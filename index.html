@@ -917,7 +917,7 @@ window.showRaceBreakdown = async function(raceId) {
     return {team,pts:p};
   }).sort((a,b)=>b.pts-a.pts);
   const html = '<p class="text-muted mb-3">Race: <strong>'+esc(race.name)+'</strong></p>'
-    + results.map((r,i)=>'<div class="lb-row '+(i<3?TC[i]:'')+'">'
+    + results.slice(0,3).map((r,i)=>'<div class="lb-row '+(i<3?TC[i]:'')+'">'
         +'<div class="lb-rank">'+(i<3?M[i]:i+1)+'</div>'
         +'<div><div class="lb-name">'+esc(r.team.teamName)+'</div><div class="lb-team">'+esc(r.team.playerName)+'</div></div>'
         +'<div><span class="lb-pts">'+r.pts+'</span><span class="lb-pts-label">pts</span></div></div>').join('');
