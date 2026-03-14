@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IMS Fantasy</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red:#E8002D;--red-dark:#b50022;--gold:#FFD700;
+    --bg:#0a0a0f;--surface:#13131a;--surface2:#1c1c27;
+    --surface3:#252535;--border:#2e2e45;--text:#f0f0f8;
+    --muted:#7070a0;--green:#00e676;--blue:#4fc3f7;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
+
+  #setup-banner{background:#1a1200;border-bottom:2px solid var(--gold);padding:16px 24px;font-size:.9rem;line-height:1.7;}
+  #setup-banner h2{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;letter-spacing:1px;color:var(--gold);margin-bottom:8px;}
+  #setup-banner code{background:#2a2000;border:1px solid #554400;border-radius:3px;padding:1px 6px;font-size:.85rem;color:var(--gold);}
+  #setup-banner ol{margin:8px 0 8px 20px;color:var(--text);}
+  #setup-banner li{margin-bottom:4px;}
+  #setup-banner a{color:var(--blue);}
+
+  header{background:var(--surface);border-bottom:2px solid var(--red);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100;}
+  .logo{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.6rem;letter-spacing:2px;display:flex;align-items:center;gap:10px;}
+  .logo span{color:var(--red);}
+  nav{display:flex;gap:4px;}
+  nav button{background:none;border:none;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:.95rem;letter-spacing:1px;padding:8px 14px;cursor:pointer;border-radius:4px;transition:all .2s;text-transform:uppercase;}
+  nav button:hover,nav button.active{color:var(--text);background:var(--surface2);}
+  nav button.active{border-bottom:2px solid var(--red);border-radius:4px 4px 0 0;}
+  .admin-badge{background:var(--red);color:white;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:3px;letter-spacing:1px;}
+
+  main{max-width:1100px;margin:0 auto;padding:32px 24px;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:24px;margin-bottom:20px;}
+  .card-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.3rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:18px;display:flex;align-items:center;gap:10px;}
+  .card-title .dot{width:8px;height:8px;background:var(--red);border-radius:50%;}
+
+  .btn{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:.95rem;letter-spacing:1px;text-transform:uppercase;padding:10px 22px;border-radius:5px;cursor:pointer;transition:all .18s;border:none;}
+  .btn-primary{background:var(--red);color:white;}
+  .btn-primary:hover{background:var(--red-dark);}
+  .btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+  .btn-secondary:hover{border-color:var(--red);color:var(--red);}
+  .btn-gold{background:#2a2000;color:var(--gold);border:1px solid var(--gold);}
+  .btn-sm{padding:6px 14px;font-size:.82rem;}
+  .btn:disabled{opacity:.4;cursor:not-allowed;}
+
+  input,select,textarea{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:5px;font-family:'Barlow',sans-serif;font-size:.95rem;width:100%;transition:border-color .2s;}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--red);}
+  label{display:block;color:var(--muted);font-size:.82rem;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-weight:600;}
+  .form-group{margin-bottom:16px;}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+  @media(max-width:700px){.divisions-grid{grid-template-columns:1fr!important;}.form-row,.form-row-3{grid-template-columns:1fr;}}
+
+  .divisions-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+  .division-card{background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:16px;}
+  .division-label{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.1rem;letter-spacing:2px;color:var(--red);margin-bottom:12px;text-transform:uppercase;}
+  .driver-option{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:5px;cursor:pointer;margin-bottom:6px;background:var(--surface3);border:1px solid transparent;transition:all .18s;user-select:none;}
+  .driver-option:hover{border-color:var(--muted);}
+  .driver-option.active{border-color:var(--red);background:#2a1015;}
+  .driver-option input[type=radio]{display:none;}
+  .driver-avatar{width:38px;height:38px;border-radius:50%;background:var(--surface);border:2px solid var(--border);font-size:.7rem;display:flex;align-items:center;justify-content:center;color:var(--muted);overflow:hidden;flex-shrink:0;}
+  .driver-avatar img{width:100%;height:100%;object-fit:cover;}
+  .driver-name{font-weight:600;font-size:.92rem;}
+  .check-icon{margin-left:auto;color:var(--red);display:none;}
+  .driver-option.active .check-icon{display:block;}
+  .pick-pct{margin-left:auto;font-size:.75rem;color:var(--muted);font-weight:600;margin-right:4px;}
+  .driver-option.active .pick-pct{margin-right:8px;}
+  .captain-btn{font-size:.7rem;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:3px;border:1px solid var(--border);background:var(--surface3);color:var(--muted);cursor:pointer;white-space:nowrap;transition:all .18s;}
+  .captain-btn:hover{border-color:var(--gold);color:var(--gold);}
+  .captain-btn.active{background:#2a2000;border-color:var(--gold);color:var(--gold);}
+  .captain-badge{background:var(--gold);color:#000;font-size:.65rem;font-weight:900;padding:2px 6px;border-radius:3px;letter-spacing:1px;text-transform:uppercase;margin-left:6px;vertical-align:middle;}
+  .team-driver-card.is-captain{border-color:var(--gold);background:#1a1800;}
+  .d-pts-2x{font-size:.7rem;color:var(--gold);font-weight:700;margin-left:3px;opacity:.8;}
+
+  .constructor-pick{background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px;}
+  .constructor-label{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.1rem;letter-spacing:2px;color:var(--gold);margin-bottom:12px;}
+  .constructor-option{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:5px;cursor:pointer;margin-bottom:6px;background:var(--surface3);border:1px solid transparent;transition:all .18s;user-select:none;}
+  .constructor-option:hover{border-color:var(--muted);}
+  .constructor-option.active{border-color:var(--gold);background:#1a1a0a;}
+  .constructor-option input[type=radio]{display:none;}
+  .constructor-logo{width:38px;height:38px;border-radius:6px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.65rem;overflow:hidden;flex-shrink:0;}
+  .constructor-logo img{width:100%;height:100%;object-fit:contain;}
+
+  .team-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;}
+  .team-driver-card{background:var(--surface2);border-radius:8px;padding:16px;text-align:center;border:1px solid var(--border);}
+  .team-driver-card .div-tag{font-size:.72rem;color:var(--red);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;}
+  .team-driver-card .d-avatar{width:60px;height:60px;border-radius:50%;margin:0 auto 8px;background:var(--surface3);overflow:hidden;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--muted);}
+  .team-driver-card .d-avatar img{width:100%;height:100%;object-fit:cover;}
+  .team-driver-card .d-name{font-weight:700;font-size:.95rem;}
+  .team-driver-card .d-pts{color:var(--gold);font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.4rem;}
+  .team-driver-card .d-pts-label{color:var(--muted);font-size:.75rem;}
+
+  .lb-row{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--surface2);border-radius:6px;margin-bottom:6px;border:1px solid var(--border);}
+  .lb-row.top-1{border-color:var(--gold);background:#1a1800;}
+  .lb-row.top-2{border-color:#c0c0c0;background:#161616;}
+  .lb-row.top-3{border-color:#cd7f32;background:#151008;}
+  .lb-rank{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.3rem;width:30px;text-align:center;}
+  .lb-name{flex:1;font-weight:600;}
+  .lb-team{color:var(--muted);font-size:.82rem;}
+  .lb-pts{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.3rem;color:var(--gold);}
+  .lb-pts-label{color:var(--muted);font-size:.75rem;margin-left:4px;}
+
+  .status-banner{padding:12px 18px;border-radius:6px;margin-bottom:20px;font-weight:600;display:flex;align-items:center;gap:10px;}
+  .status-banner.locked{background:#2a0a0a;border:1px solid var(--red);color:var(--red);}
+  .status-banner.open{background:#0a2a15;border:1px solid var(--green);color:var(--green);}
+
+  .alert{padding:12px 16px;border-radius:6px;margin-bottom:16px;font-size:.9rem;}
+  .alert-success{background:#0a2a15;border:1px solid var(--green);color:var(--green);}
+  .alert-error{background:#2a0a0a;border:1px solid var(--red);color:#ff6b6b;}
+  .alert-info{background:#0a1a2a;border:1px solid var(--blue);color:var(--blue);}
+  .alert-warning{background:#1a1200;border:1px solid var(--gold);color:var(--gold);}
+
+  table{width:100%;border-collapse:collapse;}
+  th{background:var(--surface3);color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:1px;padding:10px 12px;text-align:left;font-weight:700;}
+  td{padding:10px 12px;border-bottom:1px solid var(--border);font-size:.9rem;vertical-align:middle;}
+  tr:hover td{background:var(--surface2);}
+  .tag{display:inline-block;padding:2px 8px;border-radius:3px;font-size:.72rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+  .tag-red{background:#2a0a0a;color:var(--red);border:1px solid var(--red);}
+
+  .tabs{display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+  .tab{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:.9rem;letter-spacing:1px;text-transform:uppercase;padding:8px 16px;cursor:pointer;border:none;background:none;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .18s;}
+  .tab:hover{color:var(--text);}
+  .tab.active{color:var(--red);border-bottom-color:var(--red);}
+
+  .section{display:none;}.section.active{display:block;}
+  .page{display:none;}.page.active{display:block;}
+
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);}
+  .modal-overlay.hidden{display:none;}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:28px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;}
+  .modal-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.3rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;}
+  .modal-close{cursor:pointer;font-size:1.4rem;background:none;border:none;color:var(--muted);}
+  .modal-close:hover{color:var(--text);}
+
+  .race-history-item{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface2);border-radius:6px;margin-bottom:6px;border:1px solid var(--border);}
+  .race-name{font-weight:600;}
+  .race-pts{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.2rem;color:var(--gold);}
+
+  .divider{border:none;border-top:1px solid var(--border);margin:20px 0;}
+  .text-muted{color:var(--muted);font-size:.85rem;}
+  .flex{display:flex;}.gap-2{gap:8px;}.gap-3{gap:12px;}
+  .mb-3{margin-bottom:12px;}.mb-4{margin-bottom:16px;}
+  .ml-auto{margin-left:auto;}.align-center{align-items:center;}.justify-between{justify-content:space-between;}
+  .no-drivers{color:var(--muted);font-style:italic;text-align:center;padding:20px;font-size:.9rem;}
+  #total-pts-display{font-family:'Barlow Condensed',sans-serif;font-size:3rem;font-weight:900;color:var(--gold);text-align:center;}
+  .pts-label{text-align:center;color:var(--muted);font-size:.85rem;text-transform:uppercase;letter-spacing:1px;margin-top:4px;}
+  .spinner{display:inline-block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--red);border-radius:50%;animation:spin .7s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .loading-state{text-align:center;padding:40px;color:var(--muted);}
+</style>
+</head>
+<body>
+
+<div id="setup-banner" style="display:none">
+  <h2>⚙️ ONE-TIME FIREBASE SETUP — connects all devices to the same database</h2>
+  <ol>
+    <li>Go to <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> → <strong>Create a project</strong> (disable Analytics, not needed)</li>
+    <li>In your project: <strong>Firestore Database</strong> → <strong>Create database</strong> → <strong>Start in test mode</strong> → pick any location → Enable</li>
+    <li>Click <strong>⚙️ Project settings</strong> → <strong>Your apps</strong> → <strong>&lt;/&gt; Web</strong> icon → register app → copy the <code>firebaseConfig</code> object</li>
+    <li>In this app: <strong>Admin</strong> (password: admin123) → <strong>Firebase Config</strong> tab → paste your config → Save &amp; Connect</li>
+    <li>Once connected on your device, everyone who opens the link will share the same data automatically</li>
+  </ol>
+  <button class="btn btn-gold btn-sm" style="margin-top:8px" onclick="document.getElementById('setup-banner').style.display='none'">Dismiss</button>
+</div>
+
+<header>
+  <div class="logo"><span>IMS</span> FANTASY</div>
+  <nav>
+    <button class="active" onclick="showPage('dashboard')">Home</button>
+    <button onclick="showPage('home')">Edit Team</button>
+    <button onclick="showPage('my-team')">My Team</button>
+    <button onclick="showPage('leaderboard')">Leaderboard</button>
+    <button onclick="showPage('admin')">Admin</button>
+  </nav>
+  <div id="admin-indicator" class="admin-badge" style="display:none">ADMIN</div>
+</header>
+
+<main>
+
+<div id="page-dashboard" class="page active">
+  <div id="dashboard-content"><div class="loading-state"><div class="spinner"></div></div></div>
+</div>
+
+<div id="page-home" class="page">
+  <div id="home-alert"></div>
+  <div id="lock-status-banner"></div>
+  <div id="user-setup-section" class="card" style="display:none">
+    <div class="card-title"><div class="dot"></div>Join the Fantasy League</div>
+    <div class="form-row">
+      <div class="form-group"><label>Your Name</label><input type="text" id="user-name-input" placeholder="Enter your name"></div>
+      <div class="form-group"><label>Team Name</label><input type="text" id="user-team-input" placeholder="Enter your team name"></div>
+    </div>
+    <button class="btn btn-primary" onclick="setupUser()">Continue →</button>
+  </div>
+  <div id="team-builder-section" style="display:none"></div>
+</div>
+
+<div id="page-my-team" class="page">
+  <div id="my-team-content"></div>
+</div>
+
+<div id="page-leaderboard" class="page">
+  <div class="card">
+    <div class="card-title"><div class="dot"></div>Leaderboard</div>
+    <div id="leaderboard-content"><div class="loading-state"><div class="spinner"></div></div></div>
+  </div>
+  <div class="card">
+    <div class="card-title"><div class="dot"></div>Race Results History</div>
+    <div id="race-history-content"></div>
+  </div>
+</div>
+
+<div id="page-admin" class="page">
+  <div id="admin-login-section" class="card">
+    <div class="card-title"><div class="dot"></div>Admin Login</div>
+    <div class="form-group"><label>Password</label><input type="password" id="admin-pw-input" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')adminLogin()"></div>
+    <button class="btn btn-primary" onclick="adminLogin()">Login →</button>
+    <div id="admin-login-error" class="alert alert-error" style="display:none;margin-top:12px"></div>
+  </div>
+  <div id="admin-panel" style="display:none">
+    <div class="tabs">
+      <button class="tab active" onclick="showAdminTab('drivers',this)">Drivers</button>
+      <button class="tab" onclick="showAdminTab('constructors',this)">Constructors</button>
+      <button class="tab" onclick="showAdminTab('points',this)">Add Points</button>
+      <button class="tab" onclick="showAdminTab('teams',this)">Teams</button>
+      <button class="tab" onclick="showAdminTab('settings',this)">Settings</button>
+      <button class="tab" onclick="showAdminTab('firebase',this)" style="color:var(--gold)">⚙ Firebase Config</button>
+    </div>
+
+    <div id="admin-tab-drivers" class="section active">
+      <div class="card">
+        <div class="card-title"><div class="dot"></div>Import from Google Sheets</div>
+        <p class="text-muted mb-3" style="margin-bottom:12px">Click to sync Season 6 drivers from the live Google Sheet. This will <strong>replace all existing drivers</strong>.</p>
+        <button class="btn btn-gold" onclick="importFromSheet()">↓ Import Season 6 Drivers</button>
+        <div id="sheet-import-msg" style="margin-top:10px"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><div class="dot"></div>Add Driver Manually</div>
+        <div class="form-row">
+          <div class="form-group"><label>Driver Name</label><input type="text" id="new-driver-name" placeholder="e.g. Max Verstappen"></div>
+          <div class="form-group"><label>Division</label>
+            <select id="new-driver-div">
+              <option value="D1">D1</option><option value="E1">E1</option>
+              <option value="D2">D2</option><option value="E2">E2</option>
+              <option value="D3">D3</option><option value="E3">E3</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group"><label>Photo URL (optional)</label><input type="text" id="new-driver-photo" placeholder="https://..."></div>
+        <button class="btn btn-primary" onclick="addDriver()">Add Driver</button>
+        <div id="add-driver-msg" style="margin-top:10px"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><div class="dot"></div>Drivers Database</div>
+        <div id="drivers-table"><div class="loading-state"><div class="spinner"></div></div></div>
+      </div>
+    </div>
+
+    <div id="admin-tab-constructors" class="section">
+      <div class="card">
+        <div class="card-title"><div class="dot"></div>Add Constructor</div>
+        <div class="form-row">
+          <div class="form-group"><label>Constructor Name</label><input type="text" id="new-constructor-name" placeholder="e.g. Ferrari"></div>
+          <div class="form-group"><label>Logo URL (optional)</label><input type="text" id="new-constructor-logo" placeholder="https://..."></div>
+        </div>
+        <button class="btn btn-primary" onclick="addConstructor()">Add Constructor</button>
+        <div id="add-constructor-msg" style="margin-top:10px"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><div class="dot"></div>Constructors Database</div>
+        <div id="constructors-table"><div class="loading-state"><div class="spinner"></div></div></div>
+      </div>
+    </div>
+
+    <div id="admin-tab-points" class="section">
+      <div class="card">
+        <div class="card-title"><div class="dot"></div>Add Race Results</div>
+        <div class="form-row">
+          <div class="form-group"><label>Race Name</label><input type="text" id="race-name-input" placeholder="e.g. Bahrain GP"></div>
+          <div class="form-group"><label>Race Number</label><input type="number" id="race-num-input" placeholder="1" min="1"></div>
+        </div>
+        <p class="text-muted mb-3">Enter points for each driver and constructor (blank = 0):</p>
+        <div id="points-inputs"></div>
+        <button class="btn btn-primary" onclick="submitRaceResults()" style="margin-top:16px">Save Race Results →</button>
+        <div id="points-msg" style="margin-top:10px"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><div class="dot"></div>Edit Past Races</div>
+        <p class="text-muted mb-3" style="margin-bottom:14px">Select a race to update its points — useful if points come in after you've already moved on.</p>
+        <div id="past-races-list"><div class="loading-state"><div class="spinner"></div></div></div>
+        <div id="edit-race-form" style="display:none;margin-top:20px;border-top:1px solid var(--border);padding-top:20px">
+          <div class="card-title" style="font-size:1rem;margin-bottom:14px"><div class="dot"></div>Editing: <span id="edit-race-label" style="color:var(--gold)"></span></div>
+          <div id="edit-points-inputs"></div>
+          <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+            <button class="btn btn-primary" onclick="saveEditedRace()">Save Changes →</button>
+            <button class="btn btn-secondary" onclick="cancelEditRace()">Cancel</button>
+            <button class="btn btn-secondary" style="margin-left:auto;color:var(--red);border-color:var(--red)" onclick="deleteRace(window._editingRaceId)">Delete Race</button>
+          </div>
+          <div id="edit-race-msg" style="margin-top:10px"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="admin-tab-teams" class="section">
+      <div class="card">
+        <div class="card-title"><div class="dot"></div>All Teams</div>
+        <div id="admin-teams-table"><div class="loading-state"><div class="spinner"></div></div></div>
+      </div>
+    </div>
+
+    <div id="admin-tab-settings" class="section">
+      <div class="card">
+        <div class="card-title"><div class="dot"></div>Team Editing</div>
+        <div id="edit-lock-status" class="status-banner open"><span>🟢</span><span>Team editing is <strong>OPEN</strong></span></div>
+        <div class="flex gap-2">
+          <button class="btn btn-primary" onclick="setEditLock(false)">🔓 Allow Editing</button>
+          <button class="btn" style="background:#2a0a0a;color:var(--red);border:1px solid var(--red);" onclick="setEditLock(true)">🔒 Lock Teams</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><div class="dot"></div>Change Admin Password</div>
+        <div class="form-group"><label>New Password</label><input type="password" id="new-admin-pw" placeholder="Min 4 characters"></div>
+        <button class="btn btn-secondary" onclick="changeAdminPw()">Update Password</button>
+        <div id="pw-change-msg" style="margin-top:10px"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><div class="dot"></div>Reset League</div>
+        <p class="text-muted mb-4">Deletes all teams and race results. Drivers/constructors stay.</p>
+        <button class="btn" style="background:#2a0a0a;color:var(--red);border:1px solid var(--red);" onclick="resetLeague()">⚠ Reset All Teams & Results</button>
+      </div>
+    </div>
+
+    <div id="admin-tab-firebase" class="section">
+      <div class="card">
+        <div class="card-title"><div class="dot"></div>Firebase Configuration</div>
+        <div class="alert alert-warning" style="margin-bottom:16px">
+          Paste your Firebase config JSON here. This is saved in your browser — you only need to do this once per device you use as admin. Regular players never need to touch this.
+        </div>
+        <div class="form-group">
+          <label>Firebase Config (paste the full JSON object)</label>
+          <textarea id="firebase-config-input" rows="10" placeholder='{
+  "apiKey": "AIza...",
+  "authDomain": "your-project.firebaseapp.com",
+  "projectId": "your-project-id",
+  "storageBucket": "your-project.appspot.com",
+  "messagingSenderId": "123456789",
+  "appId": "1:123456789:web:abc123"
+}'></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="saveFirebaseConfig()">Save &amp; Connect →</button>
+        <div id="firebase-config-msg" style="margin-top:10px"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<div id="modal-overlay" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">Modal <button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<div id="confirm-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:300;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:28px;width:100%;max-width:360px;">
+    <div id="confirm-msg" style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.2rem;letter-spacing:1px;margin-bottom:16px;">Are you sure?</div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-primary" id="confirm-yes-btn">Yes, Delete</button>
+      <button class="btn btn-secondary" onclick="document.getElementById('confirm-overlay').style.display='none'">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DIVISIONS = ['D1','E1','D2','E2','D3','E3'];
+let PROJECT_ID = null;
+let API_KEY = null;
+let currentUser = null;
+let adminLoggedIn = false;
+
+// ===== CONFIG =====
+function getStoredConfig() {
+  // Check URL hash first — admin shares a URL with config embedded
+  try {
+    const hash = window.location.hash.slice(1);
+    if (hash.startsWith('cfg=')) {
+      const cfg = JSON.parse(atob(hash.slice(4)));
+      if (cfg && cfg.projectId) {
+        localStorage.setItem('imsFirebaseConfig', JSON.stringify(cfg));
+        history.replaceState(null, '', window.location.pathname);
+        return cfg;
+      }
+    }
+  } catch(e) {}
+  // Fall back to localStorage
+  try { return JSON.parse(localStorage.getItem('imsFirebaseConfig') || 'null'); } catch { return null; }
+}
+
+function getShareableUrl(config) {
+  const encoded = btoa(JSON.stringify(config));
+  return window.location.origin + window.location.pathname + '#cfg=' + encoded;
+}
+
+// ===== FIRESTORE REST API =====
+function fsUrl(col, docId) {
+  const base = 'https://firestore.googleapis.com/v1/projects/' + PROJECT_ID + '/databases/(default)/documents';
+  return docId ? base+'/'+col+'/'+docId+'?key='+API_KEY : base+'/'+col+'?key='+API_KEY;
+}
+
+function toFsValue(val) {
+  if (val === null || val === undefined) return {nullValue:null};
+  if (typeof val === 'boolean') return {booleanValue:val};
+  if (typeof val === 'number') return Number.isInteger(val) ? {integerValue:String(val)} : {doubleValue:val};
+  if (typeof val === 'string') return {stringValue:val};
+  if (Array.isArray(val)) return {arrayValue:{values:val.map(toFsValue)}};
+  if (typeof val === 'object') {
+    const fields = {};
+    for (const k in val) fields[k] = toFsValue(val[k]);
+    return {mapValue:{fields}};
+  }
+  return {stringValue:String(val)};
+}
+
+function fromFsValue(fv) {
+  if (!fv) return null;
+  if ('nullValue' in fv) return null;
+  if ('booleanValue' in fv) return fv.booleanValue;
+  if ('integerValue' in fv) return Number(fv.integerValue);
+  if ('doubleValue' in fv) return fv.doubleValue;
+  if ('stringValue' in fv) return fv.stringValue;
+  if ('arrayValue' in fv) return (fv.arrayValue.values||[]).map(fromFsValue);
+  if ('mapValue' in fv) {
+    const obj = {};
+    for (const k in (fv.mapValue.fields||{})) obj[k] = fromFsValue(fv.mapValue.fields[k]);
+    return obj;
+  }
+  return null;
+}
+
+function fsDocToObj(doc) {
+  const id = doc.name.split('/').pop();
+  const obj = {id};
+  for (const k in (doc.fields||{})) obj[k] = fromFsValue(doc.fields[k]);
+  return obj;
+}
+
+function objToFsFields(obj) {
+  const fields = {};
+  for (const k in obj) { if (k==='id') continue; fields[k] = toFsValue(obj[k]); }
+  return fields;
+}
+
+async function fsRequest(method, url, body) {
+  const opts = {method, headers:{'Content-Type':'application/json'}};
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(url, opts);
+  if (res.status === 204) return null;
+  const data = await res.json();
+  if (!res.ok) throw Object.assign(new Error(data.error?.message||'HTTP '+res.status), {code:data.error?.status, status:res.status});
+  return data;
+}
+
+// ===== DB HELPERS =====
+async function dbGetAll(col) {
+  if (!PROJECT_ID) return [];
+  try {
+    const url = 'https://firestore.googleapis.com/v1/projects/'+PROJECT_ID+'/databases/(default)/documents/'+col+'?key='+API_KEY+'&pageSize=200';
+    const data = await fsRequest('GET', url);
+    return (data.documents||[]).map(fsDocToObj);
+  } catch(e) { console.error('dbGetAll',col,e); return []; }
+}
+
+async function dbGet(col, id) {
+  if (!PROJECT_ID) return null;
+  try {
+    const data = await fsRequest('GET', fsUrl(col, id));
+    return fsDocToObj(data);
+  } catch(e) { if (e.status===404) return null; console.error('dbGet',col,id,e); return null; }
+}
+
+async function dbAdd(col, obj) {
+  if (!PROJECT_ID) throw new Error('Not connected');
+  const url = 'https://firestore.googleapis.com/v1/projects/'+PROJECT_ID+'/databases/(default)/documents/'+col+'?key='+API_KEY;
+  const data = await fsRequest('POST', url, {fields:objToFsFields(obj)});
+  return data.name.split('/').pop();
+}
+
+async function dbSet(col, id, obj) {
+  if (!PROJECT_ID) throw new Error('Not connected');
+  const fields = objToFsFields(obj);
+  const mask = Object.keys(fields).map(k => 'updateMask.fieldPaths='+encodeURIComponent(k)).join('&');
+  const url = 'https://firestore.googleapis.com/v1/projects/'+PROJECT_ID+'/databases/(default)/documents/'+col+'/'+id+'?key='+API_KEY+'&'+mask;
+  await fsRequest('PATCH', url, {fields});
+}
+
+async function dbDelete(col, id) {
+  if (!PROJECT_ID) throw new Error('Not connected');
+  await fsRequest('DELETE', fsUrl(col, id));
+}
+
+// ===== CONNECT =====
+async function connectFirebase(config) {
+  try {
+    PROJECT_ID = config.projectId;
+    API_KEY = config.apiKey;
+    const url = 'https://firestore.googleapis.com/v1/projects/'+PROJECT_ID+'/databases/(default)/documents/settings?key='+API_KEY+'&pageSize=1';
+    const res = await fetch(url);
+    if (!res.ok) {
+      const err = await res.json().catch(()=>({}));
+      throw Object.assign(new Error(err.error?.message||'HTTP '+res.status), {code:err.error?.status, status:res.status});
+    }
+    return {ok:true};
+  } catch(e) {
+    PROJECT_ID = null; API_KEY = null;
+    return {ok:false, error:e};
+  }
+}
+
+window.saveFirebaseConfig = async function() {
+  let raw = document.getElementById('firebase-config-input').value.trim();
+  const msgEl = document.getElementById('firebase-config-msg');
+  msgEl.innerHTML = '<div class="alert alert-info">⏳ Connecting…</div>';
+  let config;
+  try {
+    const jsonified = raw.replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)(\s*:)/g,'$1"$2"$3');
+    try { config = JSON.parse(jsonified); }
+    catch(e) { config = Function('"use strict"; return ('+raw+')')(); }
+  } catch(e) {
+    msgEl.innerHTML = '<div class="alert alert-error">❌ Could not parse config: '+e.message+'</div>';
+    return;
+  }
+  if (!config?.projectId || !config?.apiKey) {
+    msgEl.innerHTML = '<div class="alert alert-error">❌ Missing projectId or apiKey. Copy the full config from Firebase Project Settings.</div>';
+    return;
+  }
+  const result = await connectFirebase(config);
+  if (result.ok) {
+    localStorage.setItem('imsFirebaseConfig', JSON.stringify(config));
+    const shareUrl = getShareableUrl(config);
+    msgEl.innerHTML = '<div class="alert alert-success">✔ Connected!<br><br>Share this URL with your players — they will connect automatically:<br><br>'
+      + '<input type="text" value="'+shareUrl+'" readonly onclick="this.select()" style="font-size:.8rem;margin-top:6px;cursor:text">'
+      + '<button class="btn btn-sm btn-secondary" style="margin-top:8px" onclick="navigator.clipboard.writeText(\''+shareUrl+'\').then(()=>this.textContent=\'✔ Copied!\')">Copy URL</button></div>';
+    document.getElementById('setup-banner').style.display = 'none';
+    await ensureDefaults();
+    renderDashboard();
+    renderHome();
+    renderAdminDrivers();
+    renderAdminConstructors();
+    renderAdminTeams();
+    renderAdminSettings();
+    renderPointsInputs();
+  } else {
+    const err = result.error;
+    let hint = '';
+    if (err?.code==='PERMISSION_DENIED'||err?.status===403) hint = '🔒 Permission denied. Go to Firebase Console → Firestore → Rules tab and set <code>allow read, write: if true;</code> then Publish.';
+    else if (err?.status===404) hint = '🗄 Database not found. Make sure you created the Firestore database (Start in test mode).';
+    else if (err?.status===400) hint = '🔑 Invalid API key. Check the apiKey in your config.';
+    else hint = err?.message || 'Unknown error.';
+    msgEl.innerHTML = '<div class="alert alert-error">❌ Could not connect.<br><br>'+hint+'</div>';
+  }
+};
+
+// ===== INIT =====
+async function ensureDefaults() {
+  const pw = await dbGet('settings','adminPassword');
+  if (!pw) await dbSet('settings','adminPassword',{value:'admin123'});
+  const lock = await dbGet('settings','teamsLocked');
+  if (!lock) await dbSet('settings','teamsLocked',{value:false});
+}
+
+async function init() {
+  const cfg = getStoredConfig();
+  if (cfg) {
+    const result = await connectFirebase(cfg);
+    if (result.ok) {
+      document.getElementById('setup-banner').style.display = 'none';
+      document.getElementById('firebase-config-input').value = JSON.stringify(cfg, null, 2);
+      await ensureDefaults();
+    } else {
+      document.getElementById('home-alert').innerHTML = '<div class="alert alert-error">⚠️ Could not connect to database. Check your internet connection and refresh.</div>';
+    }
+  } else {
+    // No config — show setup banner (admin only scenario)
+    document.getElementById('setup-banner').style.display = 'block';
+  }
+  const session = localStorage.getItem('imsFantasyUser');
+  if (session) { try { currentUser = JSON.parse(session); } catch(e) {} }
+  renderDashboard();
+  renderHome();
+}
+
+// ===== NAVIGATION =====
+window.showPage = function(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  document.querySelectorAll('nav button').forEach((b,i) => b.classList.toggle('active', ['dashboard','home','my-team','leaderboard','admin'][i]===page));
+  if (page==='dashboard') renderDashboard();
+  if (page==='home') renderHome();
+  if (page==='my-team') renderMyTeam();
+  if (page==='leaderboard') renderLeaderboard();
+  if (page==='admin') renderAdmin();
+};
+
+// ===== DASHBOARD =====
+async function renderDashboard() {
+  const el = document.getElementById('dashboard-content');
+  if (!PROJECT_ID) { el.innerHTML = '<div class="alert alert-warning">Database not connected.</div>'; return; }
+  el.innerHTML = '<div class="loading-state"><div class="spinner"></div></div>';
+
+  const [races, drivers, constrs, teams] = await Promise.all([
+    dbGetAll('races'), dbGetAll('drivers'), dbGetAll('constructors'), dbGetAll('teams')
+  ]);
+  races.sort((a,b) => (b.raceNum||0)-(a.raceNum||0));
+
+  // Current race — latest by raceNum
+  const currentRace = races[0] || null;
+  const hasPoints = currentRace && currentRace.driverPoints && Object.values(currentRace.driverPoints).some(v=>v>0);
+
+  // Highest scoring driver overall
+  const driverTotals = {};
+  races.forEach(r => {
+    if (!r.driverPoints) return;
+    Object.entries(r.driverPoints).forEach(([id, pts]) => {
+      driverTotals[id] = (driverTotals[id]||0) + pts;
+    });
+  });
+  const topDriverId = Object.keys(driverTotals).sort((a,b)=>driverTotals[b]-driverTotals[a])[0];
+  const topDriver = topDriverId ? drivers.find(d=>d.id===topDriverId) : null;
+  const topDriverPts = topDriverId ? driverTotals[topDriverId] : 0;
+
+  // Highest scoring constructor overall
+  const constrTotals = {};
+  races.forEach(r => {
+    if (!r.constructorPoints) return;
+    Object.entries(r.constructorPoints).forEach(([id, pts]) => {
+      constrTotals[id] = (constrTotals[id]||0) + pts;
+    });
+  });
+  const topConstrId = Object.keys(constrTotals).sort((a,b)=>constrTotals[b]-constrTotals[a])[0];
+  const topConstr = topConstrId ? constrs.find(c=>c.id===topConstrId) : null;
+  const topConstrPts = topConstrId ? constrTotals[topConstrId] : 0;
+
+  // Most selected driver
+  const selCounts = {};
+  teams.forEach(t => {
+    const sel = t.selections || {};
+    Object.values(sel).forEach(id => {
+      if (id && id !== 'CONSTRUCTOR') selCounts[id] = (selCounts[id]||0) + 1;
+    });
+  });
+  const mostSelId = Object.keys(selCounts).sort((a,b)=>selCounts[b]-selCounts[a])[0];
+  const mostSelDriver = mostSelId ? drivers.find(d=>d.id===mostSelId) : null;
+  const mostSelCount = mostSelId ? selCounts[mostSelId] : 0;
+  const mostSelPct = teams.length ? Math.round(mostSelCount/teams.length*100) : 0;
+
+  el.innerHTML = `
+    <div class="card">
+      <div class="card-title"><div class="dot"></div>Current Race</div>
+      ${currentRace ? `
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+          <div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:2rem;letter-spacing:1px">${esc(currentRace.name)}</div>
+            <div class="text-muted">Round ${currentRace.raceNum}</div>
+          </div>
+          <div style="background:${hasPoints?'var(--surface2)':'rgba(232,0,45,0.1)'};border:1px solid ${hasPoints?'var(--border)':'var(--red)'};border-radius:8px;padding:8px 16px;text-align:center">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:.85rem;letter-spacing:1px;color:${hasPoints?'var(--muted)':'var(--red)'}">${hasPoints?'RESULTS IN':'UPCOMING'}</div>
+          </div>
+        </div>
+      ` : '<p class="text-muted">No races added yet.</p>'}
+    </div>
+
+    <div class="card">
+      <div class="card-title"><div class="dot"></div>Stats</div>
+      ${!races.length ? '<p class="text-muted">No data yet.</p>' : `
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px">
+          <div style="font-size:.75rem;font-family:'Barlow Condensed',sans-serif;letter-spacing:2px;color:var(--muted);margin-bottom:8px">TOP DRIVER</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.3rem">${topDriver ? esc(topDriver.name) : '—'}</div>
+          <div class="text-muted" style="font-size:.85rem">${topDriver ? esc(topDriver.division) : ''}</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.6rem;color:var(--gold);margin-top:6px">${topDriverPts} <span style="font-size:.9rem;font-weight:400;color:var(--muted)">pts</span></div>
+        </div>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px">
+          <div style="font-size:.75rem;font-family:'Barlow Condensed',sans-serif;letter-spacing:2px;color:var(--muted);margin-bottom:8px">TOP CONSTRUCTOR</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.3rem">${topConstr ? esc(topConstr.name) : '—'}</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.6rem;color:var(--gold);margin-top:6px">${topConstrPts} <span style="font-size:.9rem;font-weight:400;color:var(--muted)">pts</span></div>
+        </div>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px">
+          <div style="font-size:.75rem;font-family:'Barlow Condensed',sans-serif;letter-spacing:2px;color:var(--muted);margin-bottom:8px">MOST PICKED DRIVER</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.3rem">${mostSelDriver ? esc(mostSelDriver.name) : '—'}</div>
+          <div class="text-muted" style="font-size:.85rem">${mostSelDriver ? esc(mostSelDriver.division) : ''}</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.6rem;color:var(--gold);margin-top:6px">${mostSelPct}% <span style="font-size:.9rem;font-weight:400;color:var(--muted)">of teams</span></div>
+        </div>
+      </div>`}
+    </div>`;
+}
+
+// ===== HOME =====
+async function renderHome() {
+  if (!PROJECT_ID) return;
+  document.getElementById('home-alert').innerHTML = '';
+  const lockDoc = await dbGet('settings','teamsLocked');
+  const locked = lockDoc && lockDoc.value;
+  document.getElementById('lock-status-banner').innerHTML = locked
+    ? '<div class="status-banner locked">🔒 Team editing is locked. Check back for the next round!</div>'
+    : '<div class="status-banner open">🟢 Team editing is open — pick your drivers!</div>';
+  if (!currentUser) {
+    document.getElementById('user-setup-section').style.display = 'block';
+    document.getElementById('team-builder-section').style.display = 'none';
+  } else {
+    document.getElementById('user-setup-section').style.display = 'none';
+    const teams = await dbGetAll('teams');
+    const myTeam = teams.find(t => t.userId===currentUser.userId);
+    await renderTeamBuilder(myTeam, locked, teams);
+  }
+}
+
+async function renderTeamBuilder(existingTeam, locked, allTeams) {
+  const [drivers, constrs] = await Promise.all([dbGetAll('drivers'), dbGetAll('constructors')]);
+  const existing = existingTeam ? (existingTeam.selections||{}) : {};
+  const totalTeams = (allTeams||[]).length;
+
+  // Count how many teams have picked each driver/constructor
+  const pickCount = {};
+  (allTeams||[]).forEach(t => {
+    const sel = t.selections||{};
+    DIVISIONS.forEach(div => { if(sel[div]) pickCount[sel[div]] = (pickCount[sel[div]]||0)+1; });
+    if(sel['CONSTRUCTOR']) pickCount[sel['CONSTRUCTOR']] = (pickCount[sel['CONSTRUCTOR']]||0)+1;
+  });
+  function pct(id) {
+    if (!totalTeams) return '';
+    const p = Math.round(((pickCount[id]||0)/totalTeams)*100);
+    return '<span class="pick-pct">'+p+'%</span>';
+  }
+
+  const tbs = document.getElementById('team-builder-section');
+  tbs.style.display = 'block';
+  let divHtml = '';
+  for (const div of DIVISIONS) {
+    const dd = drivers.filter(d => d.division===div);
+    divHtml += '<div class="division-card"><div class="division-label">'+div+'</div>';
+    if (!dd.length) {
+      divHtml += '<div class="no-drivers">No drivers added yet</div>';
+    } else {
+      dd.forEach(d => {
+        const sel = existing[div]===d.id;
+        divHtml += '<label class="driver-option'+(sel?' active':'')+'" onclick="selectDriver(\''+div+'\',\''+d.id+'\',this)">'
+          + '<input type="radio" name="div-'+div+'" value="'+d.id+'"'+(sel?' checked':'')+'>'
+          + '<div class="driver-avatar">'+(d.photo ? '<img src="'+esc(d.photo)+'" onerror="this.parentElement.innerHTML=\'👤\'">' : '👤')+'</div>'
+          + '<span class="driver-name">'+esc(d.name)+'</span>'
+          + (totalTeams ? pct(d.id) : '')
+          + '<span class="check-icon">✔</span></label>';
+      });
+    }
+    divHtml += '</div>';
+  }
+  const cHtml = !constrs.length
+    ? '<div class="no-drivers">No constructors added yet</div>'
+    : constrs.map(c => {
+        const sel = existing['CONSTRUCTOR']===c.id;
+        return '<label class="constructor-option'+(sel?' active':'')+'" onclick="selectConstructor(\''+c.id+'\',this)">'
+          + '<input type="radio" name="constructor" value="'+c.id+'"'+(sel?' checked':'')+'>'
+          + '<div class="constructor-logo">'+(c.logo ? '<img src="'+esc(c.logo)+'" onerror="this.parentElement.innerHTML=\'🏎\'">' : '🏎')+'</div>'
+          + '<span class="driver-name">'+esc(c.name)+'</span>'
+          + (totalTeams ? pct(c.id) : '')
+          + '<span class="check-icon">✔</span></label>';
+      }).join('');
+  tbs.innerHTML = '<div class="card">'
+    + '<div class="card-title"><div class="dot"></div>'+(existingTeam?'Edit Your Team':'Build Your Team')+' <span style="color:var(--muted);font-weight:400;font-size:1rem">— '+esc(currentUser.name)+'</span></div>'
+    + '<p class="text-muted mb-4">Select one driver per division and one constructor.</p>'
+    + '<div class="divisions-grid">'+divHtml+'</div>'
+    + '<hr class="divider">'
+    + '<div class="constructor-pick"><div class="constructor-label">🏎 Constructor</div>'+cHtml+'</div>'
+    + '<hr class="divider">'
+    + '<div class="flex gap-2 align-center">'
+    + '<button class="btn btn-primary" onclick="submitTeam()"'+(locked?' disabled':'')+'>'+(existingTeam?'Update Team →':'Submit Team →')+'</button>'
+    + (locked ? '<span class="text-muted" style="font-size:.85rem">Team editing is locked</span>' : '')
+    + '</div><div id="submit-team-msg" style="margin-top:10px"></div></div>';
+}
+
+window.selectDriver = function(div, driverId, el) {
+  document.querySelectorAll('.driver-option').forEach(e => {
+    if (e.querySelector('input[name="div-'+div+'"]')) e.classList.remove('active');
+  });
+  el.classList.add('active');
+  const r = el.querySelector('input[type=radio]'); if (r) r.checked = true;
+};
+
+window.selectConstructor = function(cId, el) {
+  document.querySelectorAll('.constructor-option').forEach(e => e.classList.remove('active'));
+  el.classList.add('active');
+  const r = el.querySelector('input[type=radio]'); if (r) r.checked = true;
+};
+
+window.setupUser = async function() {
+  const name = document.getElementById('user-name-input').value.trim();
+  const teamName = document.getElementById('user-team-input').value.trim();
+  if (!name||!teamName) { showAlert('home-alert','Please enter your name and team name.','error'); return; }
+  if (!PROJECT_ID) { showAlert('home-alert','Database not connected yet.','error'); return; }
+  const teams = await dbGetAll('teams');
+  const existing = teams.find(t => t.playerName.toLowerCase()===name.toLowerCase());
+  if (existing) {
+    currentUser = {userId:existing.userId, name:existing.playerName, teamName:existing.teamName};
+  } else {
+    const userId = 'u_'+Date.now()+'_'+Math.random().toString(36).substr(2,6);
+    currentUser = {userId, name, teamName};
+  }
+  localStorage.setItem('imsFantasyUser', JSON.stringify(currentUser));
+  renderHome();
+};
+
+window.submitTeam = async function() {
+  const lockDoc = await dbGet('settings','teamsLocked');
+  if (lockDoc&&lockDoc.value) { showAlert('submit-team-msg','Team editing is locked.','error'); return; }
+  const selections = {};
+  for (const div of DIVISIONS) {
+    const r = document.querySelector('input[name="div-'+div+'"]:checked');
+    if (r) selections[div] = r.value;
+  }
+  const cr = document.querySelector('input[name="constructor"]:checked');
+  if (cr) selections['CONSTRUCTOR'] = cr.value;
+  const missing = DIVISIONS.filter(d => !selections[d]);
+  if (missing.length) { showAlert('submit-team-msg','Pick a driver for: '+missing.join(', '),'error'); return; }
+  if (!selections['CONSTRUCTOR']) { showAlert('submit-team-msg','Pick a constructor.','error'); return; }
+  const teams = await dbGetAll('teams');
+  const existing = teams.find(t => t.userId===currentUser.userId);
+  const data = {userId:currentUser.userId, playerName:currentUser.name, teamName:currentUser.teamName, selections};
+  if (existing) {
+    await dbSet('teams', existing.id, data);
+  } else {
+    data.createdAt = Date.now();
+    await dbAdd('teams', data);
+  }
+  showAlert('submit-team-msg','✔ Team saved!','success');
+  setTimeout(() => showPage('my-team'), 900);
+};
+
+// ===== MY TEAM =====
+async function renderMyTeam() {
+  const el = document.getElementById('my-team-content');
+  if (!PROJECT_ID) { el.innerHTML = '<div class="card"><div class="alert alert-warning">Database not connected.</div></div>'; return; }
+  if (!currentUser) { el.innerHTML = '<div class="card"><p class="text-muted">Set up your account on the Home page first.</p></div>'; return; }
+  el.innerHTML = '<div class="loading-state"><div class="spinner"></div><p style="margin-top:12px">Loading…</p></div>';
+  const [teams,drivers,constrs,races,lockDoc] = await Promise.all([dbGetAll('teams'),dbGetAll('drivers'),dbGetAll('constructors'),dbGetAll('races'),dbGet('settings','teamsLocked')]);
+  const myTeam = teams.find(t => t.userId===currentUser.userId);
+  if (!myTeam) { el.innerHTML = '<div class="card"><p class="text-muted">No team yet. <a href="#" onclick="showPage(\'home\')" style="color:var(--red)">Build yours →</a></p></div>'; return; }
+  races.sort((a,b) => (b.raceNum||0)-(a.raceNum||0));
+  const sel = myTeam.selections||{};
+  const locked = lockDoc && lockDoc.value;
+
+  // captains is a per-race map: { raceId: driverId }
+  // Each race uses only its own captain — changing captain for race 3 never affects races 1 or 2
+  const captains = myTeam.captains || {};
+  // Legacy migration: if old flat captainId exists, attach it to the latest race only
+  if (!Object.keys(captains).length && myTeam.captainId && races.length) {
+    captains[races[0].id] = myTeam.captainId;
+  }
+
+  const latest = races[0];
+  // Only hide the latest race display if it existed before the team joined AND already had points at that time
+  const latestHasPoints = latest?.driverPoints && Object.values(latest.driverPoints).some(v=>v>0);
+  const latestCountsForTeam = !(myTeam.createdAt && latest?.createdAt && latest.createdAt < myTeam.createdAt && latestHasPoints);
+  // If no races yet, use 'pending' so player can still pick a captain
+  const captainKey = latest ? latest.id : 'pending';
+  const latestCaptainId = captains[captainKey] || null;
+
+  function racePts(race) {
+    // Don't count races that existed before this team joined
+    const raceHasPoints = race.driverPoints && Object.values(race.driverPoints).some(v=>v>0);
+    if (myTeam.createdAt && race.createdAt && race.createdAt < myTeam.createdAt && raceHasPoints) return 0;
+    const capId = captains[race.id]||null;
+    let p=0;
+    DIVISIONS.forEach(div => {
+      if(sel[div]&&race.driverPoints) {
+        const base = race.driverPoints[sel[div]]||0;
+        p += (capId && sel[div]===capId) ? base*2 : base;
+      }
+    });
+    if(sel['CONSTRUCTOR']&&race.constructorPoints) p+=race.constructorPoints[sel['CONSTRUCTOR']]||0;
+    return p;
+  }
+
+  const latestPts = latest && latestCountsForTeam ? racePts(latest) : null;
+  const totalPts = races.reduce((s,r) => s+racePts(r), 0);
+
+  let html = '<div class="card">'
+    + '<div class="card-title"><div class="dot"></div>'+esc(myTeam.teamName)+' <span style="color:var(--muted);font-size:.9rem;font-weight:400">— '+esc(myTeam.playerName)+'</span></div>'
+    + '<div style="text-align:center;margin-bottom:20px">'
+    + '<div id="total-pts-display">'+(latestPts!==null?latestPts:'—')+'</div>'
+    + '<div class="pts-label">'+(latest?'Points — '+esc(latest.name):'No races yet')+'</div></div>'
+    + '<p style="color:var(--muted);font-size:.85rem;margin-bottom:14px;text-align:center">'
+    + (locked ? '🔒 Captain is locked for this round'
+               : (latest ? 'Pick a captain for <strong>'+esc(latest.name)+'</strong> — their points count <strong style="color:var(--gold)">2×</strong> this race only'
+                         : 'Pick a captain — their points count <strong style="color:var(--gold)">2×</strong> for that race'))
+    + '</p>'
+    + '<div class="team-grid">';
+
+  DIVISIONS.forEach(div => {
+    const dId=sel[div];
+    const driver=dId?drivers.find(d=>d.id===dId):null;
+    const isCap = dId && dId===latestCaptainId;
+    const dpts = latest&&driver&&latest.driverPoints&&latestCountsForTeam ? (latest.driverPoints[dId]||0) : null;
+    const displayPts = (dpts!==null && isCap) ? dpts*2 : dpts;
+    html += '<div class="team-driver-card'+(isCap?' is-captain':'')+'">'
+      + '<div class="div-tag">'+div+(isCap?' <span class="captain-badge">★ Captain</span>':'')+'</div>'
+      + '<div class="d-avatar">'+(driver&&driver.photo?'<img src="'+esc(driver.photo)+'" onerror="this.parentElement.innerHTML=\'👤\'">':'👤')+'</div>'
+      + '<div class="d-name">'+(driver?esc(driver.name):'—')+'</div>'
+      + (displayPts!==null?'<div class="d-pts">'+displayPts+(isCap?'<span class="d-pts-2x">2×</span>':'')+'</div><div class="d-pts-label">pts this race</div>':'')
+      + (driver&&latest?'<button class="captain-btn'+(isCap?' active':'')+'"'+(locked?' disabled style="opacity:.4;cursor:not-allowed"':'')+' onclick="setCaptain(\''+dId+'\',\''+myTeam.id+'\',\''+latest.id+'\')">'+(isCap?'★ Captain':'Set Captain')+'</button>':'')
+      + '</div>';
+  });
+
+  html += '</div>';
+  const cId=sel['CONSTRUCTOR']; const constr=cId?constrs.find(c=>c.id===cId):null;
+  const cpts=latest&&constr&&latest.constructorPoints&&latestCountsForTeam?(latest.constructorPoints[cId]||0):null;
+  html += '<hr class="divider"><div class="flex align-center gap-3">'
+    + '<div style="width:40px;height:40px;border-radius:6px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;background:var(--surface2);font-size:1.2rem;flex-shrink:0">'
+    + (constr&&constr.logo?'<img src="'+esc(constr.logo)+'" style="width:100%;height:100%;object-fit:contain" onerror="this.parentElement.innerHTML=\'🏎\'">':'🏎')+'</div>'
+    + '<div><strong>'+(constr?esc(constr.name):'—')+'</strong> <span class="text-muted">(Constructor)</span></div>'
+    + (cpts!==null?'<div class="ml-auto" style="font-family:\'Barlow Condensed\',sans-serif;font-weight:900;font-size:1.3rem;color:var(--gold)">'+cpts+' pts</div>':'')
+    + '</div></div>';
+
+  html += '<div class="card"><div class="card-title"><div class="dot"></div>Race History</div>';
+  if (!races.length) html += '<p class="text-muted">No races recorded yet.</p>';
+  else races.forEach(r => {
+    const rp = racePts(r);
+    const rCap = captains[r.id]||null;
+    const capDriver = rCap ? drivers.find(d=>d.id===rCap) : null;
+    html += '<div class="race-history-item">'
+      + '<div><span class="race-name">'+esc(r.name)+'</span> <span class="text-muted">R'+r.raceNum+'</span>'
+      + (capDriver?'<span style="font-size:.75rem;color:var(--gold);margin-left:8px">★ '+esc(capDriver.name.split(' ').pop())+'</span>':'')
+      + '</div>'
+      + '<div><span class="race-pts">'+rp+'</span> <span class="text-muted" style="font-size:.8rem">pts</span></div>'
+      + '</div>';
+  });
+  html += '<hr class="divider"><div class="flex justify-between align-center">'
+    + '<span class="text-muted">Total Points (all races)</span>'
+    + '<span style="font-family:\'Barlow Condensed\',sans-serif;font-weight:900;font-size:1.5rem;color:var(--gold)">'+totalPts+'</span></div></div>';
+  el.innerHTML = html;
+}
+
+window.setCaptain = async function(driverId, teamDocId, raceId) {
+  const lockDoc = await dbGet('settings','teamsLocked');
+  if (lockDoc && lockDoc.value) return;
+  const team = await dbGet('teams', teamDocId);
+  const captains = team.captains || {};
+  captains[raceId] = driverId;
+  await dbSet('teams', teamDocId, {captains});
+  renderMyTeam();
+};
+
+
+// ===== LEADERBOARD =====
+async function renderLeaderboard() {
+  if (!PROJECT_ID) { document.getElementById('leaderboard-content').innerHTML='<div class="alert alert-warning">Database not connected.</div>'; return; }
+  const [teams,races,drivers,constrs] = await Promise.all([dbGetAll('teams'),dbGetAll('races'),dbGetAll('drivers'),dbGetAll('constructors')]);
+  races.sort((a,b)=>(b.raceNum||0)-(a.raceNum||0));
+  const driverMap={};
+  drivers.forEach(d=>driverMap[d.id]=d.name);
+
+  function teamRacePts(t, race) {
+    // Don't count races that existed before this team joined
+    const raceHasPoints = race.driverPoints && Object.values(race.driverPoints).some(v=>v>0);
+    if (t.createdAt && race.createdAt && race.createdAt < t.createdAt && raceHasPoints) return 0;
+    const sel=t.selections||{};
+    const captains=t.captains||{};
+    const capId = captains[race.id] || null;
+    let p=0;
+    DIVISIONS.forEach(div=>{
+      if(sel[div]&&race.driverPoints){
+        const base=race.driverPoints[sel[div]]||0;
+        p+=(capId&&sel[div]===capId)?base*2:base;
+      }
+    });
+    if(sel['CONSTRUCTOR']&&race.constructorPoints) p+=race.constructorPoints[sel['CONSTRUCTOR']]||0;
+    return p;
+  }
+
+  function teamTotal(t) {
+    return races.reduce((s,r)=>s+teamRacePts(t,r), 0);
+  }
+
+  const ranked = teams.map(t=>({...t,total:teamTotal(t)})).sort((a,b)=>b.total-a.total);
+  const M=['🥇','🥈','🥉'],TC=['top-1','top-2','top-3'];
+  const latestRace = races[0];
+
+  if (!ranked.length) {
+    document.getElementById('leaderboard-content').innerHTML = '<p class="text-muted">No teams yet.</p>';
+  } else {
+    function buildRow(t, i) {
+      const latestCapId = latestRace ? ((t.captains||{})[latestRace.id]||null) : null;
+      const capName = latestCapId&&driverMap[latestCapId] ? '<span style="font-size:.75rem;color:var(--gold);margin-left:6px">★ '+esc(driverMap[latestCapId].split(' ').pop())+'</span>' : '';
+      return '<div class="lb-row '+(i<3?TC[i]:'')+'">'
+        +'<div class="lb-rank">'+(i<3?M[i]:i+1)+'</div>'
+        +'<div><div class="lb-name">'+esc(t.teamName)+capName+'</div><div class="lb-team">'+esc(t.playerName)+'</div></div>'
+        +'<div><span class="lb-pts">'+t.total+'</span><span class="lb-pts-label">pts</span></div></div>';
+    }
+    const top10 = ranked.slice(0,10).map((t,i)=>buildRow(t,i)).join('');
+    const rest = ranked.slice(10).map((t,i)=>buildRow(t,i+10)).join('');
+    document.getElementById('leaderboard-content').innerHTML = top10
+      + (rest ? '<div id="lb-rest" style="display:none">'+rest+'</div>'
+               +'<div style="text-align:center;margin-top:12px">'
+               +'<button class="btn btn-secondary" id="lb-show-rest-btn" onclick="toggleLbRest()">Show the rest ('+(ranked.length-10)+')</button>'
+               +'</div>' : '');
+  }
+
+  window.toggleLbRest = function() {
+    const el = document.getElementById('lb-rest');
+    const btn = document.getElementById('lb-show-rest-btn');
+    if (!el) return;
+    if (el.style.display==='none') {
+      el.style.display='block';
+      btn.textContent='Show top 10 only';
+    } else {
+      el.style.display='none';
+      btn.textContent='Show the rest ('+(ranked.length-10)+')';
+    }
+  };
+
+  document.getElementById('race-history-content').innerHTML = !races.length
+    ? '<p class="text-muted">No races yet.</p>'
+    : races.map(race => {
+        let top=null,topPts=-1;
+        ranked.forEach(t => {
+          const p=teamRacePts(t,race);
+          if(p>topPts){topPts=p;top=t;}
+        });
+        return '<div class="race-history-item">'
+          +'<div><div class="race-name">R'+race.raceNum+' — '+esc(race.name)+'</div>'
+          +(top?'<div class="text-muted" style="font-size:.8rem">Top: '+esc(top.teamName)+' ('+topPts+' pts)</div>':'')+'</div>'
+          +'<button class="btn btn-secondary btn-sm" onclick="showRaceBreakdown(\''+race.id+'\')">Results</button></div>';
+      }).join('');
+}
+
+window.showRaceBreakdown = async function(raceId) {
+  const [race,teams] = await Promise.all([dbGet('races',raceId),dbGetAll('teams')]);
+  const M=['🥇','🥈','🥉'],TC=['top-1','top-2','top-3'];
+  const results = teams.map(team => {
+    const raceHasPoints = race.driverPoints && Object.values(race.driverPoints).some(v=>v>0);
+    if (team.createdAt && race.createdAt && race.createdAt < team.createdAt && raceHasPoints) return {team, pts:0};
+    const sel=team.selections||{};
+    const capId=(team.captains||{})[race.id]||null;
+    let p=0;
+    DIVISIONS.forEach(div=>{
+      if(sel[div]&&race.driverPoints){const base=race.driverPoints[sel[div]]||0;p+=(capId&&sel[div]===capId)?base*2:base;}
+    });
+    if(sel['CONSTRUCTOR']&&race.constructorPoints) p+=race.constructorPoints[sel['CONSTRUCTOR']]||0;
+    return {team,pts:p};
+  }).sort((a,b)=>b.pts-a.pts);
+  const html = '<p class="text-muted mb-3">Race: <strong>'+esc(race.name)+'</strong></p>'
+    + results.slice(0,3).map((r,i)=>'<div class="lb-row '+TC[i]+'">'
+        +'<div class="lb-rank">'+M[i]+'</div>'
+        +'<div><div class="lb-name">'+esc(r.team.teamName)+'</div><div class="lb-team">'+esc(r.team.playerName)+'</div></div>'
+        +'<div><span class="lb-pts">'+r.pts+'</span><span class="lb-pts-label">pts</span></div></div>').join('');
+  openModal('R'+race.raceNum+' — '+esc(race.name), html);
+};
+
+// ===== ADMIN =====
+function renderAdmin() {
+  if (!adminLoggedIn) {
+    document.getElementById('admin-login-section').style.display='block';
+    document.getElementById('admin-panel').style.display='none';
+  } else {
+    document.getElementById('admin-login-section').style.display='none';
+    document.getElementById('admin-panel').style.display='block';
+    document.getElementById('admin-indicator').style.display='block';
+    if (PROJECT_ID) { renderAdminDrivers(); renderAdminConstructors(); renderAdminTeams(); renderAdminSettings(); renderPointsInputs(); renderPastRacesList(); }
+  }
+}
+
+window.adminLogin = async function() {
+  const pw = document.getElementById('admin-pw-input').value;
+  const errEl = document.getElementById('admin-login-error');
+  let correct = false;
+  if (!PROJECT_ID) {
+    correct = pw === (localStorage.getItem('imsAdminPw')||'admin123');
+  } else {
+    const stored = await dbGet('settings','adminPassword');
+    correct = stored && stored.value===pw;
+  }
+  if (correct) { adminLoggedIn=true; errEl.style.display='none'; renderAdmin(); }
+  else { errEl.style.display='block'; errEl.textContent='Incorrect password.'; }
+};
+
+window.showAdminTab = function(tab, btn) {
+  document.querySelectorAll('#admin-panel .section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('#admin-panel .tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('admin-tab-'+tab).classList.add('active');
+  if(btn) btn.classList.add('active');
+};
+
+async function renderAdminDrivers() {
+  if (!PROJECT_ID) return;
+  const drivers = await dbGetAll('drivers');
+  let html='<table><thead><tr><th>Name</th><th>Division</th><th>Photo</th><th></th></tr></thead><tbody>';
+  if (!drivers.length) html+='<tr><td colspan="4" style="color:var(--muted);text-align:center;padding:20px">No drivers yet</td></tr>';
+  drivers.forEach(d => {
+    html+='<tr><td><strong>'+esc(d.name)+'</strong></td>'
+      +'<td><span class="tag tag-red">'+esc(d.division)+'</span></td>'
+      +'<td>'+(d.photo?'<img src="'+esc(d.photo)+'" style="height:30px;border-radius:50%" onerror="this.outerHTML=\'—\'">':'—')+'</td>'
+      +'<td><button class="btn btn-secondary btn-sm" onclick="deleteDriver(\''+d.id+'\')">Delete</button></td></tr>';
+  });
+  document.getElementById('drivers-table').innerHTML=html+'</tbody></table>';
+}
+
+window.addDriver = async function() {
+  const name=document.getElementById('new-driver-name').value.trim();
+  const div=document.getElementById('new-driver-div').value;
+  const photo=document.getElementById('new-driver-photo').value.trim();
+  const msg=document.getElementById('add-driver-msg');
+  if(!name){msg.innerHTML='<div class="alert alert-error">Name required.</div>';return;}
+  await dbAdd('drivers',{name,division:div,photo});
+  document.getElementById('new-driver-name').value='';
+  document.getElementById('new-driver-photo').value='';
+  msg.innerHTML='<div class="alert alert-success">✔ Driver added!</div>';
+  renderAdminDrivers(); renderPointsInputs();
+  setTimeout(()=>msg.innerHTML='',3000);
+};
+
+window.deleteDriver = function(id) {
+  customConfirm('Delete this driver?', async()=>{ await dbDelete('drivers',id); renderAdminDrivers(); renderPointsInputs(); });
+};
+
+window.importFromSheet = async function() {
+  const msg = document.getElementById('sheet-import-msg');
+  if (!PROJECT_ID) { msg.innerHTML='<div class="alert alert-error">Connect Firebase first.</div>'; return; }
+  msg.innerHTML='<div class="alert alert-info">⏳ Fetching drivers from Google Sheet…</div>';
+
+  let drivers;
+  try {
+    const res = await fetch('https://script.google.com/macros/s/AKfycbyDLw0qOulYGyBGi3hnoVjs986BTwXuNdL87uisJv_yjzDBnPy_QuJ1Sf2SIB8zuVY4/exec');
+    if (!res.ok) throw new Error('HTTP '+res.status);
+    const raw = await res.text();
+    console.log('Sheet response:', raw);
+    drivers = JSON.parse(raw);
+    console.log('Parsed drivers:', drivers);
+  } catch(e) {
+    msg.innerHTML='<div class="alert alert-error">❌ Could not fetch drivers. Error: '+e.message+'</div>';
+    return;
+  }
+
+  if (!drivers || !drivers.length) {
+    msg.innerHTML='<div class="alert alert-error">❌ No Season 6 drivers found. Raw: '+JSON.stringify(drivers).substring(0,200)+'</div>';
+    return;
+  }
+
+  msg.innerHTML='<div class="alert alert-info">⏳ Found '+drivers.length+' drivers — clearing old roster and importing…</div>';
+
+  // Delete all existing drivers
+  const existing = await dbGetAll('drivers');
+  await Promise.all(existing.map(d=>dbDelete('drivers',d.id)));
+
+  // Add new drivers
+  await Promise.all(drivers.map(d=>dbAdd('drivers',d)));
+
+  msg.innerHTML='<div class="alert alert-success">✔ Imported '+drivers.length+' Season 6 drivers successfully!</div>';
+  renderAdminDrivers();
+  renderPointsInputs();
+};
+
+async function renderAdminConstructors() {
+  if (!PROJECT_ID) return;
+  const constrs = await dbGetAll('constructors');
+  let html='<table><thead><tr><th>Name</th><th>Logo</th><th></th></tr></thead><tbody>';
+  if(!constrs.length) html+='<tr><td colspan="3" style="color:var(--muted);text-align:center;padding:20px">No constructors yet</td></tr>';
+  constrs.forEach(c=>{
+    html+='<tr><td><strong>'+esc(c.name)+'</strong></td>'
+      +'<td>'+(c.logo?'<img src="'+esc(c.logo)+'" style="height:30px;object-fit:contain" onerror="this.outerHTML=\'—\'">':'—')+'</td>'
+      +'<td><button class="btn btn-secondary btn-sm" onclick="deleteConstructor(\''+c.id+'\')">Delete</button></td></tr>';
+  });
+  document.getElementById('constructors-table').innerHTML=html+'</tbody></table>';
+}
+
+window.addConstructor = async function() {
+  const name=document.getElementById('new-constructor-name').value.trim();
+  const logo=document.getElementById('new-constructor-logo').value.trim();
+  const msg=document.getElementById('add-constructor-msg');
+  if(!name){msg.innerHTML='<div class="alert alert-error">Name required.</div>';return;}
+  await dbAdd('constructors',{name,logo});
+  document.getElementById('new-constructor-name').value='';
+  document.getElementById('new-constructor-logo').value='';
+  msg.innerHTML='<div class="alert alert-success">✔ Constructor added!</div>';
+  renderAdminConstructors(); renderPointsInputs();
+  setTimeout(()=>msg.innerHTML='',3000);
+};
+
+window.deleteConstructor = function(id) {
+  customConfirm('Delete this constructor?', async()=>{ await dbDelete('constructors',id); renderAdminConstructors(); renderPointsInputs(); });
+};
+
+async function renderPointsInputs() {
+  if(!PROJECT_ID) return;
+  const [drivers,constrs]=await Promise.all([dbGetAll('drivers'),dbGetAll('constructors')]);
+  let html='';
+  for (const div of DIVISIONS) {
+    const dd=drivers.filter(d=>d.division===div);
+    if(!dd.length) continue;
+    html+='<div style="margin-bottom:20px"><div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:900;color:var(--red);letter-spacing:2px;margin-bottom:10px">'+div+'</div><div class="form-row-3">';
+    dd.forEach(d=>{html+='<div class="form-group"><label>'+esc(d.name)+'</label><input type="number" id="pts-d-'+d.id+'" placeholder="0" min="0"></div>';});
+    html+='</div></div>';
+  }
+  if(constrs.length){
+    html+='<div style="margin-bottom:20px"><div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:900;color:var(--gold);letter-spacing:2px;margin-bottom:10px">Constructors</div><div class="form-row">';
+    constrs.forEach(c=>{html+='<div class="form-group"><label>'+esc(c.name)+'</label><input type="number" id="pts-c-'+c.id+'" placeholder="0" min="0"></div>';});
+    html+='</div></div>';
+  }
+  document.getElementById('points-inputs').innerHTML=html;
+}
+
+window.submitRaceResults = async function() {
+  const name=document.getElementById('race-name-input').value.trim();
+  const num=parseInt(document.getElementById('race-num-input').value)||0;
+  const msg=document.getElementById('points-msg');
+  if(!name||!num){msg.innerHTML='<div class="alert alert-error">Enter race name and number.</div>';return;}
+  const [drivers,constrs]=await Promise.all([dbGetAll('drivers'),dbGetAll('constructors')]);
+  const dp={},cp={};
+  drivers.forEach(d=>{const el=document.getElementById('pts-d-'+d.id);dp[d.id]=parseInt(el?.value)||0;});
+  constrs.forEach(c=>{const el=document.getElementById('pts-c-'+c.id);cp[c.id]=parseInt(el?.value)||0;});
+  await dbAdd('races',{name,raceNum:num,createdAt:Date.now(),driverPoints:dp,constructorPoints:cp});
+  document.getElementById('race-name-input').value='';
+  document.getElementById('race-num-input').value='';
+  drivers.forEach(d=>{const el=document.getElementById('pts-d-'+d.id);if(el)el.value='';});
+  constrs.forEach(c=>{const el=document.getElementById('pts-c-'+c.id);if(el)el.value='';});
+  msg.innerHTML='<div class="alert alert-success">✔ Race results saved!</div>';
+  renderPastRacesList();
+  setTimeout(()=>msg.innerHTML='',3000);
+};
+
+async function renderPastRacesList() {
+  const el = document.getElementById('past-races-list');
+  if (!el) return;
+  const races = await dbGetAll('races');
+  races.sort((a,b)=>(b.raceNum||0)-(a.raceNum||0));
+  if (!races.length) { el.innerHTML='<p class="text-muted">No races added yet.</p>'; return; }
+  el.innerHTML = races.map(r =>
+    '<div class="race-history-item">'
+    +'<div><span class="race-name">R'+r.raceNum+' — '+esc(r.name)+'</span></div>'
+    +'<button class="btn btn-secondary btn-sm" onclick="editRace(\''+r.id+'\')">Edit Points</button>'
+    +'</div>'
+  ).join('');
+}
+
+window._editingRaceId = null;
+
+window.editRace = async function(raceId) {
+  window._editingRaceId = raceId;
+  const [race, drivers, constrs] = await Promise.all([dbGet('races', raceId), dbGetAll('drivers'), dbGetAll('constructors')]);
+  document.getElementById('edit-race-label').textContent = 'R'+race.raceNum+' — '+race.name;
+  document.getElementById('edit-race-form').style.display = 'block';
+  document.getElementById('edit-race-form').scrollIntoView({behavior:'smooth', block:'start'});
+  let html = '';
+  for (const div of DIVISIONS) {
+    const dd = drivers.filter(d=>d.division===div);
+    if (!dd.length) continue;
+    html += '<div style="margin-bottom:20px"><div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:900;color:var(--red);letter-spacing:2px;margin-bottom:10px">'+div+'</div><div class="form-row-3">';
+    dd.forEach(d => {
+      const existing = race.driverPoints ? (race.driverPoints[d.id]||0) : 0;
+      html += '<div class="form-group"><label>'+esc(d.name)+'</label><input type="number" id="edit-pts-d-'+d.id+'" value="'+existing+'" min="0"></div>';
+    });
+    html += '</div></div>';
+  }
+  if (constrs.length) {
+    html += '<div style="margin-bottom:20px"><div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:900;color:var(--gold);letter-spacing:2px;margin-bottom:10px">Constructors</div><div class="form-row">';
+    constrs.forEach(c => {
+      const existing = race.constructorPoints ? (race.constructorPoints[c.id]||0) : 0;
+      html += '<div class="form-group"><label>'+esc(c.name)+'</label><input type="number" id="edit-pts-c-'+c.id+'" value="'+existing+'" min="0"></div>';
+    });
+    html += '</div></div>';
+  }
+  document.getElementById('edit-points-inputs').innerHTML = html;
+};
+
+window.saveEditedRace = async function() {
+  const msg = document.getElementById('edit-race-msg');
+  const [drivers, constrs] = await Promise.all([dbGetAll('drivers'), dbGetAll('constructors')]);
+  const dp={}, cp={};
+  drivers.forEach(d=>{const el=document.getElementById('edit-pts-d-'+d.id); dp[d.id]=parseInt(el?.value)||0;});
+  constrs.forEach(c=>{const el=document.getElementById('edit-pts-c-'+c.id); cp[c.id]=parseInt(el?.value)||0;});
+  await dbSet('races', window._editingRaceId, {driverPoints:dp, constructorPoints:cp});
+  msg.innerHTML='<div class="alert alert-success">✔ Race updated!</div>';
+  setTimeout(()=>{msg.innerHTML=''; cancelEditRace();},2000);
+};
+
+window.cancelEditRace = function() {
+  document.getElementById('edit-race-form').style.display='none';
+  document.getElementById('edit-points-inputs').innerHTML='';
+  window._editingRaceId = null;
+};
+
+window.deleteRace = function(raceId) {
+  customConfirm('Delete this race and all its points?', async()=>{
+    await dbDelete('races', raceId);
+    cancelEditRace();
+    renderPastRacesList();
+  });
+};
+
+async function renderAdminTeams() {
+  if(!PROJECT_ID) return;
+  const [teams,drivers,constrs,races]=await Promise.all([dbGetAll('teams'),dbGetAll('drivers'),dbGetAll('constructors'),dbGetAll('races')]);
+  let html='<table><thead><tr><th>Player</th><th>Team</th><th>Drivers</th><th>Constructor</th><th>Total Pts</th><th></th></tr></thead><tbody>';
+  if(!teams.length) html+='<tr><td colspan="6" style="color:var(--muted);text-align:center;padding:20px">No teams yet</td></tr>';
+  teams.forEach(team=>{
+    const sel=team.selections||{};
+    const dn=DIVISIONS.map(div=>{const d=drivers.find(d=>d.id===sel[div]);return d?'<span class="tag tag-red">'+esc(d.name.split(' ').pop())+'</span>':'—';}).join(' ');
+    const c=constrs.find(c=>c.id===sel['CONSTRUCTOR']);
+    let total=0;
+    races.forEach(r=>{
+      DIVISIONS.forEach(div=>{if(sel[div]&&r.driverPoints)total+=r.driverPoints[sel[div]]||0;});
+      if(sel['CONSTRUCTOR']&&r.constructorPoints)total+=r.constructorPoints[sel['CONSTRUCTOR']]||0;
+    });
+    html+='<tr><td>'+esc(team.playerName)+'</td><td><strong>'+esc(team.teamName)+'</strong></td>'
+      +'<td style="font-size:.8rem">'+dn+'</td><td>'+(c?esc(c.name):'—')+'</td>'
+      +'<td><strong style="color:var(--gold)">'+total+'</strong></td>'
+      +'<td><button class="btn btn-secondary btn-sm" onclick="adminDeleteTeam(\''+team.id+'\')">Delete</button></td></tr>';
+  });
+  document.getElementById('admin-teams-table').innerHTML=html+'</tbody></table>';
+}
+
+window.adminDeleteTeam = function(id) {
+  customConfirm('Delete this team?', async()=>{ await dbDelete('teams',id); renderAdminTeams(); });
+};
+
+async function renderAdminSettings() {
+  if(!PROJECT_ID) return;
+  const lockDoc=await dbGet('settings','teamsLocked');
+  const locked=lockDoc&&lockDoc.value;
+  const b=document.getElementById('edit-lock-status');
+  b.className='status-banner '+(locked?'locked':'open');
+  b.innerHTML=locked?'<span>🔒</span><span>Team editing is <strong>LOCKED</strong></span>':'<span>🟢</span><span>Team editing is <strong>OPEN</strong></span>';
+}
+
+window.setEditLock = async function(locked) {
+  await dbSet('settings','teamsLocked',{value:locked});
+  renderAdminSettings(); renderHome();
+};
+
+window.changeAdminPw = async function() {
+  const pw=document.getElementById('new-admin-pw').value.trim();
+  const msg=document.getElementById('pw-change-msg');
+  if(!pw||pw.length<4){msg.innerHTML='<div class="alert alert-error">Min 4 characters.</div>';return;}
+  await dbSet('settings','adminPassword',{value:pw});
+  localStorage.setItem('imsAdminPw',pw);
+  document.getElementById('new-admin-pw').value='';
+  msg.innerHTML='<div class="alert alert-success">✔ Password updated!</div>';
+  setTimeout(()=>msg.innerHTML='',3000);
+};
+
+window.resetLeague = function() {
+  customConfirm('Delete ALL teams and race results? Cannot be undone.', async()=>{
+    const [teams,races]=await Promise.all([dbGetAll('teams'),dbGetAll('races')]);
+    await Promise.all([...teams.map(t=>dbDelete('teams',t.id)),...races.map(r=>dbDelete('races',r.id))]);
+    currentUser=null; localStorage.removeItem('imsFantasyUser');
+    renderAdminTeams();
+  });
+};
+
+// ===== UTILS =====
+window.customConfirm = function(msg, onYes) {
+  const o=document.getElementById('confirm-overlay');
+  document.getElementById('confirm-msg').textContent=msg;
+  document.getElementById('confirm-yes-btn').onclick=()=>{ o.style.display='none'; onYes(); };
+  o.style.display='flex';
+};
+window.openModal = function(title, body) {
+  document.getElementById('modal-title').innerHTML=title+' <button class="modal-close" onclick="closeModal()">✕</button>';
+  document.getElementById('modal-body').innerHTML=body;
+  document.getElementById('modal-overlay').classList.remove('hidden');
+};
+window.closeModal = function() { document.getElementById('modal-overlay').classList.add('hidden'); };
+document.getElementById('modal-overlay').addEventListener('click', e=>{ if(e.target===e.currentTarget) closeModal(); });
+
+function showAlert(id, msg, type) {
+  const el=document.getElementById(id);
+  if(el) el.innerHTML='<div class="alert alert-'+type+'">'+msg+'</div>';
+}
+function esc(s) {
+  if(!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ===== START =====
+init();
+</script>
+</body>
+</html>
