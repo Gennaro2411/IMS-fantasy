@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ims-fantasy-v3';
+const CACHE_NAME = 'ims-fantasy-v4';
 const STATIC_ASSETS = [
   '/IMS-fantasy/',
   '/IMS-fantasy/index.html',
@@ -30,6 +30,14 @@ self.addEventListener('fetch', event => {
       event.request.url.includes('script.google.com') ||
       event.request.url.includes('discord.com') ||
       event.request.url.includes('player.twitch.tv')) {
+    return;
+  }
+
+  // Don't intercept audio/music files — streaming uses range requests, which
+  // break if piped through the cache, and big MP3s shouldn't fill the app cache.
+  if (event.request.destination === 'audio' ||
+      event.request.url.endsWith('.mp3') ||
+      event.request.url.includes('files.catbox.moe')) {
     return;
   }
 
