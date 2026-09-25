@@ -6060,7 +6060,9 @@ async function renderHomeStatCards(myTeam, allTeams) {
     const raceSel = (snap ? snap.selections : sel) || {};
     const raceHasPoints = race.driverPoints && Object.values(race.driverPoints).some(v=>v>0);
     if (!snap && myTeam.createdAt && race.createdAt && race.createdAt < myTeam.createdAt && raceHasPoints) return 0;
-    const captainId = (myTeam.captains || {})[race.id] || null;
+    // Prefer the current captains map; fall back to the "as market closed" snapshot so a race
+    // whose captain entry was lost still scores its ×2 (and ×3 with Triple Captain) bonus.
+    const captainId = (myTeam.captains || {})[race.id] || (snap && snap.captains && snap.captains[race.id]) || null;
     const isTripleCap = (myTeam.chips||{}).tripleCaptain && (myTeam.chips.tripleCaptain.raceId === race.id);
     const capMult = isTripleCap ? 3 : 2;
     let p = 0;
@@ -7432,7 +7434,9 @@ async function renderMyTeam() {
     const snapSel = snap ? snap.selections : sel;
     const raceHasPoints = race.driverPoints && Object.values(race.driverPoints).some(v=>v>0);
     if (!snap && myTeam.createdAt && race.createdAt && race.createdAt < myTeam.createdAt && raceHasPoints) return 0;
-    const capId = captains[race.id] || null;
+    // Fall back to the locked snapshot's captain if the current map lost this race's entry,
+    // so the ×2/×3 captain bonus is never silently dropped from historical points.
+    const capId = captains[race.id] || (snap && snap.captains && snap.captains[race.id]) || null;
     const racePtsChips = myTeam.chips || {};
     const isTripleCap = racePtsChips.tripleCaptain && racePtsChips.tripleCaptain.raceId === race.id;
     const capMultiplier = isTripleCap ? 3 : 2;
@@ -9826,7 +9830,9 @@ window.fantasyTeamRacePts = function(t, race, allRaces) {
   const sel = (snap ? snap.selections : t.selections) || {};
   const raceHasPoints = race.driverPoints && Object.values(race.driverPoints).some(v=>v>0);
   if (!snap && t.createdAt && race.createdAt && race.createdAt < t.createdAt && raceHasPoints) return 0;
-  const capId = (t.captains || {})[race.id] || null;
+  // Prefer the current captains map; fall back to the locked snapshot so a race whose captain
+  // entry was lost still scores its ×2 (and ×3 with Triple Captain) bonus on the leaderboard.
+  const capId = (t.captains || {})[race.id] || (snap && snap.captains && snap.captains[race.id]) || null;
   const isTripleCap = (t.chips||{}).tripleCaptain && (t.chips.tripleCaptain.raceId === race.id);
   const capMult = isTripleCap ? 3 : 2;
   // Reserve substitutions for this race (if a plan is available): { div: {absentId, reserveId, pts} }.
@@ -21201,7 +21207,7 @@ window.openPlayerProfile = async function(userId, big) {
       const raceSel = (snap ? snap.selections : t.selections) || {};
       const raceHasPoints = race.driverPoints && Object.values(race.driverPoints).some(v=>v>0);
       if (!snap && t.createdAt && race.createdAt && race.createdAt < t.createdAt && raceHasPoints) return 0;
-      const capId = (t.captains || {})[race.id] || null;
+      const capId = (t.captains || {})[race.id] || (snap && snap.captains && snap.captains[race.id]) || null;
       const isTripleCap = (t.chips||{}).tripleCaptain && (t.chips.tripleCaptain.raceId === race.id);
       const capMult = isTripleCap ? 3 : 2;
       let p = 0;
