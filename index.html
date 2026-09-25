@@ -6060,9 +6060,9 @@ async function renderHomeStatCards(myTeam, allTeams) {
     const raceSel = (snap ? snap.selections : sel) || {};
     const raceHasPoints = race.driverPoints && Object.values(race.driverPoints).some(v=>v>0);
     if (!snap && myTeam.createdAt && race.createdAt && race.createdAt < myTeam.createdAt && raceHasPoints) return 0;
-    // Prefer the current captains map; fall back to the "as market closed" snapshot so a race
-    // whose captain entry was lost still scores its ×2 (and ×3 with Triple Captain) bonus.
-    const captainId = (myTeam.captains || {})[race.id] || (snap && snap.captains && snap.captains[race.id]) || null;
+    // Live pick → locked snapshot → carry-forward → best season scorer, so a lost captain entry
+    // never silently drops the ×2 (or ×3 with Triple Captain) bonus.
+    const captainId = window.resolveRaceCaptain(myTeam, race, raceSel, snap, races);
     const isTripleCap = (myTeam.chips||{}).tripleCaptain && (myTeam.chips.tripleCaptain.raceId === race.id);
     const capMult = isTripleCap ? 3 : 2;
     let p = 0;
@@ -7434,9 +7434,9 @@ async function renderMyTeam() {
     const snapSel = snap ? snap.selections : sel;
     const raceHasPoints = race.driverPoints && Object.values(race.driverPoints).some(v=>v>0);
     if (!snap && myTeam.createdAt && race.createdAt && race.createdAt < myTeam.createdAt && raceHasPoints) return 0;
-    // Fall back to the locked snapshot's captain if the current map lost this race's entry,
-    // so the ×2/×3 captain bonus is never silently dropped from historical points.
-    const capId = captains[race.id] || (snap && snap.captains && snap.captains[race.id]) || null;
+    // Live pick → locked snapshot → carry-forward → best season scorer, so the ×2/×3 captain
+    // bonus is never silently dropped from historical points.
+    const capId = window.resolveRaceCaptain(myTeam, race, snapSel, snap, races);
     const racePtsChips = myTeam.chips || {};
     const isTripleCap = racePtsChips.tripleCaptain && racePtsChips.tripleCaptain.raceId === race.id;
     const capMultiplier = isTripleCap ? 3 : 2;
@@ -9821,6 +9821,44 @@ window.leagueReserveAppearances = function(races, drivers, limit) {
   return limit ? out.slice(0, limit) : out;
 };
 
+// Read-only captain resolver shared by every scoring path. Resolves who a team had captained
+// for a race, in priority order, so a lost captain entry never silently drops the ×2/×3 bonus:
+//   1) the team's current captains map (their live pick),
+//   2) the race's locked "as market closed" snapshot,
+//   3) carry-forward — the captain from the most recent prior race (live map or that race's
+//      snapshot) if that driver is still fielded here,
+//   4) their best season scorer among the drivers fielded this race.
+// Steps 3–4 mirror the admin "Fix Missing Captains" tool, but computed on the fly and without
+// writing anything, so races that never got a snapshot still score a captain bonus.
+window.resolveRaceCaptain = function(t, race, lineup, snap, allRaces) {
+  if (!t || !race) return null;
+  const live = (t.captains || {})[race.id];
+  if (live) return live;
+  const snapCap = snap && snap.captains && snap.captains[race.id];
+  if (snapCap) return snapCap;
+  const divs = (typeof DIVISIONS !== 'undefined' ? DIVISIONS : ['D0','D1','D2','D3','D4']);
+  const sel = lineup || {};
+  if (!allRaces || !allRaces.length) return null;
+  // 3) carry forward the most recent prior race's captain if still in this race's line-up
+  const prior = allRaces
+    .filter(r => r && r.id !== race.id && (r.raceNum || 0) < (race.raceNum || 0))
+    .sort((a, b) => (b.raceNum || 0) - (a.raceNum || 0));
+  for (const pr of prior) {
+    const pSnap = pr.teamSnapshots && pr.teamSnapshots[t.id];
+    const pCap = (t.captains || {})[pr.id] || (pSnap && pSnap.captains && pSnap.captains[pr.id]);
+    if (pCap && divs.some(d => sel[d] === pCap)) return pCap;
+  }
+  // 4) best season scorer among the drivers fielded this race
+  let bestId = null, bestPts = -1;
+  divs.forEach(d => {
+    const dId = sel[d];
+    if (!dId) return;
+    const total = allRaces.reduce((s, r) => s + ((r.driverPoints && r.driverPoints[dId]) || 0), 0);
+    if (total > bestPts) { bestPts = total; bestId = dId; }
+  });
+  return bestId;
+};
+
 window.fantasyTeamRacePts = function(t, race, allRaces) {
   if (!t || !race) return 0;
   // Admin can void a round's fantasy scoring (e.g. imported with bad data). Driver/constructor
@@ -9830,9 +9868,9 @@ window.fantasyTeamRacePts = function(t, race, allRaces) {
   const sel = (snap ? snap.selections : t.selections) || {};
   const raceHasPoints = race.driverPoints && Object.values(race.driverPoints).some(v=>v>0);
   if (!snap && t.createdAt && race.createdAt && race.createdAt < t.createdAt && raceHasPoints) return 0;
-  // Prefer the current captains map; fall back to the locked snapshot so a race whose captain
-  // entry was lost still scores its ×2 (and ×3 with Triple Captain) bonus on the leaderboard.
-  const capId = (t.captains || {})[race.id] || (snap && snap.captains && snap.captains[race.id]) || null;
+  // Live pick → locked snapshot → carry-forward → best season scorer, so a lost captain entry
+  // never silently drops the ×2 (or ×3 with Triple Captain) bonus on the leaderboard.
+  const capId = window.resolveRaceCaptain(t, race, sel, snap, allRaces);
   const isTripleCap = (t.chips||{}).tripleCaptain && (t.chips.tripleCaptain.raceId === race.id);
   const capMult = isTripleCap ? 3 : 2;
   // Reserve substitutions for this race (if a plan is available): { div: {absentId, reserveId, pts} }.
@@ -21207,7 +21245,7 @@ window.openPlayerProfile = async function(userId, big) {
       const raceSel = (snap ? snap.selections : t.selections) || {};
       const raceHasPoints = race.driverPoints && Object.values(race.driverPoints).some(v=>v>0);
       if (!snap && t.createdAt && race.createdAt && race.createdAt < t.createdAt && raceHasPoints) return 0;
-      const capId = (t.captains || {})[race.id] || (snap && snap.captains && snap.captains[race.id]) || null;
+      const capId = window.resolveRaceCaptain(t, race, raceSel, snap, allRaces);
       const isTripleCap = (t.chips||{}).tripleCaptain && (t.chips.tripleCaptain.raceId === race.id);
       const capMult = isTripleCap ? 3 : 2;
       let p = 0;
