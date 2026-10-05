@@ -2442,6 +2442,17 @@
         <div id="career-sugg" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"></div>
         <div id="career-out" style="margin-top:14px"></div>
       </div>
+      <div class="card" style="margin-top:14px">
+        <div class="card-title"><div class="dot"></div>📊 All-time driver stats</div>
+        <p class="text-muted" style="margin-bottom:10px">Every driver in the games pool with their all-time numbers (used by PaddockDle, the Grid and Higher or Lower). Edit any box and hit 💾 Save — edited values are highlighted in amber. Clear a box to go back to the calculated value.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+          <input id="ats-q" type="text" placeholder="Search driver…" style="max-width:220px" oninput="atsRender()">
+          <button class="btn btn-secondary btn-sm" onclick="atsLoad()">🔄 Load / refresh</button>
+          <button class="btn btn-primary btn-sm" onclick="atsSave()">💾 Save changes</button>
+          <span id="ats-msg" class="text-muted" style="font-size:.8rem"></span>
+        </div>
+        <div id="ats-out" style="overflow-x:auto"></div>
+      </div>
     </div>
     <div id="admin-tab-settings" class="section">
       <div class="card">
@@ -26354,6 +26365,11 @@ async function _wdLoad() {
       pool.push({ id: 'db:' + k, name: s.n, res: true, dbOnly: true, dv: ld, team: 'Reserve', div: '', nat: _natFix(s.n, s.nat || ''), b: s.b || 0,
         p: bs ? bs[0] + Math.round(s.p8 || 0) : Math.round(s.p || 0), w: bs ? bs[1] + (s.w8 || 0) : (s.w || 0), st: s.st0 || 0, pd: (bs ? bs[2] : 0) + (s.pd8 || 0),
         th: Object.assign({}, s.th || {}), dh: Object.assign({}, s.dh || {}), fs: _wdFirstSeason(s), pl: _poleFix(s.n, s.pl || 0), ch: DRIVER_CHAMPS.filter(([, n]) => _wdNorm(n) === k).length, photo }); }); }
+  // Admin stat overrides (settings/statOverrides, keyed by normalised name) — applied last so they win everywhere.
+  { const so = await dbGet('settings', 'statOverrides').catch(() => null); window._statOv = (so && so.value) || {};
+    pool.forEach(p => { p._orig = { p: p.p, w: p.w, pd: p.pd, pl: p.pl, st: p.st, b: p.b, ch: p.ch, nat: p.nat };
+      const o = window._statOv[_wdNorm(p.name)]; if (o) Object.entries(o).forEach(([f, v]) => { if (v !== '' && v != null) p[f] = f === 'nat' ? String(v) : Number(v); }); });
+    window._wdFullPool = pool; }
   // PaddockDle and Grid: market drivers + reserves with 25+ race starts.
   const P = pool.filter(p => !p.res || (p.st || 0) >= 25 || p.ch >= 1 || p.b >= 1); // reserves: 25+ starts, or any champion / BOTT winner
   return { cfg: window._wordleCfg, pool: P, gridPool: P, hasData: !!window._wordleData };
@@ -26708,6 +26724,28 @@ window.careerSuggest = function(v) {
   box.innerHTML = window._careerNames.filter(n => searchFold(n).includes(k)).slice(0, 10)
     .map(n => `<button class="btn btn-secondary btn-sm" onclick="document.getElementById('career-q').value=this.dataset.n;careerLookup(this.dataset.n)" data-n="${esc(n)}">${esc(n)}</button>`).join('');
 };
+// ===== ADMIN: ALL-TIME DRIVER STATS EDITOR =====
+const ATS_F = [['p','Pts'],['w','Wins'],['pd','Pods'],['pl','Poles'],['st','Starts'],['b','BOTTs'],['ch','Titles'],['nat','Nat']];
+let _atsSort = 'p', _atsDir = -1, _atsEdits = {};
+window.atsLoad = async function() { const out = document.getElementById('ats-out'); if (out) out.innerHTML = '<p class="text-muted">Loading…</p>';
+  dbInvalidate && dbInvalidate('settings'); await _wdLoad(); _atsEdits = JSON.parse(JSON.stringify(window._statOv || {})); atsRender(); };
+window.atsSort = function(f) { if (_atsSort === f) _atsDir *= -1; else { _atsSort = f; _atsDir = f === 'name' || f === 'nat' ? 1 : -1; } atsRender(); };
+window.atsEdit = function(el) { const k = el.dataset.k, f = el.dataset.f, v = el.value.trim(), o = (window._wdFullPool || []).find(p => _wdNorm(p.name) === k);
+  const E = _atsEdits[k] = _atsEdits[k] || {}; if (v === '' || (o && String(o._orig[f] ?? '') === v)) delete E[f]; else E[f] = f === 'nat' ? v : Number(v);
+  if (!Object.keys(E).length) delete _atsEdits[k]; el.style.background = E[f] != null ? 'rgba(255,170,0,.25)' : '';
+  document.getElementById('ats-msg').textContent = 'Unsaved changes'; };
+window.atsRender = function() { const out = document.getElementById('ats-out'); if (!out) return; const pool = window._wdFullPool; if (!pool) { out.innerHTML = '<p class="text-muted">Press 🔄 Load.</p>'; return; }
+  const q = searchFold(document.getElementById('ats-q').value || '');
+  const val = (p, f) => { const e = (_atsEdits[_wdNorm(p.name)] || {})[f]; return e != null ? e : (p._orig || p)[f]; };
+  const rows = pool.filter(p => !q || searchFold(p.name).includes(q)).sort((a, b) => { const x = _atsSort === 'name' ? a.name.toLowerCase() : val(a, _atsSort), y = _atsSort === 'name' ? b.name.toLowerCase() : val(b, _atsSort);
+    return (x > y ? 1 : x < y ? -1 : 0) * _atsDir || a.name.localeCompare(b.name); });
+  const th = (f, l) => `<th style="cursor:pointer;padding:6px;white-space:nowrap;text-align:left" onclick="atsSort('${f}')">${l}${_atsSort === f ? (_atsDir > 0 ? ' ▲' : ' ▼') : ''}</th>`;
+  out.innerHTML = `<div class="text-muted" style="font-size:.75rem;margin-bottom:6px">${rows.length} drivers</div><table style="width:100%;border-collapse:collapse;font-size:.82rem"><thead><tr>${th('name', 'Driver')}${ATS_F.map(([f, l]) => th(f, l)).join('')}</tr></thead><tbody>${rows.map(p => { const k = _wdNorm(p.name), E = _atsEdits[k] || {};
+    return `<tr style="border-top:1px solid var(--border)"><td style="padding:4px 6px;white-space:nowrap">${esc(p.name)}${p.res ? ' <span class="text-muted" style="font-size:.7rem">' + (p.dbOnly ? 'db' : 'res') + '</span>' : ''}</td>${ATS_F.map(([f]) => `<td style="padding:2px"><input data-k="${esc(k)}" data-f="${f}" ${f === 'nat' ? 'type="text" style="width:90px' : 'type="number" min="0" style="width:62px'};padding:3px 5px${E[f] != null ? ';background:rgba(255,170,0,.25)' : ''}" value="${esc(String(val(p, f) ?? ''))}" placeholder="${esc(String((p._orig || {})[f] ?? ''))}" onchange="atsEdit(this)"></td>`).join('')}</tr>`; }).join('')}</tbody></table>`; };
+window.atsSave = async function() { const m = document.getElementById('ats-msg'); m.textContent = 'Saving…';
+  try { await dbSet('settings', 'statOverrides', { value: _atsEdits }); window._statOv = JSON.parse(JSON.stringify(_atsEdits));
+    (window._wdFullPool || []).forEach(p => { Object.assign(p, p._orig); const o = _atsEdits[_wdNorm(p.name)]; if (o) Object.assign(p, o); });
+    m.textContent = '✅ Saved — ' + Object.keys(_atsEdits).length + ' driver(s) with edits'; } catch (e) { m.textContent = '❌ ' + e.message; } };
 window.careerLookup = async function(name) {
   const out = document.getElementById('career-out'); if (!out) return;
   if (typeof _imsDb === 'undefined' || !_imsDb) { out.innerHTML = '<div class="alert alert-error">Load the .db first (Add Points → 📂 Load Database).</div>'; return; }
