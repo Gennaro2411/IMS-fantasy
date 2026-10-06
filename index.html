@@ -17008,9 +17008,9 @@ window.openDriverModal = async function(driverId) {
     const cardBd = `1px solid ${dmAccent}33`;
     const statGrid = [
       { label: 'Races', value: s.raceCount },
+      { label: 'Avg quali', value: s.avgQuali != null ? 'P' + s.avgQuali.toFixed(1) : '–' },
       { label: 'Avg / race', value: s.avgPts.toFixed(1) },
       { label: 'Scoring %', value: s.scoringRate + '%' },
-      { label: 'Avg quali', value: s.avgQuali != null ? 'P' + s.avgQuali.toFixed(1) : '–' },
     ].map(t => `<div class="dm-grid" style="background:${cardBg};border:${cardBd};border-radius:8px;padding:9px 10px;text-align:center">${gl}
       <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.5rem;line-height:1;color:var(--text)">${t.value}</div>
       <div style="font-size:.58rem;font-weight:700;letter-spacing:.5px;color:var(--muted);margin-top:3px;text-transform:uppercase">${t.label}</div>
