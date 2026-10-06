@@ -16916,6 +16916,7 @@ window.openDriverModal = async function(driverId) {
   // Build the summary numbers for one division (dv), or the whole season when dv is null.
   function summaryStatsFor(dv) {
     let rc = 0, sc = 0, tot = 0, best = 0, bestNm = '', wins = 0, pod = 0, poles = 0, fls = 0;
+    const _qk = String(driver.name || '').toLowerCase().replace(/[^a-z0-9]/g, ''), qPosArr = [];
     const scores = [];
     completedRaces.forEach(r => {
       // Collect the (division, points) entries to attribute to this round for the current view.
@@ -16939,6 +16940,7 @@ window.openDriverModal = async function(driverId) {
       }
       entries.forEach(({ div: eDiv, pts }) => {
         rc++; scores.push(pts); tot += pts; if (pts > 0) sc++;
+        { const q = r.raceGridByDiv && eDiv && r.raceGridByDiv[eDiv] ? Number(r.raceGridByDiv[eDiv][_qk]) : 0; if (q > 0) qPosArr.push(q); }
         if (pts > best) { best = pts; bestNm = r.name; }
         // win/podium within this specific division
         if (r.driverPointsByDivision && eDiv) {
@@ -16966,7 +16968,8 @@ window.openDriverModal = async function(driverId) {
       raceCount: rc, scoringRate: rc ? Math.round((sc/rc)*100) : 0,
       avgPts: scores.length ? (scores.reduce((a,b)=>a+b,0)/scores.length) : 0,
       totalPts: tot, bestScore: best, bestRaceName: bestNm,
-      wins, podiums: pod, poles, fls
+      wins, podiums: pod, poles, fls,
+      avgQuali: qPosArr.length ? qPosArr.reduce((a, b) => a + b, 0) / qPosArr.length : null
     };
   }
 
@@ -17007,6 +17010,7 @@ window.openDriverModal = async function(driverId) {
       { label: 'Races', value: s.raceCount },
       { label: 'Avg / race', value: s.avgPts.toFixed(1) },
       { label: 'Scoring %', value: s.scoringRate + '%' },
+      { label: 'Avg quali', value: s.avgQuali != null ? 'P' + s.avgQuali.toFixed(1) : '–' },
     ].map(t => `<div class="dm-grid" style="background:${cardBg};border:${cardBd};border-radius:8px;padding:9px 10px;text-align:center">${gl}
       <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.5rem;line-height:1;color:var(--text)">${t.value}</div>
       <div style="font-size:.58rem;font-weight:700;letter-spacing:.5px;color:var(--muted);margin-top:3px;text-transform:uppercase">${t.label}</div>
@@ -17062,7 +17066,7 @@ window.openDriverModal = async function(driverId) {
     // ELO is a single carry-across rating; only the baseline it's compared against is per-division.
     const eloBaseline = viewDiv ? (DIVISION_BASELINES[viewDiv] || 1500) : baseline;
     return `
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">${statGrid}</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">${statGrid}</div>
       <div style="display:flex;gap:8px">${shelf}</div>${(() => { try { return _sprintStatsHtml(viewDiv); } catch(e) { console.warn('sprint stats', e); return ''; } })()}
       <div style="height:6px;margin-top:7px;border-radius:0 0 4px 4px;background:linear-gradient(180deg,#5a3d24,#3a2716);box-shadow:inset 0 2px 3px rgba(0,0,0,0.4)"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px">
