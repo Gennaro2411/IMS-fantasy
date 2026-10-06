@@ -27245,11 +27245,23 @@ async function _hlLeaderboardHtml() {
   const day = _dailyKey(); const rows = (await dbGetAll('wordleScores', { fresh: true }).catch(() => [])).filter(r => r && r.uid && (r.hlDays || 0) > 0)
     .sort((a, b) => (a.hlBestTen || 9e9) - (b.hlBestTen || 9e9) || (b.hlCorrect || 0) - (a.hlCorrect || 0) || (b.hlTens || 0) - (a.hlTens || 0));
   const me = _wdMe(), mi = rows.findIndex(r => r.uid === me.uid), sec = (ms) => ms ? (ms / 1000).toFixed(1) + 's' : '—';
-  const line = (r, i) => { const k = r.hlDayPlain === _wdDayKey() ? (r.hlStreak || 0) : 0, today = r.hlDay === day;
-    return `<div class="wd-lb-row${r.uid === me.uid ? ' me' : ''}"><span class="wd-lb-pos">${i + 1}</span><span class="wd-lb-name">${esc(r.name || 'Player')}</span><small style="color:var(--muted);margin-right:8px;white-space:nowrap">📅 ${today ? `<b style="color:var(--text)">${r.hlDayScore}/${HL_N}</b> in ${sec(r.hlDayTime)}` : '—'} · 🔢 ${r.hlDays || 0} · <span style="color:${k ? '#fb923c' : 'inherit'}">🔥 ${k}</span> · 💯 ${r.hlTens || 0} · ✅ ${r.hlCorrect || 0}</small><b title="Fastest 10/10">⚡ ${sec(r.hlBestTen)}</b></div>`; };
-  return `<div class="wd-lb" style="margin-top:18px"><div class="wd-lb-h"><span>🏆 All-time leaderboard</span><small>Fastest 10/10, then most right</small></div>
-    <div style="font-size:.7rem;color:var(--muted);margin:2px 0 6px">⚡ fastest 10/10 · 📅 today's score &amp; time · 🔢 dailies played · 🔥 streak · 💯 perfect 10/10s · ✅ total correct</div>
-    ${rows.length ? rows.slice(0, 10).map(line).join('') + (mi >= 10 ? '<div class="wd-lb-gap">…</div>' + line(rows[mi], mi) : '') : '<p class="text-muted" style="margin:6px 0 0">Nobody has played yet.</p>'}</div>`;
+  const G = 'display:grid;grid-template-columns:26px minmax(90px,1fr) 74px 64px 34px 34px 42px 48px;gap:4px;align-items:center;min-width:430px';
+  const C = 'text-align:center;white-space:nowrap';
+  const head = `<div style="${G};font-size:.62rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:6px 8px;border-bottom:1px solid var(--border)">
+    <span>#</span><span>Player</span><span style="${C}">Today</span><span style="${C}">Best 10/10</span><span style="${C}" title="Perfect 10/10 rounds">💯</span><span style="${C}" title="Current streak">🔥</span><span style="${C}">Played</span><span style="${C}">Correct</span></div>`;
+  const line = (r, i) => { const k = r.hlDayPlain === _wdDayKey() ? (r.hlStreak || 0) : 0, today = r.hlDay === day, mine = r.uid === me.uid, medal = ['🥇', '🥈', '🥉'][i];
+    return `<div style="${G};padding:7px 8px;font-size:.82rem;border-bottom:1px solid var(--border);${mine ? 'background:rgba(59,130,246,.12);border-radius:8px' : ''}">
+      <span style="font-weight:700;color:var(--muted)">${medal || i + 1}</span>
+      <span style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.name || 'Player')}</span>
+      <span style="${C};line-height:1.15">${today ? `<b>${r.hlDayScore}/${HL_N}</b><br><small style="color:var(--muted);font-size:.68rem">${sec(r.hlDayTime)}</small>` : '<span style="color:var(--muted)">—</span>'}</span>
+      <span style="${C};font-weight:700;color:${r.hlBestTen ? '#facc15' : 'var(--muted)'}">${sec(r.hlBestTen)}</span>
+      <span style="${C}">${r.hlTens || 0}</span>
+      <span style="${C};color:${k ? '#fb923c' : 'var(--muted)'};font-weight:${k ? 700 : 400}">${k}</span>
+      <span style="${C}">${r.hlDays || 0}</span>
+      <span style="${C}">${r.hlCorrect || 0}</span></div>`; };
+  return `<div class="wd-lb" style="margin-top:18px"><div class="wd-lb-h"><span>🏆 All-time leaderboard</span><small>Ranked by fastest 10/10, then total correct</small></div>
+    <div style="overflow-x:auto;margin-top:6px">${rows.length ? head + rows.slice(0, 10).map(line).join('') + (mi >= 10 ? '<div style="text-align:center;color:var(--muted);padding:2px">⋯</div>' + line(rows[mi], mi) : '') : '<p class="text-muted" style="margin:6px 0 0">Nobody has played yet.</p>'}</div>
+    <div style="font-size:.66rem;color:var(--muted);margin-top:8px;line-height:1.5"><b>Today</b> score &amp; time taken · <b>Best 10/10</b> fastest perfect round · 💯 perfect rounds · 🔥 daily streak · <b>Played</b> dailies played · <b>Correct</b> total right answers</div></div>`;
 }
 const _hlEndHtml = (st, mode) => { const sc = st.ans.filter(Boolean).length, good = sc >= 8;
   const chip = (on, txt) => `<div class="hl-chip${on ? ' on' : ''}"><span class="imc"></span><b>+25</b><small>${txt}</small>${on ? '<i>✓</i>' : '<i>🔒</i>'}</div>`;
