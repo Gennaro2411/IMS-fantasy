@@ -27848,8 +27848,17 @@ async function _gdBody(pool, top) {
       } finally { window._gdTimingOut = 0; window._grSel = null; renderGames(); } } }, 250);
   const head = (c) => `<div class="gr-h"><div class="gr-ico">${c.icon}</div><b>${esc(c.label)}</b></div>`;
   let grid = `<div class="gr-grid"><div class="gr-h gr-corner"><img src="icons/icon-192.png?v=3" alt=""><b>DUEL</b><small>R${round}</small></div>${K.map(head).join('')}`;
+  // Duel over: fill every empty cell with a valid answer (all different where possible), shown in red.
+  const reveal = {};
+  if (done) { const used = new Set(Object.values(cells).map(c => c.d)), empty = [];
+    R.forEach((r, ri) => K.forEach((c, ci) => { const key = ri + ',' + ci; if (!cells[key]) empty.push({ key, ids: pool.filter(p => !used.has(p.id) && r.test(p) && c.test(p)).map(p => p.id) }); }));
+    const owner = {}; const tryCell = (i, seen) => { for (const id of empty[i].ids) { if (seen.has(id)) continue; seen.add(id); if (owner[id] == null || tryCell(owner[id], seen)) { owner[id] = i; return true; } } return false; };
+    empty.forEach((_, i) => tryCell(i, new Set())); Object.entries(owner).forEach(([id, i]) => { reveal[empty[i].key] = id; });
+    R.forEach((r, ri) => K.forEach((c, ci) => { const key = ri + ',' + ci; if (cells[key] || reveal[key]) return; const p = pool.find(p => r.test(p) && c.test(p)); if (p) reveal[key] = p.id; })); }
   R.forEach((r, ri) => { grid += head(r); K.forEach((c, ci) => { const key = ri + ',' + ci, cl = cells[key], d = cl && pool.find(p => p.id === cl.d);
-    grid += cl ? `<div class="gr-cell gd-${cl.by}${line.includes(ri * 3 + ci) ? ' gd-win' : ''}">${d ? _wdAv(d, 38) : ''}<span>${esc(d ? d.name : '?')}</span></div>`
+    const rv = !cl && reveal[key] && pool.find(p => p.id === reveal[key]);
+    grid += rv ? `<div class="gr-cell rev" title="A correct answer nobody got">${_wdAv(rv, 38)}<span>${esc(rv.name)}</span></div>`
+      : cl ? `<div class="gr-cell gd-${cl.by}${line.includes(ri * 3 + ci) ? ' gd-win' : ''}">${d ? _wdAv(d, 38) : ''}<span>${esc(d ? d.name : '?')}</span></div>`
       : `<button class="gr-cell${sel === key ? ' sel' : ''}" data-key="${key}" ${!myTurn ? 'disabled' : ''} onclick="gridPick('${key}')"><span class="gr-plus">+</span><small>${myTurn ? 'Choose' : ''}</small></button>`; }); });
   grid += '</div>';
   const lm = lob.lastMove || {}; const lmTxt = lm.timeout ? `${esc(lm.by === role ? 'You' : opP.name)} ran out of time ⏱` : lm.at ? `${esc((lm.by === role ? 'You' : opP.name))} ${lm.ok ? 'claimed' : 'missed'} ${lm.key ? 'a cell' : ''} with <b>${esc(lm.name || '?')}</b>${lm.ok ? ' ✅' : ' ❌'}` : '';
