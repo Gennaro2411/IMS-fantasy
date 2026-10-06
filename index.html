@@ -1989,6 +1989,16 @@
     .hl-btn:hover:not([disabled]){filter:brightness(1.1);transform:translateY(-2px)}.hl-btn:active:not([disabled]){transform:scale(.97)}.hl-btn[disabled]{opacity:.45;cursor:default}
     .hl-over{text-align:center;margin-top:16px;padding:18px;border-radius:18px;background:linear-gradient(135deg,rgba(239,68,68,0.14),rgba(255,255,255,0.02) 65%);border:1px solid rgba(248,113,113,0.35);animation:wdFlip .5s both}
     .hl-over b:first-child{font-family:'Barlow Condensed',sans-serif;font-size:1.4rem;letter-spacing:1px}.hl-final{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:3rem;color:#fb923c;line-height:1;margin:6px 0 12px}.hl-final small{display:block;font-size:.8rem;color:var(--muted);letter-spacing:2px}
+    .hlb-row{display:grid;grid-template-columns:26px minmax(0,1fr) 70px 70px 34px 34px 46px 50px;gap:4px;align-items:center;padding:7px 8px;font-size:.82rem;border-bottom:1px solid var(--border)}
+    .hlb-row.me{background:rgba(59,130,246,.12);border-radius:8px}.hlb-head{font-size:.62rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:6px 8px}
+    .hlb-row .c{text-align:center;white-space:nowrap;line-height:1.15}.hlb-row .c small{display:block;color:var(--muted);font-size:.68rem}.hlb-row .pos{font-weight:700;color:var(--muted)}
+    .hlb-row .nm{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.hlb-row .nm .m{display:none}.hlb-row .best{font-weight:700;color:var(--muted)}.hlb-row .best.on{color:#facc15}.hlb-row .mu{color:var(--muted)}
+    .hlb-key{font-size:.66rem;color:var(--muted);margin-top:8px;line-height:1.5}
+    @media (max-width:640px){.hlb-row{grid-template-columns:24px minmax(0,1fr) 58px 62px;padding:8px 6px}.hlb-row .x{display:none}
+      .hlb-row .nm .m{display:block;font-weight:400;font-size:.66rem;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis}
+      .hl-progress{gap:3px}.hl-progress span{width:auto;flex:1;max-width:22px}.hl-sub,.hl-stat{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      .hl-q{font-size:.88rem;padding:0 4px}.hl-btns{gap:8px}.hl-over{padding:14px 10px}.hl-end-actions{gap:8px}}
+    @media (max-width:380px){.hl-card .hl-av{width:60px;height:60px}.hl-card .hl-av img,.hl-card .hl-av>span{width:56px!important;height:56px!important}.hl-val{font-size:1.7rem}.hl-name{font-size:.9rem}.hl-mid{width:34px;height:34px;font-size:.85rem}}
     @media (max-width:640px){.hl-arena{gap:6px;padding:16px 8px}.hl-card .hl-av{width:72px;height:72px}.hl-card .hl-av img,.hl-card .hl-av>span{width:66px!important;height:66px!important}.hl-name{font-size:1rem}.hl-val{font-size:2rem}.hl-mid{width:40px;height:40px;font-size:1rem}.hl-btn{padding:14px;font-size:1.1rem}}
     .wd-h2h{display:flex;flex-direction:column;align-items:center;margin:6px 0}.wd-h2h b{font-family:"Barlow Condensed",sans-serif;font-size:1.8rem;font-weight:900;color:#fbbf24;letter-spacing:2px}.wd-h2h small{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
     .wd-lb-row{display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:11px;margin-top:5px;background:rgba(255,255,255,0.025)}
@@ -27245,23 +27255,20 @@ async function _hlLeaderboardHtml() {
   const day = _dailyKey(); const rows = (await dbGetAll('wordleScores', { fresh: true }).catch(() => [])).filter(r => r && r.uid && (r.hlDays || 0) > 0)
     .sort((a, b) => (a.hlBestTen || 9e9) - (b.hlBestTen || 9e9) || (b.hlCorrect || 0) - (a.hlCorrect || 0) || (b.hlTens || 0) - (a.hlTens || 0));
   const me = _wdMe(), mi = rows.findIndex(r => r.uid === me.uid), sec = (ms) => ms ? (ms / 1000).toFixed(1) + 's' : '—';
-  const G = 'display:grid;grid-template-columns:26px minmax(90px,1fr) 74px 64px 34px 34px 42px 48px;gap:4px;align-items:center;min-width:430px';
-  const C = 'text-align:center;white-space:nowrap';
-  const head = `<div style="${G};font-size:.62rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:6px 8px;border-bottom:1px solid var(--border)">
-    <span>#</span><span>Player</span><span style="${C}">Today</span><span style="${C}">Best 10/10</span><span style="${C}" title="Perfect 10/10 rounds">💯</span><span style="${C}" title="Current streak">🔥</span><span style="${C}">Played</span><span style="${C}">Correct</span></div>`;
+  const head = `<div class="hlb-row hlb-head"><span>#</span><span>Player</span><span class="c">Today</span><span class="c">Best 10/10</span><span class="c x" title="Perfect 10/10 rounds">💯</span><span class="c x" title="Current streak">🔥</span><span class="c x">Played</span><span class="c x">Correct</span></div>`;
   const line = (r, i) => { const k = r.hlDayPlain === _wdDayKey() ? (r.hlStreak || 0) : 0, today = r.hlDay === day, mine = r.uid === me.uid, medal = ['🥇', '🥈', '🥉'][i];
-    return `<div style="${G};padding:7px 8px;font-size:.82rem;border-bottom:1px solid var(--border);${mine ? 'background:rgba(59,130,246,.12);border-radius:8px' : ''}">
-      <span style="font-weight:700;color:var(--muted)">${medal || i + 1}</span>
-      <span style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.name || 'Player')}</span>
-      <span style="${C};line-height:1.15">${today ? `<b>${r.hlDayScore}/${HL_N}</b><br><small style="color:var(--muted);font-size:.68rem">${sec(r.hlDayTime)}</small>` : '<span style="color:var(--muted)">—</span>'}</span>
-      <span style="${C};font-weight:700;color:${r.hlBestTen ? '#facc15' : 'var(--muted)'}">${sec(r.hlBestTen)}</span>
-      <span style="${C}">${r.hlTens || 0}</span>
-      <span style="${C};color:${k ? '#fb923c' : 'var(--muted)'};font-weight:${k ? 700 : 400}">${k}</span>
-      <span style="${C}">${r.hlDays || 0}</span>
-      <span style="${C}">${r.hlCorrect || 0}</span></div>`; };
-  return `<div class="wd-lb" style="margin-top:18px"><div class="wd-lb-h"><span>🏆 All-time leaderboard</span><small>Ranked by fastest 10/10, then total correct</small></div>
-    <div style="overflow-x:auto;margin-top:6px">${rows.length ? head + rows.slice(0, 10).map(line).join('') + (mi >= 10 ? '<div style="text-align:center;color:var(--muted);padding:2px">⋯</div>' + line(rows[mi], mi) : '') : '<p class="text-muted" style="margin:6px 0 0">Nobody has played yet.</p>'}</div>
-    <div style="font-size:.66rem;color:var(--muted);margin-top:8px;line-height:1.5"><b>Today</b> score &amp; time taken · <b>Best 10/10</b> fastest perfect round · 💯 perfect rounds · 🔥 daily streak · <b>Played</b> dailies played · <b>Correct</b> total right answers</div></div>`;
+    return `<div class="hlb-row${mine ? ' me' : ''}">
+      <span class="pos">${medal || i + 1}</span>
+      <span class="nm">${esc(r.name || 'Player')}<small class="m">💯 ${r.hlTens || 0} · <span style="color:${k ? '#fb923c' : 'inherit'}">🔥 ${k}</span> · ${r.hlDays || 0} played · ${r.hlCorrect || 0} correct</small></span>
+      <span class="c">${today ? `<b>${r.hlDayScore}/${HL_N}</b><small>${sec(r.hlDayTime)}</small>` : '<span class="mu">—</span>'}</span>
+      <span class="c best${r.hlBestTen ? ' on' : ''}">${sec(r.hlBestTen)}</span>
+      <span class="c x">${r.hlTens || 0}</span>
+      <span class="c x" style="color:${k ? '#fb923c' : 'var(--muted)'};font-weight:${k ? 700 : 400}">${k}</span>
+      <span class="c x">${r.hlDays || 0}</span>
+      <span class="c x">${r.hlCorrect || 0}</span></div>`; };
+  return `<div class="wd-lb" style="margin-top:18px"><div class="wd-lb-h"><span>🏆 All-time leaderboard</span><small>Fastest 10/10, then total correct</small></div>
+    <div style="margin-top:6px">${rows.length ? head + rows.slice(0, 10).map(line).join('') + (mi >= 10 ? '<div style="text-align:center;color:var(--muted);padding:2px">⋯</div>' + line(rows[mi], mi) : '') : '<p class="text-muted" style="margin:6px 0 0">Nobody has played yet.</p>'}</div>
+    <div class="hlb-key"><b>Today</b> score &amp; time taken · <b>Best 10/10</b> fastest perfect round · 💯 perfect rounds · 🔥 daily streak · <b>Played</b> dailies played · <b>Correct</b> total right answers</div></div>`;
 }
 const _hlEndHtml = (st, mode) => { const sc = st.ans.filter(Boolean).length, good = sc >= 8;
   const chip = (on, txt) => `<div class="hl-chip${on ? ' on' : ''}"><span class="imc"></span><b>+25</b><small>${txt}</small>${on ? '<i>✓</i>' : '<i>🔒</i>'}</div>`;
