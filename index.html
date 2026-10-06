@@ -3149,12 +3149,19 @@ function objToFsFields(obj) {
   return fields;
 }
 
+window._now = () => Date.now() + (window._srvSkew || 0);
+// One tiny write to learn this device's clock offset from the server (once per page load) before a duel starts.
+window._clockSync = async () => { if (window._srvSkew != null) return;
+  try { const me = (typeof _wdMe === 'function') ? _wdMe() : null; if (!me || !me.uid) return; await dbSet('wordleScores', _wdScoreId(me.uid), { clockAt: Date.now() }); } catch (e) {} };
 async function fsRequest(method, url, body) {
   const opts = {method, headers:{'Content-Type':'application/json'}};
   if (body) opts.body = JSON.stringify(body);
-  const res = await fetch(url, opts);
+  const _t0 = Date.now(); const res = await fetch(url, opts);
   if (res.status === 204) return null;
   const data = await res.json();
+  // Server clock: every write returns Firestore's own updateTime. Track how far this device's clock is
+  // off, so live duels (turn timers, countdowns, lobby heartbeats) agree across phones/PCs whose clocks differ.
+  try { if (method === 'PATCH' && data && data.updateTime && res.ok) { const sv = Date.parse(data.updateTime), mid = (_t0 + Date.now()) / 2; if (!isNaN(sv)) window._srvSkew = Math.round(sv - mid); } } catch (e) {}
   if (!res.ok) throw Object.assign(new Error(data.error?.message||'HTTP '+res.status), {code:data.error?.status, status:res.status});
   return data;
 }
@@ -26952,7 +26959,7 @@ async function _wdDuelBody(pool, top) {
   if (!lob) {
     clearInterval(window._wdDuelPoll);
     const all = await dbGetAll('wordleDuels', { fresh: true }).catch(() => []);
-    const now = Date.now();
+    const now = _now();
     all.filter(l => l && now - (l.createdAt || 0) > _WD_DUEL_TTL).forEach(l => dbDelete('wordleDuels', l.id).catch(() => {})); // tidy old lobbies
     const open = all.filter(l => l && !l.game && l.public && l.status === 'waiting' && now - (l.hostSeen || l.createdAt || 0) < 30e3 && l.hostUid !== me.uid).sort((a, b) => b.createdAt - a.createdAt);
     window._wdDuelPoll = setInterval(() => { if (!document.getElementById('wd-lobbies')) { clearInterval(window._wdDuelPoll); return; } if (!document.activeElement || document.activeElement.id !== 'wd-join-code') renderGames(); }, 6000);
@@ -26975,7 +26982,7 @@ async function _wdDuelBody(pool, top) {
   const round = lob.round || 1, rk = lob.id + '_' + round;
   const waiting = lob.status === 'waiting';
   const oppLeft = !!lob[opp + 'Left'];
-  const FACE_MS = 4500; const faceLeft = !waiting && lob.startedAt ? (lob.startedAt + FACE_MS) - Date.now() : 0;
+  const FACE_MS = 4500; const faceLeft = !waiting && lob.startedAt ? (lob.startedAt + FACE_MS) - _now() : 0;
   window._wdDuelLive = { status: lob.status, done, answer: lob.answer };
   window._wdCurGuesses = myG;
   window._wdDuelRef = { code: lob.id, role, locked: faceLeft > 0 || done };
@@ -26992,7 +26999,7 @@ async function _wdDuelBody(pool, top) {
   // Host starts the rematch once both have accepted: new driver, fresh boards, face-off again.
   if (done && role === 'host' && lob.hostRematch && lob.guestRematch && !oppLeft) {
     const a2 = _wdPickAnswer(pool, 'duel');
-    await dbSet('wordleDuels', lob.id, { answer: a2 ? a2.id : lob.answer, hostGuesses: [], guestGuesses: [], hostWonAt: 0, guestWonAt: 0, hostRematch: false, guestRematch: false, forfeit: '', round: round + 1, startedAt: Date.now() + 1500 });
+    await dbSet('wordleDuels', lob.id, { answer: a2 ? a2.id : lob.answer, hostGuesses: [], guestGuesses: [], hostWonAt: 0, guestWonAt: 0, hostRematch: false, guestRematch: false, forfeit: '', round: round + 1, startedAt: _now() + 1500 });
     setTimeout(() => renderGames(), 200);
   }
   // Poll the lobby for the other player's moves (keeps going after the end for the rematch vote).
@@ -27001,7 +27008,7 @@ async function _wdDuelBody(pool, top) {
     if (!document.getElementById('wd-duel')) { clearInterval(window._wdDuelPoll); return; }
     dbInvalidate('wordleDuels'); const l2 = await dbGet('wordleDuels', lob.id).catch(() => null);
     if (!l2) { _wdDuelSet(null); renderGames(); return; }
-    if (l2.status === 'waiting' && role === 'host' && Date.now() - (l2.hostSeen || 0) > 10e3) dbSet('wordleDuels', lob.id, { hostSeen: Date.now() }).catch(() => {}); // "still here" ping
+    if (l2.status === 'waiting' && role === 'host' && _now() - (l2.hostSeen || 0) > 10e3) dbSet('wordleDuels', lob.id, { hostSeen: _now() }).catch(() => {}); // "still here" ping
     const sig = (x) => [x.status, x.round || 1, (x.hostGuesses || []).length, (x.guestGuesses || []).length, x.hostWonAt || 0, x.guestWonAt || 0, x.guestName || '', !!x.hostRematch, !!x.guestRematch, !!x.hostLeft, !!x.guestLeft].join('|');
     if (sig(l2) !== sig(lob)) { const typing = document.getElementById('wd-input'); const v = typing ? typing.value : ''; await renderGames(); const t2 = document.getElementById('wd-input'); if (t2 && v) { t2.value = v; wordleSuggest(v); } }
   }, 1500);
@@ -27015,7 +27022,7 @@ async function _wdDuelBody(pool, top) {
     setTimeout(() => { if (document.getElementById('wd-duel')) renderGames(); }, faceLeft + 50);
     const n = Math.min(3, Math.ceil(Math.max(0, faceLeft - 1000) / 1000));
     clearInterval(window._wdTick); window._wdTick = setInterval(() => { const c = document.getElementById('wd-count'); if (!c) { clearInterval(window._wdTick); return; }
-      const ms = (lob.startedAt + FACE_MS) - Date.now(); c.textContent = ms > 1000 ? Math.ceil((ms - 1000) / 1000) : 'GO!'; }, 200);
+      const ms = (lob.startedAt + FACE_MS) - _now(); c.textContent = ms > 1000 ? Math.ceil((ms - 1000) / 1000) : 'GO!'; }, 200);
     return top(`<span class="wd-pill">⚔️ Round ${round}</span>`) + `<div id="wd-duel" class="wd-face go" style="${_duelVars(lob, role)}">${card(meP, 'l')}
       <div class="wd-face-mid"><span class="wd-vs-big">VS</span>${(() => { const h = _h2hVs(stats, meP.uid, opP.uid, 'h2hWd'); return `<div class="wd-h2h"><b style="color:${h[0] > h[1] ? '#4ade80' : h[0] < h[1] ? '#f87171' : '#9ca3af'}">${h[0]}–${h[1]}</b><small>Head to head</small></div>`; })()}<div id="wd-count" class="wd-count">${n || 'GO!'}</div></div>${card(opP, 'r')}</div>`;
   }
@@ -27078,7 +27085,7 @@ function _wdEndDuel(beacon) {
     if (beacon) { try { const ff = objToFsFields(f); fetch(url + '&' + Object.keys(ff).map(x => 'updateMask.fieldPaths=' + x).join('&'), { method: 'PATCH', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields: ff }) }); } catch (e) {} }
     else dbSet('wordleDuels', k.code, f).catch(() => {});
   } else if (s.status === 'playing' && !s.done) {
-    const opp = k.role === 'host' ? 'guest' : 'host'; const upd = { [opp + 'WonAt']: Date.now(), forfeit: k.role };
+    const opp = k.role === 'host' ? 'guest' : 'host'; const upd = { [opp + 'WonAt']: _now(), forfeit: k.role };
     if (beacon) { try { const f = objToFsFields(upd); fetch(url + '&' + Object.keys(f).map(x => 'updateMask.fieldPaths=' + x).join('&'), { method: 'PATCH', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields: f }) }); } catch (e) {} }
     else dbSet('wordleDuels', k.code, upd).catch(() => {});
   }
@@ -27143,6 +27150,7 @@ document.addEventListener('visibilitychange', () => {
 });
 window.addEventListener('pagehide', () => _wdEndDuel(true));
 window.wordleDuelCreate = async function(pub) {
+  await _clockSync();
   if (window._wdLocked) return;
   const me = _wdMe(); const ans = _wdPickAnswer(window._wdPool || [], 'duel'); if (!ans) return;
   let code = _wdCode(); for (let i = 0; i < 4 && await dbGet('wordleDuels', code).catch(() => null); i++) code = _wdCode();
@@ -27150,6 +27158,7 @@ window.wordleDuelCreate = async function(pub) {
   _wdDuelSet({ code, role: 'host' }); renderGames();
 };
 window.wordleDuelJoin = async function(code) {
+  await _clockSync();
   if (window._wdLocked) return;
   const msg = document.getElementById('wd-duel-msg'); const say = (t) => { if (msg) msg.innerHTML = '<div class="alert alert-error">' + t + '</div>'; };
   code = String(code || '').trim().toUpperCase(); if (!code) return say('Enter a lobby code.');
@@ -27335,25 +27344,27 @@ const _hlEndHtml = (st, mode) => { const sc = st.ans.filter(Boolean).length, goo
 const _hdKey = () => { try { return JSON.parse(localStorage.getItem('imsHLDuel') || 'null'); } catch (e) { return null; } };
 const _hdSet = (v) => { try { v ? localStorage.setItem('imsHLDuel', JSON.stringify(v)) : localStorage.removeItem('imsHLDuel'); } catch (e) {} };
 window.hlDuelCreate = async function(pub) {
+  await _clockSync();
   if (window._hlLocked) return; const me = _wdMe(), qs = _hlMakeQs(window._hlPool || [], Math.random); if (!qs) return;
   let code = _wdCode(); for (let i = 0; i < 4 && await dbGet('wordleDuels', code).catch(() => null); i++) code = _wdCode();
-  await dbSet('wordleDuels', code, { game: 'hl', public: !!pub, status: 'waiting', createdAt: Date.now(), hostSeen: Date.now(), qs, round: 1, hostAns: [], guestAns: [], hostDone: 0, guestDone: 0,
+  await dbSet('wordleDuels', code, { game: 'hl', public: !!pub, status: 'waiting', createdAt: _now(), hostSeen: _now(), qs, round: 1, hostAns: [], guestAns: [], hostDone: 0, guestDone: 0,
     hostUid: me.uid, hostName: me.name, hostAvatar: me.avatar || '', hostColor: _myDuelColour(), guestUid: '', guestName: '', guestAvatar: '' });
   _hdSet({ code, role: 'host' }); renderGames();
 };
 window.hlDuelJoin = async function(code) {
+  await _clockSync();
   if (window._hlLocked) return; const msg = document.getElementById('hd-msg'); const say = (t) => { if (msg) msg.innerHTML = '<div class="alert alert-error">' + t + '</div>'; };
   code = String(code || '').trim().toUpperCase(); if (!code) return say('Enter a lobby code.');
   dbInvalidate('wordleDuels'); const l = await dbGet('wordleDuels', code).catch(() => null); if (!l || l.game !== 'hl') return say('No Higher or Lower lobby with that code.');
   const me = _wdMe(); if (l.hostUid === me.uid) { _hdSet({ code, role: 'host' }); return renderGames(); }
   if (l.status !== 'waiting' || (l.guestUid && l.guestUid !== me.uid)) return say('That duel has already started.');
-  if (Date.now() - (l.hostSeen || l.createdAt || 0) > 30e3) return say('That lobby has closed — the host left.');
-  await dbSet('wordleDuels', code, { guestUid: me.uid, guestName: me.name, guestAvatar: me.avatar || '', guestColor: _myDuelColour(), status: 'playing', startedAt: Date.now() + 800 });
+  if (_now() - (l.hostSeen || l.createdAt || 0) > 30e3) return say('That lobby has closed — the host left.');
+  await dbSet('wordleDuels', code, { guestUid: me.uid, guestName: me.name, guestAvatar: me.avatar || '', guestColor: _myDuelColour(), status: 'playing', startedAt: _now() + 800 });
   _hdSet({ code, role: 'guest' }); renderGames();
 };
 function _hdLeave(silent) { const k = _hdKey(); if (!k) return; clearInterval(window._hdPoll); _hdSet(null); const s = window._hdLive || {};
   if (s.status === 'waiting' && k.role === 'host') dbDelete('wordleDuels', k.code).catch(() => {});
-  else if (s.status === 'playing') dbSet('wordleDuels', k.code, { [k.role + 'Left']: true, ...(s.done ? {} : { [k.role + 'Done']: Date.now(), [k.role + 'Quit']: true }) }).catch(() => {});
+  else if (s.status === 'playing') dbSet('wordleDuels', k.code, { [k.role + 'Left']: true, ...(s.done ? {} : { [k.role + 'Done']: _now(), [k.role + 'Quit']: true }) }).catch(() => {});
   if (!silent) setTimeout(() => renderGames(), 150); }
 window.hlDuelLeave = () => _hdLeave(false);
 window.hlDuelRematch = async function() { const r = window._hdRef; if (r) { await dbSet('wordleDuels', r.code, { [r.role + 'Rematch']: true }); renderGames(); } };
@@ -27361,14 +27372,14 @@ async function _hdGuess(dir) {
   const r = window._hdRef; if (!r || r.locked) return; dbInvalidate('wordleDuels'); const l = await dbGet('wordleDuels', r.code).catch(() => null); if (!l) return;
   const mine = (l[r.role + 'Ans'] || []).slice(); if (mine.length >= HL_N || l[r.role + 'Done']) return;
   const ok = _hlRight(l.qs[mine.length], window._hlPool || [], dir); window._hlBusy = true; window._hlReveal = { ok, idx: mine.length }; renderGames().then(_hlCountUp);
-  mine.push(ok); const upd = { [r.role + 'Ans']: mine }; if (mine.length >= HL_N) upd[r.role + 'Done'] = Date.now();
+  mine.push(ok); const upd = { [r.role + 'Ans']: mine }; if (mine.length >= HL_N) upd[r.role + 'Done'] = _now();
   await dbSet('wordleDuels', r.code, upd); await new Promise(res => setTimeout(res, 1100)); window._hlReveal = null; window._hlBusy = false; renderGames();
 }
 async function _hdBody(pool, top) {
   const me = _wdMe(), mine = _hdKey(); let lob = null;
   if (mine && mine.code) { dbInvalidate('wordleDuels'); lob = await dbGet('wordleDuels', mine.code).catch(() => null); if (!lob) _hdSet(null); }
   if (!lob) { clearInterval(window._hdPoll);
-    const all = await dbGetAll('wordleDuels', { fresh: true }).catch(() => []); const now = Date.now();
+    const all = await dbGetAll('wordleDuels', { fresh: true }).catch(() => []); const now = _now();
     const open = all.filter(l => l && l.game === 'hl' && l.public && l.status === 'waiting' && now - (l.hostSeen || l.createdAt || 0) < 30e3 && l.hostUid !== me.uid).sort((a, b) => b.createdAt - a.createdAt);
     window._hdPoll = setInterval(() => { if (!document.getElementById('hd-lobbies')) { clearInterval(window._hdPoll); return; } if (!document.activeElement || document.activeElement.id !== 'hd-join-code') renderGames(); }, 6000);
     return top(`<span class="wd-pill">👤 ${esc(me.name)}</span>`) + `<div class="wd-duel-grid">
@@ -27385,7 +27396,7 @@ async function _hdBody(pool, top) {
   const P = (r) => ({ uid: lob[r + 'Uid'], name: lob[r + 'Name'] || 'Player', av: lob[r + 'Avatar'] || '' }); const meP = P(role), opP = P(opp);
   const myA = lob[role + 'Ans'] || [], opA = lob[opp + 'Ans'] || [], myDone = lob[role + 'Done'] || 0, opDone = lob[opp + 'Done'] || 0;
   const done = lob.status === 'playing' && (!!(myDone && opDone) || !!lob.hostQuit || !!lob.guestQuit); const round = lob.round || 1, rk = lob.id + '_h' + round;
-  const FACE = 4500, faceLeft = lob.status === 'playing' && lob.startedAt ? (lob.startedAt + FACE) - Date.now() : 0;
+  const FACE = 4500, faceLeft = lob.status === 'playing' && lob.startedAt ? (lob.startedAt + FACE) - _now() : 0;
   const mySc = myA.filter(Boolean).length, opSc = opA.filter(Boolean).length;
   let winner = '';
   if (done) { if (lob[opp + 'Quit'] && !lob[role + 'Quit']) winner = role; else if (lob[role + 'Quit'] && !lob[opp + 'Quit']) winner = opp;
@@ -27396,11 +27407,11 @@ async function _hdBody(pool, top) {
       await dbSet('wordleScores', id, Object.assign({ uid: meP.uid, name: meP.name, points: cur.points || 0, [w ? 'hlW' : 'hlL']: ((w ? cur.hlW : cur.hlL) || 0) + 1 }, _h2hPatch(cur, 'h2hHl', opP, w))); } catch (e) {}
     if (w) { _gameCoins('duel-hl', 5); setTimeout(() => { try { fireConfetti({ count: 200 }); } catch (e) {} }, 300); } }
   if (done && role === 'host' && lob.hostRematch && lob.guestRematch && !lob[opp + 'Left']) { const qs = _hlMakeQs(pool, Math.random);
-    if (qs) { await dbSet('wordleDuels', lob.id, { qs, round: round + 1, hostAns: [], guestAns: [], hostDone: 0, guestDone: 0, hostQuit: false, guestQuit: false, hostRematch: false, guestRematch: false, startedAt: Date.now() + 1500 }); setTimeout(() => renderGames(), 200); } }
+    if (qs) { await dbSet('wordleDuels', lob.id, { qs, round: round + 1, hostAns: [], guestAns: [], hostDone: 0, guestDone: 0, hostQuit: false, guestQuit: false, hostRematch: false, guestRematch: false, startedAt: _now() + 1500 }); setTimeout(() => renderGames(), 200); } }
   clearInterval(window._hdPoll);
   window._hdPoll = setInterval(async () => { if (!document.getElementById('hd-duel')) { clearInterval(window._hdPoll); return; } if (window._hlBusy) return;
     dbInvalidate('wordleDuels'); const l2 = await dbGet('wordleDuels', lob.id).catch(() => null); if (!l2) { _hdSet(null); renderGames(); return; }
-    if (l2.status === 'waiting' && role === 'host' && Date.now() - (l2.hostSeen || 0) > 10e3) dbSet('wordleDuels', lob.id, { hostSeen: Date.now() }).catch(() => {});
+    if (l2.status === 'waiting' && role === 'host' && _now() - (l2.hostSeen || 0) > 10e3) dbSet('wordleDuels', lob.id, { hostSeen: _now() }).catch(() => {});
     const sig = (x) => [x.status, x.round || 1, (x.hostAns || []).length, (x.guestAns || []).length, x.hostDone || 0, x.guestDone || 0, x.guestName || '', !!x.hostRematch, !!x.guestRematch, !!x.hostLeft, !!x.guestLeft].join('|');
     if (sig(l2) !== sig(lob)) renderGames(); }, 1500);
   const V = `style="${_duelVars(lob, role)}"`;
@@ -27412,7 +27423,7 @@ async function _hdBody(pool, top) {
       <div style="text-align:center;margin-top:12px"><button class="btn btn-secondary" onclick="hlDuelLeave()">Cancel lobby</button></div>`; }
   if (faceLeft > 0) { setTimeout(() => { if (document.getElementById('hd-duel')) renderGames(); }, faceLeft + 50);
     const st2 = await _wdStatsFor([meP.uid, opP.uid]), h = _h2hVs(st2, meP.uid, opP.uid, 'h2hHl'), n = Math.min(3, Math.ceil(Math.max(0, faceLeft - 1000) / 1000));
-    clearInterval(window._wdTick); window._wdTick = setInterval(() => { const c = document.getElementById('hd-count'); if (!c) { clearInterval(window._wdTick); return; } const ms = (lob.startedAt + FACE) - Date.now(); c.textContent = ms > 1000 ? Math.ceil((ms - 1000) / 1000) : 'GO!'; }, 200);
+    clearInterval(window._wdTick); window._wdTick = setInterval(() => { const c = document.getElementById('hd-count'); if (!c) { clearInterval(window._wdTick); return; } const ms = (lob.startedAt + FACE) - _now(); c.textContent = ms > 1000 ? Math.ceil((ms - 1000) / 1000) : 'GO!'; }, 200);
     const rec = (p) => { const x = st2[p.uid] || {}; return `<span><i>${x.hlW || 0}–${x.hlL || 0}</i>Duels W–L</span>`; };
     return top(`<span class="wd-pill">⚔️ Round ${round}</span>`) + `<div id="hd-duel" class="wd-face go" ${V}>${bigCard(meP, 'l', rec(meP))}
       <div class="wd-face-mid"><span class="wd-vs-big">VS</span><div class="wd-h2h"><b style="color:${h[0] > h[1] ? '#4ade80' : h[0] < h[1] ? '#f87171' : '#9ca3af'}">${h[0]}–${h[1]}</b><small>Head to head</small></div><div id="hd-count" class="wd-count">${n || 'GO!'}</div></div>${bigCard(opP, 'r', rec(opP))}</div>`; }
@@ -27437,7 +27448,7 @@ async function _hdBody(pool, top) {
 
 async function renderHLGame(el) {
   // Load the driver pool once per visit (re-rendering every question shouldn't refetch everything).
-  if (!window._hlPool || !window._hlPool.length || Date.now() - (window._hlPoolAt || 0) > 10 * 60e3) { const { gridPool } = await _wdLoad(); window._hlPool = gridPool.filter(p => (p.st || 0) > 0); window._hlPoolAt = Date.now(); }
+  if (!window._hlPool || !window._hlPool.length || _now() - (window._hlPoolAt || 0) > 10 * 60e3) { const { gridPool } = await _wdLoad(); window._hlPool = gridPool.filter(p => (p.st || 0) > 0); window._hlPoolAt = _now(); }
   const pool = window._hlPool, mode = _hlGetMode();
   const locked = !!(window._gamesLock || {}).hl && !adminLoggedIn && !_gamesAccess(); window._hlLocked = locked;
   const tabs = `<div class="wd-modes">${[['daily', '📅', 'DAILY'], ['inf', '∞', 'PRACTICE'], ['duel', '⚔️', 'DUEL']].map(([m, i, l]) => `<button class="${mode === m ? 'on' : ''}" onclick="setHLMode('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>`;
@@ -27456,8 +27467,8 @@ async function renderHLGame(el) {
       <p><b>📅 Daily</b> — the same ${HL_N} questions for everyone, once a day. <b>∞ Practice</b> — as many rounds as you like. <b>⚔️ Duel</b> — you and an opponent get the same ${HL_N} questions at the same time; most right wins, and if it's level the faster finisher wins.</p>
       <p style="margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(247,207,85,.08);border:1px solid rgba(247,207,85,.35);font-size:.84rem"><span class="imc"></span> <b>Earn IM$:</b> play the daily for <b>+25 IM$</b>, score <b>8/10 or better</b> for <b>another +25 IM$</b>, and win duels for <b>+5 IM$</b> each (up to 25 IM$ from duels every 24 hours). Log in to earn.</p>
       <p>Same driver pool as PaddockDle: everyone on the market, plus reserves with 25+ starts (or a title / BOTT). Stats are all-time across every IMS season.</p></div></div>`;
-  if (mode === 'daily' && document.getElementById('hl-timer')) { const until = Date.now() + _wdMsToMidnight(); clearInterval(window._wdTick);
-    window._wdTick = setInterval(() => { const t = document.getElementById('hl-timer'); if (!t) { clearInterval(window._wdTick); return; } const ms = until - Date.now(); if (ms <= 0) { clearInterval(window._wdTick); renderGames(); return; }
+  if (mode === 'daily' && document.getElementById('hl-timer')) { const until = _now() + _wdMsToMidnight(); clearInterval(window._wdTick);
+    window._wdTick = setInterval(() => { const t = document.getElementById('hl-timer'); if (!t) { clearInterval(window._wdTick); return; } const ms = until - _now(); if (ms <= 0) { clearInterval(window._wdTick); renderGames(); return; }
       t.textContent = [Math.floor(ms / 36e5), Math.floor(ms / 6e4) % 60, Math.floor(ms / 1e3) % 60].map(x => String(x).padStart(2, '0')).join(':'); }, 1000); }
 }
 // ===== GAMES: IMS PADDOCKDLE GRID =====
@@ -27762,7 +27773,7 @@ async function _gdBody(pool, top) {
   if (mine && mine.code) { dbInvalidate('wordleDuels'); lob = await dbGet('wordleDuels', mine.code).catch(() => null); if (!lob) _gdSet(null); }
   if (!lob) { // ---- lobby browser ----
     clearInterval(window._gdPoll);
-    const all = await dbGetAll('wordleDuels', { fresh: true }).catch(() => []); const now = Date.now();
+    const all = await dbGetAll('wordleDuels', { fresh: true }).catch(() => []); const now = _now();
     const open = all.filter(l => l && l.game === 'grid' && l.public && l.status === 'waiting' && now - (l.hostSeen || l.createdAt || 0) < 30e3 && l.hostUid !== me.uid).sort((a, b) => b.createdAt - a.createdAt);
     window._gdPoll = setInterval(() => { if (!document.getElementById('gd-lobbies')) { clearInterval(window._gdPoll); return; } if (!document.activeElement || document.activeElement.id !== 'gd-join-code') renderGames(); }, 6000);
     return top(`<span class="wd-pill">👤 ${esc(me.name)}</span>`) + `<div class="wd-duel-grid">
@@ -27780,7 +27791,7 @@ async function _gdBody(pool, top) {
   const cells = lob.cells || {}; window._gdCells = cells; const win = _gdWinner(cells); const full = Object.keys(cells).length >= 9;
   const done = !!(lob.winner || win || full); const winner = lob.winner || (win && win.by) || (full ? 'draw' : '');
   const round = lob.round || 1, rk = lob.id + '_g' + round;
-  const GFACE = 4500, gFaceLeft = lob.status === 'playing' && !done && lob.startedAt ? (lob.startedAt + GFACE) - Date.now() : 0;
+  const GFACE = 4500, gFaceLeft = lob.status === 'playing' && !done && lob.startedAt ? (lob.startedAt + GFACE) - _now() : 0;
   window._gdLive = { status: lob.status, done }; window._gdRef = { code: lob.id, role, myTurn: lob.status === 'playing' && !done && lob.turn === role && gFaceLeft <= 0 };
   const P = (r) => ({ uid: lob[r + 'Uid'], name: lob[r + 'Name'] || 'Player', av: lob[r + 'Avatar'] || '' }); const meP = P(role), opP = P(opp);
   // Finish: record once, confetti for the winner, mark the lobby done (winner field) so both agree.
@@ -27791,13 +27802,13 @@ async function _gdBody(pool, top) {
   if (done && winner === role && !window['_gdCf_' + rk]) { window['_gdCf_' + rk] = 1; setTimeout(() => { try { fireConfetti({ count: 200 }); } catch (e) {} }, 300); }
   if (done && role === 'host' && lob.hostRematch && lob.guestRematch && !lob[opp + 'Left']) {
     const g = _grBuild(pool, Math.floor(Math.random() * 2 ** 31));
-    if (g) { await dbSet('wordleDuels', lob.id, { rows: g.rows, cols: g.cols, cells: {}, winner: '', forfeit: '', hostRematch: false, guestRematch: false, round: round + 1, turn: round % 2 ? 'guest' : 'host', lastMove: {}, startedAt: Date.now() + 1500 }); setTimeout(() => renderGames(), 200); }
+    if (g) { await dbSet('wordleDuels', lob.id, { rows: g.rows, cols: g.cols, cells: {}, winner: '', forfeit: '', hostRematch: false, guestRematch: false, round: round + 1, turn: round % 2 ? 'guest' : 'host', lastMove: {}, startedAt: _now() + 1500 }); setTimeout(() => renderGames(), 200); }
   }
   clearInterval(window._gdPoll);
   window._gdPoll = setInterval(async () => {
     if (!document.getElementById('gd-duel')) { clearInterval(window._gdPoll); return; }
     dbInvalidate('wordleDuels'); const l2 = await dbGet('wordleDuels', lob.id).catch(() => null); if (!l2) { _gdSet(null); renderGames(); return; }
-    if (l2.status === 'waiting' && role === 'host' && Date.now() - (l2.hostSeen || 0) > 10e3) dbSet('wordleDuels', lob.id, { hostSeen: Date.now() }).catch(() => {});
+    if (l2.status === 'waiting' && role === 'host' && _now() - (l2.hostSeen || 0) > 10e3) dbSet('wordleDuels', lob.id, { hostSeen: _now() }).catch(() => {});
     // Order-proof fingerprint: the database can return the same cells in a different order, which used
     // to look like a change and redraw the screen every 1.5 s (flashing + the search box losing focus).
     const cellSig = (c) => Object.keys(c || {}).sort().map(k => k + ':' + (c[k] || {}).by + ':' + (c[k] || {}).d).join(',');
@@ -27818,7 +27829,7 @@ async function _gdBody(pool, top) {
       <div class="wd-fc-st"><span><i>${s2.gridW || 0}–${s2.gridL || 0}</i>Grid duels W–L</span></div></div>`; };
     const n = Math.min(3, Math.ceil(Math.max(0, gFaceLeft - 1000) / 1000));
     clearInterval(window._wdTick); window._wdTick = setInterval(() => { const c = document.getElementById('gd-count'); if (!c) { clearInterval(window._wdTick); return; }
-      const ms = (lob.startedAt + GFACE) - Date.now(); c.textContent = ms > 1000 ? Math.ceil((ms - 1000) / 1000) : 'GO!'; }, 200);
+      const ms = (lob.startedAt + GFACE) - _now(); c.textContent = ms > 1000 ? Math.ceil((ms - 1000) / 1000) : 'GO!'; }, 200);
     return top(`<span class="wd-pill">⚔️ Round ${round}</span>`) + `<div id="gd-duel" class="wd-face go" style="${_duelVars(lob, role)}">${fc(meP, 'l')}
       <div class="wd-face-mid"><span class="wd-vs-big">VS</span><div class="wd-h2h"><b style="color:${h[0] > h[1] ? '#4ade80' : h[0] < h[1] ? '#f87171' : '#9ca3af'}">${h[0]}–${h[1]}</b><small>Head to head</small></div><div id="gd-count" class="wd-count">${n || 'GO!'}</div></div>${fc(opP, 'r')}</div>`;
   }
@@ -27828,11 +27839,11 @@ async function _gdBody(pool, top) {
   const TURN_MS = 60e3, turnStart = Math.max(lob.turnAt || 0, (lob.lastMove || {}).at || 0, (lob.startedAt || 0) + GFACE);
   clearInterval(window._gdClock);
   if (!done) window._gdClock = setInterval(async () => { const el = document.getElementById('gd-timer'); if (!el) { clearInterval(window._gdClock); return; }
-    const left = turnStart + TURN_MS - Date.now(); el.textContent = '⏱ ' + Math.max(0, Math.ceil(left / 1000)) + 's'; el.classList.toggle('low', left < 10e3);
+    const left = turnStart + TURN_MS - _now(); el.textContent = '⏱ ' + Math.max(0, Math.ceil(left / 1000)) + 's'; el.classList.toggle('low', left < 10e3);
     if (left <= 0 && !window._gdTimingOut) { window._gdTimingOut = 1; clearInterval(window._gdClock);
       try { dbInvalidate('wordleDuels'); const l = await dbGet('wordleDuels', lob.id).catch(() => null);
         const ts = l && Math.max(l.turnAt || 0, (l.lastMove || {}).at || 0, (l.startedAt || 0) + GFACE);
-        if (l && !l.winner && l.turn === lob.turn && ts === turnStart) await dbSet('wordleDuels', lob.id, { turn: l.turn === 'host' ? 'guest' : 'host', turnAt: Date.now(), lastMove: { by: l.turn, ok: false, timeout: true, at: Date.now() } });
+        if (l && !l.winner && l.turn === lob.turn && ts === turnStart) await dbSet('wordleDuels', lob.id, { turn: l.turn === 'host' ? 'guest' : 'host', turnAt: _now(), lastMove: { by: l.turn, ok: false, timeout: true, at: _now() } });
       } finally { window._gdTimingOut = 0; window._grSel = null; renderGames(); } } }, 250);
   const head = (c) => `<div class="gr-h"><div class="gr-ico">${c.icon}</div><b>${esc(c.label)}</b></div>`;
   let grid = `<div class="gr-grid"><div class="gr-h gr-corner"><img src="icons/icon-192.png?v=3" alt=""><b>DUEL</b><small>R${round}</small></div>${K.map(head).join('')}`;
@@ -27848,25 +27859,27 @@ async function _gdBody(pool, top) {
       <div class="wd-btns">${lob[role + 'Rematch'] ? '' : '<button class="btn btn-primary" onclick="gridDuelRematch()">🔁 Rematch</button>'}<button class="btn btn-secondary" onclick="gridDuelLeave()">Back to duel menu</button></div>`}</div>`; }
   else if (!myTurn) side = `<div class="gr-panel"><b>⏳ ${esc(opP.name)}'s turn</b><p>Wait for them to pick a cell and name a driver.</p>${lmTxt ? `<p class="gd-last">${lmTxt}</p>` : ''}</div>`;
   else side = _grPickerHtml(R, K, sel, `<b>🎯 Your turn</b><p>Pick an empty cell and name a driver who fits both categories. Wrong = your turn is gone.</p>`, lmTxt ? `<p class="gd-last">${lmTxt}</p>` : '', 'gd-myturn');
-  return top(`<span class="wd-pill">⚔️ Round ${round}</span>`) + `<div id="gd-duel" class="gd-vs" style="${_duelVars(lob, role)}">${card(meP, role)}<span style="display:flex;flex-direction:column;align-items:center;gap:4px"><span class="gd-turn">${done ? 'FINISHED' : myTurn ? 'YOUR TURN' : 'THEIR TURN'}</span>${done ? '' : `<span id="gd-timer" class="gd-timer">⏱ ${Math.max(0, Math.ceil((turnStart + TURN_MS - Date.now()) / 1000))}s</span>`}</span>${card(opP, opp)}</div>
+  return top(`<span class="wd-pill">⚔️ Round ${round}</span>`) + `<div id="gd-duel" class="gd-vs" style="${_duelVars(lob, role)}">${card(meP, role)}<span style="display:flex;flex-direction:column;align-items:center;gap:4px"><span class="gd-turn">${done ? 'FINISHED' : myTurn ? 'YOUR TURN' : 'THEIR TURN'}</span>${done ? '' : `<span id="gd-timer" class="gd-timer">⏱ ${Math.max(0, Math.ceil((turnStart + TURN_MS - _now()) / 1000))}s</span>`}</span>${card(opP, opp)}</div>
     <div class="gr-layout" style="${_duelVars(lob, role)}">${grid}${side}</div>${done ? '' : '<div style="text-align:center;margin-top:12px"><button class="btn btn-secondary btn-sm" onclick="gridDuelLeave()">Forfeit & leave</button></div>'}`;
 }
 window.gridDuelCreate = async function(pub) {
+  await _clockSync();
   if (window._grLocked) return; const me = _wdMe(); const g = _grBuild(window._grPool || [], Math.floor(Math.random() * 2 ** 31)); if (!g) return customAlert('Not enough driver data to make a grid yet.');
   let code = _wdCode(); for (let i = 0; i < 4 && await dbGet('wordleDuels', code).catch(() => null); i++) code = _wdCode();
-  await dbSet('wordleDuels', code, { game: 'grid', public: !!pub, status: 'waiting', createdAt: Date.now(), hostSeen: Date.now(), rows: g.rows, cols: g.cols, cells: {}, turn: 'host', winner: '', round: 1, lastMove: {},
+  await dbSet('wordleDuels', code, { game: 'grid', public: !!pub, status: 'waiting', createdAt: _now(), hostSeen: _now(), rows: g.rows, cols: g.cols, cells: {}, turn: 'host', winner: '', round: 1, lastMove: {},
     hostUid: me.uid, hostName: me.name, hostAvatar: me.avatar || '', hostColor: _myDuelColour(), guestUid: '', guestName: '', guestAvatar: '' });
   _gdSet({ code, role: 'host' }); window._grSel = null; renderGames();
 };
 window.gridDuelJoin = async function(code) {
+  await _clockSync();
   if (window._grLocked) return; const msg = document.getElementById('gd-msg'); const say = (t) => { if (msg) msg.innerHTML = '<div class="alert alert-error">' + t + '</div>'; };
   code = String(code || '').trim().toUpperCase(); if (!code) return say('Enter a lobby code.');
   dbInvalidate('wordleDuels'); const l = await dbGet('wordleDuels', code).catch(() => null);
   if (!l || l.game !== 'grid') return say('No grid lobby with that code.'); const me = _wdMe();
   if (l.hostUid === me.uid) { _gdSet({ code, role: 'host' }); return renderGames(); }
   if (l.status !== 'waiting' || (l.guestUid && l.guestUid !== me.uid)) return say('That duel has already started.');
-  if (Date.now() - (l.hostSeen || l.createdAt || 0) > 30e3) return say('That lobby has closed — the host left.');
-  await dbSet('wordleDuels', code, { guestUid: me.uid, guestName: me.name, guestAvatar: me.avatar || '', guestColor: _myDuelColour(), status: 'playing', startedAt: Date.now() + 800 });
+  if (_now() - (l.hostSeen || l.createdAt || 0) > 30e3) return say('That lobby has closed — the host left.');
+  await dbSet('wordleDuels', code, { guestUid: me.uid, guestName: me.name, guestAvatar: me.avatar || '', guestColor: _myDuelColour(), status: 'playing', startedAt: _now() + 800 });
   _gdSet({ code, role: 'guest' }); window._grSel = null; renderGames();
 };
 window.gridDuelLeave = function() { _gdEnd(false); window._grSel = null; setTimeout(() => renderGames(), 150); };
@@ -27879,7 +27892,7 @@ async function _gdGuess(id) {
   const C = _grCategories(window._grPool || []), byId = Object.fromEntries(C.map(c => [c.id, c])); const [ri, ci] = key.split(',').map(Number);
   const p = (window._grPool || []).find(x => x.id === id); const ok = !!(p && byId[l.rows[ri]] && byId[l.cols[ci]] && byId[l.rows[ri]].test(p) && byId[l.cols[ci]].test(p));
   if (ok) cells[key] = { by: ref.role, d: id };
-  const upd = { cells, turn: ref.role === 'host' ? 'guest' : 'host', lastMove: { by: ref.role, ok, key, d: id, name: p ? p.name : '', at: Date.now() }, turnAt: Date.now() };
+  const upd = { cells, turn: ref.role === 'host' ? 'guest' : 'host', lastMove: { by: ref.role, ok, key, d: id, name: p ? p.name : '', at: _now() }, turnAt: _now() };
   const w = _gdWinner(cells); if (w) upd.winner = w.by; else if (Object.keys(cells).length >= 9) upd.winner = 'draw';
   await dbSet('wordleDuels', ref.code, upd); window._grSel = null; window._grHits = []; renderGames();
 }
