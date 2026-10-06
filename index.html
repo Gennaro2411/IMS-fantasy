@@ -27232,7 +27232,7 @@ async function _hlRecordDaily(st) {
   const me = _wdMe(), id = _wdScoreId(me.uid), sc = st.ans.filter(Boolean).length, day = st.key;
   try { dbInvalidate('wordleScores'); const cur = await dbGet('wordleScores', id).catch(() => null) || {}; if (cur.hlDay === day) return;
     const streak = cur.hlDayPlain === _wdYesterdayKey() ? (cur.hlStreak || 0) + 1 : 1;
-    await dbSet('wordleScores', id, { uid: me.uid, name: me.name, points: cur.points || 0, hlDay: day, hlDayPlain: _wdDayKey(), hlDayScore: sc, hlDayTime: (st.t1 || Date.now()) - (st.t0 || Date.now()), hlDays: (cur.hlDays || 0) + 1, hlCorrect: (cur.hlCorrect || 0) + sc, hlTens: (cur.hlTens || 0) + (sc === 10 ? 1 : 0), hlStreak: streak }); } catch (e) {}
+    await dbSet('wordleScores', id, { uid: me.uid, name: me.name, points: cur.points || 0, hlDay: day, hlDayPlain: _wdDayKey(), hlDayScore: sc, hlDayTime: (st.t1 || Date.now()) - (st.t0 || Date.now()), hlDays: (cur.hlDays || 0) + 1, hlCorrect: (cur.hlCorrect || 0) + sc, hlTens: (cur.hlTens || 0) + (sc === 10 ? 1 : 0), hlStreak: streak, ...(sc === 10 ? { hlBestTen: Math.min(cur.hlBestTen || 9e9, (st.t1 || Date.now()) - (st.t0 || Date.now())) } : {}) }); } catch (e) {}
   await _gameCoins('hl-daily', 25); if (sc >= 8) await _gameCoins('hl-win', 25);
 }
 async function _hlRecordPractice(sc) { try { const me = _wdMe(), id = _wdScoreId(me.uid); const cur = await dbGet('wordleScores', id).catch(() => null) || {};
@@ -27241,14 +27241,15 @@ window.hlShare = function() { const mode = _hlGetMode(), st = mode === 'inf' ? w
   const sc = st.ans.filter(Boolean).length; const txt = `IMS Higher or Lower ${mode === 'daily' ? '#' + _wdDayNum() : '∞'} · ${sc}/${HL_N}\n${_hlDots(st.ans)}\n` + location.href.split('#')[0];
   if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) navigator.share({ text: txt }).catch(() => {}); else if (navigator.clipboard) navigator.clipboard.writeText(txt).then(() => { if (typeof showToast === 'function') showToast('📋 Copied — paste it in Discord!', 'success'); }); };
 async function _hlLeaderboardHtml() {
-  const day = _dailyKey(); const rows = (await dbGetAll('wordleScores', { fresh: true }).catch(() => [])).filter(r => r && r.uid && r.hlDay === day)
-    .sort((a, b) => (b.hlDayScore || 0) - (a.hlDayScore || 0) || (a.hlDayTime || 9e9) - (b.hlDayTime || 9e9));
-  const me = _wdMe(), mi = rows.findIndex(r => r.uid === me.uid), sec = (ms) => ms ? (ms / 1000).toFixed(1) + 's' : '';
-  const line = (r, i) => { const k = r.hlDayPlain === _wdDayKey() ? (r.hlStreak || 0) : 0;
-    return `<div class="wd-lb-row${r.uid === me.uid ? ' me' : ''}"><span class="wd-lb-pos">${i + 1}</span><span class="wd-lb-name">${esc(r.name || 'Player')}</span><small style="color:var(--muted);margin-right:8px;white-space:nowrap">⏱ ${sec(r.hlDayTime)} · 🔢 ${r.hlDays || 0} · <span style="color:${k ? '#fb923c' : 'inherit'}">🔥 ${k}</span> · 💯 ${r.hlTens || 0}</small><b>${r.hlDayScore}/${HL_N}</b></div>`; };
-  return `<div class="wd-lb" style="margin-top:18px"><div class="wd-lb-h"><span>🏆 Today's leaderboard</span><small>Most right, then fastest</small></div>
-    <div style="font-size:.7rem;color:var(--muted);margin:2px 0 6px">⏱ time · 🔢 dailies played · 🔥 streak · 💯 perfect 10/10s</div>
-    ${rows.length ? rows.slice(0, 10).map(line).join('') + (mi >= 10 ? '<div class="wd-lb-gap">…</div>' + line(rows[mi], mi) : '') : '<p class="text-muted" style="margin:6px 0 0">Nobody has played today\'s round yet.</p>'}</div>`;
+  // All-time board: never resets daily. Ranked by fastest perfect 10/10, then total correct answers.
+  const day = _dailyKey(); const rows = (await dbGetAll('wordleScores', { fresh: true }).catch(() => [])).filter(r => r && r.uid && (r.hlDays || 0) > 0)
+    .sort((a, b) => (a.hlBestTen || 9e9) - (b.hlBestTen || 9e9) || (b.hlCorrect || 0) - (a.hlCorrect || 0) || (b.hlTens || 0) - (a.hlTens || 0));
+  const me = _wdMe(), mi = rows.findIndex(r => r.uid === me.uid), sec = (ms) => ms ? (ms / 1000).toFixed(1) + 's' : '—';
+  const line = (r, i) => { const k = r.hlDayPlain === _wdDayKey() ? (r.hlStreak || 0) : 0, today = r.hlDay === day;
+    return `<div class="wd-lb-row${r.uid === me.uid ? ' me' : ''}"><span class="wd-lb-pos">${i + 1}</span><span class="wd-lb-name">${esc(r.name || 'Player')}</span><small style="color:var(--muted);margin-right:8px;white-space:nowrap">📅 ${today ? `<b style="color:var(--text)">${r.hlDayScore}/${HL_N}</b> in ${sec(r.hlDayTime)}` : '—'} · 🔢 ${r.hlDays || 0} · <span style="color:${k ? '#fb923c' : 'inherit'}">🔥 ${k}</span> · 💯 ${r.hlTens || 0} · ✅ ${r.hlCorrect || 0}</small><b title="Fastest 10/10">⚡ ${sec(r.hlBestTen)}</b></div>`; };
+  return `<div class="wd-lb" style="margin-top:18px"><div class="wd-lb-h"><span>🏆 All-time leaderboard</span><small>Fastest 10/10, then most right</small></div>
+    <div style="font-size:.7rem;color:var(--muted);margin:2px 0 6px">⚡ fastest 10/10 · 📅 today's score &amp; time · 🔢 dailies played · 🔥 streak · 💯 perfect 10/10s · ✅ total correct</div>
+    ${rows.length ? rows.slice(0, 10).map(line).join('') + (mi >= 10 ? '<div class="wd-lb-gap">…</div>' + line(rows[mi], mi) : '') : '<p class="text-muted" style="margin:6px 0 0">Nobody has played yet.</p>'}</div>`;
 }
 const _hlEndHtml = (st, mode) => { const sc = st.ans.filter(Boolean).length, good = sc >= 8;
   const chip = (on, txt) => `<div class="hl-chip${on ? ' on' : ''}"><span class="imc"></span><b>+25</b><small>${txt}</small>${on ? '<i>✓</i>' : '<i>🔒</i>'}</div>`;
