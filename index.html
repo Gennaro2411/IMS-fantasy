@@ -508,6 +508,7 @@
   @media (prefers-reduced-motion:reduce){#driver-modal,#driver-modal-inner,#driver-modal-content.dm-in{animation:none!important}}
   #now-playing{position:fixed;left:16px;bottom:16px;z-index:9000;display:flex;align-items:center;gap:11px;padding:10px 16px 10px 12px;border-radius:14px;background:rgba(18,18,28,0.92);border:1px solid rgba(123,127,232,0.35);box-shadow:0 8px 24px rgba(0,0,0,.45);pointer-events:none;opacity:0;transform:translate3d(-12px,8px,0);transition:opacity .35s ease,transform .35s cubic-bezier(.2,.9,.3,1)}
   #now-playing.np-show{opacity:1;transform:none}
+  @media (max-width:640px){#now-playing{left:50%;right:auto;top:10px;bottom:auto;transform:translate3d(-50%,-12px,0);padding:6px 12px 6px 9px}#now-playing.np-show{transform:translate3d(-50%,0,0)}}
   #now-playing .np-eq{display:flex;align-items:flex-end;gap:3px;height:22px}
   #now-playing .np-eq i{display:block;width:4px;height:100%;border-radius:2px;background:linear-gradient(to top,#5a5ec9,#a0a4ff);transform-origin:bottom;animation:npBar .9s ease-in-out infinite alternate}
   #now-playing .np-eq i:nth-child(1){animation-duration:.72s}
@@ -1998,8 +1999,8 @@
       .hlb-row .nm .m{display:block;font-weight:400;font-size:.66rem;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis}
       .hl-progress{gap:3px}.hl-progress span{width:auto;flex:1;max-width:22px}.hl-sub,.hl-stat{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
       .hl-q{font-size:.88rem;padding:0 4px}.hl-btns{gap:8px}.hl-over{padding:14px 10px}.hl-end-actions{gap:8px}}
-    @media (max-width:380px){.hl-card .hl-av{width:60px;height:60px}.hl-card .hl-av img,.hl-card .hl-av>span{width:56px!important;height:56px!important}.hl-val{font-size:1.7rem}.hl-name{font-size:.9rem}.hl-mid{width:34px;height:34px;font-size:.85rem}}
-    @media (max-width:640px){.hl-arena{gap:6px;padding:16px 8px}.hl-card .hl-av{width:72px;height:72px}.hl-card .hl-av img,.hl-card .hl-av>span{width:66px!important;height:66px!important}.hl-name{font-size:1rem}.hl-val{font-size:2rem}.hl-mid{width:40px;height:40px;font-size:1rem}.hl-btn{padding:14px;font-size:1.1rem}}
+    @media (max-width:380px){.hl-card .hl-av{width:60px;height:60px}.hl-card .hl-av>*{max-width:58px;max-height:58px}.hl-val{font-size:1.7rem}.hl-name{font-size:.9rem}.hl-mid{width:34px;height:34px;font-size:.85rem}}
+    @media (max-width:640px){.hl-arena{gap:6px;padding:16px 8px}.hl-card .hl-av{width:72px;height:72px}.hl-card .hl-av>*{max-width:70px;max-height:70px}.hl-name{font-size:1rem}.hl-val{font-size:2rem}.hl-mid{width:40px;height:40px;font-size:1rem}.hl-btn{padding:14px;font-size:1.1rem}}
     .wd-h2h{display:flex;flex-direction:column;align-items:center;margin:6px 0}.wd-h2h b{font-family:"Barlow Condensed",sans-serif;font-size:1.8rem;font-weight:900;color:#fbbf24;letter-spacing:2px}.wd-h2h small{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
     .wd-lb-row{display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:11px;margin-top:5px;background:rgba(255,255,255,0.025)}
     .wd-lb-row.me{background:rgba(46,204,113,0.12);border:1px solid rgba(74,222,128,0.35)}
@@ -27199,7 +27200,7 @@ function _hlQHtml(q, pool, rv, okFlag, i, total, ans) {
   const A = pool.find(p => p.id === q.a), B = pool.find(p => p.id === q.b); if (!A || !B) return '<div class="alert alert-warning">This question uses a driver who is no longer in the pool.</div>';
   const [, sLabel, sIco] = HL_STATS.find(x => x[0] === q.s);
   const card = (p, side, val) => { const lg = (!p.res && typeof getTeamLogo === 'function' && p.team) ? getTeamLogo(p.team) : '';
-    return `<div class="hl-card ${side}"><div class="wd-fc-av hl-av">${_wdAv(p, 96)}</div><b class="hl-name">${esc(p.name)}</b>
+    return `<div class="hl-card ${side}"><div class="wd-fc-av hl-av">${_wdAv(p, innerWidth <= 380 ? 58 : innerWidth <= 640 ? 70 : 96)}</div><b class="hl-name">${esc(p.name)}</b>
       <small class="hl-sub">${lg ? `<img src="${esc(lg)}" style="height:13px;width:20px;object-fit:contain;vertical-align:middle;margin-right:4px">` : ''}${p.res ? 'Reserve' : esc(p.team || '')}${p.dv ? ' · ' + esc(p.dv) : ''}</small>
       <div class="hl-val">${val}</div><small class="hl-stat">${sIco} ${sLabel}</small></div>`; };
   const rVal = rv ? `<span id="hl-val" class="${okFlag ? 'ok' : 'bad'}" data-v="${B[q.s] || 0}">0</span>` : '<span class="q">?</span>';
