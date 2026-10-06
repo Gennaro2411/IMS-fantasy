@@ -800,6 +800,7 @@
     .modal-overlay{padding:10px;align-items:flex-start;padding-top:14px;}
     .modal{max-height:88vh;}
   }
+@keyframes twLivePulse{0%,100%{opacity:1}50%{opacity:.25}}
 </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.js"></script>
 </head>
@@ -3485,6 +3486,22 @@ window.toggleBroadcastTheatre = function() {
   if (on) setTimeout(fitTheatreZoom, 30);
 };
 window.addEventListener('resize', () => { if (document.getElementById('broadcast-box')?.classList.contains('bc-theatre')) fitTheatreZoom(); });
+// ===== HOME: live Twitch stream (only shown while IMSttv26 is actually live) =====
+window._homeTwitchCheck = async function() {
+  const box = document.getElementById('home-twitch-live'); if (!box) return;
+  clearTimeout(window._homeTwTimer); window._homeTwTimer = setTimeout(window._homeTwitchCheck, 120000); // re-check every 2 min
+  let live = false;
+  try { const r = await fetch('https://decapi.me/twitch/uptime/IMSttv26', { cache: 'no-store' }); const t = (await r.text()).trim(); live = r.ok && !!t && !/offline|error|not found/i.test(t); } catch (e) { live = false; }
+  if (!live) { box.innerHTML = ''; return; }
+  if (box.querySelector('iframe')) return; // already showing — don't reload the player
+  const parents = Array.from(new Set(['fantasy.ims-league.com', location.hostname].filter(Boolean))).map(h => 'parent=' + encodeURIComponent(h)).join('&');
+  box.innerHTML = `<div class="card" style="border:1px solid rgba(145,70,255,.55);background:linear-gradient(135deg,rgba(145,70,255,.16),var(--surface) 60%)">
+    <div class="card-title" style="display:flex;align-items:center;gap:8px"><span style="display:inline-flex;align-items:center;gap:5px;background:#e8002d;color:#fff;font-size:.62rem;font-weight:800;letter-spacing:1.5px;padding:3px 8px;border-radius:5px"><span style="width:7px;height:7px;border-radius:50%;background:#fff;animation:twLivePulse 1.2s infinite"></span>LIVE</span> IMS is live on Twitch
+      <a href="https://twitch.tv/IMSttv26" target="_blank" rel="noopener" style="margin-left:auto;font-size:.72rem;color:#b48cff;text-decoration:none;font-weight:700">Open on Twitch ↗</a></div>
+    <div style="position:relative;width:100%;aspect-ratio:16/9;border-radius:10px;overflow:hidden;background:#000">
+      <iframe src="https://player.twitch.tv/?channel=IMSttv26&${parents}&muted=true" allowfullscreen frameborder="0" style="position:absolute;inset:0;width:100%;height:100%"></iframe></div>
+  </div>`;
+};
 window.toggleTwitchTheatre = function() {
   const box = document.getElementById('twitch-box');
   const btn = document.getElementById('tw-expand-btn');
@@ -7035,7 +7052,8 @@ async function renderDashboard() {
     </div>`;
   const GOLD='#ffc800', GREEN='#2ecc71', RED='#e8002d', PURPLE='#9b6fd4', TEAL='#27f4d2';
 
-  el.innerHTML = heroHtml + `
+  setTimeout(() => { try { window._homeTwitchCheck(); } catch (e) {} }, 0);
+  el.innerHTML = heroHtml + `<div id="home-twitch-live"></div>
     <div class="card">
       <div class="card-title"><div class="dot"></div>Race Timings</div>
       ${timingsHtml}
