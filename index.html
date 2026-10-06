@@ -508,7 +508,6 @@
   @media (prefers-reduced-motion:reduce){#driver-modal,#driver-modal-inner,#driver-modal-content.dm-in{animation:none!important}}
   #now-playing{position:fixed;left:16px;bottom:16px;z-index:9000;display:flex;align-items:center;gap:11px;padding:10px 16px 10px 12px;border-radius:14px;background:rgba(18,18,28,0.92);border:1px solid rgba(123,127,232,0.35);box-shadow:0 8px 24px rgba(0,0,0,.45);pointer-events:none;opacity:0;transform:translate3d(-12px,8px,0);transition:opacity .35s ease,transform .35s cubic-bezier(.2,.9,.3,1)}
   #now-playing.np-show{opacity:1;transform:none}
-  @media (max-width:640px){#now-playing{left:50%;right:auto;top:10px;bottom:auto;transform:translate3d(-50%,-12px,0);padding:6px 12px 6px 9px}#now-playing.np-show{transform:translate3d(-50%,0,0)}}
   #now-playing .np-eq{display:flex;align-items:flex-end;gap:3px;height:22px}
   #now-playing .np-eq i{display:block;width:4px;height:100%;border-radius:2px;background:linear-gradient(to top,#5a5ec9,#a0a4ff);transform-origin:bottom;animation:npBar .9s ease-in-out infinite alternate}
   #now-playing .np-eq i:nth-child(1){animation-duration:.72s}
@@ -520,7 +519,7 @@
   #now-playing .np-lbl{font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:#9a9eff;font-weight:700}
   #now-playing .np-title{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:1.02rem;color:#fff;white-space:nowrap;max-width:62vw;overflow:hidden;text-overflow:ellipsis}
   @keyframes npBar{0%{transform:scaleY(.2)}50%{transform:scaleY(.75)}100%{transform:scaleY(1)}}
-  @media (max-width:768px){#now-playing{left:12px;bottom:calc(78px + env(safe-area-inset-bottom,0px))}}
+  @media (max-width:768px){#now-playing{left:50%;right:auto;top:calc(10px + env(safe-area-inset-top,0px));bottom:auto;height:auto;max-width:calc(100vw - 24px);transform:translate3d(-50%,-12px,0);padding:6px 12px 6px 9px}#now-playing.np-show{transform:translate3d(-50%,0,0)}}
   @media (prefers-reduced-motion:reduce){#now-playing .np-eq i{animation:none;transform:scaleY(.6)}}
   /* ===== Results classification tables ===== */
   .rr-pair{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:14px}
