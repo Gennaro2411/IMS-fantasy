@@ -519,7 +519,8 @@
   #now-playing .np-lbl{font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:#9a9eff;font-weight:700}
   #now-playing .np-title{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:1.02rem;color:#fff;white-space:nowrap;max-width:62vw;overflow:hidden;text-overflow:ellipsis}
   @keyframes npBar{0%{transform:scaleY(.2)}50%{transform:scaleY(.75)}100%{transform:scaleY(1)}}
-  @media (max-width:768px){#now-playing{left:50%;right:auto;top:calc(10px + env(safe-area-inset-top,0px));bottom:auto;height:auto;max-width:calc(100vw - 24px);transform:translate3d(-50%,-12px,0);padding:6px 12px 6px 9px}#now-playing.np-show{transform:translate3d(-50%,0,0)}}
+  @media (max-width:768px){#now-playing{left:50%;right:auto;top:calc(8px + env(safe-area-inset-top,0px));bottom:auto;height:auto;width:auto;max-width:min(260px,calc(100vw - 32px));gap:7px;padding:4px 11px 4px 8px;border-radius:999px;transform:translate3d(-50%,-12px,0)}#now-playing.np-show{transform:translate3d(-50%,0,0)}
+    #now-playing .np-lbl{display:none}#now-playing .np-eq{height:12px;gap:2px}#now-playing .np-eq i{width:2px}#now-playing .np-txt{min-width:0}#now-playing .np-title{font-size:.78rem;max-width:200px}}
   @media (prefers-reduced-motion:reduce){#now-playing .np-eq i{animation:none;transform:scaleY(.6)}}
   /* ===== Results classification tables ===== */
   .rr-pair{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:14px}
