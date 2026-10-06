@@ -6713,6 +6713,7 @@ async function renderDashboard() {
   });
   buildDivisionAverages(drivers);
   window._sortedRacesForPrice = [...races].sort((a,b)=>(b.raceNum||0)-(a.raceNum||0));
+  try { if (window._loadLastSeasonForm) await window._loadLastSeasonForm(); } catch (e) {}
   window._allConstrs = constrs;
   window._constrPointTotals = {};
   constrs.forEach(c => { window._constrPointTotals[c.id] = c.seedPoints || 0; });
@@ -7561,6 +7562,7 @@ async function renderTeamBuilder(existingTeam, locked, allTeams) {
   });
   buildDivisionAverages(drivers);
   window._sortedRacesForPrice = [...races].sort((a,b)=>(b.raceNum||0)-(a.raceNum||0));
+  try { if (window._loadLastSeasonForm) await window._loadLastSeasonForm(); } catch (e) {}
   window._allConstrs = constrs;
   window._constrPointTotals = {};
   constrs.forEach(c => { window._constrPointTotals[c.id] = c.seedPoints || 0; });
@@ -8777,6 +8779,7 @@ async function renderMyTeam() {
   });
   buildDivisionAverages(drivers);
   window._sortedRacesForPrice = [...races].sort((a,b)=>(b.raceNum||0)-(a.raceNum||0));
+  try { if (window._loadLastSeasonForm) await window._loadLastSeasonForm(); } catch (e) {}
   window._allConstrs = constrs;
   window._constrPointTotals = {};
   constrs.forEach(c => { window._constrPointTotals[c.id] = c.seedPoints || 0; });
@@ -19421,6 +19424,16 @@ function priceChangeSinceLastRace(entity) {
 // most recent races most heavily (last 3 dominate), so a hot/cold streak shows through while one
 // freak result doesn't swing it. Grounded in the same signals that move prices — a *forecast*, not a
 // guarantee. Returns { dir:'up'|'down'|'steady', label, reason, hue, score }.
+// Last season's form for price forecasts: average price move per race from the latest season archive.
+window._loadLastSeasonForm = async function() { if (window._lastSeasonForm) return;
+  try { const a = (await dbGetAll('archives').catch(() => [])).filter(x => x && Array.isArray(x.drivers)).sort((x, y) => (y.createdAt || 0) - (x.createdAt || 0))[0];
+    const out = {}; if (a) { const n = Math.max(1, (a.races || []).length || 12), nk = (x) => String(x || '').replace(/^\[[^\]]*\]\s*/, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      [...(a.drivers || []), ...(a.constrs || [])].forEach(d => { if (d && d.name && typeof d.priceChange === 'number') out[nk(d.name)] = d.priceChange / n; }); }
+    window._lastSeasonForm = out; } catch (e) { window._lastSeasonForm = {}; } };
+const _lastSeasonMove = (d) => { const L = window._lastSeasonForm; if (!L || !d) return null; const k = String(d.name || '').replace(/^\[[^\]]*\]\s*/, '').toLowerCase().replace(/[^a-z0-9]/g, ''); return typeof L[k] === 'number' ? L[k] : null; };
+// Blend last season in as if it were 3 extra races of form — matters early in the season, fades as this season's races pile up.
+const _blendPrevSeason = (moves, prev) => { if (prev == null) return null; const n = moves.length;
+  if (!n) return { recentAvg: prev, seasonAvg: prev }; const sa = moves.reduce((a, b) => a + b, 0) / n; return { seasonAvg: (sa * n + prev * 3) / (n + 3) }; };
 window.predictPriceMove = function(driver) {
   if (!driver) return null;
   let score = 0; const reasons = [];
@@ -19435,10 +19448,11 @@ window.predictPriceMove = function(driver) {
       const moves = [];
       for (const r of order) { if (r && r.name && pr[r.name] && typeof pr[r.name].priceChange === 'number') moves.push(pr[r.name].priceChange); }
       let dir='steady', label='Holding steady', hue='#8a90a6', reason='form holding around its price';
-      if (moves.length) {
+      const _pv = _blendPrevSeason(moves, _lastSeasonMove(driver));
+      if (moves.length || _pv) {
         const last3 = moves.slice(0,3);
-        const recentAvg = last3.reduce((a,b)=>a+b,0)/last3.length;
-        const seasonAvg = moves.reduce((a,b)=>a+b,0)/moves.length;
+        const recentAvg = last3.length ? last3.reduce((a,b)=>a+b,0)/last3.length : _pv.recentAvg;
+        const seasonAvg = _pv ? _pv.seasonAvg : moves.reduce((a,b)=>a+b,0)/moves.length;
         const trend = recentAvg*0.75 + seasonAvg*0.25;
         const rs = [];
         if (trend >= 0.5) rs.push('gaining value fast'); else if (trend >= 0.15) rs.push('trending up in price');
@@ -19477,12 +19491,14 @@ window.predictPriceMove = function(driver) {
       const dnf = (dnfRec && typeof dnfRec === 'object' && typeof dnfRec.priceChange === 'number') ? dnfRec.priceChange : 0;
       if (driver.domPriceByRace && driver.domPriceByRace[r.name] !== undefined) moves.push(dom + elo - dnf);
     }
-    if (moves.length) {
+    const _pv = _blendPrevSeason(moves, _lastSeasonMove(driver));
+    if (moves.length || _pv) {
       // Recent form is what matters most for the NEXT move — base the signal mainly on the last 3
-      // races, with the wider season as a lighter tiebreaker.
+      // races, with the wider season (plus last season, weighted as 3 races) as a lighter tiebreaker.
       const last3 = moves.slice(0, 3);
-      const recentAvg = last3.reduce((a,b)=>a+b,0) / last3.length;
-      const seasonAvg = moves.reduce((a,b)=>a+b,0) / moves.length;
+      const recentAvg = last3.length ? last3.reduce((a,b)=>a+b,0) / last3.length : _pv.recentAvg;
+      const seasonAvg = _pv ? _pv.seasonAvg : moves.reduce((a,b)=>a+b,0) / moves.length;
+      if (_pv && moves.length < 3) reasons.push('last season\'s form counted');
       // Blend: 75% recent, 25% season.
       const trend = recentAvg * 0.75 + seasonAvg * 0.25;
       // Thresholds in $M per race.
@@ -20119,6 +20135,7 @@ async function renderMarket() {
   });
   buildDivisionAverages(drivers);
   window._sortedRacesForPrice = [...races].sort((a,b)=>(b.raceNum||0)-(a.raceNum||0));
+  try { if (window._loadLastSeasonForm) await window._loadLastSeasonForm(); } catch (e) {}
 
   // Count how many of the most-recent scored races each driver MISSED. A race "counts" only if it
   // was really imported (a non-zero entry somewhere). A driver participated if they have a result by
