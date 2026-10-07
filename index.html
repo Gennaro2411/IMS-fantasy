@@ -27156,8 +27156,8 @@ async function _h2hBoardHtml(f, title) {
   const rows = Object.values(pairs).filter(p => p.w + p.l > 0).map(p => { const t = p.w + p.l; if (p.l > p.w) [p.a, p.b, p.w, p.l] = [p.b, p.a, p.l, p.w]; return Object.assign(p, { t, pct: p.w / t }); })
     .sort((x, y) => y.pct - x.pct || (y.w - y.l) - (x.w - x.l) || y.t - x.t).slice(0, 20);
   const line = (r, i) => { const mine = r.a.uid === me.uid || r.b.uid === me.uid, lose = r.b.uid === me.uid && r.w !== r.l, draw = r.w === r.l;
-    // Whole row tinted: green = winning (or the leader, for other players' rows), red = you're losing it, amber = level.
-    const c = draw ? '#f59e0b' : lose ? '#ef4444' : '#22c55e';
+    // Whole row tinted: green = you're winning, red = you're losing, amber = level, grey = you're not in it.
+    const c = !mine ? '#9ca3af' : draw ? '#f59e0b' : lose ? '#ef4444' : '#22c55e';
     return `<div class="wd-lb-row${mine ? ' me' : ''}" style="background:${c}1f;border:1px solid ${c}66;border-left:4px solid ${c};border-radius:10px;margin-bottom:5px"><span class="wd-lb-pos" style="color:${c}">${i + 1}</span><span class="wd-lb-name"><b>${esc(r.a.name)}</b> <small style="color:var(--muted)">vs</small> ${esc(r.b.name)}</span><small style="color:var(--muted);margin-right:8px">${Math.round(r.pct * 100)}% · ${r.t} played</small><b style="color:${c}">${r.b.uid === me.uid ? r.l + '–' + r.w : r.w + '–' + r.l}</b></div>`; };
   return `<div class="wd-panel wd-lb" style="margin-top:14px"><h4>🥊 ${title} <small>most dominant first</small></h4>${rows.length ? rows.map(line).join('') : '<p class="text-muted" style="margin:6px 0 0">No head-to-heads yet — play a duel!</p>'}</div>`;
 }
