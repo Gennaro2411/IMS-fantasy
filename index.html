@@ -26558,8 +26558,8 @@ const DRIVER_CHAMPS = [["S1 D1", "TheMekanic17"], ["S1 D2", "Ranga20063239"], ["
 const NAT_OVERRIDE = { 'MrShiesty_1769': 'Welsh', 'mcbeth': 'Welsh', 'alfienerfboy': 'Welsh', 'TheMekanic17': 'Australian', 'veerthebot': 'British', 'connoroce': 'Australian' };
 // Admin-confirmed pole totals (the .db is missing / has a bad quali time for some sessions).
 // Poles the .db is missing: [extra to add on top of the calculated count, known minimum right now].
-// Mekanic has 7 (one pole isn't in the .db) — new poles from future .db rebuilds still add on top.
-const POLE_OVERRIDE = { 'TheMekanic17': [1, 7] };
+// Mekanic has 6 (one pole isn't in the .db) — new poles from future .db rebuilds still add on top.
+const POLE_OVERRIDE = { 'TheMekanic17': [1, 6] };
 const _poleFix = (name, n) => { const k = _wdNorm(name); for (const [nm, v] of Object.entries(POLE_OVERRIDE)) if (_wdNorm(nm) === k) return Math.max((n || 0) + v[0], v[1]); return n; };
 const _natFix = (name, nat) => { const k = _wdNorm(name); for (const [n, v] of Object.entries(NAT_OVERRIDE)) { const o = _wdNorm(n); if (o === k || (o.length >= 5 && k.includes(o))) return v; } return nat; }; // exact, or name contains it (e.g. "McBeth_7")
 // First season a driver raced in (from their per-season results, e.g. "S3 D2").
