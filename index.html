@@ -179,6 +179,7 @@
   nav button{background:none;border:none;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:.95rem;letter-spacing:1px;padding:10px 14px;cursor:pointer;border-radius:4px 4px 0 0;transition:all .2s;text-transform:uppercase;white-space:nowrap;border-bottom:2px solid transparent;}
   nav button:hover,nav button.active{color:var(--text);background:var(--surface2);}
   nav button.active{border-bottom:2px solid #5A5EC9;border-radius:4px 4px 0 0;}
+  .ims-ico{width:1em;height:1em;display:inline-block;vertical-align:-0.14em;flex-shrink:0;overflow:visible}
   .admin-badge{background:var(--red);color:white;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:3px;letter-spacing:1px;}
 
   main{max-width:1100px;margin:0 auto;padding:32px 24px;position:relative;}
@@ -1319,7 +1320,7 @@
   <button class="page-refresh-btn" onclick="refreshCurrentPage(this)" title="Refresh">⟳</button>
 
   <a href="https://ims-league.com/" target="_blank" rel="noopener noreferrer" class="league-cta">
-    <div class="league-cta-badge">🏁</div>
+    <div class="league-cta-badge"><svg viewBox="0 0 24 24" class="ims-ico" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4"/><path d="M5 4h13v9H5"/><path d="M9.3 4v9M13.7 4v9M5 8.5h13" stroke-width="1.2" opacity=".55"/></svg></div>
     <div style="flex:1;min-width:0">
       <div class="league-cta-kicker">Official Home of the Series</div>
       <div class="league-cta-title">IMS LEAGUE</div>
@@ -2846,6 +2847,10 @@
 </div>
 
 <script>
+
+// ===== Icon set (replaces emojis): clean line icons, inherit text colour, sized to the text =====
+window._ICONS = {"flag": "<path d=\"M5 21V4\"/><path d=\"M5 4h13v9H5\"/><path d=\"M9.3 4v9M13.7 4v9M5 8.5h13\" stroke-width=\"1.2\" opacity=\".55\"/>", "shield": "<path d=\"M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6z\"/>", "user": "<circle cx=\"12\" cy=\"8\" r=\"4\"/><path d=\"M4 21a8 8 0 0 1 16 0\"/>", "crown": "<path d=\"M3 8l4.5 4L12 5l4.5 7L21 8l-2 10H5z\"/><path d=\"M5 21h14\"/>", "trophy": "<path d=\"M8 21h8M12 17v4\"/><path d=\"M7 4h10v5a5 5 0 0 1-10 0z\"/><path d=\"M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3\"/>", "medal": "<circle cx=\"12\" cy=\"15\" r=\"6\"/><path d=\"M8.5 9.6 6 3h4l2 4 2-4h4l-2.5 6.6\"/>", "up": "<path d=\"M22 7l-8.5 8.5-5-5L2 17\"/><path d=\"M16 7h6v6\"/>", "down": "<path d=\"M22 17l-8.5-8.5-5 5L2 7\"/><path d=\"M16 17h6v-6\"/>", "sparkles": "<path d=\"M12 3l1.8 4.7 4.7 1.8-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z\"/><path d=\"M19 14.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z\"/>", "timer": "<circle cx=\"12\" cy=\"14\" r=\"8\"/><path d=\"M12 10v4l2.5 2M10 2h4\"/>", "zap": "<path d=\"M13 2 4 14h7l-1 8 9-12h-7z\"/>", "ban": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M5.6 5.6l12.8 12.8\"/>", "alert": "<path d=\"M12 3 2 20h20z\"/><path d=\"M12 10v4.5M12 17.2v.1\"/>", "pennant": "<path d=\"M5 21V4\"/><path d=\"M5 4h12l-2.5 4.5L17 13H5\"/>", "swap": "<path d=\"M3 12a9 9 0 0 1 15.4-6.4L21 8\"/><path d=\"M21 3v5h-5\"/><path d=\"M21 12a9 9 0 0 1-15.4 6.4L3 16\"/><path d=\"M3 21v-5h5\"/>", "pin": "<path d=\"M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z\"/><circle cx=\"12\" cy=\"10\" r=\"2.5\"/>", "home": "<path d=\"M3 11l9-8 9 8\"/><path d=\"M5 9.5V20h14V9.5\"/><path d=\"M10 20v-5h4v5\"/>", "star": "<path d=\"m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z\"/>", "flame": "<path d=\"M12 22c4.1 0 7-2.9 7-7 0-3.6-2.4-6-4-8-.4 2-1.5 3-3 3 0-3-1-5-3-7-.6 3.3-5 6-5 12 0 4.1 3.3 7 8 7z\"/>", "snow": "<path d=\"M12 2v20M3.3 7l17.4 10M3.3 17 20.7 7\"/><path d=\"M9 4.2l3 2 3-2M9 19.8l3-2 3 2\"/>", "gem": "<path d=\"M6 3h12l4 6-10 12L2 9z\"/><path d=\"M2 9h20M12 21 8 9l4-6 4 6z\"/>", "lock": "<rect x=\"4.5\" y=\"11\" width=\"15\" height=\"10\" rx=\"2\"/><path d=\"M8 11V7.5a4 4 0 0 1 8 0V11\"/>", "hidden": "<path d=\"M3 3l18 18\"/><path d=\"M10.6 5.1A10.3 10.3 0 0 1 22 12a15 15 0 0 1-3 3.9M6.6 6.6A14.5 14.5 0 0 0 2 12s3.5 7 10 7a9.7 9.7 0 0 0 5.4-1.6\"/><path d=\"M9.9 9.9a3 3 0 0 0 4.2 4.2\"/>", "calendar": "<rect x=\"3\" y=\"5\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M3 10h18M8 3v4M16 3v4\"/>", "clipboard": "<rect x=\"5\" y=\"4\" width=\"14\" height=\"17\" rx=\"2\"/><path d=\"M9 3h6v3H9z\"/><path d=\"M9 12h6M9 16h4\"/>", "ticket": "<path d=\"M3 7h18v3a2 2 0 0 0 0 4v3H3v-3a2 2 0 0 0 0-4z\"/><path d=\"M14.5 7v2M14.5 11v2M14.5 15v2\"/>", "check": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"m8.5 12 2.5 2.5 4.5-5\"/>", "undo": "<path d=\"M9 14 4 9l5-5\"/><path d=\"M4 9h11a5 5 0 0 1 0 10h-3\"/>", "target": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><circle cx=\"12\" cy=\"12\" r=\"5\"/><circle cx=\"12\" cy=\"12\" r=\"1\"/>", "chart": "<path d=\"M4 20V11M10 20V5M16 20v-7M2 20h20\"/>", "building": "<rect x=\"4\" y=\"3\" width=\"16\" height=\"18\" rx=\"1.5\"/><path d=\"M9 21v-4h6v4M8.5 7.5h1M14.5 7.5h1M8.5 11.5h1M14.5 11.5h1\"/>", "rise": "<path d=\"M7 17 17 7\"/><path d=\"M8 7h9v9\"/>", "drop": "<path d=\"M7 7l10 10\"/><path d=\"M17 8v9H8\"/>", "tag": "<path d=\"M3 12V3h9l9 9-9 9z\"/><circle cx=\"7.5\" cy=\"7.5\" r=\"1.3\"/>", "history": "<path d=\"M3 12a9 9 0 1 0 2.6-6.4L3 8\"/><path d=\"M3 3v5h5\"/><path d=\"M12 7.5V12l3 2\"/>", "wallet": "<rect x=\"3\" y=\"6\" width=\"18\" height=\"14\" rx=\"2.5\"/><path d=\"M3 10.5h18\"/><circle cx=\"16.5\" cy=\"15.2\" r=\"1.1\"/>", "dot": "<circle cx=\"12\" cy=\"12\" r=\"5\" fill=\"currentColor\" stroke=\"none\"/>"};
+window._ico = (n, c) => `<svg viewBox="0 0 24 24" class="ims-ico" fill="none" stroke="${c || 'currentColor'}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${window._ICONS[n] || ''}</svg>`;
 const DIVISIONS = ['D0','D1','D2','D3','D4','E3'];
 
 // ── Season 7 results overrides ───────────────────────────────────────────────
@@ -3792,13 +3797,13 @@ function bcScenes() {
       const label = c.isConstructor ? "CONSTRUCTORS' CHAMPION" : (esc(c.div) + ' CHAMPION');
       let badge;
       if (c.isConstructor) {
-        badge = `<div style="width:${avSize}px;height:${avSize}px;border-radius:9px;background:#0d0d12;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden">${c.logo?`<img src="${esc(c.logo)}" style="width:78%;height:78%;object-fit:contain">`:'🏭'}</div>`;
+        badge = `<div style="width:${avSize}px;height:${avSize}px;border-radius:9px;background:#0d0d12;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden">${c.logo?`<img src="${esc(c.logo)}" style="width:78%;height:78%;object-fit:contain">`:_ico('shield')}</div>`;
       } else {
         const photo = c.driver ? (typeof driverPhoto === 'function' ? driverPhoto(c.driver) : '') : '';
         badge = bcAvatar(photo, c.name, avSize);
       }
       return `<div style="display:flex;align-items:center;gap:11px;padding:${pad};border-radius:11px;background:linear-gradient(100deg, ${hue}26, rgba(255,200,0,0.05) 72%);border:1px solid ${hue}66;box-shadow:0 0 16px ${hue}1c">
-        <div style="font-size:${crownSz};line-height:1">👑</div>
+        <div style="font-size:${crownSz};line-height:1;color:#ffc800">${_ico('crown')}</div>
         ${badge}
         <div style="flex:1;min-width:0">
           <div style="font-size:${labelSz};font-weight:800;letter-spacing:2px;color:${hue};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${label}</div>
@@ -3810,7 +3815,7 @@ function bcScenes() {
         </div>
       </div>`;
     }).join('');
-    scenes.push({ label: n > 1 ? '👑 YOUR CHAMPIONS' : '👑 CHAMPION', html:
+    scenes.push({ label: _ico('crown') + (n > 1 ? ' YOUR CHAMPIONS' : ' CHAMPION'), html:
       `<div style="display:flex;flex-direction:column;gap:${gap}">${cards}</div>` });
   }
 
@@ -3830,7 +3835,7 @@ function bcScenes() {
           <div style="font-size:.66rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(a.detail)} · ${esc(a.sub)}</div>
         </div>
       </div>`).join('');
-      scenes.push({ label: `🎖️ ${esc(wk.raceName).toUpperCase()} — WEEKLY AWARDS`, html: `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${cards}</div>` });
+      scenes.push({ label: `${_ico('medal')} ${esc(wk.raceName).toUpperCase()} — WEEKLY AWARDS`, html: `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${cards}</div>` });
     }
   } catch(e) {}
 
@@ -3864,12 +3869,12 @@ function bcScenes() {
             <div style="font-size:.64rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(x.p.reason)}</div>
           </div>
           <div style="text-align:right;flex-shrink:0">
-            <div style="font-size:1.3rem;line-height:1">${up?'📈':'📉'}</div>
+            <div style="font-size:1.3rem;line-height:1;color:${up?'#4ade80':'#f87171'}">${up?_ico('up'):_ico('down')}</div>
             <div style="font-size:.5rem;font-weight:800;letter-spacing:.5px;color:${x.p.hue}">${up?'RISE':'RISK'}</div>
           </div>
         </div>`;
       }).join('');
-      scenes.push({ label: '🔮 PRICE FORECAST — ONES TO WATCH', html: `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${cards}</div>` });
+      scenes.push({ label: _ico('sparkles') + ' PRICE FORECAST — ONES TO WATCH', html: `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${cards}</div>` });
     }
   } catch(e) {}
 
@@ -3888,7 +3893,7 @@ function bcScenes() {
   // SCENES: last race — a podium scene for EACH division (D0–D4)
   const lastRace = D.races.find(r => r.driverPoints && Object.values(r.driverPoints).some(v => v > 0));
   if (lastRace) {
-    const medals = ['🥇','🥈','🥉'];
+    const medals = [_ico('medal','#ffd24a'), _ico('medal','#cfd8e3'), _ico('medal','#cd7f32')];
     DIVISIONS.forEach(div => {
       // Per-division points: prefer the per-division record; fall back to the driver's total
       // for that race if they're rostered in this division (older race records).
@@ -3915,7 +3920,7 @@ function bcScenes() {
         const n = _nnp(d.name);
         let b = '';
         if (poleName && n === poleName) b += ' <span style="font-size:.6rem;font-weight:800;color:#e1bee7;background:rgba(155,89,182,0.20);border:1px solid rgba(155,89,182,0.6);border-radius:4px;padding:0 4px;vertical-align:middle">P</span>';
-        if (flName && n === flName) b += ' <span style="font-size:.6rem;font-weight:800;color:#e1bee7;background:rgba(155,89,182,0.20);border:1px solid rgba(155,89,182,0.6);border-radius:4px;padding:0 4px;vertical-align:middle">⏱ FL</span>';
+        if (flName && n === flName) b += ' <span style="font-size:.6rem;font-weight:800;color:#e1bee7;background:rgba(155,89,182,0.20);border:1px solid rgba(155,89,182,0.6);border-radius:4px;padding:0 4px;vertical-align:middle">'+_ico('timer')+' FL</span>';
         return b;
       };
       scenes.push({ label: `${esc(lastRace.name).toUpperCase()} — ${div} PODIUM`, html:
@@ -3948,7 +3953,7 @@ function bcScenes() {
     scenes.push({ label: 'MARKET MOVERS', html:
       movers.map((d,i) => `
         <div style="display:flex;align-items:center;gap:10px;padding:4px 8px;animation:pageFade .4s ease ${i*0.08}s backwards">
-          <span style="font-size:1rem">${fullMove(d) > 0 ? '📈' : '📉'}</span>
+          <span style="font-size:1rem;color:${fullMove(d) > 0 ? '#4ade80' : '#f87171'}">${fullMove(d) > 0 ? _ico('up') : _ico('down')}</span>
           ${bcAvatar(driverPhoto(d), d.name, 26)}
           <span style="flex:1;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(d.name)}</span>
           <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;color:${fullMove(d)>0?'#2ecc71':'var(--red)'}">${fullMove(d)>0?'+':''}${fullMove(d).toFixed(1)}M</span>
@@ -3997,7 +4002,7 @@ function bcScenes() {
           <span style="flex:1;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(x.d.name)}<span style="font-size:.6rem;color:var(--muted);margin-left:6px">${esc(x.d.division||'')}</span></span>
           <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;color:${accent}">${x.n}${unit}</span>
         </div>`).join('');
-    const winHtml = leaderRows(winTally, gold, ' 🏆');
+    const winHtml = leaderRows(winTally, gold, ' '+_ico('trophy'));
     const poleHtml = leaderRows(poleTally, '#e1bee7', ' P');
     if (winHtml) scenes.push({ label: 'RACE WINS — TOP 5 THIS SEASON', html: winHtml });
     if (poleHtml) scenes.push({ label: 'POLE POSITIONS — TOP 5 THIS SEASON', html: poleHtml });
@@ -4089,7 +4094,7 @@ function bcScenes() {
     if (cap.length) {
       const cards = cap.map((o,i) => {
         const col = o.kind==='ban' ? '#ff5470' : '#ff8fab';
-        const tag = o.kind==='ban' ? '🚫 BANNED'+(o.extra?' · '+o.extra.toUpperCase():'') : '⚠️ CHECKED OUT';
+        const tag = o.kind==='ban' ? _ico('ban')+' BANNED'+(o.extra?' · '+o.extra.toUpperCase():'') : _ico('alert')+' CHECKED OUT';
         return `<div style="display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:10px;background:linear-gradient(150deg,${col}14,rgba(255,255,255,0.02) 75%);border:1px solid ${col}33;animation:pageFade .4s ease ${i*0.07}s backwards;min-width:0">
           ${bcAvatar(driverPhoto(o.d), o.d.name, 32)}
           <span style="flex:1;min-width:0">
@@ -4099,7 +4104,7 @@ function bcScenes() {
           <span style="font-size:.6rem;font-weight:800;color:var(--muted);flex-shrink:0">${esc((o.d.division||'').toUpperCase())}</span>
         </div>`;
       }).join('');
-      scenes.push({ label: '🚩 OUT'+(upNext?' AT '+esc(upNext.name).toUpperCase():' THIS ROUND'), html: `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${cards}</div>` });
+      scenes.push({ label: _ico('pennant')+' OUT'+(upNext?' AT '+esc(upNext.name).toUpperCase():' THIS ROUND'), html: `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${cards}</div>` });
     }
   }
 
@@ -4116,7 +4121,7 @@ function bcScenes() {
         return `<div style="display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:12px;background:linear-gradient(100deg, ${hue}1a, var(--surface2) 70%);border:1px solid ${hue}44;animation:pageFade .4s ease ${i*0.06}s backwards">
           <div style="position:relative;flex-shrink:0">
             ${bcAvatar(photo, s.reserveName, 42)}
-            <div style="position:absolute;bottom:-3px;right:-3px;width:17px;height:17px;border-radius:50%;background:${hue};display:flex;align-items:center;justify-content:center;font-size:.6rem;box-shadow:0 0 0 2px var(--surface2)">🔄</div>
+            <div style="position:absolute;bottom:-3px;right:-3px;width:17px;height:17px;border-radius:50%;background:${hue};display:flex;align-items:center;justify-content:center;font-size:.6rem;box-shadow:0 0 0 2px var(--surface2);color:#fff">${_ico('swap')}</div>
           </div>
           <div style="flex:1;min-width:0">
             <div style="font-weight:800;font-size:1rem;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff">${esc(s.reserveName)}</div>
@@ -4132,7 +4137,7 @@ function bcScenes() {
           </div>
         </div>`;
       }).join('');
-      scenes.push({ label: '🔄 RESERVES STEPPING IN', html: `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${cards}</div>` });
+      scenes.push({ label: _ico('swap')+' RESERVES STEPPING IN', html: `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${cards}</div>` });
     }
   } catch(e) {}
 
@@ -4166,7 +4171,7 @@ function bcScenes() {
               </span>
               <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.15rem;color:#2ecc71;flex-shrink:0">${x.avg.toFixed(1)}<span style="font-size:.6rem;color:var(--muted)"> avg</span></span>
             </div>`).join('');
-          scenes.push({ label: '📍 TRACK FORM — '+esc(upNext.name).toUpperCase(), html: `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${cards}</div>` });
+          scenes.push({ label: _ico('pin')+' TRACK FORM — '+esc(upNext.name).toUpperCase(), html: `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${cards}</div>` });
         }
       }
     }
@@ -4195,7 +4200,7 @@ function bcScenes() {
               </span>
               ${natFlagImg(x.nat, 24)}
             </div>`).join('');
-        scenes.push({ label: '🏠 HOME GP — ' + esc(upNext.name).toUpperCase(), html: `<div style="font-size:.72rem;color:var(--muted);margin-bottom:8px">${home.length} driver${home.length>1?'s':''} racing on home soil ${typeof trackFlagImg==='function'?trackFlagImg(upNext.name,18):''}${home.length>12?' · showing 12':''}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${cards}</div>` });
+        scenes.push({ label: _ico('home')+' HOME GP — ' + esc(upNext.name).toUpperCase(), html: `<div style="font-size:.72rem;color:var(--muted);margin-bottom:8px">${home.length} driver${home.length>1?'s':''} racing on home soil ${typeof trackFlagImg==='function'?trackFlagImg(upNext.name,18):''}${home.length>12?' · showing 12':''}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${cards}</div>` });
       }
     }
   }
@@ -4274,7 +4279,7 @@ function bcScenes() {
         topOwned.map((x,i) => {
           const pct = Math.round(x.c / D.teams.length * 100);
           return `<div style="display:flex;align-items:center;gap:10px;padding:4px 8px;animation:pageFade .4s ease ${i*0.08}s backwards">
-            <span style="font-size:.95rem">⭐</span>
+            <span style="font-size:.95rem;color:#ffc800">${_ico('star')}</span>
             ${bcAvatar(driverPhoto(x.d), x.d.name, 24)}
             <span style="flex:1;font-weight:${i===0?800:600};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(x.d.name)} <span style="font-size:.65rem;color:var(--muted)">${esc(x.d.division||'')}</span></span>
             <div style="width:90px;height:7px;border-radius:4px;background:rgba(255,255,255,0.07);overflow:hidden"><div style="width:${pct}%;height:100%;background:linear-gradient(90deg,#9b6fd4,${gold})"></div></div>
@@ -4282,7 +4287,7 @@ function bcScenes() {
           </div>`;
         }).join('') +
         (topC ? `<div style="display:flex;align-items:center;gap:10px;padding:6px 8px;margin-top:2px;border-top:1px solid rgba(255,255,255,0.07)">
-          <span style="font-size:.95rem">🏭</span>
+          <span style="font-size:.95rem">${_ico('shield')}</span>
           <span style="flex:1;font-weight:700">${esc(topC.c.name)} <span style="font-size:.65rem;color:var(--muted)">top constructor</span></span>
           <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;color:${gold}">${Math.round(topC.n / D.teams.length * 100)}%</span>
         </div>` : '') });
@@ -4313,7 +4318,7 @@ function bcScenes() {
     const cold = formList.filter(x => x.delta <= -15).slice(-3).reverse();
     if (heaters.length || cold.length) {
       const row = (x, hot, i) => `<div style="display:flex;align-items:center;gap:10px;padding:4px 8px;animation:pageFade .4s ease ${i*0.08}s backwards">
-        <span style="font-size:.95rem">${hot?'🔥':'🧊'}</span>
+        <span style="font-size:.95rem;color:${hot?'#fb923c':'#7dd3fc'}">${hot?_ico('flame'):_ico('snow')}</span>
         ${bcAvatar(driverPhoto(x.d), x.d.name, 24)}
         <span style="flex:1;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(x.d.name)} <span style="font-size:.65rem;color:var(--muted)">${esc(x.d.division||'')}</span></span>
         <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;color:${hot?'#2ecc71':'var(--red)'}">${x.delta>0?'+':''}${x.delta}% <span style="font-size:.62rem;font-weight:400;color:var(--muted)">vs season form</span></span>
@@ -4340,14 +4345,14 @@ function bcScenes() {
       if (capEntries.length) {
         scenes.push({ label: `CAPTAINCY REPORT — ${esc(capRace.name).toUpperCase()}`, html:
           capEntries.slice(0,3).map((x,i) => `<div style="display:flex;align-items:center;gap:10px;padding:4px 8px;animation:pageFade .4s ease ${i*0.08}s backwards">
-            <span style="font-size:.95rem">👑</span>
+            <span style="font-size:.95rem;color:#ffc800">${_ico('crown')}</span>
             ${bcAvatar(driverPhoto(x.d), x.d.name, 24)}
             <span style="flex:1;font-weight:${i===0?800:600};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(x.d.name)}</span>
             <span style="font-size:.72rem;color:var(--muted)">${x.c} manager${x.c!==1?'s':''}</span>
             <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;color:${gold};width:56px;text-align:right">${x.pts} pts</span>
           </div>`).join('') +
           (missed ? `<div style="display:flex;align-items:center;gap:10px;padding:6px 8px;margin-top:2px;border-top:1px solid rgba(255,255,255,0.07)">
-            <span style="font-size:.95rem">💎</span>
+            <span style="font-size:.95rem;color:#a5b4fc">${_ico('gem')}</span>
             <span style="flex:1;font-size:.8rem"><b>The one that got away:</b> ${esc(missed.d.name)} scored ${missed.pts} — captained by ${missed.caps === 0 ? 'nobody' : 'just ' + missed.caps}</span>
           </div>` : '') });
       }
@@ -4365,14 +4370,14 @@ function bcScenes() {
         ? `<span style="font-size:.6rem;font-weight:800;padding:2px 8px;border-radius:20px;background:rgba(46,204,113,0.14);color:#2ecc71;border:1px solid rgba(46,204,113,0.45)">✓ ${dv}</span>`
         : `<span style="font-size:.6rem;font-weight:800;padding:2px 8px;border-radius:20px;background:rgba(255,255,255,0.04);color:var(--muted);border:1px solid rgba(255,255,255,0.10)">${dv}</span>`;
     }).join('');
-    scenes.push({ label: '🔴 LIVE THIS WEEKEND', html: `
+    scenes.push({ label: _ico('dot','#ef4444')+' LIVE THIS WEEKEND', html: `
       ${liveOutline ? `<img src="${liveOutline}" alt="" style="position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);height:105%;max-width:88%;object-fit:contain;filter:invert(1);opacity:.10;pointer-events:none">` : ''}
       <div style="text-align:center;padding-top:6px;position:relative">
         <div style="font-size:1.8rem;margin-bottom:2px">${getRaceFlag(bcLive.name)}</div>
         <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.9rem;line-height:1;text-transform:uppercase;letter-spacing:1px">${esc(bcLive.name)}</div>
         <div style="font-size:.62rem;font-weight:800;letter-spacing:2px;color:var(--red);margin:8px 0 6px"><span class="dd-dot"></span>ROUND ${esc(String(bcLive.raceNum||'?'))} · RACE WEEKEND IN PROGRESS</div>
         <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(232,0,45,0.10);border:1px solid rgba(232,0,45,0.35);border-radius:8px;padding:7px 14px">
-          <span>🔒</span><span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1rem">TEAMS LOCKED — POINTS COMING IN</span>
+          <span>${_ico('lock')}</span><span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1rem">TEAMS LOCKED — POINTS COMING IN</span>
         </div>
         <div style="display:flex;gap:5px;margin-top:8px;justify-content:center;flex-wrap:wrap">${bcDivChips}</div>
       </div>` });
@@ -4406,7 +4411,7 @@ function bcScenes() {
     scenes.push({ label: revealed ? 'TRANSFER WIRE — DEADLINE DAY' : 'TRANSFER WIRE', html:
       recentTx.map((t,i) => `
         <div style="display:flex;align-items:center;gap:8px;padding:5px 8px;font-size:.85rem;animation:pageFade .4s ease ${i*0.1}s backwards">
-          ${revealed ? bcAvatar(teamAv[t.userId], teamName[t.userId]||'?', 22) : '<span>🕶</span>'}<b style="color:${gold}">${revealed ? esc(teamName[t.userId]||'?') : 'A manager'}</b>
+          ${revealed ? bcAvatar(teamAv[t.userId], teamName[t.userId]||'?', 22) : '<span>'+_ico('hidden')+'</span>'}<b style="color:${gold}">${revealed ? esc(teamName[t.userId]||'?') : 'A manager'}</b>
           <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted)">${esc(t.oldName||'—')} ➜ <span style="color:var(--text)">${esc(t.newName||'—')}</span></span>
           <span style="font-size:.7rem;color:var(--muted)">${formatTimeAgo(t.timestamp||Date.now())}</span>
         </div>`).join('') });
@@ -4424,7 +4429,7 @@ function bcShowScene() {
   sceneEl.style.opacity = 0;
   setTimeout(() => {
     sceneEl.innerHTML = scene.html;
-    if (labelEl) labelEl.textContent = scene.label;
+    if (labelEl) labelEl.innerHTML = scene.label;
     if (typeof fitTheatreZoom === 'function') fitTheatreZoom();
     sceneEl.style.opacity = 1;
   }, 500);
@@ -4655,7 +4660,7 @@ function buildRaceHero(nextRace, allRaces, schedule, actionBtnHtml, heroId, isLi
     let chip, chipStyle;
     const isHeroRace = r.id === nextRace.id || (isLive && (r.name||'').toLowerCase().trim() === (nextRace.name||'').toLowerCase().trim());
     if (isHeroRace) {
-      chip = isLive ? '🔴 LIVE' : 'NEXT';
+      chip = isLive ? _ico('dot')+' LIVE' : 'NEXT';
       chipStyle = isLive ? 'background:rgba(232,0,45,0.15);color:var(--red);border:1px solid rgba(232,0,45,0.5)' : 'background:rgba(255,200,0,0.15);color:var(--gold);border:1px solid rgba(255,200,0,0.4)';
     }
     else if ((r.lockTime||0) > now) { chip = 'UPCOMING'; chipStyle = 'background:var(--surface2);color:var(--muted);border:1px solid var(--border)'; }
@@ -4668,7 +4673,7 @@ function buildRaceHero(nextRace, allRaces, schedule, actionBtnHtml, heroId, isLi
       <div style="display:flex;align-items:center;gap:10px">
         ${getRaceFlag(r.name)}
         <div>
-          <div style="font-weight:700;font-size:.88rem;display:flex;align-items:center;gap:6px">${esc(r.name)}${r.isSprint?'<span style="color:#ff9500;font-weight:800;font-size:.6rem;letter-spacing:.5px;border:1px solid #ff9500;border-radius:3px;padding:0 4px;background:rgba(255,149,0,0.12)">⚡ SPRINT</span>':''}</div>
+          <div style="font-weight:700;font-size:.88rem;display:flex;align-items:center;gap:6px">${esc(r.name)}${r.isSprint?'<span style="color:#ff9500;font-weight:800;font-size:.6rem;letter-spacing:.5px;border:1px solid #ff9500;border-radius:3px;padding:0 4px;background:rgba(255,149,0,0.12)">'+_ico('zap')+' SPRINT</span>':''}</div>
           <div style="font-size:.7rem;color:var(--muted)">Round ${esc(String(r.raceNum||'?'))} · ${dateStr} · Lock ${timeStr}</div>
         </div>
       </div>
@@ -4725,7 +4730,7 @@ function buildRaceHero(nextRace, allRaces, schedule, actionBtnHtml, heroId, isLi
             <div style="font-size:.6rem;font-weight:800;letter-spacing:2px;color:var(--muted);margin-bottom:5px">THIS WEEKEND</div>
             <div style="background:rgba(232,0,45,0.10);border:1px solid rgba(232,0,45,0.35);border-radius:8px;padding:10px 14px">
               <div style="display:flex;align-items:center;gap:10px">
-                <span style="font-size:1.2rem">🔒</span>
+                <span style="font-size:1.2rem">${_ico('lock')}</span>
                 <div>
                   <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.15rem;line-height:1.1">TEAMS LOCKED — RACING NOW</div>
                   <div style="font-size:.72rem;color:var(--muted)">${anyIn ? 'Results are coming in — divisions ticked below are already on your team' : 'Points land on your team as division results come in'}</div>
@@ -4751,7 +4756,7 @@ function buildRaceHero(nextRace, allRaces, schedule, actionBtnHtml, heroId, isLi
       ${isDeadlineDay ? `<div class="lock-ticker" data-pending="1"><div class="lock-ticker-inner"><span class="tk-item">Loading transfer wire…</span></div></div>` : ''}
       <div style="position:relative;border-top:1px solid rgba(255,255,255,0.08)">
         <div id="${calId}" style="display:none;max-height:320px;overflow-y:auto">${calendarRows}</div>
-        <button class="btn btn-secondary btn-sm" style="width:100%;border-radius:0;border:none;background:rgba(255,255,255,0.03)" onclick="const el=document.getElementById('${calId}');const open=el.style.display!=='none';el.style.display=open?'none':'block';this.textContent=open?'📅 Season Calendar ▼':'📅 Season Calendar ▲';">📅 Season Calendar ▼</button>
+        <button class="btn btn-secondary btn-sm" style="width:100%;border-radius:0;border:none;background:rgba(255,255,255,0.03)" onclick="const el=document.getElementById('${calId}');const open=el.style.display!=='none';el.style.display=open?'none':'block';this.innerHTML=(open?this.dataset.c:this.dataset.o);" data-c="<svg viewBox=&quot;0 0 24 24&quot; class=&quot;ims-ico&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;><rect x=&quot;3&quot; y=&quot;5&quot; width=&quot;18&quot; height=&quot;16&quot; rx=&quot;2&quot;/><path d=&quot;M3 10h18M8 3v4M16 3v4&quot;/></svg> Season Calendar ▼" data-o="<svg viewBox=&quot;0 0 24 24&quot; class=&quot;ims-ico&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;><rect x=&quot;3&quot; y=&quot;5&quot; width=&quot;18&quot; height=&quot;16&quot; rx=&quot;2&quot;/><path d=&quot;M3 10h18M8 3v4M16 3v4&quot;/></svg> Season Calendar ▲"><svg viewBox="0 0 24 24" class="ims-ico" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg> Season Calendar ▼</button>
       </div>
     </div>`;
 }
@@ -6597,7 +6602,7 @@ async function renderBriefingNudge() {
       <div onclick="showPage('predictions')" style="position:relative;overflow:hidden;border-radius:16px;padding:16px 18px;margin-bottom:20px;cursor:pointer;background:linear-gradient(120deg, rgba(77,171,247,0.16), rgba(123,79,191,0.14) 60%, var(--surface2) 100%);border:1px solid rgba(77,171,247,0.4);transition:transform .15s, box-shadow .15s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(77,171,247,0.15)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
         ${outline?`<div style="position:absolute;top:50%;right:-24px;transform:translateY(-50%);width:150px;height:150px;background:url('${outline}') no-repeat center/contain;opacity:0.1;filter:brightness(0) invert(1);pointer-events:none"></div>`:''}
         <div style="position:relative;display:flex;align-items:center;gap:14px">
-          <div style="flex-shrink:0;width:46px;height:46px;border-radius:12px;background:rgba(77,171,247,0.18);border:1px solid rgba(77,171,247,0.45);display:flex;align-items:center;justify-content:center;font-size:1.5rem">📋</div>
+          <div style="flex-shrink:0;width:46px;height:46px;border-radius:12px;background:rgba(77,171,247,0.18);border:1px solid rgba(77,171,247,0.45);display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:#4dabf7">${_ico('clipboard')}</div>
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px">
               <span style="font-size:.55rem;font-weight:800;letter-spacing:1.5px;color:var(--blue)">NEW RACE BRIEFING</span>
@@ -6622,15 +6627,15 @@ async function renderBetOfWeek() {
       .sort((a, b) => (b.payout || 0) - (a.payout || 0) || (b.settledAt || 0) - (a.settledAt || 0))[0];
     if (!best) { box.style.display = 'none'; return; }
     const t = teams.find(x => x.userId === best.userId) || {}, name = t.playerName || t.teamName || 'A player';
-    const av = t.discordAvatar ? `<img src="${esc(t.discordAvatar)}" style="width:54px;height:54px;border-radius:50%;object-fit:cover;border:2px solid #f7cf55;box-shadow:0 0 16px rgba(247,207,85,.4)" onerror="this.outerHTML='<span style=&quot;font-size:2rem&quot;>👤</span>'">` : '<span style="font-size:2rem">👤</span>';
+    const av = t.discordAvatar ? `<img src="${esc(t.discordAvatar)}" style="width:54px;height:54px;border-radius:50%;object-fit:cover;border:2px solid #f7cf55;box-shadow:0 0 16px rgba(247,207,85,.4)" onerror="this.outerHTML='<span style=&quot;font-size:2rem;color:#f7cf55&quot;>'+_ico('user')+'</span>'">` : '<span style="font-size:2rem;color:#f7cf55">'+_ico('user')+'</span>';
     const C = '<i class="imc"></i>', acca = best.market === 'acca' && (best.legs || []).length;
     const odds = best.effOdds || best.odds;
     const legs = acca ? `<div style="display:flex;flex-direction:column;gap:5px;margin-top:12px">${best.legs.map(l => { const r = l.void ? 'void' : l.result;
-        return `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:9px;background:rgba(255,255,255,.04);font-size:.8rem;${r === 'void' ? 'opacity:.55;text-decoration:line-through' : ''}"><span>${r === 'won' ? '✅' : r === 'void' ? '↩️' : '✅'}</span><span style="flex:1;min-width:0">${esc(l.label || '')}</span><b style="color:var(--gold)">${fmtOdds(l.odds)}</b></div>`; }).join('')}</div>` : '';
+        return `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:9px;background:rgba(255,255,255,.04);font-size:.8rem;${r === 'void' ? 'opacity:.55;text-decoration:line-through' : ''}"><span style="color:${r === 'void' ? '#9ca3af' : '#4ade80'}">${r === 'void' ? _ico('undo') : _ico('check')}</span><span style="flex:1;min-width:0">${esc(l.label || '')}</span><b style="color:var(--gold)">${fmtOdds(l.odds)}</b></div>`; }).join('')}</div>` : '';
     box.innerHTML = `<div style="position:relative;overflow:hidden;padding:16px 18px;border-radius:16px;background:linear-gradient(135deg,rgba(247,207,85,.14),rgba(20,20,30,.6) 60%);border:1px solid rgba(247,207,85,.4);box-shadow:0 10px 30px rgba(0,0,0,.3)">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;letter-spacing:2px;font-size:.8rem;color:#f7cf55;margin-bottom:10px">🎟 BET OF THE WEEK</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;letter-spacing:2px;font-size:.8rem;color:#f7cf55;margin-bottom:10px">${_ico('ticket')} BET OF THE WEEK</div>
       <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">${av}
-        <div style="flex:1;min-width:160px"><b style="font-size:1.1rem">${esc(name)}</b><div style="font-size:.85rem;margin-top:2px">${acca ? '🎯 ' : ''}${esc(best.label || '')}</div>
+        <div style="flex:1;min-width:160px"><b style="font-size:1.1rem">${esc(name)}</b><div style="font-size:.85rem;margin-top:2px">${acca ? _ico('target')+' ' : ''}${esc(best.label || '')}</div>
           <small style="color:var(--muted)">${esc(best.raceName || '')}${!acca && best.div ? ' · ' + esc(best.div) : ''}</small></div>
         <div style="text-align:right"><small style="color:var(--muted);display:block">${best.stake} ${C} @ <b style="color:var(--gold)">${fmtOdds(odds)}</b>${acca ? ' overall' : ''}</small>
           <b style="font-family:'Barlow Condensed',sans-serif;font-size:1.9rem;color:#4ade80;line-height:1.1">+${best.payout} ${C}</b></div></div>
@@ -6940,7 +6945,7 @@ async function renderDashboard() {
     <div class="card" style="padding:0;overflow:hidden;position:relative;background:linear-gradient(150deg,#151022 0%,#101018 60%,#0d0d14 100%);border:1px solid rgba(123,79,191,0.4)">
       <div style="height:3px;background:linear-gradient(90deg,var(--gold),#9b6fd4,transparent)"></div>
       <div style="padding:16px 18px 6px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
-        <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.5rem;letter-spacing:2px;background:linear-gradient(90deg,#ffe259,#ffa751);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">⭐ TEAM OF THE WEEK</span>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.5rem;letter-spacing:2px;background:linear-gradient(90deg,#ffe259,#ffa751);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent"><span style="-webkit-text-fill-color:initial;color:#ffc800">${_ico('star')}</span> TEAM OF THE WEEK</span>
         <span style="font-size:.78rem;color:var(--muted)">${getRaceFlag(prevRace.name)} ${esc(prevRace.name)}</span>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;padding:12px 18px 18px">
@@ -6953,7 +6958,7 @@ async function renderDashboard() {
             ${isMvp ? '<div style="position:absolute;top:-9px;left:50%;transform:translateX(-50%);font-size:.55rem;font-weight:900;letter-spacing:1px;background:linear-gradient(135deg,#ffe259,#ffa751);color:#111;border-radius:10px;padding:2px 9px;box-shadow:0 2px 8px rgba(0,0,0,.4)">MVP</div>' : ''}
             <div style="font-size:.58rem;font-weight:800;letter-spacing:1px;color:#fff;background:${acc}33;border:1px solid ${acc}66;border-radius:4px;padding:1px 6px;display:inline-block;margin-bottom:8px">${div}</div>
             <div style="width:54px;height:54px;border-radius:50%;background:var(--surface);border:2px solid ${isMvp?'var(--gold)':acc};margin:0 auto 8px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:1.4rem">
-              ${driverPhoto(driver) ? `<img src="${esc(driverPhoto(driver))}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML='👤'">` : '👤'}
+              ${driverPhoto(driver) ? `<img src="${esc(driverPhoto(driver))}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML=_ico('user')">` : _ico('user')}
             </div>
             <div class="kh-font" style="font-weight:900;font-size:.88rem;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(driver.name)}</div>
             <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.4rem;color:var(--gold);margin-top:3px">${pts}<span style="font-size:.7rem;font-weight:400;color:var(--muted)"> pts</span></div>
@@ -6967,7 +6972,7 @@ async function renderDashboard() {
           <div onclick="openConstructorModal && openConstructorModal('${totwConstr.id}')" style="cursor:pointer;background:${tcC ? `linear-gradient(170deg, ${tcC.bg.replace('0.08','0.20')}, var(--surface2) 75%)` : 'var(--surface2)'};border:1px solid ${tcC?tcC.border:'var(--border)'};border-radius:12px;padding:12px 8px;text-align:center;position:relative;transition:transform .15s ease" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
             <div style="font-size:.58rem;font-weight:800;letter-spacing:1px;color:#fff;background:${accC}33;border:1px solid ${accC}66;border-radius:4px;padding:1px 6px;display:inline-block;margin-bottom:8px">CONSTRUCTOR</div>
             <div style="width:54px;height:54px;border-radius:50%;background:var(--surface);border:2px solid ${accC};margin:0 auto 8px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:1.4rem">
-              ${logoC ? `<img src="${esc(logoC)}" style="width:70%;height:70%;object-fit:contain" onerror="this.parentElement.innerHTML='🏭'">` : '🏭'}
+              ${logoC ? `<img src="${esc(logoC)}" style="width:70%;height:70%;object-fit:contain" onerror="this.parentElement.innerHTML=_ico('shield')">` : _ico('shield')}
             </div>
             <div class="kh-font" style="font-weight:900;font-size:.88rem;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(totwConstr.name)}</div>
             <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.4rem;color:var(--gold);margin-top:3px">${Math.max(0,totwConstrPts)}<span style="font-size:.7rem;font-weight:400;color:var(--muted)"> pts</span></div>
@@ -7015,7 +7020,7 @@ async function renderDashboard() {
     <div class="card" style="padding:0;overflow:hidden;position:relative;background:linear-gradient(150deg,#1a1508 0%,#141018 60%,#0d0d14 100%);border:1px solid rgba(255,200,0,0.45)">
       <div style="height:3px;background:linear-gradient(90deg,#ffd24a,#ffa751,transparent)"></div>
       <div style="padding:16px 18px 6px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
-        <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.5rem;letter-spacing:2px;background:linear-gradient(90deg,#ffe259,#ffa751);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">👑 TEAM OF THE SEASON</span>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.5rem;letter-spacing:2px;background:linear-gradient(90deg,#ffe259,#ffa751);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent"><span style="-webkit-text-fill-color:initial;color:#ffc800">${_ico('crown')}</span> TEAM OF THE SEASON</span>
         <span style="font-size:.78rem;color:var(--muted)">Season ${seasonNumForTots} · top scorer per division all year</span>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;padding:12px 18px 18px">
@@ -7028,7 +7033,7 @@ async function renderDashboard() {
             ${isMvp ? '<div style="position:absolute;top:-9px;left:50%;transform:translateX(-50%);font-size:.55rem;font-weight:900;letter-spacing:1px;background:linear-gradient(135deg,#ffe259,#ffa751);color:#111;border-radius:10px;padding:2px 9px;box-shadow:0 2px 8px rgba(0,0,0,.4)">MVP</div>' : ''}
             <div style="font-size:.58rem;font-weight:800;letter-spacing:1px;color:#fff;background:${acc}33;border:1px solid ${acc}66;border-radius:4px;padding:1px 6px;display:inline-block;margin-bottom:8px">${div}</div>
             <div style="width:54px;height:54px;border-radius:50%;background:var(--surface);border:2px solid ${isMvp?'var(--gold)':acc};margin:0 auto 8px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:1.4rem">
-              ${driverPhoto(driver) ? `<img src="${esc(driverPhoto(driver))}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML='👤'">` : '👤'}
+              ${driverPhoto(driver) ? `<img src="${esc(driverPhoto(driver))}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML=_ico('user')">` : _ico('user')}
             </div>
             <div class="kh-font" style="font-weight:900;font-size:.88rem;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(driver.name)}</div>
             <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.4rem;color:var(--gold);margin-top:3px">${pts}<span style="font-size:.7rem;font-weight:400;color:var(--muted)"> pts</span></div>
@@ -7042,7 +7047,7 @@ async function renderDashboard() {
           <div onclick="openConstructorModal && openConstructorModal('${totsConstr.id}')" style="cursor:pointer;background:${tcC ? `linear-gradient(170deg, ${tcC.bg.replace('0.08','0.20')}, var(--surface2) 75%)` : 'var(--surface2)'};border:1px solid ${tcC?tcC.border:'var(--border)'};border-radius:12px;padding:12px 8px;text-align:center;position:relative;transition:transform .15s ease" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
             <div style="font-size:.58rem;font-weight:800;letter-spacing:1px;color:#fff;background:${accC}33;border:1px solid ${accC}66;border-radius:4px;padding:1px 6px;display:inline-block;margin-bottom:8px">CONSTRUCTOR</div>
             <div style="width:54px;height:54px;border-radius:50%;background:var(--surface);border:2px solid ${accC};margin:0 auto 8px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:1.4rem">
-              ${logoC ? `<img src="${esc(logoC)}" style="width:70%;height:70%;object-fit:contain" onerror="this.parentElement.innerHTML='🏭'">` : '🏭'}
+              ${logoC ? `<img src="${esc(logoC)}" style="width:70%;height:70%;object-fit:contain" onerror="this.parentElement.innerHTML=_ico('shield')">` : _ico('shield')}
             </div>
             <div class="kh-font" style="font-weight:900;font-size:.88rem;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(totsConstr.name)}</div>
             <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.4rem;color:var(--gold);margin-top:3px">${Math.max(0,totsConstrPts)}<span style="font-size:.7rem;font-weight:400;color:var(--muted)"> pts</span></div>
@@ -7092,20 +7097,20 @@ async function renderDashboard() {
 
     <div class="card">
       <div class="card-title"><div class="dot"></div>Stats</div>
-      ${!races.length ? emptyState('📊','No stats yet','Stats appear after the first race is imported.') : `
+      ${!races.length ? emptyState(_ico('chart'),'No stats yet','Stats appear after the first race is imported.') : `
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
-        ${statCard('👑','TOP DRIVER', topDriver ? esc(topDriver.name) : '—', topDriver ? esc(topDriver.division) : '', `${topDriverPts} <span style="font-size:.85rem;font-weight:400;color:var(--muted)">pts</span>`, GOLD)}
-        ${statCard('🏭','TOP CONSTRUCTOR', topConstr ? esc(topConstr.name) : '—', '', `${topConstrPts} <span style="font-size:.85rem;font-weight:400;color:var(--muted)">pts</span>`, GOLD)}
-        ${statCard('⭐','MOST PICKED DRIVER', mostSelDriver ? esc(mostSelDriver.name) : '—', mostSelDriver ? esc(mostSelDriver.division) : '', `${mostSelPct}% <span style="font-size:.85rem;font-weight:400;color:var(--muted)">of teams</span>`, PURPLE)}
-        ${statCard('🏢','MOST PICKED CONSTRUCTOR', mostSelConstr ? esc(mostSelConstr.name) : '—', '', `${mostSelConstrPct}% <span style="font-size:.85rem;font-weight:400;color:var(--muted)">of teams</span>`, PURPLE)}
-        ${statCard('📈','BIGGEST WINNER DRIVER', biggestWinnerDriver ? esc(biggestWinnerDriver.name) : '—', biggestWinnerDriver ? esc(biggestWinnerDriver.division) : '', biggestWinnerDriver && biggestWinnerDriverPts !== -Infinity ? `${biggestWinnerDriverPts >= 0 ? '+' : ''}${biggestWinnerDriverPts} <span style="font-size:.85rem;font-weight:400;color:var(--muted)">pts</span>` : '—', GREEN)}
-        ${statCard('📉','BIGGEST LOSER DRIVER', biggestLoserDriver ? esc(biggestLoserDriver.name) : '—', biggestLoserDriver ? esc(biggestLoserDriver.division) : '', biggestLoserDriver && biggestLoserDriverPts !== Infinity ? `${biggestLoserDriverPts >= 0 ? '+' : ''}${biggestLoserDriverPts} <span style="font-size:.85rem;font-weight:400;color:var(--muted)">pts</span>` : '—', RED)}
-        ${statCard('📈','BIGGEST WINNER CONSTRUCTOR', biggestWinnerConstr ? esc(biggestWinnerConstr.name) : '—', '', biggestWinnerConstr && biggestWinnerConstrPts !== -Infinity ? `${biggestWinnerConstrPts >= 0 ? '+' : ''}${biggestWinnerConstrPts} <span style="font-size:.85rem;font-weight:400;color:var(--muted)">pts</span>` : '—', GREEN)}
-        ${statCard('📉','BIGGEST LOSER CONSTRUCTOR', biggestLoserConstr ? esc(biggestLoserConstr.name) : '—', '', biggestLoserConstr && biggestLoserConstrPts !== Infinity ? `${biggestLoserConstrPts >= 0 ? '+' : ''}${biggestLoserConstrPts} <span style="font-size:.85rem;font-weight:400;color:var(--muted)">pts</span>` : '—', RED)}
-        ${statCard('💹','BIGGEST PRICE RISE', biggestPriceGainDriver ? esc(biggestPriceGainDriver.name) : '—', biggestPriceGainDriver ? esc(biggestPriceGainDriver.division) : '', biggestPriceGainDriver && biggestPriceGain !== -Infinity ? '+$'+biggestPriceGain.toFixed(1)+'M' : '—', GREEN)}
-        ${statCard('🪂','BIGGEST PRICE DROP', biggestPriceLossDriver ? esc(biggestPriceLossDriver.name) : '—', biggestPriceLossDriver ? esc(biggestPriceLossDriver.division) : '', biggestPriceLossDriver && biggestPriceLoss !== Infinity ? '$'+biggestPriceLoss.toFixed(1)+'M' : '—', RED)}
-        ${statCard('💎','MOST EXPENSIVE DRIVER', mostExpensive ? esc(mostExpensive.name) : '—', mostExpensive ? esc(mostExpensive.division) : '', mostExpensive ? '$'+mostExpensive.price.toFixed(1)+'M' : '—', TEAL)}
-        ${statCard('🏷️','CHEAPEST DRIVER', leastExpensive ? esc(leastExpensive.name) : '—', leastExpensive ? esc(leastExpensive.division) : '', leastExpensive ? '$'+leastExpensive.price.toFixed(1)+'M' : '—', TEAL)}
+        ${statCard(_ico('crown'),'TOP DRIVER', topDriver ? esc(topDriver.name) : '—', topDriver ? esc(topDriver.division) : '', `${topDriverPts} <span style="font-size:.85rem;font-weight:400;color:var(--muted)">pts</span>`, GOLD)}
+        ${statCard(_ico('shield'),'TOP CONSTRUCTOR', topConstr ? esc(topConstr.name) : '—', '', `${topConstrPts} <span style="font-size:.85rem;font-weight:400;color:var(--muted)">pts</span>`, GOLD)}
+        ${statCard(_ico('star'),'MOST PICKED DRIVER', mostSelDriver ? esc(mostSelDriver.name) : '—', mostSelDriver ? esc(mostSelDriver.division) : '', `${mostSelPct}% <span style="font-size:.85rem;font-weight:400;color:var(--muted)">of teams</span>`, PURPLE)}
+        ${statCard(_ico('building'),'MOST PICKED CONSTRUCTOR', mostSelConstr ? esc(mostSelConstr.name) : '—', '', `${mostSelConstrPct}% <span style="font-size:.85rem;font-weight:400;color:var(--muted)">of teams</span>`, PURPLE)}
+        ${statCard(_ico('up'),'BIGGEST WINNER DRIVER', biggestWinnerDriver ? esc(biggestWinnerDriver.name) : '—', biggestWinnerDriver ? esc(biggestWinnerDriver.division) : '', biggestWinnerDriver && biggestWinnerDriverPts !== -Infinity ? `${biggestWinnerDriverPts >= 0 ? '+' : ''}${biggestWinnerDriverPts} <span style="font-size:.85rem;font-weight:400;color:var(--muted)">pts</span>` : '—', GREEN)}
+        ${statCard(_ico('down'),'BIGGEST LOSER DRIVER', biggestLoserDriver ? esc(biggestLoserDriver.name) : '—', biggestLoserDriver ? esc(biggestLoserDriver.division) : '', biggestLoserDriver && biggestLoserDriverPts !== Infinity ? `${biggestLoserDriverPts >= 0 ? '+' : ''}${biggestLoserDriverPts} <span style="font-size:.85rem;font-weight:400;color:var(--muted)">pts</span>` : '—', RED)}
+        ${statCard(_ico('up'),'BIGGEST WINNER CONSTRUCTOR', biggestWinnerConstr ? esc(biggestWinnerConstr.name) : '—', '', biggestWinnerConstr && biggestWinnerConstrPts !== -Infinity ? `${biggestWinnerConstrPts >= 0 ? '+' : ''}${biggestWinnerConstrPts} <span style="font-size:.85rem;font-weight:400;color:var(--muted)">pts</span>` : '—', GREEN)}
+        ${statCard(_ico('down'),'BIGGEST LOSER CONSTRUCTOR', biggestLoserConstr ? esc(biggestLoserConstr.name) : '—', '', biggestLoserConstr && biggestLoserConstrPts !== Infinity ? `${biggestLoserConstrPts >= 0 ? '+' : ''}${biggestLoserConstrPts} <span style="font-size:.85rem;font-weight:400;color:var(--muted)">pts</span>` : '—', RED)}
+        ${statCard(_ico('rise'),'BIGGEST PRICE RISE', biggestPriceGainDriver ? esc(biggestPriceGainDriver.name) : '—', biggestPriceGainDriver ? esc(biggestPriceGainDriver.division) : '', biggestPriceGainDriver && biggestPriceGain !== -Infinity ? '+$'+biggestPriceGain.toFixed(1)+'M' : '—', GREEN)}
+        ${statCard(_ico('drop'),'BIGGEST PRICE DROP', biggestPriceLossDriver ? esc(biggestPriceLossDriver.name) : '—', biggestPriceLossDriver ? esc(biggestPriceLossDriver.division) : '', biggestPriceLossDriver && biggestPriceLoss !== Infinity ? '$'+biggestPriceLoss.toFixed(1)+'M' : '—', RED)}
+        ${statCard(_ico('gem'),'MOST EXPENSIVE DRIVER', mostExpensive ? esc(mostExpensive.name) : '—', mostExpensive ? esc(mostExpensive.division) : '', mostExpensive ? '$'+mostExpensive.price.toFixed(1)+'M' : '—', TEAL)}
+        ${statCard(_ico('tag'),'CHEAPEST DRIVER', leastExpensive ? esc(leastExpensive.name) : '—', leastExpensive ? esc(leastExpensive.division) : '', leastExpensive ? '$'+leastExpensive.price.toFixed(1)+'M' : '—', TEAL)}
       </div>`}
     </div>
     ${totsHtml}
@@ -7439,7 +7444,7 @@ async function renderHomeStatCards(myTeam, allTeams) {
         const up = myRank < seen.rank;
         const places = Math.abs(myRank - seen.rank);
         bits.push('<div style="display:flex;align-items:center;gap:8px">'
-          + '<span style="font-size:1rem">'+(up?'📈':'📉')+'</span>'
+          + '<span style="font-size:1rem;color:'+(up?'#4ade80':'#f87171')+'">'+(up?_ico('up'):_ico('down'))+'</span>'
           + '<span>You '+(up?'climbed':'dropped')+' <strong style="color:'+(up?'#4caf50':'var(--red)')+'">'+places+' place'+(places>1?'s':'')+'</strong> to <strong>P'+myRank+'</strong> of '+totalTeams+'</span></div>');
       } else if (typeof seen.rank === 'number' && myRank === seen.rank) {
         bits.push('<div style="display:flex;align-items:center;gap:8px"><span style="font-size:1rem">➖</span><span>You held <strong>P'+myRank+'</strong> of '+totalTeams+'</span></div>');
@@ -7456,7 +7461,7 @@ async function renderHomeStatCards(myTeam, allTeams) {
           const cap = drivers.find(d => d.id === capId);
           const capBase = latest.driverPoints[capId] || 0;
           if (cap) {
-            bits.push('<div style="display:flex;align-items:center;gap:8px"><span style="font-size:1rem">👑</span><span>Your '+esc(latest.name)+' captain <strong>'+esc(cap.name)+'</strong> scored <strong style="color:var(--gold)">'+(capBase*2)+' pts</strong> (2×)</span></div>');
+            bits.push('<div style="display:flex;align-items:center;gap:8px"><span style="font-size:1rem;color:#ffc800">'+_ico('crown')+'</span><span>Your '+esc(latest.name)+' captain <strong>'+esc(cap.name)+'</strong> scored <strong style="color:var(--gold)">'+(capBase*2)+' pts</strong> (2×)</span></div>');
           }
         }
       }
@@ -7472,13 +7477,13 @@ async function renderHomeStatCards(myTeam, allTeams) {
       });
       if (bestMove) {
         const up = bestMove.mv > 0;
-        bits.push('<div style="display:flex;align-items:center;gap:8px"><span style="font-size:1rem">'+(up?'🟢':'🔴')+'</span><span>Your <strong>'+esc(bestMove.name)+'</strong> '+(up?'rose':'dropped')+' <strong style="color:'+(up?'#4caf50':'var(--red)')+'">'+(up?'▲':'▼')+'$'+Math.abs(bestMove.mv).toFixed(1)+'M</strong></span></div>');
+        bits.push('<div style="display:flex;align-items:center;gap:8px"><span style="font-size:1rem;color:'+(up?'#4ade80':'#ef4444')+'">'+(up?_ico('up'):_ico('down'))+'</span><span>Your <strong>'+esc(bestMove.name)+'</strong> '+(up?'rose':'dropped')+' <strong style="color:'+(up?'#4caf50':'var(--red)')+'">'+(up?'▲':'▼')+'$'+Math.abs(bestMove.mv).toFixed(1)+'M</strong></span></div>');
       }
       if (bits.length) {
         changeEl.style.display = 'block';
         changeEl.innerHTML = '<div style="position:relative;background:linear-gradient(135deg,rgba(90,94,201,0.12),rgba(255,200,0,0.06));border:1px solid rgba(90,94,201,0.4);border-radius:12px;padding:16px 18px;margin-bottom:18px">'
           + '<button onclick="dismissWhatsChanged()" style="position:absolute;top:10px;right:12px;background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer">✕</button>'
-          + '<div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:900;font-size:1.1rem;letter-spacing:1px;margin-bottom:10px">👋 SINCE YOU LAST LOOKED — R'+latestScoredNum+' '+esc(latest?latest.name||'':'').toUpperCase()+'</div>'
+          + '<div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:900;font-size:1.1rem;letter-spacing:1px;margin-bottom:10px">'+_ico('history')+' SINCE YOU LAST LOOKED — R'+latestScoredNum+' '+esc(latest?latest.name||'':'').toUpperCase()+'</div>'
           + '<div style="display:flex;flex-direction:column;gap:7px;font-size:.85rem;color:var(--text)">'+bits.join('')+'</div>'
           + '</div>';
         // Celebrate a genuine climb or reaching P1 — once per load, only on a newly-seen round.
@@ -7522,10 +7527,10 @@ async function renderHomeStatCards(myTeam, allTeams) {
   el.classList.add('home-stat-grid');
 
   el.innerHTML = [
-    { label: 'SEASON '+currentSeason+' RANK', value: myRank ? myRank+rankSuffix : '—', sub: 'of '+totalTeams+' teams', icon: '🏆', color: '#f39c12' },
-    { label: 'LAST RACE PTS', value: latest ? myRacePts : '—', sub: latest ? esc(latest.name) : 'No race yet', icon: '⚡', color: '#9b59b6' },
-    { label: 'SEASON TOTAL', value: mySeasonPts, sub: completedRaces.length+' races scored', icon: '📊', color: '#2ecc71' },
-    { label: 'TEAM VALUE', value: '$'+teamValue.toFixed(1)+'M', sub: 'Budget: $'+(myTeam.budget !== undefined ? myTeam.budget.toFixed(1) : '—')+'M left', icon: '💰', color: '#3498db' },
+    { label: 'SEASON '+currentSeason+' RANK', value: myRank ? myRank+rankSuffix : '—', sub: 'of '+totalTeams+' teams', icon: _ico('trophy'), color: '#f39c12' },
+    { label: 'LAST RACE PTS', value: latest ? myRacePts : '—', sub: latest ? esc(latest.name) : 'No race yet', icon: _ico('zap'), color: '#9b59b6' },
+    { label: 'SEASON TOTAL', value: mySeasonPts, sub: completedRaces.length+' races scored', icon: _ico('chart'), color: '#2ecc71' },
+    { label: 'TEAM VALUE', value: '$'+teamValue.toFixed(1)+'M', sub: 'Budget: $'+(myTeam.budget !== undefined ? myTeam.budget.toFixed(1) : '—')+'M left', icon: _ico('wallet'), color: '#3498db' },
   ].map(card => `
     <div class="hs-card" style="--acc:${card.color}">
       <div class="hs-glow"></div>
