@@ -27677,7 +27677,14 @@ function _grPickerHtml(R, K, sel, intro, extra, cls) {
       <div class="wd-btns" style="margin-top:12px;justify-content:flex-end"><button class="btn btn-secondary btn-sm" onclick="gridPick(null)">Cancel</button></div></div>${extra || ''}</div>`;
 }
 async function renderGridGame(el) {
-  const { cfg, gridPool: pool, hasData } = await _wdLoad();
+  // Live duels redraw every time the other player moves. Reloading every driver, team and race result on
+  // each redraw took many seconds on slower/long-distance connections (and piled up), so moves showed up
+  // 30–45 s late. In a duel, reuse the driver data loaded in the last 2 minutes — it doesn't change mid-game.
+  const _gm0 = _grGetMode(), _gc = window._grLoadCache;
+  let _L;
+  if (_gm0 === 'duel' && _gc && Date.now() - _gc.at < 120e3) _L = _gc.res;
+  else { _L = await _wdLoad(); window._grLoadCache = { at: Date.now(), res: _L }; }
+  const { cfg, gridPool: pool, hasData } = _L;
   window._grPool = pool;
   const lives = Math.max(1, Number(cfg.gridLives) || 3);
   const mode = _grGetMode(); const locked = !!(window._gamesLock || {}).grid && !adminLoggedIn && !_gamesAccess(); window._grLocked = locked;
@@ -27878,9 +27885,15 @@ async function _gdBody(pool, top) {
     if (g) { await dbSet('wordleDuels', lob.id, { rows: g.rows, cols: g.cols, cells: {}, winner: '', forfeit: '', hostRematch: false, guestRematch: false, round: round + 1, turn: round % 2 ? 'guest' : 'host', lastMove: {}, startedAt: _now() + 1500 }); setTimeout(() => renderGames(), 200); }
   }
   clearInterval(window._gdPoll);
+  window._gdPollBusy = false;
   window._gdPoll = setInterval(async () => {
     if (!document.getElementById('gd-duel')) { clearInterval(window._gdPoll); return; }
-    dbInvalidate('wordleDuels'); const l2 = await dbGet('wordleDuels', lob.id).catch(() => null); if (!l2) { _gdSet(null); renderGames(); return; }
+    if (window._gdPollBusy) return; // one check at a time — never stack requests/redraws on a slow connection
+    window._gdPollBusy = true;
+    try {
+    dbInvalidate('wordleDuels'); dbGet._lastFailed = false; const l2 = await dbGet('wordleDuels', lob.id).catch(() => undefined);
+    if (l2 === undefined || dbGet.readFailed()) return; // network blip: just try again next tick, don't drop out of the duel
+    if (!l2) { _gdSet(null); renderGames(); return; }
     if (l2.status === 'waiting' && role === 'host' && _now() - (l2.hostSeen || 0) > 10e3) dbSet('wordleDuels', lob.id, { hostSeen: _now() }).catch(() => {});
     // Order-proof fingerprint: the database can return the same cells in a different order, which used
     // to look like a change and redraw the screen every 1.5 s (flashing + the search box losing focus).
@@ -27888,7 +27901,8 @@ async function _gdBody(pool, top) {
     const sig = (x) => [x.status, x.round || 1, x.turn, cellSig(x.cells), x.winner || '', x.guestName || '', !!x.hostRematch, !!x.guestRematch, !!x.hostLeft, !!x.guestLeft, (x.lastMove || {}).at || 0].join('|');
     if (sig(l2) !== sig(lob)) { const t = document.getElementById('gr-input'); const v = t ? t.value : '', had = t && document.activeElement === t;
       await renderGames(); const t2 = document.getElementById('gr-input'); if (t2) { if (v) { t2.value = v; gridSuggest(v); } if (had) t2.focus(); } }
-  }, 1500);
+    } finally { window._gdPollBusy = false; }
+  }, 1000);
   const card = (p, cls) => `<div class="gd-p ${cls}">${_wdAv({ name: p.name, photo: p.av }, 40)}<div><b>${esc(p.name)}</b><small><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${_duelCols(lob)[cls]};vertical-align:middle;margin-right:4px;border:1px solid rgba(255,255,255,.4)"></span>${cls === 'host' ? 'Host' : 'Guest'}</small></div></div>`;
   if (lob.status === 'waiting') { const st0 = (await _wdStatsFor([meP.uid]))[meP.uid] || {};
     return top(`<span class="wd-pill">⚔️ Grid duel</span>`) + `<div id="gd-duel" class="wd-face wait" style="${_duelVars(lob, role)}"><div class="wd-fc l"><div class="wd-fc-av">${_wdAv({ name: meP.name, photo: meP.av }, 96)}</div><b>${esc(meP.name)}</b>
