@@ -27139,12 +27139,16 @@ async function _wdRecordDuel(p, won, op) {
 function _h2hMap(doc, f) { try { return JSON.parse((doc || {})[f] || '{}') || {}; } catch (e) { return {}; } }
 function _h2hPatch(cur, f, op, won) { if (!op || !op.uid) return {}; const m = _h2hMap(cur, f), r = m[op.uid] || { w: 0, l: 0 };
   r[won ? 'w' : 'l']++; r.n = op.name || r.n || 'Player'; r.a = op.av || r.a || ''; m[op.uid] = r; return { [f]: JSON.stringify(m) }; }
-function _h2hVs(stats, a, b, f) { const r = _h2hMap(stats[a], f)[b]; if (r) return [r.w, r.l]; const o = _h2hMap(stats[b], f)[a]; return o ? [o.l, o.w] : [0, 0]; }
+function _h2hVs(stats, a, b, f) { const r = _h2hMap(stats[a], f)[b] || {}, o = _h2hMap(stats[b], f)[a] || {}; // both copies agree: take the fuller record of each side
+  return [Math.max(r.w || 0, o.l || 0), Math.max(r.l || 0, o.w || 0)]; }
 async function _h2hBoardHtml(f, title) {
   dbInvalidate('wordleScores'); const all = await dbGetAll('wordleScores', { fresh: true }).catch(() => []); const me = _wdMe();
   const pairs = {}; all.forEach(d => { if (!d || !d.uid) return; const m = _h2hMap(d, f);
-    Object.keys(m).forEach(o => { const k = [d.uid, o].sort().join('|'); if (pairs[k] && d.uid > o) return; // prefer the lower uid's copy
-      pairs[k] = { a: { uid: d.uid, name: d.name || 'Player' }, b: { uid: o, name: m[o].n || 'Player' }, w: m[o].w || 0, l: m[o].l || 0 }; }); });
+    Object.keys(m).forEach(o => { const k = [d.uid, o].sort().join('|'), lo = d.uid < o; // merge both players' copies, taking the fuller count of each side
+      const w = lo ? (m[o].w || 0) : (m[o].l || 0), l = lo ? (m[o].l || 0) : (m[o].w || 0), P0 = pairs[k];
+      const me1 = { uid: d.uid, name: d.name || 'Player' }, op1 = { uid: o, name: m[o].n || 'Player' };
+      if (!P0) pairs[k] = { a: lo ? me1 : op1, b: lo ? op1 : me1, w, l };
+      else { P0.w = Math.max(P0.w, w); P0.l = Math.max(P0.l, l); if (lo) P0.a = me1; else P0.b = me1; } }); });
   const rows = Object.values(pairs).filter(p => p.w + p.l > 0).map(p => { const t = p.w + p.l; if (p.l > p.w) [p.a, p.b, p.w, p.l] = [p.b, p.a, p.l, p.w]; return Object.assign(p, { t, pct: p.w / t }); })
     .sort((x, y) => y.pct - x.pct || (y.w - y.l) - (x.w - x.l) || y.t - x.t).slice(0, 20);
   const line = (r, i) => `<div class="wd-lb-row${r.a.uid === me.uid || r.b.uid === me.uid ? ' me' : ''}"><span class="wd-lb-pos">${i + 1}</span><span class="wd-lb-name"><b>${esc(r.a.name)}</b> <small style="color:var(--muted)">vs</small> ${esc(r.b.name)}</span><small style="color:var(--muted);margin-right:8px">${Math.round(r.pct * 100)}% · ${r.t} played</small><b style="color:${r.w === r.l ? '#9ca3af' : r.b.uid === me.uid ? '#f87171' : '#4ade80'}">${r.b.uid === me.uid ? r.l + '–' + r.w : r.w + '–' + r.l}</b></div>`;
@@ -27850,7 +27854,8 @@ function _gdEnd(beacon) {
   const url = 'https://firestore.googleapis.com/v1/projects/' + PROJECT_ID + '/databases/(default)/documents/wordleDuels/' + k.code + '?key=' + API_KEY;
   const send = (upd) => { if (beacon) { try { const f = objToFsFields(upd); fetch(url + '&' + Object.keys(f).map(x => 'updateMask.fieldPaths=' + x).join('&'), { method: 'PATCH', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields: f }) }); } catch (e) {} } else dbSet('wordleDuels', k.code, upd).catch(() => {}); };
   if (s.status === 'waiting' && k.role === 'host') { if (beacon) { try { fetch(url, { method: 'DELETE', keepalive: true }); } catch (e) {} } else dbDelete('wordleDuels', k.code).catch(() => {}); }
-  else if (s.status === 'playing' && !s.done) send({ winner: opp, forfeit: k.role });
+  else if (s.status === 'playing' && !s.done && !s.moved) send({ winner: 'cancel', [k.role + 'Left']: true }); // nobody has moved yet: no result
+  else if (s.status === 'playing' && !s.done) send({ winner: opp, forfeit: k.role, [k.role + 'Left']: true });
   else if (s.status === 'playing' && s.done) send({ [k.role + 'Left']: true });
 }
 window.addEventListener('pagehide', () => _gdEnd(true));
@@ -27878,13 +27883,20 @@ async function _gdBody(pool, top) {
   const done = !!(lob.winner || win || full); const winner = lob.winner || (win && win.by) || (full ? 'draw' : '');
   const round = lob.round || 1, rk = lob.id + '_g' + round;
   const GFACE = 4500, gFaceLeft = lob.status === 'playing' && !done && lob.startedAt ? (lob.startedAt + GFACE) - _now() : 0;
-  window._gdLive = { status: lob.status, done }; window._gdRef = { code: lob.id, role, myTurn: lob.status === 'playing' && !done && lob.turn === role && gFaceLeft <= 0 };
+  window._gdLive = { status: lob.status, done, moved: !!((lob.lastMove || {}).at || Object.keys(lob.cells || {}).length) }; window._gdRef = { code: lob.id, role, myTurn: lob.status === 'playing' && !done && lob.turn === role && gFaceLeft <= 0 };
   const P = (r) => ({ uid: lob[r + 'Uid'], name: lob[r + 'Name'] || 'Player', av: lob[r + 'Avatar'] || '' }); const meP = P(role), opP = P(opp);
   // Finish: record once, confetti for the winner, mark the lobby done (winner field) so both agree.
   if (done && lob.status === 'playing' && !lob.winner && role === 'host') dbSet('wordleDuels', lob.id, { winner: winner }).catch(() => {});
-  if (done && winner !== 'draw' && !_wdLS('gdRec_' + rk)) { _wdLS('gdRec_' + rk, 1); if (winner === role) _gameCoins('duel-gr', 5);
-    try { const id = _wdScoreId(meP.uid), cur = await dbGet('wordleScores', id).catch(() => null) || {}; const w = winner === role;
-      await dbSet('wordleScores', id, Object.assign({ uid: meP.uid, name: meP.name, [w ? 'gridW' : 'gridL']: ((w ? cur.gridW : cur.gridL) || 0) + 1, points: cur.points || 0 }, _h2hPatch(cur, 'h2hGr', opP, w))); } catch (e) {} }
+  // Result is recorded ONCE, for BOTH players, by one screen: the player who didn't forfeit (a forfeiter
+  // has already left, so their screen never saw the result — that's why their losses went missing), else the host.
+  const _isRes = winner === 'host' || winner === 'guest';
+  if (done && _isRes && winner === role && !_wdLS('gdCoin_' + rk)) { _wdLS('gdCoin_' + rk, 1); _gameCoins('duel-gr', 5); }
+  const _recBy = lob.forfeit ? (lob.forfeit === 'host' ? 'guest' : 'host') : 'host';
+  if (done && _isRes && role === _recBy && (lob.recR || 0) !== round && !_wdLS('gdRec_' + rk)) { _wdLS('gdRec_' + rk, 1);
+    try { await dbSet('wordleDuels', lob.id, { recR: round });
+      for (const [p, o, w] of [[P('host'), P('guest'), winner === 'host'], [P('guest'), P('host'), winner === 'guest']]) { if (!p.uid) continue;
+        const id = _wdScoreId(p.uid); dbInvalidate('wordleScores'); const cur = await dbGet('wordleScores', id).catch(() => null) || {};
+        await dbSet('wordleScores', id, Object.assign({ uid: p.uid, name: p.name, [w ? 'gridW' : 'gridL']: ((w ? cur.gridW : cur.gridL) || 0) + 1, points: cur.points || 0 }, _h2hPatch(cur, 'h2hGr', o, w))); } } catch (e) {} }
   if (done && winner === role && !window['_gdCf_' + rk]) { window['_gdCf_' + rk] = 1; setTimeout(() => { try { fireConfetti({ count: 200 }); } catch (e) {} }, 300); }
   if (done && role === 'host' && lob.hostRematch && lob.guestRematch && !lob[opp + 'Left']) {
     const g = _grBuild(pool, Math.floor(Math.random() * 2 ** 31));
@@ -27960,7 +27972,8 @@ async function _gdBody(pool, top) {
     const rmAv = (p, r) => { const left = !!lob[r + 'Left'], yes = !!lob[r + 'Rematch'] && !left;
       return `<div class="gd-rm${yes ? ' yes' : ''}${left ? ' left' : ''}"><div class="gd-rm-av">${_wdAv({ name: p.name, photo: p.av }, 52)}</div><b>${r === role ? 'You' : esc(p.name)}</b><small>${left ? 'Left' : yes ? '✓ Rematch' : 'Deciding…'}</small></div>`; };
     const rmRow = `<div class="gd-rm-row">${rmAv(meP, role)}${rmAv(opP, opp)}</div>`;
-    side = `<div class="gr-panel ${iWon ? 'won' : 'lost'}"><b>${draw ? '🤝 DRAW' : iWon ? '🏆 YOU WIN!' : esc(opP.name) + ' WINS'}</b><p>${lob.forfeit === opp ? esc(opP.name) + ' forfeited.' : lob.forfeit === role ? 'You forfeited.' : draw ? (lob.drawAgreed ? 'Draw agreed by both players.' : 'The grid filled up with no 3 in a row.') : '3 in a row!'}</p>${rmRow}
+    const cancelled = winner === 'cancel';
+    side = `<div class="gr-panel ${iWon ? 'won' : 'lost'}"><b>${cancelled ? '🚫 NO RESULT' : draw ? '🤝 DRAW' : iWon ? '🏆 YOU WIN!' : esc(opP.name) + ' WINS'}</b><p>${cancelled ? (lob[opp + 'Left'] ? esc(opP.name) + ' left before anyone moved — it doesn\'t count.' : 'Left before anyone moved — it doesn\'t count.') : lob.forfeit === opp ? esc(opP.name) + ' forfeited.' : lob.forfeit === role ? 'You forfeited.' : draw ? (lob.drawAgreed ? 'Draw agreed by both players.' : 'The grid filled up with no 3 in a row.') : '3 in a row!'}</p>${rmRow}
       ${lob[opp + 'Left'] ? `<p>${esc(opP.name)} left the lobby.</p><button class="btn btn-primary" onclick="gridDuelLeave()">Back to duel menu</button>` : `<p>${lob[role + 'Rematch'] && lob[opp + 'Rematch'] ? 'Starting rematch…' : lob[role + 'Rematch'] ? 'Waiting for ' + esc(opP.name) + '… <span class="wd-spin"></span>' : lob[opp + 'Rematch'] ? '<b style="color:#4ade80">' + esc(opP.name) + ' wants a rematch!</b>' : 'Rematch? You both need to accept.'}</p>
       <div class="wd-btns">${lob[role + 'Rematch'] ? '' : '<button class="btn btn-primary" onclick="gridDuelRematch()">🔁 Rematch</button>'}<button class="btn btn-secondary" onclick="gridDuelLeave()">Back to duel menu</button></div>`}</div>`; }
   else if (!myTurn) side = `<div class="gr-panel"><b>⏳ ${esc(opP.name)}'s turn</b><p>Wait for them to pick a cell and name a driver.</p>${lmTxt ? `<p class="gd-last">${lmTxt}</p>` : ''}</div>`;
@@ -27970,7 +27983,7 @@ async function _gdBody(pool, top) {
     ? `<div class="gd-draw ask"><span>🤝 <b>${esc(opP.name)}</b> wants to call it a draw</span><button class="btn btn-primary btn-sm" onclick="gridDuelDraw(true)">Accept draw</button></div>`
     : lob[role + 'Draw'] ? `<div class="gd-draw"><span>🤝 You offered a draw — waiting for ${esc(opP.name)}…</span><button class="btn btn-secondary btn-sm" onclick="gridDuelDraw(false)">Cancel</button></div>` : '';
   return top(`<span class="wd-pill">⚔️ Round ${round}</span>`) + `<div id="gd-duel" class="gd-vs" style="${_duelVars(lob, role)}">${card(meP, role)}<span style="display:flex;flex-direction:column;align-items:center;gap:4px"><span class="gd-turn">${done ? 'FINISHED' : myTurn ? 'YOUR TURN' : 'THEIR TURN'}</span>${done ? '' : `<span id="gd-timer" class="gd-timer">⏱ ${Math.max(0, Math.ceil((turnStart + TURN_MS - _now()) / 1000))}s</span>`}</span>${card(opP, opp)}</div>
-    <div class="gr-layout" style="${_duelVars(lob, role)}">${grid}${side}</div>${drawBar}${done ? '' : `<div style="text-align:center;margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">${lob[role + 'Draw'] || lob[opp + 'Draw'] ? '' : '<button class="btn btn-secondary btn-sm" onclick="gridDuelDraw(true)">🤝 Vote draw</button>'}<button class="btn btn-secondary btn-sm" onclick="gridDuelLeave()">Forfeit & leave</button></div>`}`;
+    <div class="gr-layout" style="${_duelVars(lob, role)}">${grid}${side}</div>${drawBar}${done ? '' : `<div style="text-align:center;margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">${lob[role + 'Draw'] || lob[opp + 'Draw'] ? '' : '<button class="btn btn-secondary btn-sm" onclick="gridDuelDraw(true)">🤝 Vote draw</button>'}<button class="btn btn-secondary btn-sm" onclick="gridDuelLeave()">${window._gdLive.moved ? 'Forfeit & leave' : 'Leave (no result)'}</button></div>`}`;
 }
 window.gridDuelDraw = async function(on) { const r = window._gdRef; if (!r) return; const opp = r.role === 'host' ? 'guest' : 'host';
   dbInvalidate('wordleDuels'); const l = await dbGet('wordleDuels', r.code).catch(() => null); if (!l || l.winner) return renderGames();
@@ -28008,7 +28021,7 @@ async function _gdGuess(id) {
   if (ok) cells[key] = { by: ref.role, d: id };
   const upd = { cells, turn: ref.role === 'host' ? 'guest' : 'host', lastMove: { by: ref.role, ok, key, d: id, name: p ? p.name : '', at: _now() }, turnAt: _now() };
   const w = _gdWinner(cells); if (w) upd.winner = w.by; else if (Object.keys(cells).length >= 9) upd.winner = 'draw';
-  await dbSet('wordleDuels', ref.code, upd); window._grSel = null; window._grHits = []; renderGames();
+  await dbSet('wordleDuels', ref.code, upd); window._gdLive = Object.assign({}, window._gdLive, { moved: true }); window._grSel = null; window._grHits = []; renderGames();
 }
 </script>
 </body>
