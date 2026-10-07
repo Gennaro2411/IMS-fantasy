@@ -6094,7 +6094,7 @@ window.hidePageLoader = function() {
 window.closePatchNotes = function() { document.getElementById('patch-modal').classList.add('hidden'); try { localStorage.setItem('ims_patch_seen', window.PATCH_NOTES_VERSION); } catch(e) {} };
 // Show the patch notes automatically once per release version, then never again until
 // PATCH_NOTES_VERSION is bumped.
-window.maybeShowPatchNotes = function() {
+window.maybeShowPatchNotes = function() { return; // auto-popup turned off — patch notes only open from the 📋 button
   try {
     if (localStorage.getItem('ims_patch_seen') === window.PATCH_NOTES_VERSION) return;
   } catch(e) {}
