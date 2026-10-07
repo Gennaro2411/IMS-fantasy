@@ -24936,9 +24936,17 @@ async function _betLoadCoins(userId) {
 // Settle this player's open bets whose round now has results for that division.
 // Work out a bet's result from the CURRENT race data. Returns 'won' | 'lost' | 'void', or null
 // when that round/division has no results yet.
+// True once EVERY division of the season has been imported for this race (D0…E3 in Season 8).
+// Constructor (BOTT) points build up division by division, so BOTT bets must wait for the last one.
+function _raceAllDivsIn(race) {
+  const divs = (typeof divisionsForSeason === 'function') ? divisionsForSeason(window.currentSeason) : ['D0', 'D1', 'D2', 'D3', 'D4'];
+  const have = new Set(); Object.values(race.driverPointsByDivision || {}).forEach(bd => Object.keys(bd || {}).forEach(k => have.add(String(k).toUpperCase())));
+  return divs.every(d => have.has(d));
+}
 function _betOutcome(b, races) {
   const race = races.find(r => (r.name || '').toLowerCase().trim() === (b.raceName || '').toLowerCase().trim() && (b.div === 'BOTT' ? r.constructorPoints : r.positionByDivision));
   if (!race) return null;
+  if (b.div === 'BOTT' && !_raceAllDivsIn(race)) return null; // still waiting on later divisions — don't settle on partial BOTT points
   let pos;
   if (b.div === 'BOTT') {
     // Constructors: rank by this round's BOTT points. Ties share the better position.
