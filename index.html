@@ -115,12 +115,12 @@
   /* Two-row header: a taller top row with a larger logo + utility buttons, and the nav on its
      own row underneath (like the main league site). */
   header{background:var(--surface);border-bottom:2px solid #5A5EC9;padding:0 24px;
-    display:grid;grid-template-columns:auto auto 1fr auto;grid-template-areas:"logo badge mid utils" "nav nav nav nav";
+    display:grid;grid-template-columns:auto auto auto 1fr auto;grid-template-areas:"logo badge music mid utils" "nav nav nav nav nav";
     align-items:center;row-gap:0;position:sticky;top:0;z-index:100;}
   header > .logo{grid-area:logo;padding:12px 0 10px;}
   header > nav{grid-area:nav;}
   header > #admin-indicator{grid-area:badge;justify-self:start;margin-left:14px;}
-  header > #hdr-music{grid-area:badge;justify-self:start;margin-left:12px;display:flex;align-items:center;gap:2px;background:rgba(90,94,201,0.14);border:1px solid rgba(90,94,201,0.45);border-radius:20px;padding:3px 5px;}
+  header > #hdr-music{grid-area:music;justify-self:start;margin-left:12px;display:flex;align-items:center;gap:2px;background:rgba(90,94,201,0.14);border:1px solid rgba(90,94,201,0.45);border-radius:20px;padding:3px 5px;}
   header > #hdr-music button{background:none;border:none;color:#5A5EC9;font-size:.85rem;cursor:pointer;padding:3px 6px;border-radius:50%;line-height:1;transition:background .15s ease,color .15s ease;}
   header > #hdr-music #music-play-btn{color:#5A5EC9;text-shadow:0 0 6px rgba(90,94,201,0.5);}
   header > #hdr-music button:hover{background:rgba(90,94,201,0.3);color:#fff;}
