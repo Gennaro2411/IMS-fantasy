@@ -186,6 +186,15 @@
   .lb-cap i{font-style:normal;width:16px;height:16px;border-radius:50%;display:grid;place-items:center;flex-shrink:0;
     background:linear-gradient(135deg,#ffe259,#ffa751);color:#1a1200;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:.66rem;
     box-shadow:0 0 0 2px rgba(255,200,0,.15),0 0 10px rgba(255,190,60,.45)}
+  .lb-cap.fx{position:relative;overflow:hidden}.lb-cap.fx i{width:auto;min-width:20px;padding:0 3px;border-radius:999px;color:#fff;font-size:.62rem;letter-spacing:.2px}
+  .lb-cap.fx b{font-weight:400;font-size:.78rem;margin-left:-1px}
+  .lb-cap.fx::after{content:'';position:absolute;top:0;bottom:0;width:40%;left:-60%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.2),transparent);animation:lbTcShine 3.2s ease-in-out infinite}
+  .lb-cap.ga{color:#d1fae5;border-color:rgba(52,211,153,.6);background:linear-gradient(90deg,rgba(16,185,129,.30),rgba(45,212,191,.10) 60%,rgba(16,185,129,.04));box-shadow:0 0 14px rgba(16,185,129,.22)}
+  .lb-cap.ga i{background:linear-gradient(135deg,#34d399,#14b8a6);box-shadow:0 0 0 2px rgba(52,211,153,.2),0 0 12px rgba(45,212,191,.55)}
+  .lb-cap.ga b{filter:drop-shadow(0 0 4px rgba(52,211,153,.6))}.lb-cap.ga::after{animation-delay:1s}
+  .lb-cap.wc{color:#fde68a;border-color:rgba(251,146,60,.65);background:linear-gradient(90deg,rgba(249,115,22,.30),rgba(239,68,68,.12) 60%,rgba(249,115,22,.04));box-shadow:0 0 14px rgba(249,115,22,.22)}
+  .lb-cap.wc i{background:linear-gradient(135deg,#fbbf24,#ef4444);box-shadow:0 0 0 2px rgba(251,146,60,.2),0 0 12px rgba(239,68,68,.5)}
+  .lb-cap.wc b{filter:drop-shadow(0 0 4px rgba(251,146,60,.6))}.lb-cap.wc::after{animation-delay:2s}
   .lb-cap.tc{color:#e9d5ff;border-color:rgba(192,132,252,.6);background:linear-gradient(90deg,rgba(168,85,247,.32),rgba(236,72,153,.12) 60%,rgba(168,85,247,.04));
     box-shadow:0 0 14px rgba(168,85,247,.25);position:relative;overflow:hidden}
   .lb-cap.tc i{width:auto;min-width:20px;padding:0 3px;border-radius:999px;background:linear-gradient(135deg,#c084fc,#ec4899);color:#fff;font-size:.64rem;letter-spacing:.2px;
@@ -11708,8 +11717,8 @@ async function renderLeaderboard() {
       const tcCapName = tcActive && latestCapId && driverMap[latestCapId] ? driverMap[latestCapId].split(' ').pop() : null;
       const gaDriverName = gaActive && chips.guardianAngel.driverId && driverMap[chips.guardianAngel.driverId] ? driverMap[chips.guardianAngel.driverId].split(' ').pop() : null;
       const chipBadges = (tcActive && !capName ? '<span style="font-size:.7rem;background:rgba(155,89,182,0.2);color:#ce93d8;border:1px solid #9b59b6;border-radius:4px;padding:1px 5px;margin-left:4px">🚀'+(tcCapName?' '+tcCapName:'')+'</span>' : '')
-        + (gaActive ? '<span style="font-size:.7rem;background:rgba(39,174,96,0.2);color:#2ecc71;border:1px solid #27ae60;border-radius:4px;padding:1px 5px;margin-left:4px">😇'+(gaDriverName?' '+gaDriverName:'')+'</span>' : '')
-        + (wcActive ? '<span style="font-size:.7rem;background:rgba(243,156,18,0.2);color:#f39c12;border:1px solid #f39c12;border-radius:4px;padding:1px 5px;margin-left:4px">🃏 Wild</span>' : '');
+        + (gaActive ? '<span class="lb-cap fx ga" title="Guardian Angel — this driver\'s points are protected this round"><i>GA</i>'+esc(gaDriverName || 'Guardian Angel')+'<b>😇</b></span>' : '')
+        + (wcActive ? '<span class="lb-cap fx wc" title="Wildcard — unlimited free transfers this round"><i>WC</i>Wildcard<b>🃏</b></span>' : '');
       const trophies = (!isValueMode && raceTrophies[t.userId]) ? raceTrophies[t.userId].map(r =>
         '<span title="🏆 Highest score in '+esc(r.name)+' ('+r.pts+' pts)" style="font-size:.85rem;cursor:default">'+getRaceFlag(r.name)+'🏆</span>'
       ).join('') : '';
