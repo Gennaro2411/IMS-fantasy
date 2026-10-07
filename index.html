@@ -26258,6 +26258,13 @@ function showNowPlaying(audio) {
   np.classList.add('np-show');
 }
 function hideNowPlaying() { const np = document.getElementById('now-playing'); if (np) np.classList.remove('np-show'); }
+// If a song can't load (e.g. the music host is down), skip to another — but stop after 3 failures in a row
+// so we don't hammer a dead server; it resets as soon as a song actually plays.
+document.addEventListener('DOMContentLoaded', () => { const a = document.getElementById('bg-music'); if (!a || a._errHooked) return; a._errHooked = 1;
+  a.addEventListener('error', () => { if (!a.getAttribute('src')) return; window._musicFails = (window._musicFails || 0) + 1;
+    if (window._musicFails <= 3) setTimeout(() => window.nextTrack && window.nextTrack(), 400);
+    else { _setPlayIcon(false); if (typeof hideNowPlaying === 'function') hideNowPlaying(); if (typeof showToast === 'function' && !window._musicDownShown) { window._musicDownShown = 1; showToast('🎵 Music is unavailable right now — the music host is down. Try again later.', 'error'); } } });
+  a.addEventListener('playing', () => { window._musicFails = 0; window._musicDownShown = 0; }); });
 window.nextTrack = function() {
   const audio = document.getElementById('bg-music');
   if (!audio) return;
