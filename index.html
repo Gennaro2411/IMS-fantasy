@@ -25250,7 +25250,21 @@ window.renderBets = async function() {
   const _ouOdds = (market, sel, p) => { const auto = _betOdds(p), k = market + ':' + sel.join('-'); const R = window._betOuReg[k];
     if (!R || R.auto !== auto || R.p !== p) { window._betOuReg[k] = { auto, p }; try { localStorage.setItem('imsBetOuReg', JSON.stringify(window._betOuReg)); } catch (e) {} }
     return finalOdds(market, sel, auto); };
-  const finalOdds = (market, sel, auto) => {
+  // Remember how every price on screen is built (model price + fair share, or a fixed boost/override), per race+division,
+  // so a bet's live price & cash-out can be worked out later from ANY tab (not just the division being viewed).
+  if (!window._betReg) { try { window._betReg = JSON.parse(localStorage.getItem('imsBetReg') || '{}') || {}; } catch (e) { window._betReg = {}; } }
+  const _regSave = () => { clearTimeout(window._betRegT); window._betRegT = setTimeout(() => { try { const r = window._betReg, ks = Object.keys(r); if (ks.length > 4000) ks.slice(0, ks.length - 4000).forEach(k => delete r[k]); localStorage.setItem('imsBetReg', JSON.stringify(r)); } catch (e) {} }, 400); };
+  const _regPut = (market, sel, auto) => { if (!upcoming || auto == null) return; const key = sel.join('-'), rk = upcoming.name + '|' + div + '|' + market + '|' + key; let R;
+    const B = _findBoost(market, sel), o = OVR[ovKey(market, sel)];
+    if (B) R = { fixed: B.odds }; else if (typeof o === 'number' && o >= 1.01) R = { fixed: o };
+    else if (market === 'qh2h') { const f = _qPa(sel[0], sel[1]); R = f == null ? { fixed: auto } : { auto, fair: f, opp: sel.slice().reverse().join('-') }; }
+    else if (market === 'h2h') R = { auto, fair: 1 / (1 + Math.pow(10, ((field.find(d => d.id === sel[1]) || {}).elo - (field.find(d => d.id === sel[0]) || {}).elo) / 400)), opp: sel.slice().reverse().join('-') };
+    else if (market === 'ou' || market === 'cou' || market === 'yn') { const OR = (window._betOuReg || {})[market + ':' + key]; if (!OR) return; const os = sel.slice(); os[1] = ({ over: 'under', under: 'over', yes: 'no', no: 'yes' })[sel[1]] || sel[1]; R = { auto, fair: OR.p, opp: os.join('-') }; }
+    else if (market === 'pgap' || market === 'wmar') R = { fixed: auto };
+    else { const probs = market === 'win' ? P.win : market === 'pod' ? (P.pod || {}) : market === 'pole' ? (P.pole || {}) : P.top5; const sumP = Object.values(probs).reduce((x, y) => x + y, 0) || 1; R = { auto, fair: (probs[sel[0]] || 0) / sumP }; }
+    const old = window._betReg[rk]; if (!old || JSON.stringify(old) !== JSON.stringify(R)) { window._betReg[rk] = R; _regSave(); } };
+  const finalOdds = (market, sel, auto) => { try { _regPut(market, sel, auto); } catch (e) {} return _finalRaw(market, sel, auto); };
+  const _finalRaw = (market, sel, auto) => {
     { const B = _findBoost(market, sel); if (B) return B.odds; }
     const o = OVR[ovKey(market, sel)]; if (typeof o === 'number' && o >= 1.01) return o;
     const key = sel.join('-');
@@ -25533,7 +25547,7 @@ window.renderBets = async function() {
   const _per = 10, _pages = Math.max(1, Math.ceil(_shown.length / _per));
   const _pg = Math.min(Math.max(1, window._betHistPage || 1), _pages); window._betHistPage = _pg;
   const betsHtml = _shown.slice((_pg - 1) * _per, _pg * _per).map(b =>
-    `<div class="bo-bet ${b.status}"><span>${stIcon[b.status] || ''}</span><div class="bo-bet-t"><b>${b.market === 'acca' ? '🎯 ' : ''}${esc(b.label)}${b.adminOverride ? ' <span title="Changed by the stewards' + (b.adminReason ? ': ' + esc(b.adminReason) : '') + '" style="font-size:.62rem;color:#a0a4ff">⚖️ reviewed</span>' : b.resettled ? ' <span title="Re-settled after the race results were updated" style="font-size:.62rem;color:#a0a4ff">⚖️ result updated</span>' : ''}</b><small>${esc(b.raceName || '')} · ${b.market === 'acca' ? (b.legs || []).length + ' picks' + (b.status === 'open' ? ' · ' + (b.legs || []).filter(l => l.result === 'won').length + ' in, ' + (b.legs || []).filter(l => !l.result).length + ' waiting' : '') : (b.div || '')} · ${b.stake} <i class="imc" title="IM$"></i> placed at <b style="color:var(--gold)">${fmtOdds(b.odds)}</b>${(() => { if (b.status !== 'open' || !upcoming || b.raceName !== upcoming.name) return ''; let now = window._betOuLive(b, true); if (now == null) { if (b.div !== div) return ''; const _au = window._betAutoOdds ? window._betAutoOdds(b.market, b.sel) : null; now = _au ? window._betCashOdds(b.market, b.sel, _au) : null; } if (!now || Math.abs(now - b.odds) < 0.005) return ''; return ' · now ' + fmtOdds(now) + (now < b.odds ? ' <span style="color:#4ade80" title="Odds have shortened since you bet — you locked in a better price">▼ you beat the market</span>' : ' <span style="color:#ff8f6b">▲</span>'); })()}</small>${b.market === 'acca' ? `<div class="bo-acca-legs">${(b.legs || []).map(l => { const r = l.void ? 'void' : l.result; return `<span class="${r || 'open'}">${r === 'won' ? '✅' : r === 'lost' ? '❌' : r === 'void' ? '↩️' : '⏳'} ${esc(l.label)} <i>${fmtOdds(l.odds)}</i></span>`; }).join('')}${b.effOdds && Math.abs(b.effOdds - b.odds) > 0.005 ? `<em>Paid at ${fmtOdds(b.effOdds)} after refunded picks dropped out</em>` : ''}</div>` : ''}</div>
+    `<div class="bo-bet ${b.status}"><span>${stIcon[b.status] || ''}</span><div class="bo-bet-t"><b>${b.market === 'acca' ? '🎯 ' : ''}${esc(b.label)}${b.adminOverride ? ' <span title="Changed by the stewards' + (b.adminReason ? ': ' + esc(b.adminReason) : '') + '" style="font-size:.62rem;color:#a0a4ff">⚖️ reviewed</span>' : b.resettled ? ' <span title="Re-settled after the race results were updated" style="font-size:.62rem;color:#a0a4ff">⚖️ result updated</span>' : ''}</b><small>${esc(b.raceName || '')} · ${b.market === 'acca' ? (b.legs || []).length + ' picks' + (b.status === 'open' ? ' · ' + (b.legs || []).filter(l => l.result === 'won').length + ' in, ' + (b.legs || []).filter(l => !l.result).length + ' waiting' : '') : (b.div || '')} · ${b.stake} <i class="imc" title="IM$"></i> placed at <b style="color:var(--gold)">${fmtOdds(b.odds)}</b>${(() => { if (b.status !== 'open' || !upcoming || b.raceName !== upcoming.name) return ''; let now = window._betLive(b, true); if (now == null) now = window._betOuLive(b, true); if (now == null) { if (b.div !== div) return ''; const _au = window._betAutoOdds ? window._betAutoOdds(b.market, b.sel) : null; now = _au ? window._betCashOdds(b.market, b.sel, _au) : null; } if (!now || Math.abs(now - b.odds) < 0.005) return ''; return ' · now ' + fmtOdds(now) + (now < b.odds ? ' <span style="color:#4ade80" title="Odds have shortened since you bet — you locked in a better price">▼ you beat the market</span>' : ' <span style="color:#ff8f6b">▲</span>'); })()}</small>${b.market === 'acca' ? `<div class="bo-acca-legs">${(b.legs || []).map(l => { const r = l.void ? 'void' : l.result; return `<span class="${r || 'open'}">${r === 'won' ? '✅' : r === 'lost' ? '❌' : r === 'void' ? '↩️' : '⏳'} ${esc(l.label)} <i>${fmtOdds(l.odds)}</i></span>`; }).join('')}${b.effOdds && Math.abs(b.effOdds - b.odds) > 0.005 ? `<em>Paid at ${fmtOdds(b.effOdds)} after refunded picks dropped out</em>` : ''}</div>` : ''}</div>
     <span class="bo-bet-p">${b.status === 'open' ? 'Returns ' + (Math.round(b.stake * b.odds) - (b.free ? b.stake : 0)) + ((open && upcoming && b.raceName === upcoming.name && !b.free) ? `<button class="bo-cash" onclick="betCashOut('${b.id}')">Cash out ${window._betCashValue(b)}</button>` : '') : b.status === 'won' ? 'Won +' + b.payout : b.status === 'void' ? (b.free ? 'Free bet returned' : 'Refunded ' + b.stake) : b.status === 'cashed' ? 'Cashed ' + b.payout : b.free ? 'Lost (free bet)' : 'Lost −' + b.stake}</span></div>`).join('')
     || '<div class="text-muted" style="padding:12px 16px;font-size:.8rem">' + (_hf === 'all' ? 'No bets yet. Tap any odds to start a slip.' : 'Nothing here yet.') + '</div>';
   const betsMore = _pages > 1 ? `<div class="bo-pager">
@@ -25828,6 +25842,21 @@ window.betAckNotices = async function() {
   await dbSet('coins', currentUser.userId, c).catch(() => {});
   if (document.getElementById('page-bets') && document.getElementById('page-bets').classList.contains('active')) renderBets();
 };
+// Live price of ANY single bet from any tab: rebuilt from the remembered model price + everyone's open money.
+// exclMe: leave out the player's own stakes (cash-out), so nobody can move their own price.
+window._betLive = function(b, exclMe) {
+  if (!b || b.market === 'acca') return null; let reg = window._betReg; if (!reg) { try { reg = JSON.parse(localStorage.getItem('imsBetReg') || '{}'); } catch (e) { reg = {}; } }
+  const key = (b.sel || []).join('-'), R = reg[b.raceName + '|' + b.div + '|' + b.market + '|' + key]; if (!R) return null;
+  if (R.fixed != null) return R.fixed;
+  if (b.odds > R.auto * 1.31) return null; // taken at a boost that's since gone — never value it off the normal line
+  const me = currentUser && currentUser.userId;
+  const pool = (window._betAllBets || []).filter(x => x.status === 'open' && x.raceName === b.raceName && x.div === b.div && x.market === b.market && !(exclMe && x.userId === me));
+  const on = (k) => pool.filter(x => (x.sel || []).join('-') === k).reduce((t, x) => t + (x.stake || 0), 0);
+  const a = on(key), tot = R.opp ? a + on(R.opp) : pool.reduce((t, x) => t + (x.stake || 0), 0);
+  if (tot < 200) return R.auto;
+  const f = Math.max(0.7, Math.min(1.3, 1 - 0.8 * (a / tot - R.fair) * Math.min(1, tot / 1000)));
+  return Math.max(1.01, Math.round(R.auto * f * 100) / 100);
+};
 // Live price of an over/under / yes-no bet (any division tab), from everyone's open money on both sides.
 // exclMe: leave the player's own stakes out (used for cash-out, so you can't move your own price).
 window._betOuLive = function(b, exclMe) {
@@ -25852,7 +25881,7 @@ window._betCashValue = function(b) {
   // themselves and cash out). Odds shortened by other people's money → cash-out goes UP; odds
   // drifted → it goes DOWN. Value = stake × (odds taken ÷ current odds) × 0.95, capped at 95% of
   // the full potential return. Off-screen division → stake minus 5%.
-  let now = window._betOuLive(b, true);
+  let now = window._betLive(b, true); if (now == null) now = window._betOuLive(b, true);
   if (now == null && b.div === window._betDivNow && typeof window._betCashOdds === 'function') {
     const auto = window._betAutoOdds(b.market, b.sel);
     if (auto) now = window._betCashOdds(b.market, b.sel, auto);
