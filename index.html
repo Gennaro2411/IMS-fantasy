@@ -26190,7 +26190,13 @@ const MUSIC_TRACKS = [
   'https://files.catbox.moe/gd53gy.mp3',                // Voyager — Daft Punk (30 Sep 2026)
   'https://files.catbox.moe/5gy5cy.mp3',                // Take a Slice — Glass Animals (1 Oct 2026)
   'https://files.catbox.moe/rg5xoa.MP3',                // Flower in the wind — Jean Claude (6 Oct 2026)
-  'https://files.catbox.moe/s721g3.mp3'                 // U Know Y — CAPYAC (7 Oct 2026)
+  'https://files.catbox.moe/s721g3.mp3',                // U Know Y — CAPYAC (7 Oct 2026)
+  'https://files.catbox.moe/1hxrtt.mp3',
+  'https://files.catbox.moe/oyp0ni.mp3',
+  'https://files.catbox.moe/pz8xl3.mp3',
+  'https://files.catbox.moe/jx0z02.mp3',
+  'https://files.catbox.moe/j4qx04.mp3',
+  'https://files.catbox.moe/hwkkjd.mp3'
 ];
 // Display names for the "now playing" toast (keyed by URL).
 const MUSIC_TITLES = {
@@ -26207,7 +26213,13 @@ const MUSIC_TITLES = {
   'https://files.catbox.moe/gd53gy.mp3': { title: 'Voyager', artist: 'Daft Punk' },
   'https://files.catbox.moe/5gy5cy.mp3': { title: 'Take a Slice', artist: 'Glass Animals' },
   'https://files.catbox.moe/rg5xoa.MP3': { title: 'Flower in the wind', artist: 'Jean Claude' },
-  'https://files.catbox.moe/s721g3.mp3': { title: 'U Know Y', artist: 'CAPYAC' }
+  'https://files.catbox.moe/s721g3.mp3': { title: 'U Know Y', artist: 'CAPYAC' },
+  'https://files.catbox.moe/1hxrtt.mp3': { title: "Alabama", artist: "Ad\u00e8le Castillon" },
+  'https://files.catbox.moe/oyp0ni.mp3': { title: "Settle", artist: "Ceetee19" },
+  'https://files.catbox.moe/pz8xl3.mp3': { title: "SENNA", artist: "CHISEKO, Max Glyde, Gin & Tonic" },
+  'https://files.catbox.moe/jx0z02.mp3': { title: "Always Silver - Brighter Than Gold", artist: "Kainalu" },
+  'https://files.catbox.moe/j4qx04.mp3': { title: "CAN'T GO HOME", artist: "Tayrell, Nic Hanson, Elijah Fox" },
+  'https://files.catbox.moe/hwkkjd.mp3': { title: "Enemies", artist: "Magic City Hippies" }
 };
 // Archived tracks — not played. Move any of these back into MUSIC_TRACKS to restore them.
 const MUSIC_TRACKS_ARCHIVED = [
@@ -26246,9 +26258,11 @@ window.nextTrack = function() {
   const audio = document.getElementById('bg-music');
   if (!audio) return;
   if (_musicBlocked()) { audio.pause(); _setPlayIcon(false); return; }
-  // Random pick, but a song can't come back within the next 2 songs (skips the last 2 played).
-  window._musicRecent = (window._musicRecent || []).concat(musicTrackIdx).slice(-2);
-  const _pool = _musicOrder.map((_, i) => i).filter(i => !window._musicRecent.includes(i));
+  // Random pick, but a song can't come back within the next 5 songs (skips the last 5 played — remembered across reloads).
+  let _rec = []; try { _rec = JSON.parse(localStorage.getItem('imsMusicRecent') || '[]'); } catch (e) {}
+  _rec = _rec.concat(_musicOrder[musicTrackIdx]).filter(Boolean).slice(-5); try { localStorage.setItem('imsMusicRecent', JSON.stringify(_rec)); } catch (e) {}
+  window._musicRecent = _rec;
+  const _pool = _musicOrder.map((_, i) => i).filter(i => !_rec.includes(_musicOrder[i]));
   const _choices = _pool.length ? _pool : _musicOrder.map((_, i) => i).filter(i => i !== musicTrackIdx);
   if (_choices.length) musicTrackIdx = _choices[Math.floor(Math.random() * _choices.length)];
   audio.pause();
