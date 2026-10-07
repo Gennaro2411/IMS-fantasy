@@ -25261,6 +25261,10 @@ window.renderBets = async function() {
     if (market === 'h2h') { const a = field.find(d => d.id === sel[0]), o = field.find(d => d.id === sel[1]); if (!a || !o) return null; return _betOdds(1 / (1 + Math.pow(10, (o.elo - a.elo) / 400))); }
     if (market === 'wmar') { const ix = ['m1', 'm13', 'm36', 'm6'].indexOf(sel[0]); return (window._betWmar && ix >= 0) ? _betOdds(window._betWmar[ix]) : null; }
     if (market === 'pgap') { const ix = ['lt01', '01to02', 'gt02'].indexOf(sel[0]); return (window._betPgap && ix >= 0) ? _betOdds(window._betPgap[ix]) : null; }
+    // Only markets with a live price here. Over/under (incl. constructor BOTT lines) and yes/no have no live
+    // price in this function — they used to fall through to the top-5 table and show a fake 'now' price, which let
+    // players cash out for instant profit. Return null so their cash-out is simply stake − 5%.
+    if (!['win', 'pod', 'pole', 'top5'].includes(market)) return null;
     const pr = market === 'win' ? P.win[sel[0]] : market === 'pod' ? (P.pod || {})[sel[0]] : market === 'pole' ? (P.pole || {})[sel[0]] : P.top5[sel[0]]; return pr == null ? null : _betOdds(pr);
   };
   window._betDivNow = div;
