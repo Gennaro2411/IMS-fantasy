@@ -25241,7 +25241,7 @@ window.renderBets = async function() {
     return Math.max(1.01, Math.round(auto * f * 100) / 100);
   };
   const _boostDoc = await dbGet('settings', 'betBoost').catch(() => null);
-  const BOOSTS = upcoming ? window._betBoostList(_boostDoc, upcoming.name) : [];
+  const BOOSTS = upcoming ? window._betBoostList(_boostDoc, upcoming.name) : []; window._betBoostsNow = BOOSTS;
   window._betBoost = BOOSTS;
   const _findBoost = (market, sel) => BOOSTS.find(B => B.div === div && B.market === market && (B.sel || []).join('-') === sel.join('-'));
   const _isBoost = (market, sel) => !!_findBoost(market, sel);
@@ -25834,6 +25834,9 @@ window._betOuLive = function(b, exclMe) {
   if (!b || !['ou', 'cou', 'yn'].includes(b.market)) return null;
   let reg = window._betOuReg; if (!reg) { try { reg = JSON.parse(localStorage.getItem('imsBetOuReg') || '{}'); } catch (e) { reg = {}; } }
   const key = (b.sel || []).join('-'), R = reg[b.market + ':' + key]; if (!R) return null;
+  // Boosted picks keep their fixed boosted price — never value them off the normal line (that would turn a boost into free cash-out profit).
+  if ((window._betBoostsNow || []).some(B => B.div === b.div && B.market === b.market && (B.sel || []).join('-') === key)) return null;
+  if (b.odds > R.auto * 1.31) return null; // taken above anything the market could reach = a boost price
   const opp = (b.sel || []).slice(); opp[1] = ({ over: 'under', under: 'over', yes: 'no', no: 'yes' })[opp[1]] || opp[1]; const oKey = opp.join('-');
   const me = currentUser && currentUser.userId;
   const pool = (window._betAllBets || []).filter(x => x.status === 'open' && x.raceName === b.raceName && x.div === b.div && x.market === b.market && !(exclMe && x.userId === me));
