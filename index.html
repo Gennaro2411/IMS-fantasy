@@ -2079,6 +2079,12 @@
     .gd-miss svg{width:46%;height:46%;fill:none;stroke:#f87171;stroke-width:3;stroke-linecap:round;filter:drop-shadow(0 0 6px rgba(248,113,113,.6));animation:gdMissX 1.6s ease forwards}
     @keyframes gdMiss{0%{opacity:0}12%{opacity:1}70%{opacity:1}100%{opacity:0}}
     @keyframes gdMissX{0%{transform:scale(.4) rotate(-20deg)}18%{transform:scale(1.12) rotate(0)}28%{transform:scale(1)}100%{transform:scale(1)}}
+    .hd-cd{position:relative;display:flex;align-items:center;gap:14px;margin:0 0 14px;padding:12px 16px 16px;border-radius:16px;overflow:hidden;background:linear-gradient(120deg,rgba(250,204,21,0.12),rgba(255,255,255,0.02) 70%);border:1px solid rgba(250,204,21,0.35)}
+    .hd-cd-txt{flex:1;min-width:0}.hd-cd-txt small{display:block;font-size:.6rem;font-weight:800;letter-spacing:2px;color:#facc15}.hd-cd-txt span{font-size:.88rem;color:#e5e7eb}
+    .hd-cd-num{display:flex;align-items:baseline;gap:3px;font-family:'Barlow Condensed',sans-serif;line-height:1}.hd-cd-num b{font-size:2.4rem;font-weight:900;color:#facc15;font-variant-numeric:tabular-nums;min-width:1.3em;text-align:right}.hd-cd-num i{font-style:normal;font-size:.75rem;font-weight:700;color:var(--muted);letter-spacing:1px}
+    .hd-cd-bar{position:absolute;left:0;right:0;bottom:0;height:4px;background:rgba(255,255,255,0.06)}.hd-cd-bar span{display:block;height:100%;background:linear-gradient(90deg,#facc15,#fb923c);transition:width .25s linear}
+    .hd-cd.low{background:linear-gradient(120deg,rgba(239,68,68,0.16),rgba(255,255,255,0.02) 70%);border-color:rgba(239,68,68,0.5)}.hd-cd.low small,.hd-cd.low .hd-cd-num b{color:#f87171}.hd-cd.low .hd-cd-bar span{background:linear-gradient(90deg,#ef4444,#f87171)}
+    .hd-cd.low .hd-cd-num b{animation:hdPulse 1s ease-in-out infinite}@keyframes hdPulse{50%{transform:scale(1.08)}}
     .gd-rm-row{display:flex;justify-content:center;gap:22px;margin:10px 0 12px}.gd-rm{display:flex;flex-direction:column;align-items:center;gap:4px;transition:opacity .2s,filter .2s}
     .gd-rm-av{border-radius:50%;padding:3px;border:3px solid rgba(255,255,255,0.12);transition:border-color .2s,box-shadow .2s}.gd-rm-av img,.gd-rm-av>span{border-radius:50%;display:block}
     .gd-rm.yes .gd-rm-av{border-color:#4ade80;box-shadow:0 0 14px rgba(74,222,128,.55)}.gd-rm.left{opacity:.35;filter:grayscale(1)}
@@ -27559,13 +27565,18 @@ async function _hdBody(pool, top) {
   const slowR = oneDone ? (myDone ? opp : role) : '', deadline = oneDone ? (myDone || opDone) + HD_LAST : 0;
   clearInterval(window._hdCd);
   if (oneDone) window._hdCd = setInterval(async () => { const el = document.getElementById('hd-cd'), left = deadline - _now();
-    if (el) el.textContent = Math.max(0, Math.ceil(left / 1000)) + 's';
+    if (el) el.textContent = Math.max(0, Math.ceil(left / 1000));
+    const fl = document.getElementById('hd-cd-fill'), bx = document.getElementById('hd-cdbox'); if (fl) fl.style.width = Math.max(0, left / HD_LAST * 100) + '%'; if (bx) bx.classList.toggle('low', left < 10e3);
     if (!document.getElementById('hd-duel')) { clearInterval(window._hdCd); return; }
     if (left <= 0 && !window._hdCdFiring) { window._hdCdFiring = 1; clearInterval(window._hdCd);
       try { dbInvalidate('wordleDuels'); const l = await dbGet('wordleDuels', lob.id).catch(() => null);
         if (l && !l[slowR + 'Done'] && !l.drawAgreed && !l.cancelled) await dbSet('wordleDuels', lob.id, { [slowR + 'Done']: deadline, [slowR + 'Timeout']: true });
       } finally { window._hdCdFiring = 0; window._hlReveal = null; window._hlBusy = false; renderGames(); } } }, 250);
-  const cdBar = oneDone ? `<div class="gd-draw ask" style="font-size:.95rem"><span>⏱ ${slowR === role ? `<b>${esc(opP.name)}</b> has finished — you have` : `Waiting for <b>${esc(opP.name)}</b> — they have`} <b id="hd-cd" style="font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;color:#facc15">${Math.max(0, Math.ceil((deadline - _now()) / 1000))}s</b> left</span></div>` : '';
+  const cdLeft0 = oneDone ? Math.max(0, deadline - _now()) : 0;
+  const cdBar = oneDone ? `<div id="hd-cdbox" class="hd-cd${cdLeft0 < 10e3 ? ' low' : ''}">
+      <div class="hd-cd-txt"><small>${slowR === role ? 'FINAL COUNTDOWN' : 'WAITING ON OPPONENT'}</small><span>${slowR === role ? `<b>${esc(opP.name)}</b> has finished — answer what you can` : `<b>${esc(opP.name)}</b> is still answering`}</span></div>
+      <div class="hd-cd-num"><b id="hd-cd">${Math.ceil(cdLeft0 / 1000)}</b><i>sec</i></div>
+      <div class="hd-cd-bar"><span id="hd-cd-fill" style="width:${cdLeft0 / HD_LAST * 100}%"></span></div></div>` : '';
   const bigCard = (p, side, st) => `<div class="wd-fc ${side}"><div class="wd-fc-av">${_wdAv({ name: p.name, photo: p.av }, 96)}</div><b>${esc(p.name)}</b><div class="wd-fc-st">${st}</div></div>`;
   if (lob.status === 'waiting') { const s0 = (await _wdStatsFor([meP.uid]))[meP.uid] || {};
     return top(`<span class="wd-pill">⚔️ Duel</span>`) + `<div id="hd-duel" class="wd-face wait" ${V}>${bigCard(meP, 'l', `<span><i>${s0.hlW || 0}–${s0.hlL || 0}</i>Duels W–L</span>`)}
