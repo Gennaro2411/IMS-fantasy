@@ -26942,8 +26942,9 @@ window.wordleShare = function() {
   const ans = pool.find(p => p.id === st.answer); if (!ans) return; const max = (window._wordleCfg || {}).maxGuesses || 8;
   const sq = (ok, mid) => ok ? '🟩' : mid ? '🟨' : '🟥';
   const O = ['D0', 'D1', 'D2', 'D3', 'D4', 'E1', 'E2', 'E3'];
+  // No square for the driver itself — the row is all green when it's the right driver anyway.
   const rows = st.guesses.map(id => pool.find(p => p.id === id)).filter(Boolean).map(g => [
-    sq(g.id === ans.id), sq(g.nat && ans.nat && g.nat.toLowerCase() === ans.nat.toLowerCase()), sq(_wdNorm(g.team) === _wdNorm(ans.team), _wdPastTeam(g, ans)), sq(g.dv && g.dv === ans.dv),
+    sq(g.nat && ans.nat && g.nat.toLowerCase() === ans.nat.toLowerCase()), sq(_wdNorm(g.team) === _wdNorm(ans.team), _wdPastTeam(g, ans)), sq(g.dv && g.dv === ans.dv),
     sq(g.b === ans.b, _wdClose(g.b, ans.b, 'b')), sq(g.st === ans.st, _wdClose(g.st, ans.st, 'st')), sq(g.p === ans.p, _wdClose(g.p, ans.p, 'p')), sq(g.w === ans.w, _wdClose(g.w, ans.w, 'w'))].join(''));
   const head = mode === 'daily' ? 'IMS PaddockDle #' + _wdDayNum() : 'IMS PaddockDle ∞';
   const txt = head + ' · ' + (st.won ? st.guesses.length + '/' + max : 'X/' + max) + '\n' + rows.join('\n') + '\n' + location.href.split('#')[0];
