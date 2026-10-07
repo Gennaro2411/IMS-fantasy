@@ -1486,8 +1486,10 @@
     #page-predictions .brf-tl-row.next .brf-tl-state,#page-predictions .brf-tl-row.live .brf-tl-state{color:var(--h)}
     #page-predictions .brf-tl-row.done{opacity:.45}
     /* availability rings */
-    .et-view-btn{flex:1;padding:8px 10px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:.72rem;font-weight:800;letter-spacing:.5px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);transition:all .15s}
-    .et-view-btn:hover{border-color:rgba(255,200,0,.45);color:#fff}.et-view-btn.on{color:var(--gold);border-color:var(--gold);background:rgba(255,200,0,0.12)}
+    .et-seg{display:flex;gap:4px;padding:4px;margin-bottom:12px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08)}
+    .et-view-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:10px 12px;border:none;border-radius:9px;cursor:pointer;font-family:inherit;font-size:.9rem;font-weight:600;color:#a3a3b8;background:transparent;transition:background .2s,color .2s,box-shadow .2s}
+    .et-view-btn:hover{color:#fff;background:rgba(255,255,255,0.05)}
+    .et-view-btn.on{color:#111;font-weight:700;background:linear-gradient(135deg,#ffe259,#ffa751);box-shadow:0 2px 10px rgba(255,190,60,0.3)}
     #page-predictions .brf-av-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;align-items:start}#page-predictions .brf-av{min-width:0;overflow-wrap:anywhere}
     #page-predictions .brf-av{border-radius:14px;padding:13px 12px 12px;background:radial-gradient(120% 90% at 50% 0%,color-mix(in srgb,var(--hue) 14%,transparent),transparent 70%),var(--surface2);border:1px solid color-mix(in srgb,var(--hue) 30%,transparent)}
     #page-predictions .brf-av-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
@@ -7784,7 +7786,7 @@ async function renderTeamBuilder(existingTeam, locked, allTeams) {
             style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:#fff;font-size:.85rem">
           <div id="et-driver-search-results" style="position:absolute;top:100%;left:0;right:0;z-index:60;background:var(--surface2);border:1px solid var(--border);border-radius:0 0 8px 8px;max-height:260px;overflow-y:auto;display:none"></div>
         </div>
-        <div id="et-view-toggle" style="display:flex;gap:6px;margin-bottom:10px">
+        <div id="et-view-toggle" class="et-seg">
           <button type="button" class="et-view-btn" data-view="team" onclick="window.setEtView('team')">🏎 By team</button>
           <button type="button" class="et-view-btn" data-view="div" onclick="window.setEtView('div')">📊 By division</button>
         </div>
@@ -7975,9 +7977,9 @@ window.renderEtDivTabs = function() {
   const box = document.getElementById('et-div-tabs'); if (!box || !window._etDivList) return;
   const act = window._etActiveDiv || window._etDivList[0];
   box.innerHTML = window._etDivList.map(dv => { const on = dv === act, hue = ({ D0:'#ffc800', D1:'#e8002d', D2:'#9b6fd4', D3:'#27f4d2', D4:'#2ecc71', E3:'#2ecc71' })[dv] || '#9b6fd4', has = window._etPicks && window._etPicks[dv];
-    return `<button type="button" onclick="window.selectEtDivTab('${dv}')" style="position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border-radius:8px;cursor:pointer;width:100%;font-family:inherit;transition:all .15s;border:1px solid ${on ? hue : hue + '55'};background:${on ? hue + '33' : hue + '12'};box-shadow:${on ? '0 0 0 1px ' + hue + ',0 0 12px ' + hue + '55' : 'none'}">
-      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.2rem;line-height:1;color:${hue}">${dv}</span>
-      <span style="font-size:.6rem;font-weight:700;color:${on ? '#fff' : 'var(--muted)'}">${has ? 'Picked' : 'Empty'}</span>
+    return `<button type="button" onclick="window.selectEtDivTab('${dv}')" style="position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 4px;border-radius:10px;cursor:pointer;width:100%;font-family:inherit;transition:all .2s;border:1px solid ${on ? hue : 'rgba(255,255,255,0.08)'};background:${on ? hue + '40' : 'rgba(255,255,255,0.03)'};border-left:3px solid ${hue};box-shadow:${on ? '0 4px 14px ' + hue + '40' : 'none'}">
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.35rem;line-height:1;color:${on ? '#fff' : hue}">${dv}</span>
+      <span style="font-size:.7rem;font-weight:600;color:${on ? '#fff' : '#a3a3b8'}">${has ? 'Picked' : 'Empty'}</span>
       ${has ? `<span style="position:absolute;top:2px;right:2px;background:#4caf50;color:#fff;font-size:.6rem;font-weight:800;border-radius:50%;width:14px;height:14px;display:flex;align-items:center;justify-content:center">✓</span>` : ''}</button>`; }).join('');
 };
 window.selectEtDivTab = function(dv) {
