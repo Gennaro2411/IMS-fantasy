@@ -1431,6 +1431,8 @@
       #page-leaderboard .lbr-bar{display:none}
     }
   </style>
+  <div id="lb-admin-bets-bar" style="display:none;margin-bottom:12px"><button class="btn btn-secondary btn-sm" onclick="adminRaceBets()">🎰 Admin · bets placed this race</button></div>
+  <div id="lb-admin-bets" style="display:none"></div>
   <button class="page-refresh-btn" onclick="refreshCurrentPage(this)" title="Refresh">⟳</button>
   <div class="card">
     <div class="card-title lb-header"><div class="dot"></div>Leaderboard
@@ -11456,6 +11458,7 @@ window.computeTeamRanksByPoints = function(teams, races) {
 };
 
 async function renderLeaderboard() {
+  { const ab = document.getElementById('lb-admin-bets-bar'); if (ab) ab.style.display = adminLoggedIn ? 'block' : 'none'; if (!adminLoggedIn) { const bx = document.getElementById('lb-admin-bets'); if (bx) bx.style.display = 'none'; } }
   if (!PROJECT_ID) { document.getElementById('leaderboard-content').innerHTML='<div class="alert alert-warning">Database not connected.</div>'; return; }
   const [teams,races,drivers,constrs,lockDoc] = await Promise.all([dbGetAll('teams'),dbGetAll('races'),dbGetAll('drivers'),dbGetAll('constructors'),dbGet('settings','teamsLocked').catch(()=>null)]);
   const _teamsLocked = !!(lockDoc && lockDoc.value);
@@ -24914,6 +24917,31 @@ function _betSim(field, sims, seed, topN) {
   return { win, top5, pod };
 }
 
+// Admin: every bet placed for a race, grouped by player (opened from the Leaderboard page).
+window.adminRaceBets = async function(race) {
+  if (!adminLoggedIn) return; const box = document.getElementById('lb-admin-bets'); if (!box) return;
+  if (box.style.display === 'block' && race === undefined) { box.style.display = 'none'; return; }
+  box.style.display = 'block'; box.innerHTML = '<div class="card"><p class="text-muted">Loading bets…</p></div>';
+  const [bets, teams] = await Promise.all([dbGetAll('bets', { fresh: true }).catch(() => []), dbGetAll('teams').catch(() => [])]);
+  const nm = {}; teams.forEach(t => { if (t && t.userId) nm[t.userId] = t.playerName || t.name || t.teamName || t.userId; });
+  const last = {}; bets.forEach(b => { if (b && b.raceName) last[b.raceName] = Math.max(last[b.raceName] || 0, b.placedAt || 0); });
+  const racesL = Object.keys(last).sort((a, b) => last[b] - last[a]); const R = race || racesL[0];
+  const list = bets.filter(b => b && b.raceName === R);
+  const byU = {}; list.forEach(b => { (byU[b.userId] = byU[b.userId] || []).push(b); });
+  const col = { open: '#facc15', won: '#4ade80', lost: '#f87171', cashed: '#60a5fa', void: '#9ca3af' };
+  const tot = list.reduce((a, b) => a + (b.free ? 0 : (b.stake || 0)), 0), openLiab = list.filter(b => b.status === 'open').reduce((a, b) => a + Math.round((b.stake || 0) * (b.odds || 1)), 0);
+  const users = Object.keys(byU).sort((a, b) => byU[b].reduce((x, y) => x + (y.stake || 0), 0) - byU[a].reduce((x, y) => x + (y.stake || 0), 0));
+  box.innerHTML = `<div class="card"><div class="card-title" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div class="dot"></div>🎰 Bets · 
+      <select onchange="adminRaceBets(this.value)" style="max-width:220px">${racesL.map(r => `<option ${r === R ? 'selected' : ''}>${esc(r)}</option>`).join('')}</select>
+      <button class="btn btn-secondary btn-sm" style="margin-left:auto" onclick="document.getElementById('lb-admin-bets').style.display='none'">Close</button></div>
+    <div class="text-muted" style="font-size:.8rem;margin-bottom:10px">${list.length} bets · ${users.length} players · ${tot.toLocaleString()} IM$ staked · ${openLiab.toLocaleString()} IM$ potential returns still open</div>
+    ${users.length ? users.map(u => { const bs = byU[u].sort((a, b) => (b.placedAt || 0) - (a.placedAt || 0)), st = bs.reduce((a, b) => a + (b.stake || 0), 0);
+      return `<details style="border:1px solid var(--border);border-radius:10px;margin-bottom:6px;background:var(--surface2)"><summary style="cursor:pointer;padding:9px 12px;display:flex;gap:10px;align-items:center"><b style="flex:1">${esc(nm[u] || u)}</b><small class="text-muted">${bs.length} bet${bs.length !== 1 ? 's' : ''} · ${st.toLocaleString()} staked</small></summary>
+        <div style="padding:0 12px 10px">${bs.map(b => `<div style="display:flex;gap:10px;align-items:center;padding:6px 0;border-top:1px solid var(--border);font-size:.82rem">
+          <span style="flex:1;min-width:0">${b.market === 'acca' ? '🎯 ' : ''}${esc(b.label || '')}${b.free ? ' <small style="color:#a0a4ff">free bet</small>' : ''}<br><small class="text-muted">${esc(b.div || '')} · ${b.stake} @ ${(Number(b.odds) || 0).toFixed(2)} · ${b.placedAt ? new Date(b.placedAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}</small></span>
+          <b style="color:${col[b.status] || '#fff'};white-space:nowrap;text-transform:uppercase;font-size:.72rem">${b.status}${b.status === 'won' || b.status === 'cashed' ? ' +' + b.payout : b.status === 'open' ? ' → ' + Math.round(b.stake * b.odds) : ''}</b></div>`).join('')}</div></details>`; }).join('')
+      : '<p class="text-muted">No bets for this race.</p>'}</div>`;
+};
 async function _betLoadCoins(userId) {
   let c = await dbGet('coins', userId).catch(() => null);
   if (!c) { c = { userId, balance: BET_START_COINS, staked: 0, won: 0, betsPlaced: 0, betsWon: 0, createdAt: Date.now() }; await dbSet('coins', userId, c).catch(() => {}); }
