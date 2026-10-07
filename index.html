@@ -27058,10 +27058,12 @@ async function _duelRecordBoth(lob, round, winnerRole, quitRole, wF, lF, h2hF) {
     for (const [r, o] of [['host', 'guest'], ['guest', 'host']]) { const p = P(r), op = P(o), w = winnerRole === r; if (!p.uid) continue;
       const id = _wdScoreId(p.uid); dbInvalidate('wordleScores'); const cur = await dbGet('wordleScores', id).catch(() => null) || {};
       await dbSet('wordleScores', id, Object.assign({ uid: p.uid, name: p.name, points: cur.points || 0, [w ? wF : lF]: ((w ? cur[wF] : cur[lF]) || 0) + 1 }, _h2hPatch(cur, h2hF, op, w))); } } catch (e) {} }
+// The poll just fetched the lobby — reuse that copy for the redraw it triggers instead of fetching it again (saves a round trip).
+function _duelPre(code) { const p = window._duelPrefetch; window._duelPrefetch = null; return p && p.id === code && Date.now() - p.at < 1500 ? p.d : null; }
 async function _wdDuelBody(pool, top) {
   const me = _wdMe(); const mine = _wdDuelKey();
   let lob = null;
-  if (mine && mine.code) { dbInvalidate('wordleDuels'); lob = await dbGet('wordleDuels', mine.code).catch(() => null); if (!lob) _wdDuelSet(null); }
+  if (mine && mine.code) { dbInvalidate('wordleDuels'); lob = _duelPre(mine.code) || await dbGet('wordleDuels', mine.code).catch(() => null); if (!lob) _wdDuelSet(null); }
   // ---- Lobby browser ----
   if (!lob) {
     clearInterval(window._wdDuelPoll);
@@ -27121,7 +27123,7 @@ async function _wdDuelBody(pool, top) {
     if (!document.getElementById('wd-duel')) { clearInterval(window._wdDuelPoll); return; }
     if (window._wdPollBusy) return; window._wdPollBusy = true; // one check at a time — never stack on a slow connection
     try {
-    dbInvalidate('wordleDuels'); dbGet._lastFailed = false; const l2 = await dbGet('wordleDuels', lob.id).catch(() => undefined);
+    dbInvalidate('wordleDuels'); dbGet._lastFailed = false; const l2 = await dbGet('wordleDuels', lob.id).catch(() => undefined); if (l2) window._duelPrefetch = { id: lob.id, at: Date.now(), d: l2 };
     if (l2 === undefined || dbGet.readFailed()) return; // network blip: try again next tick
     if (!l2) { _wdDuelSet(null); renderGames(); return; }
     if (l2.status === 'waiting' && role === 'host' && _now() - (l2.hostSeen || 0) > 10e3) dbSet('wordleDuels', lob.id, { hostSeen: _now() }).catch(() => {}); // "still here" ping
@@ -27507,7 +27509,7 @@ async function _hdGuess(dir) {
 }
 async function _hdBody(pool, top) {
   const me = _wdMe(), mine = _hdKey(); let lob = null;
-  if (mine && mine.code) { dbInvalidate('wordleDuels'); lob = await dbGet('wordleDuels', mine.code).catch(() => null); if (!lob) _hdSet(null); }
+  if (mine && mine.code) { dbInvalidate('wordleDuels'); lob = _duelPre(mine.code) || await dbGet('wordleDuels', mine.code).catch(() => null); if (!lob) _hdSet(null); }
   if (!lob) { clearInterval(window._hdPoll);
     const all = await dbGetAll('wordleDuels', { fresh: true }).catch(() => []); const now = _now();
     const open = all.filter(l => l && l.game === 'hl' && l.public && l.status === 'waiting' && now - (l.hostSeen || l.createdAt || 0) < 30e3 && l.hostUid !== me.uid).sort((a, b) => b.createdAt - a.createdAt);
@@ -27544,7 +27546,7 @@ async function _hdBody(pool, top) {
   window._hdPollBusy = false;
   window._hdPoll = setInterval(async () => { if (!document.getElementById('hd-duel')) { clearInterval(window._hdPoll); return; } if (window._hlBusy || window._hdPollBusy) return;
     window._hdPollBusy = true; try {
-    dbInvalidate('wordleDuels'); dbGet._lastFailed = false; const l2 = await dbGet('wordleDuels', lob.id).catch(() => undefined);
+    dbInvalidate('wordleDuels'); dbGet._lastFailed = false; const l2 = await dbGet('wordleDuels', lob.id).catch(() => undefined); if (l2) window._duelPrefetch = { id: lob.id, at: Date.now(), d: l2 };
     if (l2 === undefined || dbGet.readFailed()) return; // network blip: try again next tick
     if (!l2) { _hdSet(null); renderGames(); return; }
     if (l2.status === 'waiting' && role === 'host' && _now() - (l2.hostSeen || 0) > 10e3) dbSet('wordleDuels', lob.id, { hostSeen: _now() }).catch(() => {});
@@ -27915,7 +27917,7 @@ function _gdEnd(beacon) {
 window.addEventListener('pagehide', () => _gdEnd(true));
 async function _gdBody(pool, top) {
   const me = _wdMe(), mine = _gdKey(); let lob = null;
-  if (mine && mine.code) { dbInvalidate('wordleDuels'); lob = await dbGet('wordleDuels', mine.code).catch(() => null); if (!lob) _gdSet(null); }
+  if (mine && mine.code) { dbInvalidate('wordleDuels'); lob = _duelPre(mine.code) || await dbGet('wordleDuels', mine.code).catch(() => null); if (!lob) _gdSet(null); }
   if (!lob) { // ---- lobby browser ----
     clearInterval(window._gdPoll);
     const all = await dbGetAll('wordleDuels', { fresh: true }).catch(() => []); const now = _now();
@@ -27963,7 +27965,7 @@ async function _gdBody(pool, top) {
     if (window._gdPollBusy) return; // one check at a time — never stack requests/redraws on a slow connection
     window._gdPollBusy = true;
     try {
-    dbInvalidate('wordleDuels'); dbGet._lastFailed = false; const l2 = await dbGet('wordleDuels', lob.id).catch(() => undefined);
+    dbInvalidate('wordleDuels'); dbGet._lastFailed = false; const l2 = await dbGet('wordleDuels', lob.id).catch(() => undefined); if (l2) window._duelPrefetch = { id: lob.id, at: Date.now(), d: l2 };
     if (l2 === undefined || dbGet.readFailed()) return; // network blip: just try again next tick, don't drop out of the duel
     if (!l2) { _gdSet(null); renderGames(); return; }
     if (l2.status === 'waiting' && role === 'host' && _now() - (l2.hostSeen || 0) > 10e3) dbSet('wordleDuels', lob.id, { hostSeen: _now() }).catch(() => {});
