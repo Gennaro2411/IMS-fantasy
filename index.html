@@ -2075,6 +2075,10 @@
     @media (max-width:640px){.gr-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;width:100%}.gr-h b{font-size:.58rem}.gr-ico{font-size:1.2rem;min-height:24px}.gr-logo{max-width:36px;max-height:22px}.gr-div{font-size:1rem}.gr-panel{width:100%}.gr-cell.ok span{font-size:.55rem}.gr-cell.ok img,.gr-cell.ok>span:first-child{width:28px!important;height:28px!important}}
     .gd-vs{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;padding:12px 16px;border-radius:16px;background:linear-gradient(90deg,color-mix(in srgb,var(--cl,#f97316) 14%,transparent),rgba(20,20,30,0.5) 45%,rgba(20,20,30,0.5) 55%,color-mix(in srgb,var(--cr,#3b82f6) 14%,transparent));border:1px solid rgba(255,255,255,0.08)}
     .gd-p{display:flex;align-items:center;gap:10px}.gd-p img,.gd-p>span{border-radius:50%}.gd-p b{display:block;font-family:'Barlow Condensed',sans-serif;font-size:1.15rem}.gd-p small{font-size:.7rem;font-weight:800}
+    .gr-cell{position:relative}.gd-miss{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;border-radius:inherit;pointer-events:none;z-index:2;background:rgba(239,68,68,0.16);box-shadow:inset 0 0 0 2px rgba(239,68,68,0.75);animation:gdMiss 1.6s ease forwards}
+    .gd-miss svg{width:46%;height:46%;fill:none;stroke:#f87171;stroke-width:3;stroke-linecap:round;filter:drop-shadow(0 0 6px rgba(248,113,113,.6));animation:gdMissX 1.6s ease forwards}
+    @keyframes gdMiss{0%{opacity:0}12%{opacity:1}70%{opacity:1}100%{opacity:0}}
+    @keyframes gdMissX{0%{transform:scale(.4) rotate(-20deg)}18%{transform:scale(1.12) rotate(0)}28%{transform:scale(1)}100%{transform:scale(1)}}
     .gd-rm-row{display:flex;justify-content:center;gap:22px;margin:10px 0 12px}.gd-rm{display:flex;flex-direction:column;align-items:center;gap:4px;transition:opacity .2s,filter .2s}
     .gd-rm-av{border-radius:50%;padding:3px;border:3px solid rgba(255,255,255,0.12);transition:border-color .2s,box-shadow .2s}.gd-rm-av img,.gd-rm-av>span{border-radius:50%;display:block}
     .gd-rm.yes .gd-rm-av{border-color:#4ade80;box-shadow:0 0 14px rgba(74,222,128,.55)}.gd-rm.left{opacity:.35;filter:grayscale(1)}
@@ -27959,11 +27963,13 @@ async function _gdBody(pool, top) {
     const owner = {}; const tryCell = (i, seen) => { for (const id of empty[i].ids) { if (seen.has(id)) continue; seen.add(id); if (owner[id] == null || tryCell(owner[id], seen)) { owner[id] = i; return true; } } return false; };
     empty.forEach((_, i) => tryCell(i, new Set())); Object.entries(owner).forEach(([id, i]) => { reveal[empty[i].key] = id; });
     R.forEach((r, ri) => K.forEach((c, ci) => { const key = ri + ',' + ci; if (cells[key] || reveal[key]) return; const p = pool.find(p => r.test(p) && c.test(p)); if (p) reveal[key] = p.id; })); }
+  // A wrong answer flashes an X on the cell that was tried (for ~1.6 s, on both screens).
+  const _lmv = lob.lastMove || {}, missAge = Math.max(0, _now() - (_lmv.at || 0)), missKey = (!done && _lmv.key && _lmv.ok === false && missAge < 1600) ? _lmv.key : '';
   R.forEach((r, ri) => { grid += head(r); K.forEach((c, ci) => { const key = ri + ',' + ci, cl = cells[key], d = cl && pool.find(p => p.id === cl.d);
     const rv = !cl && reveal[key] && pool.find(p => p.id === reveal[key]);
     grid += rv ? `<div class="gr-cell rev" title="A correct answer nobody got">${_wdAv(rv, 38)}<span>${esc(rv.name)}</span></div>`
       : cl ? `<div class="gr-cell gd-${cl.by}${line.includes(ri * 3 + ci) ? ' gd-win' : ''}">${d ? _wdAv(d, 38) : ''}<span>${esc(d ? d.name : '?')}</span></div>`
-      : `<button class="gr-cell${sel === key ? ' sel' : ''}" data-key="${key}" ${!myTurn ? 'disabled' : ''} onclick="gridPick('${key}')"><span class="gr-plus">+</span><small>${myTurn ? 'Choose' : ''}</small></button>`; }); });
+      : `<button class="gr-cell${sel === key ? ' sel' : ''}" data-key="${key}" ${!myTurn ? 'disabled' : ''} onclick="gridPick('${key}')">${missKey === key ? `<span class="gd-miss gd-miss-${lob.lastMove.by}" style="animation-delay:-${missAge}ms"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></span>` : ''}<span class="gr-plus">+</span><small>${myTurn ? 'Choose' : ''}</small></button>`; }); });
   grid += '</div>';
   const lm = lob.lastMove || {}; const lmTxt = lm.timeout ? `${esc(lm.by === role ? 'You' : opP.name)} ran out of time ⏱` : lm.at ? `${esc((lm.by === role ? 'You' : opP.name))} ${lm.ok ? 'claimed' : 'missed'} ${lm.key ? 'a cell' : ''} with <b>${esc(lm.name || '?')}</b>${lm.ok ? ' ✅' : ' ❌'}` : '';
   let side;
