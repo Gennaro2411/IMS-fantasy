@@ -2075,6 +2075,12 @@
     @media (max-width:640px){.gr-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;width:100%}.gr-h b{font-size:.58rem}.gr-ico{font-size:1.2rem;min-height:24px}.gr-logo{max-width:36px;max-height:22px}.gr-div{font-size:1rem}.gr-panel{width:100%}.gr-cell.ok span{font-size:.55rem}.gr-cell.ok img,.gr-cell.ok>span:first-child{width:28px!important;height:28px!important}}
     .gd-vs{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;padding:12px 16px;border-radius:16px;background:linear-gradient(90deg,color-mix(in srgb,var(--cl,#f97316) 14%,transparent),rgba(20,20,30,0.5) 45%,rgba(20,20,30,0.5) 55%,color-mix(in srgb,var(--cr,#3b82f6) 14%,transparent));border:1px solid rgba(255,255,255,0.08)}
     .gd-p{display:flex;align-items:center;gap:10px}.gd-p img,.gd-p>span{border-radius:50%}.gd-p b{display:block;font-family:'Barlow Condensed',sans-serif;font-size:1.15rem}.gd-p small{font-size:.7rem;font-weight:800}
+    .gd-rm-row{display:flex;justify-content:center;gap:22px;margin:10px 0 12px}.gd-rm{display:flex;flex-direction:column;align-items:center;gap:4px;transition:opacity .2s,filter .2s}
+    .gd-rm-av{border-radius:50%;padding:3px;border:3px solid rgba(255,255,255,0.12);transition:border-color .2s,box-shadow .2s}.gd-rm-av img,.gd-rm-av>span{border-radius:50%;display:block}
+    .gd-rm.yes .gd-rm-av{border-color:#4ade80;box-shadow:0 0 14px rgba(74,222,128,.55)}.gd-rm.left{opacity:.35;filter:grayscale(1)}
+    .gd-rm b{font-size:.82rem}.gd-rm small{font-size:.7rem;color:var(--muted)}.gd-rm.yes small{color:#4ade80;font-weight:700}
+    .gd-draw{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:12px;padding:9px 12px;border-radius:12px;font-size:.85rem;background:rgba(255,255,255,0.04);border:1px solid var(--border)}
+    .gd-draw.ask{background:rgba(250,204,21,0.1);border-color:rgba(250,204,21,0.45)}
     .gd-p.host small{color:var(--ch,#fb923c)}.gd-p.guest small{color:var(--cg,#60a5fa)}.gd-vs .gd-p:last-child{flex-direction:row-reverse;text-align:right}
     .gd-turn{font-family:'Barlow Condensed',sans-serif;font-weight:900;letter-spacing:2px;font-size:.95rem;padding:4px 12px;border-radius:20px;background:rgba(255,255,255,0.06)}
     .gr-cell.gd-host{background:linear-gradient(160deg,color-mix(in srgb,var(--ch,#f97316) 32%,transparent),color-mix(in srgb,var(--ch,#f97316) 10%,transparent));border-color:color-mix(in srgb,var(--ch,#f97316) 60%,transparent);color:#ffedd5}
@@ -27882,7 +27888,7 @@ async function _gdBody(pool, top) {
   if (done && winner === role && !window['_gdCf_' + rk]) { window['_gdCf_' + rk] = 1; setTimeout(() => { try { fireConfetti({ count: 200 }); } catch (e) {} }, 300); }
   if (done && role === 'host' && lob.hostRematch && lob.guestRematch && !lob[opp + 'Left']) {
     const g = _grBuild(pool, Math.floor(Math.random() * 2 ** 31));
-    if (g) { await dbSet('wordleDuels', lob.id, { rows: g.rows, cols: g.cols, cells: {}, winner: '', forfeit: '', hostRematch: false, guestRematch: false, round: round + 1, turn: round % 2 ? 'guest' : 'host', lastMove: {}, startedAt: _now() + 1500 }); setTimeout(() => renderGames(), 200); }
+    if (g) { await dbSet('wordleDuels', lob.id, { rows: g.rows, cols: g.cols, cells: {}, winner: '', forfeit: '', hostRematch: false, guestRematch: false, hostDraw: false, guestDraw: false, drawAgreed: false, round: round + 1, turn: round % 2 ? 'guest' : 'host', lastMove: {}, startedAt: _now() + 1500 }); setTimeout(() => renderGames(), 200); }
   }
   clearInterval(window._gdPoll);
   window._gdPollBusy = false;
@@ -27898,7 +27904,7 @@ async function _gdBody(pool, top) {
     // Order-proof fingerprint: the database can return the same cells in a different order, which used
     // to look like a change and redraw the screen every 1.5 s (flashing + the search box losing focus).
     const cellSig = (c) => Object.keys(c || {}).sort().map(k => k + ':' + (c[k] || {}).by + ':' + (c[k] || {}).d).join(',');
-    const sig = (x) => [x.status, x.round || 1, x.turn, cellSig(x.cells), x.winner || '', x.guestName || '', !!x.hostRematch, !!x.guestRematch, !!x.hostLeft, !!x.guestLeft, (x.lastMove || {}).at || 0].join('|');
+    const sig = (x) => [x.status, x.round || 1, x.turn, cellSig(x.cells), x.winner || '', x.guestName || '', !!x.hostRematch, !!x.guestRematch, !!x.hostLeft, !!x.guestLeft, !!x.hostDraw, !!x.guestDraw, (x.lastMove || {}).at || 0].join('|');
     if (sig(l2) !== sig(lob)) { const t = document.getElementById('gr-input'); const v = t ? t.value : '', had = t && document.activeElement === t;
       await renderGames(); const t2 = document.getElementById('gr-input'); if (t2) { if (v) { t2.value = v; gridSuggest(v); } if (had) t2.focus(); } }
     } finally { window._gdPollBusy = false; }
@@ -27950,14 +27956,26 @@ async function _gdBody(pool, top) {
   const lm = lob.lastMove || {}; const lmTxt = lm.timeout ? `${esc(lm.by === role ? 'You' : opP.name)} ran out of time ⏱` : lm.at ? `${esc((lm.by === role ? 'You' : opP.name))} ${lm.ok ? 'claimed' : 'missed'} ${lm.key ? 'a cell' : ''} with <b>${esc(lm.name || '?')}</b>${lm.ok ? ' ✅' : ' ❌'}` : '';
   let side;
   if (done) { const iWon = winner === role, draw = winner === 'draw';
-    side = `<div class="gr-panel ${iWon ? 'won' : 'lost'}"><b>${draw ? '🤝 DRAW' : iWon ? '🏆 YOU WIN!' : esc(opP.name) + ' WINS'}</b><p>${lob.forfeit === opp ? esc(opP.name) + ' forfeited.' : lob.forfeit === role ? 'You forfeited.' : draw ? 'The grid filled up with no 3 in a row.' : '3 in a row!'}</p>
+    // Rematch status: both pictures — green ring = voted rematch, greyed out = left the lobby.
+    const rmAv = (p, r) => { const left = !!lob[r + 'Left'], yes = !!lob[r + 'Rematch'] && !left;
+      return `<div class="gd-rm${yes ? ' yes' : ''}${left ? ' left' : ''}"><div class="gd-rm-av">${_wdAv({ name: p.name, photo: p.av }, 52)}</div><b>${r === role ? 'You' : esc(p.name)}</b><small>${left ? 'Left' : yes ? '✓ Rematch' : 'Deciding…'}</small></div>`; };
+    const rmRow = `<div class="gd-rm-row">${rmAv(meP, role)}${rmAv(opP, opp)}</div>`;
+    side = `<div class="gr-panel ${iWon ? 'won' : 'lost'}"><b>${draw ? '🤝 DRAW' : iWon ? '🏆 YOU WIN!' : esc(opP.name) + ' WINS'}</b><p>${lob.forfeit === opp ? esc(opP.name) + ' forfeited.' : lob.forfeit === role ? 'You forfeited.' : draw ? (lob.drawAgreed ? 'Draw agreed by both players.' : 'The grid filled up with no 3 in a row.') : '3 in a row!'}</p>${rmRow}
       ${lob[opp + 'Left'] ? `<p>${esc(opP.name)} left the lobby.</p><button class="btn btn-primary" onclick="gridDuelLeave()">Back to duel menu</button>` : `<p>${lob[role + 'Rematch'] && lob[opp + 'Rematch'] ? 'Starting rematch…' : lob[role + 'Rematch'] ? 'Waiting for ' + esc(opP.name) + '… <span class="wd-spin"></span>' : lob[opp + 'Rematch'] ? '<b style="color:#4ade80">' + esc(opP.name) + ' wants a rematch!</b>' : 'Rematch? You both need to accept.'}</p>
       <div class="wd-btns">${lob[role + 'Rematch'] ? '' : '<button class="btn btn-primary" onclick="gridDuelRematch()">🔁 Rematch</button>'}<button class="btn btn-secondary" onclick="gridDuelLeave()">Back to duel menu</button></div>`}</div>`; }
   else if (!myTurn) side = `<div class="gr-panel"><b>⏳ ${esc(opP.name)}'s turn</b><p>Wait for them to pick a cell and name a driver.</p>${lmTxt ? `<p class="gd-last">${lmTxt}</p>` : ''}</div>`;
   else side = _grPickerHtml(R, K, sel, `<b>🎯 Your turn</b><p>Pick an empty cell and name a driver who fits both categories. Wrong = your turn is gone.</p>`, lmTxt ? `<p class="gd-last">${lmTxt}</p>` : '', 'gd-myturn');
+  // Draw vote: either player can offer; when both have voted the game ends as a draw.
+  const drawBar = done ? '' : lob[opp + 'Draw'] && !lob[role + 'Draw']
+    ? `<div class="gd-draw ask"><span>🤝 <b>${esc(opP.name)}</b> wants to call it a draw</span><button class="btn btn-primary btn-sm" onclick="gridDuelDraw(true)">Accept draw</button></div>`
+    : lob[role + 'Draw'] ? `<div class="gd-draw"><span>🤝 You offered a draw — waiting for ${esc(opP.name)}…</span><button class="btn btn-secondary btn-sm" onclick="gridDuelDraw(false)">Cancel</button></div>` : '';
   return top(`<span class="wd-pill">⚔️ Round ${round}</span>`) + `<div id="gd-duel" class="gd-vs" style="${_duelVars(lob, role)}">${card(meP, role)}<span style="display:flex;flex-direction:column;align-items:center;gap:4px"><span class="gd-turn">${done ? 'FINISHED' : myTurn ? 'YOUR TURN' : 'THEIR TURN'}</span>${done ? '' : `<span id="gd-timer" class="gd-timer">⏱ ${Math.max(0, Math.ceil((turnStart + TURN_MS - _now()) / 1000))}s</span>`}</span>${card(opP, opp)}</div>
-    <div class="gr-layout" style="${_duelVars(lob, role)}">${grid}${side}</div>${done ? '' : '<div style="text-align:center;margin-top:12px"><button class="btn btn-secondary btn-sm" onclick="gridDuelLeave()">Forfeit & leave</button></div>'}`;
+    <div class="gr-layout" style="${_duelVars(lob, role)}">${grid}${side}</div>${drawBar}${done ? '' : `<div style="text-align:center;margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">${lob[role + 'Draw'] || lob[opp + 'Draw'] ? '' : '<button class="btn btn-secondary btn-sm" onclick="gridDuelDraw(true)">🤝 Vote draw</button>'}<button class="btn btn-secondary btn-sm" onclick="gridDuelLeave()">Forfeit & leave</button></div>`}`;
 }
+window.gridDuelDraw = async function(on) { const r = window._gdRef; if (!r) return; const opp = r.role === 'host' ? 'guest' : 'host';
+  dbInvalidate('wordleDuels'); const l = await dbGet('wordleDuels', r.code).catch(() => null); if (!l || l.winner) return renderGames();
+  const upd = { [r.role + 'Draw']: !!on }; if (on && l[opp + 'Draw']) Object.assign(upd, { winner: 'draw', drawAgreed: true });
+  await dbSet('wordleDuels', r.code, upd); renderGames(); };
 window.gridDuelCreate = async function(pub) {
   await _clockSync();
   if (window._grLocked) return; const me = _wdMe(); const g = _grBuild(window._grPool || [], Math.floor(Math.random() * 2 ** 31)); if (!g) return customAlert('Not enough driver data to make a grid yet.');
