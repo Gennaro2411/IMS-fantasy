@@ -10459,10 +10459,12 @@ async function renderAiRacePreview() {
 
   // Get data
   try { await loadAttendance(); } catch(e) {}
-  const [drivers, races, seasonDoc] = await Promise.all([
+  const [_allDrivers, races, seasonDoc] = await Promise.all([
     dbGetAll('drivers'), dbGetAll('races'),
     dbGet('settings', 'seasonNumber').catch(() => null)
   ]);
+  // Only talk about drivers who are on the market (no reserves) — picks, captains, title talk, everything.
+  const drivers = (_allDrivers || []).filter(d => d && !d.isReserve);
 
   const sorted = races.slice().sort((a,b) => (a.raceNum||0) - (b.raceNum||0));
   const upcoming = sorted.find(r => !r.driverPoints || Object.keys(r.driverPoints).length === 0);
@@ -10573,7 +10575,7 @@ async function renderAiRacePreview() {
   // race as if it's still open. Same clinch maths as the standings (32 pts max per race).
   let _clinchedText = '';
   try {
-    const champ = (typeof computeDriverChampStandings === 'function') ? computeDriverChampStandings(completedRaces, drivers) : {};
+    const champ = (typeof computeDriverChampStandings === 'function') ? computeDriverChampStandings(completedRaces, _allDrivers) : {};
     // races left = scheduled/known rounds not yet scored (by name)
     const _sched = await dbGetAll('schedule').catch(()=>[]);
     const _cal = new Set(), _scored = new Set();
