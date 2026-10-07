@@ -27502,7 +27502,8 @@ window.hlDuelDraw = async function(on) { const r = window._hdRef; if (!r) return
 window.hlDuelRematch = async function() { const r = window._hdRef; if (r) { await dbSet('wordleDuels', r.code, { [r.role + 'Rematch']: true }); renderGames(); } };
 async function _hdGuess(dir) {
   const r = window._hdRef; if (!r || r.locked) return; dbInvalidate('wordleDuels'); const l = await dbGet('wordleDuels', r.code).catch(() => null); if (!l) return;
-  const mine = (l[r.role + 'Ans'] || []).slice(); if (mine.length >= HL_N || l[r.role + 'Done'] || l.drawAgreed || l.cancelled) return;
+  const mine = (l[r.role + 'Ans'] || []).slice(); const oD = l[(r.role === 'host' ? 'guest' : 'host') + 'Done'] || 0;
+  if (mine.length >= HL_N || l[r.role + 'Done'] || l.drawAgreed || l.cancelled || (oD && _now() > oD + 30e3)) return renderGames(); // time's up after the opponent finished
   const ok = _hlRight(l.qs[mine.length], window._hlPool || [], dir); window._hlBusy = true; window._hlReveal = { ok, idx: mine.length }; renderGames().then(_hlCountUp);
   mine.push(ok); const upd = { [r.role + 'Ans']: mine }; if (mine.length >= HL_N) upd[r.role + 'Done'] = _now();
   await dbSet('wordleDuels', r.code, upd); window._hdLive = Object.assign({}, window._hdLive, { moved: true }); await new Promise(res => setTimeout(res, 1100)); window._hlReveal = null; window._hlBusy = false; renderGames();
@@ -27541,7 +27542,7 @@ async function _hdBody(pool, top) {
     const winR = winner === role ? role : winner === opp ? opp : '';
     if (done && winR && role === recBy && (lob.recR || 0) !== round && !_wdLS('hdRec_' + rk)) { _wdLS('hdRec_' + rk, 1); _duelRecordBoth(lob, round, winR, quitR, 'hlW', 'hlL', 'h2hHl'); } }
   if (done && role === 'host' && lob.hostRematch && lob.guestRematch && !lob[opp + 'Left']) { const qs = _hlMakeQs(pool, Math.random);
-    if (qs) { await dbSet('wordleDuels', lob.id, { qs, round: round + 1, hostAns: [], guestAns: [], hostDone: 0, guestDone: 0, hostQuit: false, guestQuit: false, hostRematch: false, guestRematch: false, hostLeft: false, guestLeft: false, hostDraw: false, guestDraw: false, drawAgreed: false, cancelled: false, startedAt: _now() + 1500 }); setTimeout(() => renderGames(), 200); } }
+    if (qs) { await dbSet('wordleDuels', lob.id, { qs, round: round + 1, hostAns: [], guestAns: [], hostDone: 0, guestDone: 0, hostQuit: false, guestQuit: false, hostRematch: false, guestRematch: false, hostLeft: false, guestLeft: false, hostDraw: false, guestDraw: false, drawAgreed: false, cancelled: false, hostTimeout: false, guestTimeout: false, startedAt: _now() + 1500 }); setTimeout(() => renderGames(), 200); } }
   clearInterval(window._hdPoll);
   window._hdPollBusy = false;
   window._hdPoll = setInterval(async () => { if (!document.getElementById('hd-duel')) { clearInterval(window._hdPoll); return; } if (window._hlBusy || window._hdPollBusy) return;
@@ -27553,6 +27554,18 @@ async function _hdBody(pool, top) {
     const sig = (x) => [x.status, x.round || 1, (x.hostAns || []).length, (x.guestAns || []).length, x.hostDone || 0, x.guestDone || 0, x.guestName || '', !!x.hostRematch, !!x.guestRematch, !!x.hostLeft, !!x.guestLeft, !!x.hostDraw, !!x.guestDraw, !!x.drawAgreed, !!x.cancelled, !!x.hostQuit, !!x.guestQuit].join('|');
     if (sig(l2) !== sig(lob)) await renderGames(); } finally { window._hdPollBusy = false; } }, 1000);
   const V = `style="${_duelVars(lob, role)}"`;
+  // Once one player finishes, the other has 30 s — then the round ends on whatever they've got (unanswered = wrong).
+  const HD_LAST = 30e3, oneDone = lob.status === 'playing' && !done && !!(myDone || opDone) && !(myDone && opDone);
+  const slowR = oneDone ? (myDone ? opp : role) : '', deadline = oneDone ? (myDone || opDone) + HD_LAST : 0;
+  clearInterval(window._hdCd);
+  if (oneDone) window._hdCd = setInterval(async () => { const el = document.getElementById('hd-cd'), left = deadline - _now();
+    if (el) el.textContent = Math.max(0, Math.ceil(left / 1000)) + 's';
+    if (!document.getElementById('hd-duel')) { clearInterval(window._hdCd); return; }
+    if (left <= 0 && !window._hdCdFiring) { window._hdCdFiring = 1; clearInterval(window._hdCd);
+      try { dbInvalidate('wordleDuels'); const l = await dbGet('wordleDuels', lob.id).catch(() => null);
+        if (l && !l[slowR + 'Done'] && !l.drawAgreed && !l.cancelled) await dbSet('wordleDuels', lob.id, { [slowR + 'Done']: deadline, [slowR + 'Timeout']: true });
+      } finally { window._hdCdFiring = 0; window._hlReveal = null; window._hlBusy = false; renderGames(); } } }, 250);
+  const cdBar = oneDone ? `<div class="gd-draw ask" style="font-size:.95rem"><span>⏱ ${slowR === role ? `<b>${esc(opP.name)}</b> has finished — you have` : `Waiting for <b>${esc(opP.name)}</b> — they have`} <b id="hd-cd" style="font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;color:#facc15">${Math.max(0, Math.ceil((deadline - _now()) / 1000))}s</b> left</span></div>` : '';
   const bigCard = (p, side, st) => `<div class="wd-fc ${side}"><div class="wd-fc-av">${_wdAv({ name: p.name, photo: p.av }, 96)}</div><b>${esc(p.name)}</b><div class="wd-fc-st">${st}</div></div>`;
   if (lob.status === 'waiting') { const s0 = (await _wdStatsFor([meP.uid]))[meP.uid] || {};
     return top(`<span class="wd-pill">⚔️ Duel</span>`) + `<div id="hd-duel" class="wd-face wait" ${V}>${bigCard(meP, 'l', `<span><i>${s0.hlW || 0}–${s0.hlL || 0}</i>Duels W–L</span>`)}
@@ -27573,14 +27586,15 @@ async function _hdBody(pool, top) {
     <div class="wd-vs-p"><div class="wd-vs-row r"><div><b>${esc(opP.name)}</b><small>${opDone ? 'Finished · ' : ''}${opSc}/${opA.length}</small></div>${_wdAv({ name: opP.name, photo: opP.av }, 40)}</div><div class="hl-ddots r">${dots(opA)}</div></div></div>`;
   let body;
   if (done) { const iWon = winner === role, draw = winner === 'draw';
-    const why = cancelled ? (lob[opp + 'Left'] ? esc(opP.name) + ' left before anyone answered — it doesn\'t count.' : 'Left before anyone answered — it doesn\'t count.') : drawn ? 'Draw agreed by both players.' : lob[opp + 'Quit'] ? esc(opP.name) + ' left the duel.' : lob[role + 'Quit'] ? 'You left the duel.' : mySc !== opSc ? `${mySc}/${HL_N} vs ${opSc}/${HL_N}` : `Level on ${mySc}/${HL_N} — decided on time (${((myDone - lob.startedAt - FACE) / 1000).toFixed(1)}s vs ${((opDone - lob.startedAt - FACE) / 1000).toFixed(1)}s)`;
+    const tOut = lob[opp + 'Timeout'] ? esc(opP.name) + ' ran out of time · ' : lob[role + 'Timeout'] ? 'You ran out of time · ' : '';
+    const why = cancelled ? (lob[opp + 'Left'] ? esc(opP.name) + ' left before anyone answered — it doesn\'t count.' : 'Left before anyone answered — it doesn\'t count.') : drawn ? 'Draw agreed by both players.' : lob[opp + 'Quit'] ? esc(opP.name) + ' left the duel.' : lob[role + 'Quit'] ? 'You left the duel.' : mySc !== opSc ? `${tOut}${mySc}/${HL_N} vs ${opSc}/${HL_N}` : `Level on ${mySc}/${HL_N} — decided on time (${((myDone - lob.startedAt - FACE) / 1000).toFixed(1)}s vs ${((opDone - lob.startedAt - FACE) / 1000).toFixed(1)}s)`;
     body = `<div class="wd-end ${iWon ? 'won' : 'lost'}"><div class="wd-end-l"><div><b>${cancelled ? '🚫 NO RESULT' : drawn ? '🤝 DRAW' : draw ? '🤝 DEAD HEAT' : iWon ? '🏆 YOU WIN THE DUEL!' : esc(opP.name) + ' WINS'}</b><div class="wd-end-sub">${why}</div></div></div>
       ${_duelRmRow(lob, role, meP, opP)}<div class="wd-rm">${lob[opp + 'Left'] ? `<span class="wd-rm-note">${esc(opP.name)} left the lobby</span><button class="btn btn-primary" onclick="hlDuelLeave()">Back to duel menu</button>`
         : `<span class="wd-rm-note">${lob[role + 'Rematch'] && lob[opp + 'Rematch'] ? 'Starting rematch…' : lob[role + 'Rematch'] ? 'Waiting for ' + esc(opP.name) + '… <span class="wd-spin"></span>' : lob[opp + 'Rematch'] ? '<b style="color:#4ade80">' + esc(opP.name) + ' wants a rematch!</b>' : 'Rematch? You both need to accept.'}</span>
           ${lob[role + 'Rematch'] ? '' : '<button class="btn btn-primary" onclick="hlDuelRematch()">🔁 Rematch</button>'}<button class="btn btn-secondary" onclick="hlDuelLeave()">Back to duel menu</button>`}</div></div>`; }
-  else if (myDone) body = `<div class="wd-panel" style="text-align:center"><b>✅ You're done — ${mySc}/${HL_N}</b><p style="margin:6px 0 0">Waiting for ${esc(opP.name)} to finish… <span class="wd-spin"></span></p></div>` + _duelDrawHtml(lob, role, opP, 'hlDuelDraw')
+  else if (myDone) body = `<div class="wd-panel" style="text-align:center"><b>✅ You're done — ${mySc}/${HL_N}</b><p style="margin:6px 0 0">Waiting for ${esc(opP.name)} to finish… <span class="wd-spin"></span></p></div>` + cdBar + _duelDrawHtml(lob, role, opP, 'hlDuelDraw')
     + `<div style="text-align:center;margin-top:12px">${lob.hostDraw || lob.guestDraw ? '' : '<button class="btn btn-secondary btn-sm" onclick="hlDuelDraw(true)">🤝 Vote draw</button>'}</div>`;
-  else { const i = myA.length, rv = window._hlReveal; const qi = rv && rv.idx != null ? rv.idx : i; body = _hlQHtml(lob.qs[qi], pool, !!rv, rv && rv.ok, qi, HL_N, myA) + _hlBtns(!!rv)
+  else { const i = myA.length, rv = window._hlReveal; const qi = rv && rv.idx != null ? rv.idx : i; body = cdBar + _hlQHtml(lob.qs[qi], pool, !!rv, rv && rv.ok, qi, HL_N, myA) + _hlBtns(!!rv)
     + _duelDrawHtml(lob, role, opP, 'hlDuelDraw') + `<div style="text-align:center;margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">${lob.hostDraw || lob.guestDraw ? '' : '<button class="btn btn-secondary btn-sm" onclick="hlDuelDraw(true)">🤝 Vote draw</button>'}<button class="btn btn-secondary btn-sm" onclick="hlDuelLeave()">${moved ? 'Forfeit & leave' : 'Leave (no result)'}</button></div>`; }
   return top(`<span class="wd-pill">⚔️ Round ${round}</span>`) + head + body;
 }
