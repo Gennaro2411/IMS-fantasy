@@ -766,6 +766,8 @@
     #et-team-tabs > *{flex:0 0 auto;min-width:72px;width:72px!important;scroll-snap-align:start;}
     #et-team-strip-wrap{position:relative;}
     #et-team-tabs{scroll-snap-type:x proximity;}
+    #et-div-tabs{flex-direction:row!important;gap:6px!important}#et-div-tabs > *{flex:1 1 0;min-width:0}
+    body:has(#et-div-tabs[style*="display: flex"]) .et-swipe-hint,body:has(#et-div-tabs[style*="display:flex"]) .et-swipe-hint{display:none}
     .et-swipe-hint{display:block;text-align:center;font-size:.62rem;font-weight:800;letter-spacing:2px;
       color:var(--muted);padding:2px 0 5px;animation:etSwipeNudge 1.8s ease-in-out infinite;}
     .et-strip-fade{display:block;position:absolute;top:0;right:0;bottom:8px;width:36px;pointer-events:none;
@@ -7667,7 +7669,10 @@ async function renderTeamBuilder(existingTeam, locked, allTeams) {
   function buildTeamPanelHtml(teamName) {
     const dd = (driversByTeam[teamName] || []).slice().sort((a,b) => DIVISIONS.indexOf(a.division) - DIVISIONS.indexOf(b.division));
     if (!dd.length) return '<div class="no-drivers">No drivers on this team</div>';
-    return dd.map(d => {
+    return dd.map(d => etPillHtml(d)).join('');
+  }
+  function etPillHtml(d) {
+    {
       const div = d.division;
       const sel = window._etPicks && window._etPicks[div] === d.id;
       const price = driverPrice(d);
@@ -7702,10 +7707,24 @@ async function renderTeamBuilder(existingTeam, locked, allTeams) {
           <span style="font-family:'Barlow Condensed',sans-serif;font-size:1.08rem;font-weight:900;letter-spacing:.3px;color:#111;background:linear-gradient(135deg,#ffe259,#ffa751);padding:3px 9px;border-radius:6px;box-shadow:0 1px 6px rgba(255,190,60,0.35);line-height:1.1;white-space:nowrap">$${Number(price).toFixed(1)}M</span>
         </span>
       </button>`;
-    }).join('');
+    }
   }
+  // Division view: every driver in one division, your current pick pinned on top, then by price.
+  function buildDivPanelHtml(div) {
+    const cur = window._etPicks && window._etPicks[div];
+    const dd = drivers.filter(d => d.division === div)
+      .sort((a, b) => (b.id === cur) - (a.id === cur) || driverPrice(b) - driverPrice(a));
+    if (!dd.length) return '<div class="no-drivers">No drivers in this division</div>';
+    const curD = cur && dd.find(d => d.id === cur);
+    const note = curD ? `<div style="font-size:.72rem;color:var(--muted);margin-bottom:2px">Your ${div} pick is <b style="color:var(--gold)">${esc(curD.name)}</b> ($${driverPrice(curD).toFixed(1)}M) — tap anyone below to swap them in.</div>`
+      : `<div style="font-size:.72rem;color:var(--muted);margin-bottom:2px">No ${div} driver picked yet — tap one to add them.</div>`;
+    return note + dd.map(d => etPillHtml(d)).join('');
+  }
+  window._etBuildDivPanelHtml = buildDivPanelHtml;
+  window._etDivList = ACTIVE_DIVS.slice();
 
   window._etBuildTeamPanelHtml = buildTeamPanelHtml;
+  window._etAllDrivers = drivers;
   window._etDriversByTeam = driversByTeam;
   let allTeamPanelsHtml = `<div class="et-team-panel" data-team-panel="${esc(initialTeam)}" style="display:flex;flex-direction:column;gap:6px">
     ${buildTeamPanelHtml(initialTeam)}
@@ -7763,12 +7782,18 @@ async function renderTeamBuilder(existingTeam, locked, allTeams) {
             style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:#fff;font-size:.85rem">
           <div id="et-driver-search-results" style="position:absolute;top:100%;left:0;right:0;z-index:60;background:var(--surface2);border:1px solid var(--border);border-radius:0 0 8px 8px;max-height:260px;overflow-y:auto;display:none"></div>
         </div>
+        <div id="et-view-toggle" style="display:flex;gap:6px;margin-bottom:10px">
+          <button type="button" class="btn btn-sm et-view-btn" data-view="team" onclick="window.setEtView('team')" style="flex:1">🏎 By team</button>
+          <button type="button" class="btn btn-sm et-view-btn" data-view="div" onclick="window.setEtView('div')" style="flex:1">📊 By division</button>
+        </div>
+        <div id="et-swap-note" style="display:none;margin-bottom:10px"></div>
         <div id="et-teams-drivers-grid" style="display:grid;grid-template-columns:80px 1fr;gap:10px;align-items:start">
           <div id="et-team-strip-wrap" style="position:relative">
             <div class="et-swipe-hint">← swipe teams →</div>
             <div style="display:flex;flex-direction:column;gap:6px;max-height:480px;overflow-y:auto" id="et-team-tabs">
               ${teamTabsHtml}
             </div>
+            <div style="display:none;flex-direction:column;gap:6px" id="et-div-tabs"></div>
             <div class="et-strip-fade"></div>
           </div>
           <div style="min-height:200px">
@@ -7824,6 +7849,8 @@ async function renderTeamBuilder(existingTeam, locked, allTeams) {
   window._myBudget = myBudget;
   window._isNewTeam = isNewTeam;
   updateEtDivisionCounts();
+  try { window._etActiveDiv = null; window.setEtView(window._etView || 'team'); } catch (e) {}
+  try { const sn = document.getElementById('et-swap-note'); if (sn) sn.style.display = 'none'; } catch (e) {}
   // Pin the budget bar just below the real (two-row) header. A fixed 60px sat inside the header, so
   // it hid behind the nav; measure the header so it stays visible as the list scrolls.
   try {
@@ -7940,9 +7967,47 @@ window.selectEtTeamTab = function(teamName) {
 // place that knows what's selected.
 window._etPicks = window._etPicks || {};
 
+// ---- Edit Team: "By team" / "By division" view ----
+window._etView = (() => { try { return localStorage.getItem('imsEtView') || 'team'; } catch (e) { return 'team'; } })();
+window.renderEtDivTabs = function() {
+  const box = document.getElementById('et-div-tabs'); if (!box || !window._etDivList) return;
+  const act = window._etActiveDiv || window._etDivList[0];
+  box.innerHTML = window._etDivList.map(dv => { const on = dv === act, hue = (typeof DIV_HUES !== 'undefined' && DIV_HUES[dv]) || '#9b6fd4', has = window._etPicks && window._etPicks[dv];
+    return `<button type="button" onclick="window.selectEtDivTab('${dv}')" style="position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 4px;border-radius:8px;cursor:pointer;width:100%;border:1px solid ${on ? 'var(--gold)' : hue + '66'};background:${on ? 'rgba(255,200,0,0.12)' : hue + '14'}">
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.15rem;color:${on ? 'var(--gold)' : hue}">${dv}</span>
+      <span style="font-size:.55rem;font-weight:700;color:${has ? '#4caf50' : 'var(--muted)'}">${has ? '✓ picked' : 'empty'}</span></button>`; }).join('');
+};
+window.selectEtDivTab = function(dv) {
+  window._etActiveDiv = dv; window.renderEtDivTabs();
+  const pc = document.getElementById('et-team-panels'), lb = document.getElementById('et-active-team-label');
+  if (pc && window._etBuildDivPanelHtml) pc.innerHTML = `<div class="et-team-panel" style="display:flex;flex-direction:column;gap:6px">${window._etBuildDivPanelHtml(dv)}</div>`;
+  if (lb) lb.textContent = 'DIVISION ' + dv;
+};
+window.setEtView = function(v) {
+  window._etView = v; try { localStorage.setItem('imsEtView', v); } catch (e) {}
+  document.querySelectorAll('.et-view-btn').forEach(b => { const on = b.dataset.view === v; b.classList.toggle('btn-primary', on); b.classList.toggle('btn-secondary', !on); });
+  const tt = document.getElementById('et-team-tabs'), dt = document.getElementById('et-div-tabs');
+  if (tt) tt.style.display = v === 'div' ? 'none' : 'flex'; if (dt) dt.style.display = v === 'div' ? 'flex' : 'none';
+  if (v === 'div') window.selectEtDivTab(window._etActiveDiv || (window._etDivList || [])[0]);
+  else { const a = document.querySelector('.et-team-tab.active'); if (a) window.selectEtTeamTab(a.dataset.team); }
+};
+// "You are replacing X with Y" — shown every time a pick changes a division slot.
+window._etSwapNote = function(div, oldId, newId) {
+  const box = document.getElementById('et-swap-note'); if (!box) return;
+  const all = window._etAllDrivers || [], o = oldId && all.find(d => d.id === oldId), n = newId && all.find(d => d.id === newId);
+  if (!n && !o) { box.style.display = 'none'; return; }
+  const pr = (d) => d ? Number(driverPrice(d)) : 0, diff = pr(n) - pr(o);
+  const diffTxt = (o && n) ? ` <span style="color:${diff > 0 ? '#ff8f6b' : diff < 0 ? '#4ade80' : 'var(--muted)'};font-weight:700">${diff > 0 ? '+' : diff < 0 ? '−' : '±'}$${Math.abs(diff).toFixed(1)}M</span>` : '';
+  const msg = (o && n) ? `🔄 You are replacing <b>${esc(o.name)}</b> with <b>${esc(n.name)}</b> in <b>${div}</b>${diffTxt}<div style="font-size:.7rem;color:var(--muted);margin-top:2px">You can only have one driver per division — picking another ${div} driver swaps them.</div>`
+    : n ? `✅ Added <b>${esc(n.name)}</b> as your <b>${div}</b> driver` : `➖ Removed <b>${esc(o.name)}</b> — your <b>${div}</b> slot is empty`;
+  box.innerHTML = `<div style="padding:9px 12px;border-radius:10px;font-size:.82rem;line-height:1.4;background:${o && n ? 'rgba(255,200,0,0.1)' : 'rgba(255,255,255,0.04)'};border:1px solid ${o && n ? 'rgba(255,200,0,0.45)' : 'var(--border)'}">${msg}</div>`;
+  box.style.display = 'block'; clearTimeout(window._etSwapT); window._etSwapT = setTimeout(() => { box.style.display = 'none'; }, 9000);
+};
 window.handleDriverPillClick = function(div, driverId) {
   const currentlyPicked = window._etPicks[div];
   const isDeselecting = currentlyPicked === driverId;
+  try { window._etSwapNote(div, currentlyPicked, isDeselecting ? null : driverId); } catch (e) {}
+  setTimeout(() => { try { if (window._etView === 'div') { window.renderEtDivTabs(); if (window._etActiveDiv === div) window.selectEtDivTab(div); } } catch (e) {} }, 0);
 
   // Reset every pill in this division to its unselected look
   document.querySelectorAll('[data-div="'+div+'"]').forEach(function(btn) {
