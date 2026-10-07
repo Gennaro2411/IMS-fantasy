@@ -25437,11 +25437,12 @@ window.renderBets = async function() {
   const myRank = board.findIndex(c => c.userId === me);
   // Admin: the race whose bets to show — the upcoming one, or (once locked) the race with the latest bets.
   window._adminBetRace = upcoming ? upcoming.name : ((window._betAllBets || []).slice().sort((a, b) => (b.placedAt || 0) - (a.placedAt || 0))[0] || {}).raceName || '';
-  const boardHtml = board.slice(0, 15).map((c, i) => {
+  const boardHtml = board.slice(0, window._betLbAll ? board.length : 10).map((c, i) => {
     const t = teamBy[c.userId];
     const nOpen = adminLoggedIn ? (window._betAllBets || []).filter(b => b.userId === c.userId && b.raceName === window._adminBetRace).length : 0;
     return `<div class="bo-lb${c.userId === me ? ' me' : ''}"${adminLoggedIn ? ` style="cursor:pointer" title="Admin: see this race's bets" onclick="adminUserBets('${c.userId}')"` : ''}><span class="bo-lb-r">${i + 1}</span><span class="bo-lb-n"><b>${esc(t.teamName || t.playerName || '—')}</b><small>${esc(t.playerName || '')}${adminLoggedIn && nOpen ? ` · <span style="color:#facc15">🎰 ${nOpen} bet${nOpen !== 1 ? 's' : ''} this race</span>` : ''}</small></span><span class="bo-lb-c">${(c.balance || 0).toLocaleString()} <i><i class="imc" title="IM$"></i></i></span></div>${adminLoggedIn ? `<div id="alb-${c.userId}" style="display:none"></div>` : ''}`;
-  }).join('') || '<div class="text-muted" style="padding:10px 14px;font-size:.8rem">No bettors yet — be the first.</div>';
+  }).join('') + (board.length > 10 ? `<button onclick="window._betLbAll=!window._betLbAll;renderBets()" style="display:block;width:100%;padding:9px;border:none;border-top:1px solid var(--bline);background:transparent;color:var(--muted);font-family:inherit;font-size:.75rem;font-weight:700;cursor:pointer">${window._betLbAll ? '▲ Show top 10' : '▼ Show all ' + board.length}</button>` : '')
+    || '<div class="text-muted" style="padding:10px 14px;font-size:.8rem">No bettors yet — be the first.</div>';
   // Your betting stats
   const _MKN = { win: 'Win', pod: 'Podium', top5: 'Top 5 / Top 3', h2h: 'Head to head', qh2h: 'Quali H2H', pole: 'Pole', pgap: 'Pole gap', wmar: 'Winning margin', ou: 'Over / under', cou: 'Constructor pts', yn: 'Specials', acca: 'Accumulators' };
   const _mine = myBets.filter(b => ['won', 'lost', 'cashed'].includes(b.status)).sort((a, b) => (a.settledAt || a.placedAt || 0) - (b.settledAt || b.placedAt || 0));
