@@ -25232,6 +25232,9 @@ window.renderBets = async function() {
   window._betBoost = BOOSTS;
   const _findBoost = (market, sel) => BOOSTS.find(B => B.div === div && B.market === market && (B.sel || []).join('-') === sel.join('-'));
   const _isBoost = (market, sel) => !!_findBoost(market, sel);
+  // Over/under & yes/no: remember each side's model price + probability so the live price and cash-out can use them.
+  window._betOuReg = window._betOuReg || {};
+  const _ouOdds = (market, sel, p) => { const auto = _betOdds(p); window._betOuReg[market + ':' + sel.join('-')] = { auto, p }; return finalOdds(market, sel, auto); };
   const finalOdds = (market, sel, auto) => {
     { const B = _findBoost(market, sel); if (B) return B.odds; }
     const o = OVR[ovKey(market, sel)]; if (typeof o === 'number' && o >= 1.01) return o;
@@ -25247,7 +25250,12 @@ window.renderBets = async function() {
       const fair = 1 / (1 + Math.pow(10, ((field.find(d => d.id === sel[1]) || {}).elo - (field.find(d => d.id === sel[0]) || {}).elo) / 400));
       return tot ? _dyn(auto, a / tot, fair, tot) : auto;
     }
-    if (market === 'pgap' || market === 'wmar' || market === 'ou' || market === 'cou' || market === 'yn') return auto;
+    if (market === 'ou' || market === 'cou' || market === 'yn') { // two-sided: money on one side shortens it and lengthens the other
+      const R = (window._betOuReg || {})[market + ':' + key]; const fair = R ? R.p : null; if (fair == null) return auto;
+      const oppSel = sel.slice(); oppSel[1] = ({ over: 'under', under: 'over', yes: 'no', no: 'yes' })[sel[1]] || sel[1];
+      const a = _stakeOn(market, key), b = _stakeOn(market, oppSel.join('-')), tot = a + b;
+      return tot ? _dyn(auto, a / tot, fair, tot) : auto; }
+    if (market === 'pgap' || market === 'wmar') return auto;
     const probs = market === 'win' ? P.win : market === 'pod' ? (P.pod || {}) : market === 'pole' ? (P.pole || {}) : P.top5; const sumP = Object.values(probs).reduce((x, y) => x + y, 0) || 1;
     const tot = _openHere.filter(b => b.market === market).reduce((x, b) => x + (b.stake || 0), 0);
     return tot ? _dyn(auto, _stakeOn(market, key) / tot, (probs[sel[0]] || 0) / sumP, tot) : auto;
@@ -25264,6 +25272,7 @@ window.renderBets = async function() {
     // Only markets with a live price here. Over/under (incl. constructor BOTT lines) and yes/no have no live
     // price in this function — they used to fall through to the top-5 table and show a fake 'now' price, which let
     // players cash out for instant profit. Return null so their cash-out is simply stake − 5%.
+    if (market === 'ou' || market === 'cou' || market === 'yn') { const R = (window._betOuReg || {})[market + ':' + sel.join('-')]; return R ? R.auto : null; }
     if (!['win', 'pod', 'pole', 'top5'].includes(market)) return null;
     const pr = market === 'win' ? P.win[sel[0]] : market === 'pod' ? (P.pod || {})[sel[0]] : market === 'pole' ? (P.pole || {})[sel[0]] : P.top5[sel[0]]; return pr == null ? null : _betOdds(pr);
   };
@@ -25568,16 +25577,16 @@ window.renderBets = async function() {
           <div class="bo-pgap four">${_WMB.map(([k, l], ix) => `<div class="bo-pg-opt"><span>${l}</span>${oddsBtn('wmar', [k], div + ' winning margin: ' + l, finalOdds('wmar', [k], _betOdds(_wmar[ix])))}</div>`).join('')}</div></div>` : ''}
         ${(_ouMargin || _ouTime || _ouDnf || _ouMore.length) ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>📏 Over / under</span><small>Race winner</small></div>
           ${[['margin', 'Winning margin (P1 → P2)', _ouMargin, (v) => (v / 1000).toFixed(1) + ' s'], ['wtime', 'Winning race time', _ouTime, _fmtT], ['dnf', 'DNFs in the race', _ouDnf, (v) => String(v)], ..._ouMore].filter(x => x[2]).map(([k, l, o, f]) => `<div class="bo-ou"><div><b>${l}</b><span class="bo-ou-line">LINE <em>${f(o.line)}</em></span></div>
-            <div class="bo-ou-b"><i>OVER</i>${oddsBtn('ou', [k, 'over', String(o.line)], div + ' ' + l.toLowerCase() + ' over ' + f(o.line), _betOdds(o.po))}</div>
-            <div class="bo-ou-b"><i>UNDER</i>${oddsBtn('ou', [k, 'under', String(o.line)], div + ' ' + l.toLowerCase() + ' under ' + f(o.line), _betOdds(1 - o.po))}</div></div>`).join('')}</div>` : ''}
+            <div class="bo-ou-b"><i>OVER</i>${oddsBtn('ou', [k, 'over', String(o.line)], div + ' ' + l.toLowerCase() + ' over ' + f(o.line), _ouOdds('ou', [k, 'over', String(o.line)], o.po))}</div>
+            <div class="bo-ou-b"><i>UNDER</i>${oddsBtn('ou', [k, 'under', String(o.line)], div + ' ' + l.toLowerCase() + ' under ' + f(o.line), _ouOdds('ou', [k, 'under', String(o.line)], 1 - o.po))}</div></div>`).join('')}</div>` : ''}
         ${_yn.length ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>🎯 Specials</span><small>Yes / no</small></div>
           ${_yn.map(([k, l, p]) => `<div class="bo-ou"><div><b>${l}</b></div>
-            <div class="bo-ou-b"><i>YES</i>${oddsBtn('yn', [k, 'yes'], div + ' ' + l.toLowerCase() + ': yes', _betOdds(p))}</div>
-            <div class="bo-ou-b"><i>NO</i>${oddsBtn('yn', [k, 'no'], div + ' ' + l.toLowerCase() + ': no', _betOdds(1 - p))}</div></div>`).join('')}</div>` : ''}
+            <div class="bo-ou-b"><i>YES</i>${oddsBtn('yn', [k, 'yes'], div + ' ' + l.toLowerCase() + ': yes', _ouOdds('yn', [k, 'yes'], p))}</div>
+            <div class="bo-ou-b"><i>NO</i>${oddsBtn('yn', [k, 'no'], div + ' ' + l.toLowerCase() + ': no', _ouOdds('yn', [k, 'no'], 1 - p))}</div></div>`).join('')}</div>` : ''}
         ${(isC && Object.keys(_ouCons).length) ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>📏 Constructor points</span><small>Over / under BOTT points this round</small></div>
           ${field.filter(c => _ouCons[c.id]).map(c => { const o = _ouCons[c.id]; return `<div class="bo-ou"><div class="bo-ou-c">${photo(c)}<div><b>${esc(c.name)}</b><span class="bo-ou-line">LINE <em>${o.line} pts</em></span></div></div>
-            <div class="bo-ou-b"><i>OVER</i>${oddsBtn('cou', [c.id, 'over', String(o.line)], c.name + ' over ' + o.line + ' BOTT pts', _betOdds(o.po))}</div>
-            <div class="bo-ou-b"><i>UNDER</i>${oddsBtn('cou', [c.id, 'under', String(o.line)], c.name + ' under ' + o.line + ' BOTT pts', _betOdds(1 - o.po))}</div></div>`; }).join('')}</div>` : ''}
+            <div class="bo-ou-b"><i>OVER</i>${oddsBtn('cou', [c.id, 'over', String(o.line)], c.name + ' over ' + o.line + ' BOTT pts', _ouOdds('cou', [c.id, 'over', String(o.line)], o.po))}</div>
+            <div class="bo-ou-b"><i>UNDER</i>${oddsBtn('cou', [c.id, 'under', String(o.line)], c.name + ' under ' + o.line + ' BOTT pts', _ouOdds('cou', [c.id, 'under', String(o.line)], 1 - o.po))}</div></div>`; }).join('')}</div>` : ''}
       </div>
       <div class="bo-side">
         ${slipHtml}
