@@ -180,6 +180,12 @@
   nav button:hover,nav button.active{color:var(--text);background:var(--surface2);}
   nav button.active{border-bottom:2px solid #5A5EC9;border-radius:4px 4px 0 0;}
   .ims-ico{width:1em;height:1em;display:inline-block;vertical-align:-0.14em;flex-shrink:0;overflow:visible}
+  .lb-cap{display:inline-flex;align-items:center;gap:6px;margin-left:8px;padding:2px 9px 2px 2px;border-radius:999px;vertical-align:middle;white-space:nowrap;
+    background:linear-gradient(90deg,rgba(255,200,0,.20),rgba(255,200,0,.03) 85%);border:1px solid rgba(255,200,0,.38);
+    font-size:.68rem;font-weight:700;letter-spacing:.4px;color:#ffe08a;line-height:1.35}
+  .lb-cap i{font-style:normal;width:16px;height:16px;border-radius:50%;display:grid;place-items:center;flex-shrink:0;
+    background:linear-gradient(135deg,#ffe259,#ffa751);color:#1a1200;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:.66rem;
+    box-shadow:0 0 0 2px rgba(255,200,0,.15),0 0 10px rgba(255,190,60,.45)}
   .admin-badge{background:var(--red);color:white;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:3px;letter-spacing:1px;}
 
   main{max-width:1100px;margin:0 auto;padding:32px 24px;position:relative;}
@@ -11684,7 +11690,7 @@ async function renderLeaderboard() {
         const selNow = t.selections || {};
         if (!DIVISIONS.some(div => selNow[div] === latestCapId)) latestCapId = null;
       }
-      const capName = !isValueMode && latestCapId&&driverMap[latestCapId] ? '<span style="font-size:.75rem;color:var(--gold);margin-left:6px">★ '+esc(driverMap[latestCapId].split(' ').pop())+'</span>' : '';
+      const capName = !isValueMode && latestCapId&&driverMap[latestCapId] ? '<span class="lb-cap" title="Captain this round"><i>C</i>'+esc(driverMap[latestCapId].split(' ').pop())+'</span>' : '';
       const chips = t.chips || {};
       const tcActive = latestRace && chips.tripleCaptain && chips.tripleCaptain.raceId === latestRace.id;
       const gaActive = latestRace && chips.guardianAngel && chips.guardianAngel.raceId === latestRace.id;
