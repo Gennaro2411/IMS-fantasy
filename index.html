@@ -14241,6 +14241,8 @@ window.importDbRound = async function(roundNo, trackName) {
     renderPastRacesList();
     renderDominanceTable();
     // Refresh the qualifying-pace store so pole / pole-gap odds include this round's laps.
+    // Games stats (points, wins, podiums, poles, BOTTs…) rebuilt from the same .db straight after every import — no extra button.
+    try { if (typeof buildWordleData === 'function') { await buildWordleData(null); window._grLoadCache = null; window._wdLoadCache = null; msg.insertAdjacentHTML('beforeend', '<div class="alert" style="margin-top:8px;font-size:.8rem">🟩 Games stats (PaddockDle, Grid, Higher or Lower) updated.</div>'); } } catch(e) { console.warn('auto games stats failed', e); }
     try { if (typeof buildQualiPace === 'function') { await buildQualiPace(null, true); msg.insertAdjacentHTML('beforeend', '<div class="alert" style="margin-top:8px;font-size:.8rem">⏱ Quali pace updated for pole betting.</div>'); } } catch(e) { console.warn('auto quali pace failed', e); }
 
   } catch(e) {
