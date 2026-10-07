@@ -1486,6 +1486,8 @@
     #page-predictions .brf-tl-row.next .brf-tl-state,#page-predictions .brf-tl-row.live .brf-tl-state{color:var(--h)}
     #page-predictions .brf-tl-row.done{opacity:.45}
     /* availability rings */
+    .et-view-btn{flex:1;padding:8px 10px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:.72rem;font-weight:800;letter-spacing:.5px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);transition:all .15s}
+    .et-view-btn:hover{border-color:rgba(255,200,0,.45);color:#fff}.et-view-btn.on{color:var(--gold);border-color:var(--gold);background:rgba(255,200,0,0.12)}
     #page-predictions .brf-av-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;align-items:start}#page-predictions .brf-av{min-width:0;overflow-wrap:anywhere}
     #page-predictions .brf-av{border-radius:14px;padding:13px 12px 12px;background:radial-gradient(120% 90% at 50% 0%,color-mix(in srgb,var(--hue) 14%,transparent),transparent 70%),var(--surface2);border:1px solid color-mix(in srgb,var(--hue) 30%,transparent)}
     #page-predictions .brf-av-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
@@ -7783,8 +7785,8 @@ async function renderTeamBuilder(existingTeam, locked, allTeams) {
           <div id="et-driver-search-results" style="position:absolute;top:100%;left:0;right:0;z-index:60;background:var(--surface2);border:1px solid var(--border);border-radius:0 0 8px 8px;max-height:260px;overflow-y:auto;display:none"></div>
         </div>
         <div id="et-view-toggle" style="display:flex;gap:6px;margin-bottom:10px">
-          <button type="button" class="btn btn-sm et-view-btn" data-view="team" onclick="window.setEtView('team')" style="flex:1">🏎 By team</button>
-          <button type="button" class="btn btn-sm et-view-btn" data-view="div" onclick="window.setEtView('div')" style="flex:1">📊 By division</button>
+          <button type="button" class="et-view-btn" data-view="team" onclick="window.setEtView('team')">🏎 By team</button>
+          <button type="button" class="et-view-btn" data-view="div" onclick="window.setEtView('div')">📊 By division</button>
         </div>
         <div id="et-swap-note" style="display:none;margin-bottom:10px"></div>
         <div id="et-teams-drivers-grid" style="display:grid;grid-template-columns:80px 1fr;gap:10px;align-items:start">
@@ -7972,10 +7974,11 @@ window._etView = (() => { try { return localStorage.getItem('imsEtView') || 'tea
 window.renderEtDivTabs = function() {
   const box = document.getElementById('et-div-tabs'); if (!box || !window._etDivList) return;
   const act = window._etActiveDiv || window._etDivList[0];
-  box.innerHTML = window._etDivList.map(dv => { const on = dv === act, hue = (typeof DIV_HUES !== 'undefined' && DIV_HUES[dv]) || '#9b6fd4', has = window._etPicks && window._etPicks[dv];
-    return `<button type="button" onclick="window.selectEtDivTab('${dv}')" style="position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 4px;border-radius:8px;cursor:pointer;width:100%;border:1px solid ${on ? 'var(--gold)' : hue + '66'};background:${on ? 'rgba(255,200,0,0.12)' : hue + '14'}">
-      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.15rem;color:${on ? 'var(--gold)' : hue}">${dv}</span>
-      <span style="font-size:.55rem;font-weight:700;color:${has ? '#4caf50' : 'var(--muted)'}">${has ? '✓ picked' : 'empty'}</span></button>`; }).join('');
+  box.innerHTML = window._etDivList.map(dv => { const on = dv === act, hue = ({ D0:'#ffc800', D1:'#e8002d', D2:'#9b6fd4', D3:'#27f4d2', D4:'#2ecc71', E3:'#2ecc71' })[dv] || '#9b6fd4', has = window._etPicks && window._etPicks[dv];
+    return `<button type="button" onclick="window.selectEtDivTab('${dv}')" style="position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border-radius:8px;cursor:pointer;width:100%;font-family:inherit;transition:all .15s;border:1px solid ${on ? hue : hue + '55'};background:${on ? hue + '33' : hue + '12'};box-shadow:${on ? '0 0 0 1px ' + hue + ',0 0 12px ' + hue + '55' : 'none'}">
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.2rem;line-height:1;color:${hue}">${dv}</span>
+      <span style="font-size:.6rem;font-weight:700;color:${on ? '#fff' : 'var(--muted)'}">${has ? 'Picked' : 'Empty'}</span>
+      ${has ? `<span style="position:absolute;top:2px;right:2px;background:#4caf50;color:#fff;font-size:.6rem;font-weight:800;border-radius:50%;width:14px;height:14px;display:flex;align-items:center;justify-content:center">✓</span>` : ''}</button>`; }).join('');
 };
 window.selectEtDivTab = function(dv) {
   window._etActiveDiv = dv; window.renderEtDivTabs();
@@ -7985,7 +7988,7 @@ window.selectEtDivTab = function(dv) {
 };
 window.setEtView = function(v) {
   window._etView = v; try { localStorage.setItem('imsEtView', v); } catch (e) {}
-  document.querySelectorAll('.et-view-btn').forEach(b => { const on = b.dataset.view === v; b.classList.toggle('btn-primary', on); b.classList.toggle('btn-secondary', !on); });
+  document.querySelectorAll('.et-view-btn').forEach(b => b.classList.toggle('on', b.dataset.view === v));
   const tt = document.getElementById('et-team-tabs'), dt = document.getElementById('et-div-tabs');
   if (tt) tt.style.display = v === 'div' ? 'none' : 'flex'; if (dt) dt.style.display = v === 'div' ? 'flex' : 'none';
   if (v === 'div') window.selectEtDivTab(window._etActiveDiv || (window._etDivList || [])[0]);
