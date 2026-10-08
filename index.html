@@ -338,6 +338,9 @@
   .wc-intag{position:absolute;z-index:61;pointer-events:none;font:900 .8rem 'Barlow Condensed',sans-serif;letter-spacing:2px;color:#0a0a0f;background:linear-gradient(90deg,#4ade80,#27f4d2);padding:3px 10px;border-radius:20px;box-shadow:0 0 16px rgba(74,222,128,.7);white-space:nowrap}
   #page-my-team .mt-hero-photo{position:absolute!important;inset:0;z-index:0!important;background:center/cover no-repeat;opacity:0;transition:opacity .8s ease;pointer-events:none;-webkit-mask-image:linear-gradient(180deg,rgba(0,0,0,.9),rgba(0,0,0,.55));mask-image:linear-gradient(180deg,rgba(0,0,0,.9),rgba(0,0,0,.55));filter:saturate(1.1) brightness(.55)}
   #page-my-team .mt-hero-photo.on{opacity:.55}
+  #page-my-team .mt-hero-photo-l{position:absolute;inset:0;background:center/cover no-repeat;opacity:0;transition:opacity 1.6s ease;transform:scale(1.04)}
+  #page-my-team .mt-hero-photo-l.on{opacity:1;animation:mtKen 9s ease-out both}
+  @keyframes mtKen{from{transform:scale(1.12)}to{transform:scale(1.02)}}
   #page-my-team .mt-hero-pts::after{content:'';position:absolute;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 45% 70% at 50% 52%,rgba(8,8,14,.78),rgba(8,8,14,.35) 60%,transparent 85%)}
   #page-my-team .mt-hero-pts .mt-lbl,#page-my-team .mt-hero-pts .mt-tile-sub{text-shadow:0 1px 3px #000,0 0 8px rgba(0,0,0,.9);color:#d6d6ea!important}
   #page-my-team #total-pts-display{text-shadow:0 2px 6px rgba(0,0,0,.95),0 0 14px rgba(0,0,0,.8),0 0 18px rgba(255,200,0,.3)!important}
@@ -8855,27 +8858,68 @@ window._VAN = 'data:image/webp;base64,UklGRqANAABXRUJQVlA4WAoAAAAQAAAAnwAAPgAAQU
 // dealt in face-down, then flipped over with a burst of sparks.
 // Location photo behind the round-points box: the host city's lead photo from Wikipedia (fetched once
 // per place, cached in localStorage). Purely decorative — silently skipped if anything fails.
-window._PLACE_WIKI = {singapore:'Marina_Bay,_Singapore',barcelona:'Barcelona',spain:'Barcelona',catalunya:'Barcelona',cota:'Austin,_Texas',austin:'Austin,_Texas',texas:'Austin,_Texas','united states':'Austin,_Texas',mexico:'Mexico_City',brazil:'São_Paulo',interlagos:'São_Paulo','sao paulo':'São_Paulo',china:'The_Bund',shanghai:'The_Bund',vegas:'Las_Vegas_Strip','las vegas':'Las_Vegas_Strip','abu dhabi':'Abu_Dhabi',bahrain:'Manama',silverstone:'Silverstone_Circuit',britain:'Silverstone_Circuit',monza:'Monza',italy:'Monza',imola:'Imola',japan:'Suzuka_International_Racing_Course',suzuka:'Suzuka_International_Racing_Course',baku:'Baku',azerbaijan:'Baku',qatar:'Doha',australia:'Melbourne',melbourne:'Melbourne',monaco:'Monaco',canada:'Montreal',montreal:'Montreal',austria:'Spielberg,_Styria',spa:'Spa,_Belgium',belgium:'Spa,_Belgium',hungary:'Budapest',netherlands:'Zandvoort',zandvoort:'Zandvoort',miami:'Miami',saudi:'Jeddah',jeddah:'Jeddah'};
+window._PLACE_WIKI = {
+  singapore:['Marina_Bay,_Singapore','Marina_Bay_Sands','Gardens_by_the_Bay','Singapore_Flyer','Marina_Bay_Street_Circuit'],
+  barcelona:['Barcelona','Sagrada_Família','Park_Güell','Casa_Batlló','Circuit_de_Barcelona-Catalunya'],
+  cota:['Austin,_Texas','Texas_State_Capitol','Congress_Avenue_Bridge','Lady_Bird_Lake','Circuit_of_the_Americas'],
+  mexico:['Mexico_City','Palacio_de_Bellas_Artes','Zócalo','Angel_of_Independence','Autódromo_Hermanos_Rodríguez'],
+  brazil:['São_Paulo','Avenida_Paulista','Ibirapuera_Park','Octavio_Frias_de_Oliveira_Bridge','Autódromo_José_Carlos_Pace'],
+  china:['The_Bund','Oriental_Pearl_Tower','Shanghai_Tower','Lujiazui','Shanghai_International_Circuit'],
+  vegas:['Las_Vegas_Strip','Bellagio_(resort)','Sphere_(venue)','Fremont_Street_Experience','Las_Vegas_Strip_Circuit'],
+  'abu dhabi':['Abu_Dhabi','Sheikh_Zayed_Grand_Mosque','Yas_Island','Emirates_Palace','Yas_Marina_Circuit'],
+  bahrain:['Manama','Bahrain_World_Trade_Center','Bahrain_Fort','Bahrain_Financial_Harbour','Bahrain_International_Circuit'],
+  silverstone:['Silverstone_Circuit','Silverstone','Northamptonshire','Stowe_House','British_Grand_Prix'],
+  monza:['Monza','Autodromo_Nazionale_di_Monza','Villa_Reale_(Monza)','Milan_Cathedral','Lake_Como'],
+  japan:['Suzuka_International_Racing_Course','Mount_Fuji','Nagoya_Castle','Ise_Grand_Shrine','Suzuka,_Mie'],
+  baku:['Baku','Flame_Towers','Heydar_Aliyev_Center','Old_City_(Baku)','Baku_City_Circuit'],
+  qatar:['Doha','Museum_of_Islamic_Art,_Doha','The_Pearl-Qatar','Corniche_(Doha)','Lusail_International_Circuit'],
+  australia:['Melbourne','Flinders_Street_railway_station','Federation_Square','Albert_Park,_Victoria','Albert_Park_Circuit'],
+  monaco:['Monaco','Monte_Carlo','Port_Hercules','Monte_Carlo_Casino','Circuit_de_Monaco'],
+  canada:['Montreal','Old_Montreal','Notre-Dame_Basilica_(Montreal)','Mount_Royal','Circuit_Gilles_Villeneuve'],
+  austria:['Spielberg,_Styria','Styria','Graz','Dachstein','Red_Bull_Ring'],
+  spa:['Spa,_Belgium','Ardennes','Liège','Stavelot','Circuit_de_Spa-Francorchamps'],
+  hungary:['Budapest','Hungarian_Parliament_Building','Széchenyi_Chain_Bridge','Buda_Castle','Hungaroring'],
+  zandvoort:['Zandvoort','Amsterdam','Haarlem','Keukenhof','Circuit_Zandvoort'],
+  miami:['Miami','Miami_Beach,_Florida','South_Beach','Brickell','Miami_International_Autodrome'],
+  jeddah:['Jeddah','King_Fahd\'s_Fountain','Al-Balad,_Jeddah','Jeddah_Tower','Jeddah_Corniche_Circuit']
+};
+window._PLACE_ALIAS = {spain:'barcelona',catalunya:'barcelona',austin:'cota',texas:'cota','united states':'cota',interlagos:'brazil','sao paulo':'brazil',shanghai:'china','las vegas':'vegas',britain:'silverstone',italy:'monza',imola:'monza',suzuka:'japan',azerbaijan:'baku',melbourne:'australia',montreal:'canada',belgium:'spa',netherlands:'zandvoort',saudi:'jeddah'};
+window._wikiPic = async function(title) {
+  const ck = 'imsPlacePic:' + title;
+  let url = null; try { url = localStorage.getItem(ck); } catch(e) {}
+  if (url) return url === 'none' ? '' : url;
+  try {
+    const r = await fetch('https://en.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(title));
+    const j = await r.json();
+    url = (j.thumbnail && j.thumbnail.source) ? j.thumbnail.source.replace(/\/\d+px-/, '/960px-') : ((j.originalimage && j.originalimage.source) || '');
+    if (/\.svg/i.test(url) || /map|logo|flag|coat_of_arms|seal/i.test(url)) url = '';
+  } catch(e) { url = ''; }
+  try { localStorage.setItem(ck, url || 'none'); } catch(e) {}
+  return url;
+};
 window._fillPlacePhotos = async function(root) {
-  const els = (root || document).querySelectorAll('.mt-hero-photo[data-place]');
-  for (const el of els) {
-    const n = (el.getAttribute('data-place') || '').toLowerCase();
-    const k = Object.keys(window._PLACE_WIKI).sort((a,b)=>b.length-a.length).find(x => n.includes(x));
-    if (!k) continue;
-    const title = window._PLACE_WIKI[k], ck = 'imsPlacePic:' + title;
-    let url = null; try { url = localStorage.getItem(ck); } catch(e) {}
-    if (!url) {
-      try {
-        const r = await fetch('https://en.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(title));
-        const j = await r.json();
-        url = (j.originalimage && j.originalimage.source) || (j.thumbnail && j.thumbnail.source) || '';
-        if (j.thumbnail && j.thumbnail.source && /\/\d+px-/.test(j.thumbnail.source)) url = j.thumbnail.source.replace(/\/\d+px-/, '/960px-');
-        if (/\.svg/i.test(url)) url = '';
-        try { localStorage.setItem(ck, url || 'none'); } catch(e) {}
-      } catch(e) { url = ''; }
-    }
-    if (url && url !== 'none') { const im = new Image(); im.onload = () => { el.style.backgroundImage = 'url("' + url + '")'; el.classList.add('on'); }; im.src = url; }
-  }
+  clearInterval(window._placeRot);
+  const el = (root || document).querySelector('.mt-hero-photo[data-place]');
+  if (!el) return;
+  const n = (el.getAttribute('data-place') || '').toLowerCase();
+  const all = Object.assign({}, window._PLACE_ALIAS); Object.keys(window._PLACE_WIKI).forEach(k => all[k] = k);
+  const k = Object.keys(all).sort((a,b)=>b.length-a.length).find(x => n.includes(x));
+  if (!k) return;
+  const urls = (await Promise.all(window._PLACE_WIKI[all[k]].map(window._wikiPic))).filter(Boolean);
+  if (!urls.length || !el.isConnected) return;
+  for (let i = urls.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [urls[i], urls[j]] = [urls[j], urls[i]]; }
+  // Two stacked layers cross-fade between photos.
+  const L = [document.createElement('div'), document.createElement('div')];
+  L.forEach(d => { d.className = 'mt-hero-photo-l'; el.appendChild(d); });
+  let idx = 0, cur = 0;
+  const show = () => {
+    const u = urls[idx % urls.length]; idx++;
+    const im = new Image();
+    im.onload = () => { const nx = L[1 - cur]; nx.style.backgroundImage = 'url("' + u + '")'; nx.classList.add('on'); L[cur].classList.remove('on'); cur = 1 - cur; el.classList.add('on'); };
+    im.src = u;
+  };
+  show();
+  if (urls.length > 1) window._placeRot = setInterval(() => { if (!el.isConnected) { clearInterval(window._placeRot); return; } show(); }, 7000);
 };
 
 window._wcSwapRun = function(sw) {
