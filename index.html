@@ -22196,6 +22196,7 @@ async function renderHistory() {
         <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:.95rem;width:22px;text-align:center;color:${i===0?'var(--gold)':i===1?'#c0c6d4':i===2?'#cd7f32':'var(--muted)'};flex-shrink:0">${i+1}</span>
         ${av(t.avatar, t.name, 30, i===0?'rgba(255,215,0,0.6)':null)}
         <div style="flex:1;min-width:0"><div style="font-weight:${i===0?800:700};font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t.name)} <span style="font-size:.6rem;color:var(--gold)">${'👑'.repeat(Math.min(t.titles,5))}</span></div><div style="font-size:.58rem;color:var(--muted)">${t.seasons} season${t.seasons!==1?'s':''} played</div></div>
+        <div style="text-align:right;flex-shrink:0;margin-right:6px"><div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;color:#ffd24a;font-size:1.1rem;line-height:1">${(allTimeRoundWins[_normName(t.name)]||{}).wins||0}</div><div style="font-size:.48rem;letter-spacing:1px;color:var(--muted)">ROUND WINS</div></div>
         <div style="text-align:right;flex-shrink:0"><div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;color:var(--gold);font-size:1.1rem;line-height:1">${t.titles}</div><div style="font-size:.48rem;letter-spacing:1px;color:var(--muted)">${t.titles===1?'TITLE':'TITLES'}</div></div>
       </div>`).join('')}
     </div>` : emptyFeature('championships', 'once a season is completed & archived');
