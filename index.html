@@ -1441,6 +1441,17 @@
     #page-leaderboard .lbr-rank{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.15rem;width:26px;text-align:center;color:var(--muted);flex-shrink:0}
     #page-leaderboard .lbr .rank-delta{min-width:26px;font-size:.64rem}
     #page-leaderboard .lbr-main{flex:1;min-width:0}
+    #page-leaderboard .lbr-chips{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin-top:5px}
+    #page-leaderboard .lbr-chips .lb-cap{margin-left:0}
+    @media (max-width:640px){
+      #page-leaderboard .lb-row.lbr{gap:9px;padding:9px 10px}
+      #page-leaderboard .lbr-name{font-size:.86rem}
+      #page-leaderboard .lbr-chips{gap:4px;margin-top:4px}
+      #page-leaderboard .lbr-chips .lb-cap{font-size:.62rem;padding:1px 7px 1px 2px;gap:4px}
+      #page-leaderboard .lbr-chips .lb-cap i{width:14px;height:14px;font-size:.58rem}
+      #page-leaderboard .lbr-chips .lb-cap.fx i,#page-leaderboard .lbr-chips .lb-cap.tc i{width:auto;min-width:18px}
+      #page-leaderboard .lbr-chips .lb-cap b{font-size:.7rem}
+    }
     #page-leaderboard .lbr-name{font-weight:700;font-size:.9rem;display:flex;align-items:center;gap:4px;flex-wrap:wrap;min-width:0}
     #page-leaderboard .lbr-name > b{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
     #page-leaderboard .lbr-sub{font-size:.68rem;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -11749,8 +11760,9 @@ async function renderLeaderboard() {
         +'<div class="lbr-rank">'+(i+1)+'</div>'
         +(!isValueMode?deltaHtml(t.userId):'')
         +initialsAvatar(t.teamName, 36, 'border-radius:11px;flex-shrink:0;'+(fzCols?'box-shadow:0 0 0 2px '+fzCols[0]+',0 0 12px '+fzCols[1]+';':''), fzCols, t.discordAvatar)
-        +'<div class="lbr-main"><div class="lbr-name"><b>'+esc(t.teamName)+'</b>'+fanZoneChip(t)+(isMe?' <span class="lbx-you">YOU</span>':'')+capName+chipBadges+(trophies?' <span style="margin-left:2px">'+trophies+'</span>':'')+'</div>'
+        +'<div class="lbr-main"><div class="lbr-name"><b>'+esc(t.teamName)+'</b>'+fanZoneChip(t)+(isMe?' <span class="lbx-you">YOU</span>':'')+'</div>'
         +'<div class="lbr-sub">'+esc(t.playerName)+'</div>'
+        +((capName||chipBadges||trophies)?'<div class="lbr-chips">'+capName+chipBadges+(trophies?'<span class="lbr-tro">'+trophies+'</span>':'')+'</div>':'')
         +(pct?'<div class="lbr-bar"><span style="width:'+pct+'%'+(fzCols?';--bar:'+fzCols[0]:'')+'"></span></div>':'')
         +'</div>'
         +'<div class="lbr-pts">'+valueStr+(label?'<small>PTS</small>':'')+'</div></div>';
