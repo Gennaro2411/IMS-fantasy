@@ -202,6 +202,19 @@
   .lb-cap.tc b{font-weight:400;font-size:.78rem;margin-left:-1px;filter:drop-shadow(0 0 4px rgba(236,72,153,.6))}
   .lb-cap.tc::after{content:'';position:absolute;top:0;bottom:0;width:40%;left:-60%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.22),transparent);animation:lbTcShine 3.2s ease-in-out infinite}
   @keyframes lbTcShine{0%,55%{left:-60%}100%{left:130%}}
+  #modal-overlay.mo-prof{animation:moFade .28s ease both;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+  #modal-overlay.mo-prof .modal{animation:moRise .42s cubic-bezier(.2,.9,.25,1) both}
+  #modal-overlay.mo-prof #modal-body > *{animation:moItem .45s cubic-bezier(.2,.9,.25,1) both}
+  #modal-overlay.mo-prof #modal-body > *:nth-child(1){animation-delay:.04s} #modal-overlay.mo-prof #modal-body > *:nth-child(2){animation-delay:.09s}
+  #modal-overlay.mo-prof #modal-body > *:nth-child(3){animation-delay:.14s} #modal-overlay.mo-prof #modal-body > *:nth-child(4){animation-delay:.19s}
+  #modal-overlay.mo-prof #modal-body > *:nth-child(5){animation-delay:.24s} #modal-overlay.mo-prof #modal-body > *:nth-child(n+6){animation-delay:.28s}
+  #modal-overlay.mo-prof.mo-closing{animation:moFadeOut .2s ease both}
+  #modal-overlay.mo-prof.mo-closing .modal{animation:moSink .2s ease both}
+  @keyframes moFade{from{opacity:0}to{opacity:1}} @keyframes moFadeOut{from{opacity:1}to{opacity:0}}
+  @keyframes moRise{from{opacity:0;transform:translateY(26px) scale(.96)}to{opacity:1;transform:none}}
+  @keyframes moSink{from{opacity:1;transform:none}to{opacity:0;transform:translateY(14px) scale(.98)}}
+  @keyframes moItem{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){#modal-overlay.mo-prof,#modal-overlay.mo-prof .modal,#modal-overlay.mo-prof #modal-body > *{animation:none!important}}
   .admin-badge{background:var(--red);color:white;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:3px;letter-spacing:1px;}
 
   main{max-width:1100px;margin:0 auto;padding:32px 24px;position:relative;}
@@ -24341,6 +24354,8 @@ window.openPlayerProfile = async function(userId, big) {
   `;
 
   openModal('', body, !!big);
+  // Smooth entrance for the profile: backdrop fades/blurs in, the card rises and settles, sections cascade in.
+  const ov = document.getElementById('modal-overlay'); if (ov) { ov.classList.remove('mo-prof', 'mo-closing'); void ov.offsetWidth; ov.classList.add('mo-prof'); }
 };
 
 // ===== GLOBAL HEADER SEARCH =====
@@ -24542,6 +24557,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 window.openModal = function(title, body, wide) {
+  { const _o = document.getElementById('modal-overlay'); if (_o) { _o.classList.remove('mo-prof', 'mo-closing'); clearTimeout(window._moT); } }
   document.getElementById('modal-title').innerHTML=title+' <button class="modal-close" onclick="closeModal()">✕</button>';
   document.getElementById('modal-body').innerHTML=body;
   // Wide mode — used by the full-size team profile opened from the My Team avatar
@@ -24553,6 +24569,9 @@ window.openModal = function(title, body, wide) {
   document.getElementById('modal-overlay').classList.remove('hidden');
 };
 window.closeModal = function() {
+  const _ov = document.getElementById('modal-overlay');
+  if (_ov && _ov.classList.contains('mo-prof') && !_ov.classList.contains('mo-closing')) { // profile: animate out, then close
+    _ov.classList.add('mo-closing'); clearTimeout(window._moT); window._moT = setTimeout(() => { _ov.classList.remove('mo-prof', 'mo-closing'); window.closeModal(); }, 200); return; }
   const modalEl = document.querySelector('#modal-overlay .modal');
   if (modalEl) { modalEl.style.maxWidth = ''; modalEl.style.padding = ''; }
   document.getElementById('modal-overlay').classList.add('hidden');
