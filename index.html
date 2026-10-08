@@ -336,6 +336,8 @@
   .wc-ghost span{font:800 .6rem 'Barlow Condensed',sans-serif;letter-spacing:2px;color:#fff;background:#e8002d;border-radius:4px;padding:1px 6px;align-self:flex-start}
   .wc-ghost b{font-weight:800;font-size:.9rem;color:#ddd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .wc-intag{position:absolute;z-index:61;pointer-events:none;font:900 .8rem 'Barlow Condensed',sans-serif;letter-spacing:2px;color:#0a0a0f;background:linear-gradient(90deg,#4ade80,#27f4d2);padding:3px 10px;border-radius:20px;box-shadow:0 0 16px rgba(74,222,128,.7);white-space:nowrap}
+  #page-my-team .mt-hero-photo{position:absolute!important;inset:0;z-index:0!important;background:center/cover no-repeat;opacity:0;transition:opacity .8s ease;pointer-events:none;-webkit-mask-image:linear-gradient(180deg,rgba(0,0,0,.9),rgba(0,0,0,.55));mask-image:linear-gradient(180deg,rgba(0,0,0,.9),rgba(0,0,0,.55));filter:saturate(1.1) brightness(.55)}
+  #page-my-team .mt-hero-photo.on{opacity:.55}
   .admin-badge{background:var(--red);color:white;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:3px;letter-spacing:1px;}
 
   main{max-width:1100px;margin:0 auto;padding:32px 24px;position:relative;}
@@ -8848,6 +8850,31 @@ window.renderTrophyShelf = function(trophies, opts) {
 window._VAN = 'data:image/webp;base64,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';
 // Wildcard signing scene: the outgoing driver's card is thrown off the table and the new signing is
 // dealt in face-down, then flipped over with a burst of sparks.
+// Location photo behind the round-points box: the host city's lead photo from Wikipedia (fetched once
+// per place, cached in localStorage). Purely decorative — silently skipped if anything fails.
+window._PLACE_WIKI = {singapore:'Marina_Bay,_Singapore',barcelona:'Barcelona',spain:'Barcelona',catalunya:'Barcelona',cota:'Austin,_Texas',austin:'Austin,_Texas',texas:'Austin,_Texas','united states':'Austin,_Texas',mexico:'Mexico_City',brazil:'São_Paulo',interlagos:'São_Paulo','sao paulo':'São_Paulo',china:'The_Bund',shanghai:'The_Bund',vegas:'Las_Vegas_Strip','las vegas':'Las_Vegas_Strip','abu dhabi':'Abu_Dhabi',bahrain:'Manama',silverstone:'Silverstone_Circuit',britain:'Silverstone_Circuit',monza:'Monza',italy:'Monza',imola:'Imola',japan:'Suzuka_International_Racing_Course',suzuka:'Suzuka_International_Racing_Course',baku:'Baku',azerbaijan:'Baku',qatar:'Doha',australia:'Melbourne',melbourne:'Melbourne',monaco:'Monaco',canada:'Montreal',montreal:'Montreal',austria:'Spielberg,_Styria',spa:'Spa,_Belgium',belgium:'Spa,_Belgium',hungary:'Budapest',netherlands:'Zandvoort',zandvoort:'Zandvoort',miami:'Miami',saudi:'Jeddah',jeddah:'Jeddah'};
+window._fillPlacePhotos = async function(root) {
+  const els = (root || document).querySelectorAll('.mt-hero-photo[data-place]');
+  for (const el of els) {
+    const n = (el.getAttribute('data-place') || '').toLowerCase();
+    const k = Object.keys(window._PLACE_WIKI).sort((a,b)=>b.length-a.length).find(x => n.includes(x));
+    if (!k) continue;
+    const title = window._PLACE_WIKI[k], ck = 'imsPlacePic:' + title;
+    let url = null; try { url = localStorage.getItem(ck); } catch(e) {}
+    if (!url) {
+      try {
+        const r = await fetch('https://en.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(title));
+        const j = await r.json();
+        url = (j.originalimage && j.originalimage.source) || (j.thumbnail && j.thumbnail.source) || '';
+        if (j.thumbnail && j.thumbnail.source && /\/\d+px-/.test(j.thumbnail.source)) url = j.thumbnail.source.replace(/\/\d+px-/, '/960px-');
+        if (/\.svg/i.test(url)) url = '';
+        try { localStorage.setItem(ck, url || 'none'); } catch(e) {}
+      } catch(e) { url = ''; }
+    }
+    if (url && url !== 'none') { const im = new Image(); im.onload = () => { el.style.backgroundImage = 'url("' + url + '")'; el.classList.add('on'); }; im.src = url; }
+  }
+};
+
 window._wcSwapRun = function(sw) {
   const host = document.getElementById('page-my-team');
   if (!host || !sw || !sw.ch || !sw.ch.length || !host.animate) return;
@@ -9603,6 +9630,7 @@ async function renderMyTeam() {
         const _stot = (_es && _es.seasonTotal != null) ? _es.seasonTotal : (_ss && _ss.seasonTotalBefore != null) ? Math.round((_ss.seasonTotalBefore + (racePts(viewedRace) || 0)) * 10) / 10 : totalPts;
         const _trackBg = (pointsRace && typeof getTrackOutlineUrl === 'function') ? getTrackOutlineUrl(pointsRace.name) : null;
         return '<div class="mt-hero-pts">'
+          + (pointsRace ? '<div class="mt-hero-photo" data-place="'+esc(pointsRace.name)+'"></div>' : '')
           + (_trackBg ? '<img class="mt-hero-track" src="'+esc(_trackBg)+'" alt="" onerror="this.style.display=\'none\'">' : '')
           + '<div class="mt-lbl">'+(pointsRace?'Points · '+esc(pointsRace.name):'Points')+'</div>'
           + '<div id="total-pts-display" data-countup="'+(latestPts!==null?latestPts:0)+'">'+(latestPts!==null?latestPts:'—')+'</div>'
@@ -10290,6 +10318,7 @@ async function renderMyTeam() {
 
   el.innerHTML = divMoveBanner + html;
   try { window._deEmoji(el); } catch(e) {}
+  try { window._fillPlacePhotos(el); } catch(e) {}
   if (window._wcSwap) { const _sw = window._wcSwap; window._wcSwap = null; setTimeout(() => window._wcSwapRun && window._wcSwapRun(_sw), 120); }
 
   setTimeout(animateMyTeamPoints, 100);
