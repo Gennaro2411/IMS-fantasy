@@ -314,6 +314,8 @@
   .rb-legs i{width:7px;height:16px;background:linear-gradient(90deg,#3a2a1c,#2a1d12);border-radius:0 0 2px 2px}
   .rb-cap{text-align:center;font-size:.66rem;color:var(--muted);margin-top:6px;font-weight:600;letter-spacing:.5px}
   @keyframes rbSit{from{transform:translateY(-14px);opacity:0}to{transform:none;opacity:1}}
+  .tc-twinkle{animation:tcTwk 2.2s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+  @keyframes tcTwk{0%,100%{opacity:0;transform:scale(.3)}50%{opacity:1;transform:scale(1.2)}}
   .admin-badge{background:var(--red);color:white;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:3px;letter-spacing:1px;}
 
   main{max-width:1100px;margin:0 auto;padding:32px 24px;position:relative;}
@@ -8716,6 +8718,19 @@ window._trophySvg = function(t) {
   let body;
   if (kind === 'value') {
     body = `<path d="M10 6h20l6 9-16 19L4 15z" fill="${G}" stroke="${st}" stroke-width="1.2" stroke-linejoin="round"/><path d="M4 15h32M14 6l-4 9 10 19 10-19-4-9M20 6v0" fill="none" stroke="${m[0]}" stroke-opacity=".7" stroke-width=".8"/><rect x="17" y="34" width="6" height="4" fill="${G}"/>`;
+  } else if (kind === 'champ') {
+    const leaf = (x,y,r,f) => `<ellipse cx="${x}" cy="${y}" rx="1.6" ry="3.4" transform="rotate(${r} ${x} ${y})" fill="${f}"/>`;
+    const L = [[6,30,-30],[4.5,25,-15],[4,20,0],[5,15,15],[7,10.5,30]];
+    const laurel = L.map(([x,y,r]) => leaf(x,y,r,G) + leaf(40-x,y,-r,G)).join('')
+      + `<path d="M8 33C3 26 3 16 8 9M32 33c5-7 5-17 0-24" fill="none" stroke="${m[2]}" stroke-width=".9"/>`;
+    body = laurel
+      + `<path d="M15 2l2.2 2.6L20 1l2.8 3.6L25 2l-.8 4.6h-8.4z" fill="${G}" stroke="${st}" stroke-width=".7" stroke-linejoin="round"/><circle cx="20" cy="1.2" r="1" fill="#ff5470"/>`
+      + `<path d="M11 7h18v6c0 8-4 12.5-9 12.5S11 21 11 13z" fill="${G}" stroke="${st}" stroke-width="1.2"/>`
+      + `<path d="M11 9H7.5c0 5 2.2 7.5 4.6 8M29 9h3.5c0 5-2.2 7.5-4.6 8" fill="none" stroke="${G}" stroke-width="2.2" stroke-linecap="round"/>`
+      + `<path d="M13.5 9c0 5 1.5 8.5 4 10.5" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="1.3" stroke-linecap="round"/>`
+      + `<path d="M20 10.5l1.4 2.9 3.2.4-2.3 2.2.6 3.1-2.9-1.5-2.9 1.5.6-3.1-2.3-2.2 3.2-.4z" fill="#fff"/>`
+      + `<rect x="18" y="25.5" width="4" height="4" fill="${G}"/><path d="M13 29.5h14l2 4H11z" fill="${G}" stroke="${st}" stroke-width=".8"/>`
+      + `<circle cx="30" cy="5" r="1.3" fill="#fff" class="tc-twinkle"/><circle cx="9" cy="4" r="1" fill="#fff" class="tc-twinkle" style="animation-delay:.8s"/>`;
   } else {
     const big = kind === 'champ';
     body = `<path d="M9 4h22v8c0 8-5 13-11 13S9 20 9 12z" fill="${G}" stroke="${st}" stroke-width="1.2"/>`
