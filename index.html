@@ -8861,7 +8861,7 @@ window._wcSwapRun = function(sw) {
     const card = host.querySelector('[data-div="' + div + '"]');
     if (!card) return;
     const r = card.getBoundingClientRect();
-    const x = r.left - hb.left, y = r.top - hb.top, delay = i * 650;
+    const x = r.left - hb.left, y = r.top - hb.top, delay = i * 1500;
     card.scrollIntoView && i === 0 && card.scrollIntoView({ block: 'center', behavior: 'smooth' });
     // Ghost of the outgoing driver
     const old = all.find(d => d.id === sw.prev[div]);
@@ -8872,13 +8872,13 @@ window._wcSwapRun = function(sw) {
     g.innerHTML = (ph ? `<img src="${String(ph).replace(/"/g,'&quot;')}" alt="">` : '') + `<div><span>OUT</span><b>${old ? String(old.name).replace(/[<>&]/g,'') : 'Sold'}</b></div>`;
     host.appendChild(g);
     card.style.visibility = 'hidden';
-    g.animate([{ transform: 'none', opacity: 1 }, { transform: 'translateY(-14px) rotate(-3deg)', opacity: 1, offset: .3 }, { transform: 'translate(-70vw,-40px) rotate(-38deg)', opacity: 0 }], { duration: 900, delay, easing: 'cubic-bezier(.5,0,.8,.4)', fill: 'both' }).onfinish = () => g.remove();
+    g.animate([{ transform: 'none', opacity: 1 }, { transform: 'translateY(-14px) rotate(-3deg)', opacity: 1, offset: .3 }, { transform: 'translate(-70vw,-40px) rotate(-38deg)', opacity: 0 }], { duration: 1500, delay, easing: 'cubic-bezier(.5,0,.8,.4)', fill: 'both' }).onfinish = () => g.remove();
     // New signing dealt in face-down, then revealed
     setTimeout(() => {
       card.style.visibility = '';
       const b = document.createElement('div'); b.className = 'wc-back'; b.style.cssText = 'position:absolute;inset:-1px;z-index:99;opacity:1'; b.innerHTML = back; const _f = b.querySelector('.wc-face'); if (_f) _f.style.transform = 'none';
       card.appendChild(b);
-      const T = 1700;
+      const T = 3000;
       card.style.zIndex = 30;
       card.animate([
         { transform: 'perspective(900px) translate(75vw,-60px) rotate(25deg) rotateY(180deg)' },
@@ -8892,9 +8892,9 @@ window._wcSwapRun = function(sw) {
         const tag = document.createElement('div'); tag.className = 'wc-intag'; tag.textContent = 'NEW SIGNING';
         tag.style.cssText = `left:${x + r.width / 2}px;top:${y - 6}px`;
         host.appendChild(tag);
-        tag.animate([{ transform: 'translate(-50%,10px) scale(.6)', opacity: 0 }, { transform: 'translate(-50%,-8px) scale(1.05)', opacity: 1, offset: .2 }, { transform: 'translate(-50%,-8px) scale(1)', opacity: 1, offset: .8 }, { transform: 'translate(-50%,-22px)', opacity: 0 }], { duration: 1800 }).onfinish = () => tag.remove();
+        tag.animate([{ transform: 'translate(-50%,10px) scale(.6)', opacity: 0 }, { transform: 'translate(-50%,-8px) scale(1.05)', opacity: 1, offset: .2 }, { transform: 'translate(-50%,-8px) scale(1)', opacity: 1, offset: .8 }, { transform: 'translate(-50%,-22px)', opacity: 0 }], { duration: 2800 }).onfinish = () => tag.remove();
       }, T * 0.78);
-    }, delay + 650);
+    }, delay + 1200);
   });
 };
 
