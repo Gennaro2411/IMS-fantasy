@@ -9599,9 +9599,9 @@ async function renderMyTeam() {
     // so a past round shows 3× exactly when Triple Captain was active THAT round.
     const _cardTC = tcActivePoints;
     const _wcKey = wcActiveThisRace && latest ? myTeam.id+':'+latest.id+':'+Object.entries(myTeam.selections||{}).filter(([k,v])=>v).map(([k,v])=>k+'='+v).sort().join(',') : null;
-    const _wcFlip = !!(_wcKey && window._wcFlipDone !== _wcKey);
+    const _wcFlip = !!(_wcKey && !(window._wcLast && Date.now() - window._wcLast < 1500));
     window._wcNow = _wcFlip;
-    if (_wcFlip && !window._wcSched) { window._wcSched = 1; setTimeout(() => { window._wcSched = 0; window._wcFlipDone = _wcKey; window._wcRun(); }, 60); }
+    if (_wcFlip && !window._wcSched) { window._wcSched = 1; setTimeout(() => { window._wcSched = 0; window._wcLast = Date.now(); window._wcRun(); }, 60); }
 
     if (!driver) {
       html += '<div onclick="showPage(\'home\')" style="cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:24px 12px;border-radius:12px;border:1px dashed var(--border);background:var(--surface2)">';
