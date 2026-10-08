@@ -276,8 +276,8 @@
   .cp-glint.g1{top:12%;right:12%}.cp-glint.g2{top:55%;right:30%;animation-delay:1s}.cp-glint.g3{bottom:14%;right:8%;animation-delay:2s}
   @keyframes cpGlint{0%,100%{opacity:0;transform:scale(.4) rotate(0)}50%{opacity:1;transform:scale(1.2) rotate(45deg)}}
   @media (prefers-reduced-motion:reduce){.cp-sheen,.cp-glint{animation:none}}
-  .wc-flip{transform-style:preserve-3d}
-  .wc-back{position:absolute;inset:0;z-index:6;border-radius:12px;pointer-events:none;background:#fbf8f2;padding:5px;opacity:0;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+  .wc-flip .cap-crown,.wc-flip .cap-badge{visibility:hidden}
+  .wc-back{position:absolute;inset:-1px;z-index:99;border-radius:12px;pointer-events:none;background:#fbf8f2;padding:5px;opacity:0;box-shadow:0 2px 8px rgba(0,0,0,.4)}
   .wc-face{position:relative;width:100%;height:100%;border-radius:8px;transform:scaleX(-1);display:flex;align-items:center;justify-content:center;overflow:hidden;border:1.5px solid #5e1fa8;
     background:radial-gradient(circle at 50% 50%,transparent 3px,rgba(255,255,255,.18) 3.5px,transparent 4.5px) 0 0/12px 12px,repeating-linear-gradient(45deg,#5e1fa8 0 2px,transparent 2px 8px),repeating-linear-gradient(-45deg,#5e1fa8 0 2px,transparent 2px 8px),linear-gradient(145deg,#8e2de2,#3a0f73)}
   .wc-face::before{content:'';position:absolute;inset:4px;border:1px solid rgba(255,208,138,.75);border-radius:5px}
