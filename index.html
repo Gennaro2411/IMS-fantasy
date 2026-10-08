@@ -8858,11 +8858,8 @@ window._wcRun = function () {
     const back = c.querySelector('.wc-back');
     const dealAt = SH + i * GAP, flipAt = SH + (n - 1) * GAP + DEAL + 200 + i * 120, total = flipAt + FLIP;
     const P = (t) => t / total, side = (i % 2 ? 1 : -1);
-    // Uniform scale only (non-uniform scaling made the cards blurry/stretched). Wider cards (the
-    // constructor) are clipped to a driver-card shape while in the deck instead of squashed.
-    const us = Math.min(1, refH / r.height), ksx = us, ksy = us;
-    const insetX = Math.max(0, (r.width - refW / us) / 2);
-    const at = (x, y, rot, ry, full) => `perspective(900px) translate(${x}px,${y}px) rotate(${rot}deg) rotateY(${ry}deg)` + (full || us === 1 ? '' : ` scale(${us})`);
+    const ksx = refW / r.width, ksy = refH / r.height;
+    const at = (x, y, rot, ry, full) => `perspective(900px) translate(${x}px,${y}px) rotate(${rot}deg) rotateY(${ry}deg) scale(${full ? 1 : ksx},${full ? 1 : ksy})`;
     const kf = [{ offset: 0, transform: at(dx, dy - plan.z0[i] * 1.5, 0, 180), zIndex: 20 + plan.z0[i] }];
     plan.rounds.forEach((rd, k) => {
       const t0 = k * RD, L = rd.left[i], h = rd.hpos[i], z = rd.z[i];
@@ -8878,14 +8875,22 @@ window._wcRun = function () {
     kf.push({ offset: P(dealAt + DEAL), transform: at(0, 0, 0, 180, 1), easing: 'ease-in-out' });
     kf.push({ offset: P(flipAt), transform: at(0, 0, 0, 180, 1), easing: 'ease-in-out' });
     kf.push({ offset: 1, transform: at(0, 0, 0, 360, 1) });
-    c.style.zIndex = 20 + plan.rounds[ROUNDS-1].z[i];
+    // The constructor card stays at the very back of the pile the whole time (no riffle for it).
+    if (c.classList.contains('mt-hov')) {
+      kf.length = 0;
+      kf.push({ offset: 0, transform: at(dx, dy + 6, 0, 180), zIndex: 1 });
+      kf.push({ offset: P(dealAt), transform: at(dx, dy + 6, 0, 180), zIndex: 1 });
+      kf.push({ offset: P(dealAt + DEAL), transform: at(0, 0, 0, 180, 1), zIndex: 1, easing: 'ease-in-out' });
+      kf.push({ offset: P(flipAt), transform: at(0, 0, 0, 180, 1), zIndex: 1, easing: 'ease-in-out' });
+      kf.push({ offset: 1, transform: at(0, 0, 0, 360, 1), zIndex: 1 });
+    }
+    c.style.zIndex = c.classList.contains('mt-hov') ? 1 : 20 + plan.rounds[ROUNDS-1].z[i];
     const a = c.animate(kf, { duration: total, easing: 'linear' });
     if (back) back.animate([{ opacity: 1 }, { opacity: 1, offset: P(flipAt + FLIP / 2) }, { opacity: 0, offset: Math.min(1, P(flipAt + FLIP / 2) + 0.0001) }, { opacity: 0 }], { duration: total });
     const ba = back ? back.getAnimations() : [];
-    if (insetX > 1) c.animate([{ clipPath: `inset(0 ${insetX}px round 12px)` }, { clipPath: `inset(0 ${insetX}px round 12px)`, offset: P(dealAt) }, { clipPath: 'inset(0 0px round 12px)', offset: P(dealAt + DEAL) }, { clipPath: 'inset(0 0px round 12px)' }], { duration: total });
-    const ov = null, cor = 1;
+    const ov = back && back.querySelector('.wc-oval'), cor = ksy / ksx;
     if (ov && Math.abs(cor - 1) > 0.02) ov.animate([{ transform: `scale(${cor},1)` }, { transform: `scale(${cor},1)`, offset: P(dealAt) }, { transform: 'scale(1,1)', offset: P(dealAt + DEAL) }, { transform: 'scale(1,1)' }], { duration: total });
-    a.onfinish = () => { c.getAnimations().forEach(x => x.cancel()); ba.forEach(x => x.cancel()); if (back) back.remove(); c.classList.remove('wc-flip'); c.style.zIndex = ''; c.style.transform = ''; };
+    a.onfinish = () => { a.cancel(); ba.forEach(x => x.cancel()); if (back) back.remove(); c.classList.remove('wc-flip'); c.style.zIndex = ''; c.style.transform = ''; };
   });
 };
 async function renderMyTeam() {
