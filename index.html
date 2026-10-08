@@ -210,6 +210,12 @@
   @keyframes moRise{from{opacity:0;transform:translate3d(0,14px,0) scale(.98)}to{opacity:1;transform:none}}
   @keyframes moSink{from{opacity:1;transform:none}to{opacity:0;transform:translate3d(0,8px,0)}}
   @media (prefers-reduced-motion:reduce){#modal-overlay.mo-prof,#modal-overlay.mo-prof .modal{animation:none!important}}
+  /* My Team: driver + constructor cards lift and glow on hover, like the rest of the app */
+  .mt-driver-row > *, .mt-hov{transition:transform .18s cubic-bezier(.2,.9,.3,1),box-shadow .18s ease,filter .18s ease;will-change:transform}
+  @media (hover:hover){
+    .mt-driver-row > *:hover, .mt-hov:hover{transform:translateY(-3px) scale(1.012);box-shadow:0 10px 26px rgba(0,0,0,.4);filter:brightness(1.06)}
+    .mt-driver-row > *:active, .mt-hov:active{transform:translateY(-1px) scale(.995)}
+  }
   .admin-badge{background:var(--red);color:white;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:3px;letter-spacing:1px;}
 
   main{max-width:1100px;margin:0 auto;padding:32px 24px;position:relative;}
@@ -9633,7 +9639,7 @@ async function renderMyTeam() {
   } else {
     const cAccentMt = cTeamCol ? cTeamCol.accent : '#666677';
     const cBgMt = cTeamCol ? `linear-gradient(160deg, ${cTeamCol.bg.replace('0.08','0.18')}, var(--surface2) 70%)` : 'var(--surface2)';
-    html += '<div style="border-radius:14px;border:1px solid '+(cTeamCol?cTeamCol.border:'var(--border)')+';background:'+cBgMt+';cursor:pointer;margin-bottom:16px;position:relative;overflow:hidden" onclick="openConstructorModal(\''+constr.id+'\')">';
+    html += '<div class="mt-hov" style="border-radius:14px;border:1px solid '+(cTeamCol?cTeamCol.border:'var(--border)')+';background:'+cBgMt+';cursor:pointer;margin-bottom:16px;position:relative;overflow:hidden" onclick="openConstructorModal(\''+constr.id+'\')">';
     html += '<div style="height:3px;background:linear-gradient(90deg,'+cAccentMt+',transparent 85%)"></div>';
     html += '<div style="display:flex;align-items:center;gap:12px;padding:10px 14px 12px;position:relative">';
     html += '<div style="width:44px;height:44px;border-radius:8px;border:1px solid '+cAccentMt+'55;display:flex;align-items:center;justify-content:center;background:var(--surface);flex-shrink:0">';
