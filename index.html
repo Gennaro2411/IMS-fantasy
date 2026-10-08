@@ -9635,7 +9635,7 @@ async function renderMyTeam() {
         return '<div class="mt-hero-pts">'
           + (pointsRace ? '<div class="mt-hero-photo" data-place="'+esc(pointsRace.name)+'"></div>' : '')
           + (_trackBg ? '<img class="mt-hero-track" src="'+esc(_trackBg)+'" alt="" onerror="this.style.display=\'none\'">' : '')
-          + '<div class="mt-lbl">'+(pointsRace?'Points · '+esc(pointsRace.name):'Points')+'</div>'
+          + '<div class="mt-lbl">'+(pointsRace?'Points · '+(function(){ try { const _rs = races.filter(r => !r.excludeFromFantasy).slice().sort((a,b)=>(a.raceNum||0)-(b.raceNum||0)); const _ix = _rs.findIndex(r => r.id === pointsRace.id); return _ix >= 0 ? 'Round '+(_ix+1)+' · ' : ''; } catch(e) { return ''; } })()+esc(pointsRace.name):'Points')+'</div>'
           + '<div id="total-pts-display" data-countup="'+(latestPts!==null?latestPts:0)+'">'+(latestPts!==null?latestPts:'—')+'</div>'
           + '<div class="mt-tile-sub">'+(pointsRace?(pointsRaceScored?'This round':'Not scored yet'):'No races yet')+'</div>'
           + '</div>'
