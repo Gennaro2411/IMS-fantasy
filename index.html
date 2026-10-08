@@ -316,6 +316,7 @@
   @keyframes rbSit{from{transform:translateY(-14px);opacity:0}to{transform:none;opacity:1}}
   .tc-twinkle{animation:tcTwk 2.2s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
   @keyframes tcTwk{0%,100%{opacity:0;transform:scale(.3)}50%{opacity:1;transform:scale(1.2)}}
+  .champ-cup img{border-radius:50%;width:13px!important;height:13px!important;top:9px!important;box-shadow:0 0 0 1px #c8901a,0 0 4px rgba(255,200,0,.6)}
   .admin-badge{background:var(--red);color:white;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:3px;letter-spacing:1px;}
 
   main{max-width:1100px;margin:0 auto;padding:32px 24px;position:relative;}
@@ -12300,8 +12301,9 @@ async function renderLeaderboard() {
       const _champSeasons = Object.keys(_champBySeason).sort((a,b)=>b-a);
       const champStrip = _champSeasons.length ? '<div style="margin-bottom:14px">' + _champSeasons.map(sk => {
         const w = _champBySeason[sk].w;
-        return `<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;margin-bottom:8px;border:1px solid rgba(255,200,0,0.3);background:linear-gradient(160deg,rgba(255,200,0,0.06),var(--surface2) 70%)">
-          <span style="font-size:1.4rem">👑</span>
+        const _cup = (typeof window._trophySvg === 'function') ? window._trophySvg({ emoji:'👑', glow:'#ffc800', logo:'icons/icon-192.png?v=3' }) : '👑';
+        return `<div style="position:relative;overflow:hidden;display:flex;align-items:center;gap:16px;padding:14px 16px;border-radius:12px;margin-bottom:8px;background:radial-gradient(120% 160% at 0% 50%,rgba(255,200,0,0.16),transparent 55%),linear-gradient(160deg,rgba(255,200,0,0.05),var(--surface2) 70%)">
+          <div class="champ-cup" style="flex-shrink:0;width:70px;height:80px;display:flex;align-items:center;justify-content:center"><div style="transform:scale(1.75);transform-origin:center">${_cup}</div></div>
           <div style="flex:1;min-width:0">
             <div style="font-size:.62rem;font-weight:800;letter-spacing:1px;color:var(--muted)">${esc(_champBySeason[sk].name)} · CHAMPION</div>
             <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.3rem;color:var(--gold)">${esc(w.teamName||w.playerName||'?')}</div>
