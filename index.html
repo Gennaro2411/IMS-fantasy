@@ -338,6 +338,9 @@
   .wc-intag{position:absolute;z-index:61;pointer-events:none;font:900 .8rem 'Barlow Condensed',sans-serif;letter-spacing:2px;color:#0a0a0f;background:linear-gradient(90deg,#4ade80,#27f4d2);padding:3px 10px;border-radius:20px;box-shadow:0 0 16px rgba(74,222,128,.7);white-space:nowrap}
   #page-my-team .mt-hero-photo{position:absolute!important;inset:0;z-index:0!important;background:center/cover no-repeat;opacity:0;transition:opacity .8s ease;pointer-events:none;-webkit-mask-image:linear-gradient(180deg,rgba(0,0,0,.9),rgba(0,0,0,.55));mask-image:linear-gradient(180deg,rgba(0,0,0,.9),rgba(0,0,0,.55));filter:saturate(1.1) brightness(.55)}
   #page-my-team .mt-hero-photo.on{opacity:.55}
+  #page-my-team .mt-hero-pts::after{content:'';position:absolute;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 45% 70% at 50% 52%,rgba(8,8,14,.78),rgba(8,8,14,.35) 60%,transparent 85%)}
+  #page-my-team .mt-hero-pts .mt-lbl,#page-my-team .mt-hero-pts .mt-tile-sub{text-shadow:0 1px 3px #000,0 0 8px rgba(0,0,0,.9);color:#d6d6ea!important}
+  #page-my-team #total-pts-display{text-shadow:0 2px 6px rgba(0,0,0,.95),0 0 14px rgba(0,0,0,.8),0 0 18px rgba(255,200,0,.3)!important}
   .admin-badge{background:var(--red);color:white;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:3px;letter-spacing:1px;}
 
   main{max-width:1100px;margin:0 auto;padding:32px 24px;position:relative;}
@@ -1520,7 +1523,7 @@
     #page-my-team .mt-tile-val{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.7rem;line-height:1.1}
     #page-my-team .mt-tile-sub{font-size:.66rem;color:var(--muted);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     #page-my-team .mt-hero-pts{position:relative;overflow:hidden;margin-top:14px;text-align:center;background:rgba(255,200,0,0.05);border:1px solid rgba(255,200,0,0.25);border-radius:14px;padding:13px 16px 14px}
-    #page-my-team .mt-hero-track{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;transform:scale(1.15);filter:invert(1) drop-shadow(0 0 3px rgba(255,255,255,.9)) drop-shadow(0 0 10px rgba(255,210,74,.6));opacity:.55;pointer-events:none;z-index:0}
+    #page-my-team .mt-hero-track{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;transform:scale(1.15);filter:invert(1) drop-shadow(0 0 2px rgba(255,255,255,.6));opacity:.3;pointer-events:none;z-index:0}
     #page-my-team .mt-hero-pts > *:not(.mt-hero-track){position:relative;z-index:1}
     #page-my-team #total-pts-display{font-size:3rem;line-height:1.02}
     @media (max-width:520px){ #page-my-team #total-pts-display{font-size:2.4rem} }
