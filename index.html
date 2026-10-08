@@ -9596,6 +9596,7 @@ async function renderMyTeam() {
     const _cardTC = tcActivePoints;
     const _wcKey = wcActiveThisRace && latest ? myTeam.id+':'+latest.id+':'+JSON.stringify(myTeam.selections||{})+':'+(myTeam.constructorId||myTeam.constructor||'') : null;
     const _wcFlip = !!(_wcKey && window._wcFlipDone !== _wcKey);
+    window._wcNow = _wcFlip;
     if (_wcFlip && !window._wcSched) { window._wcSched = 1; setTimeout(() => { window._wcSched = 0; window._wcFlipDone = _wcKey; window._wcRun(); }, 60); }
 
     if (!driver) {
@@ -9782,7 +9783,9 @@ async function renderMyTeam() {
   } else {
     const cAccentMt = cTeamCol ? cTeamCol.accent : '#666677';
     const cBgMt = cTeamCol ? `linear-gradient(160deg, ${cTeamCol.bg.replace('0.08','0.18')}, var(--surface2) 70%)` : 'var(--surface2)';
-    html += '<div class="mt-hov" data-logo="'+esc(constr.logo || (typeof getTeamLogo==='function' ? getTeamLogo(constr.name) : '') || '')+'" style="border-radius:14px;border:1px solid '+(cTeamCol?cTeamCol.border:'var(--border)')+';background:'+cBgMt+';cursor:pointer;margin-bottom:16px;position:relative;overflow:hidden" onclick="openConstructorModal(\''+constr.id+'\')">';
+    const _wcC = !!window._wcNow; window._wcNow = false;
+    html += '<div class="mt-hov'+(_wcC?' wc-flip':'')+'" data-logo="'+esc(constr.logo || (typeof getTeamLogo==='function' ? getTeamLogo(constr.name) : '') || '')+'" style="border-radius:14px;border:1px solid '+(cTeamCol?cTeamCol.border:'var(--border)')+';background:'+cBgMt+';cursor:pointer;margin-bottom:16px;position:relative;overflow:hidden" onclick="openConstructorModal(\''+constr.id+'\')">';
+    if (_wcC) html += '<div class="wc-back" style="position:absolute;inset:0;z-index:99"><div class="wc-face"><b class="wc-c tl">IMS</b><div class="wc-oval"><img src="icons/icon-192.png?v=3" alt="" onerror="this.remove()"><small>WILDCARD</small></div><b class="wc-c br">IMS</b></div></div>';
     html += '<div style="height:3px;background:linear-gradient(90deg,'+cAccentMt+',transparent 85%)"></div>';
     html += '<div style="display:flex;align-items:center;gap:12px;padding:10px 14px 12px;position:relative">';
     html += '<div style="width:44px;height:44px;border-radius:8px;border:1px solid '+cAccentMt+'55;display:flex;align-items:center;justify-content:center;background:var(--surface);flex-shrink:0">';
