@@ -9685,8 +9685,8 @@ async function renderMyTeam() {
 
     html += '<div data-logo="'+esc((driver && /^forestalwaif1$/i.test(String(driver.name||'').replace(/\s/g,'')) && window._VAN) || (typeof getTeamLogo==='function' && driver && driver.team && !/^reserve$/i.test(driver.team) ? getTeamLogo(driver.team) : '') || '')+'" class="'+(isCap?(_cardTC?'cap-glow-tc':'cap-glow'):'')+(_wcFlip?' wc-flip':'')+'" style="'+'border-radius:12px;border:1px solid '+(_reserveIn?'#27f4d2':borderCol)+';background:'+bgCol+';overflow:visible;position:relative;cursor:pointer'+(_reserveIn?';box-shadow:0 0 16px rgba(39,244,210,0.25)':'')+'" onclick="openDriverModal(\''+dId+'\')">';
     if (_wcFlip) html += '<div class="wc-back" style="position:absolute;inset:-1px;z-index:99"><div class="wc-face"><b class="wc-c tl">IMS</b><div class="wc-oval"><img src="icons/icon-192.png?v=3" alt="" onerror="this.remove()"><small>WILDCARD</small></div><b class="wc-c br">IMS</b></div></div>';
-    if (wcActiveThisRace && !viewingLastRace && lastSnapRace && dId) {
-      const _prevSel = Object.values((lastSnapRace.teamSnapshots[myTeam.id] || {}).selections || {});
+    if (wcActiveThisRace && !viewingLastRace && dId && ((chips.wildcard && chips.wildcard.before) || lastSnapRace)) {
+      const _prevSel = (chips.wildcard && chips.wildcard.before) || Object.values((lastSnapRace.teamSnapshots[myTeam.id] || {}).selections || {});
       if (!_prevSel.includes(dId)) html += '<div class="wc-joker" title="Signed on the Wildcard" style="position:absolute"><span>★</span><b>J</b><i></i></div>';
     }
     if (isCap && !_cardTC) html += '<div class="cp-fx" style="position:absolute;inset:0"><div class="cp-sheen"></div><i class="cp-glint g1"></i><i class="cp-glint g2"></i><i class="cp-glint g3"></i></div>';
@@ -10075,7 +10075,8 @@ window.useWildcard = async function(teamId, raceId) {
     chips.wildcard = {
       used: true,
       raceId,
-      raceNum: latestRace ? (latestRace.raceNum || 0) : 0
+      raceNum: latestRace ? (latestRace.raceNum || 0) : 0,
+      before: Object.values(team.selections || {}).filter(Boolean)
     };
     await dbSet('teams', teamId, {...team, chips});
     renderMyTeam();
