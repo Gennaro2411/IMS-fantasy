@@ -276,9 +276,8 @@
   .cp-glint.g1{top:12%;right:12%}.cp-glint.g2{top:55%;right:30%;animation-delay:1s}.cp-glint.g3{bottom:14%;right:8%;animation-delay:2s}
   @keyframes cpGlint{0%,100%{opacity:0;transform:scale(.4) rotate(0)}50%{opacity:1;transform:scale(1.2) rotate(45deg)}}
   @media (prefers-reduced-motion:reduce){.cp-sheen,.cp-glint{animation:none}}
-  .wc-flip{animation:wcFlip 1.1s cubic-bezier(.4,.1,.3,1) both;transform-style:preserve-3d}
-  @keyframes wcFlip{0%{transform:perspective(700px) rotateY(0)}50%{transform:perspective(700px) rotateY(180deg)}100%{transform:perspective(700px) rotateY(360deg)}}
-  .wc-back{position:absolute;inset:0;z-index:6;border-radius:12px;pointer-events:none;background:#fbf8f2;padding:5px;opacity:0;animation:wcBack 1.1s linear both;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+  .wc-flip{transform-style:preserve-3d}
+  .wc-back{position:absolute;inset:0;z-index:6;border-radius:12px;pointer-events:none;background:#fbf8f2;padding:5px;opacity:0;box-shadow:0 2px 8px rgba(0,0,0,.4)}
   .wc-face{position:relative;width:100%;height:100%;border-radius:8px;transform:scaleX(-1);display:flex;align-items:center;justify-content:center;overflow:hidden;border:1.5px solid #5e1fa8;
     background:radial-gradient(circle at 50% 50%,transparent 3px,rgba(255,255,255,.18) 3.5px,transparent 4.5px) 0 0/12px 12px,repeating-linear-gradient(45deg,#5e1fa8 0 2px,transparent 2px 8px),repeating-linear-gradient(-45deg,#5e1fa8 0 2px,transparent 2px 8px),linear-gradient(145deg,#8e2de2,#3a0f73)}
   .wc-face::before{content:'';position:absolute;inset:4px;border:1px solid rgba(255,208,138,.75);border-radius:5px}
@@ -287,8 +286,7 @@
   .wc-oval small{font:900 .45rem 'Barlow Condensed',sans-serif;letter-spacing:1.5px;color:#d35400}
   .wc-c{position:absolute;font:900 .5rem 'Barlow Condensed',sans-serif;letter-spacing:1px;color:#ffd08a}
   .wc-c.tl{top:7px;left:8px}.wc-c.br{bottom:7px;right:8px;transform:rotate(180deg)}
-  @keyframes wcBack{0%,24%{opacity:0}25%,75%{opacity:1}76%,100%{opacity:0}}
-  @media (prefers-reduced-motion:reduce){.wc-flip,.wc-back{animation:none}.wc-back{display:none}}
+  
   .admin-badge{background:var(--red);color:white;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:3px;letter-spacing:1px;}
 
   main{max-width:1100px;margin:0 auto;padding:32px 24px;position:relative;}
@@ -8699,6 +8697,37 @@ window.renderTrophyShelf = function(trophies, opts) {
   </div>`;
 };
 
+
+window._wcRun = function () {
+  const cards = [...document.querySelectorAll('#page-my-team .wc-flip')];
+  if (!cards.length || !cards[0].animate) return;
+  if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const rs = cards.map(c => c.getBoundingClientRect());
+  const cx = rs.reduce((a, r) => a + r.left + r.width / 2, 0) / rs.length;
+  const cy = rs.reduce((a, r) => a + r.top + r.height / 2, 0) / rs.length;
+  const n = cards.length, SH = 1800, DEAL = 650, GAP = 220, FLIP = 1400;
+  cards.forEach((c, i) => {
+    const r = rs[i], dx = cx - (r.left + r.width / 2), dy = cy - (r.top + r.height / 2);
+    const back = c.querySelector('.wc-back');
+    const dealAt = SH + i * GAP, flipAt = SH + (n - 1) * GAP + DEAL + 200 + i * 120, total = flipAt + FLIP;
+    const P = (t) => t / total, side = (i % 2 ? 1 : -1);
+    const at = (x, y, rot, ry) => `perspective(900px) translate(${x}px,${y}px) rotate(${rot}deg) rotateY(${ry}deg)`;
+    const kf = [{ offset: 0, transform: at(dx, dy + i * -2, (i - n / 2) * 2, 180) }];
+    for (let k = 1; k <= 4; k++) {
+      const t = (SH / 5) * k, o = ((k + i) % 2 ? 1 : -1) * (40 + (i * 13) % 30);
+      kf.push({ offset: P(t - 120), transform: at(dx + o, dy - 6, o / 6, 180) });
+      kf.push({ offset: P(t), transform: at(dx, dy + i * -2, (i - n / 2) * 2, 180) });
+    }
+    kf.push({ offset: P(dealAt), transform: at(dx, dy, 0, 180) });
+    kf.push({ offset: P(dealAt + DEAL), transform: at(0, 0, 0, 180), easing: 'ease-in-out' });
+    kf.push({ offset: P(flipAt), transform: at(0, 0, 0, 180), easing: 'ease-in-out' });
+    kf.push({ offset: 1, transform: at(0, 0, 0, 360) });
+    c.style.zIndex = 20 + (n - i);
+    const a = c.animate(kf, { duration: total, easing: 'linear' });
+    if (back) back.animate([{ opacity: 1 }, { opacity: 1, offset: P(flipAt + FLIP / 2) }, { opacity: 0, offset: Math.min(1, P(flipAt + FLIP / 2) + 0.0001) }, { opacity: 0 }], { duration: total });
+    a.onfinish = () => { c.style.zIndex = ''; };
+  });
+};
 async function renderMyTeam() {
   window._wcN = 0;
   const el = document.getElementById('my-team-content');
@@ -9542,7 +9571,7 @@ async function renderMyTeam() {
     const _cardTC = tcActivePoints;
     const _wcKey = wcActiveThisRace && latest ? myTeam.id+':'+latest.id : null;
     const _wcFlip = !!(_wcKey && window._wcFlipDone !== _wcKey);
-    if (_wcFlip) setTimeout(() => { window._wcFlipDone = _wcKey; }, 0);
+    if (_wcFlip && !window._wcSched) { window._wcSched = 1; setTimeout(() => { window._wcSched = 0; window._wcFlipDone = _wcKey; window._wcRun(); }, 60); }
 
     if (!driver) {
       html += '<div onclick="showPage(\'home\')" style="cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:24px 12px;border-radius:12px;border:1px dashed var(--border);background:var(--surface2)">';
@@ -9617,14 +9646,14 @@ async function renderMyTeam() {
       return bestPts > 0 && bestId === dId;
     })();
 
-    html += '<div data-logo="'+esc((typeof getTeamLogo==='function' && driver && driver.team && !/^reserve$/i.test(driver.team) ? getTeamLogo(driver.team) : '') || '')+'" class="'+(isCap?(_cardTC?'cap-glow-tc':'cap-glow'):'')+(_wcFlip?' wc-flip':'')+'" style="'+(_wcFlip?'animation-delay:'+((window._wcN=(window._wcN||0)+1)*0.12)+'s;':'')+'border-radius:12px;border:1px solid '+(_reserveIn?'#27f4d2':borderCol)+';background:'+bgCol+';overflow:visible;position:relative;cursor:pointer'+(_reserveIn?';box-shadow:0 0 16px rgba(39,244,210,0.25)':'')+'" onclick="openDriverModal(\''+dId+'\')">';
-    if (_wcFlip) html += '<div class="wc-back" style="animation-delay:'+(window._wcN*0.12)+'s"><div class="wc-face"><b class="wc-c tl">IMS</b><div class="wc-oval"><img src="icons/icon-192.png?v=3" alt="" onerror="this.remove()"><small>WILDCARD</small></div><b class="wc-c br">IMS</b></div></div>';
-    if (isCap && !_cardTC) html += '<div class="cp-fx"><div class="cp-sheen"></div><i class="cp-glint g1"></i><i class="cp-glint g2"></i><i class="cp-glint g3"></i></div>';
+    html += '<div data-logo="'+esc((typeof getTeamLogo==='function' && driver && driver.team && !/^reserve$/i.test(driver.team) ? getTeamLogo(driver.team) : '') || '')+'" class="'+(isCap?(_cardTC?'cap-glow-tc':'cap-glow'):'')+(_wcFlip?' wc-flip':'')+'" style="'+'border-radius:12px;border:1px solid '+(_reserveIn?'#27f4d2':borderCol)+';background:'+bgCol+';overflow:visible;position:relative;cursor:pointer'+(_reserveIn?';box-shadow:0 0 16px rgba(39,244,210,0.25)':'')+'" onclick="openDriverModal(\''+dId+'\')">';
+    if (_wcFlip) html += '<div class="wc-back"><div class="wc-face"><b class="wc-c tl">IMS</b><div class="wc-oval"><img src="icons/icon-192.png?v=3" alt="" onerror="this.remove()"><small>WILDCARD</small></div><b class="wc-c br">IMS</b></div></div>';
+    if (isCap && !_cardTC) html += '<div class="cp-fx" style="position:absolute;inset:0"><div class="cp-sheen"></div><i class="cp-glint g1"></i><i class="cp-glint g2"></i><i class="cp-glint g3"></i></div>';
     if (isCap && _cardTC) {
       const _seen={}; const _urls=((typeof races!=='undefined'&&races)||[]).map(r=>{try{return getTrackOutlineUrl(r.name)}catch(e){return null}}).filter(u=>u&&!_seen[u]&&(_seen[u]=1));
       const _pos=[[8,10],[44,6],[80,30],[20,48]];
       const _stars=_urls.slice(0,4).map((u,i)=>'<img class="tc-trk" src="'+esc(u)+'" alt="" style="left:'+_pos[i][0]+'%;top:'+_pos[i][1]+'%;animation-delay:'+(-i*.7)+'s" onerror="this.remove()">').join('');
-      html += '<div class="tc-fx"><div class="tc-sky"></div><div class="tc-dots"></div>'+_stars+'<div class="tc-launch"><div class="tc-glow"></div><div class="tc-plume"></div><svg class="tc-ship" viewBox="0 0 22 80" width="13" height="48"><defs><linearGradient id="tcb" x1="0" x2="1"><stop offset="0" stop-color="#8d96a1"/><stop offset=".45" stop-color="#fff"/><stop offset="1" stop-color="#7f8892"/></linearGradient><linearGradient id="tcn" x1="0" x2="1"><stop offset="0" stop-color="#5e1fa8"/><stop offset=".45" stop-color="#c471ed"/><stop offset="1" stop-color="#4d1a8c"/></linearGradient></defs><path d="M11 0C15 7 16 14 16 22H6C6 14 7 7 11 0Z" fill="url(#tcn)"/><rect x="6" y="22" width="10" height="44" fill="url(#tcb)"/><rect x="6" y="22" width="10" height="2" fill="#2b2f36"/><text x="11" y="40" font-family="Barlow Condensed,Arial" font-weight="800" font-size="6" fill="#5e1fa8" text-anchor="middle">I</text><text x="11" y="47" font-family="Barlow Condensed,Arial" font-weight="800" font-size="6" fill="#5e1fa8" text-anchor="middle">M</text><text x="11" y="54" font-family="Barlow Condensed,Arial" font-weight="800" font-size="6" fill="#5e1fa8" text-anchor="middle">S</text><rect x="6" y="58" width="10" height="2" fill="#c471ed"/><path d="M6 54L1 70H6ZM16 54L21 70H16Z" fill="url(#tcn)"/><path d="M7 66H15L14 71H8Z" fill="#3a3f47"/></svg><img class="tc-logo" src="icons/icon-192.png?v=3" alt="" onerror="this.remove()"><div class="tc-flame"></div></div><div class="tc-smoke">'+'<i></i>'.repeat(7)+'</div></div>';
+      html += '<div class="tc-fx" style="position:absolute;inset:0"><div class="tc-sky"></div><div class="tc-dots"></div>'+_stars+'<div class="tc-launch"><div class="tc-glow"></div><div class="tc-plume"></div><svg class="tc-ship" viewBox="0 0 22 80" width="13" height="48"><defs><linearGradient id="tcb" x1="0" x2="1"><stop offset="0" stop-color="#8d96a1"/><stop offset=".45" stop-color="#fff"/><stop offset="1" stop-color="#7f8892"/></linearGradient><linearGradient id="tcn" x1="0" x2="1"><stop offset="0" stop-color="#5e1fa8"/><stop offset=".45" stop-color="#c471ed"/><stop offset="1" stop-color="#4d1a8c"/></linearGradient></defs><path d="M11 0C15 7 16 14 16 22H6C6 14 7 7 11 0Z" fill="url(#tcn)"/><rect x="6" y="22" width="10" height="44" fill="url(#tcb)"/><rect x="6" y="22" width="10" height="2" fill="#2b2f36"/><text x="11" y="40" font-family="Barlow Condensed,Arial" font-weight="800" font-size="6" fill="#5e1fa8" text-anchor="middle">I</text><text x="11" y="47" font-family="Barlow Condensed,Arial" font-weight="800" font-size="6" fill="#5e1fa8" text-anchor="middle">M</text><text x="11" y="54" font-family="Barlow Condensed,Arial" font-weight="800" font-size="6" fill="#5e1fa8" text-anchor="middle">S</text><rect x="6" y="58" width="10" height="2" fill="#c471ed"/><path d="M6 54L1 70H6ZM16 54L21 70H16Z" fill="url(#tcn)"/><path d="M7 66H15L14 71H8Z" fill="#3a3f47"/></svg><img class="tc-logo" src="icons/icon-192.png?v=3" alt="" onerror="this.remove()"><div class="tc-flame"></div></div><div class="tc-smoke">'+'<i></i>'.repeat(7)+'</div></div>';
     }
     // Team-colour identity stripe across the top of the card
     html += '<div style="height:3px;border-radius:12px 12px 0 0;background:linear-gradient(90deg,'+stripeCol+',transparent 85%)"></div>';
