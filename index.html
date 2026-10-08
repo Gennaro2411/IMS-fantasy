@@ -267,6 +267,15 @@
   @keyframes tcPuff{0%,10%{transform:scale(.2);opacity:0}20%{opacity:1}100%{transform:scale(2.4) translateY(-6px);opacity:0}}
   .set-cap-btn.is-cap.is-tc{background:linear-gradient(135deg,#8e2de2,#c471ed)!important;color:#fff!important;border-color:#e0b3ff!important;box-shadow:0 0 12px rgba(196,113,237,.6);font-weight:800}
   @media (prefers-reduced-motion:reduce){.tc-launch,.tc-smoke i,.tc-flame,.tc-trk{animation:none}}
+  .cap-glow{box-shadow:0 0 0 1px rgba(255,200,0,.55),0 0 14px rgba(255,190,0,.22)}
+  .cap-glow>*:not(.cp-fx):not([style*="position:absolute"]){position:relative;z-index:1}
+  .cp-fx{position:absolute;inset:0;border-radius:12px;overflow:hidden;pointer-events:none;z-index:0;background:radial-gradient(ellipse at 15% 0%,rgba(255,215,90,.16),transparent 55%),linear-gradient(160deg,rgba(255,200,0,.06),transparent 60%)}
+  .cp-sheen{position:absolute;top:-20%;bottom:-20%;width:35%;left:-60%;background:linear-gradient(100deg,transparent,rgba(255,230,150,.22),rgba(255,255,255,.12),transparent);transform:skewX(-12deg);animation:cpSheen 5s ease-in-out infinite}
+  @keyframes cpSheen{0%,55%{left:-60%}100%{left:130%}}
+  .cp-glint{position:absolute;width:7px;height:7px;background:radial-gradient(#fff6d0,transparent 70%);clip-path:polygon(50% 0,60% 40%,100% 50%,60% 60%,50% 100%,40% 60%,0 50%,40% 40%);animation:cpGlint 3s ease-in-out infinite;opacity:0}
+  .cp-glint.g1{top:12%;right:12%}.cp-glint.g2{top:55%;right:30%;animation-delay:1s}.cp-glint.g3{bottom:14%;right:8%;animation-delay:2s}
+  @keyframes cpGlint{0%,100%{opacity:0;transform:scale(.4) rotate(0)}50%{opacity:1;transform:scale(1.2) rotate(45deg)}}
+  @media (prefers-reduced-motion:reduce){.cp-sheen,.cp-glint{animation:none}}
   .admin-badge{background:var(--red);color:white;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:3px;letter-spacing:1px;}
 
   main{max-width:1100px;margin:0 auto;padding:32px 24px;position:relative;}
@@ -9593,6 +9602,7 @@ async function renderMyTeam() {
     })();
 
     html += '<div data-logo="'+esc((typeof getTeamLogo==='function' && driver && driver.team && !/^reserve$/i.test(driver.team) ? getTeamLogo(driver.team) : '') || '')+'" class="'+(isCap?(_cardTC?'cap-glow-tc':'cap-glow'):'')+'" style="border-radius:12px;border:1px solid '+(_reserveIn?'#27f4d2':borderCol)+';background:'+bgCol+';overflow:visible;position:relative;cursor:pointer'+(_reserveIn?';box-shadow:0 0 16px rgba(39,244,210,0.25)':'')+'" onclick="openDriverModal(\''+dId+'\')">';
+    if (isCap && !_cardTC) html += '<div class="cp-fx"><div class="cp-sheen"></div><i class="cp-glint g1"></i><i class="cp-glint g2"></i><i class="cp-glint g3"></i></div>';
     if (isCap && _cardTC) {
       const _seen={}; const _urls=((typeof races!=='undefined'&&races)||[]).map(r=>{try{return getTrackOutlineUrl(r.name)}catch(e){return null}}).filter(u=>u&&!_seen[u]&&(_seen[u]=1));
       const _pos=[[8,10],[44,6],[80,30],[20,48]];
