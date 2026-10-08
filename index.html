@@ -1361,7 +1361,6 @@
       <label class="set-toggle"><input type="checkbox" id="set-mute-music" onchange="setMusicMuted(this.checked)"><span><strong>Mute music</strong><em>Turns the IMS Radio music player off completely. When it's on, music starts every time you open the app</em></span></label>
       <button class="set-row" onclick="showTrackList()"><span><strong>🎵 Track list</strong><em>See every song in IMS Radio and pick what plays</em></span><i>›</i></button>
       <label class="set-toggle"><input type="checkbox" id="set-reduce-motion" onchange="setReduceMotion(this.checked)"><span><strong>Reduce motion</strong><em>Turns off card foils, ticker scrolls & broadcast zoom animations</em></span></label>
-      <label class="set-toggle"><input type="checkbox" id="set-hide-captain-suggestion" onchange="setHideCaptainSuggestion(this.checked)"><span><strong>Hide captain suggestion</strong><em>Removes the suggested-captain tip on My Team</em></span></label>
       <label class="set-toggle"><input type="checkbox" id="set-hide-checkin" onchange="setHideCheckin(this.checked)"><span><strong>Hide check-in ticks</strong><em>Removes the green ring & tick that show which drivers are checked in for their race</em></span></label>
     </div>
 
@@ -6295,7 +6294,7 @@ window.openSettingsModal = async function() {
     try { const mm = document.getElementById('set-mute-music'); if (mm) mm.checked = localStorage.getItem('musicMuted') === '1'; } catch(e) {}
     document.getElementById('set-reduce-motion').checked = localStorage.getItem('imsReduceMotion') === '1';
     { const cb = document.getElementById('set-hide-checkin'); if (cb) cb.checked = localStorage.getItem('imsHideCheckin') === '1'; }
-    document.getElementById('set-hide-captain-suggestion').checked = localStorage.getItem('imsHideCaptainSuggestion') === '1';
+    const _hcs=document.getElementById('set-hide-captain-suggestion'); if(_hcs) _hcs.checked = localStorage.getItem('imsHideCaptainSuggestion') === '1';
   } catch(e){}
   const fzSel = document.getElementById('set-fanzone');
   fzSel.innerHTML = '<option value="">— No fan zone yet —</option>' + constrsSet.slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
@@ -9433,7 +9432,7 @@ async function renderMyTeam() {
     });
 
     const hideSuggestion = (() => { try { return localStorage.getItem('imsHideCaptainSuggestion') === '1'; } catch(e) { return false; } })();
-    if (bestSuggestion && !hideSuggestion) {
+    if (false && bestSuggestion && !hideSuggestion) {
       const isAlreadyCap = bestSuggestion.dId === latestCaptainId;
       const teamLogo2 = getTeamLogo(bestSuggestion.driver.team);
       const reasonParts = [];
