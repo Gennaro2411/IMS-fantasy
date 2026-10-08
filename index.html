@@ -8698,6 +8698,40 @@ window.setMyTeamHistSeason = function(n) { window._myTeamHistSeason = n; renderM
 // Shared trophy-cabinet shelf: renders visible trophies on a wooden shelf, each labelled with the
 // season it was won in. `trophies` = [{emoji, label, season, flagName?, glow, tip}]. Used on both the
 // player profile and My Team so they look identical.
+// Hand-drawn SVG trophies (replace the old emoji). Metal/shape picked from the trophy kind.
+window._trophySvg = function(t) {
+  const k = t.emoji;
+  const M = {
+    gold:   ['#fff4c2','#ffd24a','#c8901a','#7a5200'],
+    silver: ['#ffffff','#d9e1ea','#9aa6b4','#4d5866'],
+    bronze: ['#ffd9b0','#d98f4e','#9a5a24','#5a3210'],
+    teal:   ['#d6fff7','#4fe6cf','#159c88','#0a5248'],
+    ice:    ['#eef8ff','#9fd4ff','#4a8fd6','#1e4a80']
+  };
+  const kind = k==='👑'?'champ':k==='🥈'?'silver':k==='🥉'?'bronze':k==='💎'?'value':k==='⭐'?'fan':'round';
+  const m = M[{champ:'gold',silver:'silver',bronze:'bronze',value:'ice',fan:'teal',round:'gold'}[kind]];
+  const id = 'tg' + Math.random().toString(36).slice(2,8);
+  const defs = `<defs><linearGradient id="${id}" x1="0" x2="1"><stop offset="0" stop-color="${m[2]}"/><stop offset=".35" stop-color="${m[0]}"/><stop offset=".6" stop-color="${m[1]}"/><stop offset="1" stop-color="${m[3]}"/></linearGradient><linearGradient id="${id}b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a2a1c"/><stop offset="1" stop-color="#1c140c"/></linearGradient></defs>`;
+  const G = `url(#${id})`, st = m[3];
+  let body;
+  if (kind === 'value') {
+    body = `<path d="M10 6h20l6 9-16 19L4 15z" fill="${G}" stroke="${st}" stroke-width="1.2" stroke-linejoin="round"/><path d="M4 15h32M14 6l-4 9 10 19 10-19-4-9M20 6v0" fill="none" stroke="${m[0]}" stroke-opacity=".7" stroke-width=".8"/><rect x="17" y="34" width="6" height="4" fill="${G}"/>`;
+  } else {
+    const big = kind === 'champ';
+    body = `<path d="M9 4h22v8c0 8-5 13-11 13S9 20 9 12z" fill="${G}" stroke="${st}" stroke-width="1.2"/>`
+      + `<path d="M9 7H4c0 6 3 9 6 9M31 7h5c0 6-3 9-6 9" fill="none" stroke="${G}" stroke-width="2.6" stroke-linecap="round"/>`
+      + `<path d="M12 6c0 6 2 10 5 12" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="1.4" stroke-linecap="round"/>`
+      + `<rect x="17.5" y="25" width="5" height="5" fill="${G}"/><path d="M13 30h14l2 4H11z" fill="${G}" stroke="${st}" stroke-width=".8"/>`
+      + (big ? `<path d="M20 8l1.6 3.3 3.6.5-2.6 2.5.6 3.6-3.2-1.7-3.2 1.7.6-3.6-2.6-2.5 3.6-.5z" fill="#fff" fill-opacity=".9"/>` : '')
+      + (kind==='silver' ? `<text x="20" y="17" text-anchor="middle" font-size="9" font-weight="900" fill="${m[3]}" font-family="Arial">2</text>` : '')
+      + (kind==='bronze' ? `<text x="20" y="17" text-anchor="middle" font-size="9" font-weight="900" fill="${m[3]}" font-family="Arial">3</text>` : '');
+  }
+  const svg = `<svg viewBox="0 0 40 46" width="38" height="44" style="display:block;overflow:visible;filter:drop-shadow(0 3px 5px ${(t.glow||m[1])}66)">${defs}${body}<rect x="8" y="37" width="24" height="8" rx="1.5" fill="url(#${id}b)" stroke="${m[2]}" stroke-width=".8"/></svg>`;
+  const flag = (t.flagName && typeof trackFlagImg === 'function') ? trackFlagImg(t.flagName, 12) : '';
+  const plaque = flag ? `<span style="position:absolute;left:50%;bottom:2px;transform:translateX(-50%);line-height:0;border-radius:1px;overflow:hidden;box-shadow:0 0 0 1px ${m[2]}">${flag}</span>` : '';
+  const logo = t.logo ? `<img src="${esc(t.logo)}" alt="" onerror="this.remove()" style="position:absolute;left:50%;top:${kind==='value'?'14':'11'}px;transform:translateX(-50%);width:15px;height:15px;object-fit:contain;filter:drop-shadow(0 0 2px rgba(0,0,0,.6))">` : '';
+  return `<div style="position:relative;width:38px;height:44px;margin:0 auto">${svg}${logo}${plaque}</div>`;
+};
 window.renderTrophyShelf = function(trophies, opts) {
   opts = opts || {};
   const title = opts.title || '🏆 TROPHY CABINET';
@@ -8706,16 +8740,10 @@ window.renderTrophyShelf = function(trophies, opts) {
     const flag = (t.flagName && typeof trackFlagImg === 'function') ? trackFlagImg(t.flagName, 16) : '';
     const glow = t.glow || '#ffd24a';
     // Fan-zone trophies show the winning team's logo on the trophy instead of a plain emoji.
-    const icon = t.logo
-      ? `<div style="position:relative;width:34px;height:34px;margin:0 auto;display:grid;place-items:center">
-           <div style="font-size:2.1rem;line-height:1;filter:drop-shadow(0 2px 4px ${glow}88)">🏆</div>
-           <img src="${esc(t.logo)}" style="position:absolute;width:17px;height:17px;object-fit:contain;top:44%;left:50%;transform:translate(-50%,-50%);filter:drop-shadow(0 0 2px rgba(0,0,0,0.6))" onerror="this.style.display='none'">
-         </div>`
-      : `<div style="font-size:2.1rem;line-height:1;filter:drop-shadow(0 2px 4px ${glow}88)">${t.emoji}</div>`;
+    const icon = window._trophySvg(t);
     return `<div title="${esc(t.tip||'')}" style="flex:1 1 0;min-width:0;max-width:78px;text-align:center;cursor:default">
       <div style="position:relative;display:inline-block">
         ${icon}
-        ${flag ? `<span style="position:absolute;bottom:-2px;right:0;border-radius:2px;overflow:hidden;box-shadow:0 0 0 1px rgba(0,0,0,0.4);line-height:0">${flag}</span>` : ''}
       </div>
       <div style="font-size:.5rem;font-weight:700;color:var(--text);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t.label||'')}</div>
       ${t.season ? `<div style="font-size:.48rem;font-weight:700;color:var(--muted);letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t.season)}</div>` : ''}
