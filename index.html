@@ -302,6 +302,18 @@
   .f1-pts,#page-leaderboard .lbp-pts{display:inline-block;text-shadow:0 0 10px rgba(255,200,0,.35)}
   #page-leaderboard .lbp-pts{display:block;letter-spacing:1px}
   #page-leaderboard .lbr-pts small,.lb-pts-label{font-family:'Barlow Condensed',sans-serif}
+  .rb-wrap{position:relative;margin:14px auto 2px;max-width:460px;padding:0 6px}
+  .rb-seats{display:flex;justify-content:space-around;align-items:flex-end;position:relative;z-index:2;padding:0 10px;margin-bottom:-6px}
+  .rb-seat{display:flex;flex-direction:column;align-items:center;gap:3px;width:20%}
+  .rb-taken{cursor:pointer;animation:rbSit .45s cubic-bezier(.3,1.4,.6,1) both}
+  .rb-taken>div:first-child{width:40px!important;height:40px!important;box-shadow:0 4px 10px rgba(0,0,0,.5)}
+  .rb-empty{width:40px;height:40px;border-radius:50%;border:2px dashed rgba(255,255,255,.14);background:rgba(255,255,255,.02)}
+  .rb-nm{font-size:.56rem;font-weight:700;color:#c9c9e0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rb-plank{height:12px;border-radius:6px;background:linear-gradient(180deg,#6b4a2e,#4a3220 60%,#33231a);box-shadow:0 3px 0 #22170f,0 8px 16px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.15)}
+  .rb-legs{display:flex;justify-content:space-between;padding:0 12%}
+  .rb-legs i{width:7px;height:16px;background:linear-gradient(90deg,#3a2a1c,#2a1d12);border-radius:0 0 2px 2px}
+  .rb-cap{text-align:center;font-size:.66rem;color:var(--muted);margin-top:6px;font-weight:600;letter-spacing:.5px}
+  @keyframes rbSit{from{transform:translateY(-14px);opacity:0}to{transform:none;opacity:1}}
   .admin-badge{background:var(--red);color:white;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:3px;letter-spacing:1px;}
 
   main{max-width:1100px;margin:0 auto;padding:32px 24px;position:relative;}
@@ -9916,6 +9928,20 @@ async function renderMyTeam() {
         </div>
       </div>`;
     }).join('') : '<div style="font-size:.8rem;color:var(--muted);padding:10px;text-align:center;background:var(--surface2);border-radius:10px">No reserves have filled in for your team yet.<br><span style="font-size:.72rem">If one of your drivers misses their race, whoever drove their seat scores for you — costing one token.</span></div>';
+    // The bench: one seat per token. Each reserve who has stepped in (and used a token) sits on it.
+    const _usedN = Math.max(0, total - left);
+    const _sitters = allSwaps.filter(x => x.counted).slice(0, _usedN);
+    const benchHtml = `<div class="rb-wrap" title="${_usedN} of ${total} reserve tokens used">
+      <div class="rb-seats">${Array.from({length: total}, (_, i) => {
+        const sw = _sitters[i];
+        if (!sw) return '<div class="rb-seat"><div class="rb-empty"></div><div class="rb-nm">&nbsp;</div></div>';
+        const hue = DIV_HUES_RES[sw.div] || '#27f4d2';
+        const rid = sw.reserve && sw.reserve.id ? sw.reserve.id : '';
+        return `<div class="rb-seat rb-taken"${rid?` onclick="event.stopPropagation();openDriverModal('${rid}')"`:''} title="${esc(sw.reserveName)} · ${esc(sw.race)} (${esc(sw.div)})">${face(sw.reserve, hue)}<div class="rb-nm">${esc(String(sw.reserveName).slice(0,10))}</div></div>`;
+      }).join('')}</div>
+      <div class="rb-plank"></div><div class="rb-legs"><i></i><i></i></div>
+      <div class="rb-cap">${_usedN ? _usedN + ' used · ' + left + ' left' : 'Bench empty · all ' + total + ' tokens available'}</div>
+    </div>`;
     html += `<div class="card">
       <div onclick="toggleReserveDrop(this)" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none">
         <div style="display:flex;align-items:center;gap:8px">
@@ -9924,6 +9950,7 @@ async function renderMyTeam() {
         </div>
         <div style="display:flex;align-items:center;gap:6px" title="${left} of ${total} reserve tokens left this season">${pips}<span style="font-size:.74rem;color:var(--muted);margin-left:2px;font-weight:700">${left}/${total}</span></div>
       </div>
+      ${benchHtml}
       <div class="res-drop-body" style="display:none;margin-top:12px">
         <div style="font-size:.72rem;color:var(--muted);margin-bottom:10px">If a driver on your team doesn't race, the reserve who took their seat scores in their place — for that race only. You get ${total} reserve subs a season.</div>
         ${subsHtml}
