@@ -20809,7 +20809,7 @@ window.confirmTransfer = async function(oldDriverId, newDriverId, div, teamId, c
   const totalCost = cost;
   const currentBudget = team.budget !== undefined ? team.budget : STARTING_BUDGET;
 
-  if (totalCost > currentBudget) {
+  if (Math.round(totalCost * 10) > Math.round(currentBudget * 10)) { // whole $0.1M steps — float leftovers blocked equal amounts
     customAlert(`❌ Cannot complete transfer. This costs ${formatM(totalCost)} but you only have ${formatM(currentBudget)}.`);
     return;
   }
