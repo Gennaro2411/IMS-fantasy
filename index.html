@@ -8881,12 +8881,10 @@ window._wcSwapRun = function(sw) {
       const T = 1700;
       card.style.zIndex = 30;
       card.animate([
-        { transform: 'perspective(900px) translate(75vw,-60px) rotate(25deg) rotateY(0deg)' },
-        { transform: 'perspective(900px) translate(0px,0px) rotate(0deg) rotateY(0deg)', offset: .4, easing: 'ease-in-out' },
-        { transform: 'perspective(900px) translate(0px,0px) rotate(0deg) rotateY(0deg)', offset: .55, easing: 'ease-in' },
-        { transform: 'perspective(900px) translate(0px,0px) rotate(0deg) rotateY(90deg)', offset: .775 },
-        { transform: 'perspective(900px) translate(0px,0px) rotate(0deg) rotateY(-90deg)', offset: .7751, easing: 'ease-out' },
-        { transform: 'perspective(900px) translate(0px,0px) rotate(0deg) rotateY(0deg)' }
+        { transform: 'perspective(900px) translate(75vw,-60px) rotate(25deg) rotateY(180deg)' },
+        { transform: 'perspective(900px) translate(0px,0px) rotate(0deg) rotateY(180deg)', offset: .4, easing: 'ease-in-out' },
+        { transform: 'perspective(900px) translate(0px,0px) rotate(0deg) rotateY(180deg)', offset: .55 },
+        { transform: 'perspective(900px) translate(0px,0px) rotate(0deg) rotateY(360deg)' }
       ], { duration: T, easing: 'cubic-bezier(.2,.8,.3,1)' }).onfinish = () => { b.remove(); card.style.zIndex = ''; };
       b.animate([{ opacity: 1 }, { opacity: 1, offset: .775 }, { opacity: 0, offset: .776 }, { opacity: 0 }], { duration: T });
       setTimeout(() => {
