@@ -7548,8 +7548,9 @@ async function renderHomeStatCards(myTeam, allTeams) {
   // My rank — via the SAME shared ranking function the leaderboard uses, so they can never
   // disagree. (window._allDrivers is set above so Guardian Angel resolves correctly here too.)
   window.computeTeamRanksByPoints(allTeams, races);
-  const myRank = (window._teamRankByUser && window._teamRankByUser[currentUser.userId]) || 0;
-  const totalTeams = allTeams.length;
+  const _meTest = !!(allTeams.find(t => t && t.userId === currentUser.userId && t.testAccount));
+  const myRank = _meTest ? 0 : ((window._teamRankByUser && window._teamRankByUser[currentUser.userId]) || 0);
+  const totalTeams = allTeams.filter(t => t && !t.testAccount).length;
 
   // ===== "WHAT CHANGED SINCE YOU LAST LOOKED" =====
   // A dismissible summary shown when the latest scored round is newer than the one the player last
@@ -7662,7 +7663,7 @@ async function renderHomeStatCards(myTeam, allTeams) {
   el.classList.add('home-stat-grid');
 
   el.innerHTML = [
-    { label: 'SEASON '+currentSeason+' RANK', value: myRank ? myRank+rankSuffix : '—', sub: 'of '+totalTeams+' teams', icon: _ico('trophy'), color: '#f39c12' },
+    { label: 'SEASON '+currentSeason+' RANK', value: myRank ? myRank+rankSuffix : '—', sub: _meTest ? 'test account · unranked' : 'of '+totalTeams+' teams', icon: _ico('trophy'), color: '#f39c12' },
     { label: 'LAST RACE PTS', value: latest ? myRacePts : '—', sub: latest ? esc(latest.name) : 'No race yet', icon: _ico('zap'), color: '#9b59b6' },
     { label: 'SEASON TOTAL', value: mySeasonPts, sub: completedRaces.length+' races scored', icon: _ico('chart'), color: '#2ecc71' },
     { label: 'TEAM VALUE', value: '$'+teamValue.toFixed(1)+'M', sub: 'Budget: $'+(myTeam.budget !== undefined ? myTeam.budget.toFixed(1) : '—')+'M left', icon: _ico('wallet'), color: '#3498db' },
@@ -11669,7 +11670,7 @@ window.fantasyTeamRacePts = function(t, race, allRaces) {
 // page use this so their ranks can never disagree. Returns teams sorted high→low with a `total`,
 // and also stashes each userId's 1-based rank on window._teamRankByUser for quick lookup.
 window.computeTeamRanksByPoints = function(teams, races) {
-  const ranked = (teams||[]).map(t => ({
+  const ranked = (teams||[]).filter(t => t && !t.testAccount).map(t => ({
     ...t,
     total: (races||[]).reduce((s, r) => s + window.fantasyTeamRacePts(t, r, races), 0)
   })).sort((a,b) => b.total - a.total);
