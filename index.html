@@ -277,10 +277,16 @@
   @keyframes cpGlint{0%,100%{opacity:0;transform:scale(.4) rotate(0)}50%{opacity:1;transform:scale(1.2) rotate(45deg)}}
   @media (prefers-reduced-motion:reduce){.cp-sheen,.cp-glint{animation:none}}
   .wc-flip{animation:wcFlip 1.1s cubic-bezier(.4,.1,.3,1) both;transform-style:preserve-3d}
-  @keyframes wcFlip{0%{transform:perspective(700px) rotateY(0)}50%{transform:perspective(700px) rotateY(180deg) scale(1.04)}100%{transform:perspective(700px) rotateY(360deg)}}
-  .wc-back{position:absolute;inset:0;z-index:6;border-radius:12px;pointer-events:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:repeating-linear-gradient(45deg,rgba(255,255,255,.07) 0 6px,transparent 6px 12px),linear-gradient(145deg,#f39c12,#d35400);border:2px solid #ffd08a;box-shadow:inset 0 0 0 4px rgba(0,0,0,.15);opacity:0;animation:wcBack 1.1s linear both}
-  .wc-back span{font:900 2rem 'Barlow Condensed',sans-serif;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.35);transform:scaleX(-1)}
-  .wc-back em{font:800 .55rem 'Barlow Condensed',sans-serif;letter-spacing:2px;color:#fff3e0;font-style:normal;transform:scaleX(-1)}
+  @keyframes wcFlip{0%{transform:perspective(700px) rotateY(0)}50%{transform:perspective(700px) rotateY(180deg)}100%{transform:perspective(700px) rotateY(360deg)}}
+  .wc-back{position:absolute;inset:0;z-index:6;border-radius:12px;pointer-events:none;background:#fbf8f2;padding:5px;opacity:0;animation:wcBack 1.1s linear both;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+  .wc-face{position:relative;width:100%;height:100%;border-radius:8px;transform:scaleX(-1);display:flex;align-items:center;justify-content:center;overflow:hidden;border:1.5px solid #5e1fa8;
+    background:radial-gradient(circle at 50% 50%,transparent 3px,rgba(255,255,255,.18) 3.5px,transparent 4.5px) 0 0/12px 12px,repeating-linear-gradient(45deg,#5e1fa8 0 2px,transparent 2px 8px),repeating-linear-gradient(-45deg,#5e1fa8 0 2px,transparent 2px 8px),linear-gradient(145deg,#8e2de2,#3a0f73)}
+  .wc-face::before{content:'';position:absolute;inset:4px;border:1px solid rgba(255,208,138,.75);border-radius:5px}
+  .wc-oval{position:relative;width:46%;max-width:70px;aspect-ratio:3/4;border-radius:50%;background:radial-gradient(#fff,#f3e6ff);border:2px solid #ffd08a;box-shadow:0 0 0 3px #5e1fa8,0 0 12px rgba(255,208,138,.6);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+  .wc-oval img{width:62%;border-radius:50%}
+  .wc-oval small{font:900 .45rem 'Barlow Condensed',sans-serif;letter-spacing:1.5px;color:#d35400}
+  .wc-c{position:absolute;font:900 .5rem 'Barlow Condensed',sans-serif;letter-spacing:1px;color:#ffd08a}
+  .wc-c.tl{top:7px;left:8px}.wc-c.br{bottom:7px;right:8px;transform:rotate(180deg)}
   @keyframes wcBack{0%,24%{opacity:0}25%,75%{opacity:1}76%,100%{opacity:0}}
   @media (prefers-reduced-motion:reduce){.wc-flip,.wc-back{animation:none}.wc-back{display:none}}
   .admin-badge{background:var(--red);color:white;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:3px;letter-spacing:1px;}
@@ -9612,7 +9618,7 @@ async function renderMyTeam() {
     })();
 
     html += '<div data-logo="'+esc((typeof getTeamLogo==='function' && driver && driver.team && !/^reserve$/i.test(driver.team) ? getTeamLogo(driver.team) : '') || '')+'" class="'+(isCap?(_cardTC?'cap-glow-tc':'cap-glow'):'')+(_wcFlip?' wc-flip':'')+'" style="'+(_wcFlip?'animation-delay:'+((window._wcN=(window._wcN||0)+1)*0.12)+'s;':'')+'border-radius:12px;border:1px solid '+(_reserveIn?'#27f4d2':borderCol)+';background:'+bgCol+';overflow:visible;position:relative;cursor:pointer'+(_reserveIn?';box-shadow:0 0 16px rgba(39,244,210,0.25)':'')+'" onclick="openDriverModal(\''+dId+'\')">';
-    if (_wcFlip) html += '<div class="wc-back" style="animation-delay:'+(window._wcN*0.12)+'s"><span>W</span><em>WILDCARD</em></div>';
+    if (_wcFlip) html += '<div class="wc-back" style="animation-delay:'+(window._wcN*0.12)+'s"><div class="wc-face"><b class="wc-c tl">IMS</b><div class="wc-oval"><img src="icons/icon-192.png?v=3" alt="" onerror="this.remove()"><small>WILDCARD</small></div><b class="wc-c br">IMS</b></div></div>';
     if (isCap && !_cardTC) html += '<div class="cp-fx"><div class="cp-sheen"></div><i class="cp-glint g1"></i><i class="cp-glint g2"></i><i class="cp-glint g3"></i></div>';
     if (isCap && _cardTC) {
       const _seen={}; const _urls=((typeof races!=='undefined'&&races)||[]).map(r=>{try{return getTrackOutlineUrl(r.name)}catch(e){return null}}).filter(u=>u&&!_seen[u]&&(_seen[u]=1));
