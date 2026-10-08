@@ -8705,7 +8705,7 @@ window._wcRun = function () {
   const rs = cards.map(c => c.getBoundingClientRect());
   const cx = rs.reduce((a, r) => a + r.left + r.width / 2, 0) / rs.length;
   const cy = rs.reduce((a, r) => a + r.top + r.height / 2, 0) / rs.length;
-  const n = cards.length, SH = 1800, DEAL = 650, GAP = 220, FLIP = 1400;
+  const n = cards.length, SH = 3600, DEAL = 650, GAP = 220, FLIP = 1400;
   cards.forEach((c, i) => {
     const r = rs[i], dx = cx - (r.left + r.width / 2), dy = cy - (r.top + r.height / 2);
     const back = c.querySelector('.wc-back');
@@ -8713,8 +8713,8 @@ window._wcRun = function () {
     const P = (t) => t / total, side = (i % 2 ? 1 : -1);
     const at = (x, y, rot, ry) => `perspective(900px) translate(${x}px,${y}px) rotate(${rot}deg) rotateY(${ry}deg)`;
     const kf = [{ offset: 0, transform: at(dx, dy + i * -2, (i - n / 2) * 2, 180) }];
-    for (let k = 1; k <= 4; k++) {
-      const t = (SH / 5) * k, o = ((k + i) % 2 ? 1 : -1) * (40 + (i * 13) % 30);
+    for (let k = 1; k <= 8; k++) {
+      const t = (SH / 9) * k, o = ((k + i) % 2 ? 1 : -1) * (40 + (i * 13) % 30);
       kf.push({ offset: P(t - 120), transform: at(dx + o, dy - 6, o / 6, 180) });
       kf.push({ offset: P(t), transform: at(dx, dy + i * -2, (i - n / 2) * 2, 180) });
     }
@@ -8725,7 +8725,8 @@ window._wcRun = function () {
     c.style.zIndex = 20 + (n - i);
     const a = c.animate(kf, { duration: total, easing: 'linear' });
     if (back) back.animate([{ opacity: 1 }, { opacity: 1, offset: P(flipAt + FLIP / 2) }, { opacity: 0, offset: Math.min(1, P(flipAt + FLIP / 2) + 0.0001) }, { opacity: 0 }], { duration: total });
-    a.onfinish = () => { c.style.zIndex = ''; };
+    const ba = back ? back.getAnimations() : [];
+    a.onfinish = () => { a.cancel(); ba.forEach(x => x.cancel()); if (back) back.remove(); c.classList.remove('wc-flip'); c.style.zIndex = ''; c.style.transform = ''; };
   });
 };
 async function renderMyTeam() {
