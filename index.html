@@ -3013,6 +3013,21 @@ const DIVISIONS = ['D0','D1','D2','D3','D4','E3'];
 // (lower-cased). This is the SOURCE OF TRUTH for the S7 race-history board and round-win trophies:
 // it is displayed verbatim, overriding any computed score, so the board always matches the final
 // published results regardless of snapshot/scoring edge cases.
+// Names a team went by in Season 7 (from the S7 archive leaderboard, matched by userId or current
+// name) — so S7 round wins still find a player who has since renamed their team (e.g. "P1").
+window._s7AliasNames = function(team, archives) {
+  const norm = x => String(x||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+  const out = new Set([norm(team && team.teamName), norm(team && team.playerName)].filter(Boolean));
+  (archives || []).forEach(a => {
+    const sn = a.season != null ? Number(a.season) : Number((String(a.seasonName||'').match(/\d+/)||[])[0]);
+    if (sn !== 7) return;
+    (a.leaderboard || []).forEach(r => {
+      const hit = (team.userId && r.userId && r.userId === team.userId) || out.has(norm(r.playerName)) || out.has(norm(r.teamName));
+      if (hit) { if (r.teamName) out.add(norm(r.teamName)); if (r.playerName) out.add(norm(r.playerName)); }
+    });
+  });
+  return out;
+};
 window.S7_PODIUMS = {
   'brazil':    [['FL Racing',251],            ['Ferrari lovers',234],['Bald Eagles Racing',226]],
   'abu dhabi': [['Baku street boys',282],     ['SFR on top',262],    ['DTS',249]],
@@ -9327,10 +9342,10 @@ async function renderMyTeam() {
     // `races` collection, so they aren't in doneRaces). Award for every round this team won.
     try {
       const _norm = s => String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
-      const _meN = _norm(myTeam.teamName), _meP = _norm(myTeam.playerName);
+      const _meSet = window._s7AliasNames(myTeam, myTeamArchives);
       Object.entries(window.S7_PODIUMS || {}).forEach(([raceKey, pod]) => {
         const w = _norm(pod[0][0]);
-        if (w && (w === _meN || w === _meP)) {
+        if (w && _meSet.has(w)) {
           const raceLabel = raceKey.replace(/\b\w/g, c => c.toUpperCase());
           if (!_trophyList.some(x => x.emoji==='🏆' && (x.label||'').toLowerCase() === raceKey)) {
             _trophyList.push({ emoji:'🏆', label:raceLabel, season:'S7', flagName:raceLabel, glow:'#ffd24a', tip:`${raceLabel} (S7) — Round win, ${pod[0][1]} pts` });
@@ -24571,10 +24586,10 @@ window.openPlayerProfile = async function(userId, big) {
       // trophy for every race this team won 1st place in, matched by team/player name.
       try {
         const _norm = s => String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
-        const _meN = _norm(t.teamName), _meP = _norm(t.playerName);
+        const _meSet = window._s7AliasNames(t, _pArchives);
         Object.entries(window.S7_PODIUMS || {}).forEach(([raceKey, pod]) => {
           const winnerName = _norm(pod[0][0]);
-          if (winnerName && (winnerName === _meN || winnerName === _meP)) {
+          if (winnerName && _meSet.has(winnerName)) {
             const raceLabel = raceKey.replace(/\b\w/g, c => c.toUpperCase()); // "abu dhabi" -> "Abu Dhabi"
             // Avoid a duplicate if a live-race trophy for the same round already got added above.
             if (!_pl.some(x => x.emoji==='🏆' && (x.label||'').toLowerCase() === raceKey)) {
