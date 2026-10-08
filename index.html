@@ -246,24 +246,25 @@
   @keyframes gaRise{0%{transform:translateY(0) scale(.6);opacity:0}15%{opacity:.9}100%{transform:translateY(-90px) scale(1.1);opacity:0}}
   @media (prefers-reduced-motion:reduce){.ga-rays,.ga-halo,.ga-wing,.ga-spark{animation:none!important}}
   @media (max-width:640px){.ga-card{gap:10px;padding:12px}.ga-figure{width:80px;height:58px}.ga-wing{width:38px;height:48px}.ga-photo{width:44px;height:52px}.ga-name{font-size:1.1rem}.ga-sub{font-size:.64rem}}
-  .tc-fx{position:absolute;inset:0;pointer-events:none;z-index:2;border-radius:12px;box-shadow:0 0 0 1px #8e2de2,0 0 18px rgba(142,45,226,.55)}
-  .tc-space{position:absolute;inset:0;border-radius:12px;overflow:hidden;background:radial-gradient(ellipse at 50% 120%,rgba(142,45,226,.35),transparent 60%),linear-gradient(180deg,rgba(8,4,24,.55),rgba(30,10,60,.35))}
-  .tc-stars{position:absolute;inset:-100% 0 0;background-image:radial-gradient(1px 1px at 10% 20%,#fff,transparent),radial-gradient(1px 1px at 30% 70%,#fff,transparent),radial-gradient(1.5px 1.5px at 55% 35%,#ffe9a8,transparent),radial-gradient(1px 1px at 75% 15%,#fff,transparent),radial-gradient(1px 1px at 90% 60%,#cfe9ff,transparent),radial-gradient(1px 1px at 45% 90%,#fff,transparent);background-size:100% 50%;animation:tcStars 8s linear infinite;opacity:.8}
-  .tc-stars.s2{background-size:70% 35%;animation-duration:14s;opacity:.45}
-  @keyframes tcStars{to{transform:translateY(50%)}}
-  .tc-planet{position:absolute;right:-14px;top:-14px;width:46px;height:46px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ff9de2,#8e2de2 60%,#2a0b4d);box-shadow:0 0 14px rgba(196,113,237,.6);opacity:.55}
-  .tc-planet::after{content:'';position:absolute;left:-10px;right:-10px;top:50%;height:8px;margin-top:-4px;border-radius:50%;border:1.5px solid rgba(255,211,110,.7);transform:rotate(-20deg)}
-  .tc-rocket{position:absolute;bottom:-34px;left:var(--x);animation:tcLaunch var(--d) cubic-bezier(.5,0,.8,.6) infinite;animation-delay:var(--dl);filter:drop-shadow(0 0 4px rgba(255,179,71,.7))}
-  .tc-rocket.r1{--x:12%;--d:3.4s;--dl:0s}.tc-rocket.r2{--x:46%;--d:4.1s;--dl:-1.4s}.tc-rocket.r3{--x:80%;--d:3.7s;--dl:-2.6s}
-  .tc-rocket svg{display:block}
-  .tc-smoke{position:absolute;left:50%;top:100%;width:6px;height:46px;margin-left:-3px;border-radius:3px;background:linear-gradient(rgba(255,179,71,.7),rgba(255,255,255,.25) 30%,transparent)}
-  .tc-flame{transform-origin:10px 31px;animation:tcFlame .12s ease-in-out infinite alternate}
-  @keyframes tcFlame{to{transform:scaleY(.6) scaleX(1.2);fill:#ff5e3a}}
-  @keyframes tcLaunch{0%{transform:translateY(0);opacity:0}8%{opacity:1}35%{transform:translateY(-20px) translateX(0)}100%{transform:translateY(-190px) translateX(4px);opacity:0}}
-  .tc-ribbon{position:absolute;top:-9px;left:50%;transform:translateX(-50%);white-space:nowrap;font:800 .55rem 'Barlow Condensed',sans-serif;letter-spacing:1.5px;color:#fff;padding:2px 9px;border-radius:20px;background:linear-gradient(90deg,#1a0b3a,#8e2de2,#1a0b3a);background-size:200% 100%;border:1px solid #c471ed;box-shadow:0 0 10px rgba(196,113,237,.7);animation:tcShim 2.5s linear infinite;z-index:5}
-  .tc-ribbon b{font-size:.75rem;color:#ffd36e}
-  @keyframes tcShim{to{background-position:-200% 0}}
-  @media (prefers-reduced-motion:reduce){.tc-stars,.tc-rocket,.tc-flame,.tc-ribbon{animation:none}.tc-rocket{display:none}}
+  .cap-glow-tc{box-shadow:0 0 0 1px #9b59b6,0 0 18px rgba(155,89,182,.45)}
+  .cap-glow-tc>*:not(.tc-fx):not([style*="position:absolute"]){position:relative;z-index:1}
+  .tc-fx{position:absolute;inset:0;pointer-events:none;z-index:0;border-radius:12px;overflow:hidden}
+  .tc-sky{position:absolute;inset:0;background:linear-gradient(180deg,#05060f 0%,#141a3a 55%,#3b1d4a 85%,#7a3a2a 100%);opacity:.75}
+  .tc-stars{position:absolute;inset:0;background-image:radial-gradient(1px 1px at 12% 18%,#fff,transparent),radial-gradient(1px 1px at 38% 8%,#fff,transparent),radial-gradient(1px 1px at 62% 26%,#dfe8ff,transparent),radial-gradient(1px 1px at 84% 12%,#fff,transparent),radial-gradient(1px 1px at 24% 40%,#fff,transparent),radial-gradient(1px 1px at 92% 38%,#fff,transparent);opacity:.7;animation:tcTw 3s ease-in-out infinite alternate}
+  @keyframes tcTw{to{opacity:.35}}
+  .tc-launch{position:absolute;right:16%;bottom:0;width:9px;animation:tcAsc 6s cubic-bezier(.55,0,.9,.5) infinite}
+  .tc-ship{display:block;position:relative;z-index:2}
+  .tc-flame{position:absolute;left:50%;top:34px;width:7px;height:22px;margin-left:-3.5px;border-radius:50% 50% 50% 50%/30% 30% 70% 70%;background:linear-gradient(#fff 0%,#fff6c8 25%,#ffb04a 55%,rgba(255,80,30,0));filter:blur(.6px);transform-origin:top;animation:tcFl .07s linear infinite alternate}
+  @keyframes tcFl{to{transform:scaleY(.8) scaleX(1.15)}}
+  .tc-glow{position:absolute;left:50%;top:40px;width:60px;height:60px;margin-left:-30px;border-radius:50%;background:radial-gradient(rgba(255,190,90,.55),rgba(255,120,40,.15) 45%,transparent 70%)}
+  .tc-plume{position:absolute;left:50%;top:50px;width:6px;height:120px;margin-left:-3px;background:linear-gradient(rgba(255,230,190,.55),rgba(220,220,230,.25) 40%,transparent);filter:blur(1.5px)}
+  @keyframes tcAsc{0%,12%{transform:translateY(30px)}14%{transform:translateY(29px) translateX(.5px)}16%{transform:translateY(30px) translateX(-.5px)}100%{transform:translateY(-200px)}}
+  .tc-smoke{position:absolute;left:0;right:0;bottom:-10px;height:30px}
+  .tc-smoke i{position:absolute;bottom:0;width:34px;height:34px;border-radius:50%;background:radial-gradient(rgba(235,225,225,.5),rgba(180,170,180,.15) 60%,transparent 70%);filter:blur(2px);animation:tcPuff 6s ease-out infinite}
+  .tc-smoke i:nth-child(1){right:8%}.tc-smoke i:nth-child(2){right:20%;animation-delay:.2s}.tc-smoke i:nth-child(3){right:0;animation-delay:.4s}.tc-smoke i:nth-child(4){right:30%;animation-delay:.6s}.tc-smoke i:nth-child(5){right:14%;animation-delay:.3s}.tc-smoke i:nth-child(6){right:40%;animation-delay:.8s}.tc-smoke i:nth-child(7){right:-6%;animation-delay:.5s}
+  @keyframes tcPuff{0%,10%{transform:scale(.2);opacity:0}20%{opacity:1}100%{transform:scale(2.4) translateY(-6px);opacity:0}}
+  .set-cap-btn.is-cap.is-tc{background:linear-gradient(135deg,#8e2de2,#c471ed)!important;color:#fff!important;border-color:#e0b3ff!important;box-shadow:0 0 12px rgba(196,113,237,.6);font-weight:800}
+  @media (prefers-reduced-motion:reduce){.tc-launch,.tc-smoke i,.tc-flame,.tc-stars{animation:none}}
   .admin-badge{background:var(--red);color:white;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:3px;letter-spacing:1px;}
 
   main{max-width:1100px;margin:0 auto;padding:32px 24px;position:relative;}
@@ -9590,8 +9591,7 @@ async function renderMyTeam() {
     })();
 
     html += '<div data-logo="'+esc((typeof getTeamLogo==='function' && driver && driver.team && !/^reserve$/i.test(driver.team) ? getTeamLogo(driver.team) : '') || '')+'" class="'+(isCap?(_cardTC?'cap-glow-tc':'cap-glow'):'')+'" style="border-radius:12px;border:1px solid '+(_reserveIn?'#27f4d2':borderCol)+';background:'+bgCol+';overflow:visible;position:relative;cursor:pointer'+(_reserveIn?';box-shadow:0 0 16px rgba(39,244,210,0.25)':'')+'" onclick="openDriverModal(\''+dId+'\')">';
-    if (isCap && _cardTC) { const _rk='<svg viewBox="0 0 20 44" width="12" height="26"><path d="M10 1C15 7 16 15 15 26H5C4 15 5 7 10 1Z" fill="#eee"/><path d="M10 1C13 5 14 9 14.3 12H5.7C6 9 7 5 10 1Z" fill="#c471ed"/><circle cx="10" cy="17" r="2.6" fill="#6ae3ff" stroke="#8e2de2"/><path d="M5 20L1 29L5 27ZM15 20L19 29L15 27Z" fill="#8e2de2"/><path d="M6 27H14L12 31H8Z" fill="#666"/><path class="tc-flame" d="M7.5 31Q10 44 12.5 31Z" fill="#ffb347"/></svg>';
-      html += '<div class="tc-fx"><div class="tc-space"><div class="tc-stars"></div><div class="tc-stars s2"></div><div class="tc-planet"></div>'+[1,2,3].map(i=>'<div class="tc-rocket r'+i+'">'+_rk+'<i class="tc-smoke"></i></div>').join('')+'</div><div class="tc-ribbon">🚀 <b>3</b>× TRIPLE CAPTAIN</div></div>'; }
+    if (isCap && _cardTC) html += '<div class="tc-fx"><div class="tc-sky"></div><div class="tc-stars"></div><div class="tc-launch"><div class="tc-glow"></div><div class="tc-plume"></div><svg class="tc-ship" viewBox="0 0 16 64" width="9" height="36"><defs><linearGradient id="tcb" x1="0" x2="1"><stop offset="0" stop-color="#9aa3ad"/><stop offset=".45" stop-color="#fff"/><stop offset="1" stop-color="#8a929c"/></linearGradient></defs><path d="M8 0C11 6 12 12 12 20V52H4V20C4 12 5 6 8 0Z" fill="url(#tcb)"/><rect x="4" y="30" width="8" height="2" fill="#2b2f36"/><path d="M4 44L1 56H4ZM12 44L15 56H12Z" fill="#7d858f"/><path d="M5 52H11L10 56H6Z" fill="#3a3f47"/></svg><div class="tc-flame"></div></div><div class="tc-smoke">'+'<i></i>'.repeat(7)+'</div></div>';
     // Team-colour identity stripe across the top of the card
     html += '<div style="height:3px;border-radius:12px 12px 0 0;background:linear-gradient(90deg,'+stripeCol+',transparent 85%)"></div>';
     html += '<div class="mt-card-row" style="padding:10px 10px 0;display:flex;gap:10px;align-items:center">';
