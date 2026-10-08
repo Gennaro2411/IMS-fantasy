@@ -330,6 +330,12 @@
   @keyframes wcLetter{from{transform:translateY(-40px) rotate(-20deg) scale(1.6);opacity:0}to{transform:none;opacity:1}}
   .wc-spark{position:absolute;width:6px;height:6px;border-radius:50%;z-index:60;pointer-events:none;box-shadow:0 0 8px currentColor}
   @media (max-width:600px){.wc-title{font-size:2.2rem;gap:3px}}
+  .wc-ghost{position:absolute;z-index:40;border-radius:12px;overflow:hidden;background:#1b1b28;border:1px solid rgba(255,84,112,.6);box-shadow:0 10px 30px rgba(0,0,0,.6);display:flex;align-items:center;gap:10px;padding:10px;pointer-events:none}
+  .wc-ghost img{width:44px;height:52px;object-fit:cover;object-position:top;border-radius:8px;filter:grayscale(.6)}
+  .wc-ghost div{display:flex;flex-direction:column;gap:3px;min-width:0}
+  .wc-ghost span{font:800 .6rem 'Barlow Condensed',sans-serif;letter-spacing:2px;color:#fff;background:#e8002d;border-radius:4px;padding:1px 6px;align-self:flex-start}
+  .wc-ghost b{font-weight:800;font-size:.9rem;color:#ddd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .wc-intag{position:absolute;z-index:61;pointer-events:none;font:900 .8rem 'Barlow Condensed',sans-serif;letter-spacing:2px;color:#0a0a0f;background:linear-gradient(90deg,#4ade80,#27f4d2);padding:3px 10px;border-radius:20px;box-shadow:0 0 16px rgba(74,222,128,.7);white-space:nowrap}
   .admin-badge{background:var(--red);color:white;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:3px;letter-spacing:1px;}
 
   main{max-width:1100px;margin:0 auto;padding:32px 24px;position:relative;}
@@ -8840,6 +8846,58 @@ window.renderTrophyShelf = function(trophies, opts) {
 
 
 window._VAN = 'data:image/webp;base64,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';
+// Wildcard signing scene: the outgoing driver's card is thrown off the table and the new signing is
+// dealt in face-down, then flipped over with a burst of sparks.
+window._wcSwapRun = function(sw) {
+  const host = document.getElementById('page-my-team');
+  if (!host || !sw || !sw.ch || !sw.ch.length || !host.animate) return;
+  if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (getComputedStyle(host).position === 'static') host.style.position = 'relative';
+  const hb = host.getBoundingClientRect();
+  const all = window._allDrivers || [];
+  const back = '<div class="wc-face"><b class="wc-c tl">IMS</b><div class="wc-oval"><img src="icons/icon-192.png?v=3" alt=""><small>WILDCARD</small></div><b class="wc-c br">IMS</b></div>';
+  const spark = (x, y) => { for (let k = 0; k < 18; k++) { const p = document.createElement('i'); p.className = 'wc-spark'; const ang = Math.random()*Math.PI*2, d = 60 + Math.random()*70; p.style.left = x+'px'; p.style.top = y+'px'; p.style.background = ['#ffd24a','#ff9f43','#fff3b0','#4ade80'][k%4]; host.appendChild(p); p.animate([{transform:'translate(-50%,-50%) scale(1)',opacity:1},{transform:`translate(calc(-50% + ${Math.cos(ang)*d}px),calc(-50% + ${Math.sin(ang)*d}px)) scale(.2)`,opacity:0}],{duration:850,easing:'cubic-bezier(.2,.7,.3,1)'}).onfinish = () => p.remove(); } };
+  sw.ch.forEach((div, i) => {
+    const card = host.querySelector('[data-div="' + div + '"]');
+    if (!card) return;
+    const r = card.getBoundingClientRect();
+    const x = r.left - hb.left, y = r.top - hb.top, delay = i * 650;
+    card.scrollIntoView && i === 0 && card.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    // Ghost of the outgoing driver
+    const old = all.find(d => d.id === sw.prev[div]);
+    const ph = old && typeof driverPhoto === 'function' ? driverPhoto(old) : '';
+    const g = document.createElement('div');
+    g.className = 'wc-ghost';
+    g.style.cssText = `left:${x}px;top:${y}px;width:${r.width}px;height:${r.height}px`;
+    g.innerHTML = (ph ? `<img src="${String(ph).replace(/"/g,'&quot;')}" alt="">` : '') + `<div><span>OUT</span><b>${old ? String(old.name).replace(/[<>&]/g,'') : 'Sold'}</b></div>`;
+    host.appendChild(g);
+    card.style.visibility = 'hidden';
+    g.animate([{ transform: 'none', opacity: 1 }, { transform: 'translateY(-14px) rotate(-3deg)', opacity: 1, offset: .3 }, { transform: 'translate(-70vw,-40px) rotate(-38deg)', opacity: 0 }], { duration: 900, delay, easing: 'cubic-bezier(.5,0,.8,.4)', fill: 'both' }).onfinish = () => g.remove();
+    // New signing dealt in face-down, then revealed
+    setTimeout(() => {
+      card.style.visibility = '';
+      const b = document.createElement('div'); b.className = 'wc-back'; b.style.cssText = 'position:absolute;inset:-1px;z-index:99;opacity:1'; b.innerHTML = back;
+      card.appendChild(b);
+      const T = 1700;
+      card.style.zIndex = 30;
+      card.animate([
+        { transform: 'perspective(900px) translate(75vw,-60px) rotate(25deg) rotateY(180deg)' },
+        { transform: 'perspective(900px) translate(0,0) rotate(0) rotateY(180deg)', offset: .4, easing: 'ease-in-out' },
+        { transform: 'perspective(900px) rotateY(180deg)', offset: .55 },
+        { transform: 'perspective(900px) rotateY(360deg)' }
+      ], { duration: T, easing: 'cubic-bezier(.2,.8,.3,1)' }).onfinish = () => { b.remove(); card.style.zIndex = ''; };
+      b.animate([{ opacity: 1 }, { opacity: 1, offset: .775 }, { opacity: 0, offset: .776 }, { opacity: 0 }], { duration: T });
+      setTimeout(() => {
+        spark(x + r.width / 2, y + r.height / 2);
+        const tag = document.createElement('div'); tag.className = 'wc-intag'; tag.textContent = 'NEW SIGNING';
+        tag.style.cssText = `left:${x + r.width / 2}px;top:${y - 6}px`;
+        host.appendChild(tag);
+        tag.animate([{ transform: 'translate(-50%,10px) scale(.6)', opacity: 0 }, { transform: 'translate(-50%,-8px) scale(1.05)', opacity: 1, offset: .2 }, { transform: 'translate(-50%,-8px) scale(1)', opacity: 1, offset: .8 }, { transform: 'translate(-50%,-22px)', opacity: 0 }], { duration: 1800 }).onfinish = () => tag.remove();
+      }, T * 0.78);
+    }, delay + 650);
+  });
+};
+
 window._wcRun = function () {
   const cards = [...document.querySelectorAll('#page-my-team .wc-flip')];
   if (!cards.length || !cards[0].animate) return;
@@ -8941,7 +8999,7 @@ window._wcRun = function () {
   });
 };
 async function renderMyTeam() {
-  window._wcN = 0;
+  window._wcN = 0; window._wcDecided = false;
   const el = document.getElementById('my-team-content');
   if (!PROJECT_ID) { el.innerHTML = '<div class="card"><div class="alert alert-warning">Database not connected.</div></div>'; return; }
   if (!currentUser && !adminLoggedIn) { el.innerHTML = '<div class="card"><p class="text-muted">Set up your account on the Home page first.</p></div>'; return; }
@@ -9793,6 +9851,16 @@ async function renderMyTeam() {
     // so a past round shows 3× exactly when Triple Captain was active THAT round.
     const _cardTC = tcActivePoints;
     const _wcKey = wcActiveThisRace && latest ? myTeam.id+':'+latest.id+':'+Object.entries(myTeam.selections||{}).filter(([k,v])=>v).map(([k,v])=>k+'='+v).sort().join(',') : null;
+    if (_wcKey && !window._wcDecided && !viewingLastRace) {
+      window._wcDecided = true;
+      const _lk = 'imsWcSel:' + myTeam.id + ':' + latest.id;
+      let _prev = null; try { _prev = JSON.parse(localStorage.getItem(_lk) || 'null'); } catch(e) {}
+      const _cur = myTeam.selections || {};
+      const _ch = _prev ? Object.keys(Object.assign({}, _prev, _cur)).filter(d => (_prev[d] || '') !== (_cur[d] || '') && _cur[d]) : [];
+      try { localStorage.setItem(_lk, JSON.stringify(_cur)); } catch(e) {}
+      window._wcSwap = _ch.length ? { ch: _ch, prev: _prev } : null;
+      if (_ch.length) window._wcWant = false; // a signing gets the swap scene, not the full shuffle
+    }
     const _wcFlip = !!(_wcKey && window._wcWant);
     window._wcNow = _wcFlip;
     if (_wcFlip && !window._wcSched) { window._wcSched = 1; setTimeout(() => { window._wcSched = 0; window._wcWant = false; window._wcRun(); }, 60); }
@@ -9870,7 +9938,7 @@ async function renderMyTeam() {
       return bestPts > 0 && bestId === dId;
     })();
 
-    html += '<div data-logo="'+esc((driver && /^forestalwaif1$/i.test(String(driver.name||'').replace(/\s/g,'')) && window._VAN) || (typeof getTeamLogo==='function' && driver && driver.team && !/^reserve$/i.test(driver.team) ? getTeamLogo(driver.team) : '') || '')+'" class="'+(isCap?(_cardTC?'cap-glow-tc':'cap-glow'):'')+(_wcFlip?' wc-flip':'')+'" style="'+'border-radius:12px;border:1px solid '+(_reserveIn?'#27f4d2':borderCol)+';background:'+bgCol+';overflow:visible;position:relative;cursor:pointer'+(_reserveIn?';box-shadow:0 0 16px rgba(39,244,210,0.25)':'')+'" onclick="openDriverModal(\''+dId+'\')">';
+    html += '<div data-div="'+div+'" data-logo="'+esc((driver && /^forestalwaif1$/i.test(String(driver.name||'').replace(/\s/g,'')) && window._VAN) || (typeof getTeamLogo==='function' && driver && driver.team && !/^reserve$/i.test(driver.team) ? getTeamLogo(driver.team) : '') || '')+'" class="'+(isCap?(_cardTC?'cap-glow-tc':'cap-glow'):'')+(_wcFlip?' wc-flip':'')+'" style="'+'border-radius:12px;border:1px solid '+(_reserveIn?'#27f4d2':borderCol)+';background:'+bgCol+';overflow:visible;position:relative;cursor:pointer'+(_reserveIn?';box-shadow:0 0 16px rgba(39,244,210,0.25)':'')+'" onclick="openDriverModal(\''+dId+'\')">';
     if (_wcFlip) html += '<div class="wc-back" style="position:absolute;inset:-1px;z-index:99"><div class="wc-face"><b class="wc-c tl">IMS</b><div class="wc-oval"><img src="icons/icon-192.png?v=3" alt="" onerror="this.remove()"><small>WILDCARD</small></div><b class="wc-c br">IMS</b></div></div>';
     if (wcActiveThisRace && !viewingLastRace && dId && ((chips.wildcard && chips.wildcard.before) || lastSnapRace)) {
       const _prevSel = (chips.wildcard && chips.wildcard.before) || Object.values((lastSnapRace.teamSnapshots[myTeam.id] || {}).selections || {});
@@ -9986,7 +10054,7 @@ async function renderMyTeam() {
     const cAccentMt = cTeamCol ? cTeamCol.accent : '#666677';
     const cBgMt = cTeamCol ? `linear-gradient(160deg, ${cTeamCol.bg.replace('0.08','0.18')}, var(--surface2) 70%)` : 'var(--surface2)';
     const _wcC = !!window._wcNow; window._wcNow = false;
-    html += '<div class="mt-hov'+(_wcC?' wc-flip':'')+'" data-logo="'+esc(constr.logo || (typeof getTeamLogo==='function' ? getTeamLogo(constr.name) : '') || '')+'" style="border-radius:14px;border:1px solid '+(cTeamCol?cTeamCol.border:'var(--border)')+';background:'+cBgMt+';cursor:pointer;margin-bottom:16px;position:relative;overflow:hidden" onclick="openConstructorModal(\''+constr.id+'\')">';
+    html += '<div data-div="CONSTRUCTOR" class="mt-hov'+(_wcC?' wc-flip':'')+'" data-logo="'+esc(constr.logo || (typeof getTeamLogo==='function' ? getTeamLogo(constr.name) : '') || '')+'" style="border-radius:14px;border:1px solid '+(cTeamCol?cTeamCol.border:'var(--border)')+';background:'+cBgMt+';cursor:pointer;margin-bottom:16px;position:relative;overflow:hidden" onclick="openConstructorModal(\''+constr.id+'\')">';
     if (_wcC) html += '<div class="wc-back" style="position:absolute;inset:0;z-index:99"><div class="wc-face"><b class="wc-c tl">IMS</b><div class="wc-oval"><img src="icons/icon-192.png?v=3" alt="" onerror="this.remove()"><small>WILDCARD</small></div><b class="wc-c br">IMS</b></div></div>';
     html += '<div style="height:3px;background:linear-gradient(90deg,'+cAccentMt+',transparent 85%)"></div>';
     html += '<div style="display:flex;align-items:center;gap:12px;padding:10px 14px 12px;position:relative">';
@@ -10205,6 +10273,7 @@ async function renderMyTeam() {
 
   el.innerHTML = divMoveBanner + html;
   try { window._deEmoji(el); } catch(e) {}
+  if (window._wcSwap) { const _sw = window._wcSwap; window._wcSwap = null; setTimeout(() => window._wcSwapRun && window._wcSwapRun(_sw), 120); }
 
   setTimeout(animateMyTeamPoints, 100);
 }
