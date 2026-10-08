@@ -8876,6 +8876,23 @@ window._wcSwapRun = function(sw) {
     // New signing dealt in face-down, then revealed
     setTimeout(() => {
       card.style.visibility = '';
+      if (!sw.wc) {
+        // Normal transfer: the new driver's card slides in from the right and lands — no card back.
+        card.style.zIndex = 30;
+        card.animate([
+          { transform: 'translate(75vw,-40px) rotate(18deg)', opacity: .2 },
+          { transform: 'translate(-12px,0) rotate(-2deg)', opacity: 1, offset: .7, easing: 'ease-out' },
+          { transform: 'translate(0,0) rotate(0deg)' }
+        ], { duration: 1600, easing: 'cubic-bezier(.2,.8,.3,1)' }).onfinish = () => { card.style.zIndex = ''; };
+        setTimeout(() => {
+          spark(x + r.width / 2, y + r.height / 2);
+          const tag = document.createElement('div'); tag.className = 'wc-intag'; tag.textContent = 'NEW SIGNING';
+          tag.style.cssText = `left:${x + r.width / 2}px;top:${y - 6}px`;
+          host.appendChild(tag);
+          tag.animate([{ transform: 'translate(-50%,10px) scale(.6)', opacity: 0 }, { transform: 'translate(-50%,-8px) scale(1.05)', opacity: 1, offset: .2 }, { transform: 'translate(-50%,-8px) scale(1)', opacity: 1, offset: .8 }, { transform: 'translate(-50%,-22px)', opacity: 0 }], { duration: 2800 }).onfinish = () => tag.remove();
+        }, 1150);
+        return;
+      }
       const b = document.createElement('div'); b.className = 'wc-back'; b.style.cssText = 'position:absolute;inset:-1px;z-index:99;opacity:1'; b.innerHTML = back; const _f = b.querySelector('.wc-face'); if (_f) _f.style.transform = 'none';
       card.appendChild(b);
       const T = 3000;
@@ -9851,15 +9868,15 @@ async function renderMyTeam() {
     // so a past round shows 3× exactly when Triple Captain was active THAT round.
     const _cardTC = tcActivePoints;
     const _wcKey = wcActiveThisRace && latest ? myTeam.id+':'+latest.id+':'+Object.entries(myTeam.selections||{}).filter(([k,v])=>v).map(([k,v])=>k+'='+v).sort().join(',') : null;
-    if (_wcKey && !window._wcDecided && !viewingLastRace) {
+    if (latest && !window._wcDecided && !viewingLastRace) {
       window._wcDecided = true;
-      const _lk = 'imsWcSel:' + myTeam.id + ':' + latest.id;
+      const _lk = 'imsSel:' + myTeam.id;
       let _prev = null; try { _prev = JSON.parse(localStorage.getItem(_lk) || 'null'); } catch(e) {}
       const _cur = myTeam.selections || {};
       const _ch = _prev ? Object.keys(Object.assign({}, _prev, _cur)).filter(d => (_prev[d] || '') !== (_cur[d] || '') && _cur[d]) : [];
       try { localStorage.setItem(_lk, JSON.stringify(_cur)); } catch(e) {}
-      window._wcSwap = _ch.length ? { ch: _ch, prev: _prev } : null;
-      if (_ch.length) window._wcWant = false; // a signing gets the swap scene, not the full shuffle
+      window._wcSwap = _ch.length ? { ch: _ch, prev: _prev, wc: !!_wcKey } : null;
+      if (_ch.length && _wcKey) window._wcWant = false; // a signing gets the swap scene, not the full shuffle
     }
     const _wcFlip = !!(_wcKey && window._wcWant);
     window._wcNow = _wcFlip;
