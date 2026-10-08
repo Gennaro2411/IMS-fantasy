@@ -282,7 +282,7 @@
     background:radial-gradient(circle at 50% 50%,transparent 3px,rgba(255,255,255,.18) 3.5px,transparent 4.5px) 0 0/12px 12px,repeating-linear-gradient(45deg,#5e1fa8 0 2px,transparent 2px 8px),repeating-linear-gradient(-45deg,#5e1fa8 0 2px,transparent 2px 8px),linear-gradient(145deg,#8e2de2,#3a0f73)}
   .wc-face::before{content:'';position:absolute;inset:4px;border:1px solid rgba(255,208,138,.75);border-radius:5px}
   .wc-oval{position:relative;width:46%;max-width:70px;aspect-ratio:3/4;border-radius:50%;background:radial-gradient(#fff,#f3e6ff);border:2px solid #ffd08a;box-shadow:0 0 0 3px #5e1fa8,0 0 12px rgba(255,208,138,.6);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
-  .wc-oval img{width:62%;border-radius:50%}
+  .wc-oval img{width:62%;aspect-ratio:1;object-fit:contain;border-radius:50%}
   .wc-oval small{font:900 .45rem 'Barlow Condensed',sans-serif;letter-spacing:1.5px;color:#d35400}
   .wc-c{position:absolute;font:900 .5rem 'Barlow Condensed',sans-serif;letter-spacing:1px;color:#ffd08a}
   .wc-c.tl{top:7px;left:8px}.wc-c.br{bottom:7px;right:8px;transform:rotate(180deg)}
@@ -8752,6 +8752,8 @@ window._wcRun = function () {
     const a = c.animate(kf, { duration: total, easing: 'linear' });
     if (back) back.animate([{ opacity: 1 }, { opacity: 1, offset: P(flipAt + FLIP / 2) }, { opacity: 0, offset: Math.min(1, P(flipAt + FLIP / 2) + 0.0001) }, { opacity: 0 }], { duration: total });
     const ba = back ? back.getAnimations() : [];
+    const ov = back && back.querySelector('.wc-oval'), cor = ksy / ksx;
+    if (ov && Math.abs(cor - 1) > 0.02) ov.animate([{ transform: `scale(${cor},1)` }, { transform: `scale(${cor},1)`, offset: P(dealAt) }, { transform: 'scale(1,1)', offset: P(dealAt + DEAL) }, { transform: 'scale(1,1)' }], { duration: total });
     a.onfinish = () => { a.cancel(); ba.forEach(x => x.cancel()); if (back) back.remove(); c.classList.remove('wc-flip'); c.style.zIndex = ''; c.style.transform = ''; };
   });
 };
