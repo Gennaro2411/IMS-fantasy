@@ -1441,9 +1441,11 @@
     #page-leaderboard .lbr-rank{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.15rem;width:26px;text-align:center;color:var(--muted);flex-shrink:0}
     #page-leaderboard .lbr .rank-delta{min-width:26px;font-size:.64rem}
     #page-leaderboard .lbr-main{flex:1;min-width:0}
-    #page-leaderboard .lbr-chips{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin-top:5px}
+    #page-leaderboard .lbr-chips{display:none;flex-wrap:wrap;align-items:center;gap:5px;margin-top:5px}
+    #page-leaderboard .lbr-chips-pc{display:contents}
     #page-leaderboard .lbr-chips .lb-cap{margin-left:0}
     @media (max-width:640px){
+      #page-leaderboard .lbr-chips{display:flex}#page-leaderboard .lbr-chips-pc{display:none}
       #page-leaderboard .lb-row.lbr{gap:9px;padding:9px 10px}
       #page-leaderboard .lbr-name{font-size:.86rem}
       #page-leaderboard .lbr-chips{gap:4px;margin-top:4px}
@@ -11760,7 +11762,7 @@ async function renderLeaderboard() {
         +'<div class="lbr-rank">'+(i+1)+'</div>'
         +(!isValueMode?deltaHtml(t.userId):'')
         +initialsAvatar(t.teamName, 36, 'border-radius:11px;flex-shrink:0;'+(fzCols?'box-shadow:0 0 0 2px '+fzCols[0]+',0 0 12px '+fzCols[1]+';':''), fzCols, t.discordAvatar)
-        +'<div class="lbr-main"><div class="lbr-name"><b>'+esc(t.teamName)+'</b>'+fanZoneChip(t)+(isMe?' <span class="lbx-you">YOU</span>':'')+'</div>'
+        +'<div class="lbr-main"><div class="lbr-name"><b>'+esc(t.teamName)+'</b>'+fanZoneChip(t)+(isMe?' <span class="lbx-you">YOU</span>':'')+'<span class="lbr-chips-pc">'+capName+chipBadges+(trophies?' <span style="margin-left:2px">'+trophies+'</span>':'')+'</span></div>'
         +'<div class="lbr-sub">'+esc(t.playerName)+'</div>'
         +((capName||chipBadges||trophies)?'<div class="lbr-chips">'+capName+chipBadges+(trophies?'<span class="lbr-tro">'+trophies+'</span>':'')+'</div>':'')
         +(pct?'<div class="lbr-bar"><span style="width:'+pct+'%'+(fzCols?';--bar:'+fzCols[0]:'')+'"></span></div>':'')
