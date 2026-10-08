@@ -9943,18 +9943,13 @@ async function renderMyTeam() {
       <div class="rb-cap">${_usedN ? _usedN + ' used · ' + left + ' left' : 'Bench empty · all ' + total + ' tokens available'}</div>
     </div>`;
     html += `<div class="card">
-      <div onclick="toggleReserveDrop(this)" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none">
+      <div style="display:flex;align-items:center;justify-content:space-between">
         <div style="display:flex;align-items:center;gap:8px">
           <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.15rem;letter-spacing:1px">🔄 RESERVE DRIVERS</div>
-          <span class="res-drop-arrow" style="color:var(--muted);font-size:.8rem;transition:transform .2s ease">▼</span>
         </div>
         <div style="display:flex;align-items:center;gap:6px" title="${left} of ${total} reserve tokens left this season">${pips}<span style="font-size:.74rem;color:var(--muted);margin-left:2px;font-weight:700">${left}/${total}</span></div>
       </div>
       ${benchHtml}
-      <div class="res-drop-body" style="display:none;margin-top:12px">
-        <div style="font-size:.72rem;color:var(--muted);margin-bottom:10px">If a driver on your team doesn't race, the reserve who took their seat scores in their place — for that race only. You get ${total} reserve subs a season.</div>
-        ${subsHtml}
-      </div>
     </div>`;
   } catch(e) { console.warn('reserve card failed', e); }
 
