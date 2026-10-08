@@ -9350,6 +9350,7 @@ async function renderMyTeam() {
     // Identity banner: avatar, team name, player, edit — with value + latest points as stats
     + '<div style="position:relative;overflow:hidden;background:'+_bannerBg+';border-bottom:1px solid '+_bannerBorder+';padding:18px 18px 16px">'
     + (_fzCol ? '<div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,'+_fzCol.accent+',transparent 85%)"></div>'
+      + (_fzLogo ? '<img src="'+esc(_fzLogo)+'" alt="" onerror="this.remove()" style="position:absolute;right:-10px;top:-14px;height:120px;max-width:40%;object-fit:contain;opacity:.13;pointer-events:none;transform:rotate(-8deg)">' : '')
       : '')
     + '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">'
     + '<div onclick="openPlayerProfile(\''+myTeam.userId+'\', true)" title="View your team profile" style="cursor:pointer;position:relative;display:inline-block" onmouseover="this.style.transform=\'scale(1.05)\'" onmouseout="this.style.transform=\'\'" >'
