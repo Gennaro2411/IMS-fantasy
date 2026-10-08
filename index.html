@@ -3347,6 +3347,11 @@ async function dbGetAll(col, opts) {
   if (col === 'races' || col === 'seasonArchives' || col === 'teams') await _constrAliasFix(col, _r);
   if (col === 'constructors' && Array.isArray(_r) && window.DELETED_TEAM_LOGOS) _r.forEach(c => { const k = String((c && c.name) || '').toLowerCase().replace(/[^a-z0-9]/g, '');
     for (const n in window.DELETED_TEAM_LOGOS) if (k.includes(n)) c.logo = window.DELETED_TEAM_LOGOS[n]; });
+  // Test accounts are invisible everywhere (ranks, leaderboards, stats) — only their own login sees them.
+  if (col === 'teams' && Array.isArray(_r) && !(opts && opts.all)) {
+    const me = (typeof currentUser !== 'undefined' && currentUser) ? currentUser.userId : null;
+    return _r.filter(t => !t || !t.testAccount || (me && t.userId === me));
+  }
   return _r;
 }
 async function _dbGetAllRaw(col, opts) {
@@ -16277,7 +16282,7 @@ window.adminToggleTestAccount = async function() {
   const name = document.getElementById('chip-player-name').value.trim().toLowerCase();
   const msg = document.getElementById('chip-admin-msg');
   if (!name) { msg.innerHTML='<div class="alert alert-error">Enter a player name.</div>'; return; }
-  const teams = await dbGetAll('teams');
+  const teams = await dbGetAll('teams', { all: true, fresh: true });
   const team = teams.find(t => (t.playerName||'').toLowerCase() === name);
   if (!team) { msg.innerHTML='<div class="alert alert-error">Player not found.</div>'; return; }
   const on = !team.testAccount;
