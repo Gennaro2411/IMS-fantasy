@@ -7680,9 +7680,10 @@ async function renderHomeStatCards(myTeam, allTeams) {
   if (!document.getElementById('home-s8-cover') && el.parentNode) {
     const cv = document.createElement('div');
     cv.id = 'home-s8-cover';
-    cv.style.cssText = 'margin:14px 0 4px;border-radius:14px;overflow:hidden;border:1px solid rgba(255,215,106,.35);box-shadow:0 10px 30px rgba(0,0,0,.45),0 0 24px rgba(255,200,60,.12)';
+    cv.style.cssText = 'margin:0 0 20px;border-radius:14px;overflow:hidden;border:1px solid rgba(255,215,106,.35);box-shadow:0 10px 30px rgba(0,0,0,.45),0 0 24px rgba(255,200,60,.12)';
     cv.innerHTML = '<img src="icons/s8-cover.jpg?v=1" alt="IMS Fantasy Season 8" loading="lazy" style="display:block;width:100%;height:auto" onerror="this.parentElement.remove()">';
-    el.insertAdjacentElement('afterend', cv);
+    const bc = document.getElementById('broadcast-box');
+    if (bc && bc.parentNode) bc.parentNode.insertBefore(cv, bc); else el.insertAdjacentElement('afterend', cv);
   }
 }
 
