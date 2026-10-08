@@ -2506,6 +2506,7 @@
         </div>
         <div class="flex gap-2" style="flex-wrap:wrap">
           <button class="btn btn-secondary" onclick="adminGrantChip('tripleCaptain')">🚀 Grant Triple Captain</button>
+          <button class="btn btn-secondary" onclick="adminToggleTestAccount()">🧪 Toggle test account</button>
           <button class="btn btn-secondary" onclick="adminGrantChip('wildcard')">🃏 Grant Wildcard</button>
           <button class="btn btn-secondary" onclick="adminGrantChip('guardianAngel')">😇 Grant Guardian Angel</button>
           <button class="btn btn-secondary" onclick="adminGrantFreeTransfer()">🔄 Grant Free Transfer</button>
@@ -11676,6 +11677,7 @@ window.computeTeamRanksByPoints = function(teams, races) {
 async function renderLeaderboard() {
   if (!PROJECT_ID) { document.getElementById('leaderboard-content').innerHTML='<div class="alert alert-warning">Database not connected.</div>'; return; }
   const [teams,races,drivers,constrs,lockDoc] = await Promise.all([dbGetAll('teams'),dbGetAll('races'),dbGetAll('drivers'),dbGetAll('constructors'),dbGet('settings','teamsLocked').catch(()=>null)]);
+  { const _keep = teams.filter(t => !t.testAccount); teams.length = 0; teams.push(..._keep); }
   const _teamsLocked = !!(lockDoc && lockDoc.value);
   races.sort((a,b)=>(b.raceNum||0)-(a.raceNum||0));
   const driverMap={};
@@ -16269,6 +16271,19 @@ window.adminResetTransfers = async function() {
   await dbSet('teams', team.id, {...team, transfersThisRound: { raceId: null, count: 0 }});
   msg.innerHTML=`<div class="alert alert-success">✔ Transfer count reset for ${esc(team.playerName)}.</div>`;
   setTimeout(()=>msg.innerHTML='', 3000);
+};
+
+window.adminToggleTestAccount = async function() {
+  const name = document.getElementById('chip-player-name').value.trim().toLowerCase();
+  const msg = document.getElementById('chip-admin-msg');
+  if (!name) { msg.innerHTML='<div class="alert alert-error">Enter a player name.</div>'; return; }
+  const teams = await dbGetAll('teams');
+  const team = teams.find(t => (t.playerName||'').toLowerCase() === name);
+  if (!team) { msg.innerHTML='<div class="alert alert-error">Player not found.</div>'; return; }
+  const on = !team.testAccount;
+  await dbSet('teams', team.id, {...team, testAccount: on});
+  if (typeof dbInvalidate === 'function') try { dbInvalidate('teams'); } catch(e) {}
+  msg.innerHTML=`<div class="alert alert-success">🧪 ${esc(team.playerName)} is ${on?'now a test account (hidden from the leaderboard)':'no longer a test account'}.</div>`;
 };
 
 window.adminGrantChip = async function(chipType) {
