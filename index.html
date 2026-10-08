@@ -8705,24 +8705,44 @@ window._wcRun = function () {
   const rs = cards.map(c => c.getBoundingClientRect());
   const cx = rs.reduce((a, r) => a + r.left + r.width / 2, 0) / rs.length;
   const cy = rs.reduce((a, r) => a + r.top + r.height / 2, 0) / rs.length;
-  const n = cards.length, SH = 3600, DEAL = 650, GAP = 220, FLIP = 1400;
+  const n = cards.length, RD = 1200, ROUNDS = 3, SH = RD * ROUNDS, DEAL = 650, GAP = 220, FLIP = 1400;
+  // Plan the riffle: each round splits the deck in two halves (left/right) and interleaves them back.
+  let order = cards.map((_, i) => i); // order[pos] = card index, pos 0 = bottom
+  const plan = { z0: [], rounds: [] };
+  order.forEach((ci, pos) => plan.z0[ci] = pos);
+  for (let r = 0; r < ROUNDS; r++) {
+    const cut = Math.ceil(n / 2) + (r % 2 ? -1 : 0), A = order.slice(0, Math.max(1, cut)), B = order.slice(Math.max(1, cut));
+    const rd = { left: [], hpos: [], z: [], zPrev: [] };
+    order.forEach((ci, pos) => rd.zPrev[ci] = pos);
+    A.forEach((ci, p) => { rd.left[ci] = true; rd.hpos[ci] = p; });
+    B.forEach((ci, p) => { rd.left[ci] = false; rd.hpos[ci] = p; });
+    const next = []; let ia = 0, ib = 0, fromA = r % 2 === 0;
+    while (ia < A.length || ib < B.length) { if ((fromA && ia < A.length) || ib >= B.length) next.push(A[ia++]); else next.push(B[ib++]); fromA = !fromA; }
+    next.forEach((ci, pos) => rd.z[ci] = pos);
+    plan.rounds.push(rd); order = next;
+  }
   cards.forEach((c, i) => {
     const r = rs[i], dx = cx - (r.left + r.width / 2), dy = cy - (r.top + r.height / 2);
     const back = c.querySelector('.wc-back');
     const dealAt = SH + i * GAP, flipAt = SH + (n - 1) * GAP + DEAL + 200 + i * 120, total = flipAt + FLIP;
     const P = (t) => t / total, side = (i % 2 ? 1 : -1);
     const at = (x, y, rot, ry) => `perspective(900px) translate(${x}px,${y}px) rotate(${rot}deg) rotateY(${ry}deg)`;
-    const kf = [{ offset: 0, transform: at(dx, dy + i * -2, (i - n / 2) * 2, 180) }];
-    for (let k = 1; k <= 8; k++) {
-      const t = (SH / 9) * k, o = ((k + i) % 2 ? 1 : -1) * (40 + (i * 13) % 30);
-      kf.push({ offset: P(t - 120), transform: at(dx + o, dy - 6, o / 6, 180) });
-      kf.push({ offset: P(t), transform: at(dx, dy + i * -2, (i - n / 2) * 2, 180) });
-    }
-    kf.push({ offset: P(dealAt), transform: at(dx, dy, 0, 180) });
+    const kf = [{ offset: 0, transform: at(dx, dy - plan.z0[i] * 1.5, 0, 180), zIndex: 20 + plan.z0[i] }];
+    plan.rounds.forEach((rd, k) => {
+      const t0 = k * RD, L = rd.left[i], h = rd.hpos[i], z = rd.z[i];
+      const sx = L ? -95 : 95, tilt = L ? -10 : 10;
+      kf.push({ offset: P(t0 + RD * 0.12), transform: at(dx + sx * 0.5, dy - 10 - h * 1.5, tilt * 0.5, 180), zIndex: 20 + rd.zPrev[i] });
+      kf.push({ offset: P(t0 + RD * 0.32), transform: at(dx + sx, dy - 4 - h * 1.5, tilt, 180), zIndex: 20 + rd.zPrev[i] });
+      const drop = t0 + RD * (0.42 + 0.4 * (z / Math.max(1, n - 1)));
+      kf.push({ offset: P(drop - 40), transform: at(dx + sx * 0.35, dy - 8, tilt * 0.4, 180), zIndex: 20 + z });
+      kf.push({ offset: P(drop), transform: at(dx + (L ? -3 : 3), dy - z * 1.5, L ? -2 : 2, 180), zIndex: 20 + z });
+      kf.push({ offset: P(t0 + RD * 0.97), transform: at(dx, dy - z * 1.5, 0, 180), zIndex: 20 + z });
+    });
+    kf.push({ offset: P(dealAt), transform: at(dx, dy - plan.rounds[ROUNDS-1].z[i] * 1.5, 0, 180) });
     kf.push({ offset: P(dealAt + DEAL), transform: at(0, 0, 0, 180), easing: 'ease-in-out' });
     kf.push({ offset: P(flipAt), transform: at(0, 0, 0, 180), easing: 'ease-in-out' });
     kf.push({ offset: 1, transform: at(0, 0, 0, 360) });
-    c.style.zIndex = 20 + (n - i);
+    c.style.zIndex = 20 + plan.rounds[ROUNDS-1].z[i];
     const a = c.animate(kf, { duration: total, easing: 'linear' });
     if (back) back.animate([{ opacity: 1 }, { opacity: 1, offset: P(flipAt + FLIP / 2) }, { opacity: 0, offset: Math.min(1, P(flipAt + FLIP / 2) + 0.0001) }, { opacity: 0 }], { duration: total });
     const ba = back ? back.getAnimations() : [];
