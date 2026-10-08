@@ -8709,6 +8709,7 @@ window._wcRun = function () {
   const rs = cards.map(c => c.getBoundingClientRect());
   const cx = rs.reduce((a, r) => a + r.left + r.width / 2, 0) / rs.length;
   const cy = rs.reduce((a, r) => a + r.top + r.height / 2, 0) / rs.length;
+  const refR = rs.reduce((m, r) => r.width < m.width ? r : m, rs[0]), refW = refR.width, refH = refR.height;
   const n = cards.length, RD = 1200, ROUNDS = 3, SH = RD * ROUNDS, DEAL = 650, GAP = 220, FLIP = 1400;
   // Plan the riffle: each round splits the deck in two halves (left/right) and interleaves them back.
   let order = cards.map((_, i) => i); // order[pos] = card index, pos 0 = bottom
@@ -8730,7 +8731,8 @@ window._wcRun = function () {
     const back = c.querySelector('.wc-back');
     const dealAt = SH + i * GAP, flipAt = SH + (n - 1) * GAP + DEAL + 200 + i * 120, total = flipAt + FLIP;
     const P = (t) => t / total, side = (i % 2 ? 1 : -1);
-    const at = (x, y, rot, ry) => `perspective(900px) translate(${x}px,${y}px) rotate(${rot}deg) rotateY(${ry}deg)`;
+    const ksx = refW / r.width, ksy = refH / r.height;
+    const at = (x, y, rot, ry, full) => `perspective(900px) translate(${x}px,${y}px) rotate(${rot}deg) rotateY(${ry}deg) scale(${full ? 1 : ksx},${full ? 1 : ksy})`;
     const kf = [{ offset: 0, transform: at(dx, dy - plan.z0[i] * 1.5, 0, 180), zIndex: 20 + plan.z0[i] }];
     plan.rounds.forEach((rd, k) => {
       const t0 = k * RD, L = rd.left[i], h = rd.hpos[i], z = rd.z[i];
@@ -8743,9 +8745,9 @@ window._wcRun = function () {
       kf.push({ offset: P(t0 + RD * 0.97), transform: at(dx, dy - z * 1.5, 0, 180), zIndex: 20 + z });
     });
     kf.push({ offset: P(dealAt), transform: at(dx, dy - plan.rounds[ROUNDS-1].z[i] * 1.5, 0, 180) });
-    kf.push({ offset: P(dealAt + DEAL), transform: at(0, 0, 0, 180), easing: 'ease-in-out' });
-    kf.push({ offset: P(flipAt), transform: at(0, 0, 0, 180), easing: 'ease-in-out' });
-    kf.push({ offset: 1, transform: at(0, 0, 0, 360) });
+    kf.push({ offset: P(dealAt + DEAL), transform: at(0, 0, 0, 180, 1), easing: 'ease-in-out' });
+    kf.push({ offset: P(flipAt), transform: at(0, 0, 0, 180, 1), easing: 'ease-in-out' });
+    kf.push({ offset: 1, transform: at(0, 0, 0, 360, 1) });
     c.style.zIndex = 20 + plan.rounds[ROUNDS-1].z[i];
     const a = c.animate(kf, { duration: total, easing: 'linear' });
     if (back) back.animate([{ opacity: 1 }, { opacity: 1, offset: P(flipAt + FLIP / 2) }, { opacity: 0, offset: Math.min(1, P(flipAt + FLIP / 2) + 0.0001) }, { opacity: 0 }], { duration: total });
