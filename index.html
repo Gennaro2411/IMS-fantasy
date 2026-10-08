@@ -217,6 +217,35 @@
     .mt-driver-row > *:active, .mt-hov:active{transform:translateY(-1px) scale(.995)}
   }
   #page-my-team [data-logo]{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  /* Guardian Angel card: wings, halo, light rays and rising sparkles */
+  .ga-card{grid-column:1/-1;position:relative;overflow:hidden;display:flex;align-items:center;gap:16px;padding:14px 18px 14px 14px;border-radius:16px;cursor:pointer;
+    background:radial-gradient(120% 140% at 12% 50%,rgba(124,242,198,.22),transparent 55%),linear-gradient(120deg,rgba(255,255,255,.07),rgba(39,174,96,.10) 60%,rgba(255,255,255,.03));
+    border:1px solid rgba(124,242,198,.55);box-shadow:0 0 0 1px rgba(255,255,255,.04) inset,0 0 26px rgba(124,242,198,.18);transition:transform .18s ease,box-shadow .18s ease}
+  @media (hover:hover){.ga-card:hover{transform:translateY(-3px);box-shadow:0 0 0 1px rgba(255,255,255,.06) inset,0 10px 30px rgba(124,242,198,.28)}}
+  .ga-rays{position:absolute;left:-40px;top:50%;width:220px;height:220px;transform:translateY(-50%);pointer-events:none;opacity:.35;
+    background:conic-gradient(from 0deg,transparent 0 8%,rgba(255,255,255,.35) 10%,transparent 13% 25%,rgba(255,255,255,.28) 27%,transparent 30% 42%,rgba(255,255,255,.3) 44%,transparent 47% 58%,rgba(255,255,255,.25) 60%,transparent 63% 75%,rgba(255,255,255,.3) 77%,transparent 80% 92%,rgba(255,255,255,.25) 94%,transparent 97%);
+    -webkit-mask:radial-gradient(circle,#000 0 30%,transparent 70%);mask:radial-gradient(circle,#000 0 30%,transparent 70%);animation:gaSpin 22s linear infinite}
+  .ga-figure{position:relative;width:96px;height:66px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+  .ga-photo{position:relative;z-index:2;width:50px;height:58px;border-radius:12px;overflow:hidden;background:var(--surface);border:1.5px solid rgba(255,255,255,.75);box-shadow:0 0 16px rgba(124,242,198,.55);display:flex;align-items:center;justify-content:center;font-size:1.6rem;color:#7cf2c6}
+  .ga-photo img{width:100%;height:100%;object-fit:cover}
+  .ga-halo{position:absolute;z-index:3;top:-9px;left:50%;width:34px;height:10px;margin-left:-17px;border-radius:50%;border:2.5px solid #fff6c4;box-shadow:0 0 10px #ffe58a,0 0 18px rgba(255,229,138,.8),inset 0 0 6px #ffe58a;animation:gaHalo 2.6s ease-in-out infinite}
+  .ga-wing{position:absolute;z-index:1;top:-2px;width:46px;height:56px;filter:drop-shadow(0 0 6px rgba(255,255,255,.55))}
+  .ga-wing.l{left:-4px;transform-origin:100% 40%;animation:gaFlapL 2.6s ease-in-out infinite}
+  .ga-wing.r{right:-4px;transform:scaleX(-1);transform-origin:0% 40%;animation:gaFlapR 2.6s ease-in-out infinite}
+  .ga-txt{position:relative;flex:1;min-width:0}
+  .ga-tag{display:inline-block;font-size:.58rem;font-weight:900;letter-spacing:2.5px;padding:2px 8px;border-radius:999px;color:#06281d;background:linear-gradient(90deg,#fffbe6,#7cf2c6);box-shadow:0 0 10px rgba(124,242,198,.45)}
+  .ga-name{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.3rem;letter-spacing:.5px;margin-top:4px;color:#fff;text-shadow:0 0 12px rgba(124,242,198,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ga-sub{font-size:.7rem;color:#a7d9c6}
+  .ga-pts{position:relative;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.8rem;line-height:1;color:#eafff6;text-shadow:0 0 14px rgba(124,242,198,.7);text-align:right}
+  .ga-pts small{display:block;font-size:.6rem;letter-spacing:1px;color:#a7d9c6}
+  .ga-spark{position:absolute;bottom:-6px;width:4px;height:4px;border-radius:50%;background:#fff;box-shadow:0 0 6px #fff,0 0 10px #7cf2c6;opacity:0;pointer-events:none;animation:gaRise 3.3s ease-in infinite}
+  @keyframes gaSpin{to{transform:translateY(-50%) rotate(360deg)}}
+  @keyframes gaHalo{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+  @keyframes gaFlapL{0%,100%{transform:rotate(0)}50%{transform:rotate(-12deg)}}
+  @keyframes gaFlapR{0%,100%{transform:scaleX(-1) rotate(0)}50%{transform:scaleX(-1) rotate(-12deg)}}
+  @keyframes gaRise{0%{transform:translateY(0) scale(.6);opacity:0}15%{opacity:.9}100%{transform:translateY(-90px) scale(1.1);opacity:0}}
+  @media (prefers-reduced-motion:reduce){.ga-rays,.ga-halo,.ga-wing,.ga-spark{animation:none!important}}
+  @media (max-width:640px){.ga-card{gap:10px;padding:12px}.ga-figure{width:80px;height:58px}.ga-wing{width:38px;height:48px}.ga-photo{width:44px;height:52px}.ga-name{font-size:1.1rem}.ga-sub{font-size:.64rem}}
   .admin-badge{background:var(--red);color:white;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:3px;letter-spacing:1px;}
 
   main{max-width:1100px;margin:0 auto;padding:32px 24px;position:relative;}
@@ -9441,14 +9470,19 @@ async function renderMyTeam() {
         gaPts = 0;
       }
     }
-    html += `<div style="grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;border:2px solid #27ae60;background:rgba(39,174,96,0.08);cursor:pointer" onclick="openDriverModal('${gaDriverId}')">
-      <div style="width:44px;height:52px;border-radius:8px;overflow:hidden;background:var(--surface);flex-shrink:0">
-        ${(function(){ const ph = driverPhoto(gaDriver); return ph?`<img src="${esc(ph)}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML='👤'">`:'<div style="display:flex;align-items:center;justify-content:center;height:100%">👤</div>'; })()}
-      </div>
-      <div style="flex:1"><div style="font-size:.6rem;font-weight:800;letter-spacing:1px;color:#2ecc71">😇 GUARDIAN ANGEL</div>
-      <div style="font-weight:700">${esc(gaDriver.name)}</div>
-      <div style="font-size:.7rem;color:var(--muted)">Vanishes after this race</div></div>
-      ${gaPts!==null?`<div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.5rem;color:#2ecc71">${gaPts}<span style="font-size:.6rem;color:var(--muted);display:block;text-align:right">pts</span></div>`:''}
+    const _wing = (side) => `<svg class="ga-wing ${side}" viewBox="0 0 64 72" aria-hidden="true"><defs><linearGradient id="gaw${side}" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".95"/><stop offset=".55" stop-color="#d9fff0" stop-opacity=".75"/><stop offset="1" stop-color="#7cf2c6" stop-opacity=".25"/></linearGradient></defs>
+      <path fill="url(#gaw${side})" d="M62 14C46 2 18 2 3 20c12-3 21-1 27 3C17 25 7 33 3 46c12-7 23-8 31-6-11 6-18 15-19 27 13-11 29-17 46-30z"/>
+      <path fill="none" stroke="#ffffff" stroke-opacity=".55" stroke-width="1.2" stroke-linecap="round" d="M60 18C44 12 24 14 12 22M58 26C42 24 24 30 14 40M56 34C44 36 32 44 24 56"/></svg>`;
+    const _ph = driverPhoto(gaDriver);
+    html += `<div class="ga-card" onclick="openDriverModal('${gaDriverId}')">
+      <div class="ga-rays"></div>
+      ${['8%','22%','37%','63%','78%','92%'].map((l, k) => `<span class="ga-spark" style="left:${l};animation-delay:${(k * 0.55).toFixed(2)}s"></span>`).join('')}
+      <div class="ga-figure">${_wing('l')}${_wing('r')}<div class="ga-halo"></div>
+        <div class="ga-photo">${_ph ? `<img src="${esc(_ph)}" onerror="this.parentElement.innerHTML=_ico('user')">` : _ico('user')}</div></div>
+      <div class="ga-txt"><div class="ga-tag">GUARDIAN ANGEL</div>
+        <div class="ga-name">${esc(gaDriver.name)}</div>
+        <div class="ga-sub">Watching over your team · vanishes after this race</div></div>
+      ${gaPts!==null?`<div class="ga-pts">${gaPts}<small>pts</small></div>`:''}
     </div>`;
   } else if (gaActiveThisRace && !gaDriver && !_snapView) {
     html += `<div style="grid-column:1/-1;padding:12px;border:2px dashed #27ae60;border-radius:12px;text-align:center;color:#2ecc71;font-size:.85rem">
