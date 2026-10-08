@@ -3414,7 +3414,8 @@ async function dbGetAll(col, opts) {
   // Test accounts are invisible everywhere (ranks, leaderboards, stats) — only their own login sees them.
   if (col === 'teams' && Array.isArray(_r) && !(opts && opts.all)) {
     const me = (typeof currentUser !== 'undefined' && currentUser) ? currentUser.userId : null;
-    return _r.filter(t => !t || !t.testAccount || (me && t.userId === me));
+    if (!me) return _r; // not logged in yet (login / sign-up need every account, test ones included)
+    return _r.filter(t => !t || !t.testAccount || t.userId === me);
   }
   return _r;
 }
