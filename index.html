@@ -8876,15 +8876,15 @@ window._wcSwapRun = function(sw) {
     // New signing dealt in face-down, then revealed
     setTimeout(() => {
       card.style.visibility = '';
-      const b = document.createElement('div'); b.className = 'wc-back'; b.style.cssText = 'position:absolute;inset:-1px;z-index:99;opacity:1'; b.innerHTML = back;
+      const b = document.createElement('div'); b.className = 'wc-back'; b.style.cssText = 'position:absolute;inset:-1px;z-index:99;opacity:1'; b.innerHTML = back; const _f = b.querySelector('.wc-face'); if (_f) _f.style.transform = 'none';
       card.appendChild(b);
       const T = 1700;
       card.style.zIndex = 30;
       card.animate([
         { transform: 'perspective(900px) translate(75vw,-60px) rotate(25deg) rotateY(180deg)' },
-        { transform: 'perspective(900px) translate(0,0) rotate(0) rotateY(180deg)', offset: .4, easing: 'ease-in-out' },
-        { transform: 'perspective(900px) rotateY(180deg)', offset: .55 },
-        { transform: 'perspective(900px) rotateY(360deg)' }
+        { transform: 'perspective(900px) translate(0px,0px) rotate(0deg) rotateY(180deg)', offset: .4, easing: 'ease-in-out' },
+        { transform: 'perspective(900px) translate(0px,0px) rotate(0deg) rotateY(180deg)', offset: .55 },
+        { transform: 'perspective(900px) translate(0px,0px) rotate(0deg) rotateY(360deg)' }
       ], { duration: T, easing: 'cubic-bezier(.2,.8,.3,1)' }).onfinish = () => { b.remove(); card.style.zIndex = ''; };
       b.animate([{ opacity: 1 }, { opacity: 1, offset: .775 }, { opacity: 0, offset: .776 }, { opacity: 0 }], { duration: T });
       setTimeout(() => {
