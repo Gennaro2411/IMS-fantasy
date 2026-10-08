@@ -300,9 +300,6 @@
   #page-my-team .mt-hero-pts{text-align:center}
   .f1-pts,#page-leaderboard .lbr-pts,.lb-pts{font-family:'Titillium Web',sans-serif!important;font-weight:900!important;color:var(--gold);letter-spacing:.5px;font-variant-numeric:tabular-nums;text-shadow:0 2px 0 rgba(0,0,0,.35)}
   .f1-pts{display:inline-block;transform:scaleX(1.08);transform-origin:right center}
-  #page-my-team .mt-fz-stripe{position:absolute!important;top:0;left:0;right:0;height:3px;z-index:1}
-  #page-my-team .mt-fz-logo{position:absolute!important;right:14px;top:50%;transform:translateY(-50%);height:62%;max-width:26%;object-fit:contain;opacity:.22;pointer-events:none;z-index:0!important}
-  #page-my-team .mt-fz-tag{position:absolute!important;left:14px;top:11px;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:.62rem;letter-spacing:1.5px;text-transform:uppercase;filter:brightness(1.4)}
   .admin-badge{background:var(--red);color:white;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:3px;letter-spacing:1px;}
 
   main{max-width:1100px;margin:0 auto;padding:32px 24px;position:relative;}
@@ -9339,9 +9336,20 @@ async function renderMyTeam() {
     } catch(e) { console.warn('live-season cabinet trophies failed', e); }
   } catch(e) { console.warn('trophy cabinet compute failed', e); }
 
+  const _fzId = myTeam.fanZone && myTeam.fanZone.constructorId;
+  const _fzC = _fzId ? (constrs || []).find(c => c.id === _fzId) : null;
+  const _fzCol = _fzC && typeof getTeamCardColour === 'function' ? getTeamCardColour(_fzC.name) : null;
+  const _fzLogo = _fzC ? (_fzC.logo || (typeof getTeamLogo === 'function' ? getTeamLogo(_fzC.name) : '')) : '';
+  const _bannerBg = _fzCol
+    ? 'radial-gradient(120% 140% at 0% 0%,'+_fzCol.accent+'55,transparent 60%),linear-gradient(135deg,'+_fzCol.accent+'22 0%,#12121a 60%,#0e0e15 100%)'
+    : 'radial-gradient(120% 140% at 0% 0%,rgba(123,79,191,0.22),transparent 55%),linear-gradient(135deg,#17111f 0%,#12121a 60%,#0e0e15 100%)';
+  const _bannerBorder = _fzCol ? _fzCol.accent : 'rgba(123,79,191,0.35)';
   let html = (_adminBanner || '') + '<div class="card" style="padding:0;overflow:hidden">'
     // Identity banner: avatar, team name, player, edit — with value + latest points as stats
-    + '<div style="position:relative;background:radial-gradient(120% 140% at 0% 0%,rgba(123,79,191,0.22),transparent 55%),linear-gradient(135deg,#17111f 0%,#12121a 60%,#0e0e15 100%);border-bottom:1px solid rgba(123,79,191,0.35);padding:18px 18px 16px">'
+    + '<div style="position:relative;overflow:hidden;background:'+_bannerBg+';border-bottom:1px solid '+_bannerBorder+';padding:18px 18px 16px">'
+    + (_fzCol ? '<div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,'+_fzCol.accent+',transparent 85%)"></div>'
+      + (_fzLogo ? '<img src="'+esc(_fzLogo)+'" alt="" onerror="this.remove()" style="position:absolute;right:-10px;top:-14px;height:120px;max-width:40%;object-fit:contain;opacity:.13;pointer-events:none;transform:rotate(-8deg)">' : '')
+      + '<div style="position:absolute;right:14px;top:10px;font-family:\'Barlow Condensed\',sans-serif;font-weight:800;font-size:.6rem;letter-spacing:1.5px;text-transform:uppercase;color:'+_fzCol.accent+';filter:brightness(1.5)">'+esc(_fzC.name)+' fan zone</div>' : '')
     + '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">'
     + '<div onclick="openPlayerProfile(\''+myTeam.userId+'\', true)" title="View your team profile" style="cursor:pointer;position:relative;display:inline-block" onmouseover="this.style.transform=\'scale(1.05)\'" onmouseout="this.style.transform=\'\'" >'
       + initialsAvatar(myTeam.teamName, 54, 'border-radius:16px;box-shadow:0 3px 12px rgba(0,0,0,0.4);transition:transform .15s ease;', null, myTeam.discordAvatar)
@@ -9367,15 +9375,7 @@ async function renderMyTeam() {
         const _tv = (_ss && _ss.teamValue != null) ? _ss.teamValue : totalTeamValue;
         const _stot = (_es && _es.seasonTotal != null) ? _es.seasonTotal : (_ss && _ss.seasonTotalBefore != null) ? Math.round((_ss.seasonTotalBefore + (racePts(viewedRace) || 0)) * 10) / 10 : totalPts;
         const _trackBg = (pointsRace && typeof getTrackOutlineUrl === 'function') ? getTrackOutlineUrl(pointsRace.name) : null;
-        const _fzId = myTeam.fanZone && myTeam.fanZone.constructorId;
-        const _fzC = _fzId ? (constrs || []).find(c => c.id === _fzId) : null;
-        const _fzCol = _fzC && typeof getTeamCardColour === 'function' ? getTeamCardColour(_fzC.name) : null;
-        const _fzLogo = _fzC ? (_fzC.logo || (typeof getTeamLogo === 'function' ? getTeamLogo(_fzC.name) : '')) : '';
-        const _fzStyle = _fzCol ? ' style="border-color:'+_fzCol.accent+';background:linear-gradient(120deg,'+_fzCol.accent+'33,'+_fzCol.accent+'0d 55%,rgba(0,0,0,0) 100%);box-shadow:0 0 22px '+_fzCol.accent+'33, inset 0 0 0 1px '+_fzCol.accent+'22"' : '';
-        return '<div class="mt-hero-pts'+(_fzCol?' mt-hero-fz':'')+'"'+_fzStyle+'>'
-          + (_fzCol ? '<div class="mt-fz-stripe" style="background:linear-gradient(90deg,'+_fzCol.accent+',transparent 80%)"></div>'
-            + (_fzLogo ? '<img class="mt-fz-logo" src="'+esc(_fzLogo)+'" alt="" onerror="this.remove()">' : '')
-            + '<div class="mt-fz-tag" style="color:'+_fzCol.accent+'">'+esc(_fzC.name)+' fan zone</div>' : '')
+        return '<div class="mt-hero-pts">'
           + (_trackBg ? '<img class="mt-hero-track" src="'+esc(_trackBg)+'" alt="" onerror="this.style.display=\'none\'">' : '')
           + '<div class="mt-lbl">'+(pointsRace?'Points · '+esc(pointsRace.name):'Points')+'</div>'
           + '<div id="total-pts-display" data-countup="'+(latestPts!==null?latestPts:0)+'">'+(latestPts!==null?latestPts:'—')+'</div>'
