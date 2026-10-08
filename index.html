@@ -287,8 +287,8 @@
   .wc-c{position:absolute;font:900 .5rem 'Barlow Condensed',sans-serif;letter-spacing:1px;color:#ffd08a}
   .wc-c.tl{top:7px;left:8px}.wc-c.br{bottom:7px;right:8px;transform:rotate(180deg)}
   
-  .tc-van{position:absolute;width:48px;right:32%;top:22%;opacity:1;z-index:1;filter:drop-shadow(0 0 4px rgba(200,180,255,.5));animation:tcVan 14s ease-in-out infinite}
-  @keyframes tcVan{0%{transform:translate(0,0) rotate(-12deg)}25%{transform:translate(20px,-6px) rotate(8deg)}50%{transform:translate(38px,6px) rotate(25deg)}75%{transform:translate(14px,10px) rotate(-4deg)}100%{transform:translate(0,0) rotate(-12deg)}}
+  .tc-van{position:absolute;width:48px;right:32%;top:22%;opacity:1;z-index:1;filter:drop-shadow(0 0 4px rgba(200,180,255,.5));animation:tcVan 16s ease-in-out infinite}
+  @keyframes tcVan{0%{transform:translate(0,0) rotate(-10deg) scaleX(1)}20%{transform:translate(-45px,-8px) rotate(6deg) scaleX(1)}35%{transform:translate(-80px,4px) rotate(18deg) scaleX(-1)}50%{transform:translate(-110px,-4px) rotate(-8deg) scaleX(-1)}70%{transform:translate(-60px,8px) rotate(-20deg) scaleX(-1)}85%{transform:translate(-20px,0) rotate(4deg) scaleX(1)}100%{transform:translate(0,0) rotate(-10deg) scaleX(1)}}
   @media (prefers-reduced-motion:reduce){.tc-van{animation:none}}
   .admin-badge{background:var(--red);color:white;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:3px;letter-spacing:1px;}
 
