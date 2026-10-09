@@ -26957,6 +26957,14 @@ window._applyMusicCustom = function(c) {
   _musicOrder.length = 0; keep.forEach(u => _musicOrder.push(u));
 };
 setTimeout(() => { try { dbGet('settings', 'musicCustom').then(d => { window._musicCustom = (d && d.value) || { added: [], removed: [] }; window._applyMusicCustom(window._musicCustom); }).catch(() => {}); } catch(e) {} }, 0);
+// Personal hide list: songs a player has removed from their own radio (this device only).
+window._musicHidden = () => { try { return JSON.parse(localStorage.getItem('imsMusicHidden') || '[]'); } catch(e) { return []; } };
+window.toggleHideSong = function(url) {
+  let h = _musicHidden(); h = h.includes(url) ? h.filter(x => x !== url) : h.concat(url);
+  if (h.length >= MUSIC_TRACKS.length) { customAlert('Keep at least one song on your radio.'); return; }
+  try { localStorage.setItem('imsMusicHidden', JSON.stringify(h)); } catch(e) {}
+  showTrackList();
+};
 window._saveMusicCustom = async function() { await dbSet('settings', 'musicCustom', { value: window._musicCustom }); };
 window.adminAddSong = async function() {
   const u = (document.getElementById('tl-add-url') || {}).value || '', t = (document.getElementById('tl-add-title') || {}).value || '', a = (document.getElementById('tl-add-artist') || {}).value || '';
@@ -27038,8 +27046,9 @@ window.nextTrack = function() {
   let _rec = []; try { _rec = JSON.parse(localStorage.getItem('imsMusicRecent') || '[]'); } catch (e) {}
   _rec = _rec.concat(_musicOrder[musicTrackIdx]).filter(Boolean).slice(-5); try { localStorage.setItem('imsMusicRecent', JSON.stringify(_rec)); } catch (e) {}
   window._musicRecent = _rec;
-  const _pool = _musicOrder.map((_, i) => i).filter(i => !_rec.includes(_musicOrder[i]));
-  const _choices = _pool.length ? _pool : _musicOrder.map((_, i) => i).filter(i => i !== musicTrackIdx);
+  const _hid = _musicHidden(), _ok = (i) => !_hid.includes(_musicOrder[i]);
+  const _pool = _musicOrder.map((_, i) => i).filter(i => !_rec.includes(_musicOrder[i]) && _ok(i));
+  const _choices = _pool.length ? _pool : _musicOrder.map((_, i) => i).filter(i => i !== musicTrackIdx && _ok(i));
   if (_choices.length) musicTrackIdx = _choices[Math.floor(Math.random() * _choices.length)];
   audio.pause();
   audio.src = _musicOrder[musicTrackIdx];
@@ -27062,8 +27071,8 @@ window.showTrackList = function() {
   m.innerHTML = `<div style="background:var(--surface);border:1px solid rgba(255,255,255,0.1);border-radius:20px;width:100%;max-width:440px;max-height:80vh;overflow:auto;padding:18px;box-shadow:0 24px 60px rgba(0,0,0,.5)">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><b style="font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;letter-spacing:1px">🎵 TRACK LIST</b><button class="btn btn-secondary btn-sm" onclick="document.getElementById('track-list-modal').remove()">✕</button></div>
     ${MUSIC_TRACKS.map(u => { const t = MUSIC_TITLES[u] || { title: 'IMS Radio', artist: '' }, on = cur === u;
-      return `<button class="tl-item${on ? ' on' : ''}" onclick="document.querySelectorAll('.tl-item').forEach(b => { b.classList.remove('on'); b.querySelector('.tl-ico').textContent = '▶'; }); this.classList.add('on'); this.querySelector('.tl-ico').textContent = '🔊'; playTrack('${u}')">
-        <span class="tl-ico">${on ? '🔊' : '▶'}</span><span style="flex:1;min-width:0"><b style="display:block">${esc(t.title)}</b><small style="color:var(--muted)">${esc(t.artist)}</small></span>${adminLoggedIn ? `<span role="button" title="Remove song" onclick="event.stopPropagation();adminRemoveSong('${String(u).replace(/'/g, "\\'")}')" style="margin-left:8px;color:#ff5470;font-weight:900;padding:2px 8px;border-radius:6px;border:1px solid rgba(255,84,112,.4)">✕</span>` : ''}</button>`; }).join('')}
+      return `<button class="tl-item${on ? ' on' : ''}" style="${_musicHidden().includes(u) ? 'opacity:.4' : ''}" onclick="document.querySelectorAll('.tl-item').forEach(b => { b.classList.remove('on'); b.querySelector('.tl-ico').textContent = '▶'; }); this.classList.add('on'); this.querySelector('.tl-ico').textContent = '🔊'; playTrack('${u}')">
+        <span class="tl-ico">${on ? '🔊' : '▶'}</span><span style="flex:1;min-width:0"><b style="display:block">${esc(t.title)}</b><small style="color:var(--muted)">${esc(t.artist)}</small></span>${(() => { const hid = _musicHidden().includes(u); return `<span role="button" title="${hid ? 'Add back to my radio' : 'Hide this song for me'}" onclick="event.stopPropagation();toggleHideSong('${String(u).replace(/'/g, "\\'")}')" style="margin-left:8px;font-weight:900;padding:2px 8px;border-radius:6px;${hid ? 'color:#4ade80;border:1px solid rgba(74,222,128,.4)' : 'color:#ff5470;border:1px solid rgba(255,84,112,.4)'}">${hid ? '↺' : '✕'}</span>`; })()}</button>`; }).join('')}
     ${adminLoggedIn ? `<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)"><b style="font-size:.8rem;letter-spacing:1px;color:var(--muted)">ADD A SONG (ADMIN)</b>
       <input id="tl-add-url" type="text" placeholder="Song link (https://files.catbox.moe/….mp3)" style="width:100%;margin-top:8px">
       <div style="display:flex;gap:8px;margin-top:8px"><input id="tl-add-title" type="text" placeholder="Title" style="flex:1;min-width:0"><input id="tl-add-artist" type="text" placeholder="Artist" style="flex:1;min-width:0"></div>
@@ -27109,6 +27118,7 @@ window.setMusicMuted = function(on) {
   const audio = document.getElementById('bg-music');
   if (!audio) return;
   audio.volume = 0.4;
+  { const _h = _musicHidden(); for (let k = 0; k < _musicOrder.length && _h.includes(_musicOrder[musicTrackIdx]); k++) musicTrackIdx = (musicTrackIdx + 1) % _musicOrder.length; }
   audio.src = _musicOrder[musicTrackIdx];
   // When a song finishes, move on to the next one (wraps around the shuffled list).
   audio.addEventListener('ended', nextTrack);
