@@ -8909,7 +8909,8 @@ window._F1_FILES = {"Singapore_Grand_Prix": ["1_singapore_f1_night_race_2012_cit
 window._LOCAL_F1 = { Singapore_Grand_Prix: ['track-photos/singapore-1.jpg'] };
 window._f1Pics = async function(gpTitle) {
   // Hand-picked Wikimedia Commons photos of F1 cars at each Grand Prix (served via Special:FilePath).
-  return (window._LOCAL_F1[gpTitle] || []).concat((window._F1_FILES[gpTitle] || []).map(f => 'https://commons.wikimedia.org/wiki/Special:FilePath/' + encodeURIComponent(f) + '?width=1200'));
+  const own = window._LOCAL_F1[gpTitle] || [];
+  return own.concat(own, own, own).concat((window._F1_FILES[gpTitle] || []).map(f => 'https://commons.wikimedia.org/wiki/Special:FilePath/' + encodeURIComponent(f) + '?width=1200'));
 };
 window._fillPlacePhotos = async function(root) {
   const el = (root || document).querySelector('.mt-hero-photo[data-place]');
