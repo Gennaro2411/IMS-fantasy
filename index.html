@@ -10891,9 +10891,10 @@ async function renderBriefingExtras() {
         if (!out.length && !res.length) return '';
         const hue = DIV_HUES[div] || '#9b6fd4';
         const face = (d, ring) => { const ph = d && d.id && typeof driverPhoto === 'function' ? driverPhoto(d) : ''; const ini = String((d && d.name) || '?').replace(/^\[[^\]]*\]\s*/, '').slice(0, 2).toUpperCase();
-          return `<div style="width:40px;height:40px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--surface3);border:2px solid ${ring};display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:#c9c9e0">${ph ? `<img src="${esc(ph)}" style="width:100%;height:100%;object-fit:cover;object-position:top center">` : ini}</div>`; };
-        const n = Math.max(out.length, res.length);
-        return Array.from({ length: n }, (_, i) => {
+          return `<div style="width:40px;height:40px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--surface3);border:2px solid ${ring};display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:#c9c9e0">${ph ? `<img src="${esc(ph)}" style="width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.replaceWith(document.createTextNode('${ini.replace(/'/g, '')}'))">` : ini}</div>`; };
+        if (!out.length) return '';
+        const n = out.length;
+        return `<div style="margin-bottom:16px"><div style="display:flex;align-items:center;gap:8px;margin:0 0 8px"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.05rem;letter-spacing:1px;color:${hue}">${esc(div)}</span><span style="flex:1;height:1px;background:linear-gradient(90deg,${hue}55,transparent)"></span><span style="font-size:.66rem;color:var(--muted)">${n} out · ${Math.min(n, res.length)} covered</span></div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px">` + Array.from({ length: n }, (_, i) => {
           const o = out[i], r = res[i];
           return `<div style="display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:14px;background:linear-gradient(100deg, ${hue}1a, var(--surface2) 70%);border:1px solid ${hue}40">
             <div style="display:flex;align-items:center;flex-shrink:0">
@@ -10909,8 +10910,9 @@ async function renderBriefingExtras() {
               </div>
             </div>
           </div>`;
-        }).join('');      }).join('');
-      if (rows) attendanceHtml += `${_secHead('🔄', 'Reserves stepping in', 'Who\'s sitting out and the reserves checked in to cover', '#27f4d2')}<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px">${rows}</div>`;
+        }).join('') + '</div></div>';
+      }).join('');
+      if (rows) attendanceHtml += `<div style="margin-top:28px">${_secHead('🔄', 'Reserves stepping in', 'Who\'s sitting out and the reserves checked in to cover', '#27f4d2')}<div style="margin-top:12px">${rows}</div></div>`;
     } catch(e) { console.warn('reserves stepping in failed', e); }
   }
 
