@@ -8927,6 +8927,8 @@ window._fillPlacePhotos = async function(root) {
   // each time meant the last (usually city) pick always won.
   window._placePick = window._placePick || {};
   let url = window._placePick[all[k]] || '';
+  const _own = gp ? (window._LOCAL_F1[gp] || []) : [];
+  if (!url && _own.length && Math.random() < 0.5) url = _own[Math.floor(Math.random() * _own.length)];
   if (!url && gp && ((window._F1_FILES[gp] || []).length || (window._LOCAL_F1[gp] || []).length) && Math.random() < 0.45) { const f = await window._f1Pics(gp); if (f.length) url = f[Math.floor(Math.random() * f.length)]; }
   if (!url) { const c = (await Promise.all(city.map(window._wikiPic))).filter(Boolean); if (c.length) url = c[Math.floor(Math.random() * c.length)]; }
   if (url) window._placePick[all[k]] = url;
