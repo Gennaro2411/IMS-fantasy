@@ -21459,7 +21459,25 @@ window.confirmTransfer = async function(oldDriverId, newDriverId, div, teamId, c
     currentUser.selections = newSel;
     localStorage.setItem('imsFantasyUser', JSON.stringify(currentUser));
     renderMarket();
+    try { window._signedPopup(newDriverId, newName, isConstructor); } catch(e) {}
   }, confirmLabel);
+};
+// "Congratulations, you've signed X" — after a market purchase, with a choice of where to go next.
+window._signedPopup = function(id, name, isConstructor) {
+  const ent = isConstructor ? (window._allConstrs || []).find(x => x.id === id) : (window._allDrivers || []).find(x => x.id === id);
+  const pic = ent ? (isConstructor ? (ent.logo || '') : (typeof driverPhoto === 'function' ? driverPhoto(ent) : '')) : '';
+  const body = `<div style="text-align:center;padding:6px 4px 2px">
+    <div class="sg-pic" style="width:96px;height:96px;margin:4px auto 12px;border-radius:${isConstructor?'18px':'50%'};overflow:hidden;background:var(--surface3);border:3px solid #4ade80;box-shadow:0 0 24px rgba(74,222,128,.5);display:flex;align-items:center;justify-content:center">${pic ? `<img src="${esc(pic)}" style="width:100%;height:100%;object-fit:${isConstructor?'contain':'cover'};object-position:top center">` : '<span style="font-size:2rem;color:var(--muted)">?</span>'}</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.5rem;letter-spacing:1px;color:#4ade80">CONGRATULATIONS!</div>
+    <div style="font-size:1rem;margin-top:4px">You have signed <strong>${esc(name || 'your new signing')}</strong></div>
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap">
+      <button class="btn btn-secondary" onclick="document.getElementById('modal-overlay').classList.add('hidden')">Carry on shopping</button>
+      <button class="btn btn-primary" onclick="document.getElementById('modal-overlay').classList.add('hidden');showPage('my-team')">Go to My Team</button>
+    </div></div>`;
+  document.getElementById('modal-title').innerHTML = isConstructor ? 'New constructor' : 'New signing';
+  document.getElementById('modal-body').innerHTML = body;
+  document.getElementById('modal-overlay').classList.remove('hidden');
+  try { if (typeof window.fireConfetti === 'function') window.fireConfetti({ count: 70 }); } catch(e) {}
 };
 
 // Builds a tiny inline SVG sparkline from a driver's price history (last 5 races), so
