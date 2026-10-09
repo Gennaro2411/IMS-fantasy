@@ -8908,9 +8908,8 @@ window._F1_FILES = {"Singapore_Grand_Prix": ["1_singapore_f1_night_race_2012_cit
 // Your own photos in the repo (track-photos/) — these take priority as the F1 shot for that GP.
 window._LOCAL_F1 = { Singapore_Grand_Prix: ['track-photos/singapore-1.jpg'] };
 window._f1Pics = async function(gpTitle) {
-  if ((window._LOCAL_F1[gpTitle] || []).length) return window._LOCAL_F1[gpTitle];
   // Hand-picked Wikimedia Commons photos of F1 cars at each Grand Prix (served via Special:FilePath).
-  return (window._F1_FILES[gpTitle] || []).map(f => 'https://commons.wikimedia.org/wiki/Special:FilePath/' + encodeURIComponent(f) + '?width=1200');
+  return (window._LOCAL_F1[gpTitle] || []).concat((window._F1_FILES[gpTitle] || []).map(f => 'https://commons.wikimedia.org/wiki/Special:FilePath/' + encodeURIComponent(f) + '?width=1200'));
 };
 window._fillPlacePhotos = async function(root) {
   const el = (root || document).querySelector('.mt-hero-photo[data-place]');
@@ -8927,9 +8926,14 @@ window._fillPlacePhotos = async function(root) {
   if (gp && ((window._F1_FILES[gp] || []).length || (window._LOCAL_F1[gp] || []).length) && Math.random() < 0.45) { const f = await window._f1Pics(gp); if (f.length) url = f[Math.floor(Math.random() * f.length)]; }
   if (!url) { const c = (await Promise.all(city.map(window._wikiPic))).filter(Boolean); if (c.length) url = c[Math.floor(Math.random() * c.length)]; }
   if (!url || !el.isConnected) return;
-  const im = new Image();
-  im.onload = () => { const d = document.createElement('div'); d.className = 'mt-hero-photo-l on'; d.style.backgroundImage = 'url("' + url + '")'; el.appendChild(d); el.classList.add('on'); };
-  im.src = url;
+  const put = (u, retry) => {
+    const im = new Image();
+    im.onload = () => { const d = document.createElement('div'); d.className = 'mt-hero-photo-l on'; d.style.backgroundImage = 'url("' + u + '")'; el.appendChild(d); el.classList.add('on'); };
+    // If a photo fails to load, fall back to one of the city photos so the box is never empty.
+    im.onerror = async () => { if (!retry) return; const c = (await Promise.all(city.map(window._wikiPic))).filter(x => x && x !== u); if (c.length) put(c[Math.floor(Math.random() * c.length)], false); };
+    im.src = u;
+  };
+  put(url, true);
 };
 
 window._wcSwapRun = function(sw) {
