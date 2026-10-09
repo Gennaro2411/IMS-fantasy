@@ -344,6 +344,7 @@
   #page-my-team .mt-hero-pts::after{content:'';position:absolute;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 45% 70% at 50% 52%,rgba(8,8,14,.78),rgba(8,8,14,.35) 60%,transparent 85%)}
   #page-my-team .mt-hero-pts .mt-lbl,#page-my-team .mt-hero-pts .mt-tile-sub{text-shadow:0 1px 3px #000,0 0 8px rgba(0,0,0,.9);color:#d6d6ea!important}
   #page-my-team #total-pts-display{text-shadow:0 2px 6px rgba(0,0,0,.95),0 0 14px rgba(0,0,0,.8),0 0 18px rgba(255,200,0,.3)!important}
+  @keyframes pulseDot{0%,100%{opacity:1}50%{opacity:.3}}
   .admin-badge{background:var(--red);color:white;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:3px;letter-spacing:1px;}
 
   main{max-width:1100px;margin:0 auto;padding:32px 24px;position:relative;}
@@ -27943,7 +27944,7 @@ async function _wdDuelBody(pool, top) {
         <div id="wd-duel-msg" style="margin-top:8px"></div>${_duelPickerHtml()}</div>
       <div class="wd-panel" id="wd-lobbies"><h4>🌍 Open public lobbies <small>${open.length}</small></h4>
         ${open.length ? open.map(l => `<div class="wd-lob"><span style="display:inline-flex;align-items:center;gap:8px;min-width:0">${_wdAv({ name: l.hostName || 'Player', photo: l.hostAvatar || '' }, 30)}<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(l.hostName || 'Player')}</span></span><small>${Math.max(1, Math.round((now - l.createdAt) / 60e3))} min ago</small><button class="btn btn-primary btn-sm" onclick="wordleDuelJoin('${esc(l.id)}')">Join</button></div>`).join('') : '<p class="text-muted" style="margin:6px 0 0">No open lobbies right now — start one and wait for someone to join.</p>'}
-      </div></div>` + await _h2hBoardHtml('h2hWd', 'PaddockDle H2H records');
+      </div></div>` + await _liveDuelsHtml(all, 'wd', 'h2hWd') + await _h2hBoardHtml('h2hWd', 'PaddockDle H2H records');
   }
   // ---- In a lobby ----
   const role = mine.role, opp = role === 'host' ? 'guest' : 'host';
@@ -28046,6 +28047,22 @@ function _h2hPatch(cur, f, op, won) { if (!op || !op.uid) return {}; const m = _
   r[won ? 'w' : 'l']++; r.n = op.name || r.n || 'Player'; r.a = op.av || r.a || ''; m[op.uid] = r; return { [f]: JSON.stringify(m) }; }
 function _h2hVs(stats, a, b, f) { const r = _h2hMap(stats[a], f)[b] || {}, o = _h2hMap(stats[b], f)[a] || {}; // both copies agree: take the fuller record of each side
   return [Math.max(r.w || 0, o.l || 0), Math.max(r.l || 0, o.w || 0)]; }
+// "Live now": duels currently being played in this game, with the two players' head-to-head record.
+async function _liveDuelsHtml(all, game, f) {
+  const now = _now();
+  const live = (all || []).filter(l => l && (game === 'wd' ? !l.game : l.game === game) && l.status === 'playing' && !l.done && l.hostUid && l.guestUid
+    && now - (l.startedAt || l.createdAt || 0) < 15 * 60e3);
+  if (!live.length) return '';
+  let stats = {};
+  try { (await dbGetAll('wordleScores').catch(() => [])).forEach(d => { if (d && d.uid) stats[d.uid] = d; }); } catch(e) {}
+  const rows = live.map(l => {
+    const [w, ls] = _h2hVs(stats, l.hostUid, l.guestUid, f);
+    const lead = w > ls ? 'host' : ls > w ? 'guest' : '';
+    const side = (r, n) => `<span style="display:inline-flex;align-items:center;gap:7px;min-width:0;${r === 'guest' ? 'flex-direction:row-reverse;' : ''}">${_wdAv({ name: l[r + 'Name'] || 'Player', photo: l[r + 'Avatar'] || '' }, 30)}<b style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:${lead === r ? '#4ade80' : 'inherit'}">${esc(l[r + 'Name'] || 'Player')}</b></span>`;
+    return `<div class="wd-lob" style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px">${side('host')}<span style="text-align:center;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.1rem;white-space:nowrap">${w} – ${ls}<small style="display:block;font-size:.55rem;letter-spacing:1px;color:var(--muted);font-weight:700">H2H</small></span>${side('guest')}</div>`;
+  }).join('');
+  return `<div class="wd-panel" style="margin-top:12px"><h4><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ef4444;box-shadow:0 0 8px #ef4444;margin-right:6px;animation:pulseDot 1.2s ease-in-out infinite"></span>Live now <small>${live.length}</small></h4>${rows}</div>`;
+}
 async function _h2hBoardHtml(f, title) {
   dbInvalidate('wordleScores'); const all = await dbGetAll('wordleScores', { fresh: true }).catch(() => []); const me = _wdMe();
   const pairs = {}; all.forEach(d => { if (!d || !d.uid) return; const m = _h2hMap(d, f);
@@ -28386,7 +28403,7 @@ async function _hdBody(pool, top) {
         <div id="hd-msg" style="margin-top:8px"></div>${_duelPickerHtml()}</div>
       <div class="wd-panel" id="hd-lobbies"><h4>🌍 Open lobbies <small>${open.length}</small></h4>
         ${open.length ? open.map(l => `<div class="wd-lob"><span style="display:inline-flex;align-items:center;gap:8px;min-width:0">${_wdAv({ name: l.hostName || 'Player', photo: l.hostAvatar || '' }, 30)}<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(l.hostName || 'Player')}</span></span><small>${Math.max(1, Math.round((now - l.createdAt) / 60e3))} min ago</small><button class="btn btn-primary btn-sm" onclick="hlDuelJoin('${esc(l.id)}')">Join</button></div>`).join('') : '<p class="text-muted" style="margin:6px 0 0">No open lobbies — start one and wait for someone to join.</p>'}</div></div>`
-      + await _h2hBoardHtml('h2hHl', 'Higher or Lower H2H records');
+      + await _liveDuelsHtml(all, 'hl', 'h2hHl') + await _h2hBoardHtml('h2hHl', 'Higher or Lower H2H records');
   }
   const role = mine.role, opp = role === 'host' ? 'guest' : 'host';
   const P = (r) => ({ uid: lob[r + 'Uid'], name: lob[r + 'Name'] || 'Player', av: lob[r + 'Avatar'] || '' }); const meP = P(role), opP = P(opp);
@@ -28812,7 +28829,7 @@ async function _gdBody(pool, top) {
         <div class="wd-btns"><input id="gd-join-code" type="text" maxlength="5" placeholder="CODE" style="text-transform:uppercase;letter-spacing:4px;font-weight:800;max-width:140px" onkeydown="if(event.key==='Enter')gridDuelJoin(this.value)"><button class="btn btn-secondary" onclick="gridDuelJoin(document.getElementById('gd-join-code').value)">Join</button></div>
         <div id="gd-msg" style="margin-top:8px"></div>${_duelPickerHtml()}</div>
       <div class="wd-panel" id="gd-lobbies"><h4>🌍 Open grid lobbies <small>${open.length}</small></h4>
-        ${open.length ? open.map(l => `<div class="wd-lob"><span style="display:inline-flex;align-items:center;gap:8px;min-width:0">${_wdAv({ name: l.hostName || 'Player', photo: l.hostAvatar || '' }, 30)}<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(l.hostName || 'Player')}</span></span><small>${Math.max(1, Math.round((now - l.createdAt) / 60e3))} min ago</small><button class="btn btn-primary btn-sm" onclick="gridDuelJoin('${esc(l.id)}')">Join</button></div>`).join('') : '<p class="text-muted" style="margin:6px 0 0">No open grid lobbies — start one and wait for someone to join.</p>'}</div></div>` + await _h2hBoardHtml('h2hGr', 'Grid H2H records');
+        ${open.length ? open.map(l => `<div class="wd-lob"><span style="display:inline-flex;align-items:center;gap:8px;min-width:0">${_wdAv({ name: l.hostName || 'Player', photo: l.hostAvatar || '' }, 30)}<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(l.hostName || 'Player')}</span></span><small>${Math.max(1, Math.round((now - l.createdAt) / 60e3))} min ago</small><button class="btn btn-primary btn-sm" onclick="gridDuelJoin('${esc(l.id)}')">Join</button></div>`).join('') : '<p class="text-muted" style="margin:6px 0 0">No open grid lobbies — start one and wait for someone to join.</p>'}</div></div>` + await _liveDuelsHtml(all, 'grid', 'h2hGr') + await _h2hBoardHtml('h2hGr', 'Grid H2H records');
   }
   const role = mine.role, opp = role === 'host' ? 'guest' : 'host';
   const C = _grCategories(pool), byId = Object.fromEntries(C.map(c => [c.id, c]));
