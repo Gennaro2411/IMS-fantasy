@@ -3140,10 +3140,23 @@ window.getRoundWinOverride = function(race, teams, season) {
 // From Season 8, E3 replaces D4. Season 7 and earlier keep D4. This helper returns the correct set
 // for a given season (defaults to the live season). All 5-division logic should use it.
 const ALL_DIVISION_CODES = ['D0','D1','D2','D3','D4','E3'];
+// Official divisions / round counts come from the bible's season_definitions table (synced to
+// settings/seasonDefinitions whenever an admin loads the .db). Hardcoded values are only a fallback.
+window._seasonDefs = window._seasonDefs || null;
 function divisionsForSeason(season) {
   const s = Number(season || window._reserveSeason || window.currentSeason || 8) || 8;
+  const d = window._seasonDefs && window._seasonDefs[String(s)];
+  if (d && Array.isArray(d.divisions) && d.divisions.length) return d.divisions.slice();
   return s >= 8 ? ['D0','D1','D2','D3','E3'] : ['D0','D1','D2','D3','D4'];
 }
+window.totalRoundsForSeason = function(season) {
+  const d = window._seasonDefs && window._seasonDefs[String(Number(season) || '')];
+  return d && d.totalRounds ? d.totalRounds : 0;
+};
+(function _loadSeasonDefs() {
+  const go = () => { try { dbGet('settings', 'seasonDefinitions').then(doc => { if (doc && doc.value) window._seasonDefs = doc.value; }).catch(() => {}); } catch(e) { setTimeout(go, 500); } };
+  setTimeout(go, 0);
+})();
 window.divisionsForSeason = divisionsForSeason;
 // From Season 8, Haas and Mercedes run as RESERVE teams: they still race and appear in results,
 // but they can't be picked as a fantasy constructor (not in Edit Team or the Market).
@@ -13668,6 +13681,19 @@ window.loadDbFile = async function() {
     const buf = await file.arrayBuffer();
     _imsDb = new SQL.Database(new Uint8Array(buf));
     window._careerBott = null; window._appBott = null;
+    // Sync the official season definitions (divisions + total rounds) from the bible.
+    try {
+      const sd = _imsDb.exec("SELECT season, official_divisions_json, total_rounds FROM season_definitions");
+      if (sd.length && sd[0].values.length) {
+        const defs = {};
+        sd[0].values.forEach(([season, divs, rounds]) => { let dv = []; try { dv = JSON.parse(divs || '[]'); } catch(e) {} defs[String(season)] = { divisions: dv, totalRounds: Number(rounds) || 0 }; });
+        window._seasonDefs = defs;
+        await dbSet('settings', 'seasonDefinitions', { value: defs });
+        const _sn = await dbGet('settings','seasonNumber').catch(()=>null);
+        const _cur = defs[String((_sn && _sn.value) || window._reserveSeason || '')];
+        if (_cur && _cur.totalRounds) await dbSet('settings', 'totalRounds', { value: _cur.totalRounds });
+      }
+    } catch(e) { console.warn('season_definitions sync failed', e); }
 
     // List available rounds for the CURRENT season (was hardcoded to 7, so S8 imports showed nothing
     // but old S7 races). Group by track name since round numbers can be ambiguous across sources.
