@@ -22278,7 +22278,21 @@ async function renderHistory() {
   </div>`;
 
   // Which archives feed the current view
-  const sourceArchives = sel === 'all' ? archives : archives.filter(a => a.seasonName === sel);
+  // Test accounts never appear in the Hall of Fame — except in the Season 7 final standings,
+  // where the "test" team genuinely took part.
+  let _testIds = new Set(), _testNames = new Set();
+  try { (await dbGetAll('teams', { all: true })).filter(t => t && t.testAccount).forEach(t => { if (t.userId) _testIds.add(t.userId); [t.playerName, t.teamName].forEach(n => { if (n) _testNames.add(_normName(n)); }); }); } catch(e) {}
+  const _isTestRow = (r, a) => {
+    if (!r) return false;
+    const isS7 = !a.live && /\b7\b/.test(String(a.seasonName || a.season || ''));
+    if (isS7) return false;
+    return (r.userId && _testIds.has(r.userId)) || _testNames.has(_normName(r.playerName)) || _testNames.has(_normName(r.teamName));
+  };
+  const _cleanArch = archives.map(a => (_testIds.size || _testNames.size) ? Object.assign({}, a, {
+    leaderboard: (a.leaderboard || []).filter(r => !_isTestRow(r, a)),
+    roundWins: a.roundWins ? Object.fromEntries(Object.entries(a.roundWins).filter(([uid]) => !_isTestRow(Object.assign({ userId: uid }, (a.roundWinsMeta || {})[uid] || {}), a))) : a.roundWins
+  }) : a);
+  const sourceArchives = sel === 'all' ? _cleanArch : _cleanArch.filter(a => a.seasonName === sel);
 
   // Aggregate across the selected source(s)
   const allTimeStandings = {}; // player -> {name, team, avatar, points, seasons, wins(titles)}
