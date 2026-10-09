@@ -3244,6 +3244,7 @@ window.loadAttendance = async function() {
       (s.drivers || []).forEach(d => {
         if (d.discord_id) { byDiv[div].add(String(d.discord_id)); all.add(String(d.discord_id)); }
         if (d.alias) { const nn = normName(d.alias); if (nn) { namesByDiv[div].add(nn); namesAll.add(nn); } }
+        if (!window._attRawTmp) window._attRawTmp = {}; (window._attRawTmp[div] = window._attRawTmp[div] || []).push({ id: d.discord_id ? String(d.discord_id) : '', alias: d.alias || '' });
       });
       // Explicit checked-out list — drivers who selected "not racing" for this session.
       (s.checked_out_drivers || []).forEach(d => {
@@ -3256,6 +3257,7 @@ window.loadAttendance = async function() {
     window._attendanceByDiv = byDiv;
     window._attendanceAll = all;
     window._attendanceNamesByDiv = namesByDiv;
+    window._attendanceRawByDiv = window._attRawTmp || {}; window._attRawTmp = null;
     window._checkedOutByDiv = outByDiv;
     window._checkedOutNamesByDiv = outNamesByDiv;
     window._attendanceMeta = { generated_at_utc: manifest.generated_at_utc, track: manifest.track || manifest.race || null, round: manifest.round != null ? manifest.round : null, sessions: manifest.sessions.length };
@@ -10874,6 +10876,32 @@ async function renderBriefingExtras() {
           </div>`;
         }).join('')}
       </div>`;
+    // ── Reserves stepping in: a market driver checked OUT + a non-market driver checked IN for that division ──
+    try {
+      const _fold = (x) => (typeof searchFold === 'function') ? searchFold(String(x||'').replace(/^\[[^\]]*\]\s*/,'')) : String(x||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+      const _all = window._allDrivers || drivers;
+      const rows = ((typeof divisionsForSeason==='function') ? divisionsForSeason(window.currentSeason) : DIVISIONS).map(div => {
+        const mkt = drivers.filter(d => d.division === div && !d.isReserve);
+        const mktIds = new Set(mkt.map(d => String(d.discordId || ''))), mktNames = new Set(mkt.map(d => _fold(d.name)));
+        const outIdS = (window._checkedOutByDiv || {})[div], outNmS = (window._checkedOutNamesByDiv || {})[div];
+        const out = mkt.filter(d => (outIdS && d.discordId && outIdS.has(String(d.discordId))) || (outNmS && outNmS.has(_fold(d.name))));
+        const ins = ((window._attendanceRawByDiv || {})[div] || []).filter(r => !(r.id && mktIds.has(r.id)) && !mktNames.has(_fold(r.alias)));
+        const seen = new Set(); const res = ins.filter(r => { const k = r.id || _fold(r.alias); if (seen.has(k)) return false; seen.add(k); return true; })
+          .map(r => _all.find(d => (r.id && String(d.discordId || '') === r.id) || _fold(d.name) === _fold(r.alias)) || { name: r.alias || 'Reserve' });
+        if (!out.length && !res.length) return '';
+        const hue = DIV_HUES[div] || '#9b6fd4';
+        const chip = (d, c) => { const ph = (typeof driverPhoto === 'function' && d.id) ? driverPhoto(d) : ''; return `<span style="display:inline-flex;align-items:center;gap:6px;padding:3px 9px 3px 3px;border-radius:20px;background:${c}14;border:1px solid ${c}55;font-size:.74rem;font-weight:700;margin:2px">${ph ? `<img src="${esc(ph)}" style="width:20px;height:20px;border-radius:50%;object-fit:cover">` : ''}${esc(d.name)}</span>`; };
+        return `<div style="padding:10px 12px;border-radius:12px;background:var(--surface2);border:1px solid ${hue}44;margin-bottom:8px">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;letter-spacing:1px;color:${hue};margin-bottom:6px">${esc(div)}</div>
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px">
+            <span style="font-size:.62rem;font-weight:800;letter-spacing:1px;color:#ff5470;min-width:34px">OUT</span>${out.length ? out.map(d => chip(d, '#ff5470')).join('') : '<span class="text-muted" style="font-size:.72rem">—</span>'}
+          </div>
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:4px">
+            <span style="font-size:.62rem;font-weight:800;letter-spacing:1px;color:#27f4d2;min-width:34px">IN</span>${res.length ? res.map(d => chip(d, '#27f4d2')).join('') : '<span class="text-muted" style="font-size:.72rem">No reserve checked in yet</span>'}
+          </div></div>`;
+      }).join('');
+      if (rows) attendanceHtml += `${_secHead('🔄', 'Reserves stepping in', 'Market drivers checked out and the reserves checked in for their division', '#27f4d2')}<div>${rows}</div>`;
+    } catch(e) { console.warn('reserves stepping in failed', e); }
   }
 
   let checklistHtml = '';
