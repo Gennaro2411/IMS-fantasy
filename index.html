@@ -6729,6 +6729,7 @@ window.searchFold = function(s) {
     .toLowerCase().replace(/[^a-z0-9]/g, '');
 };
 window.showPage = function(page) {
+  if (!window._seasonDefs && typeof dbGet === 'function') dbGet('settings','seasonDefinitions').then(d => { if (d && d.value) window._seasonDefs = d.value; }).catch(()=>{});
   if (page === 'my-team') { window._wcWant = true; window._placePick = {}; }
   // Mid-way through an IMS PaddockDle game? Leaving counts as giving up (stops people looking answers up).
   if (page !== 'games' && typeof window._wdGuardLeave === 'function' && window._wdGuardLeave(() => showPage(page))) return;
