@@ -10890,17 +10890,27 @@ async function renderBriefingExtras() {
           .map(r => _all.find(d => (r.id && String(d.discordId || '') === r.id) || _fold(d.name) === _fold(r.alias)) || { name: r.alias || 'Reserve' });
         if (!out.length && !res.length) return '';
         const hue = DIV_HUES[div] || '#9b6fd4';
-        const chip = (d, c) => { const ph = (typeof driverPhoto === 'function' && d.id) ? driverPhoto(d) : ''; return `<span style="display:inline-flex;align-items:center;gap:6px;padding:3px 9px 3px 3px;border-radius:20px;background:${c}14;border:1px solid ${c}55;font-size:.74rem;font-weight:700;margin:2px">${ph ? `<img src="${esc(ph)}" style="width:20px;height:20px;border-radius:50%;object-fit:cover">` : ''}${esc(d.name)}</span>`; };
-        return `<div style="padding:10px 12px;border-radius:12px;background:var(--surface2);border:1px solid ${hue}44;margin-bottom:8px">
-          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;letter-spacing:1px;color:${hue};margin-bottom:6px">${esc(div)}</div>
-          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px">
-            <span style="font-size:.62rem;font-weight:800;letter-spacing:1px;color:#ff5470;min-width:34px">OUT</span>${out.length ? out.map(d => chip(d, '#ff5470')).join('') : '<span class="text-muted" style="font-size:.72rem">—</span>'}
-          </div>
-          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:4px">
-            <span style="font-size:.62rem;font-weight:800;letter-spacing:1px;color:#27f4d2;min-width:34px">IN</span>${res.length ? res.map(d => chip(d, '#27f4d2')).join('') : '<span class="text-muted" style="font-size:.72rem">No reserve checked in yet</span>'}
-          </div></div>`;
-      }).join('');
-      if (rows) attendanceHtml += `${_secHead('🔄', 'Reserves stepping in', 'Market drivers checked out and the reserves checked in for their division', '#27f4d2')}<div>${rows}</div>`;
+        const face = (d, ring) => { const ph = d && d.id && typeof driverPhoto === 'function' ? driverPhoto(d) : ''; const ini = String((d && d.name) || '?').replace(/^\[[^\]]*\]\s*/, '').slice(0, 2).toUpperCase();
+          return `<div style="width:40px;height:40px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--surface3);border:2px solid ${ring};display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:#c9c9e0">${ph ? `<img src="${esc(ph)}" style="width:100%;height:100%;object-fit:cover;object-position:top center">` : ini}</div>`; };
+        const n = Math.max(out.length, res.length);
+        return Array.from({ length: n }, (_, i) => {
+          const o = out[i], r = res[i];
+          return `<div style="display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:14px;background:linear-gradient(100deg, ${hue}1a, var(--surface2) 70%);border:1px solid ${hue}40">
+            <div style="display:flex;align-items:center;flex-shrink:0">
+              ${o ? face(o, 'rgba(255,255,255,0.18)') : `<div style="width:40px;height:40px;border-radius:50%;border:2px dashed rgba(255,255,255,.18)"></div>`}
+              <span style="margin:0 -5px;z-index:1;width:20px;height:20px;border-radius:50%;background:#0d1a1a;border:1px solid ${hue};display:flex;align-items:center;justify-content:center;color:${hue};font-size:.7rem">⇄</span>
+              ${r ? face(r, hue) : `<div style="width:40px;height:40px;border-radius:50%;border:2px dashed ${hue}66;display:flex;align-items:center;justify-content:center;color:${hue};font-weight:900">?</div>`}
+            </div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:.88rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${o ? `<span style="color:var(--muted);text-decoration:line-through">${esc(o.name)}</span>` : '<span style="color:var(--muted)">Spare seat</span>'} <span style="color:${hue}">→</span> ${r ? `<span style="color:#fff">${esc(r.name)}</span>` : '<span style="color:var(--muted);font-style:italic">awaiting reserve</span>'}</div>
+              <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
+                <span style="font-size:.58rem;font-weight:800;color:${hue};background:${hue}22;border:1px solid ${hue}55;border-radius:4px;padding:0 6px">${esc(div)}</span>
+                <span style="font-size:.64rem;color:var(--muted)">${o ? (o.team ? esc(o.team) + ' seat' : 'Checked out') : 'Extra reserve checked in'}</span>
+              </div>
+            </div>
+          </div>`;
+        }).join('');      }).join('');
+      if (rows) attendanceHtml += `${_secHead('🔄', 'Reserves stepping in', 'Who\'s sitting out and the reserves checked in to cover', '#27f4d2')}<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px">${rows}</div>`;
     } catch(e) { console.warn('reserves stepping in failed', e); }
   }
 
