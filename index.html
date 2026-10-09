@@ -27418,6 +27418,9 @@ function natFlagImg(nat, px) {
   const c = natCode(nat); if (!c) return ''; const w = px || 24;
   return `<img src="https://flagcdn.com/w${w <= 20 ? 20 : w <= 40 ? 40 : 80}/${c}.png" alt="${esc(String(nat))}" title="${esc(String(nat))}" style="width:${w}px;height:${Math.round(w * 0.75)}px;object-fit:cover;border-radius:3px;vertical-align:middle;box-shadow:0 0 0 1px rgba(0,0,0,.35)">`;
 }
+window._CONT = {"GB": "EU", "IE": "EU", "FR": "EU", "DE": "EU", "IT": "EU", "ES": "EU", "PT": "EU", "NL": "EU", "BE": "EU", "CH": "EU", "AT": "EU", "GR": "EU", "PL": "EU", "CZ": "EU", "SK": "EU", "HU": "EU", "RO": "EU", "BG": "EU", "RS": "EU", "HR": "EU", "SI": "EU", "BA": "EU", "AL": "EU", "MK": "EU", "ME": "EU", "XK": "EU", "DK": "EU", "SE": "EU", "NO": "EU", "FI": "EU", "IS": "EU", "EE": "EU", "LV": "EU", "LT": "EU", "UA": "EU", "RU": "EU", "BY": "EU", "MD": "EU", "GE": "EU", "AM": "EU", "AZ": "EU", "TR": "EU", "CY": "EU", "MT": "EU", "LU": "EU", "MC": "EU", "FO": "EU", "AD": "EU", "LI": "EU", "SM": "EU", "GI": "EU", "IM": "EU", "JE": "EU", "GG": "EU", "GL": "EU", "US": "NA", "CA": "NA", "MX": "NA", "CR": "NA", "PR": "NA", "CU": "NA", "DO": "NA", "JM": "NA", "GT": "NA", "PA": "NA", "HN": "NA", "SV": "NA", "NI": "NA", "TT": "NA", "BB": "NA", "BS": "NA", "HT": "NA", "BR": "SA", "AR": "SA", "CL": "SA", "CO": "SA", "PE": "SA", "VE": "SA", "UY": "SA", "EC": "SA", "PY": "SA", "BO": "SA", "GY": "SA", "SR": "SA", "JP": "AS", "CN": "AS", "KR": "AS", "KP": "AS", "IN": "AS", "PK": "AS", "BD": "AS", "LK": "AS", "NP": "AS", "ID": "AS", "MY": "AS", "SG": "AS", "TH": "AS", "VN": "AS", "PH": "AS", "TW": "AS", "HK": "AS", "MO": "AS", "KH": "AS", "LA": "AS", "MM": "AS", "BN": "AS", "MV": "AS", "BT": "AS", "AF": "AS", "IL": "AS", "LB": "AS", "JO": "AS", "SA": "AS", "AE": "AS", "QA": "AS", "KW": "AS", "BH": "AS", "OM": "AS", "IR": "AS", "IQ": "AS", "SY": "AS", "YE": "AS", "PS": "AS", "KZ": "AS", "UZ": "AS", "TM": "AS", "KG": "AS", "TJ": "AS", "MN": "AS", "EG": "AF", "MA": "AF", "DZ": "AF", "TN": "AF", "LY": "AF", "ZA": "AF", "NG": "AF", "GH": "AF", "KE": "AF", "ET": "AF", "ZW": "AF", "ZM": "AF", "UG": "AF", "TZ": "AF", "CM": "AF", "SN": "AF", "CI": "AF", "AO": "AF", "MZ": "AF", "NA": "AF", "BW": "AF", "CD": "AF", "SD": "AF", "SO": "AF", "RW": "AF", "MW": "AF", "ML": "AF", "MU": "AF", "MG": "AF", "AU": "OC", "NZ": "OC", "FJ": "OC", "WS": "OC", "TO": "OC", "PG": "OC", "AS": "OC"};
+const _natCont = (nat) => { const t = String(nat || '').trim(); if (!t) return ''; let c = NAT_CODES[t.toLowerCase()] || (/^[A-Za-z]{2}$/.test(t) ? t.toUpperCase() : ''); c = String(c).split('-')[0]; return window._CONT[c] || ''; };
+const _natSameCont = (a, b) => { const x = _natCont(a); return !!x && x === _natCont(b); };
 function _wdFlag(nat) {
   const t = String(nat || '').trim(); if (!t) return '?';
   const f = natFlagImg(t, 40);
@@ -27481,7 +27484,7 @@ function _wdRowsHtml(ids, ans, pool) {
   const num = (g, a, k) => g === a ? cell('ok', g) : cell(_wdClose(g, a, k) ? 'mid' : 'bad', `${g}<i>${a > g ? '▲' : '▼'}</i>`);
   return ids.map(id => pool.find(p => p.id === id)).filter(Boolean).map(g => `<div class="wd-row">
       ${cell(g.id === ans.id ? 'ok drv' : 'drv', `${_wdAv(g, 34)}<span>${esc(g.name)}</span>`)}
-      ${cell(g.nat && ans.nat && g.nat.toLowerCase() === ans.nat.toLowerCase() ? 'ok' : 'bad', _wdFlag(g.nat))}
+      ${cell(g.nat && ans.nat && g.nat.toLowerCase() === ans.nat.toLowerCase() ? 'ok' : _natSameCont(g.nat, ans.nat) ? 'mid' : 'bad', _wdFlag(g.nat))}
       ${cell(_wdNorm(g.team) === _wdNorm(ans.team) ? 'ok' : _wdPastTeam(g, ans) ? 'mid' : 'bad', (g.res || /^reserve$/i.test(g.team) ? (typeof reserveBadgeSvg === 'function' ? `<span class="wd-logo" style="display:inline-flex;align-items:center;justify-content:center">${reserveBadgeSvg(26)}</span>` : '') + `<small>Reserve</small>` : (typeof getTeamLogo === 'function' && getTeamLogo(g.team) ? `<img class="wd-logo" src="${esc(getTeamLogo(g.team))}">` : '') + `<small>${esc(g.team)}</small>`))}
       ${(() => { const O = ['D0', 'D1', 'D2', 'D3', 'D4', 'E3']; const gi = O.indexOf(g.dv), ai = O.indexOf(ans.dv);
         return cell(g.dv && g.dv === ans.dv ? 'ok' : 'bad', `${esc(g.dv || '?')}${g.dv !== ans.dv && gi >= 0 && ai >= 0 ? `<i>${ai < gi ? '▲' : '▼'}</i>` : ''}`); })()}
@@ -27650,7 +27653,7 @@ window.wordleShare = function() {
   const O = ['D0', 'D1', 'D2', 'D3', 'D4', 'E1', 'E2', 'E3'];
   // No square for the driver itself — the row is all green when it's the right driver anyway.
   const rows = st.guesses.map(id => pool.find(p => p.id === id)).filter(Boolean).map(g => [
-    sq(g.nat && ans.nat && g.nat.toLowerCase() === ans.nat.toLowerCase()), sq(_wdNorm(g.team) === _wdNorm(ans.team), _wdPastTeam(g, ans)), sq(g.dv && g.dv === ans.dv),
+    sq(g.nat && ans.nat && g.nat.toLowerCase() === ans.nat.toLowerCase(), _natSameCont(g.nat, ans.nat)), sq(_wdNorm(g.team) === _wdNorm(ans.team), _wdPastTeam(g, ans)), sq(g.dv && g.dv === ans.dv),
     sq(g.b === ans.b, _wdClose(g.b, ans.b, 'b')), sq(g.st === ans.st, _wdClose(g.st, ans.st, 'st')), sq(g.p === ans.p, _wdClose(g.p, ans.p, 'p')), sq(g.w === ans.w, _wdClose(g.w, ans.w, 'w'))].join(''));
   const head = mode === 'daily' ? 'IMS PaddockDle #' + _wdDayNum() : 'IMS PaddockDle ∞';
   const txt = head + ' · ' + (st.won ? st.guesses.length + '/' + max : 'X/' + max) + '\n' + rows.join('\n') + '\n' + location.href.split('#')[0];
