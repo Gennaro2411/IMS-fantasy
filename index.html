@@ -13690,8 +13690,11 @@ window.loadDbFile = async function() {
         sd[0].values.forEach(([season, divs, rounds]) => { let dv = []; try { dv = JSON.parse(divs || '[]'); } catch(e) {} defs[String(season)] = { divisions: dv, totalRounds: Number(rounds) || 0 }; });
         window._seasonDefs = defs;
         await dbSet('settings', 'seasonDefinitions', { value: defs });
+        // The newest season in the bible is the current one.
+        const _latest = Math.max(...Object.keys(defs).map(Number).filter(n => n > 0));
         const _sn = await dbGet('settings','seasonNumber').catch(()=>null);
-        const _cur = defs[String((_sn && _sn.value) || window._reserveSeason || '')];
+        if (_latest && (!_sn || Number(_sn.value) !== _latest)) { await dbSet('settings', 'seasonNumber', { value: _latest }); window.currentSeason = _latest; }
+        const _cur = defs[String(_latest || (_sn && _sn.value) || '')];
         if (_cur && _cur.totalRounds) await dbSet('settings', 'totalRounds', { value: _cur.totalRounds });
       }
     } catch(e) { console.warn('season_definitions sync failed', e); }
@@ -16985,7 +16988,8 @@ async function renderAdminSettings() {
   const locked = lockDoc && lockDoc.value;
   const isBreak = breakDoc && breakDoc.value;
   const seasonInput = document.getElementById('current-season-input');
-  if (seasonInput) seasonInput.value = seasonDoc ? (seasonDoc.value || 7) : 7;
+  const _defMax = window._seasonDefs ? Math.max(...Object.keys(window._seasonDefs).map(Number).filter(n => n > 0)) : 0;
+  if (seasonInput) seasonInput.value = (seasonDoc && seasonDoc.value) || _defMax || window.currentSeason || '';
   try {
     const trInput = document.getElementById('total-rounds-input');
     if (trInput) { const trDoc = await dbGet('settings','totalRounds').catch(()=>null); if (trDoc && trDoc.value) trInput.value = trDoc.value; }
