@@ -345,6 +345,7 @@
   #page-my-team .mt-hero-pts .mt-lbl,#page-my-team .mt-hero-pts .mt-tile-sub{text-shadow:0 1px 3px #000,0 0 8px rgba(0,0,0,.9);color:#d6d6ea!important}
   #page-my-team #total-pts-display{text-shadow:0 2px 6px rgba(0,0,0,.95),0 0 14px rgba(0,0,0,.8),0 0 18px rgba(255,200,0,.3)!important}
   @keyframes pulseDot{0%,100%{opacity:1}50%{opacity:.3}}
+  .brf-form>summary::-webkit-details-marker{display:none}.brf-form[open] .brf-form-chev{transform:rotate(180deg)}
   .admin-badge{background:var(--red);color:white;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:3px;letter-spacing:1px;}
 
   main{max-width:1100px;margin:0 auto;padding:32px 24px;position:relative;}
@@ -11054,6 +11055,7 @@ async function renderBriefingExtras() {
         const spark = h.slice(-6).map(v => `<span title="${v}" style="display:inline-block;width:6px;margin-right:2px;border-radius:2px;background:${col};height:${Math.max(3, Math.min(22, v / Math.max(1, ...h) * 22))}px"></span>`).join('');
         return `<div style="border:1px solid rgba(255,255,255,.08);border-left:3px solid ${col};border-radius:12px;padding:12px;background:rgba(255,255,255,.02)">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            ${(() => { const ph = typeof driverPhoto === 'function' ? driverPhoto(d) : ''; const ini = String(d.name || '?').replace(/^\[[^\]]*\]\s*/, '').slice(0, 2).toUpperCase().replace(/'/g, ''); return `<div onclick="openDriverModal('${d.id}')" title="View profile" style="cursor:pointer;width:38px;height:38px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--surface3);border:2px solid ${col};display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:#c9c9e0">${ph ? `<img src="${esc(ph)}" style="width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.replaceWith(document.createTextNode('${ini}'))">` : ini}</div>`; })()}
             <strong style="font-size:.92rem">${esc(d.name)}</strong><span style="font-size:.65rem;color:var(--muted)">${esc(d.division || '')}</span>
             <span style="margin-left:auto;font-size:.66rem;font-weight:800;padding:3px 8px;border-radius:99px;color:${col};border:1px solid ${col}">${lab}</span>
           </div>
@@ -11065,7 +11067,7 @@ async function renderBriefingExtras() {
           ${adv ? `<div style="font-size:.78rem;line-height:1.45;margin-top:6px;color:${ratio !== null && ratio < .85 ? '#ffb3a0' : '#cfe'}">${adv}</div>` : ''}
         </div>`;
       }).join('');
-      if (rowsF) checklistHtml += `<div style="margin-top:28px">${_secHead('📈', 'Driver form', 'Points vs what each driver\'s price says they should score in their division', '#2ee6b6')}<div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">${rowsF}</div></div>`;
+      if (rowsF) checklistHtml += `<details class="brf-form" style="margin-top:28px"><summary style="list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px">${_secHead('📈', 'Driver form report', 'Tap to open: how each of your drivers is doing vs their price', '#2ee6b6')}<span class="brf-form-chev" style="margin-left:auto;font-size:.8rem;color:var(--muted);transition:transform .2s">▼</span></summary><div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">${rowsF}</div></details>`;
     } catch(e) { console.warn('driver form failed', e); }
   }
 
