@@ -8898,20 +8898,23 @@ window._wikiPic = async function(title) {
   return url;
 };
 window._f1Pics = async function(gpTitle) {
-  // Real F1 race photos from Wikimedia Commons for this Grand Prix (cached per device).
+  // Real F1 race photos from Wikimedia Commons: files in the "<year> <Grand Prix>" categories.
   const q = gpTitle.replace(/_/g, ' ');
-  const ck = 'imsF1Pics:' + q;
-  try { const c = JSON.parse(localStorage.getItem(ck) || 'null'); if (c) return c; } catch(e) {}
-  let list = [];
-  try {
-    const u = 'https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrnamespace=6&gsrlimit=30'
-      + '&gsrsearch=' + encodeURIComponent(q + ' Formula One car filetype:bitmap') + '&prop=imageinfo&iiprop=url|size&iiurlwidth=960';
-    const j = await (await fetch(u)).json();
-    list = Object.values((j.query && j.query.pages) || {})
-      .map(p => p.imageinfo && p.imageinfo[0]).filter(ii => ii && ii.thumburl && ii.width >= ii.height && ii.width >= 800 && /\.jpe?g$/i.test(ii.url))
-      .map(ii => ii.thumburl).slice(0, 12);
-  } catch(e) {}
-  try { localStorage.setItem(ck, JSON.stringify(list)); } catch(e) {}
+  const ck = 'imsF1Pics2:' + q;
+  try { const c = JSON.parse(localStorage.getItem(ck) || 'null'); if (c && c.length) return c; } catch(e) {}
+  const years = [2025, 2024, 2023, 2022, 2019];
+  const one = async (y) => {
+    try {
+      const u = 'https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&generator=categorymembers&gcmtype=file&gcmlimit=40'
+        + '&gcmtitle=' + encodeURIComponent('Category:' + y + ' ' + q) + '&prop=imageinfo&iiprop=url|size&iiurlwidth=960';
+      const j = await (await fetch(u)).json();
+      return Object.values((j.query && j.query.pages) || {}).map(p => p.imageinfo && p.imageinfo[0])
+        .filter(ii => ii && ii.thumburl && ii.width > ii.height && ii.width >= 900 && /\.jpe?g$/i.test(ii.url) && !/map|logo|poster|ticket|trophy/i.test(ii.url))
+        .map(ii => ii.thumburl);
+    } catch(e) { return []; }
+  };
+  const list = [].concat(...(await Promise.all(years.map(one)))).slice(0, 40);
+  if (list.length) { try { localStorage.setItem(ck, JSON.stringify(list)); } catch(e) {} }
   return list;
 };
 window._fillPlacePhotos = async function(root) {
@@ -8926,7 +8929,7 @@ window._fillPlacePhotos = async function(root) {
   const city = titles.filter(t => !/Grand_Prix|Circuit|Autódromo|Autodromo|Hungaroring|Ring$|International_Circuit|Course$/i.test(t));
   // A fresh pick on every page load: ~40% of the time an F1 race shot, otherwise a city photo.
   let url = '';
-  if (gp && Math.random() < 0.4) { const f = await window._f1Pics(gp); if (f.length) url = f[Math.floor(Math.random() * f.length)]; }
+  if (gp && Math.random() < 0.45) { const f = await window._f1Pics(gp); if (f.length) url = f[Math.floor(Math.random() * f.length)]; }
   if (!url) { const c = (await Promise.all(city.map(window._wikiPic))).filter(Boolean); if (c.length) url = c[Math.floor(Math.random() * c.length)]; }
   if (!url || !el.isConnected) return;
   const im = new Image();
