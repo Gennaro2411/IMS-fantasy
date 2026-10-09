@@ -10925,7 +10925,7 @@ async function renderBriefingExtras() {
           </div>`;
         }).join('') + '</div>' + (unassigned.length ? `<div style="margin-top:8px;font-size:.72rem;color:var(--muted)">Reserves checked in: ${unassigned.map(r => `<b style="color:#27f4d2">${esc(r.name)}</b>`).join(', ')}</div>` : '') + '</div>';
       }).join('');
-      if (rows) attendanceHtml += `<div style="margin-top:28px">${_secHead('🔄', 'Reserves stepping in', 'Who\'s sitting out and the reserves checked in to cover', '#27f4d2')}<div style="margin-top:12px">${rows}</div></div>`;
+      if (rows) attendanceHtml += `<details class="brf-form" style="margin-top:28px"><summary style="list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px">${_secHead('🔄', 'Reserves stepping in', 'Tap to open: who\'s sitting out and the reserves covering', '#27f4d2')}<span class="brf-form-chev" style="margin-left:auto;font-size:.8rem;color:var(--muted);transition:transform .2s">▼</span></summary><div style="margin-top:12px">${rows}</div></details>`;
     } catch(e) { console.warn('reserves stepping in failed', e); }
   }
 
@@ -11036,21 +11036,35 @@ async function renderBriefingExtras() {
           else { lab = 'Overperforming drastically'; col = '#22c55e'; }
         }
         const notes = [];
-        if (ratio !== null) notes.push(`Averaging <b>${rAvg.toFixed(1)}</b> over the last ${last3.length} vs <b>${exp.toFixed(1)}</b> expected for a $${_pr(d).toFixed(1)}M ${esc(d.division)} driver (${Math.round(ratio * 100)}% of par).`);
         if (last3.length >= 2 && h.length >= 4) {
           const diff = rAvg - _avg(h.slice(0, -3));
           if (Math.abs(diff) >= Math.max(3, sAvg * .25)) notes.push(diff > 0 ? `Trending up: +${diff.toFixed(1)} pts/race on their earlier rounds.` : `Trending down: ${diff.toFixed(1)} pts/race on their earlier rounds.`);
         }
         if (dnf >= 2) notes.push(`${dnf} DNFs this season, a real reliability risk.`);
-        if (!isDriverCheckedIn(d)) notes.push(`Not checked in for this round yet.`);
         // Replacement: better recent form, same division, affordable after selling.
         const alt = peers.filter(o => o.x.id !== d.id && !Object.values(sel).includes(o.x.id) && o.h.length >= 2 && o.p <= _pr(d) + _bank && !isDriverBanned(o.x))
           .map(o => ({ ...o, r: _avg(o.h.slice(-3)) })).filter(o => o.r > rAvg * 1.2 && o.r - rAvg >= 3).sort((a, b) => (b.r / b.p) - (a.r / a.p))[0];
-        let adv = '';
-        if (ratio !== null && ratio < .85) adv = alt ? `Consider replacing: <b>${esc(alt.x.name)}</b> ($${alt.p.toFixed(1)}M) is averaging ${alt.r.toFixed(1)} over their last ${Math.min(3, alt.h.length)} and you can afford them.` : `No affordable ${esc(d.division)} driver is clearly beating them on recent form, so holding is reasonable.`;
-        else if (ratio !== null && ratio > 1.4 && h.length >= 3 && rAvg > sAvg * 1.3) adv = `Hot streak well above their season average (${sAvg.toFixed(1)}). Ride it, but expect some regression.`;
-        else if (ratio !== null && ratio > 1.15 && rank && rank <= 3) adv = `Top ${rank} in ${esc(d.division)} on recent form, a strong captain option.`;
-        else if (alt && ratio !== null && ratio <= 1.15) adv = `Upgrade option: <b>${esc(alt.x.name)}</b> ($${alt.p.toFixed(1)}M, ${alt.r.toFixed(1)} avg recently).`;
+        // Overview: plain-English summary built only from the numbers above.
+        const tot = h.reduce((x, y) => x + y, 0), best = h.length ? Math.max(...h) : 0, worst = h.length ? Math.min(...h) : 0;
+        const nm = esc(d.name);
+        let overview = h.length ? `${nm} has scored <b>${tot}</b> pts across ${h.length} race${h.length > 1 ? 's' : ''} (<b>${sAvg.toFixed(1)}</b> a race, best ${best}, worst ${worst})` : `${nm} hasn't scored in a counted race yet`;
+        if (ratio !== null) overview += `, which is <b>${Math.round(ratio * 100)}%</b> of what a $${_pr(d).toFixed(1)}M ${esc(d.division)} driver should return`;
+        overview += '.';
+        if (rank) overview += ` On recent form they're <b>#${rank} of ${rankList.length}</b> in ${esc(d.division)}.`;
+        if (h.length >= 3) { const sd = Math.sqrt(_avg(h.map(v => (v - sAvg) ** 2))); overview += sd > sAvg * .6 ? ` Very inconsistent: scores swing by about ±${sd.toFixed(0)} a race.` : sd < sAvg * .3 ? ` Very consistent: within about ±${sd.toFixed(0)} a race.` : ''; }
+        // Verdict + next step.
+        let verdict = 'HOLD', vcol = '#94a3b8', adv = '';
+        if (ratio === null) { verdict = 'WAIT'; adv = `Not enough races to judge yet. Reassess after another round or two.`; }
+        else if (ratio < .6) { if (alt) { verdict = 'REPLACE'; vcol = '#ff3b4e'; adv = `Swap for <b>${esc(alt.x.name)}</b> ($${alt.p.toFixed(1)}M): ${alt.r.toFixed(1)} pts a race over their last ${Math.min(3, alt.h.length)}, ${(alt.r - rAvg).toFixed(1)} more than ${nm}, and it fits your budget.`; }
+          else { verdict = 'WATCH'; vcol = '#ff8f3b'; adv = `Badly under par, but no affordable ${esc(d.division)} driver is clearly better right now. Hold, and if they score under ${Math.round(exp * .6)} again next round, move on.`; } }
+        else if (ratio < .85) { if (alt) { verdict = 'CONSIDER SWAP'; vcol = '#ff8f3b'; adv = `<b>${esc(alt.x.name)}</b> ($${alt.p.toFixed(1)}M) is averaging ${alt.r.toFixed(1)} recently vs ${rAvg.toFixed(1)}. Worth it if you have a free transfer (${ft} left).`; }
+          else { verdict = 'HOLD'; adv = `Slightly under par, but nobody affordable in ${esc(d.division)} is clearly beating them. Keep the transfer.`; } }
+        else if (ratio <= 1.15) { if (alt) { verdict = 'UPGRADE OPTION'; vcol = '#4dabf7'; adv = `Doing their job. If you have a spare transfer, <b>${esc(alt.x.name)}</b> ($${alt.p.toFixed(1)}M) is scoring ${alt.r.toFixed(1)} recently.`; }
+          else { verdict = 'HOLD'; adv = `Scoring about what their price says. No clear upgrade available, so keep them.`; } }
+        else { verdict = rank && rank <= 3 ? 'CAPTAIN OPTION' : 'KEEP'; vcol = '#22c55e';
+          adv = rank && rank <= 3 ? `Top ${rank} in ${esc(d.division)} on recent form and beating their price. A strong captain pick this round.` : `Beating their price, so keep them.`;
+          if (ratio > 1.4 && h.length >= 3 && rAvg > sAvg * 1.3) adv += ` Their last 3 (${rAvg.toFixed(1)}) are well above their season average (${sAvg.toFixed(1)}), so expect some regression.`; }
+        if (!isDriverCheckedIn(d)) adv += ` Not checked in yet: if they check out, you'll need a reserve or a swap before lock.`;
         const stat = (k, v) => `<div style="text-align:center"><div style="font-size:.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">${k}</div><div style="font-weight:800;font-size:.82rem">${v}</div></div>`;
         const spark = h.slice(-6).map(v => `<span title="${v}" style="display:inline-block;width:6px;margin-right:2px;border-radius:2px;background:${col};height:${Math.max(3, Math.min(22, v / Math.max(1, ...h) * 22))}px"></span>`).join('');
         const _tc = (typeof getTeamCardColour === 'function' && getTeamCardColour(d.team)) || null;
@@ -11066,8 +11080,11 @@ async function renderBriefingExtras() {
             ${stat('Season avg', sAvg.toFixed(1))}${stat('Last 3', rAvg.toFixed(1))}${stat('Expected', exp ? exp.toFixed(1) : '–')}${stat('Div rank', rank ? '#' + rank : '–')}${stat('Pts/$M', ppm.toFixed(2))}${stat('DNFs', dnf)}${stat('Owned', own + '%')}
             <div style="display:flex;align-items:flex-end;height:22px">${spark}</div>
           </div>
-          ${notes.length ? `<div style="font-size:.76rem;line-height:1.45;color:var(--muted)">${notes.join(' ')}</div>` : ''}
-          ${adv ? `<div style="font-size:.78rem;line-height:1.45;margin-top:6px;color:${ratio !== null && ratio < .85 ? '#ffb3a0' : '#cfe'}">${adv}</div>` : ''}
+          <div style="position:relative;font-size:.78rem;line-height:1.5;color:#dfe3f0">${overview}${notes.length ? ' ' + notes.join(' ') : ''}</div>
+          <div style="position:relative;display:flex;gap:8px;align-items:flex-start;margin-top:8px;padding:8px 10px;border-radius:10px;background:rgba(0,0,0,.3);border:1px solid ${vcol}55">
+            <span style="flex-shrink:0;font-size:.62rem;font-weight:900;letter-spacing:.06em;padding:3px 7px;border-radius:6px;background:${vcol};color:#0b0b14">${verdict}</span>
+            <span style="font-size:.78rem;line-height:1.45">${adv}</span>
+          </div>
         </div>`;
       }).join('');
       if (rowsF) checklistHtml += `<details class="brf-form" style="margin-top:28px"><summary style="list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px">${_secHead('📈', 'Driver form report', 'Tap to open: how each of your drivers is doing vs their price', '#2ee6b6')}<span class="brf-form-chev" style="margin-left:auto;font-size:.8rem;color:var(--muted);transition:transform .2s">▼</span></summary><div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">${rowsF}</div></details>`;
