@@ -8923,9 +8923,13 @@ window._fillPlacePhotos = async function(root) {
   const gp = titles.find(t => /Grand_Prix/.test(t));
   const city = titles.filter(t => !/Grand_Prix|Circuit|Autódromo|Autodromo|Hungaroring|Ring$|International_Circuit|Course$/i.test(t));
   // A fresh pick on every page load: ~40% of the time an F1 race shot, otherwise a city photo.
-  let url = '';
-  if (gp && ((window._F1_FILES[gp] || []).length || (window._LOCAL_F1[gp] || []).length) && Math.random() < 0.45) { const f = await window._f1Pics(gp); if (f.length) url = f[Math.floor(Math.random() * f.length)]; }
+  // One pick per page load — My Team re-renders several times while data loads, and re-rolling
+  // each time meant the last (usually city) pick always won.
+  window._placePick = window._placePick || {};
+  let url = window._placePick[all[k]] || '';
+  if (!url && gp && ((window._F1_FILES[gp] || []).length || (window._LOCAL_F1[gp] || []).length) && Math.random() < 0.45) { const f = await window._f1Pics(gp); if (f.length) url = f[Math.floor(Math.random() * f.length)]; }
   if (!url) { const c = (await Promise.all(city.map(window._wikiPic))).filter(Boolean); if (c.length) url = c[Math.floor(Math.random() * c.length)]; }
+  if (url) window._placePick[all[k]] = url;
   if (!url || !el.isConnected) return;
   const put = (u, retry) => {
     const im = new Image();
