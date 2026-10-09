@@ -345,7 +345,15 @@
   #page-my-team .mt-hero-pts .mt-lbl,#page-my-team .mt-hero-pts .mt-tile-sub{text-shadow:0 1px 3px #000,0 0 8px rgba(0,0,0,.9);color:#d6d6ea!important}
   #page-my-team #total-pts-display{text-shadow:0 2px 6px rgba(0,0,0,.95),0 0 14px rgba(0,0,0,.8),0 0 18px rgba(255,200,0,.3)!important}
   @keyframes pulseDot{0%,100%{opacity:1}50%{opacity:.3}}
-  .brf-form>summary::-webkit-details-marker{display:none}.brf-form[open] .brf-form-chev{transform:rotate(180deg)}
+  .brf-form>summary::-webkit-details-marker{display:none}
+  .brf-form>summary{padding:10px 12px;border-radius:14px;border:1px solid rgba(46,230,182,.35);background:linear-gradient(90deg,rgba(46,230,182,.10),rgba(255,255,255,.03));box-shadow:0 0 0 0 rgba(46,230,182,.4);transition:background .2s,border-color .2s}
+  .brf-form>summary:hover{background:linear-gradient(90deg,rgba(46,230,182,.18),rgba(255,255,255,.05))}
+  .brf-form>summary .brf-form-chev{font-size:0!important;color:transparent!important;display:inline-flex;align-items:center;gap:6px;flex-shrink:0}
+  .brf-form>summary .brf-form-chev::before{content:'Tap to open';font-size:.68rem;font-weight:800;color:#0b0b14;background:#2ee6b6;padding:5px 10px;border-radius:99px;animation:brfPulse 1.8s ease-in-out infinite}
+  .brf-form>summary .brf-form-chev::after{content:'▼';font-size:.8rem;color:#2ee6b6;transition:transform .2s}
+  .brf-form[open]>summary .brf-form-chev::before{content:'Close';background:rgba(255,255,255,.12);color:#cfd3e6;animation:none}
+  .brf-form[open]>summary .brf-form-chev::after{transform:rotate(180deg)}
+  @keyframes brfPulse{0%,100%{box-shadow:0 0 0 0 rgba(46,230,182,.55)}50%{box-shadow:0 0 0 6px rgba(46,230,182,0)}}
   .admin-badge{background:var(--red);color:white;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:3px;letter-spacing:1px;}
 
   main{max-width:1100px;margin:0 auto;padding:32px 24px;position:relative;}
