@@ -28780,7 +28780,9 @@ function _grSolvable(cands) {
 }
 function _grBuild(pool, seed) {
   const C = _grCategories(pool), rnd = _grRng(seed);
-  const pick = (arr) => arr[Math.floor(rnd() * arr.length)];
+  const _isKick = (c) => c && c.kind === 'team' && /kick|sauber/i.test(c.label || '');
+  // Kick Sauber shows up less: a Kick pick is re-rolled 70% of the time.
+  const pick = (arr) => { let c = arr[Math.floor(rnd() * arr.length)]; if (_isKick(c) && arr.length > 1 && rnd() < 0.7) c = arr[Math.floor(rnd() * arr.length)]; return c; };
   // Team vs team across the axes is allowed (who drove for both?) — any other same-kind pair still clashes.
   const clash = (a, b) => a.id === b.id || (a.kind === b.kind && a.kind !== 'team');
   const TEAMS = C.filter(c => c.kind === 'team'), wantTT = TEAMS.length >= 2, want3 = TEAMS.length >= 3 && rnd() < 0.5; // every grid: 2+ teams; half aim for 3
