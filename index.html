@@ -27990,7 +27990,7 @@ async function _wdDuelBody(pool, top) {
     dbInvalidate('wordleDuels'); dbGet._lastFailed = false; const l2 = await dbGet('wordleDuels', lob.id).catch(() => undefined); if (l2) window._duelPrefetch = { id: lob.id, at: Date.now(), d: l2 };
     if (l2 === undefined || dbGet.readFailed()) return; // network blip: try again next tick
     if (!l2) { _wdDuelSet(null); renderGames(); return; }
-    if (l2.status === 'waiting' && role === 'host' && _now() - (l2.hostSeen || 0) > 10e3) dbSet('wordleDuels', lob.id, { hostSeen: _now() }).catch(() => {}); // "still here" ping
+    if (l2.status === 'waiting' && role === 'host' && _now() - (l2.hostSeen || 0) > 10e3) dbSet('wordleDuels', lob.id, { hostSeen: _now() }).catch(() => {}); else if (l2.status === 'playing' && !l2.done && _now() - (l2[role + 'Seen'] || 0) > 10e3) dbSet('wordleDuels', lob.id, { [role + 'Seen']: _now() }).catch(() => {}); // "still here" ping
     const sig = (x) => [x.status, x.round || 1, (x.hostGuesses || []).length, (x.guestGuesses || []).length, x.hostWonAt || 0, x.guestWonAt || 0, x.guestName || '', !!x.hostRematch, !!x.guestRematch, !!x.hostLeft, !!x.guestLeft, !!x.hostDraw, !!x.guestDraw, !!x.drawAgreed, !!x.cancelled].join('|');
     if (sig(l2) !== sig(lob)) { const typing = document.getElementById('wd-input'); const v = typing ? typing.value : '', had = typing && document.activeElement === typing; await renderGames(); const t2 = document.getElementById('wd-input'); if (t2) { if (v) { t2.value = v; wordleSuggest(v); } if (had) t2.focus(); } }
     } finally { window._wdPollBusy = false; }
@@ -28051,7 +28051,8 @@ function _h2hVs(stats, a, b, f) { const r = _h2hMap(stats[a], f)[b] || {}, o = _
 async function _liveDuelsHtml(all, game, f) {
   const now = _now();
   const live = (all || []).filter(l => l && (game === 'wd' ? !l.game : l.game === game) && l.status === 'playing' && !l.done && l.hostUid && l.guestUid
-    && now - (l.startedAt || l.createdAt || 0) < 15 * 60e3);
+    && now - (l.hostSeen || 0) < 30e3 && now - (l.guestSeen || 0) < 30e3
+    && !(game === 'wd' && (l.hostWonAt || l.guestWonAt)) && !(game === 'hl' && l.hostDone && l.guestDone) && !(game === 'grid' && l.winner) && !l.drawAgreed);
   if (!live.length) return '';
   let stats = {};
   try { (await dbGetAll('wordleScores').catch(() => [])).forEach(d => { if (d && d.uid) stats[d.uid] = d; }); } catch(e) {}
@@ -28430,7 +28431,7 @@ async function _hdBody(pool, top) {
     dbInvalidate('wordleDuels'); dbGet._lastFailed = false; const l2 = await dbGet('wordleDuels', lob.id).catch(() => undefined); if (l2) window._duelPrefetch = { id: lob.id, at: Date.now(), d: l2 };
     if (l2 === undefined || dbGet.readFailed()) return; // network blip: try again next tick
     if (!l2) { _hdSet(null); renderGames(); return; }
-    if (l2.status === 'waiting' && role === 'host' && _now() - (l2.hostSeen || 0) > 10e3) dbSet('wordleDuels', lob.id, { hostSeen: _now() }).catch(() => {});
+    if (l2.status === 'waiting' && role === 'host' && _now() - (l2.hostSeen || 0) > 10e3) dbSet('wordleDuels', lob.id, { hostSeen: _now() }).catch(() => {}); else if (l2.status === 'playing' && !l2.done && _now() - (l2[role + 'Seen'] || 0) > 10e3) dbSet('wordleDuels', lob.id, { [role + 'Seen']: _now() }).catch(() => {});
     const sig = (x) => [x.status, x.round || 1, (x.hostAns || []).length, (x.guestAns || []).length, x.hostDone || 0, x.guestDone || 0, x.guestName || '', !!x.hostRematch, !!x.guestRematch, !!x.hostLeft, !!x.guestLeft, !!x.hostDraw, !!x.guestDraw, !!x.drawAgreed, !!x.cancelled, !!x.hostQuit, !!x.guestQuit].join('|');
     if (sig(l2) !== sig(lob)) await renderGames(); } finally { window._hdPollBusy = false; } }, 1000);
   const V = `style="${_duelVars(lob, role)}"`;
@@ -28867,7 +28868,7 @@ async function _gdBody(pool, top) {
     dbInvalidate('wordleDuels'); dbGet._lastFailed = false; const l2 = await dbGet('wordleDuels', lob.id).catch(() => undefined); if (l2) window._duelPrefetch = { id: lob.id, at: Date.now(), d: l2 };
     if (l2 === undefined || dbGet.readFailed()) return; // network blip: just try again next tick, don't drop out of the duel
     if (!l2) { _gdSet(null); renderGames(); return; }
-    if (l2.status === 'waiting' && role === 'host' && _now() - (l2.hostSeen || 0) > 10e3) dbSet('wordleDuels', lob.id, { hostSeen: _now() }).catch(() => {});
+    if (l2.status === 'waiting' && role === 'host' && _now() - (l2.hostSeen || 0) > 10e3) dbSet('wordleDuels', lob.id, { hostSeen: _now() }).catch(() => {}); else if (l2.status === 'playing' && !l2.done && _now() - (l2[role + 'Seen'] || 0) > 10e3) dbSet('wordleDuels', lob.id, { [role + 'Seen']: _now() }).catch(() => {});
     // Order-proof fingerprint: the database can return the same cells in a different order, which used
     // to look like a change and redraw the screen every 1.5 s (flashing + the search box losing focus).
     const cellSig = (c) => Object.keys(c || {}).sort().map(k => k + ':' + (c[k] || {}).by + ':' + (c[k] || {}).d).join(',');
