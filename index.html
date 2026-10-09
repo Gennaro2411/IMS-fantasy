@@ -10977,7 +10977,8 @@ async function renderBriefingExtras() {
     // Money.
     try {
       const _val = myDrivers.reduce((t, d) => t + (typeof driverPrice === 'function' ? driverPrice(d) : (d.price || 0)), 0);
-      if (typeof myTeam.budget === 'number') items.push({ icon:'💰', txt:`<strong>$${myTeam.budget.toFixed(1)}M</strong> in the bank · drivers worth <strong>$${_val.toFixed(1)}M</strong>`, col:'#2ee6b6' });
+      let _cv = 0; try { if (sel.CONSTRUCTOR) { const _c = (await dbGetAll('constructors').catch(() => [])).find(x => x.id === sel.CONSTRUCTOR); if (_c) _cv = constructorPrice(_c); } } catch(e) {}
+      if (typeof myTeam.budget === 'number') items.push({ icon:'💰', txt:`<strong>$${myTeam.budget.toFixed(1)}M</strong> in the bank · team worth <strong>$${(_val + _cv).toFixed(1)}M</strong>`, col:'#2ee6b6' });
     } catch(e) {}
     // Chips still available this season.
     try {
