@@ -8897,29 +8897,41 @@ window._wikiPic = async function(title) {
   try { localStorage.setItem(ck, url || 'none'); } catch(e) {}
   return url;
 };
+window._f1Pics = async function(gpTitle) {
+  // Real F1 race photos from Wikimedia Commons for this Grand Prix (cached per device).
+  const q = gpTitle.replace(/_/g, ' ');
+  const ck = 'imsF1Pics:' + q;
+  try { const c = JSON.parse(localStorage.getItem(ck) || 'null'); if (c) return c; } catch(e) {}
+  let list = [];
+  try {
+    const u = 'https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrnamespace=6&gsrlimit=30'
+      + '&gsrsearch=' + encodeURIComponent(q + ' Formula One car filetype:bitmap') + '&prop=imageinfo&iiprop=url|size&iiurlwidth=960';
+    const j = await (await fetch(u)).json();
+    list = Object.values((j.query && j.query.pages) || {})
+      .map(p => p.imageinfo && p.imageinfo[0]).filter(ii => ii && ii.thumburl && ii.width >= ii.height && ii.width >= 800 && /\.jpe?g$/i.test(ii.url))
+      .map(ii => ii.thumburl).slice(0, 12);
+  } catch(e) {}
+  try { localStorage.setItem(ck, JSON.stringify(list)); } catch(e) {}
+  return list;
+};
 window._fillPlacePhotos = async function(root) {
-  clearInterval(window._placeRot);
   const el = (root || document).querySelector('.mt-hero-photo[data-place]');
   if (!el) return;
   const n = (el.getAttribute('data-place') || '').toLowerCase();
   const all = Object.assign({}, window._PLACE_ALIAS); Object.keys(window._PLACE_WIKI).forEach(k => all[k] = k);
   const k = Object.keys(all).sort((a,b)=>b.length-a.length).find(x => n.includes(x));
   if (!k) return;
-  const urls = (await Promise.all(window._PLACE_WIKI[all[k]].map(window._wikiPic))).filter(Boolean);
-  if (!urls.length || !el.isConnected) return;
-  for (let i = urls.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [urls[i], urls[j]] = [urls[j], urls[i]]; }
-  // Two stacked layers cross-fade between photos.
-  const L = [document.createElement('div'), document.createElement('div')];
-  L.forEach(d => { d.className = 'mt-hero-photo-l'; el.appendChild(d); });
-  let idx = 0, cur = 0;
-  const show = () => {
-    const u = urls[idx % urls.length]; idx++;
-    const im = new Image();
-    im.onload = () => { const nx = L[1 - cur]; nx.style.backgroundImage = 'url("' + u + '")'; nx.classList.add('on'); L[cur].classList.remove('on'); cur = 1 - cur; el.classList.add('on'); };
-    im.src = u;
-  };
-  show();
-  if (urls.length > 1) window._placeRot = setInterval(() => { if (!el.isConnected) { clearInterval(window._placeRot); return; } show(); }, 7000);
+  const titles = window._PLACE_WIKI[all[k]];
+  const gp = titles.find(t => /Grand_Prix/.test(t));
+  const city = titles.filter(t => !/Grand_Prix|Circuit|Autódromo|Autodromo|Hungaroring|Ring$|International_Circuit|Course$/i.test(t));
+  // A fresh pick on every page load: ~40% of the time an F1 race shot, otherwise a city photo.
+  let url = '';
+  if (gp && Math.random() < 0.4) { const f = await window._f1Pics(gp); if (f.length) url = f[Math.floor(Math.random() * f.length)]; }
+  if (!url) { const c = (await Promise.all(city.map(window._wikiPic))).filter(Boolean); if (c.length) url = c[Math.floor(Math.random() * c.length)]; }
+  if (!url || !el.isConnected) return;
+  const im = new Image();
+  im.onload = () => { const d = document.createElement('div'); d.className = 'mt-hero-photo-l on'; d.style.backgroundImage = 'url("' + url + '")'; el.appendChild(d); el.classList.add('on'); };
+  im.src = url;
 };
 
 window._wcSwapRun = function(sw) {
