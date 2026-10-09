@@ -3244,7 +3244,7 @@ window.loadAttendance = async function() {
       (s.drivers || []).forEach(d => {
         if (d.discord_id) { byDiv[div].add(String(d.discord_id)); all.add(String(d.discord_id)); }
         if (d.alias) { const nn = normName(d.alias); if (nn) { namesByDiv[div].add(nn); namesAll.add(nn); } }
-        if (!window._attRawTmp) window._attRawTmp = {}; (window._attRawTmp[div] = window._attRawTmp[div] || []).push({ id: d.discord_id ? String(d.discord_id) : '', alias: d.alias || '' });
+        if (!window._attRawTmp) window._attRawTmp = {}; (window._attRawTmp[div] = window._attRawTmp[div] || []).push(Object.assign({}, d, { id: d.discord_id ? String(d.discord_id) : '', alias: d.alias || '' }));
       });
       // Explicit checked-out list — drivers who selected "not racing" for this session.
       (s.checked_out_drivers || []).forEach(d => {
@@ -10887,15 +10887,24 @@ async function renderBriefingExtras() {
         const out = mkt.filter(d => (outIdS && d.discordId && outIdS.has(String(d.discordId))) || (outNmS && outNmS.has(_fold(d.name))));
         const ins = ((window._attendanceRawByDiv || {})[div] || []).filter(r => !(r.id && mktIds.has(r.id)) && !mktNames.has(_fold(r.alias)));
         const seen = new Set(); const res = ins.filter(r => { const k = r.id || _fold(r.alias); if (seen.has(k)) return false; seen.add(k); return true; })
-          .map(r => _all.find(d => (r.id && String(d.discordId || '') === r.id) || _fold(d.name) === _fold(r.alias)) || { name: r.alias || 'Reserve' });
+          .map(r => Object.assign({}, _all.find(d => (r.id && String(d.discordId || '') === r.id) || _fold(d.name) === _fold(r.alias)) || { name: r.alias || 'Reserve' }, { raw: r }));
         if (!out.length && !res.length) return '';
         const hue = DIV_HUES[div] || '#9b6fd4';
         const face = (d, ring) => { const ph = d && d.id && typeof driverPhoto === 'function' ? driverPhoto(d) : ''; const ini = String((d && d.name) || '?').replace(/^\[[^\]]*\]\s*/, '').slice(0, 2).toUpperCase();
           return `<div style="width:40px;height:40px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--surface3);border:2px solid ${ring};display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:#c9c9e0">${ph ? `<img src="${esc(ph)}" style="width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.replaceWith(document.createTextNode('${ini.replace(/'/g, '')}'))">` : ini}</div>`; };
         if (!out.length) return '';
         const n = out.length;
-        return `<div style="margin-bottom:16px"><div style="display:flex;align-items:center;gap:8px;margin:0 0 8px"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.05rem;letter-spacing:1px;color:${hue}">${esc(div)}</span><span style="flex:1;height:1px;background:linear-gradient(90deg,${hue}55,transparent)"></span><span style="font-size:.66rem;color:var(--muted)">${n} out · ${Math.min(n, res.length)} covered</span></div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px">` + Array.from({ length: n }, (_, i) => {
-          const o = out[i], r = res[i];
+        // Pair each checked-out driver with the reserve actually filling THEIR seat: match on the team
+        // (or the driver being replaced) carried in the check-in data. Never guess by order.
+        const _tn = (x) => String(x || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        const _rTeam = (r) => _tn(r.raw && (r.raw.team || r.raw.team_name || r.raw.seat_team || r.raw.for_team || r.raw.covering_team));
+        const _rFor = (r) => _fold(r.raw && (r.raw.replacing || r.raw.covering || r.raw.reserve_for || r.raw.for_driver));
+        const _used = new Set();
+        const paired = out.map(o => { const k = res.findIndex((r, j) => !_used.has(j) && ((_rFor(r) && _rFor(r) === _fold(o.name)) || (_rTeam(r) && _rTeam(r) === _tn(o.team))));
+          if (k >= 0) { _used.add(k); return res[k]; } return null; });
+        const unassigned = res.filter((_, j) => !_used.has(j));
+        return `<div style="margin-bottom:16px"><div style="display:flex;align-items:center;gap:8px;margin:0 0 8px"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.05rem;letter-spacing:1px;color:${hue}">${esc(div)}</span><span style="flex:1;height:1px;background:linear-gradient(90deg,${hue}55,transparent)"></span><span style="font-size:.66rem;color:var(--muted)">${n} out · ${res.length} reserve${res.length === 1 ? '' : 's'} in</span></div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px">` + Array.from({ length: n }, (_, i) => {
+          const o = out[i], r = paired[i];
           return `<div style="display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:14px;background:linear-gradient(100deg, ${hue}1a, var(--surface2) 70%);border:1px solid ${hue}40">
             <div style="display:flex;align-items:center;flex-shrink:0">
               ${o ? face(o, 'rgba(255,255,255,0.18)') : `<div style="width:40px;height:40px;border-radius:50%;border:2px dashed rgba(255,255,255,.18)"></div>`}
@@ -10903,14 +10912,14 @@ async function renderBriefingExtras() {
               ${r ? face(r, hue) : `<div style="width:40px;height:40px;border-radius:50%;border:2px dashed ${hue}66;display:flex;align-items:center;justify-content:center;color:${hue};font-weight:900">?</div>`}
             </div>
             <div style="flex:1;min-width:0">
-              <div style="font-size:.88rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${o ? `<span style="color:var(--muted);text-decoration:line-through">${esc(o.name)}</span>` : '<span style="color:var(--muted)">Spare seat</span>'} <span style="color:${hue}">→</span> ${r ? `<span style="color:#fff">${esc(r.name)}</span>` : '<span style="color:var(--muted);font-style:italic">awaiting reserve</span>'}</div>
+              <div style="font-size:.88rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${o ? `<span style="color:var(--muted);text-decoration:line-through">${esc(o.name)}</span>` : '<span style="color:var(--muted)">Spare seat</span>'} <span style="color:${hue}">→</span> ${r ? `<span style="color:#fff">${esc(r.name)}</span>` : (res.length ? '<span style="color:var(--muted);font-style:italic">reserve TBC</span>' : '<span style="color:var(--muted);font-style:italic">awaiting reserve</span>')}</div>
               <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
                 <span style="font-size:.58rem;font-weight:800;color:${hue};background:${hue}22;border:1px solid ${hue}55;border-radius:4px;padding:0 6px">${esc(div)}</span>
                 <span style="font-size:.64rem;color:var(--muted)">${o ? (o.team ? esc(o.team) + ' seat' : 'Checked out') : 'Extra reserve checked in'}</span>
               </div>
             </div>
           </div>`;
-        }).join('') + '</div></div>';
+        }).join('') + '</div>' + (unassigned.length ? `<div style="margin-top:8px;font-size:.72rem;color:var(--muted)">Reserves checked in: ${unassigned.map(r => `<b style="color:#27f4d2">${esc(r.name)}</b>`).join(', ')}</div>` : '') + '</div>';
       }).join('');
       if (rows) attendanceHtml += `<div style="margin-top:28px">${_secHead('🔄', 'Reserves stepping in', 'Who\'s sitting out and the reserves checked in to cover', '#27f4d2')}<div style="margin-top:12px">${rows}</div></div>`;
     } catch(e) { console.warn('reserves stepping in failed', e); }
