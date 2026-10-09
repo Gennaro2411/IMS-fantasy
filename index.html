@@ -11021,11 +11021,14 @@ async function renderBriefingExtras() {
         const h = _hist(d.id);
         const peers = drivers.filter(x => x.division === d.division && !x._deleted).map(x => ({ x, h: _hist(x.id), p: _pr(x) })).filter(o => o.h.length);
         // Expected points from price: least-squares fit of avg points vs price in this division.
+        // Expected points by price RANK: the Nth most expensive driver should score like the
+        // Nth best scorer in the division (averaged with neighbours to smooth it out).
         let exp = null;
         if (peers.length >= 4) {
-          const mx = _avg(peers.map(o => o.p)), my = _avg(peers.map(o => _avg(o.h)));
-          let num = 0, den = 0; peers.forEach(o => { num += (o.p - mx) * (_avg(o.h) - my); den += (o.p - mx) ** 2; });
-          const b = den ? num / den : 0; exp = Math.max(1, my + b * (_pr(d) - mx));
+          const avgs = peers.map(o => _avg(o.h)).sort((a, b) => b - a);
+          const k = peers.filter(o => o.p > _pr(d)).length;
+          const win = avgs.slice(Math.max(0, k - 1), Math.min(avgs.length, k + 2));
+          exp = Math.max(1, _avg(win));
         }
         const last3 = h.slice(-3), sAvg = _avg(h), rAvg = _avg(last3);
         const dnf = Object.keys(d.dnfRaces || {}).length || d.seasonDnfs || 0;
