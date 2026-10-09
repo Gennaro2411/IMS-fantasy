@@ -10879,7 +10879,10 @@ async function renderBriefingExtras() {
     // ── Reserves stepping in: a market driver checked OUT + a non-market driver checked IN for that division ──
     try {
       const _fold = (x) => (typeof searchFold === 'function') ? searchFold(String(x||'').replace(/^\[[^\]]*\]\s*/,'')) : String(x||'').toLowerCase().replace(/[^a-z0-9]/g,'');
-      const _all = window._allDrivers || drivers;
+      // Every driver record (market + reserves) so reserves can be matched to a profile too.
+      let _all = await dbGetAll('drivers').catch(() => null); if (!_all || !_all.length) _all = window._allDrivers || drivers;
+      const _match = (r) => { const f = _fold(r.alias); return _all.find(d => r.id && String(d.discordId || '') === r.id) || _all.find(d => _fold(d.name) === f)
+        || (f.length >= 4 ? _all.find(d => { const g = _fold(d.name); return g.length >= 4 && (g.includes(f) || f.includes(g)); }) : null); };
       const rows = ((typeof divisionsForSeason==='function') ? divisionsForSeason(window.currentSeason) : DIVISIONS).map(div => {
         const mkt = drivers.filter(d => d.division === div && !d.isReserve);
         const mktIds = new Set(mkt.map(d => String(d.discordId || ''))), mktNames = new Set(mkt.map(d => _fold(d.name)));
@@ -10887,7 +10890,7 @@ async function renderBriefingExtras() {
         const out = mkt.filter(d => (outIdS && d.discordId && outIdS.has(String(d.discordId))) || (outNmS && outNmS.has(_fold(d.name))));
         const ins = ((window._attendanceRawByDiv || {})[div] || []).filter(r => !(r.id && mktIds.has(r.id)) && !mktNames.has(_fold(r.alias)));
         const seen = new Set(); const res = ins.filter(r => { const k = r.id || _fold(r.alias); if (seen.has(k)) return false; seen.add(k); return true; })
-          .map(r => Object.assign({}, _all.find(d => (r.id && String(d.discordId || '') === r.id) || _fold(d.name) === _fold(r.alias)) || { name: r.alias || 'Reserve' }, { raw: r }));
+          .map(r => Object.assign({}, _match(r) || { name: r.alias || 'Reserve' }, { raw: r }));
         if (!out.length && !res.length) return '';
         const hue = DIV_HUES[div] || '#9b6fd4';
         const face = (d, ring) => { const ph = d && d.id && typeof driverPhoto === 'function' ? driverPhoto(d) : ''; const ini = String((d && d.name) || '?').replace(/^\[[^\]]*\]\s*/, '').slice(0, 2).toUpperCase();
