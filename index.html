@@ -11053,11 +11053,14 @@ async function renderBriefingExtras() {
         else if (alt && ratio !== null && ratio <= 1.15) adv = `Upgrade option: <b>${esc(alt.x.name)}</b> ($${alt.p.toFixed(1)}M, ${alt.r.toFixed(1)} avg recently).`;
         const stat = (k, v) => `<div style="text-align:center"><div style="font-size:.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">${k}</div><div style="font-weight:800;font-size:.82rem">${v}</div></div>`;
         const spark = h.slice(-6).map(v => `<span title="${v}" style="display:inline-block;width:6px;margin-right:2px;border-radius:2px;background:${col};height:${Math.max(3, Math.min(22, v / Math.max(1, ...h) * 22))}px"></span>`).join('');
-        return `<div style="border:1px solid rgba(255,255,255,.08);border-left:3px solid ${col};border-radius:12px;padding:12px;background:rgba(255,255,255,.02)">
+        const _tc = (typeof getTeamCardColour === 'function' && getTeamCardColour(d.team)) || null;
+        const _tl = typeof getTeamLogo === 'function' ? getTeamLogo(d.team) : '';
+        return `<div style="position:relative;overflow:hidden;border:1px solid ${_tc ? _tc.border : 'rgba(255,255,255,.08)'};border-left:4px solid ${_tc ? _tc.accent : col};border-radius:12px;padding:12px;background:${_tc ? `linear-gradient(120deg, ${_tc.accent}33, ${_tc.bg} 55%, rgba(255,255,255,.02))` : 'rgba(255,255,255,.02)'}">
+          ${_tl ? `<img src="${esc(_tl)}" alt="" style="position:absolute;right:-14px;bottom:-14px;width:96px;height:96px;object-fit:contain;opacity:.12;pointer-events:none">` : ''}
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
             ${(() => { const ph = typeof driverPhoto === 'function' ? driverPhoto(d) : ''; const ini = String(d.name || '?').replace(/^\[[^\]]*\]\s*/, '').slice(0, 2).toUpperCase().replace(/'/g, ''); return `<div onclick="openDriverModal('${d.id}')" title="View profile" style="cursor:pointer;width:38px;height:38px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--surface3);border:2px solid ${col};display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:#c9c9e0">${ph ? `<img src="${esc(ph)}" style="width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.replaceWith(document.createTextNode('${ini}'))">` : ini}</div>`; })()}
-            <strong style="font-size:.92rem">${esc(d.name)}</strong><span style="font-size:.65rem;color:var(--muted)">${esc(d.division || '')}</span>
-            <span style="margin-left:auto;font-size:.66rem;font-weight:800;padding:3px 8px;border-radius:99px;color:${col};border:1px solid ${col}">${lab}</span>
+            <strong style="font-size:.92rem">${esc(d.name)}</strong>${_tl ? `<img src="${esc(_tl)}" alt="" title="${esc(d.team || '')}" style="width:20px;height:20px;object-fit:contain">` : ''}<span style="font-size:.65rem;color:var(--muted)">${esc(d.division || '')}</span>
+            <span style="margin-left:auto;font-size:.66rem;font-weight:800;padding:3px 8px;border-radius:99px;background:rgba(0,0,0,.35);color:${col};border:1px solid ${col}">${lab}</span>
           </div>
           <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:8px;margin:10px 0 6px;flex-wrap:wrap">
             ${stat('Season avg', sAvg.toFixed(1))}${stat('Last 3', rAvg.toFixed(1))}${stat('Expected', exp ? exp.toFixed(1) : '–')}${stat('Div rank', rank ? '#' + rank : '–')}${stat('Pts/$M', ppm.toFixed(2))}${stat('DNFs', dnf)}${stat('Owned', own + '%')}
