@@ -3443,6 +3443,17 @@ async function dbGetAll(col, opts) {
   if (col === 'races' || col === 'seasonArchives' || col === 'teams') await _constrAliasFix(col, _r);
   if (col === 'constructors' && Array.isArray(_r) && window.DELETED_TEAM_LOGOS) _r.forEach(c => { const k = String((c && c.name) || '').toLowerCase().replace(/[^a-z0-9]/g, '');
     for (const n in window.DELETED_TEAM_LOGOS) if (k.includes(n)) c.logo = window.DELETED_TEAM_LOGOS[n]; });
+  // Games leaderboards never list test accounts.
+  if (col === 'wordleScores' && Array.isArray(_r)) {
+    try {
+      const tt = (await dbGetAll('teams', { all: true })).filter(t => t && t.testAccount);
+      if (tt.length) {
+        const ids = new Set(tt.map(t => t.userId).filter(Boolean)), nm = x => String(x||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+        const names = new Set([].concat(...tt.map(t => [nm(t.playerName), nm(t.teamName)])).filter(Boolean));
+        return _r.filter(r => !r || !(ids.has(r.uid) || names.has(nm(r.name))));
+      }
+    } catch(e) {}
+  }
   // Test accounts are invisible everywhere (ranks, leaderboards, stats) — only their own login sees them.
   if (col === 'teams' && Array.isArray(_r) && !(opts && opts.all)) {
     const me = (typeof currentUser !== 'undefined' && currentUser) ? currentUser.userId : null;
@@ -27615,7 +27626,7 @@ async function _wdLeaderboardHtml() {
   const rows = (await dbGetAll('wordleScores', { fresh: true }).catch(() => [])).filter(r => r && r.points > 0)
     .sort((a, b) => b.points - a.points || (a.updatedAt || 0) - (b.updatedAt || 0));
   const me = _wdMe(); const myIdx = rows.findIndex(r => r.uid === me.uid); const today = _wdDayKey();
-  const line = (r, i) => `<div class="wd-lb-row${r.uid === me.uid ? ' me' : ''}"><span class="wd-lb-pos">${i + 1}</span><span class="wd-lb-name">${esc(r.name || 'Player')}${r.lastDay === today ? ' <i title="Solved today">✓ today</i>' : ''}</span><small style="color:var(--muted);margin-right:8px;white-space:nowrap">${(() => { const k = _wdStreakOf(r); let d = {}; try { d = JSON.parse(r.wdDist || '{}'); } catch (e) {}
+  const line = (r, i) => `<div class="wd-lb-row${r.uid === me.uid ? ' me' : ''}"><span class="wd-lb-pos">${i + 1}</span><span class="wd-lb-name">${esc(r.name || 'Player')}${r.lastDay === today ? ' <i title="Solved today">✓ today</i>' : (r.statsDay === today ? ' <i title="Missed today\'s driver" style="color:#ff4d5e">✕ today</i>' : '')}</span><small style="color:var(--muted);margin-right:8px;white-space:nowrap">${(() => { const k = _wdStreakOf(r); let d = {}; try { d = JSON.parse(r.wdDist || '{}'); } catch (e) {}
     const n = Object.values(d).reduce((a, b) => a + b, 0), avg = n ? (Object.entries(d).reduce((a, [g, c]) => a + g * c, 0) / n).toFixed(1) : '–';
     return `<span title="Daily games played">🔢 ${r.wdPlayed || 0}</span> · <span title="Average guesses per win">🎯 ${avg}</span> · <span title="Streak — daily drivers solved in a row (best ${Math.max(r.bestStreak || 0, k)})" style="color:${k ? '#fb923c' : 'inherit'}">🔥 ${k}</span> · <span title="Total wrong guesses">❌ ${r.wdWrong || 0}</span>`; })()}</small><b>${r.points}</b></div>`;
   return `<div class="wd-lb"><div class="wd-lb-h"><span>🏆 Daily leaderboard</span><small>1 point for every daily driver you get</small></div>
