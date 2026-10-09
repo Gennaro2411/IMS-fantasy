@@ -11000,6 +11000,73 @@ async function renderBriefingExtras() {
           <span style="font-size:.84rem;line-height:1.4">${it.txt}</span>
         </div>`).join('')}
       </div>`;
+    // ── Driver form: each of my drivers vs what their price says they should score ──
+    try {
+      const _scored = sortedR.filter(r => r.driverPoints && Object.values(r.driverPoints).some(v => v > 0));
+      const _hist = id => _scored.filter(r => typeof r.driverPoints[id] === 'number').map(r => r.driverPoints[id]);
+      const _avg = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0;
+      const _pr = d => (typeof driverPrice === 'function' ? driverPrice(d) : (d.price || 0));
+      const _ownCount = id => teams.filter(t => Object.values(t.selections || {}).includes(id)).length;
+      const _bank = typeof myTeam.budget === 'number' ? myTeam.budget : 0;
+      const rowsF = myDrivers.map(d => {
+        const h = _hist(d.id);
+        const peers = drivers.filter(x => x.division === d.division && !x._deleted).map(x => ({ x, h: _hist(x.id), p: _pr(x) })).filter(o => o.h.length);
+        // Expected points from price: least-squares fit of avg points vs price in this division.
+        let exp = null;
+        if (peers.length >= 4) {
+          const mx = _avg(peers.map(o => o.p)), my = _avg(peers.map(o => _avg(o.h)));
+          let num = 0, den = 0; peers.forEach(o => { num += (o.p - mx) * (_avg(o.h) - my); den += (o.p - mx) ** 2; });
+          const b = den ? num / den : 0; exp = Math.max(1, my + b * (_pr(d) - mx));
+        }
+        const last3 = h.slice(-3), sAvg = _avg(h), rAvg = _avg(last3);
+        const dnf = Object.keys(d.dnfRaces || {}).length || d.seasonDnfs || 0;
+        const rankList = peers.map(o => ({ id: o.x.id, a: _avg(o.h.slice(-3)) })).sort((a, b) => b.a - a.a);
+        const rank = rankList.findIndex(o => o.id === d.id) + 1;
+        const own = teams.length ? Math.round(_ownCount(d.id) / teams.length * 100) : 0;
+        const ppm = _pr(d) ? rAvg / _pr(d) : 0;
+        let lab = 'Not enough data', col = 'var(--muted)', ratio = null;
+        if (exp && h.length >= 2) {
+          // Weight recent form 60/40 over season average.
+          ratio = (rAvg * .6 + sAvg * .4) / exp;
+          if (ratio < .6) { lab = 'Underperforming drastically'; col = '#ff3b4e'; }
+          else if (ratio < .85) { lab = 'Underperforming'; col = '#ff8f3b'; }
+          else if (ratio <= 1.15) { lab = 'Performing ok'; col = '#94a3b8'; }
+          else if (ratio <= 1.4) { lab = 'Overperforming'; col = '#2ee6b6'; }
+          else { lab = 'Overperforming drastically'; col = '#22c55e'; }
+        }
+        const notes = [];
+        if (ratio !== null) notes.push(`Averaging <b>${rAvg.toFixed(1)}</b> over the last ${last3.length} vs <b>${exp.toFixed(1)}</b> expected for a $${_pr(d).toFixed(1)}M ${esc(d.division)} driver (${Math.round(ratio * 100)}% of par).`);
+        if (last3.length >= 2 && h.length >= 4) {
+          const diff = rAvg - _avg(h.slice(0, -3));
+          if (Math.abs(diff) >= Math.max(3, sAvg * .25)) notes.push(diff > 0 ? `Trending up: +${diff.toFixed(1)} pts/race on their earlier rounds.` : `Trending down: ${diff.toFixed(1)} pts/race on their earlier rounds.`);
+        }
+        if (dnf >= 2) notes.push(`${dnf} DNFs this season, a real reliability risk.`);
+        if (!isDriverCheckedIn(d)) notes.push(`Not checked in for this round yet.`);
+        // Replacement: better recent form, same division, affordable after selling.
+        const alt = peers.filter(o => o.x.id !== d.id && !Object.values(sel).includes(o.x.id) && o.h.length >= 2 && o.p <= _pr(d) + _bank && !isDriverBanned(o.x))
+          .map(o => ({ ...o, r: _avg(o.h.slice(-3)) })).filter(o => o.r > rAvg * 1.2 && o.r - rAvg >= 3).sort((a, b) => (b.r / b.p) - (a.r / a.p))[0];
+        let adv = '';
+        if (ratio !== null && ratio < .85) adv = alt ? `Consider replacing: <b>${esc(alt.x.name)}</b> ($${alt.p.toFixed(1)}M) is averaging ${alt.r.toFixed(1)} over their last ${Math.min(3, alt.h.length)} and you can afford them.` : `No affordable ${esc(d.division)} driver is clearly beating them on recent form, so holding is reasonable.`;
+        else if (ratio !== null && ratio > 1.4 && h.length >= 3 && rAvg > sAvg * 1.3) adv = `Hot streak well above their season average (${sAvg.toFixed(1)}). Ride it, but expect some regression.`;
+        else if (ratio !== null && ratio > 1.15 && rank && rank <= 3) adv = `Top ${rank} in ${esc(d.division)} on recent form, a strong captain option.`;
+        else if (alt && ratio !== null && ratio <= 1.15) adv = `Upgrade option: <b>${esc(alt.x.name)}</b> ($${alt.p.toFixed(1)}M, ${alt.r.toFixed(1)} avg recently).`;
+        const stat = (k, v) => `<div style="text-align:center"><div style="font-size:.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">${k}</div><div style="font-weight:800;font-size:.82rem">${v}</div></div>`;
+        const spark = h.slice(-6).map(v => `<span title="${v}" style="display:inline-block;width:6px;margin-right:2px;border-radius:2px;background:${col};height:${Math.max(3, Math.min(22, v / Math.max(1, ...h) * 22))}px"></span>`).join('');
+        return `<div style="border:1px solid rgba(255,255,255,.08);border-left:3px solid ${col};border-radius:12px;padding:12px;background:rgba(255,255,255,.02)">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <strong style="font-size:.92rem">${esc(d.name)}</strong><span style="font-size:.65rem;color:var(--muted)">${esc(d.division || '')}</span>
+            <span style="margin-left:auto;font-size:.66rem;font-weight:800;padding:3px 8px;border-radius:99px;color:${col};border:1px solid ${col}">${lab}</span>
+          </div>
+          <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:8px;margin:10px 0 6px;flex-wrap:wrap">
+            ${stat('Season avg', sAvg.toFixed(1))}${stat('Last 3', rAvg.toFixed(1))}${stat('Expected', exp ? exp.toFixed(1) : '–')}${stat('Div rank', rank ? '#' + rank : '–')}${stat('Pts/$M', ppm.toFixed(2))}${stat('DNFs', dnf)}${stat('Owned', own + '%')}
+            <div style="display:flex;align-items:flex-end;height:22px">${spark}</div>
+          </div>
+          ${notes.length ? `<div style="font-size:.76rem;line-height:1.45;color:var(--muted)">${notes.join(' ')}</div>` : ''}
+          ${adv ? `<div style="font-size:.78rem;line-height:1.45;margin-top:6px;color:${ratio !== null && ratio < .85 ? '#ffb3a0' : '#cfe'}">${adv}</div>` : ''}
+        </div>`;
+      }).join('');
+      if (rowsF) checklistHtml += `<div style="margin-top:28px">${_secHead('📈', 'Driver form', 'Points vs what each driver\'s price says they should score in their division', '#2ee6b6')}<div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">${rowsF}</div></div>`;
+    } catch(e) { console.warn('driver form failed', e); }
   }
 
   el.innerHTML = `<div style="display:flex;flex-direction:column;gap:14px">
