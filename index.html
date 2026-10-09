@@ -27680,10 +27680,14 @@ async function _dailySharedSave(patch) { try { const d = await dbGet('wordleScor
 function _wdPickAnswer(pool, mode) {
   // Only drivers with a known nationality can be the answer (no "?" mystery drivers).
   let ap = pool.filter(p => !p.res && p.nat); if (!ap.length) ap = pool.filter(p => !p.res); if (!ap.length) return null;
-  if (mode !== 'daily') return ap[Math.floor(Math.random() * ap.length)];
+  // Slight bias towards well-known drivers: the top 100 by points count 1.5x in the draw.
+  const top = new Set(ap.slice().sort((a, b) => (b.p || 0) - (a.p || 0)).slice(0, 100).map(p => p.id));
+  const wts = ap.map(p => top.has(p.id) ? 3 : 2), tot = wts.reduce((a, b) => a + b, 0);
+  const at = (r) => { let x = r % tot; for (let i = 0; i < ap.length; i++) { if (x < wts[i]) return ap[i]; x -= wts[i]; } return ap[ap.length - 1]; };
+  if (mode !== 'daily') return at(Math.floor(Math.random() * tot));
   const key = _dailyKey(), sh = window._dailyShared || {};
   if (sh.wdKey === key) { const f = pool.find(p => p.id === sh.wdAnswer); if (f) return f; }
-  const pick = ap[_wdHash('ims' + _wdDayKey() + (_wdSalt() || '')) % ap.length];
+  const pick = at(_wdHash('ims' + _wdDayKey() + (_wdSalt() || '')));
   if (sh.wdKey !== key) { sh.wdKey = key; sh.wdAnswer = pick.id; window._dailyShared = sh; _dailySharedSave({ wdKey: key, wdAnswer: pick.id }); }
   return pick;
 }
