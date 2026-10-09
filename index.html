@@ -10891,7 +10891,7 @@ async function renderBriefingExtras() {
         if (!out.length && !res.length) return '';
         const hue = DIV_HUES[div] || '#9b6fd4';
         const face = (d, ring) => { const ph = d && d.id && typeof driverPhoto === 'function' ? driverPhoto(d) : ''; const ini = String((d && d.name) || '?').replace(/^\[[^\]]*\]\s*/, '').slice(0, 2).toUpperCase();
-          return `<div style="width:40px;height:40px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--surface3);border:2px solid ${ring};display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:#c9c9e0">${ph ? `<img src="${esc(ph)}" style="width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.replaceWith(document.createTextNode('${ini.replace(/'/g, '')}'))">` : ini}</div>`; };
+          return `<div${d && d.id ? ` onclick="openDriverModal('${d.id}')" title="View profile"` : ''} style="${d && d.id ? 'cursor:pointer;' : ''}width:40px;height:40px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--surface3);border:2px solid ${ring};display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:#c9c9e0">${ph ? `<img src="${esc(ph)}" style="width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.replaceWith(document.createTextNode('${ini.replace(/'/g, '')}'))">` : ini}</div>`; };
         if (!out.length) return '';
         const n = out.length;
         // Pair each checked-out driver with the reserve actually filling THEIR seat: match on the team
