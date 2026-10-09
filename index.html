@@ -8904,25 +8904,10 @@ window._wikiPic = async function(title) {
   try { localStorage.setItem(ck, url || 'none'); } catch(e) {}
   return url;
 };
+window._F1_FILES = {"Singapore_Grand_Prix": ["Singapore_F1_Grand_Prix_Starting_Grid_(4448041697).jpg", "Renault_SingGP.jpg", "Ferrari_SingGP.JPG", "Chicane_Kerbs_Singapore_GP.jpg"], "Spanish_Grand_Prix": ["Brawn.GP.4.Spain.09.jpg", "2018_Spanish_Grand_Prix_Alonso_(12).jpg"], "United_States_Grand_Prix": ["2018_US_Grand_Prix_at_the_Circuit_of_the_Americas.jpg", "2021_US_GP,_Tsunoda.jpg"], "Mexico_City_Grand_Prix": ["F1_2017_-i---i-_(37365978554).jpg"], "São_Paulo_Grand_Prix": ["2011_Brazil_GP_-_Hamilton_and_Vettel.jpg", "2011_Brazil_GP_-_Barrichello.jpg", "Michael_Schumacher_Ferrari_248F1_2006_Brazil.jpg"], "Chinese_Grand_Prix": ["2026_Chinese_GP_-_Mercedes_-_George_Russell_-_Qualifying.jpg"], "Las_Vegas_Grand_Prix": ["Formula_one.jpg"], "Abu_Dhabi_Grand_Prix": ["Yas_Marina_circuit_by_night.jpg"], "Bahrain_Grand_Prix": ["First_lap_2008_Bahrain.jpg", "2012_Bahrain_Grand_Prix_2.jpg", "Lewis_Hamilton_Bahrain.jpg"], "British_Grand_Prix": ["Romain_Grosjean,_Haas-Ferrari_VF-16,_2016_British_Grand_Prix,_Silverstone,_8th_July_(27687351553).jpg", "Johnny_Herbert_-_Benetton_B195_accelerates_out_of_Copse_at_the_1995_Britsh_GP,_Silverstone_(49716221398).jpg", "Rubens_Barrichello_2003_Silverstone.jpg"]};
 window._f1Pics = async function(gpTitle) {
-  // Real F1 race photos from Wikimedia Commons: files in the "<year> <Grand Prix>" categories.
-  const q = gpTitle.replace(/_/g, ' ');
-  const ck = 'imsF1Pics2:' + q;
-  try { const c = JSON.parse(localStorage.getItem(ck) || 'null'); if (c && c.length) return c; } catch(e) {}
-  const years = [2025, 2024, 2023, 2022, 2019];
-  const one = async (y) => {
-    try {
-      const u = 'https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&generator=categorymembers&gcmtype=file&gcmlimit=40'
-        + '&gcmtitle=' + encodeURIComponent('Category:' + y + ' ' + q) + '&prop=imageinfo&iiprop=url|size&iiurlwidth=960';
-      const j = await (await fetch(u)).json();
-      return Object.values((j.query && j.query.pages) || {}).map(p => p.imageinfo && p.imageinfo[0])
-        .filter(ii => ii && ii.thumburl && ii.width > ii.height && ii.width >= 900 && /\.jpe?g$/i.test(ii.url) && !/map|logo|poster|ticket|trophy/i.test(ii.url))
-        .map(ii => ii.thumburl);
-    } catch(e) { return []; }
-  };
-  const list = [].concat(...(await Promise.all(years.map(one)))).slice(0, 40);
-  if (list.length) { try { localStorage.setItem(ck, JSON.stringify(list)); } catch(e) {} }
-  return list;
+  // Hand-picked Wikimedia Commons photos of F1 cars at each Grand Prix (served via Special:FilePath).
+  return (window._F1_FILES[gpTitle] || []).map(f => 'https://commons.wikimedia.org/wiki/Special:FilePath/' + encodeURIComponent(f) + '?width=1200');
 };
 window._fillPlacePhotos = async function(root) {
   const el = (root || document).querySelector('.mt-hero-photo[data-place]');
@@ -8936,7 +8921,7 @@ window._fillPlacePhotos = async function(root) {
   const city = titles.filter(t => !/Grand_Prix|Circuit|Autódromo|Autodromo|Hungaroring|Ring$|International_Circuit|Course$/i.test(t));
   // A fresh pick on every page load: ~40% of the time an F1 race shot, otherwise a city photo.
   let url = '';
-  if (gp && Math.random() < 0.45) { const f = await window._f1Pics(gp); if (f.length) url = f[Math.floor(Math.random() * f.length)]; }
+  if (gp && (window._F1_FILES[gp] || []).length && Math.random() < 0.45) { const f = await window._f1Pics(gp); if (f.length) url = f[Math.floor(Math.random() * f.length)]; }
   if (!url) { const c = (await Promise.all(city.map(window._wikiPic))).filter(Boolean); if (c.length) url = c[Math.floor(Math.random() * c.length)]; }
   if (!url || !el.isConnected) return;
   const im = new Image();
