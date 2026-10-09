@@ -3053,6 +3053,13 @@ window._deEmoji = function(root) {
   });
 };
 window._CROWN_SVG = "<svg viewBox=\"0 0 64 44\" width=\"38\" height=\"26\" style=\"display:block;overflow:visible\"><defs><linearGradient id=\"lbcg\" x1=\"0\" x2=\"1\"><stop offset=\"0\" stop-color=\"#8a5c00\"/><stop offset=\".2\" stop-color=\"#e9b84a\"/><stop offset=\".38\" stop-color=\"#fff1b8\"/><stop offset=\".55\" stop-color=\"#d9a13a\"/><stop offset=\".75\" stop-color=\"#fff1b8\"/><stop offset=\"1\" stop-color=\"#7a5200\"/></linearGradient><radialGradient id=\"lbcr\" cx=\".35\" cy=\".3\" r=\".7\"><stop offset=\"0\" stop-color=\"#ff8fa3\"/><stop offset=\".5\" stop-color=\"#d1002a\"/><stop offset=\"1\" stop-color=\"#5c0012\"/></radialGradient><radialGradient id=\"lbcs\" cx=\".35\" cy=\".3\" r=\".7\"><stop offset=\"0\" stop-color=\"#b3e5ff\"/><stop offset=\".5\" stop-color=\"#1e6fd9\"/><stop offset=\"1\" stop-color=\"#0b2a66\"/></radialGradient></defs><path d=\"M6 34L3 10l14 11L32 3l15 18 14-11-3 24z\" fill=\"url(#lbcg)\" stroke=\"#6b4600\" stroke-width=\"1.6\" stroke-linejoin=\"round\"/><path d=\"M10 30l-1.5-12 9 7L32 9\" fill=\"none\" stroke=\"#fff6cc\" stroke-opacity=\".7\" stroke-width=\"1.2\" stroke-linecap=\"round\"/><rect x=\"5\" y=\"32\" width=\"54\" height=\"9\" rx=\"2.5\" fill=\"url(#lbcg)\" stroke=\"#6b4600\" stroke-width=\"1.6\"/><circle cx=\"3\" cy=\"10\" r=\"3\" fill=\"#fff6cc\" stroke=\"#6b4600\" stroke-width=\"1.2\"/><circle cx=\"32\" cy=\"3\" r=\"3.2\" fill=\"#fff6cc\" stroke=\"#6b4600\" stroke-width=\"1.2\"/><circle cx=\"61\" cy=\"10\" r=\"3\" fill=\"#fff6cc\" stroke=\"#6b4600\" stroke-width=\"1.2\"/><ellipse cx=\"32\" cy=\"36.5\" rx=\"4.5\" ry=\"3.4\" fill=\"url(#lbcr)\" stroke=\"#6b4600\" stroke-width=\".8\"/><rect x=\"15\" y=\"33.5\" width=\"5.5\" height=\"5.5\" rx=\"1\" transform=\"rotate(45 17.75 36.25)\" fill=\"url(#lbcs)\" stroke=\"#6b4600\" stroke-width=\".8\"/><rect x=\"43.5\" y=\"33.5\" width=\"5.5\" height=\"5.5\" rx=\"1\" transform=\"rotate(45 46.25 36.25)\" fill=\"url(#lbcs)\" stroke=\"#6b4600\" stroke-width=\".8\"/><circle cx=\"30.5\" cy=\"35.3\" r=\"1.1\" fill=\"#fff\"/></svg>";
+window._crownSvg = function(w, h) {
+  // Unique gradient ids per crown: shared ids break when the first copy sits on a hidden page.
+  const k = Math.random().toString(36).slice(2, 7);
+  let v = window._CROWN_SVG.replace(/lbc([grs])/g, 'lbc$1' + k);
+  if (w) v = v.replace('width="38" height="26"', 'width="' + w + '" height="' + h + '"');
+  return v;
+};
 window._ico = (n, c) => `<svg viewBox="0 0 24 24" class="ims-ico" fill="none" stroke="${c || 'currentColor'}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${window._ICONS[n] || ''}</svg>`;
 const DIVISIONS = ['D0','D1','D2','D3','D4','E3'];
 
@@ -10082,7 +10089,7 @@ async function renderMyTeam() {
         <div style="position:absolute;bottom:-4px;right:16px;width:14px;height:14px;border-radius:50%;background:#0d1a1a;border:1px solid #27f4d2;display:flex;align-items:center;justify-content:center;font-size:.5rem;z-index:4;color:#27f4d2">🔄</div>`;
     }
     if (isCap) {
-      html += '<div class="cap-crown">' + window._CROWN_SVG.replace('width="38" height="26"','width="26" height="18"') + '</div>';
+      html += '<div class="cap-crown">' + window._crownSvg(26, 18) + '</div>';
       html += _cardTC ? '<div class="cap-badge tc">3×</div>' : '<div class="cap-badge">C</div>';
     }
     html += '</div>';
@@ -12259,7 +12266,7 @@ async function renderLeaderboard() {
       const pfzBg = pfz ? `;background:radial-gradient(130% 95% at 50% 0%,${cfg.g},transparent 78%),radial-gradient(130% 95% at 50% 0%,${cfg.g},transparent 60%),linear-gradient(160deg,${pfz[0]}26 0%,${pfz[0]}14 55%,${pfz[0]}0a 100%),var(--surface2)` : '';
       return `<div class="lbp ${cfg.cls}" style="--pm:${cfg.m};--pg:${cfg.g};--pb:${isMe?'rgba(232,0,45,0.6)':cfg.b}${pfzBg}" onclick="openPlayerProfile('${t.userId}')">
         <div class="lbp-medal">${cfg.i+1}</div>
-        ${cfg.i===0?'<div class="lbp-crown"><svg viewBox="0 0 64 44" width="38" height="26" style="display:block;overflow:visible"><defs><linearGradient id="lbcg" x1="0" x2="1"><stop offset="0" stop-color="#8a5c00"/><stop offset=".2" stop-color="#e9b84a"/><stop offset=".38" stop-color="#fff1b8"/><stop offset=".55" stop-color="#d9a13a"/><stop offset=".75" stop-color="#fff1b8"/><stop offset="1" stop-color="#7a5200"/></linearGradient><radialGradient id="lbcr" cx=".35" cy=".3" r=".7"><stop offset="0" stop-color="#ff8fa3"/><stop offset=".5" stop-color="#d1002a"/><stop offset="1" stop-color="#5c0012"/></radialGradient><radialGradient id="lbcs" cx=".35" cy=".3" r=".7"><stop offset="0" stop-color="#b3e5ff"/><stop offset=".5" stop-color="#1e6fd9"/><stop offset="1" stop-color="#0b2a66"/></radialGradient></defs><path d="M6 34L3 10l14 11L32 3l15 18 14-11-3 24z" fill="url(#lbcg)" stroke="#6b4600" stroke-width="1.6" stroke-linejoin="round"/><path d="M10 30l-1.5-12 9 7L32 9" fill="none" stroke="#fff6cc" stroke-opacity=".7" stroke-width="1.2" stroke-linecap="round"/><rect x="5" y="32" width="54" height="9" rx="2.5" fill="url(#lbcg)" stroke="#6b4600" stroke-width="1.6"/><circle cx="3" cy="10" r="3" fill="#fff6cc" stroke="#6b4600" stroke-width="1.2"/><circle cx="32" cy="3" r="3.2" fill="#fff6cc" stroke="#6b4600" stroke-width="1.2"/><circle cx="61" cy="10" r="3" fill="#fff6cc" stroke="#6b4600" stroke-width="1.2"/><ellipse cx="32" cy="36.5" rx="4.5" ry="3.4" fill="url(#lbcr)" stroke="#6b4600" stroke-width=".8"/><rect x="15" y="33.5" width="5.5" height="5.5" rx="1" transform="rotate(45 17.75 36.25)" fill="url(#lbcs)" stroke="#6b4600" stroke-width=".8"/><rect x="43.5" y="33.5" width="5.5" height="5.5" rx="1" transform="rotate(45 46.25 36.25)" fill="url(#lbcs)" stroke="#6b4600" stroke-width=".8"/><circle cx="30.5" cy="35.3" r="1.1" fill="#fff"/></svg></div>':''}
+        ${cfg.i===0?'<div class="lbp-crown">'+window._crownSvg()+'</div>':''}
         <div class="lbp-av"><div class="lbp-av-in">${avInner}</div></div>
         <div class="lbp-name">${esc(t.teamName)}</div>
         <div class="lbp-player">${esc(t.playerName)}${fanZoneChip(t)}${isMe?' <span class="lbx-you">YOU</span>':''}</div>
