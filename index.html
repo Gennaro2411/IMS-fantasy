@@ -10963,6 +10963,29 @@ async function renderBriefingExtras() {
       if (isDriverBanned(d)) items.push({ icon:'🚫', txt:`<strong>${esc(d.name)}</strong> in your team is <strong>RACE BANNED</strong> — swap them or score nothing`, col:'#ff3b4e' });
       else if (typeof isDriverCheckedOut==='function' && isDriverCheckedOut(d)) items.push({ icon:'⚠️', txt:`<strong>${esc(d.name)}</strong> in your team has <strong>checked out</strong> — consider swapping`, col:'#ff8fab' });
     });
+    // Captain for the upcoming round.
+    if (upcomingRace && !locked) {
+      const capId = (myTeam.captains || {})[upcomingRace.id];
+      const cap = capId && drivers.find(x => x.id === capId);
+      if (!cap) items.push({ icon:'👑', txt:`<strong>No captain set</strong> for ${esc(upcomingRace.name)} — you're missing out on 2× points`, col:'#ff8fab' });
+      else if (typeof isDriverCheckedOut === 'function' && isDriverCheckedOut(cap)) items.push({ icon:'👑', txt:`Your captain <strong>${esc(cap.name)}</strong> has checked out — pick a new captain`, col:'#ff3b4e' });
+      else items.push({ icon:'👑', txt:`Captain: <strong>${esc(cap.name)}</strong>${isDriverCheckedIn(cap) ? ' · checked in ✓' : ' · not checked in yet'}`, col:'#ffc800' });
+    }
+    // Drivers who haven't answered the check-in yet.
+    const _pend = myDrivers.filter(d => !isDriverCheckedIn(d) && !(typeof isDriverCheckedOut === 'function' && isDriverCheckedOut(d)) && !isDriverBanned(d));
+    if (_pend.length && !locked) items.push({ icon:'⏳', txt:`Still waiting on check-in: <strong>${_pend.map(d => esc(d.name)).join(', ')}</strong>`, col:'#f59e0b' });
+    // Money.
+    try {
+      const _val = myDrivers.reduce((t, d) => t + (typeof driverPrice === 'function' ? driverPrice(d) : (d.price || 0)), 0);
+      if (typeof myTeam.budget === 'number') items.push({ icon:'💰', txt:`<strong>$${myTeam.budget.toFixed(1)}M</strong> in the bank · drivers worth <strong>$${_val.toFixed(1)}M</strong>`, col:'#2ee6b6' });
+    } catch(e) {}
+    // Chips still available this season.
+    try {
+      const ch = myTeam.chips || {}, left = [['tripleCaptain','🚀 Triple Captain'],['wildcard','🃏 Wildcard'],['guardianAngel','😇 Guardian Angel']].filter(([k]) => !ch[k]).map(([,l]) => l);
+      if (left.length && !locked) items.push({ icon:'🎴', txt:`Chips still to play: <strong>${left.join(' · ')}</strong>`, col:'#ce93d8' });
+    } catch(e) {}
+    // Reserve tokens.
+    try { if (typeof window.getReservePlan === 'function') { const rp = window.getReservePlan(myTeam, racesForCap); items.push({ icon:'🔄', txt:`<strong>${rp.tokensLeft}/${window.RESERVE_TOKENS_PER_SEASON}</strong> reserve tokens left — a reserve covers any of your drivers who don't race`, col:'#27f4d2' }); } } catch(e) {}
     const emptySlots = _brDivs.filter(d => !sel[d]);
     if (emptySlots.length) items.push({ icon:'➕', txt:`<strong>${emptySlots.length} empty slot${emptySlots.length>1?'s':''}</strong> (${emptySlots.join(', ')}) — fill before lock`, col:'#ff8fab' });
     if (locked) items.push({ icon:'🔒', txt:`Teams are <strong>locked</strong> for this round — no more changes`, col:'var(--muted)' });
@@ -10981,8 +11004,8 @@ async function renderBriefingExtras() {
   el.innerHTML = `<div style="display:flex;flex-direction:column;gap:14px">
     ${countdownHtml?`<div>${countdownHtml.replace('margin-bottom:14px','')}</div>`:''}
     ${fixturesHtml?`<div class="brf-sec">${fixturesHtml}</div>`:''}
-    ${attendanceHtml?`<div class="brf-sec">${attendanceHtml}</div>`:''}
     ${checklistHtml?`<div class="brf-sec">${checklistHtml}</div>`:''}
+    ${attendanceHtml?`<div class="brf-sec">${attendanceHtml}</div>`:''}
   </div>`;
 
   if (nextSession) {
