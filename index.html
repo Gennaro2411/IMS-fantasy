@@ -20832,27 +20832,37 @@ function buildRecentTransfers(moves) {
   window._rtMoves = sorted;
   window._rtIdx = 0;
   const dots = sorted.map((_,i)=>`<span id="rt-dot-${i}" onclick="rtGoto(${i})" style="width:${i===0?'16px':'6px'};height:6px;border-radius:3px;background:${i===0?'linear-gradient(90deg,var(--gold),#ffa751)':'rgba(255,255,255,0.18)'};display:inline-block;transition:all .35s;cursor:pointer"></span>`).join('');
+  const _tk = sorted.map(m => { const v = (m.toTeam || m.fromTeam) ? `${(m.action||'').toUpperCase()} · ${esc(m.toTeam || m.fromTeam)}` : (m.action||'').toUpperCase(); return `<span style="margin-right:34px"><b style="color:#fff">${esc(m.driver||'')}</b> <span style="color:#ffd400">${v}</span></span>`; }).join('');
+  if (!window._rtClock) window._rtClock = setInterval(() => { const c = document.getElementById('rt-clock'); if (!c) { clearInterval(window._rtClock); window._rtClock = null; return; } c.textContent = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }); }, 10000);
   return `<style>
     @keyframes rtPulse{0%,100%{opacity:1}50%{opacity:.35}}
-    @keyframes rtSlideIn{from{transform:translateX(14px);opacity:0}to{transform:translateX(0);opacity:1}}
-    #rt-slide .rt-anim{animation:rtSlideIn .45s cubic-bezier(.2,.8,.3,1) backwards}
+    @keyframes rtWipe{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+    @keyframes rtUp{from{transform:translateY(10px);opacity:0}to{transform:none;opacity:1}}
+    @keyframes rtTick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+    #rt-slide .rt-wipe{animation:rtWipe .5s cubic-bezier(.7,0,.2,1) backwards}
+    #rt-slide .rt-up{animation:rtUp .45s .25s cubic-bezier(.2,.8,.3,1) backwards}
+    .rt-sky{font-family:'Barlow Condensed','Arial Narrow',sans-serif}
+    @media(max-width:520px){.rt-sky .rt-dots{display:none!important}}
   </style>
-  <div class="card" style="padding:0;overflow:hidden;position:relative;background:linear-gradient(120deg,#1a0f2e 0%,#12121c 55%,#0d0d14 100%);border:1px solid rgba(123,79,191,0.45)">
-    <div style="height:3px;background:linear-gradient(90deg,var(--gold),#9b6fd4,transparent)"></div>
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 14px 8px">
-      <div style="display:flex;align-items:center;gap:8px">
-        <span style="width:7px;height:7px;border-radius:50%;background:var(--red);box-shadow:0 0 8px rgba(232,0,45,0.9);animation:rtPulse 1.6s ease infinite"></span>
-        <span style="font-family:'Barlow Condensed',sans-serif;font-size:.8rem;font-weight:900;letter-spacing:2.5px;background:linear-gradient(90deg,#ffd700,#ffa751);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">TRANSFER WIRE</span>
+  <div class="card rt-sky" style="padding:0;overflow:hidden;position:relative;background:radial-gradient(120% 140% at 85% 0%,#1d3a8a 0%,#0b1f5c 45%,#06123a 100%);border:1px solid rgba(80,130,255,.35);border-radius:12px">
+    <div style="position:absolute;inset:0;background:repeating-linear-gradient(115deg,rgba(255,255,255,.03) 0 2px,transparent 2px 14px);pointer-events:none"></div>
+    <div style="position:relative;display:flex;align-items:stretch;justify-content:space-between;height:28px">
+      <div style="display:flex;align-items:stretch">
+        <span style="display:flex;align-items:center;padding:0 10px;background:#fff;color:#06123a;font-weight:900;font-size:.82rem;letter-spacing:1px">IMS</span>
+        <span style="display:flex;align-items:center;padding:0 12px;background:#e10600;color:#fff;font-weight:900;font-size:.82rem;letter-spacing:2px;white-space:nowrap;clip-path:polygon(0 0,100% 0,calc(100% - 10px) 100%,0 100%);padding-right:20px">TRANSFER WIRE</span>
+        <span style="display:flex;align-items:center;gap:5px;padding:0 8px;color:#fff;font-weight:800;font-size:.72rem;letter-spacing:1.5px"><span style="width:7px;height:7px;border-radius:50%;background:#e10600;box-shadow:0 0 8px #e10600;animation:rtPulse 1.4s ease infinite"></span>LIVE</span>
       </div>
-      <div style="display:flex;gap:10px;align-items:center">
-        <div style="display:flex;gap:4px;align-items:center">${dots}</div>
-        ${sorted.length > 1 ? `<div style="display:flex;gap:3px">
-          <button onclick="rtStep(-1)" aria-label="Previous transfer" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--muted);cursor:pointer;font-size:.85rem;line-height:1;width:22px;height:22px;border-radius:6px;transition:all .15s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--muted)'">‹</button>
-          <button onclick="rtStep(1)" aria-label="Next transfer" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--muted);cursor:pointer;font-size:.85rem;line-height:1;width:22px;height:22px;border-radius:6px;transition:all .15s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--muted)'">›</button>
-        </div>` : ''}
+      <div style="display:flex;gap:8px;align-items:center;padding-right:8px">
+        <div class="rt-dots" style="display:flex;gap:4px;align-items:center">${dots}</div>
+        ${sorted.length > 1 ? `<button onclick="rtStep(-1)" aria-label="Previous transfer" style="background:rgba(255,255,255,.1);border:0;color:#fff;cursor:pointer;width:22px;height:20px;border-radius:4px">‹</button><button onclick="rtStep(1)" aria-label="Next transfer" style="background:rgba(255,255,255,.1);border:0;color:#fff;cursor:pointer;width:22px;height:20px;border-radius:4px">›</button>` : ''}
+        <span id="rt-clock" style="font-weight:800;font-size:.8rem;color:#fff;background:rgba(0,0,0,.35);padding:2px 7px;border-radius:3px;white-space:nowrap">${new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span>
       </div>
     </div>
-    <div id="rt-slide" style="min-height:66px;display:flex;align-items:stretch;transition:opacity .35s ease;opacity:1;position:relative"></div>
+    <div id="rt-slide" style="min-height:92px;display:flex;align-items:stretch;transition:opacity .35s ease;opacity:1;position:relative"></div>
+    <div style="position:relative;display:flex;align-items:stretch;height:24px;background:#000;overflow:hidden">
+      <span style="flex-shrink:0;display:flex;align-items:center;padding:0 10px;background:#ffd400;color:#000;font-weight:900;font-size:.72rem;letter-spacing:1.5px;z-index:1">BREAKING</span>
+      <div style="flex:1;overflow:hidden;display:flex;align-items:center"><div style="display:inline-flex;white-space:nowrap;font-weight:700;font-size:.8rem;letter-spacing:.5px;animation:rtTick ${Math.max(18, sorted.length * 6)}s linear infinite;padding-left:12px">${_tk}${_tk}</div></div>
+    </div>
   </div>`;
 }
 
@@ -20911,27 +20921,21 @@ function rtSlideHtml(m) {
       : '');
 
   return `
-    <div class="rt-anim" style="position:absolute;left:0;top:0;bottom:0;width:46%;background:linear-gradient(100deg,${hexA(teamAccent,0.16)},transparent 85%);pointer-events:none"></div>
-    <div class="rt-anim" style="position:absolute;left:0;top:0;bottom:0;width:4px;background:${teamAccent};pointer-events:none"></div>
-    <div class="rt-anim" style="display:flex;align-items:center;gap:13px;padding:10px 14px 12px 16px;position:relative;flex:1;min-width:0">
-      <div style="position:relative;width:46px;height:46px;flex-shrink:0${wireDriver?';cursor:pointer':''}"${wireDriver?` onclick="openDriverModal('${wireDriver.id}')" title="View ${esc(m.driver)}'s profile"`:''}>
-        <div style="position:absolute;inset:0;border-radius:12px;background:#2a2a3d;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.95rem;color:#c9c9e0;font-family:'Barlow Condensed',sans-serif">${initials}</div>
-        ${img}
-        <div style="position:absolute;inset:0;border-radius:12px;border:1.5px solid ${hexA(teamAccent,0.7)};pointer-events:none"></div>
-        <span style="position:absolute;bottom:-4px;right:-5px;font-size:.8rem;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.8))">${meta.icon}</span>
+    <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;position:relative;flex:1;min-width:0">
+      <div class="rt-up" style="position:relative;width:62px;height:62px;flex-shrink:0;${wireDriver?'cursor:pointer;':''}border:2px solid #fff;box-shadow:0 4px 14px rgba(0,0,0,.5)"${wireDriver?` onclick="openDriverModal('${wireDriver.id}')" title="View ${esc(m.driver)}'s profile"`:''}>
+        <div style="position:absolute;inset:0;background:${teamAccent};display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1.2rem;color:#fff">${initials}</div>
+        ${img.replace(/width:46px;height:46px;border-radius:12px/,'width:100%;height:100%;border-radius:0').replace('border-radius:12px','border-radius:0')}
       </div>
-      <div style="flex:1;min-width:0">
-        <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
-          <span style="font-size:.52rem;font-weight:900;letter-spacing:1.6px;color:${meta.col};background:${hexA(meta.col==='var(--muted)'?'#7070a0':meta.col,0.14)};border:1px solid ${hexA(meta.col==='var(--muted)'?'#7070a0':meta.col,0.45)};border-radius:4px;padding:2px 7px">${meta.tag}</span>
-          ${div?`<span style="font-size:.52rem;font-weight:800;letter-spacing:1px;color:var(--muted);border:1px solid rgba(255,255,255,0.14);border-radius:4px;padding:2px 6px">${esc(div)}</span>`:''}
-          ${rnd?`<span style="font-size:.52rem;font-weight:800;letter-spacing:1px;color:var(--muted)">${rnd}</span>`:''}
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start">
+        <div class="rt-wipe" style="display:flex;align-items:stretch">
+          <span style="background:#ffd400;color:#000;font-weight:900;font-size:.72rem;letter-spacing:1.5px;padding:2px 9px">${meta.tag}</span>
+          ${div?`<span style="background:#06123a;color:#fff;font-weight:800;font-size:.72rem;letter-spacing:1px;padding:2px 8px">${esc(div)}</span>`:''}
+          ${rnd?`<span style="background:rgba(0,0,0,.55);color:#cfd8ff;font-weight:800;font-size:.72rem;padding:2px 8px">${rnd}</span>`:''}
         </div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.25rem;line-height:1.15;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-          <span${wireDriver?` onclick="openDriverModal('${wireDriver.id}')" style="cursor:pointer" title="View ${esc(m.driver)}'s profile"`:''}>${esc(m.driver)}</span> <span style="font-weight:700;font-size:.95rem;color:var(--muted)">${meta.verb(m)}</span>
+        <div class="rt-wipe" style="animation-delay:.08s;max-width:100%;background:#fff;color:#06123a;font-weight:900;font-size:1.35rem;line-height:1.1;text-transform:uppercase;padding:3px 12px 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-left:5px solid ${teamAccent}">
+          <span${wireDriver?` onclick="openDriverModal('${wireDriver.id}')" style="cursor:pointer"`:''}>${esc(m.driver)}</span>
         </div>
-      </div>
-      <div style="flex-shrink:0;text-align:right;align-self:flex-end;padding-bottom:2px">
-        ${when?`<div style="font-size:.58rem;color:var(--muted);white-space:nowrap">${when}</div>`:''}
+        <div class="rt-wipe" style="animation-delay:.16s;max-width:100%;background:linear-gradient(90deg,#0d2a7a,#14389e);color:#fff;font-weight:700;font-size:.9rem;padding:3px 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${meta.verb(m)}${when?` <span style="color:#9fb4ff;font-size:.75rem;margin-left:6px">${when}</span>`:''}</div>
       </div>
     </div>`;
 }
