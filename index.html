@@ -26948,6 +26948,31 @@ const MUSIC_TRACKS_ARCHIVED = [
 ];
 // Shuffle the playlist on each app open so the order is random.
 const _musicOrder = MUSIC_TRACKS.slice();
+// Admin-edited playlist (settings/musicCustom): songs added/removed from the Track list without a code change.
+window._applyMusicCustom = function(c) {
+  if (!c) return; const rm = new Set(c.removed || []);
+  (c.added || []).forEach(t => { if (t && t.url && !MUSIC_TRACKS.includes(t.url)) MUSIC_TRACKS.push(t.url); if (t && t.url) MUSIC_TITLES[t.url] = { title: t.title || 'IMS Radio', artist: t.artist || '' }; });
+  for (let i = MUSIC_TRACKS.length - 1; i >= 0; i--) if (rm.has(MUSIC_TRACKS[i])) MUSIC_TRACKS.splice(i, 1);
+  const keep = _musicOrder.filter(u => MUSIC_TRACKS.includes(u)); MUSIC_TRACKS.forEach(u => { if (!keep.includes(u)) keep.splice(Math.floor(Math.random() * (keep.length + 1)), 0, u); });
+  _musicOrder.length = 0; keep.forEach(u => _musicOrder.push(u));
+};
+setTimeout(() => { try { dbGet('settings', 'musicCustom').then(d => { window._musicCustom = (d && d.value) || { added: [], removed: [] }; window._applyMusicCustom(window._musicCustom); }).catch(() => {}); } catch(e) {} }, 0);
+window._saveMusicCustom = async function() { await dbSet('settings', 'musicCustom', { value: window._musicCustom }); };
+window.adminAddSong = async function() {
+  const u = (document.getElementById('tl-add-url') || {}).value || '', t = (document.getElementById('tl-add-title') || {}).value || '', a = (document.getElementById('tl-add-artist') || {}).value || '';
+  if (!/^https?:\/\/.+/.test(u.trim())) { customAlert('Paste a full song link (https://…mp3).'); return; }
+  const c = window._musicCustom = window._musicCustom || { added: [], removed: [] };
+  c.removed = (c.removed || []).filter(x => x !== u.trim());
+  c.added = (c.added || []).filter(x => x.url !== u.trim()).concat({ url: u.trim(), title: t.trim(), artist: a.trim() });
+  window._applyMusicCustom(c); await window._saveMusicCustom(); showTrackList();
+};
+window.adminRemoveSong = async function(url) {
+  customConfirm('Remove this song from IMS Radio for everyone?', async () => {
+    const c = window._musicCustom = window._musicCustom || { added: [], removed: [] };
+    c.added = (c.added || []).filter(x => x.url !== url); if (!(c.removed || []).includes(url)) c.removed = (c.removed || []).concat(url);
+    window._applyMusicCustom(c); await window._saveMusicCustom(); showTrackList();
+  }, 'Remove');
+};
 for (let i = _musicOrder.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [_musicOrder[i], _musicOrder[j]] = [_musicOrder[j], _musicOrder[i]]; }
 let musicTrackIdx = 0;
 function _setPlayIcon(playing) { const b = document.getElementById('music-play-btn'); if (b) b.textContent = playing ? '⏸' : '▶'; }
@@ -27038,7 +27063,11 @@ window.showTrackList = function() {
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><b style="font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;letter-spacing:1px">🎵 TRACK LIST</b><button class="btn btn-secondary btn-sm" onclick="document.getElementById('track-list-modal').remove()">✕</button></div>
     ${MUSIC_TRACKS.map(u => { const t = MUSIC_TITLES[u] || { title: 'IMS Radio', artist: '' }, on = cur === u;
       return `<button class="tl-item${on ? ' on' : ''}" onclick="document.querySelectorAll('.tl-item').forEach(b => { b.classList.remove('on'); b.querySelector('.tl-ico').textContent = '▶'; }); this.classList.add('on'); this.querySelector('.tl-ico').textContent = '🔊'; playTrack('${u}')">
-        <span class="tl-ico">${on ? '🔊' : '▶'}</span><span style="flex:1;min-width:0"><b style="display:block">${esc(t.title)}</b><small style="color:var(--muted)">${esc(t.artist)}</small></span></button>`; }).join('')}
+        <span class="tl-ico">${on ? '🔊' : '▶'}</span><span style="flex:1;min-width:0"><b style="display:block">${esc(t.title)}</b><small style="color:var(--muted)">${esc(t.artist)}</small></span>${adminLoggedIn ? `<span role="button" title="Remove song" onclick="event.stopPropagation();adminRemoveSong('${String(u).replace(/'/g, "\\'")}')" style="margin-left:8px;color:#ff5470;font-weight:900;padding:2px 8px;border-radius:6px;border:1px solid rgba(255,84,112,.4)">✕</span>` : ''}</button>`; }).join('')}
+    ${adminLoggedIn ? `<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)"><b style="font-size:.8rem;letter-spacing:1px;color:var(--muted)">ADD A SONG (ADMIN)</b>
+      <input id="tl-add-url" type="text" placeholder="Song link (https://files.catbox.moe/….mp3)" style="width:100%;margin-top:8px">
+      <div style="display:flex;gap:8px;margin-top:8px"><input id="tl-add-title" type="text" placeholder="Title" style="flex:1;min-width:0"><input id="tl-add-artist" type="text" placeholder="Artist" style="flex:1;min-width:0"></div>
+      <button class="btn btn-primary btn-sm" style="margin-top:8px;width:100%" onclick="adminAddSong()">+ Add to IMS Radio</button></div>` : ''}
   </div>`;
 };
 // ---- Driver theme songs: play on repeat while that driver's profile is open (pauses IMS Radio) ----
