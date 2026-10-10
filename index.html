@@ -25845,7 +25845,10 @@ function _betOutcome(b, races) {
   } else {
     const posMap = race.positionByDivision || {};
     if (!Object.values(posMap).some(p => p && p[b.div] != null)) return null;
-    pos = (id) => (posMap[id] && posMap[id][b.div] != null) ? Number(posMap[id][b.div]) : null;
+    // A DNF/DSQ has no classified position but still took part: rank them behind every finisher
+    // (otherwise their bets wrongly void and refund). Two non-finishers tie → H2H void.
+    const _st = (id) => String((((race.raceStatusByDivision || {})[id]) || {})[b.div] || '').toUpperCase();
+    pos = (id) => (posMap[id] && posMap[id][b.div] != null) ? Number(posMap[id][b.div]) : (_st(id) === 'DNF' || _st(id) === 'DSQ') ? 999 : null;
   }
   let result = 'void';
   if (b.market === 'win') { const p = pos(b.sel[0]); if (p != null) result = p === 1 ? 'won' : 'lost'; }
