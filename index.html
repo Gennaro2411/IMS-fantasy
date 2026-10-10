@@ -6618,8 +6618,10 @@ window.saveFirebaseConfig = async function() {
 
 // ===== INIT =====
 async function ensureDefaults() {
+  // Only seed defaults when the read SUCCEEDED and the doc truly doesn't exist — a failed or
+  // blipped read returns null, and seeding then would overwrite the real password / season.
   const pw = await dbGet('settings','adminPassword');
-  if (!pw) await dbSet('settings','adminPassword',{value:'admin123'});
+  if (!pw && !dbGet.readFailed()) await dbSet('settings','adminPassword',{value:'admin123'});
   // IMPORTANT: only seed teamsLocked when the read SUCCEEDS and the doc genuinely doesn't exist.
   // Previously any failed read returned null and this wrote {value:false} — silently unlocking
   // every team after a transient network blip on startup.
@@ -6630,7 +6632,7 @@ async function ensureDefaults() {
     await dbSet('settings','teamsLocked',{value:false});
   }
   const season = await dbGet('settings','seasonNumber').catch(()=>null);
-  if (!season) await dbSet('settings','seasonNumber',{value:7});
+  if (!season && !dbGet.readFailed()) await dbSet('settings','seasonNumber',{value:8});
   const pricingLock = await dbGet('settings','pricingLocked').catch(()=>null);
   window._pricingLocked = !!(pricingLock && pricingLock.value);
   const baselinesDoc = await dbGet('settings','divisionBaselines').catch(()=>null);
@@ -13869,7 +13871,8 @@ window.loadDbFile = async function() {
         // The newest season in the bible is the current one.
         const _latest = Math.max(...Object.keys(defs).map(Number).filter(n => n > 0));
         const _sn = await dbGet('settings','seasonNumber').catch(()=>null);
-        if (_latest && (!_sn || Number(_sn.value) !== _latest)) { await dbSet('settings', 'seasonNumber', { value: _latest }); window.currentSeason = _latest; }
+        // Only ever move the season FORWARD — an older .db must never drag it back.
+        if (_latest && (!_sn || Number(_sn.value) < _latest)) { await dbSet('settings', 'seasonNumber', { value: _latest }); window.currentSeason = _latest; }
         const _cur = defs[String(_latest || (_sn && _sn.value) || '')];
         if (_cur && _cur.totalRounds) await dbSet('settings', 'totalRounds', { value: _cur.totalRounds });
       }
