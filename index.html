@@ -17497,7 +17497,7 @@ window.openConstructorModal = async function(constrId) {
                 <span style="font-size:.7rem;color:var(--muted);white-space:nowrap">$${driverPrice(d).toFixed(1)}M</span>
                 <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1rem;color:var(--gold);min-width:34px;text-align:right">${p}</span>
               </div>`; }).join('')}</div>
-            ${ds.length > 1 ? `<span style="flex-shrink:0;font-size:.6rem;color:var(--muted);text-align:right;line-height:1.2">div<br><b style="color:#fff;font-size:.8rem">${tot}</b></span>` : ''}
+            ${ds.length > 1 ? `<span style="flex-shrink:0;font-size:.6rem;color:var(--muted);text-align:right;line-height:1.2">${esc(dv)} total<br><b style="color:#fff;font-size:.8rem">${tot}</b></span>` : ''}
           </div>`; }).join('');
         if (!rows) return '';
         return `<div style="margin:14px 20px 0;border-radius:14px;overflow:hidden;background:#14141f;border:1px solid rgba(255,255,255,0.07)">
