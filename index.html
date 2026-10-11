@@ -26493,7 +26493,8 @@ window.renderBets = async function() {
 
   // Free bet: bet in each of the last 3 rounds → one free 50-coin stake this round (winnings only).
   const _pastRounds = (schedule || []).filter(r => r.lockTime <= Date.now()).sort((a, b) => b.lockTime - a.lockTime).map(r => r.name);
-  let _streak = 0; for (const n of _pastRounds) { if (myBets.some(b => b.raceName === n && !b.adminOverride)) _streak++; else break; }
+  const _rn = (x) => String(x || '').toLowerCase().replace(/grand prix|\bgp\b/g, '').replace(/[^a-z0-9]/g, '');
+  let _streak = 0; for (const n of _pastRounds) { if (myBets.some(b => _rn(b.raceName) === _rn(n))) _streak++; else break; }
   const _haveFree = !!upcoming && _streak >= BET_FREE_STREAK && coins.freeBetUsed !== upcoming.name;
   window._betFreeOk = _haveFree; if (!_haveFree) window._betUseFree = false;
   const canRefill = coins.balance < 100 && openStake === 0 && upcoming && coins.refillRace !== upcoming.name;
