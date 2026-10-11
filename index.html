@@ -6895,9 +6895,11 @@ async function renderBriefingNudge() {
 async function renderBetOfWeek() {
   const box = document.getElementById('bet-of-week'); if (!box) return;
   try {
-    const [bets, teams] = await Promise.all([dbGetAll('bets').catch(() => []), dbGetAll('teams').catch(() => [])]);
+    const [bets, teams] = await Promise.all([dbGetAll('bets').catch(() => []), dbGetAll('teams', { all: true }).catch(() => [])]);
     const wk = Date.now() - 7 * 864e5;
-    const best = bets.filter(b => b && b.status === 'won' && (b.settledAt || 0) >= wk && (b.payout || 0) > 0)
+    // Real players only: skip test accounts and bets with no matching team.
+    const _real = new Set(teams.filter(t => t && t.userId && !t.testAccount).map(t => t.userId));
+    const best = bets.filter(b => b && _real.has(b.userId) && b.status === 'won' && (b.settledAt || 0) >= wk && (b.payout || 0) > 0)
       .sort((a, b) => (b.payout || 0) - (a.payout || 0) || (b.settledAt || 0) - (a.settledAt || 0))[0];
     if (!best) { box.style.display = 'none'; return; }
     const t = teams.find(x => x.userId === best.userId) || {}, name = t.playerName || t.teamName || 'A player';
