@@ -743,6 +743,7 @@
   .rr-pts{text-align:right;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.12rem;color:var(--gold);font-variant-numeric:tabular-nums}
   .rr-card.sprint .rr-pts{color:#ffa751}
   .rr-con .rr-cols,.rr-con .rr-row{grid-template-columns:34px minmax(0,1fr) 44px 42px}
+  .rr-flat{border-top:1px solid rgba(255,255,255,0.06)}
   .rr-clogo{width:34px;height:34px;border-radius:10px;flex-shrink:0;display:grid;place-items:center;background:color-mix(in srgb,var(--team) 22%,#1b1b2a);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--team) 45%,transparent)}
   .rr-clogo img{width:24px;height:18px;object-fit:contain}
   .rr-cbar{display:block;height:4px;border-radius:99px;background:rgba(255,255,255,0.06);overflow:hidden;margin-top:3px}
@@ -22303,39 +22304,25 @@ window.buildChampStandings = function(dv) {
           ? `${esc(rows[0].name)} can't clinch yet — needs ${need} pts but only ${maxRemaining} are on offer`
           : `${esc(rows[0].name)} needs ${need} more pt${need===1?'':'s'} to clinch`);
     headerNote = `<div style="margin:0 16px 8px;font-size:.64rem;font-weight:700;letter-spacing:.5px;color:var(--muted)">${racesLeft} race${racesLeft===1?'':'s'} left · ${needTxt}</div>`;
-  }  return headerNote + '<div style="padding:2px 0 8px">' + rows.map((r, i) => {
+  }
+  return headerNote + `<div class="rr-con rr-flat"><div class="rr-cols"><span>POS</span><span>${mode === 'constructors' ? 'TEAM' : 'DRIVER'}</span><span>GAP</span><span>PTS</span></div>` + rows.map((r, i) => {
     const tc = getTeamCardColour ? getTeamCardColour(r.team) : null;
     const accent = tc ? tc.accent : hue;
-    const posCol = i===0 ? 'var(--gold)' : i===1 ? '#c0c6d4' : i===2 ? '#cd7f32' : 'var(--muted)';
-    const rowBg = i===0 ? `linear-gradient(90deg,${hue}14,transparent 70%)` : (i%2 ? 'rgba(255,255,255,0.015)' : '');
-    const gapLeader = i===0 ? '—' : '-' + (rows[0].pts - r.pts);
-    const gapNext = i===0 ? '—' : '-' + (rows[i-1].pts - r.pts);
+    const gapLeader = i===0 ? '—' : '−' + (rows[0].pts - r.pts);
+    const gapNext = i===0 ? '—' : '−' + (rows[i-1].pts - r.pts);
     const gap = gapMode === 'next' ? gapNext : gapLeader;
     const pct = Math.max(3, Math.round((r.pts/maxPts)*100));
     const logo = r.logoUrl || (getTeamLogo ? getTeamLogo(r.team) : null);
-    // In drivers mode, show the driver's photo (with initials fallback behind it); constructors
-    // mode keeps just the team logo.
-    let avatarHtml = '';
-    if (mode !== 'constructors') {
-      const ph = r.driver ? driverPhoto(r.driver) : '';
-      const inits = (r.name||'?').replace(/^\[[^\]]*\]\s*/,'').split(/\s+/).map(w=>w[0]).join('').replace(/[^a-zA-Z0-9]/g,'').slice(0,2).toUpperCase() || '?';
-      avatarHtml = `<div style="position:relative;width:30px;height:30px;flex-shrink:0">
-        <div style="position:absolute;inset:0;border-radius:50%;background:#2a2a3d;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.62rem;color:#c9c9e0;font-family:'Barlow Condensed',sans-serif">${inits}</div>
-        ${ph ? `<img src="${esc(ph)}" style="position:absolute;inset:0;width:30px;height:30px;border-radius:50%;object-fit:cover;object-position:top center">` : ''}
-      </div>`;
-    }
-    return `<div style="display:flex;align-items:center;gap:11px;padding:8px 16px;border-left:3px solid ${accent};${rowBg?'background:'+rowBg+';':''}">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.15rem;width:24px;text-align:center;color:${posCol};flex-shrink:0">${i+1}</div>
-      ${avatarHtml}
-      ${logo ? `<img src="${esc(logo)}" style="width:26px;height:15px;object-fit:contain;flex-shrink:0">` : ''}
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:700;font-size:.86rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(r.name)}${i===0?(clinched?' <span style="font-size:.58rem;font-weight:800;color:#111;background:var(--gold);border-radius:3px;padding:0 5px;vertical-align:middle">👑 CHAMPION</span>':' <span style="font-size:.58rem;font-weight:800;color:var(--gold);border:1px solid rgba(255,200,0,0.5);border-radius:3px;padding:0 4px;vertical-align:middle">LEADER</span>'):''}</div>
-        <div style="height:3px;border-radius:3px;background:rgba(255,255,255,0.06);margin-top:4px;overflow:hidden"><div style="height:100%;width:${pct}%;border-radius:3px;background:linear-gradient(90deg,${accent},${accent}55)"></div></div>
-      </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.05rem;color:var(--gold);line-height:1">${r.pts}</div>
-        <div class="champ-gap" data-leader="${gapLeader}" data-next="${gapNext}" style="font-size:.6rem;font-weight:700;color:#aeb6c6;margin-top:1px">${gap}</div>
-      </div>
+    const tag = i === 0 ? (clinched ? '<span class="rr-chip" style="color:#111;background:var(--gold)">👑 CHAMPION</span>' : '<span class="rr-chip" style="color:var(--gold);background:rgba(255,200,0,0.14)">LEADER</span>') : '';
+    const pic = mode === 'constructors'
+      ? `<span class="rr-clogo">${logo ? `<img src="${esc(logo)}" alt="">` : ''}</span>`
+      : (() => { const ph = r.driver ? driverPhoto(r.driver) : ''; return `<span class="rr-av${i === 0 ? ' top' : ''}">${ph ? `<img src="${esc(ph)}" alt="" onerror="this.remove()">` : ''}</span>`; })();
+    const sub = mode === 'constructors' ? '' : `<small>${logo ? `<img src="${esc(logo)}" alt="">` : ''}${r.team ? esc(r.team) : ''}</small>`;
+    return `<div class="rr-row${i < 3 ? ' pod' : ''}" style="--team:${accent}">
+      <span class="rr-pos${i < 3 ? ' p' + (i + 1) : ''}">${i + 1}</span>
+      <div class="rr-drv">${pic}<div class="rr-nm" style="flex:1"><b style="display:flex;align-items:center;gap:6px"><span style="overflow:hidden;text-overflow:ellipsis">${esc(r.name)}</span>${tag}</b>${sub}<span class="rr-cbar"><i style="width:${pct}%"></i></span></div></div>
+      <span class="rr-grid champ-gap" data-leader="${gapLeader}" data-next="${gapNext}">${gap}</span>
+      <span class="rr-pts">${r.pts}</span>
     </div>`;
   }).join('') + '</div>';
 };
@@ -23042,9 +23029,9 @@ async function renderResults() {
         } catch(e) { window._champRacesLeft = 0; window._champMaxPerRaceByDiv = {}; window._champConstrMaxPerRaceByDiv = {}; window._champMaxPerRaceDefault = 32; window._champCanClinch = false; }
         if (!window._champDiv || !champDivs.includes(window._champDiv)) window._champDiv = champDivs[0];
         if (window._champMode !== 'constructors') window._champMode = 'drivers';
-        html += `<div class="card" style="padding:0;overflow:hidden">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 18px 6px;flex-wrap:wrap">
-            <div class="card-title" style="margin:0"><div class="dot"></div>🏆 Championship Standings</div>
+        html += `<div class="card rr-card" style="padding:0;overflow:hidden">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px 8px;flex-wrap:wrap;background:linear-gradient(90deg,rgba(123,127,232,.18),transparent 75%)">
+            <div class="rr-title"><b>Championship</b><span style="color:#7b7fe8">Standings</span></div>
             <div style="display:flex;gap:5px;flex-wrap:wrap">
               ${champDivs.map(dv => `<button id="champ-tab-${dv}" onclick="setChampDiv('${dv}')" style="font-size:.66rem;font-weight:800;letter-spacing:.5px;padding:4px 11px;border-radius:20px;cursor:pointer;border:1px solid ${window._champDiv===dv?DIV_HUES_R[dv]:'rgba(255,255,255,0.12)'};background:${window._champDiv===dv?DIV_HUES_R[dv]+'22':'transparent'};color:${window._champDiv===dv?DIV_HUES_R[dv]:'var(--muted)'}">${dv}</button>`).join('')}
             </div>
@@ -23198,9 +23185,9 @@ function buildBottStandings(ranked, seasonOver) {
   const maxPts = ranked[0].pts || 1;
   const mode = window._bottGapMode || 'leader';
   const btn = (m, label) => `<button onclick="setBottGapMode('${m}')" class="bott-gap-btn" data-mode="${m}" style="font-size:.6rem;font-weight:800;letter-spacing:1px;padding:3px 10px;border-radius:20px;cursor:pointer;border:1px solid ${mode===m?'rgba(255,200,0,0.5)':'rgba(255,255,255,0.12)'};background:${mode===m?'rgba(255,200,0,0.12)':'transparent'};color:${mode===m?'var(--gold)':'var(--muted)'}">${label}</button>`;
-  let html = `<div class="card" style="margin-bottom:16px;padding:0;overflow:hidden">
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 18px 4px;flex-wrap:wrap">
-      <div class="card-title" style="margin:0"><div class="dot"></div>🏎 BOTT Standings</div>
+  let html = `<div class="card rr-card" style="margin-bottom:16px;padding:0;overflow:hidden">
+    <div class="rr-head" style="--acc:#ffd24a;padding:14px 16px;flex-wrap:wrap">
+      <div class="rr-title"><b>BOTT</b><span>Standings</span></div>
       <div style="display:flex;gap:4px">${btn('leader','Gap to leader')}${btn('next','Interval')}</div>
     </div>
     <div style="padding:4px 0 8px">`;
@@ -23229,31 +23216,23 @@ function buildBottStandings(ranked, seasonOver) {
       }
     }
   } catch(e) {}
+  html += `<div class="rr-con rr-flat"><div class="rr-cols"><span>POS</span><span>TEAM</span><span>GAP</span><span>PTS</span></div>`;
   ranked.forEach((c, i) => {
     const tc = getTeamCardColour ? getTeamCardColour(c.name) : null;
     const accent = tc ? tc.accent : '#666677';
-    const posCol = i===0 ? 'var(--gold)' : i===1 ? '#c0c6d4' : i===2 ? '#cd7f32' : 'var(--muted)';
-    const rowBg = i===0 ? 'linear-gradient(90deg,rgba(255,200,0,0.10),transparent 70%)'
-      : i===1 ? 'linear-gradient(90deg,rgba(180,185,200,0.07),transparent 70%)'
-      : i===2 ? 'linear-gradient(90deg,rgba(205,127,50,0.07),transparent 70%)'
-      : (i%2 ? 'rgba(255,255,255,0.015)' : '');
     const pct = Math.max(4, Math.round((c.pts/maxPts)*100));
-    const gapLeader = i===0 ? 'pts' : ('−' + (ranked[0].pts - c.pts));
-    const gapNext = i===0 ? 'pts' : ('−' + (ranked[i-1].pts - c.pts));
+    const gapLeader = i===0 ? '—' : ('−' + (ranked[0].pts - c.pts));
+    const gapNext = i===0 ? '—' : ('−' + (ranked[i-1].pts - c.pts));
     const gap = mode === 'next' ? gapNext : gapLeader;
-    html += `<div style="display:flex;align-items:center;gap:12px;padding:9px 16px;border-left:3px solid ${accent};${rowBg?'background:'+rowBg+';':''}">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.25rem;width:26px;text-align:center;color:${posCol};flex-shrink:0">${i+1}</div>
-      <div style="width:40px;height:26px;border-radius:6px;background:${accent}1f;border:1px solid ${accent}55;display:flex;align-items:center;justify-content:center;flex-shrink:0">${c.logo ? `<img src="${esc(c.logo)}" style="height:15px;max-width:32px;object-fit:contain">` : '🏎'}</div>
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:700;font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(c.name)}${i===0 ? ' <span style="font-size:.55rem;font-weight:800;letter-spacing:1px;color:var(--gold);background:rgba(255,200,0,0.12);border:1px solid rgba(255,200,0,0.4);border-radius:20px;padding:1px 7px;vertical-align:1px">'+(seasonOver?'🏆 WINNER':'LEADER')+'</span>' : ''}</div>
-        <div style="height:3px;border-radius:3px;background:rgba(255,255,255,0.06);margin-top:5px;overflow:hidden"><div style="height:100%;width:${pct}%;border-radius:3px;background:linear-gradient(90deg,${accent},${accent}66)"></div></div>
-      </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.15rem;color:var(--gold);line-height:1">${c.pts}</div>
-        <div class="bott-gap" data-leader="${gapLeader}" data-next="${gapNext}" style="font-size:.72rem;font-weight:700;color:${i===0?'var(--muted)':'#aeb6c6'};margin-top:2px">${gap}</div>
-      </div>
+    const tag = i === 0 ? `<span class="rr-chip" style="color:${seasonOver ? '#111' : 'var(--gold)'};background:${seasonOver ? 'var(--gold)' : 'rgba(255,200,0,0.14)'}">${seasonOver ? '🏆 WINNER' : 'LEADER'}</span>` : '';
+    html += `<div class="rr-row${i < 3 ? ' pod' : ''}" style="--team:${accent}">
+      <span class="rr-pos${i < 3 ? ' p' + (i + 1) : ''}">${i + 1}</span>
+      <div class="rr-drv"><span class="rr-clogo">${c.logo ? `<img src="${esc(c.logo)}" alt="">` : ''}</span><div class="rr-nm" style="flex:1"><b style="display:flex;align-items:center;gap:6px"><span style="overflow:hidden;text-overflow:ellipsis">${esc(c.name)}</span>${tag}</b><span class="rr-cbar"><i style="width:${pct}%"></i></span></div></div>
+      <span class="rr-grid bott-gap" data-leader="${gapLeader}" data-next="${gapNext}">${gap}</span>
+      <span class="rr-pts">${c.pts}</span>
     </div>`;
   });
+  html += `</div>`;
   html += `</div></div>`;
   return html;
 }
