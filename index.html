@@ -7266,7 +7266,8 @@ async function renderDashboard() {
   // ===== TEAM OF THE SEASON — top cumulative scorer per division across the whole season =====
   let totsHtml = '';
   const scoredSeasonRaces = races.filter(r => r.driverPoints && Object.values(r.driverPoints).some(v => v > 0));
-  if (scoredSeasonRaces.length) {
+  // Only worth showing once the season is under way — after 1 race it's just Team of the Week again.
+  if (scoredSeasonRaces.length >= 3) {
     const seasonNumForTots = seasonDoc ? (seasonDoc.value || 7) : 7;
     const totsDivs = (typeof divisionsForSeason === 'function') ? divisionsForSeason(seasonNumForTots) : DIVISIONS;
     // Cumulative driver points across every scored race.
