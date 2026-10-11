@@ -26452,7 +26452,9 @@ window.renderBets = async function() {
   // ===== Book stats (since tracking started) =====
   let _since = window._betStatsSince;
   if (!_since) { const sd = await dbGet('settings', 'betStatsSince').catch(() => null); _since = sd && sd.value; if (!_since) { _since = Date.now(); await dbSet('settings', 'betStatsSince', { value: _since }).catch(() => {}); } window._betStatsSince = _since; }
-  const _all = (window._betAllBets || []).filter(b => (b.placedAt || 0) >= _since);
+  // Test accounts never count towards the book.
+  const _testIds = new Set(((await dbGetAll('teams', { all: true }).catch(() => [])) || []).filter(t => t && t.testAccount && t.userId).map(t => t.userId));
+  const _all = (window._betAllBets || []).filter(b => (b.placedAt || 0) >= _since && !_testIds.has(b.userId));
   const _set = _all.filter(b => b.status !== 'open');
   const _staked = _set.reduce((a, b) => a + (b.stake || 0), 0);
   const _paid = _set.reduce((a, b) => a + (b.status === 'lost' ? 0 : (b.payout || 0)), 0);
