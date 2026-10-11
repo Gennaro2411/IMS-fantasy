@@ -6644,7 +6644,10 @@ async function ensureDefaults() {
     DIVISION_BASELINES = {...DIVISION_BASELINES_DEFAULT, ...baselinesDoc.value};
   }
   const resStartDoc = await dbGet('settings','reserveStartRaceNum').catch(()=>null);
-  window.RESERVE_START_RACENUM = (resStartDoc && resStartDoc.value) ? resStartDoc.value : 0;
+  // The cutoff is a round number, so it only applies to the season it was set in — a Season 7
+  // cutoff (e.g. round 10) would otherwise hide every Season 8 reserve from rounds 1–9.
+  { const _cs = Number((season && season.value) || 0);
+    window.RESERVE_START_RACENUM = (resStartDoc && resStartDoc.value && (resStartDoc.season ? Number(resStartDoc.season) === _cs : _cs <= 7)) ? resStartDoc.value : 0; }
   const _seasonDoc = await dbGet('settings','seasonNumber').catch(()=>null);
   window._reserveSeason = (_seasonDoc && _seasonDoc.value) ? Number(_seasonDoc.value) : (window._reserveSeason || 8);
 }
@@ -17257,7 +17260,7 @@ window.resetReserves = async function(btn) {
     let lastScored = 0;
     races.forEach(r => { const rn = r.raceNum||0; const scored = r.driverPoints && Object.keys(r.driverPoints).length; if (scored && rn > lastScored) lastScored = rn; });
     const startFrom = Math.max(1, lastScored); // include the latest scored round (not the next one)
-    await dbSet('settings','reserveStartRaceNum',{ value: startFrom });
+    await dbSet('settings','reserveStartRaceNum',{ value: startFrom, season: Number(window.currentSeason) || null });
     window.RESERVE_START_RACENUM = startFrom;
     try { window.clearReservePlanCache && window.clearReservePlanCache(); } catch(e){}
     msg.innerHTML = `<div class="alert alert-success">✔ Reserves reset. They now start from Round ${startFrom} — all past absences are ignored and everyone has a full ${window.RESERVE_TOKENS_PER_SEASON} tokens.</div>`;
