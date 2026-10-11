@@ -12102,9 +12102,17 @@ window.findReserveForSlot = function(race, absentDriver, div) {
     const pts = (race.driverPointsByDivision[did] && race.driverPointsByDivision[did][div] !== undefined)
       ? race.driverPointsByDivision[did][div] : null;
     if (pts === null) return;                                              // must have actually raced this div (0 pts is fine — they still took the seat)
-    // If more than one stand-in filled in (unusual), take the higher scorer.
-    if (!best || pts > best.pts) best = { reserveId: did, reserveName: (dmap[did] && dmap[did].name) || did, pts };
+    // Rank: a real reserve / driver from another division beats a driver whose own seat is in this
+    // division (that's usually the absent driver's teammate with a stale team name, not a stand-in).
+    // Only then fall back to points. Never pick by points alone.
+    const rank = (!cand || cand.isReserve || (cand.division && cand.division !== div)) ? 2 : 1; // not on the market at all = a reserve too
+    const nm = (cand && cand.name) || (race.driverNames && race.driverNames[did]) || did;
+    if (!best || rank > best._rank || (rank === best._rank && pts > best.pts)) best = { reserveId: did, reserveName: nm, pts, _rank: rank };
   });
+  if (best && best._rank < 2) {
+    // No clear stand-in: if the only candidates have their own seat in this division, don't guess.
+    if (best._rank === 1) return null;
+  }
   return best;
 };
 
