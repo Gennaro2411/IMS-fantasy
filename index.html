@@ -26520,6 +26520,9 @@ window.renderBets = async function() {
   // Streak free bet (once per round) OR a free bet the admin gifted (used whenever).
   const _haveFree = !!upcoming && ((coins.freeBetGifts || 0) > 0 || (_streak >= BET_FREE_STREAK && coins.freeBetUsed !== upcoming.name));
   window._betFreeOk = _haveFree; if (!_haveFree) window._betUseFree = false;
+  try { const g = coins.freeBetGifts || 0, k = 'ims_gift_seen_' + currentUser.userId, seen = +(localStorage.getItem(k) || 0);
+    if (g > seen && typeof customAlert === 'function') setTimeout(() => customAlert(`🎁 You've been gifted a free bet!\n\nPick one when you place a bet:\n• 150 IM$ on any bet at odds over 2.5\n• 300 IM$ on a 3+ leg acca at odds over 5.0\n\nYou keep the winnings.${upcoming ? '' : ' Betting opens when the next race is added.'}`), 400);
+    localStorage.setItem(k, String(g)); } catch (e) {}
   const canRefill = coins.balance < 100 && openStake === 0 && upcoming && coins.refillRace !== upcoming.name;
   const slip = window._betSlip;
   const _legs = window._betLegs || [];
@@ -26546,7 +26549,7 @@ window.renderBets = async function() {
         <div class="bo-sub">${upcoming ? 'Betting closes when teams lock' : teamsLocked ? 'Teams are locked — no new bets until the round is done and teams unlock. Open bets settle once results are in.' : 'No upcoming round — markets open once the next race is scheduled'}</div></div>
       <div class="bo-wallet"><div class="bo-kicker">Your IM$</div><div class="bo-bal">${(coins.balance || 0).toLocaleString()} <span><i class="imc" title="IM$"></i></span></div>
         <div class="bo-sub">${openStake ? openStake + ' on open bets · ' : ''}${myRank >= 0 ? 'Rank #' + (myRank + 1) : 'Unranked'}</div>
-        <div class="bo-streak">${_haveFree ? `🎁 <b>Free bet ready</b>: 150 <i class="imc" title="IM$"></i> at odds over 2.5, or 300 <i class="imc" title="IM$"></i> on a 3+ leg acca at odds over 5.0${(coins.freeBetGifts || 0) > 0 ? ' <small>(gifted)</small>' : ''}` : upcoming && coins.freeBetUsed === upcoming.name ? '🎁 Free bet used this round' : `🔥 Streak ${Math.min(_streak, BET_FREE_STREAK)}/${BET_FREE_STREAK} — bet ${BET_FREE_STREAK} rounds in a row for a free bet`}</div>
+        <div class="bo-streak">${_haveFree ? `🎁 <b>Free bet ready${(coins.freeBetGifts || 0) > 0 ? ' (gifted)' : ''}</b>: add picks to your slip, then choose 150 <i class="imc" title="IM$"></i> at odds over 2.5 or 300 <i class="imc" title="IM$"></i> on a 3+ leg acca at odds over 5.0` : (coins.freeBetGifts || 0) > 0 ? `🎁 <b>You've been gifted a free bet!</b> You can use it as soon as betting opens for the next race.` : upcoming && coins.freeBetUsed === upcoming.name ? '🎁 Free bet used this round' : `🔥 Streak ${Math.min(_streak, BET_FREE_STREAK)}/${BET_FREE_STREAK} — bet ${BET_FREE_STREAK} rounds in a row for a free bet`}</div>
         ${canRefill ? `<button class="btn btn-secondary btn-sm" style="margin-top:6px" onclick="betRefill()">⛽ Pit stop refill +${BET_REFILL_COINS}</button>` : ''}</div>
     </div>
     <div class="bo-ticker" id="bo-ticker">${_betTickerHtml(window._betAllBets || [], teamBy)}</div>
