@@ -1275,7 +1275,7 @@
     <details class="help-sec" style="--hcol:#27f4d2">
       <summary>💰 Prices — how the market moves</summary>
       <div class="help-body">
-        <p>Prices, dominance and ELO price moves all settle <strong>once per round — after the D4 results come in</strong> (the last division to be imported). Earlier divisions' points land live, but nobody's price or dominance moves until D4 closes the round. Four forces move what a driver costs:</p>
+        <p>Prices, dominance and ELO price moves all settle <strong>once per round — after the last division's results come in (E3 from Season 8)</strong> (the last division to be imported). Earlier divisions' points land live, but nobody's price or dominance moves until D4 closes the round. Four forces move what a driver costs:</p>
         <p><strong>1. Dominance</strong> — how crushing their performance was versus their own division, compared to their previous race. The price shift is <strong>$0.1M for every 5 points</strong> of dominance change: beat your last showing and your price climbs, fall off and it drops. Big swings in form move the most money.</p>
         <p><strong>2. ELO</strong> — every race nudges price by their rating change. Rises are tiered: drivers under $15M climb fastest at roughly $1M per 30 ELO, easing smoothly to $1M per 50 ELO near the $30M cap — bargains climb quick, superstars don't snowball. Falls always bite at the full $1M-per-30 rate at any price, so overpriced drivers correct fast. This includes ELO from <strong>reserve outings</strong> — a driver racing outside their own division still gains or loses global ELO there, and that still moves their price even though the outing scored no fantasy points.</p>
         <p><strong>3. Non-finish penalty 💥</strong> — every DNF, DNS or DSQ costs price, and repeat offenders pay more: the season ladder runs -$0.5M for your first, another -$0.5M for the second, -$1M for the third, and -$2M for every one after that. Crash-happy (or steward-bothering) drivers become cheap for a reason. The count <strong>resets every season</strong>, so everyone starts each season with a clean slate — non-finishes have been counting since <strong>Texas, Round 1 of Season 7</strong>.</p>
@@ -7703,7 +7703,7 @@ async function renderHomeStatCards(myTeam, allTeams) {
     const latestRoundHasD4 = !!(latestScoredRace && (
       latestScoredRace.pricingFinalized === true ||
       (latestScoredRace.driverPointsByDivision &&
-        Object.values(latestScoredRace.driverPointsByDivision).some(byDiv => byDiv && byDiv['D4'] !== undefined))
+        Object.values(latestScoredRace.driverPointsByDivision).some(byDiv => byDiv && byDiv[(() => { const dv = typeof divisionsForSeason === 'function' ? divisionsForSeason(window.currentSeason) : ['D4']; return dv.includes('E3') && !dv.includes('D4') ? 'E3' : 'D4'; })()] !== undefined))
     ));
     const seenKey = 'imsLastSeen_' + currentUser.userId;
     let seen = null;
@@ -14352,14 +14352,16 @@ window.importDbRound = async function(roundNo, trackName) {
     // points/driverPoints/constructorPoints so people can see results — they just don't trigger
     // the once-per-race price-averaging step, which would otherwise treat each partial import as
     // a separate "race" and corrupt the running season average.
-    const batchIncludesD4 = Object.values(driverPointsByDivision).some(byDiv => byDiv && byDiv['D4'] !== undefined);
+    // The round closes on the season's LAST division (D4 up to S7, E3 from S8).
+    const _closeDiv = (Array.isArray(IMPORT_DIVS) && IMPORT_DIVS.includes('E3') && !IMPORT_DIVS.includes('D4')) ? 'E3' : 'D4';
+    const batchIncludesD4 = Object.values(driverPointsByDivision).some(byDiv => byDiv && byDiv[_closeDiv] !== undefined);
     const alreadyPricedForThisRace = !!(existingRace && existingRace.pricingFinalized);
     // The pricingFinalized flag can be missing even when D4 has landed (race deleted and
     // re-created, or D4 imported through an older app version). So ALSO treat the round as
     // finalized if the stored race record already contains any D4 points — the per-driver /
     // per-constructor guards make this safe even if pricing never actually ran before.
     const raceAlreadyHasD4 = !!(existingRace && existingRace.driverPointsByDivision &&
-      Object.values(existingRace.driverPointsByDivision).some(byDiv => byDiv && byDiv['D4'] !== undefined));
+      Object.values(existingRace.driverPointsByDivision).some(byDiv => byDiv && byDiv[_closeDiv] !== undefined));
 
     // Merge points across partial imports of the same race — rebuild driverPointsByDivision
     // per-division (this batch's divisions OVERWRITE that division's prior data, everything else
