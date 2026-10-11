@@ -26492,7 +26492,11 @@ window.renderBets = async function() {
     </div>` : '';
 
   // Free bet: bet in each of the last 3 rounds → one free 50-coin stake this round (winnings only).
-  const _pastRounds = (schedule || []).filter(r => r.lockTime <= Date.now()).sort((a, b) => b.lockTime - a.lockTime).map(r => r.name);
+  // Past rounds, newest first: locked schedule entries AND imported races (a round deleted from the
+  // schedule after it ran must still count).
+  const _pRnd = {}; (races || []).filter(r => r && r.name && r.driverPoints && Object.keys(r.driverPoints).length).forEach(r => { _pRnd[String(r.name).toLowerCase().replace(/grand prix|\bgp\b/g, '').replace(/[^a-z0-9]/g, '')] = { name: r.name, n: r.raceNum || 0, t: 0 }; });
+  (schedule || []).filter(r => r.lockTime && Number(r.lockTime) <= Date.now()).forEach(r => { const k = String(r.name).toLowerCase().replace(/grand prix|\bgp\b/g, '').replace(/[^a-z0-9]/g, ''); _pRnd[k] = { name: r.name, n: r.raceNum || (_pRnd[k] || {}).n || 0, t: Number(r.lockTime) }; });
+  const _pastRounds = Object.values(_pRnd).sort((a, b) => (b.n - a.n) || (b.t - a.t)).map(r => r.name);
   const _rn = (x) => String(x || '').toLowerCase().replace(/grand prix|\bgp\b/g, '').replace(/[^a-z0-9]/g, '');
   let _streak = 0; for (const n of _pastRounds) { if (myBets.some(b => _rn(b.raceName) === _rn(n))) _streak++; else break; }
   const _haveFree = !!upcoming && _streak >= BET_FREE_STREAK && coins.freeBetUsed !== upcoming.name;
