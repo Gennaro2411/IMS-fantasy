@@ -2570,6 +2570,7 @@
         <div class="flex gap-2" style="flex-wrap:wrap">
           <button class="btn btn-secondary" onclick="adminGrantChip('tripleCaptain')">🚀 Grant Triple Captain</button>
           <button class="btn btn-secondary" onclick="adminToggleTestAccount()">🧪 Toggle test account</button>
+          <button class="btn btn-secondary" onclick="adminGiveFreeBet()">🎁 Give free bet</button>
           <button class="btn btn-secondary" onclick="adminGrantChip('wildcard')">🃏 Grant Wildcard</button>
           <button class="btn btn-secondary" onclick="adminGrantChip('guardianAngel')">😇 Grant Guardian Angel</button>
           <button class="btn btn-secondary" onclick="adminGrantFreeTransfer()">🔄 Grant Free Transfer</button>
@@ -16890,6 +16891,19 @@ window.adminResetTransfers = async function() {
   setTimeout(()=>msg.innerHTML='', 3000);
 };
 
+// Gift a player the free-bet choice (150 at odds 2.5+ or 300 on a 3+ leg acca at odds 5+) for their next Bets visit.
+window.adminGiveFreeBet = async function() {
+  const name = document.getElementById('chip-player-name').value.trim().toLowerCase();
+  const msg = document.getElementById('chip-admin-msg');
+  if (!name) { msg.innerHTML='<div class="alert alert-error">Enter a player name.</div>'; return; }
+  const teams = await dbGetAll('teams', { all: true, fresh: true });
+  const team = teams.find(t => (t.playerName||'').toLowerCase() === name || (t.teamName||'').toLowerCase() === name);
+  if (!team || !team.userId) { msg.innerHTML='<div class="alert alert-error">Player not found.</div>'; return; }
+  const coins = await _betLoadCoins(team.userId);
+  coins.freeBetGifts = (coins.freeBetGifts || 0) + 1;
+  await dbSet('coins', team.userId, coins);
+  msg.innerHTML=`<div class="alert alert-success">🎁 ${esc(team.playerName || team.teamName)} now has ${coins.freeBetGifts} gifted free bet${coins.freeBetGifts > 1 ? 's' : ''} waiting — they'll get the choice next time they open Bets.</div>`;
+};
 window.adminToggleTestAccount = async function() {
   const name = document.getElementById('chip-player-name').value.trim().toLowerCase();
   const msg = document.getElementById('chip-admin-msg');
@@ -25940,9 +25954,9 @@ function _betOutcome(b, races) {
 }
 const BET_FREE_STAKE = 150, BET_FREE_STREAK = 3, BET_MIN_STAKE = 10;
 // Free bet choices once the streak hits 3: 150 IM$ on anything at odds over 2.5, or 300 IM$ on a 3+ leg acca.
-const BET_FREE_OPTS = { odds: { stake: 150, label: '150 on any bet at odds over 2.5' }, acca: { stake: 300, label: '300 on a 3+ leg acca' } };
+const BET_FREE_OPTS = { odds: { stake: 150, label: '150 on any bet at odds over 2.5' }, acca: { stake: 300, label: '300 on a 3+ leg acca at odds over 5.0' } };
 const _betFreeStake = () => (BET_FREE_OPTS[window._betUseFree] || {}).stake || 0;
-const _betFreeWhyNot = (kind, legs, odds) => kind === 'odds' ? (odds > 2.5 ? '' : 'needs odds over 2.5') : kind === 'acca' ? (legs.length >= 3 ? '' : 'needs 3+ picks') : 'pick an option';
+const _betFreeWhyNot = (kind, legs, odds) => kind === 'odds' ? (odds > 2.5 ? '' : 'needs odds over 2.5') : kind === 'acca' ? (legs.length < 3 ? 'needs 3+ picks' : odds > 5 ? '' : 'needs odds over 5.0') : 'pick an option';
 const _betPay = (b, st) => b.free ? (st === 'won' ? Math.round(b.stake * b.odds) - b.stake : 0) : st === 'won' ? Math.round(b.stake * b.odds) : st === 'void' ? b.stake : 0; // always the ODDS PLACED AT
 
 // Settle this player's open bets, AND re-check bets already settled: if the results were changed
@@ -25969,7 +25983,7 @@ async function _betSettleMine(userId, races, coins) {
         if (!won.length) { st = 'void'; pay = b.stake; }
         else { eff = Math.round(won.reduce((a, l) => a * l.odds, 1) * 100) / 100; st = 'won'; pay = Math.round(b.stake * eff); }
       }
-      if (b.free) { pay = st === 'won' ? pay - b.stake : 0; if (st === 'void' && b.status === 'open') coins.freeBetUsed = null; }
+      if (b.free) { pay = st === 'won' ? pay - b.stake : 0; if (st === 'void' && b.status === 'open') { if (b.gifted) coins.freeBetGifts = (coins.freeBetGifts || 0) + 1; else coins.freeBetUsed = null; } }
       if (!st) { // still waiting on some legs — save the legs that are already in, so the slip shows ✓ / refunded / waiting
         const part = (b.legs || []).map((l, i) => ({ ...l, result: ls[i] || null }));
         if (legsChanged || part.some((l, i) => (l.result || null) !== ((b.legs || [])[i].result || null))) { b.legs = part; await dbSet('bets', b.id, b).catch(() => {}); }
@@ -25994,7 +26008,7 @@ async function _betSettleMine(userId, races, coins) {
     }
     if (b.status === 'open' && b.div !== 'BOTT' && window._betOutIds && window._betOutRace === b.raceName && (b.sel || []).some(id => window._betOutIds.has(id))) {
       await dbSet('bets', b.id, { ...b, status: 'void', payout: b.free ? 0 : b.stake, settledAt: Date.now(), voidReason: 'checked-out' }).catch(() => {});
-      if (b.free) coins.freeBetUsed = null; else coins.balance += b.stake;
+      if (b.free) { if (b.gifted) coins.freeBetGifts = (coins.freeBetGifts || 0) + 1; else coins.freeBetUsed = null; } else coins.balance += b.stake;
       (coins.notices = coins.notices || []).push({ id: 'n' + Date.now() + Math.random().toString(36).slice(2, 6), at: Date.now(), seen: false, betId: b.id, label: b.label, raceName: b.raceName || '',
         from: 'open', to: 'refunded', delta: b.stake, reason: 'A driver in this bet checked out of the race, so your full stake has been returned.' });
       coins.notices = coins.notices.slice(-20);
@@ -26005,7 +26019,7 @@ async function _betSettleMine(userId, races, coins) {
     if (!result || result === b.status) continue;
     if (b.status === 'open') {
       const payout = _betPay(b, result);
-      if (b.free && result === 'void') coins.freeBetUsed = null; // refunded free bet → token back
+      if (b.free && result === 'void') { if (b.gifted) coins.freeBetGifts = (coins.freeBetGifts || 0) + 1; else coins.freeBetUsed = null; } // refunded free bet → token back
       await dbSet('bets', b.id, { ...b, status: result, payout, settledAt: Date.now() }).catch(() => {});
       coins.balance += payout;
       if (result === 'won') { coins.won = (coins.won || 0) + payout; coins.betsWon = (coins.betsWon || 0) + 1; }
@@ -26503,7 +26517,8 @@ window.renderBets = async function() {
   const _pastRounds = Object.values(_pRnd).sort((a, b) => (b.n - a.n) || (b.t - a.t)).map(r => r.name);
   const _rn = (x) => String(x || '').toLowerCase().replace(/grand prix|\bgp\b/g, '').replace(/[^a-z0-9]/g, '');
   let _streak = 0; for (const n of _pastRounds) { if (myBets.some(b => _rn(b.raceName) === _rn(n))) _streak++; else break; }
-  const _haveFree = !!upcoming && _streak >= BET_FREE_STREAK && coins.freeBetUsed !== upcoming.name;
+  // Streak free bet (once per round) OR a free bet the admin gifted (used whenever).
+  const _haveFree = !!upcoming && ((coins.freeBetGifts || 0) > 0 || (_streak >= BET_FREE_STREAK && coins.freeBetUsed !== upcoming.name));
   window._betFreeOk = _haveFree; if (!_haveFree) window._betUseFree = false;
   const canRefill = coins.balance < 100 && openStake === 0 && upcoming && coins.refillRace !== upcoming.name;
   const slip = window._betSlip;
@@ -26517,7 +26532,7 @@ window.renderBets = async function() {
       <div class="bo-legs">${_legs.map(l => `<div class="bo-leg${_clash.has(l.key) ? ' clash' : ''}"><div><b>${esc(l.label)}</b><small>${esc(l.div)}${_clash.has(l.key) ? ' · ⚠ can\'t combine with another pick' : ''}</small></div><span>${fmtOdds(l.odds)}</span><button onclick="betRemoveLeg('${l.key}')" title="Remove">✕</button></div>`).join('')}</div>
       <div class="bo-slip-o">${_legs.length > 1 ? 'Combined odds' : 'Odds'} <b>${fmtOdds(_combOdds)}</b> · <span style="font-size:.7rem">${_legs.length > 1 ? 'every pick must come in' : 'locked in when you place'}</span></div>
       ${_haveFree ? `<div class="bo-free" style="display:block"><div style="margin-bottom:6px">🎁 <b>Use a free bet</b> <span style="font-size:.72rem;opacity:.75">(you keep the winnings, not the stake)</span></div><div style="display:flex;gap:6px;flex-wrap:wrap">${['odds', 'acca'].map(k => { const why = _betFreeWhyNot(k, _legs, _combOdds), on = window._betUseFree === k;
-          return `<button class="btn btn-sm ${on ? 'btn-primary' : 'btn-secondary'}" style="flex:1;min-width:140px${why ? ';opacity:.5' : ''}" ${why ? 'disabled title="' + why + '"' : ''} onclick="window._betUseFree=${on ? 'false' : `'${k}'`};renderBets()">${BET_FREE_OPTS[k].stake} <i class="imc"></i> ${k === 'odds' ? 'odds 2.5+' : '3+ leg acca'}${why ? `<br><small>${why}</small>` : ''}</button>`; }).join('')}</div></div>` : ''}
+          return `<button class="btn btn-sm ${on ? 'btn-primary' : 'btn-secondary'}" style="flex:1;min-width:140px${why ? ';opacity:.5' : ''}" ${why ? 'disabled title="' + why + '"' : ''} onclick="window._betUseFree=${on ? 'false' : `'${k}'`};renderBets()">${BET_FREE_OPTS[k].stake} <i class="imc"></i> ${k === 'odds' ? 'odds 2.5+' : '3+ leg acca, odds 5+'}${why ? `<br><small>${why}</small>` : ''}</button>`; }).join('')}</div></div>` : ''}
       <div class="bo-slip-row"${window._betUseFree ? ' style="opacity:.4;pointer-events:none"' : ''}><input id="bo-stake" type="number" min="${BET_MIN_STAKE}" max="${coins.balance}" value="${_stk0}" oninput="betStakeInput()">
         ${[10, 50, 100].map(v => `<button onclick="betAddStake(${v})" title="Add ${v} to your stake">+${v}</button>`).join('')}<button onclick="betSetStake(${coins.balance})">Max</button><button onclick="betSetStake(0)" title="Clear stake">C</button></div>
       <div class="bo-slip-ret"><span>Potential return</span><span><b id="bo-ret">${window._betUseFree ? Math.round(_betFreeStake() * _combOdds) - _betFreeStake() : Math.round(_stk0 * _combOdds)}</b> <i class="imc" title="IM$"></i></span></div>
@@ -26531,7 +26546,7 @@ window.renderBets = async function() {
         <div class="bo-sub">${upcoming ? 'Betting closes when teams lock' : teamsLocked ? 'Teams are locked — no new bets until the round is done and teams unlock. Open bets settle once results are in.' : 'No upcoming round — markets open once the next race is scheduled'}</div></div>
       <div class="bo-wallet"><div class="bo-kicker">Your IM$</div><div class="bo-bal">${(coins.balance || 0).toLocaleString()} <span><i class="imc" title="IM$"></i></span></div>
         <div class="bo-sub">${openStake ? openStake + ' on open bets · ' : ''}${myRank >= 0 ? 'Rank #' + (myRank + 1) : 'Unranked'}</div>
-        <div class="bo-streak">${_haveFree ? `🎁 <b>Free bet ready</b>: 150 <i class="imc" title="IM$"></i> at odds over 2.5, or 300 <i class="imc" title="IM$"></i> on a 3+ leg acca` : upcoming && coins.freeBetUsed === upcoming.name ? '🎁 Free bet used this round' : `🔥 Streak ${Math.min(_streak, BET_FREE_STREAK)}/${BET_FREE_STREAK} — bet ${BET_FREE_STREAK} rounds in a row for a free bet`}</div>
+        <div class="bo-streak">${_haveFree ? `🎁 <b>Free bet ready</b>: 150 <i class="imc" title="IM$"></i> at odds over 2.5, or 300 <i class="imc" title="IM$"></i> on a 3+ leg acca at odds over 5.0${(coins.freeBetGifts || 0) > 0 ? ' <small>(gifted)</small>' : ''}` : upcoming && coins.freeBetUsed === upcoming.name ? '🎁 Free bet used this round' : `🔥 Streak ${Math.min(_streak, BET_FREE_STREAK)}/${BET_FREE_STREAK} — bet ${BET_FREE_STREAK} rounds in a row for a free bet`}</div>
         ${canRefill ? `<button class="btn btn-secondary btn-sm" style="margin-top:6px" onclick="betRefill()">⛽ Pit stop refill +${BET_REFILL_COINS}</button>` : ''}</div>
     </div>
     <div class="bo-ticker" id="bo-ticker">${_betTickerHtml(window._betAllBets || [], teamBy)}</div>
@@ -27076,7 +27091,7 @@ window.betPlace = async function() {
   const coins = await _betLoadCoins(currentUser.userId);
   if (stake < 1) return err('Enter a stake.');
   if (!useFree && stake < BET_MIN_STAKE) return err('Minimum bet is ' + BET_MIN_STAKE + ' <i class="imc" title="IM$"></i>.');
-  if (useFree && coins.freeBetUsed === ctx.upcoming.name) return err('You\'ve already used your free bet this round.');
+  if (useFree && !(coins.freeBetGifts > 0) && coins.freeBetUsed === ctx.upcoming.name) return err('You\'ve already used your free bet this round.');
   if (!useFree && stake > coins.balance) return err('Not enough coins.');
   if (legs.some(l => l.market === 'pole' && !(window._betPoleOk && window._betPoleOk.has(l.sel[0])))) return err('Pole bets need a driver with at least 3 recorded qualifying laps.');
   if (window._betOutIds && legs.some(l => l.sel.some(id => window._betOutIds.has(id)))) return err('A driver on your slip has checked out of this race — remove them first.');
@@ -27098,7 +27113,7 @@ window.betPlace = async function() {
   }
   if (useFree) { doc.free = true; doc.label = '🎁 ' + doc.label; label = doc.label; }
   await dbSet('bets', id, doc);
-  if (useFree) { coins.freeBetUsed = ctx.upcoming.name; window._betUseFree = false; } else { coins.balance -= stake; coins.staked = (coins.staked || 0) + stake; }
+  if (useFree) { if (coins.freeBetGifts > 0) { coins.freeBetGifts--; doc.gifted = true; await dbSet('bets', id, doc); } else coins.freeBetUsed = ctx.upcoming.name; window._betUseFree = false; } else { coins.balance -= stake; coins.staked = (coins.staked || 0) + stake; }
   coins.betsPlaced = (coins.betsPlaced || 0) + 1;
   await dbSet('coins', currentUser.userId, coins);
   window._betLegs = [];
