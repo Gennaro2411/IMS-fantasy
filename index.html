@@ -17474,6 +17474,39 @@ window.openConstructorModal = async function(constrId) {
         <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.4rem">${ownershipPct}%</div>
       </div>
     </div>
+    ${await (async () => {
+      // Driver line-up: this team's market drivers in each division, with their season points.
+      try {
+        const nt = s => String(s || '').toLowerCase().replace(/\b(racing|f1 team|team|gp|scuderia)\b/g, '').replace(/[^a-z0-9]/g, '');
+        const me = nt(constr.name); if (!me) return '';
+        const drv = (await dbGetAll('drivers').catch(() => [])).filter(d => d && !d._deleted && !d.isReserve && nt(d.team) === me);
+        if (!drv.length) return '';
+        const divs = (typeof divisionsForSeason === 'function') ? divisionsForSeason(currentSeason) : DIVISIONS;
+        const ptsOf = (d) => completedRaces.reduce((a, r) => a + (((r.driverPoints || {})[d.id]) || 0), 0);
+        const HUE = { D0:'#ffc800', D1:'#e8002d', D2:'#9b6fd4', D3:'#27f4d2', D4:'#2ecc71', E3:'#2ecc71' };
+        const rows = divs.map(dv => {
+          const ds = drv.filter(d => d.division === dv).map(d => ({ d, p: ptsOf(d) })).sort((a, b) => b.p - a.p);
+          if (!ds.length) return '';
+          const tot = ds.reduce((a, x) => a + x.p, 0);
+          return `<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-top:1px solid rgba(255,255,255,0.05)">
+            <span style="flex-shrink:0;width:30px;text-align:center;font-size:.66rem;font-weight:900;padding:2px 0;border-radius:6px;background:${HUE[dv] || '#9b6fd4'};color:#0b0b14">${esc(dv)}</span>
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">${ds.map(({ d, p }) => { const ph = driverPhoto(d);
+              return `<div onclick="openDriverModal('${d.id}')" style="cursor:pointer;display:flex;align-items:center;gap:9px;min-width:0">
+                <span class="rr-av" style="--team:${cModalAccent};width:28px;height:28px">${ph ? `<img src="${esc(ph)}" alt="" onerror="this.remove()">` : ''}</span>
+                <span style="flex:1;min-width:0;font-weight:700;font-size:.84rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(d.name)}</span>
+                <span style="font-size:.7rem;color:var(--muted);white-space:nowrap">$${driverPrice(d).toFixed(1)}M</span>
+                <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1rem;color:var(--gold);min-width:34px;text-align:right">${p}</span>
+              </div>`; }).join('')}</div>
+            ${ds.length > 1 ? `<span style="flex-shrink:0;font-size:.6rem;color:var(--muted);text-align:right;line-height:1.2">div<br><b style="color:#fff;font-size:.8rem">${tot}</b></span>` : ''}
+          </div>`; }).join('');
+        if (!rows) return '';
+        return `<div style="margin:14px 20px 0;border-radius:14px;overflow:hidden;background:#14141f;border:1px solid rgba(255,255,255,0.07)">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;padding:11px 12px;background:linear-gradient(90deg,${cModalAccent}33,transparent 75%)">
+            <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;letter-spacing:1px;text-transform:uppercase">Driver line-up</span>
+            <span style="font-size:.6rem;font-weight:800;letter-spacing:1px;color:var(--muted)">S${currentSeason} PTS</span>
+          </div>${rows}</div>`;
+      } catch (e) { return ''; }
+    })()}
     ${buildStonksChart(constr, completedRaces,
       (currentUser ? allTransfersC.filter(t => t.userId === currentUser.userId) : []),
       (r) => {
