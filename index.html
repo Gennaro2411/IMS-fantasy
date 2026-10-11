@@ -27451,7 +27451,11 @@ window.buildWordleData = async function(btn) { window._dhSeen = new Set();
   if (typeof _imsDb === 'undefined' || !_imsDb) { say('<div class="alert alert-error">Load the .db first (Add Points → 📂 Load Database).</div>'); return; }
   if (btn) btn.disabled = true;
   try {
-    const cur = await dbGet('settings', 'seasonNumber').catch(() => null); const curS = Number((cur && cur.value) || window.currentSeason || 8);
+    const cur = await dbGet('settings', 'seasonNumber').catch(() => null);
+    // Current season = the newest season actually in the .db (never trust a stale/reset setting —
+    // if it said 7, every S8 point/win/podium was silently left out).
+    let _dbMaxS = 0; try { (_imsDb.exec("SELECT DISTINCT col_a FROM inputs_rows")[0] || { values: [] }).values.forEach(([se]) => { const t = String(se || '').trim(); if (/^P/i.test(t)) return; const m = t.match(/\d+/); if (m) _dbMaxS = Math.max(_dbMaxS, +m[0]); }); } catch (e) {}
+    const curS = Math.max(Number((cur && cur.value) || 0), Number(window.currentSeason || 0), _dbMaxS) || 8;
     const cfgDoc = await dbGet('settings', 'wordleCfg').catch(() => null); const cfg = (cfgDoc && cfgDoc.value) || {};
     const q = (sql) => { const r = _imsDb.exec(sql); return r.length ? r[0].values : []; };
     const stats = {}; const S = (nm) => { const k = _wdNorm(nm); if (!k) return null; return stats[k] || (stats[k] = { n: String(nm).trim(), nat: '', b: 0, p: 0, w: 0, bs: [], ws: [], ps: {}, dup: 0 }); };
@@ -27545,7 +27549,7 @@ window.buildWordleData = async function(btn) { window._dhSeen = new Set();
         if (!/^E/.test(d) && !(off == null || parseInt(off, 10) === 1)) return; // D divisions: official sessions only (same rule as the champions list)
         const ms = typeof _qualiMs === 'function' ? _qualiMs(qt) : parseInt(String(qt).replace(/[^0-9]/g, ''), 10); if (!ms || !isFinite(ms) || ms < 20000) return; // ignore blank / junk times
         const k = sn + '|' + rd + '|' + d; if (!poles[k] || ms < poles[k].ms) poles[k] = { ms, nm }; });
-      Object.values(poles).forEach(({ nm }) => { const st = S(nm); if (st) st.pl = (st.pl || 0) + 1; }); window._poleCount = Object.keys(poles).length;
+      Object.entries(poles).forEach(([pk, { nm }]) => { const st = S(nm); if (st) { st.pl = (st.pl || 0) + 1; if (+pk.split('|')[0] === curS) st.pl8 = (st.pl8 || 0) + 1; } }); window._poleCount = Object.keys(poles).length;
     } catch (e) { console.warn('pole count failed', e); }
     // Drivers' champions: most official points in each division, each finished season (academy excluded).
     const champ = {}; // "S5 D1" -> {k, pts}
@@ -27602,7 +27606,14 @@ async function _wdLoad() {
   try { if (typeof buildAvatarIndex === 'function') buildAvatarIndex(await dbGetAll('teams').catch(() => [])); } catch (e) {}
   const W = window._wordleData || { stats: {}, idToKey: {} };
   // This season's starts, live from the imported results: one per division a driver scored in, per round.
-  const liveSt = {}, liveTm = {}, liveDv = {}; (await dbGetAll('races').catch(() => [])).forEach(r => { const bd = r && r.driverPointsByDivision; if (!bd) return;
+  // This season's wins / podiums / poles, live from the app's own results (backs up the .db build).
+  const liveW = {}, livePd = {}, livePl = {}, _allR = await dbGetAll('races').catch(() => []);
+  { const byNm = {}; drivers.forEach(d => { byNm[_wdNorm(d.name)] = d.id; });
+    _allR.forEach(r => { if (!r) return;
+      Object.entries(r.positionByDivision || {}).forEach(([id, byDiv]) => { const best = Math.min(...Object.entries(byDiv || {}).filter(([dv]) => !/^A/i.test(dv)).map(([, p]) => Number(p) || 99));
+        if (best === 1) liveW[id] = (liveW[id] || 0) + 1; if (best <= 3) livePd[id] = (livePd[id] || 0) + 1; });
+      Object.entries(r.poleByDiv || {}).forEach(([dv, nm]) => { if (/^A/i.test(dv)) return; const id = byNm[_wdNorm(nm)]; if (id) livePl[id] = (livePl[id] || 0) + 1; }); }); }
+  const liveSt = {}, liveTm = {}, liveDv = {}; _allR.forEach(r => { const bd = r && r.driverPointsByDivision; if (!bd) return;
     // This season's team per race (from the imported results) — counts toward team history live.
     Object.entries(r.driverTeamByDivision || {}).forEach(([id, byDiv]) => Object.entries(byDiv || {}).forEach(([dv, tn]) => { if (/^A/i.test(dv) || !tn || /^reserve$/i.test(String(tn).trim())) return;
       const T = liveTm[id] = liveTm[id] || {}, k = _wdNorm(tn); T[k] = T[k] || { name: String(tn).trim(), n: 0 }; T[k].n++; }));
@@ -27624,7 +27635,7 @@ async function _wdLoad() {
     return { id: d.id, name: d.name, res: !!d.isReserve, dv: d.division || d.lastDivision || d.prevDivision || '', team: d.isReserve ? 'Reserve' : (d.team || '—'), div: d.division || '', nat: _natFix(d.name, s.nat) || '', b: s.b || 0, // All-time table (matched on the market name) + this season's .db results — so a driver whose .db
     // alias differs from their market name still gets their real points/wins.
     p: WORDLE_BASE[_wdNorm(d.name)] ? bs[0] + Math.round(s.p8 || 0) : (s.p != null ? s.p : 0),
-    w: WORDLE_BASE[_wdNorm(d.name)] ? bs[1] + (s.w8 || 0) : (s.w != null ? s.w : 0), st: (s.st0 || 0) + (liveSt[d.id] || 0), pd: (bs[2] || 0) + (s.pd8 || 0), pl: _poleFix(d.name, Math.max(s.pl || 0, s2.pl || 0)), th, dh, fs: _wdFirstSeason(s, s2), ch: DRIVER_CHAMPS.filter(([, n]) => { const c = _wdNorm(n); return c === k || c === _wdNorm(d.name); }).length, photo: (typeof driverPhoto === 'function') ? driverPhoto(d) : '' };
+    w: WORDLE_BASE[_wdNorm(d.name)] ? bs[1] + Math.max(s.w8 || 0, liveW[d.id] || 0) : (s.w != null ? s.w : 0) + Math.max(0, (liveW[d.id] || 0) - (s.w8 || 0)), st: (s.st0 || 0) + (liveSt[d.id] || 0), pd: (bs[2] || 0) + Math.max(s.pd8 || 0, livePd[d.id] || 0), pl: _poleFix(d.name, Math.max(s.pl || 0, s2.pl || 0) + Math.max(0, (livePl[d.id] || 0) - Math.max(s.pl8 || 0, s2.pl8 || 0))), th, dh, fs: _wdFirstSeason(s, s2), ch: DRIVER_CHAMPS.filter(([, n]) => { const c = _wdNorm(n); return c === k || c === _wdNorm(d.name); }).length, photo: (typeof driverPhoto === 'function') ? driverPhoto(d) : '' };
   }).sort((a, b) => a.id < b.id ? -1 : 1);
   // Drivers who are only in the .db (not in the fantasy app) — same 25+ starts / champion / BOTT rule as reserves.
   { const curS = Number(window._reserveSeason) || 8, have = new Set();
