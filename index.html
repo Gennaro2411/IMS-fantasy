@@ -2652,6 +2652,7 @@
       <div class="card"><div id="admin-bet-odds"></div></div>
       <div class="card">
         <div class="card-title"><div class="dot"></div>⚖️ Bet verdicts</div>
+        <button class="btn btn-secondary btn-sm" style="margin-bottom:10px" onclick="(async b=>{b.disabled=true;b.textContent='Settling…';const n=await window._betSettleAll();b.textContent='✔ '+n+' settled';b.disabled=false;renderAdminBetVerdicts()})(this)">🎲 Settle everyone's bets now</button>
         <p class="text-muted" style="margin-bottom:12px">Fix any bet that settled wrong (or settle one by hand). Changing a verdict adjusts that player's coins by the difference and sends them a pop-up explaining the change the next time they open the app.</p>
         <div class="form-row" style="gap:10px;flex-wrap:wrap;align-items:flex-end">
           <div class="form-group"><label>Player / bet search</label><input type="text" id="bv-q" placeholder="name or driver…" oninput="renderAdminBetVerdicts()" style="max-width:200px"></div>
@@ -15075,6 +15076,7 @@ window.importDbRound = async function(roundNo, trackName) {
     msg.innerHTML = resultMsg;
     renderPastRacesList();
     renderDominanceTable();
+    try { const nb = await window._betSettleAll(); if (nb) msg.insertAdjacentHTML('beforeend', `<div class="alert" style="margin-top:8px;font-size:.8rem">🎲 ${nb} bet${nb !== 1 ? 's' : ''} settled for everyone</div>`); } catch (e) { console.warn('bet settle-all failed', e); }
     // Refresh the qualifying-pace store so pole / pole-gap odds include this round's laps.
     // Games stats (points, wins, podiums, poles, BOTTs…) rebuilt from the same .db straight after every import — no extra button.
     try { if (typeof buildWordleData === 'function') { await buildWordleData(null); window._grLoadCache = null; window._wdLoadCache = null; msg.insertAdjacentHTML('beforeend', '<div class="alert" style="margin-top:8px;font-size:.8rem">🟩 Games stats (PaddockDle, Grid, Higher or Lower) updated.</div>'); } } catch(e) { console.warn('auto games stats failed', e); }
@@ -25821,6 +25823,29 @@ window.adminUserBets = function(uid) {
       <b style="color:${col[b.status] || '#fff'};white-space:nowrap;text-transform:uppercase;font-size:.68rem">${b.status}${b.status === 'won' || b.status === 'cashed' ? ' +' + b.payout : b.status === 'open' ? ' → ' + Math.round(b.stake * b.odds) : ''}</b></div>`).join('') : '<div class="text-muted" style="font-size:.75rem;padding:4px 0">No bets on this race.</div>'}</div>`;
   box.style.display = 'block';
 };
+// Settle EVERY player's bets right away (run by the admin straight after an import), so results
+// don't wait for each player to open the app. Each player's results pop-up is queued on their coins
+// doc and shown the next time they open Bets.
+window._betSettleAll = async function() {
+  const [races, bets] = await Promise.all([dbGetAll('races', { fresh: true }).catch(() => []), dbGetAll('bets', { fresh: true }).catch(() => [])]);
+  const users = [...new Set(bets.filter(b => b.userId).map(b => b.userId))];
+  let n = 0;
+  for (const uid of users) {
+    try {
+      window._betJustSettled = [];
+      const coins = await _betLoadCoins(uid);
+      await _betSettleMine(uid, races, coins);
+      const done = (window._betJustSettled || []).filter(b => b.userId === uid && ['won', 'lost', 'void'].includes(b.status));
+      if (done.length) {
+        n += done.length;
+        coins.pendingResults = (coins.pendingResults || []).concat(done.map(b => ({ id: b.id, label: b.label, div: b.div, market: b.market, raceName: b.raceName, stake: b.stake, odds: b.effOdds || b.odds, payout: b.payout, status: b.status, free: !!b.free }))).slice(-30);
+        await dbSet('coins', uid, coins).catch(() => {});
+      }
+    } catch (e) { console.warn('settle-all failed for', uid, e); }
+  }
+  window._betJustSettled = [];
+  return n;
+};
 async function _betLoadCoins(userId) {
   let c = await dbGet('coins', userId).catch(() => null);
   if (!c) { c = { userId, balance: BET_START_COINS, staked: 0, won: 0, betsPlaced: 0, betsWon: 0, createdAt: Date.now() }; await dbSet('coins', userId, c).catch(() => {}); }
@@ -26075,6 +26100,7 @@ window.renderBets = async function() {
   const coins = await _betLoadCoins(me);
   window._betJustSettled = window._betJustSettled || [];
   const myBets = await _betSettleMine(me, races, coins);
+  if (Array.isArray(coins.pendingResults) && coins.pendingResults.length) { try { const pr = JSON.parse(localStorage.getItem('ims_bet_results') || '[]'); localStorage.setItem('ims_bet_results', JSON.stringify(pr.concat(coins.pendingResults))); } catch (e) {} coins.pendingResults = []; await dbSet('coins', me, coins).catch(() => {}); }
   // Results box when you open Bets after bets settled (now, or in the background since) —
   // wins first (with an IM$ explosion), then losses; only losses → "UNLUCKY!".
   try { let list = (window._betJustSettled || []).filter(b => b.userId === me && ['won', 'lost', 'void', 'cashed'].includes(b.status) && b.status !== 'cashed');
