@@ -3530,6 +3530,8 @@ async function _constrAliasFix(col, data) {
     list.forEach(x => { if (col === 'races') raceFix(x); else if (col === 'seasonArchives') (x && x.races || []).forEach(raceFix); else if (col === 'teams' && x) selFix(x.selections); });
   } catch(e) {}
 }
+// settings/wordleData is stored as a JSON string (older builds stored the object directly).
+window._wdDecode = function(v) { if (!v) return null; if (typeof v.json === 'string') { try { return JSON.parse(v.json); } catch (e) { return null; } } return v; };
 async function dbGet(col, id) {
   const _d = await _dbGetRaw(col, id);
   if (_d && (col === 'races' || col === 'seasonArchives' || col === 'teams')) await _constrAliasFix(col, _d);
@@ -3955,7 +3957,7 @@ async function bcLoadData() {
 
   _bcData = { teams, races, drivers, schedule, transfers, constructors, bott, standings, champions, teamsLocked: !!(bcLockDoc && bcLockDoc.value), rosterMoves: rosterMoves||[], lastUnlockTime: bcUnlockDoc ? bcUnlockDoc.value : 0, roundComplete: bcRoundComplete ? bcRoundComplete.value : null, liveDoc: bcLiveDoc ? bcLiveDoc.value : null, trackRecords: (trackRecDoc && trackRecDoc.value) ? trackRecDoc.value : null };
   // Nationalities (from the PaddockDle stats build) for the HOME GP scene.
-  try { const _wd = window._wordleData || ((await dbGet('settings', 'wordleData').catch(() => null)) || {}).value || null; if (_wd) window._wordleData = _wd; _bcData.wordle = _wd; } catch(e) {}
+  try { const _wd = window._wordleData || window._wdDecode(((await dbGet('settings', 'wordleData').catch(() => null)) || {}).value); if (_wd) window._wordleData = _wd; _bcData.wordle = _wd; } catch(e) {}
 }
 
 // Computes the round's auto-awards from team scores, captains and selections. Uses the most recently
@@ -17525,7 +17527,7 @@ window.openDriverModal = async function(driverId) {
   content.innerHTML = '<div class="ims-loader"><div class="ims-loader-mark"><img src="icons/icon-192.png?v=3" alt=""></div><div class="ims-loader-text">Loading</div><div class="ims-loader-bar"></div></div>';
   try {
   // Nationality comes from the PaddockDle stats (built from the .db's driver catalogue).
-  if (!window._wordleData) { try { const _wd = await dbGet('settings', 'wordleData'); window._wordleData = (_wd && _wd.value) || null; } catch(e) {} }
+  if (!window._wordleData) { try { const _wd = await dbGet('settings', 'wordleData'); window._wordleData = window._wdDecode(_wd && _wd.value); } catch(e) {} }
 
   const [drivers, races, allTeams, seasonArchives, seasonDoc, allTransfers] = await Promise.all([
     dbGetAll('drivers'), dbGetAll('races'), dbGetAll('teams'),
@@ -27563,7 +27565,8 @@ window.buildWordleData = async function(btn) { window._dhSeen = new Set();
     // Manual starts corrections (the .db has a stray extra row for these drivers).
     const STARTS_FIX = { wadz51: -1 };
     Object.entries(STARTS_FIX).forEach(([k, n]) => { if (stats[k]) stats[k].st0 = Math.max(0, (stats[k].st0 || 0) + n); });
-    await dbSet('settings', 'wordleData', { value: { builtAt: Date.now(), bott, bottRule, idToKey, champs: champList, stats: JSON.parse(JSON.stringify(stats)) } });
+    // Stored as ONE JSON string: as a nested map it blew Firestore's per-document index-entry limit.
+    await dbSet('settings', 'wordleData', { value: { builtAt: Date.now(), json: JSON.stringify({ builtAt: Date.now(), bott, bottRule, idToKey, champs: champList, stats }) } });
     window._wordleData = null; window._hlPool = null; window._hlInf = null;
     say(`<div class="alert alert-success">✔ Built stats for ${Object.keys(stats).length} drivers. ⏱️ Poles counted: <b>${window._poleCount || 0}</b> sessions. Nationality from <b>${esc(natInfo)}</b> (${natN} drivers).${bottRule ? `<br><b>BOTT rule that fits best:</b> winner = most ${esc(bottRule.metric)}; a driver gets it if they ${esc(bottRule.rule)}. Matches <b>${bottRule.exact}/${bottRule.of}</b> known counts${bottRule.misses.length ? ' — off for: ' + esc(bottRule.misses.join(', ')) : ''}.<br><small class="text-muted">Next best: ${esc(bottRule.runners.join(' · '))}</small>` : ''}<br><small>BOTT winners: ${Object.keys(bott).sort((a, b) => a - b).map(sn => 'S' + sn + ' ' + esc(bott[sn]) + ' (' + (bottSrc[sn] || '?') + ')').join(' · ') || 'none'}</small>
       <div style="margin-top:10px"><b>🏆 Drivers' champions (most official points per division, finished seasons) — check these:</b>
@@ -27597,7 +27600,7 @@ const _natFix = (name, nat) => { const k = _wdNorm(name); for (const [n, v] of O
 const _wdFirstSeason = (...ss) => { let m = 0; ss.forEach(x => Object.keys((x && x.ps) || {}).forEach(k => { const n = +((k.match(/^S(\d+)/) || [])[1] || 0); if (n && (!m || n < m)) m = n; })); return m; };
 async function _wdLoad() {
   if (!window._wordleCfg) { const c = await dbGet('settings', 'wordleCfg').catch(() => null); window._wordleCfg = Object.assign({ maxGuesses: 8, daily: false, bottOverride: {} }, (c && c.value) || {}); }
-  if (!window._wordleData) { const d = await dbGet('settings', 'wordleData').catch(() => null); window._wordleData = (d && d.value) || null; }
+  if (!window._wordleData) { const d = await dbGet('settings', 'wordleData').catch(() => null); window._wordleData = window._wdDecode(d && d.value); }
   { const lk = await dbGet('settings', 'gamesLock').catch(() => null); window._gamesLock = (lk && lk.value) || {}; }
   // Today's daily driver + grid are fixed in the database by whoever loads first, so every player
   // gets exactly the same puzzle even if their driver list / app version differs slightly.
