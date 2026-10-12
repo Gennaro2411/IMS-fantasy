@@ -28119,6 +28119,11 @@ function _cnBuild(pool, seed) {
       const ids = cand.slice(0, 4); ids.forEach(id => used.add(id)); groups.push({ id: c.id, label: c.label, ids, size: members[c.id].length });
     }
     if (!ok) continue;
+    // No red-herring answers: an unused category (e.g. "American") must not also fit 4+ of the 16, unless those are exactly one real group.
+    const all16 = groups.flatMap(g => g.ids), pickedKinds = new Set(pick.map(c => c.kind)), P16 = all16.map(id => pool.find(p => p.id === id));
+    if (C.some(c => { if (pick.includes(c) || (c.kind !== 'team' && pickedKinds.has(c.kind))) return false;
+      const hit = P16.filter(p => c.test(p)).map(p => p.id); if (hit.length < 4) return false;
+      return !groups.some(g => hit.length === 4 && g.ids.every(id => hit.includes(id))); })) continue;
     groups.sort((a, b) => b.size - a.size); // bigger category = easier (yellow)
     groups.forEach((g, i) => { g.col = i; });
     return { groups, order: shuf(groups.flatMap(g => g.ids)) };
