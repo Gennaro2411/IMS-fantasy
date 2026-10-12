@@ -355,14 +355,14 @@
   .brf-form[open]>summary .brf-form-chev::after{transform:rotate(180deg)}
   @keyframes brfPulse{0%,100%{box-shadow:0 0 0 0 rgba(46,230,182,.55)}50%{box-shadow:0 0 0 6px rgba(46,230,182,0)}}
   /* Login: purpose-made IMS Fantasy background (glowing track outline, speed streaks, calendar circuits) */
-  #login-overlay{background:url('icons/login-bg-tall.jpg') center/cover no-repeat,#07070d !important}
-  @media (min-aspect-ratio:1/1){#login-overlay{background:url('icons/login-bg-wide.jpg') center/cover no-repeat,#07070d !important}}
-  #login-wall{position:absolute;inset:0;overflow:hidden;opacity:0;transition:opacity 1.2s ease;pointer-events:none;z-index:0}
+  #login-overlay{background:radial-gradient(60% 50% at 20% 20%,rgba(123,79,191,.35),transparent 70%),radial-gradient(55% 45% at 85% 85%,rgba(232,0,45,.25),transparent 70%),#07070d !important}
+  #login-wall{position:absolute;inset:0;overflow:hidden;opacity:0;transition:opacity .35s ease;pointer-events:none;z-index:0}
   #login-wall.on{opacity:1}
   #login-wall::after{content:'';position:absolute;inset:0;background:radial-gradient(60% 55% at 50% 50%,rgba(7,7,13,.92),rgba(7,7,13,.55) 70%,rgba(7,7,13,.75)),linear-gradient(160deg,rgba(123,79,191,.25),transparent 50%,rgba(232,0,45,.18))}
   .lw-cols{position:absolute;inset:-60px;display:flex;gap:10px;transform:rotate(-8deg) scale(1.15)}
   .lw-col{flex:0 0 100px;display:flex;flex-direction:column;animation:lwScroll linear infinite;will-change:transform}
-  .lw-col i{display:block;flex:0 0 100px;width:100px;height:100px;margin-bottom:10px;border-radius:16px;background:#1b1b2a center/cover no-repeat;filter:saturate(.85);box-shadow:0 0 0 1px rgba(255,255,255,.06)}
+  .lw-col i img{width:100%;height:100%;object-fit:cover;display:block}
+  .lw-col i{display:block;overflow:hidden;flex:0 0 100px;width:100px;height:100px;margin-bottom:10px;border-radius:16px;background:#1b1b2a center/cover no-repeat;filter:saturate(.85);box-shadow:0 0 0 1px rgba(255,255,255,.06)}
   @keyframes lwScroll{from{transform:translate3d(0,0,0)}to{transform:translate3d(0,-50%,0)}}
   body.reduce-motion .lw-col{animation:none}
   #login-overlay>*:not(#login-wall){position:relative;z-index:1}
@@ -6611,26 +6611,32 @@ window.logoutUser = function() {
 window._loginWall = async function() {
   const ov = document.getElementById('login-overlay'); if (!ov || document.getElementById('login-wall')) return;
   const wall = document.createElement('div'); wall.id = 'login-wall'; ov.insertBefore(wall, ov.firstChild);
+  // Build straight away from the pictures that loaded last time (cached), so the wall is there the
+  // moment the login opens; then refresh that cache in the background for next time.
+  let cached = []; try { cached = JSON.parse(localStorage.getItem('imsLoginPics') || '[]'); } catch (e) {}
+  const build = (pics) => {
+    pics = pics.slice(); for (let i = pics.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pics[i], pics[j]] = [pics[j], pics[i]]; }
+    window._lwGood = pics;
+    const cols = Math.max(4, Math.ceil(window.innerWidth / 110) + 1), per = Math.max(10, Math.ceil(window.innerHeight / 110) + 4);
+    let k = 0, html = '';
+    for (let c = 0; c < cols; c++) {
+      const tiles = []; for (let r = 0; r < per; r++) tiles.push(pics[(k++) % pics.length]);
+      const col = tiles.map(u => `<i><img src="${esc(u)}" alt="" decoding="async" onerror="this.onerror=null;var g=window._lwGood||[];this.src=g[Math.floor(Math.random()*g.length)]||''"></i>`).join('');
+      html += `<div class="lw-col" style="animation-duration:${50 + (c % 4) * 14}s;animation-direction:${c % 2 ? 'reverse' : 'normal'};animation-delay:-${(c * 7) % 40}s">${col}${col}</div>`;
+    }
+    wall.innerHTML = `<div class="lw-cols">${html}</div>`;
+    wall.classList.add('on');
+  };
+  if (cached.length >= 6) build(cached);
   let pics = [];
   try {
     const ds = (await dbGetAll('drivers').catch(() => [])).filter(d => d && d.name && !d._deleted);
-    pics = ds.map(d => (typeof driverPhoto === 'function' ? driverPhoto(d) : '')).filter(Boolean);
+    pics = [...new Set(ds.map(d => (typeof driverPhoto === 'function' ? driverPhoto(d) : '')).filter(Boolean))];
   } catch (e) {}
-  // Only keep pictures that actually load — a broken link would leave an empty tile.
-  pics = [...new Set(pics)];
   const ok = await Promise.all(pics.map(u => new Promise(res => { const im = new Image(); const t = setTimeout(() => res(null), 6000); im.onload = () => { clearTimeout(t); res(im.naturalWidth > 8 ? u : null); }; im.onerror = () => { clearTimeout(t); res(null); }; im.src = u; })));
-  pics = ok.filter(Boolean);
-  if (pics.length < 6) { wall.remove(); return; }
-  for (let i = pics.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pics[i], pics[j]] = [pics[j], pics[i]]; }
-  const cols = Math.max(4, Math.ceil(window.innerWidth / 110) + 1), per = Math.max(10, Math.ceil(window.innerHeight / 110) + 4);
-  let k = 0, html = '';
-  for (let c = 0; c < cols; c++) {
-    const tiles = []; for (let r = 0; r < per; r++) tiles.push(pics[(k++) % pics.length]);
-    const col = tiles.map(u => `<i style="background-image:url('${String(u).replace(/'/g, "%27")}')"></i>`).join('');
-    html += `<div class="lw-col" style="animation-duration:${50 + (c % 4) * 14}s;animation-direction:${c % 2 ? 'reverse' : 'normal'};animation-delay:-${(c * 7) % 40}s">${col}${col}</div>`;
-  }
-  wall.innerHTML = `<div class="lw-cols">${html}</div>`;
-  requestAnimationFrame(() => wall.classList.add('on'));
+  const good = ok.filter(Boolean);
+  if (good.length >= 6) { try { localStorage.setItem('imsLoginPics', JSON.stringify(good.slice(0, 120))); } catch (e) {} window._lwGood = good; if (cached.length < 6) build(good); }
+  else if (cached.length < 6) wall.remove();
 };
 function showLoginOverlay() {
   loginReset();
