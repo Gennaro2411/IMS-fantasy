@@ -11237,6 +11237,13 @@ async function renderBriefingExtras() {
         else { verdict = rank && rank <= 3 ? 'CAPTAIN OPTION' : 'KEEP'; vcol = '#22c55e';
           adv = rank && rank <= 3 ? `Top ${rank} in ${esc(d.division)} on recent form and beating their price. A strong captain pick this round.` : `Beating their price, so keep them.`;
           if (ratio > 1.4 && h.length >= 3 && rAvg > sAvg * 1.3) adv += ` Their last 3 (${rAvg.toFixed(1)}) are well above their season average (${sAvg.toFixed(1)}), so expect some regression.`; }
+        // New to the league (no results before this season), cheap, and already beating their price:
+        // the market hasn't caught up yet — flag it as a hidden gem.
+        try { const _newbie = _histPool(d.id, d.division).length === h.length && !_histIn(_pool.filter(r => !_scored.includes(r)), d.id).length;
+          if (_newbie && ratio !== null && ratio > 1.15) { verdict = '💎 HIDDEN GEM'; vcol = '#4aa3ff';
+            adv = `New this season and priced for ${rank && rank > 3 ? 'a midfield' : 'a lower'} finish, but scoring ${Math.round(ratio * 100)}% of that. The market hasn't caught up: expect their price to climb, so getting in early is good value.` + (rank && rank <= 3 ? ` Already top ${rank} in ${esc(d.division)} on form.` : ''); }
+          else if (_newbie && h.length < 3) notes.push(`New this season: only ${h.length} race${h.length === 1 ? '' : 's'} to go on, so treat this verdict lightly.`);
+        } catch (e) {}
         if (!isDriverCheckedIn(d)) adv += ` Not checked in yet: if they check out, you'll need a reserve or a swap before lock.`;
         const stat = (k, v) => `<div style="flex:1 1 56px;text-align:center;padding:6px 4px;border-radius:8px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.08)"><div style="font-size:.6rem;font-weight:700;color:#b8bdd6;text-transform:uppercase;letter-spacing:.05em">${k}</div><div style="font-weight:800;font-size:.95rem;color:#fff">${v}</div></div>`;
         const spark = h.slice(-6).map(v => `<span title="${v}" style="display:inline-block;width:6px;margin-right:2px;border-radius:2px;background:${col};height:${Math.max(3, Math.min(22, v / Math.max(1, ...h) * 22))}px"></span>`).join('');
