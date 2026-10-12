@@ -4920,7 +4920,8 @@ async function stampLiveWeekend(schedule) {
       const allRaces = await dbGetAll('races').catch(()=>[]);
       const raceDoc = allRaces.find(r => (r.name||'').toLowerCase().trim() === justLocked.name.toLowerCase().trim())
                    || allRaces.find(r => justLocked.raceNum && r.raceNum === justLocked.raceNum);
-      if (raceDoc) await snapshotTeamsForRace(raceDoc.id, true);
+      const _rd = raceDoc || await window.ensureRaceDoc(justLocked.name, justLocked.raceNum);
+      if (_rd) await snapshotTeamsForRace(_rd.id, true);
     } catch(e) { console.log('lock snapshot skipped:', e); }
   } catch(e) { console.log('live weekend stamp failed (non-fatal):', e); }
 }
@@ -5065,6 +5066,24 @@ setTimeout(checkLockReminder, 1500);         // check almost immediately on app 
 setTimeout(checkLockReminder, 15000);        // shortly after app load
 setInterval(checkLockReminder, 5 * 60000);   // then every 5 minutes while open
 
+// Make sure an (empty) race doc exists for a scheduled round, so the briefing, captain picks and
+// the lock-time squad snapshot all have somewhere to live before results are imported. Same id
+// format the .db importer uses, so the import fills this doc instead of making a second one.
+window.ensureRaceDoc = async function(name, raceNum) {
+  try {
+    if (!name) return null;
+    const races = await dbGetAll('races', { fresh: true }).catch(() => []);
+    const nn = String(name).toLowerCase().trim();
+    const hit = races.find(r => (r.name || '').toLowerCase().trim() === nn) || (raceNum ? races.find(r => r.raceNum === raceNum && !(r.driverPoints && Object.keys(r.driverPoints).length)) : null);
+    if (hit) return hit;
+    const sn = Number(window.currentSeason) || Number(((await dbGet('settings', 'seasonNumber').catch(() => null)) || {}).value) || 8;
+    const id = 'race_' + String(name).toLowerCase().replace(/[^a-z0-9]/g, '_') + '_s' + sn;
+    const doc = { id, name: String(name).trim(), raceNum: raceNum || 0, createdAt: Date.now() };
+    await dbSet('races', id, doc);
+    try { dbInvalidate && dbInvalidate('races'); } catch (e) {}
+    return doc;
+  } catch (e) { console.warn('ensureRaceDoc failed', e); return null; }
+};
 window.addScheduleRace = async function() {
   const name = document.getElementById('sched-name').value.trim();
   const num = parseInt(document.getElementById('sched-num').value) || 0;
@@ -5073,6 +5092,7 @@ window.addScheduleRace = async function() {
   if (!name || !num || !dt) { msg.innerHTML='<div class="alert alert-error">Fill in all fields.</div>'; return; }
   const lockTime = new Date(dt).getTime();
   await dbAdd('schedule', { name, raceNum: num, lockTime });
+  await window.ensureRaceDoc(name, num);
   msg.innerHTML='<div class="alert alert-success">✔ Race added to schedule!</div>';
   document.getElementById('sched-name').value='';
   document.getElementById('sched-num').value='';
@@ -5147,6 +5167,7 @@ window.bulkAddCalendar = async function(commit) {
     const existing = await dbGetAll('schedule').catch(()=>[]);
     await Promise.all(existing.map(s => dbDelete('schedule', s.id).catch(()=>{})));
     await Promise.all(parsed.map(p => dbAdd('schedule', { name: p.name, raceNum: p.raceNum, lockTime: p.lockTime, isSprint: p.isSprint || false })));
+    for (const p of parsed) if (p.lockTime > Date.now()) await window.ensureRaceDoc(p.name, p.raceNum);
     msg.innerHTML = `<div class="alert alert-success">✔ Schedule set — ${parsed.length} race(s) added.${errors.length?' ('+errors.length+' line(s) skipped)':''}</div>`;
     renderScheduleList();
   }, 'Replace schedule');
@@ -10687,7 +10708,9 @@ async function renderBriefingExtras() {
   // If there's no genuinely upcoming race (every round already scored / season over), show a single
   // placeholder and render none of the briefing sections — a briefing for a finished race is noise.
   try {
-    const _racesUp = await dbGetAll('races').catch(()=>[]);
+    try { const _sc = (await dbGetAll('schedule').catch(()=>[])).filter(x => x && x.name && x.lockTime > Date.now()).sort((a,b)=>a.lockTime-b.lockTime)[0];
+      if (_sc) await window.ensureRaceDoc(_sc.name, _sc.raceNum); } catch(e) {}
+    const _racesUp = await dbGetAll('races', { fresh: true }).catch(()=>[]);
     const _hasUpcoming = _racesUp.some(r => !r.driverPoints || Object.keys(r.driverPoints).length === 0);
     if (!_hasUpcoming) {
       ['briefing-header','track-history-section','ai-race-preview'].forEach(id => { const n = document.getElementById(id); if (n) n.innerHTML = ''; });
