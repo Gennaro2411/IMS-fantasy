@@ -3211,7 +3211,9 @@ window.loadAttendance = async function() {
     // over / between calendars), clear attendance so no stale green ticks or checked-out badges show.
     try {
       const _r = await dbGetAll('races').catch(()=>[]);
-      window._noUpcomingRace = !_r.some(r => !r.driverPoints || Object.keys(r.driverPoints).length === 0);
+      // A round entered ahead of time with all-zero points is still upcoming.
+      window._noUpcomingRace = !_r.some(r => !r.driverPoints || Object.keys(r.driverPoints).length === 0 || !Object.values(r.driverPoints).some(v => v > 0))
+        && !(await dbGetAll('schedule').catch(() => [])).some(x => x && x.lockTime > Date.now());
     } catch(e) { window._noUpcomingRace = false; }
     if (window._noUpcomingRace) {
       window._attendanceByDiv = null; window._attendanceAll = null; window._attendanceNamesByDiv = null;
@@ -3230,8 +3232,10 @@ window.loadAttendance = async function() {
       const sch = await dbGetAll('schedule').catch(() => []);
       const up = (sch || []).filter(r => r.lockTime > Date.now()).sort((a, b) => a.lockTime - b.lockTime)[0] || null;
       const tk = (x) => (window.trackKey ? window.trackKey(x) : String(x || '').toLowerCase().replace(/[^a-z0-9]/g, ''));
-      const mTrack = manifest.track || manifest.race || null;
-      const mRound = manifest.round != null ? Number(manifest.round) : null;
+      // The bot puts track / round on each session, not at the top — read them from there too.
+      const _s0 = (manifest.sessions || []).find(x => x && (x.round != null || x.track)) || {};
+      const mTrack = manifest.track || manifest.race || _s0.track || null;
+      const mRound = manifest.round != null ? Number(manifest.round) : (_s0.round != null ? Number(_s0.round) : null);
       const gen = manifest.generated_at_utc ? Date.parse(manifest.generated_at_utc) : NaN;
       let ok = !!up;
       // Same round number is enough (the bot may say "Spain" for our "Barcelona"); without a round
