@@ -11162,16 +11162,30 @@ async function renderBriefingExtras() {
         // Expected points by price RANK: the Nth most expensive driver should score like the
         // Nth best scorer in the division (averaged with neighbours to smooth it out).
         let exp = null;
-        // Expected by PRICE RANK in the division: the Nth most expensive driver should score like the
-        // Nth best scorer (averaged with the one above and below). Scorers use this AND last season so a
-        // single race can't set the bar; price rank uses every market driver in the division.
-        if (peers.length >= 4) {
-          const avgs = peers.map(o => _avg(o.h)).sort((a, b) => b - a);
+        // Expected from PRICE RANK → expected FINISHING POSITION → the points that position is worth.
+        // e.g. 4th most expensive of 20 in a ~14-car field → expected ~P3–P4 → what P3–P4 typically scores.
+        // Position values come from every classified result (this + last season, all divisions), so the
+        // target never depends on a handful of drivers' averages.
+        {
           const mkt = drivers.filter(x => x.division === d.division && !x._deleted && !x.isReserve);
           const above = mkt.filter(x => _pr(x) > _pr(d)).length;
-          const k = Math.min(avgs.length - 1, Math.round(above * avgs.length / Math.max(1, mkt.length)));
-          const win = avgs.slice(Math.max(0, k - 1), Math.min(avgs.length, k + 2));
-          exp = Math.min(32, Math.max(1, _avg(win)));
+          const frac = mkt.length > 1 ? above / (mkt.length - 1) : 0;
+          if (!window._posPtsCache) {
+            const sum = {}, cnt = {}, field = {};
+            _pool.forEach(r => { const pbd = r.positionByDivision || {}, dpd = r.driverPointsByDivision || {}; const fc = {};
+              Object.entries(pbd).forEach(([id, byDiv]) => Object.entries(byDiv || {}).forEach(([dv, pos]) => { pos = Number(pos); const pts = (dpd[id] || {})[dv];
+                if (pos > 0 && typeof pts === 'number') { sum[pos] = (sum[pos] || 0) + pts; cnt[pos] = (cnt[pos] || 0) + 1; fc[dv] = Math.max(fc[dv] || 0, pos); } }));
+              Object.entries(fc).forEach(([dv, n]) => { (field[dv] = field[dv] || []).push(n); }); });
+            const pts = {}; Object.keys(sum).forEach(p => { if (cnt[p] >= 3) pts[p] = sum[p] / cnt[p]; });
+            window._posPtsCache = { pts, field };
+          }
+          const PP = window._posPtsCache, fs = PP.field[d.division] || [].concat(...Object.values(PP.field));
+          const fieldSize = fs.length ? Math.round(_avg(fs)) : 12;
+          const expPos = 1 + frac * (fieldSize - 1);
+          const at = (p) => PP.pts[Math.max(1, Math.min(fieldSize, Math.round(p)))];
+          const vals = [at(expPos - 1), at(expPos), at(expPos + 1)].filter(v => typeof v === 'number');
+          if (vals.length) exp = Math.min(32, Math.max(1, _avg(vals)));
+          else if (peers.length >= 4) { const avgs = peers.map(o => _avg(o.h)).sort((a, b) => b - a); const k = Math.min(avgs.length - 1, Math.round(frac * (avgs.length - 1))); exp = Math.max(1, _avg(avgs.slice(Math.max(0, k - 1), k + 2))); }
         }
         const last3 = h.slice(-3), sAvg = _avg(h), rAvg = _avg(last3);
         const dnf = Object.keys(d.dnfRaces || {}).length || d.seasonDnfs || 0;
