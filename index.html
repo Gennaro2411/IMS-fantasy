@@ -354,6 +354,9 @@
   .brf-form[open]>summary .brf-form-chev::before{content:'Close';background:rgba(255,255,255,.12);color:#cfd3e6;animation:none}
   .brf-form[open]>summary .brf-form-chev::after{transform:rotate(180deg)}
   @keyframes brfPulse{0%,100%{box-shadow:0 0 0 0 rgba(46,230,182,.55)}50%{box-shadow:0 0 0 6px rgba(46,230,182,0)}}
+  /* Login: Season 8 poster behind the card (portrait on phones, wide cover on desktop), darkened so the form stays readable */
+  #login-overlay{background:linear-gradient(180deg,rgba(8,8,14,.55),rgba(8,8,14,.78)),url('icons/s8-poster.jpg') center/cover no-repeat,#0a0a10 !important}
+  @media (min-width:900px) and (min-aspect-ratio:4/3){#login-overlay{background:linear-gradient(90deg,rgba(8,8,14,.35),rgba(8,8,14,.8) 55%),url('icons/s8-cover.jpg') center/cover no-repeat,#0a0a10 !important}}
   .admin-badge{background:var(--red);color:white;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:3px;letter-spacing:1px;}
 
   main{max-width:1100px;margin:0 auto;padding:32px 24px;position:relative;}
