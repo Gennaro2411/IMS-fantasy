@@ -25809,6 +25809,19 @@ window.betSetBoost = function(market, selCsv, odds, label) {
   document.body.appendChild(el); requestAnimationFrame(() => el.classList.add('in'));
   setTimeout(() => { const i = document.getElementById('bst-val'); if (i) { i.focus(); i.select(); } }, 60);
 };
+// Admin: set / change / clear the headline shown above all the boosted odds this round.
+window.betBoostTitleEdit = async function() {
+  const doc = await dbGet('settings', 'betBoost').catch(() => null);
+  const cur = (doc && doc.value && doc.value.title) || '';
+  const t = prompt('Headline above all boosted odds (leave empty to remove):', cur);
+  if (t === null) return;
+  const up = window._betCtx && window._betCtx.upcoming;
+  const v = Object.assign({ raceName: up ? up.name : '', list: [] }, (doc && doc.value) || {}, { title: String(t).trim().slice(0, 60) });
+  await dbSet('settings', 'betBoost', { value: v });
+  window._betBoostTitle = v.title;
+  if (typeof showToast === 'function') showToast(v.title ? '🚀 Headline set' : 'Headline removed', 'success');
+  renderBets();
+};
 window.betBoostClose = function() { const el = document.getElementById('bst-modal'); if (!el) return; el.classList.remove('in'); setTimeout(() => el.remove(), 180); };
 window.betBoostMul = function(m) { const d = window._boostDraft; if (!d) return; const i = document.getElementById('bst-val'); i.value = (Math.round(d.was * m * 100) / 100).toFixed(2);
   document.querySelectorAll('#bst-modal .bst-q button').forEach(b => b.classList.toggle('on', Number(b.dataset.m) === m)); betBoostPrev(); };
@@ -26724,7 +26737,7 @@ window.renderBets = async function() {
         <div class="bo-boost-o"><s>${fmtOdds(BOOST.was)}</s> → <em>${fmtOdds(BOOST.odds)}</em></div></div>
         <div class="bo-boost-r">${BOOST.div === div ? oddsBtn(BOOST.market, BOOST.sel, BOOST.label, BOOST.odds) : `<button class="btn btn-primary btn-sm" onclick="betDiv('${esc(BOOST.div)}')">Go to ${esc(BOOST.div)} →</button>`}
         ${adminLoggedIn ? `<button class="btn btn-secondary btn-sm" onclick="betClearBoost(${bi})" title="Remove boost">✕</button>` : ''}</div></div>`).join('')}</div>` : ''}
-    ${adminLoggedIn && upcoming ? `<div style="margin:-4px 0 10px;text-align:right"><button class="btn btn-sm ${window._betBoostMode ? 'btn-primary' : 'btn-secondary'}" onclick="betBoostMode()">${window._betBoostMode ? '🚀 Boost mode ON — tap any price to boost it (tap here to cancel)' : '🚀 Set boosted odds'}</button></div>` : ''}
+    ${adminLoggedIn && upcoming ? `<div style="margin:-4px 0 10px;text-align:right"><button class="btn btn-sm btn-secondary" style="margin-right:6px" onclick="betBoostTitleEdit()">✏️ Boosts headline</button><button class="btn btn-sm ${window._betBoostMode ? 'btn-primary' : 'btn-secondary'}" onclick="betBoostMode()">${window._betBoostMode ? '🚀 Boost mode ON — tap any price to boost it (tap here to cancel)' : '🚀 Set boosted odds'}</button></div>` : ''}
     <div class="bo-grid">
       <div>
         <div class="bo-divs">${divs.map(d => `<button class="${d === div ? 'on' : ''}" style="--h:${HUE[d] || '#7b7fe8'}" onclick="betDiv('${d}')">${d}</button>`).join('')}
