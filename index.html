@@ -28094,7 +28094,7 @@ const CN_LIVES = 4;
 const CN_V = 2; // bump to replace today's daily Connections for everyone
 const CN_COLS = ['#f7cf55', '#4ade80', '#60a5fa', '#c084fc']; // easiest → hardest
 const _cnGetMode = () => { try { return localStorage.getItem('imsConnMode') || 'daily'; } catch (e) { return 'daily'; } };
-window.setConnMode = function(m) { try { localStorage.setItem('imsConnMode', m); } catch (e) {} window._cnSel = []; renderGames(); };
+window.setConnMode = function(m) { if (m !== 'duel') _cnEndDuel(false); try { localStorage.setItem('imsConnMode', m); } catch (e) {} window._cnSel = []; renderGames(); };
 const _cnState = (m) => { try { return JSON.parse(localStorage.getItem('imsConn_' + m) || 'null'); } catch (e) { return null; } };
 const _cnSave = (st, m) => { try { localStorage.setItem('imsConn_' + m, JSON.stringify(st)); } catch (e) {} if (m === 'daily') _dailySync('cnDaily', st); };
 // Build a puzzle: 4 categories (mostly different kinds), 4 drivers each, and every chosen driver fits
@@ -28229,7 +28229,18 @@ window.cnDuelCreate = async function(pub) { const me = _wdMe(), code = _wdCode()
 window.cnDuelJoin = async function(c) { const code = String(c || (document.getElementById('cn-code') || {}).value || '').trim().toUpperCase(); if (!code) return;
   const d = await dbGet('cnDuels', code).catch(() => null); if (!d) return customAlert('No duel with that code.'); if (d.guest) return customAlert('That duel is full.');
   const me = _wdMe(); await dbSet('cnDuels', code, { guest: JSON.stringify({ uid: me.uid, name: me.name }), guestUid: me.uid, guestName: me.name, guestAvatar: me.avatar || '', guestColor: _myDuelColour(), status: 'playing', guestSeen: Date.now(), hostSeen: Date.now() }); _cnDuelSet({ code, role: 'guest' }); localStorage.removeItem('imsConn_duel'); renderGames(); };
-window.cnDuelLeave = function() { clearInterval(window._cnPoll); _cnDuelSet(null); localStorage.removeItem('imsConn_duel'); window._cnSel = []; renderGames(); };
+// Leaving a Connections duel (Leave button, other game/mode, other page, closing or switching tab) = forfeit while it's live.
+// A waiting lobby is just deleted; a finished duel is left as it is.
+function _cnEndDuel(beacon) {
+  const k = _cnDuelKey(); if (!k || !k.code) return false; const s = window._cnDuelLive || {};
+  clearInterval(window._cnPoll); _cnDuelSet(null); localStorage.removeItem('imsConn_duel'); window._cnDuelLive = null;
+  const url = 'https://firestore.googleapis.com/v1/projects/' + PROJECT_ID + '/databases/(default)/documents/cnDuels/' + k.code + '?key=' + API_KEY;
+  const patch = (upd) => { if (beacon) { try { const f = objToFsFields(upd); fetch(url + '&' + Object.keys(f).map(x => 'updateMask.fieldPaths=' + x).join('&'), { method: 'PATCH', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields: f }) }); } catch (e) {} } else dbSet('cnDuels', k.code, upd).catch(() => {}); };
+  if (s.status === 'waiting' && k.role === 'host') { if (beacon) { try { fetch(url, { method: 'DELETE', keepalive: true }); } catch (e) {} } else dbDelete('cnDuels', k.code).catch(() => {}); return false; }
+  if (s.status === 'playing' && !s.over) { patch({ forfeit: k.role, [k.role + 'Left']: true }); return true; }
+  return false;
+}
+window.cnDuelLeave = function() { _cnEndDuel(false); clearInterval(window._cnPoll); _cnDuelSet(null); localStorage.removeItem('imsConn_duel'); window._cnSel = []; renderGames(); };
 async function _cnDuelPush(st) { const k = _cnDuelKey(); if (!k) return; try { await dbSet('cnDuels', k.code, { [k.role + 'P']: JSON.stringify({ solved: st.solved.length, mistakes: st.mistakes, done: st.done, won: st.won, at: Date.now() }) }); } catch (e) {} }
 async function _cnDuelBody(pool) {
   const k = _cnDuelKey();
@@ -28259,7 +28270,7 @@ async function _cnDuelBody(pool) {
   if (!d) { _cnDuelSet(null); return '<div class="wd-panel">That duel has ended.</div>'; }
   const host = d.host ? JSON.parse(d.host) : null, guest = d.guest ? JSON.parse(d.guest) : null;
   // Same pattern as the Grid duel: check every second, one request at a time, redraw only when something changed.
-  const dSig = (x) => [x.guest || '', x.hostP || '', x.guestP || '', !!x.done, !!x.rec].join('|');
+  const dSig = (x) => [x.guest || '', x.hostP || '', x.guestP || '', !!x.done, !!x.rec, x.forfeit || ''].join('|');
   clearInterval(window._cnPoll); window._cnPollBusy = false; let lastSig = dSig(d), lastSeen = d[k.role + 'Seen'] || 0;
   window._cnPoll = setInterval(async () => { if (window._games.view !== 'cn' || _cnGetMode() !== 'duel' || !_cnDuelKey()) { clearInterval(window._cnPoll); return; }
     if (window._cnPollBusy || window._cnAnim) return; window._cnPollBusy = true;
@@ -28271,14 +28282,17 @@ async function _cnDuelBody(pool) {
       if (dSig(d2) !== lastSig) { lastSig = dSig(d2); renderGames(); }
     } finally { window._cnPollBusy = false; } }, 1000);
   if (Date.now() - (d[k.role + 'Seen'] || 0) > 8e3) dbSet('cnDuels', k.code, { [k.role + 'Seen']: Date.now() }).catch(() => {});
+  if (!guest) { window._cnDuelLive = { status: 'waiting' }; }
   if (!guest) return `<div class="wd-panel" style="text-align:center"><h4>${d.public ? '🌍 Public lobby' : '🔒 Private lobby'}</h4><p>Share this code with your opponent:</p><div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:2.4rem;letter-spacing:6px">${esc(k.code)}</div><p class="text-muted">Waiting for them to join…</p><button class="btn btn-secondary" onclick="cnDuelLeave()">Cancel</button></div>`;
   let st = _cnState('duel');
   if (!st || st.code !== k.code) { const pz = _cnBuild(pool, Number(d.seed)); if (!pz) return '<div class="wd-panel">Couldn\'t build a puzzle.</div>'; st = { code: k.code, groups: pz.groups, order: pz.order, solved: [], mistakes: 0, guesses: [], done: false, won: false }; _cnSave(st, 'duel'); }
   const me = k.role === 'host' ? host : guest, opp = k.role === 'host' ? guest : host;
   const oP = d[(k.role === 'host' ? 'guest' : 'host') + 'P'] ? JSON.parse(d[(k.role === 'host' ? 'guest' : 'host') + 'P']) : { solved: 0, mistakes: 0 };
   const mP = { solved: st.solved.length, mistakes: st.mistakes, done: st.done, won: st.won, at: 0 };
-  const myWin = st.won && (!oP.won || (oP.at && st.wonAt && st.wonAt < oP.at)), oppWin = oP.won && (!st.won || (st.wonAt && oP.at < st.wonAt));
+  const oppRole = k.role === 'host' ? 'guest' : 'host', oppFf = d.forfeit === oppRole;
+  const myWin = oppFf || (st.won && (!oP.won || (oP.at && st.wonAt && st.wonAt < oP.at))), oppWin = !oppFf && oP.won && (!st.won || (st.wonAt && oP.at < st.wonAt));
   const over = (st.done && oP.done) || myWin || oppWin;
+  window._cnDuelLive = { status: 'playing', over };
   if (over && !st.duelDone) { st.duelDone = true; _cnSave(st, 'duel'); if (myWin) _gameCoins('duel-cn', 5); }
   // Record the result once (by the winner's screen) for BOTH players, like the other duels.
   if (over && (myWin || oppWin) && !d.done) { dbSet('cnDuels', k.code, { done: true }).catch(() => {}); }
@@ -28295,7 +28309,7 @@ async function _cnDuelBody(pool) {
   const bar = (nm, p, c) => `<div style="flex:1;padding:8px 10px;border-radius:10px;background:${c}1f;border:1px solid ${c}66;border-left:4px solid ${c}"><b>${esc(nm)}</b><div style="font-size:.78rem;color:var(--muted)">${p.solved}/4 groups · ${p.mistakes} mistake${p.mistakes === 1 ? '' : 's'}${p.done ? (p.won ? ' · ✅ solved' : ' · ❌ out') : ''}</div></div>`;
   window._cnCur = st;
   return { st, header: `<div style="display:flex;gap:8px;margin-bottom:10px">${bar((me && me.name) || 'You', mP, myC)}<span style="align-self:center;text-align:center;font-family:'Barlow Condensed',sans-serif;font-weight:900">VS<small style="display:block;font-size:.7rem;color:${h2[0] > h2[1] ? '#4ade80' : h2[0] < h2[1] ? '#f87171' : '#9ca3af'}">H2H ${h2[0]}–${h2[1]}</small></span>${bar((opp && opp.name) || 'Opponent', oP, opC)}</div>
-    ${over ? `<div class="wd-end ${myWin ? 'won' : 'lost'}"><div><b>${myWin ? 'YOU WIN THE DUEL!' : oppWin ? 'THEY GOT THERE FIRST' : 'NOBODY SOLVED IT'}</b></div><button class="btn btn-secondary" onclick="cnDuelLeave()">Leave</button></div>` : `<div style="text-align:right;margin-bottom:6px"><button class="btn btn-sm btn-secondary" onclick="cnDuelLeave()">Leave duel</button></div>`}` };
+    ${over ? `<div class="wd-end ${myWin ? 'won' : 'lost'}"><div><b>${oppFf ? 'THEY LEFT — YOU WIN THE DUEL!' : myWin ? 'YOU WIN THE DUEL!' : oppWin ? 'THEY GOT THERE FIRST' : 'NOBODY SOLVED IT'}</b></div><button class="btn btn-secondary" onclick="cnDuelLeave()">Leave</button></div>` : `<div style="text-align:right;margin-bottom:6px"><button class="btn btn-sm btn-secondary" onclick="cnDuelLeave()">Leave duel</button></div>`}` };
 }
 async function renderConnGame(el) {
   const L = await _wdLoad(); const pool = (L.gridPool || L.pool || []).filter(p => p && p.name);
@@ -28339,7 +28353,7 @@ async function renderConnGame(el) {
 }
 
 // ---- Render ----
-window.openGame = function(g) { if (g !== window._games.view && _wdGuardLeave(() => openGame(g))) return; if (g !== 'hl' && typeof _hdLeave === 'function') _hdLeave(true); if (g !== 'wordle') _wdEndDuel(false); if (g !== 'grid' && typeof _gdEnd === 'function') _gdEnd(false); window._grSel = null; window._games.view = g; renderGames(); };
+window.openGame = function(g) { if (g !== window._games.view && _wdGuardLeave(() => openGame(g))) return; if (g !== 'cn' && typeof _cnEndDuel === 'function') _cnEndDuel(false); if (g !== 'hl' && typeof _hdLeave === 'function') _hdLeave(true); if (g !== 'wordle') _wdEndDuel(false); if (g !== 'grid' && typeof _gdEnd === 'function') _gdEnd(false); window._grSel = null; window._games.view = g; renderGames(); };
 // ---- Modes: 'daily' (one shared driver per UK day), 'inf' (random, back to back), 'duel' (1v1 race) ----
 const _wdGetMode = () => { try { return localStorage.getItem('imsWordleMode') || 'daily'; } catch (e) { return 'daily'; } };
 window.setWordleMode = function(m) { if (m !== _wdGetMode() && _wdGuardLeave(() => setWordleMode(m))) return; if (m !== 'duel') _wdEndDuel(false); try { localStorage.setItem('imsWordleMode', m); } catch (e) {} clearInterval(window._wdDuelPoll); renderGames(); };
@@ -29027,7 +29041,7 @@ function _wdEndDuel(beacon) {
     else dbSet('wordleDuels', k.code, upd).catch(() => {});
   }
 }
-window._wdAutoLeave = () => { _wdEndDuel(false); if (typeof _gdEnd === 'function') _gdEnd(false); };
+window._wdAutoLeave = () => { _wdEndDuel(false); if (typeof _cnEndDuel === 'function') _cnEndDuel(false); if (typeof _gdEnd === 'function') _gdEnd(false); };
 // ---- Anti-cheat: an attempt in progress can't be left without giving it up ----
 const _WD_MODE_NAME = { daily: 'Daily', inf: 'Infinite', duel: 'Duel', grid: 'Grid', gridduel: 'Grid duel' };
 function _wdActiveAttempt() {
@@ -29086,6 +29100,10 @@ document.addEventListener('visibilitychange', () => {
   setTimeout(() => customAlert(`❌ You left the page, so you lost your IMS PaddockDle ${_WD_MODE_NAME[m]} attempt. The driver was ${a ? a.name + (a.team ? ' (' + a.team + ')' : '') : 'unknown'}.${m === 'duel' ? ' Your opponent takes the win.' : ''}`), 300);
 });
 window.addEventListener('pagehide', () => _wdEndDuel(true));
+window.addEventListener('pagehide', () => _cnEndDuel(true));
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') { if ((window._cnDuelLive || {}).status === 'playing' && _cnEndDuel(true)) window._cnTabLoss = 1; return; }
+  if (window._cnTabLoss) { window._cnTabLoss = 0; renderGames(); setTimeout(() => customAlert('🏳️ You left the page, so you forfeited the Connections duel.'), 300); } });
 window.wordleDuelCreate = async function(pub) {
   await _clockSync();
   if (window._wdLocked) return;
