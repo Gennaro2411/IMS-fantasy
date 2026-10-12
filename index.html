@@ -2920,7 +2920,7 @@
       </div>
       <div class="card">
         <div class="card-title"><div class="dot"></div>📈 Expected points (driver form targets)</div>
-        <p class="text-muted" style="margin-bottom:10px">Every market driver's target points per race, as used by the Driver Form Report: price rank in their division → expected finishing position → what that position usually scores (×0.85, with a floor).</p>
+        <p class="text-muted" style="margin-bottom:10px">Every market driver's target points per race, as used by the Driver Form Report: 75% price (price rank → expected finishing position → what that position usually scores, ×0.85, with a floor) + 25% their own recent form (last 5 results in their division).</p>
         <div class="form-row" style="gap:8px;align-items:flex-end;flex-wrap:wrap">
           <div class="form-group"><label>Division</label><select id="xp-div" onchange="renderExpectedTable()" style="max-width:120px"><option value="">All</option></select></div>
           <div class="form-group"><label>Search</label><input id="xp-q" type="text" placeholder="driver…" oninput="renderExpectedTable()" style="max-width:180px"></div>
@@ -11200,6 +11200,10 @@ async function renderBriefingExtras() {
           const _top = _avg([at(1), at(2), at(3)].filter(v => typeof v === 'number'));
           const _floor = Math.max(3, (_top || 0) * 0.2);
           if (vals.length) exp = Math.min(32, Math.max(_floor, _avg(vals) * 0.85));
+          // Blend: 75% price, 25% their own recent form (last 5 results in this division — this season
+          // first, topped up from last season). No form yet → price only.
+          if (exp != null) { const _rf = _hist(d.id, d.division).slice(-5); const _fill = _rf.length < 5 ? _histIn(_pool.filter(r => !_scored.includes(r)), d.id, d.division).slice(-(5 - _rf.length)) : [];
+            const _form = _rf.concat(_fill); if (_form.length) exp = Math.min(32, Math.max(_floor, exp * 0.75 + _avg(_form) * 0.25)); }
           else if (peers.length >= 4) { const avgs = peers.map(o => _avg(o.h)).sort((a, b) => b - a); const k = Math.min(avgs.length - 1, Math.round(frac * (avgs.length - 1))); exp = Math.max(1, _avg(avgs.slice(Math.max(0, k - 1), k + 2))); }
         }
         const last3 = h.slice(-3), sAvg = _avg(h), rAvg = _avg(last3);
@@ -23356,11 +23360,16 @@ window._computeExpectedAll = async function() {
     const at = p => PP[Math.max(1, Math.min(fieldSize, Math.round(p)))];
     const vals = [at(expPos - 1), at(expPos), at(expPos + 1)].filter(v => typeof v === 'number');
     const top = avg([at(1), at(2), at(3)].filter(v => typeof v === 'number'));
-    const exp = vals.length ? Math.min(32, Math.max(Math.max(3, top * 0.2), avg(vals) * 0.85)) : null;
-    const h = scored.filter(r => { const b = r.driverPointsByDivision && r.driverPointsByDivision[d.id]; return b ? b[d.division] !== undefined : false; }).map(r => r.driverPointsByDivision[d.id][d.division]);
+    const floor = Math.max(3, top * 0.2);
+    let exp = vals.length ? Math.min(32, Math.max(floor, avg(vals) * 0.85)) : null;
+    const inDiv = (rs) => rs.filter(r => { const b = r.driverPointsByDivision && r.driverPointsByDivision[d.id]; return b ? b[d.division] !== undefined : false; }).map(r => r.driverPointsByDivision[d.id][d.division]);
+    const h = inDiv(scored);
+    const priceExp = exp;
+    if (exp != null) { const rf = h.slice(-5); const fill = rf.length < 5 ? inDiv(pool.filter(r => !scored.includes(r))).slice(-(5 - rf.length)) : []; const form = rf.concat(fill);
+      if (form.length) exp = Math.min(32, Math.max(floor, exp * 0.75 + avg(form) * 0.25)); }
     const sAvg = avg(h), rAvg = avg(h.slice(-3)), ratio = exp && h.length ? (rAvg * .6 + sAvg * .4) / exp : null;
     const lab = ratio === null || h.length < 2 ? '—' : ratio < .6 ? 'Under (drastic)' : ratio < .85 ? 'Under' : ratio <= 1.15 ? 'OK' : ratio <= 1.4 ? 'Over' : 'Over (drastic)';
-    return { id: d.id, name: d.name, div: d.division, price: pr(d), rank: above + 1, of: mkt.length, expPos, exp, races: h.length, sAvg, ratio, lab };
+    return { id: d.id, name: d.name, div: d.division, price: pr(d), rank: above + 1, of: mkt.length, expPos, exp, priceExp, races: h.length, sAvg, ratio, lab };
   });
 };
 window.renderExpectedTable = async function() {
@@ -23371,8 +23380,8 @@ window.renderExpectedTable = async function() {
   const dv = (sel || {}).value || '', q = ((document.getElementById('xp-q') || {}).value || '').toLowerCase().trim();
   const rows = window._xpData.filter(r => (!dv || r.div === dv) && (!q || r.name.toLowerCase().includes(q))).sort((a, b) => a.div.localeCompare(b.div) || b.price - a.price);
   const col = { 'Under (drastic)': '#ff3b4e', 'Under': '#ff8f3b', 'OK': '#94a3b8', 'Over': '#2ee6b6', 'Over (drastic)': '#22c55e' };
-  out.innerHTML = rows.length ? `<table style="width:100%;font-size:.78rem;border-collapse:collapse"><tr style="color:var(--muted);text-align:left"><th style="padding:4px 6px">Div</th><th>Driver</th><th style="text-align:right">Price</th><th style="text-align:right">Rank</th><th style="text-align:right">Exp. pos</th><th style="text-align:right">Expected</th><th style="text-align:right">S${Number(window.currentSeason) || 8} avg</th><th style="text-align:right">Races</th><th style="text-align:right">% of exp</th><th style="padding-left:8px">Form</th></tr>` +
-    rows.map(r => `<tr style="border-top:1px solid var(--border)"><td style="padding:4px 6px">${esc(r.div)}</td><td>${esc(r.name)}</td><td style="text-align:right">$${r.price.toFixed(1)}M</td><td style="text-align:right">${r.rank}/${r.of}</td><td style="text-align:right">P${Math.round(r.expPos)}</td><td style="text-align:right;font-weight:800;color:var(--gold)">${r.exp != null ? r.exp.toFixed(1) : '—'}</td><td style="text-align:right">${r.races ? r.sAvg.toFixed(1) : '—'}</td><td style="text-align:right">${r.races}</td><td style="text-align:right">${r.ratio != null ? Math.round(r.ratio * 100) + '%' : '—'}</td><td style="padding-left:8px;color:${col[r.lab] || 'var(--muted)'};font-weight:700">${r.lab}</td></tr>`).join('') + '</table>'
+  out.innerHTML = rows.length ? `<table style="width:100%;font-size:.78rem;border-collapse:collapse"><tr style="color:var(--muted);text-align:left"><th style="padding:4px 6px">Div</th><th>Driver</th><th style="text-align:right">Price</th><th style="text-align:right">Rank</th><th style="text-align:right">Exp. pos</th><th style="text-align:right">Price-only</th><th style="text-align:right">Expected</th><th style="text-align:right">S${Number(window.currentSeason) || 8} avg</th><th style="text-align:right">Races</th><th style="text-align:right">% of exp</th><th style="padding-left:8px">Form</th></tr>` +
+    rows.map(r => `<tr style="border-top:1px solid var(--border)"><td style="padding:4px 6px">${esc(r.div)}</td><td>${esc(r.name)}</td><td style="text-align:right">$${r.price.toFixed(1)}M</td><td style="text-align:right">${r.rank}/${r.of}</td><td style="text-align:right">P${Math.round(r.expPos)}</td><td style="text-align:right;color:var(--muted)">${r.priceExp != null ? r.priceExp.toFixed(1) : '—'}</td><td style="text-align:right;font-weight:800;color:var(--gold)">${r.exp != null ? r.exp.toFixed(1) : '—'}</td><td style="text-align:right">${r.races ? r.sAvg.toFixed(1) : '—'}</td><td style="text-align:right">${r.races}</td><td style="text-align:right">${r.ratio != null ? Math.round(r.ratio * 100) + '%' : '—'}</td><td style="padding-left:8px;color:${col[r.lab] || 'var(--muted)'};font-weight:700">${r.lab}</td></tr>`).join('') + '</table>'
     : '<div class="text-muted">No drivers match.</div>';
 };
 window.setHideDominance = async function(on) {
