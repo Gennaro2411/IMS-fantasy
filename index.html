@@ -28190,11 +28190,11 @@ async function _cnLeaderboardHtml() {
 const _cnDuelKey = () => { try { return JSON.parse(localStorage.getItem('imsCnDuel') || 'null'); } catch (e) { return null; } };
 const _cnDuelSet = (v) => { try { v ? localStorage.setItem('imsCnDuel', JSON.stringify(v)) : localStorage.removeItem('imsCnDuel'); } catch (e) {} };
 window.cnDuelCreate = async function(pub) { const me = _wdMe(), code = _wdCode(), seed = Math.floor(Math.random() * 2 ** 31);
-  await dbSet('cnDuels', code, { code, seed, public: !!pub, createdAt: Date.now(), hostSeen: Date.now(), hostName: me.name, hostAvatar: me.avatar || '', host: JSON.stringify({ uid: me.uid, name: me.name }), guest: '' });
+  await dbSet('cnDuels', code, { code, seed, public: !!pub, createdAt: Date.now(), hostSeen: Date.now(), game: 'cn', status: 'waiting', hostUid: me.uid, hostColor: _myDuelColour(), hostName: me.name, hostAvatar: me.avatar || '', host: JSON.stringify({ uid: me.uid, name: me.name }), guest: '' });
   _cnDuelSet({ code, role: 'host' }); localStorage.removeItem('imsConn_duel'); renderGames(); };
 window.cnDuelJoin = async function(c) { const code = String(c || (document.getElementById('cn-code') || {}).value || '').trim().toUpperCase(); if (!code) return;
   const d = await dbGet('cnDuels', code).catch(() => null); if (!d) return customAlert('No duel with that code.'); if (d.guest) return customAlert('That duel is full.');
-  const me = _wdMe(); await dbSet('cnDuels', code, { guest: JSON.stringify({ uid: me.uid, name: me.name }) }); _cnDuelSet({ code, role: 'guest' }); localStorage.removeItem('imsConn_duel'); renderGames(); };
+  const me = _wdMe(); await dbSet('cnDuels', code, { guest: JSON.stringify({ uid: me.uid, name: me.name }), guestUid: me.uid, guestName: me.name, guestAvatar: me.avatar || '', guestColor: _myDuelColour(), status: 'playing', guestSeen: Date.now(), hostSeen: Date.now() }); _cnDuelSet({ code, role: 'guest' }); localStorage.removeItem('imsConn_duel'); renderGames(); };
 window.cnDuelLeave = function() { clearInterval(window._cnPoll); _cnDuelSet(null); localStorage.removeItem('imsConn_duel'); window._cnSel = []; renderGames(); };
 async function _cnDuelPush(st) { const k = _cnDuelKey(); if (!k) return; try { await dbSet('cnDuels', k.code, { [k.role + 'P']: JSON.stringify({ solved: st.solved.length, mistakes: st.mistakes, done: st.done, won: st.won, at: Date.now() }) }); } catch (e) {} }
 async function _cnDuelBody(pool) {
@@ -28210,16 +28210,16 @@ async function _cnDuelBody(pool) {
       <div class="wd-panel"><h4>⚔️ Start a duel</h4><p>Same puzzle for both of you — first to find all four groups wins. ${CN_LIVES} mistakes and you're out.</p>
         <div class="wd-btns"><button class="btn btn-primary" onclick="cnDuelCreate(true)">🌍 Public lobby</button><button class="btn btn-secondary" onclick="cnDuelCreate(false)">🔒 Private lobby</button></div>
         <h4 style="margin-top:18px">🔑 Join with a code</h4>
-        <div class="wd-btns"><input id="cn-code" type="text" maxlength="5" placeholder="CODE" style="text-transform:uppercase;letter-spacing:4px;font-weight:800;max-width:140px" onkeydown="if(event.key==='Enter')cnDuelJoin(this.value)"><button class="btn btn-secondary" onclick="cnDuelJoin()">Join</button></div></div>
+        <div class="wd-btns"><input id="cn-code" type="text" maxlength="5" placeholder="CODE" style="text-transform:uppercase;letter-spacing:4px;font-weight:800;max-width:140px" onkeydown="if(event.key==='Enter')cnDuelJoin(this.value)"><button class="btn btn-secondary" onclick="cnDuelJoin()">Join</button></div>${_duelPickerHtml()}</div>
       <div class="wd-panel" id="cn-lobbies"><h4>🌍 Open public lobbies <small>${open.length}</small></h4>
         ${open.length ? open.map(l => `<div class="wd-lob"><span style="display:inline-flex;align-items:center;gap:8px;min-width:0">${_wdAv({ name: l.hostName || 'Player', photo: l.hostAvatar || '' }, 30)}<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(l.hostName || 'Player')}</span></span><button class="btn btn-sm btn-primary" onclick="cnDuelJoin('${esc(l.code || l.id)}')">Join</button></div>`).join('') : '<p class="text-muted" style="margin:0">No open lobbies right now — start a public one and someone can jump in.</p>'}
-      </div></div>`;
+      </div></div>` + await _liveDuelsHtml(all, 'cn', 'h2hCn') + await _h2hBoardHtml('h2hCn', 'Connections H2H records');
   }
   dbInvalidate('cnDuels'); const d = await dbGet('cnDuels', k.code).catch(() => null);
   if (!d) { _cnDuelSet(null); return '<div class="wd-panel">That duel has ended.</div>'; }
   const host = d.host ? JSON.parse(d.host) : null, guest = d.guest ? JSON.parse(d.guest) : null;
   clearInterval(window._cnPoll); window._cnPoll = setInterval(() => { if (window._games.view !== 'cn' || _cnGetMode() !== 'duel') { clearInterval(window._cnPoll); return; } renderGames(); }, 3000);
-  if (!guest && k.role === 'host') dbSet('cnDuels', k.code, { hostSeen: Date.now() }).catch(() => {});
+  if (Date.now() - (d[k.role + 'Seen'] || 0) > 8e3) dbSet('cnDuels', k.code, { [k.role + 'Seen']: Date.now() }).catch(() => {});
   if (!guest) return `<div class="wd-panel" style="text-align:center"><h4>${d.public ? '🌍 Public lobby' : '🔒 Private lobby'}</h4><p>Share this code with your opponent:</p><div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:2.4rem;letter-spacing:6px">${esc(k.code)}</div><p class="text-muted">Waiting for them to join…</p><button class="btn btn-secondary" onclick="cnDuelLeave()">Cancel</button></div>`;
   let st = _cnState('duel');
   if (!st || st.code !== k.code) { const pz = _cnBuild(pool, Number(d.seed)); if (!pz) return '<div class="wd-panel">Couldn\'t build a puzzle.</div>'; st = { code: k.code, groups: pz.groups, order: pz.order, solved: [], mistakes: 0, guesses: [], done: false, won: false }; _cnSave(st, 'duel'); }
@@ -28229,9 +28229,20 @@ async function _cnDuelBody(pool) {
   const myWin = st.won && (!oP.won || (oP.at && st.wonAt && st.wonAt < oP.at)), oppWin = oP.won && (!st.won || (st.wonAt && oP.at < st.wonAt));
   const over = (st.done && oP.done) || myWin || oppWin;
   if (over && !st.duelDone) { st.duelDone = true; _cnSave(st, 'duel'); if (myWin) _gameCoins('duel-cn', 5); }
-  const bar = (nm, p) => `<div style="flex:1;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.04)"><b>${esc(nm)}</b><div style="font-size:.78rem;color:var(--muted)">${p.solved}/4 groups · ${p.mistakes} mistake${p.mistakes === 1 ? '' : 's'}${p.done ? (p.won ? ' · ✅ solved' : ' · ❌ out') : ''}</div></div>`;
+  // Record the result once (by the winner's screen) for BOTH players, like the other duels.
+  if (over && (myWin || oppWin) && !d.done) { dbSet('cnDuels', k.code, { done: true }).catch(() => {}); }
+  if (over && myWin && !d.rec && !_wdLS('cnRec_' + k.code)) { _wdLS('cnRec_' + k.code, 1);
+    try { await dbSet('cnDuels', k.code, { rec: true, done: true });
+      const H = { uid: d.hostUid || (host || {}).uid, name: d.hostName || (host || {}).name, av: d.hostAvatar || '' }, G = { uid: d.guestUid || (guest || {}).uid, name: d.guestName || (guest || {}).name, av: d.guestAvatar || '' };
+      const hostWon = k.role === 'host';
+      for (const [p, o, w] of [[H, G, hostWon], [G, H, !hostWon]]) { if (!p.uid) continue;
+        const id = _wdScoreId(p.uid); dbInvalidate('wordleScores'); const cur = await dbGet('wordleScores', id).catch(() => null) || {};
+        await dbSet('wordleScores', id, Object.assign({ uid: p.uid, name: p.name, [w ? 'cnDW' : 'cnDL']: ((w ? cur.cnDW : cur.cnDL) || 0) + 1, points: cur.points || 0 }, _h2hPatch(cur, 'h2hCn', o, w))); } } catch (e) {} }
+  const _cc = _duelCols(d), myC = k.role === 'host' ? _cc.host : _cc.guest, opC = k.role === 'host' ? _cc.guest : _cc.host;
+  const _hs = await _wdStatsFor([(me || {}).uid, (opp || {}).uid].filter(Boolean)).catch(() => ({})), h2 = (me && opp) ? _h2hVs(_hs, me.uid, opp.uid, 'h2hCn') : [0, 0];
+  const bar = (nm, p, c) => `<div style="flex:1;padding:8px 10px;border-radius:10px;background:${c}1f;border:1px solid ${c}66;border-left:4px solid ${c}"><b>${esc(nm)}</b><div style="font-size:.78rem;color:var(--muted)">${p.solved}/4 groups · ${p.mistakes} mistake${p.mistakes === 1 ? '' : 's'}${p.done ? (p.won ? ' · ✅ solved' : ' · ❌ out') : ''}</div></div>`;
   window._cnCur = st;
-  return { st, header: `<div style="display:flex;gap:8px;margin-bottom:10px">${bar((me && me.name) || 'You', mP)}<span style="align-self:center;font-weight:900">VS</span>${bar((opp && opp.name) || 'Opponent', oP)}</div>
+  return { st, header: `<div style="display:flex;gap:8px;margin-bottom:10px">${bar((me && me.name) || 'You', mP, myC)}<span style="align-self:center;text-align:center;font-family:'Barlow Condensed',sans-serif;font-weight:900">VS<small style="display:block;font-size:.7rem;color:${h2[0] > h2[1] ? '#4ade80' : h2[0] < h2[1] ? '#f87171' : '#9ca3af'}">H2H ${h2[0]}–${h2[1]}</small></span>${bar((opp && opp.name) || 'Opponent', oP, opC)}</div>
     ${over ? `<div class="wd-end ${myWin ? 'won' : 'lost'}"><div><b>${myWin ? 'YOU WIN THE DUEL!' : oppWin ? 'THEY GOT THERE FIRST' : 'NOBODY SOLVED IT'}</b></div><button class="btn btn-secondary" onclick="cnDuelLeave()">Leave</button></div>` : `<div style="text-align:right;margin-bottom:6px"><button class="btn btn-sm btn-secondary" onclick="cnDuelLeave()">Leave duel</button></div>`}` };
 }
 async function renderConnGame(el) {
