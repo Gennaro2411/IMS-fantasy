@@ -28363,7 +28363,7 @@ async function renderConnGame(el) {
   const tabs = `<div class="wd-modes">${[['daily', '📅', 'DAILY'], ['inf', '∞', 'INFINITE'], ['duel', '⚔️', 'DUEL']].map(([m, i, l]) => `<button class="${mode === m ? 'on' : ''}" onclick="setConnMode('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>`;
   const shake = window._cnShake; window._cnShake = false;
   const end = st.done ? `<div class="wd-end ${st.won ? 'won' : 'lost'}"><div class="wd-end-l"><div><b>${st.won ? (st.mistakes ? 'SOLVED!' : 'PERFECT — NO MISTAKES!') : st.gaveUp ? 'GIVEN UP' : 'OUT OF LIVES'}</b><div class="wd-end-sub">${st.won ? 'All four groups found with ' + st.mistakes + ' mistake' + (st.mistakes === 1 ? '' : 's') : 'Here were the four groups'}</div></div></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">${mode !== 'duel' ? '<button class="btn btn-primary" onclick="cnShare()">📤 Share</button>' : ''}${mode === 'inf' ? '<button class="btn btn-secondary" onclick="cnNext()">🔄 New puzzle</button>' : ''}</div></div>` : '';
+    <div style="display:flex;gap:8px;flex-wrap:wrap">${mode !== 'duel' ? '<button class="btn btn-primary" onclick="cnShare()">📤 Share</button>' : ''}${mode === 'daily' ? '<div class="wd-timer"><b id="cn-timer">--:--:--</b><small>NEXT CONNECTIONS</small></div>' : ''}${mode === 'inf' ? '<button class="btn btn-secondary" onclick="cnNext()">🔄 New puzzle</button>' : ''}</div></div>` : '';
   el.innerHTML = `<div class="wd-wrap"><div class="wd-top"><button class="wd-back" onclick="openGame('hub')" title="Back to Games">←</button><div class="wd-brand"><img src="icons/icon-192.png?v=3" alt="IMS"><span><em>CONNECTIONS</em></span></div><div class="wd-meta">${mode === 'daily' ? `<span class="wd-pill">#${_wdDayNum()}</span>` : ''}</div></div>
     ${(window._gamesLock || {}).cn ? `<div class="wd-lockbar">🔒 <b>IMS Connections is locked</b><span>${locked ? 'Have a look — playing opens soon.' : 'Locked for players — you can still play.'}</span></div>` : ''}${tabs}
     <p class="text-muted" style="text-align:center;margin:4px 0 12px;font-size:.85rem">Find four groups of four IMS drivers who share something.</p>${duelHdr}
@@ -28385,6 +28385,11 @@ async function renderConnGame(el) {
       <li>Colours go from easiest (🟨) to hardest (🟪). Daily: <b>+25 IM$</b> for finishing, <b>+25 IM$</b> more for solving it.</li>
       <li><b>🕵️ Hidden groups:</b> if you pick four drivers who really do share something that isn't one of the answers, you don't lose a life (daily and infinite). On the daily you also get <b>+10 IM$</b> (once a day). Each hidden group only counts once — e.g. after a hidden Williams group, any other four Williams drivers cost a life.</li>
       <li><b>📤 Share</b> shows your guesses in order, one row per guess, without giving the answers away. Each square is a driver you picked, coloured by the group they really belong to: a row of one colour is a group found, a mixed row (e.g. 🟩🟩🟨🟨) is a mistake.</li></ul></div></div>`;
+  if (st.done && mode === 'daily') { // countdown to the next daily, same as PaddockDle
+    const until = Date.now() + _wdMsToMidnight(); clearInterval(window._cnTick);
+    const tick = () => { const t = document.getElementById('cn-timer'); if (!t) { clearInterval(window._cnTick); return; } const ms = until - Date.now();
+      if (ms <= 0) { clearInterval(window._cnTick); renderGames(); return; } const h = Math.floor(ms / 36e5), m = Math.floor(ms / 6e4) % 60, s2 = Math.floor(ms / 1e3) % 60; t.textContent = [h, m, s2].map(x => String(x).padStart(2, '0')).join(':'); };
+    tick(); window._cnTick = setInterval(tick, 1000); }
   if (st.done && mode === 'daily' && !window['_cnRec_' + st.day + (st.cnv || 1)]) { window['_cnRec_' + st.day + (st.cnv || 1)] = 1; _cnRecord(st).then(() => { if (window._games.view === 'cn' && _cnGetMode() === 'daily') renderGames(); }); // redraw so stats + leaderboard show the result straight away
     _gameCoins('cn-daily', 25).then(() => { if (st.won) _gameCoins('cn-win', 25); }); }
 }
