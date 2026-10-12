@@ -28325,7 +28325,8 @@ async function renderConnGame(el) {
       <li><b>One away…</b> means 3 of your 4 belong together. You have <b>${CN_LIVES} mistakes</b>.</li>
       <li>Colours go from easiest (🟨) to hardest (🟪). Daily: <b>+25 IM$</b> for finishing, <b>+25 IM$</b> more for solving it.</li>
       <li><b>📤 Share</b> shows your guesses in order, one row per guess, without giving the answers away. Each square is a driver you picked, coloured by the group they really belong to: a row of one colour is a group found, a mixed row (e.g. 🟩🟩🟨🟨) is a mistake.</li></ul></div></div>`;
-  if (st.done && mode === 'daily' && !window['_cnRec_' + st.day]) { window['_cnRec_' + st.day] = 1; _cnRecord(st); _gameCoins('cn-daily', 25).then(() => { if (st.won) _gameCoins('cn-win', 25); }); }
+  if (st.done && mode === 'daily' && !window['_cnRec_' + st.day + (st.cnv || 1)]) { window['_cnRec_' + st.day + (st.cnv || 1)] = 1; _cnRecord(st).then(() => { if (window._games.view === 'cn' && _cnGetMode() === 'daily') renderGames(); }); // redraw so stats + leaderboard show the result straight away
+    _gameCoins('cn-daily', 25).then(() => { if (st.won) _gameCoins('cn-win', 25); }); }
 }
 
 // ---- Render ----
