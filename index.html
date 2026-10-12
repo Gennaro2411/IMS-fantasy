@@ -10716,6 +10716,10 @@ async function renderBriefingExtras() {
     try { const _sc = (await dbGetAll('schedule').catch(()=>[])).filter(x => x && x.name && x.lockTime > Date.now()).sort((a,b)=>a.lockTime-b.lockTime)[0];
       if (_sc) await window.ensureRaceDoc(_sc.name, _sc.raceNum); } catch(e) {}
     const _racesUp = await dbGetAll('races', { fresh: true }).catch(()=>[]);
+    // An all-zero round (added ahead of time through the manual form) counts as upcoming too —
+    // and gets cleaned so the rest of the app stops treating it as a finished 0-point race.
+    const _allZero = (r) => r.driverPoints && Object.keys(r.driverPoints).length && !Object.values(r.driverPoints).some(v => v > 0) && !Object.values(r.constructorPoints || {}).some(v => v > 0);
+    for (const r of _racesUp) if (_allZero(r)) { try { const { driverPoints, constructorPoints, teamSnapshots, ...keep } = r; await dbSet('races', r.id, keep); Object.keys(r).forEach(k => delete r[k]); Object.assign(r, keep); dbInvalidate('races'); } catch(e) {} }
     const _hasUpcoming = _racesUp.some(r => !r.driverPoints || Object.keys(r.driverPoints).length === 0);
     if (!_hasUpcoming) {
       ['briefing-header','track-history-section','ai-race-preview'].forEach(id => { const n = document.getElementById(id); if (n) n.innerHTML = ''; });
