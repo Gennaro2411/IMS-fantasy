@@ -28219,7 +28219,11 @@ async function _cnDuelBody(pool) {
     const all = await dbGetAll('cnDuels', { fresh: true }).catch(() => []);
     all.filter(l => l && now - (l.createdAt || 0) > 6 * 36e5).forEach(l => dbDelete('cnDuels', l.id || l.code).catch(() => {}));
     const open = all.filter(l => l && l.public && !l.guest && now - (l.hostSeen || l.createdAt || 0) < 30e3 && !String(l.host || '').includes('"' + me.uid + '"')).sort((a, b) => b.createdAt - a.createdAt);
-    clearInterval(window._cnPoll); window._cnPoll = setInterval(() => { if (!document.getElementById('cn-lobbies')) { clearInterval(window._cnPoll); return; } if (!document.activeElement || document.activeElement.id !== 'cn-code') renderGames(); }, 6000);
+    const lobSig = (arr) => arr.filter(l => l && l.public && !l.guest && Date.now() - (l.hostSeen || l.createdAt || 0) < 30e3).map(l => l.code || l.id).sort().join(',') + '|' + arr.filter(l => l && l.status === 'playing' && !l.done).length;
+    window._cnLobSig = lobSig(all); clearInterval(window._cnPoll); window._cnPollBusy = false;
+    window._cnPoll = setInterval(async () => { if (!document.getElementById('cn-lobbies')) { clearInterval(window._cnPoll); return; } if (window._cnPollBusy) return; window._cnPollBusy = true;
+      try { const a2 = await dbGetAll('cnDuels', { fresh: true }).catch(() => null); if (!a2) return; // network blip: try next tick
+        if (lobSig(a2) !== window._cnLobSig && (!document.activeElement || document.activeElement.id !== 'cn-code')) renderGames(); } finally { window._cnPollBusy = false; } }, 3000);
     return `<div class="wd-duel-grid">
       <div class="wd-panel"><h4>⚔️ Start a duel</h4><p>Same puzzle for both of you — first to find all four groups wins. ${CN_LIVES} mistakes and you're out.</p>
         <div class="wd-btns"><button class="btn btn-primary" onclick="cnDuelCreate(true)">🌍 Public lobby</button><button class="btn btn-secondary" onclick="cnDuelCreate(false)">🔒 Private lobby</button></div>
@@ -28229,10 +28233,23 @@ async function _cnDuelBody(pool) {
         ${open.length ? open.map(l => `<div class="wd-lob"><span style="display:inline-flex;align-items:center;gap:8px;min-width:0">${_wdAv({ name: l.hostName || 'Player', photo: l.hostAvatar || '' }, 30)}<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(l.hostName || 'Player')}</span></span><button class="btn btn-sm btn-primary" onclick="cnDuelJoin('${esc(l.code || l.id)}')">Join</button></div>`).join('') : '<p class="text-muted" style="margin:0">No open lobbies right now — start a public one and someone can jump in.</p>'}
       </div></div>` + await _liveDuelsHtml(all, 'cn', 'h2hCn') + await _h2hBoardHtml('h2hCn', 'Connections H2H records');
   }
-  dbInvalidate('cnDuels'); const d = await dbGet('cnDuels', k.code).catch(() => null);
+  let d; const pf = window._cnPrefetch;
+  if (pf && pf.code === k.code && Date.now() - pf.at < 1500) d = pf.d; else { dbInvalidate('cnDuels'); dbGet._lastFailed = false; d = await dbGet('cnDuels', k.code).catch(() => undefined);
+    if ((d === undefined || dbGet.readFailed()) && pf && pf.code === k.code) d = pf.d; } // network blip: keep showing the last copy, don't drop out
   if (!d) { _cnDuelSet(null); return '<div class="wd-panel">That duel has ended.</div>'; }
   const host = d.host ? JSON.parse(d.host) : null, guest = d.guest ? JSON.parse(d.guest) : null;
-  clearInterval(window._cnPoll); window._cnPoll = setInterval(() => { if (window._games.view !== 'cn' || _cnGetMode() !== 'duel') { clearInterval(window._cnPoll); return; } renderGames(); }, 3000);
+  // Same pattern as the Grid duel: check every second, one request at a time, redraw only when something changed.
+  const dSig = (x) => [x.guest || '', x.hostP || '', x.guestP || '', !!x.done, !!x.rec].join('|');
+  clearInterval(window._cnPoll); window._cnPollBusy = false; let lastSig = dSig(d), lastSeen = d[k.role + 'Seen'] || 0;
+  window._cnPoll = setInterval(async () => { if (window._games.view !== 'cn' || _cnGetMode() !== 'duel' || !_cnDuelKey()) { clearInterval(window._cnPoll); return; }
+    if (window._cnPollBusy || window._cnAnim) return; window._cnPollBusy = true;
+    try { dbInvalidate('cnDuels'); dbGet._lastFailed = false; const d2 = await dbGet('cnDuels', k.code).catch(() => undefined);
+      if (d2 === undefined || dbGet.readFailed()) return;
+      if (!d2) { _cnDuelSet(null); renderGames(); return; }
+      window._cnPrefetch = { code: k.code, at: Date.now(), d: d2 };
+      if (Date.now() - lastSeen > 10e3) { lastSeen = Date.now(); dbSet('cnDuels', k.code, { [k.role + 'Seen']: lastSeen }).catch(() => {}); }
+      if (dSig(d2) !== lastSig) { lastSig = dSig(d2); renderGames(); }
+    } finally { window._cnPollBusy = false; } }, 1000);
   if (Date.now() - (d[k.role + 'Seen'] || 0) > 8e3) dbSet('cnDuels', k.code, { [k.role + 'Seen']: Date.now() }).catch(() => {});
   if (!guest) return `<div class="wd-panel" style="text-align:center"><h4>${d.public ? '🌍 Public lobby' : '🔒 Private lobby'}</h4><p>Share this code with your opponent:</p><div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:2.4rem;letter-spacing:6px">${esc(k.code)}</div><p class="text-muted">Waiting for them to join…</p><button class="btn btn-secondary" onclick="cnDuelLeave()">Cancel</button></div>`;
   let st = _cnState('duel');
@@ -28253,7 +28270,8 @@ async function _cnDuelBody(pool) {
         const id = _wdScoreId(p.uid); dbInvalidate('wordleScores'); const cur = await dbGet('wordleScores', id).catch(() => null) || {};
         await dbSet('wordleScores', id, Object.assign({ uid: p.uid, name: p.name, [w ? 'cnDW' : 'cnDL']: ((w ? cur.cnDW : cur.cnDL) || 0) + 1, points: cur.points || 0 }, _h2hPatch(cur, 'h2hCn', o, w))); } } catch (e) {} }
   const _cc = _duelCols(d), myC = k.role === 'host' ? _cc.host : _cc.guest, opC = k.role === 'host' ? _cc.guest : _cc.host;
-  const _hs = await _wdStatsFor([(me || {}).uid, (opp || {}).uid].filter(Boolean)).catch(() => ({})), h2 = (me && opp) ? _h2hVs(_hs, me.uid, opp.uid, 'h2hCn') : [0, 0];
+  const hk = k.code + (d.rec ? ':r' : ''); let h2 = (window._cnH2H || {}).k === hk ? window._cnH2H.v : null;
+  if (!h2) { const _hs = await _wdStatsFor([(me || {}).uid, (opp || {}).uid].filter(Boolean)).catch(() => ({})); h2 = (me && opp) ? _h2hVs(_hs, me.uid, opp.uid, 'h2hCn') : [0, 0]; window._cnH2H = { k: hk, v: h2 }; }
   const bar = (nm, p, c) => `<div style="flex:1;padding:8px 10px;border-radius:10px;background:${c}1f;border:1px solid ${c}66;border-left:4px solid ${c}"><b>${esc(nm)}</b><div style="font-size:.78rem;color:var(--muted)">${p.solved}/4 groups · ${p.mistakes} mistake${p.mistakes === 1 ? '' : 's'}${p.done ? (p.won ? ' · ✅ solved' : ' · ❌ out') : ''}</div></div>`;
   window._cnCur = st;
   return { st, header: `<div style="display:flex;gap:8px;margin-bottom:10px">${bar((me && me.name) || 'You', mP, myC)}<span style="align-self:center;text-align:center;font-family:'Barlow Condensed',sans-serif;font-weight:900">VS<small style="display:block;font-size:.7rem;color:${h2[0] > h2[1] ? '#4ade80' : h2[0] < h2[1] ? '#f87171' : '#9ca3af'}">H2H ${h2[0]}–${h2[1]}</small></span>${bar((opp && opp.name) || 'Opponent', oP, opC)}</div>
