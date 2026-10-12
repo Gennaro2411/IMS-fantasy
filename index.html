@@ -28205,7 +28205,7 @@ async function _cnStatsHtml() {
     <div style="display:flex;flex-direction:column;gap:4px">${bar('0', '0 mistakes')}${bar('1', '1 mistake')}${bar('2', '2 mistakes')}${bar('3', '3 mistakes')}${bar('X', 'Not solved')}</div></div>`;
 }
 async function _cnLeaderboardHtml() {
-  const rows = (await dbGetAll('wordleScores', { fresh: true }).catch(() => [])).filter(r => r && (r.cnPts || 0) > 0).sort((a, b) => (b.cnPts || 0) - (a.cnPts || 0) || (b.cnPerfect || 0) - (a.cnPerfect || 0));
+  const rows = (await _gmNoTest(await dbGetAll('wordleScores', { fresh: true }).catch(() => []))).filter(r => r && (r.cnPts || 0) > 0).sort((a, b) => (b.cnPts || 0) - (a.cnPts || 0) || (b.cnPerfect || 0) - (a.cnPerfect || 0));
   const me = _wdMe(), myIdx = rows.findIndex(r => r.uid === me.uid), today = _wdDayKey();
   const line = (r, i) => `<div class="wd-lb-row${r.uid === me.uid ? ' me' : ''}"><span class="wd-lb-pos">${i + 1}</span><span class="wd-lb-name">${esc(r.name || 'Player')}${r.cnLastDay === today ? ` <i>${r.cnLastWon ? '✓' : '✕'} today</i>` : ''}</span><span class="wd-lb-sub"><span title="Perfect solves">💎 ${r.cnPerfect || 0}</span> · <span title="Solved">✅ ${r.cnWon || 0}/${r.cnPlayed || 0}</span> · <span title="Streak" style="color:${r.cnStreak ? '#fb923c' : 'inherit'}">🔥 ${r.cnStreak || 0}</span></span><b class="wd-lb-pts">${r.cnPts || 0}</b></div>`;
   return `<div class="wd-lb"><div class="wd-lb-h"><span>🏆 Daily Connections leaderboard</span><small>Solve = 4 pts + 1 per mistake left · not solved = 1 per group found</small></div>
@@ -28584,7 +28584,7 @@ async function _wdAwardDaily(guesses) {
   } catch (e) { console.warn('wordle score failed', e); }
 }
 async function _wdLeaderboardHtml() {
-  const rows = (await dbGetAll('wordleScores', { fresh: true }).catch(() => [])).filter(r => r && r.points > 0)
+  const rows = (await _gmNoTest(await dbGetAll('wordleScores', { fresh: true }).catch(() => []))).filter(r => r && r.points > 0)
     .sort((a, b) => b.points - a.points || (a.updatedAt || 0) - (b.updatedAt || 0));
   const me = _wdMe(); const myIdx = rows.findIndex(r => r.uid === me.uid); const today = _wdDayKey();
   const line = (r, i) => `<div class="wd-lb-row${r.uid === me.uid ? ' me' : ''}"><span class="wd-lb-pos">${i + 1}</span><span class="wd-lb-name">${esc(r.name || 'Player')}${r.lastDay === today ? ' <i title="Solved today">✓ today</i>' : (r.statsDay === today ? ' <i title="Missed today\'s driver" style="color:#ff4d5e">✕ today</i>' : '')}</span><small style="color:var(--muted);margin-right:8px;white-space:nowrap">${(() => { const k = _wdStreakOf(r); let d = {}; try { d = JSON.parse(r.wdDist || '{}'); } catch (e) {}
@@ -28800,6 +28800,11 @@ function _coinPop(n, kind) {
   el.innerHTML = `<span class="imc" style="font-size:1.6rem"></span><div><b>+${n} IM$</b><small>${lbl}</small></div>`;
   document.body.appendChild(el); setTimeout(() => el.classList.add('out'), 2600); setTimeout(() => el.remove(), 3200);
 }
+// Test accounts are hidden from every game leaderboard (they still see their own row).
+async function _gmTestIds() { const c = window._gmTestC; if (c && Date.now() - c.at < 60e3) return c.ids;
+  const ids = new Set(); try { (await dbGetAll('teams', { all: true })).filter(t => t && t.testAccount && t.userId).forEach(t => ids.add(t.userId)); } catch (e) {}
+  window._gmTestC = { at: Date.now(), ids }; return ids; }
+async function _gmNoTest(rows) { const ids = await _gmTestIds(), me = _wdMe().uid; return (rows || []).filter(r => !r || !r.uid || r.uid === me || !ids.has(r.uid)); }
 function _wdMe() {
   if (typeof currentUser !== 'undefined' && currentUser && currentUser.userId) { const nm = currentUser.name || currentUser.teamName || 'Player';
     const av = currentUser.discordAvatar || (window._avatarByName && typeof _normName === 'function' && window._avatarByName[_normName(nm)]) || '';
@@ -28976,9 +28981,9 @@ async function _liveDuelsHtml(all, game, f) {
   return `<div class="wd-panel" style="margin-top:12px"><h4><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ef4444;box-shadow:0 0 8px #ef4444;margin-right:6px;animation:pulseDot 1.2s ease-in-out infinite"></span>Live now <small>${live.length}</small></h4>${rows}</div>`;
 }
 async function _h2hBoardHtml(f, title) {
-  dbInvalidate('wordleScores'); const all = await dbGetAll('wordleScores', { fresh: true }).catch(() => []); const me = _wdMe();
-  const pairs = {}; all.forEach(d => { if (!d || !d.uid) return; const m = _h2hMap(d, f);
-    Object.keys(m).forEach(o => { const k = [d.uid, o].sort().join('|'), lo = d.uid < o; // merge both players' copies, taking the fuller count of each side
+  dbInvalidate('wordleScores'); const all = await dbGetAll('wordleScores', { fresh: true }).catch(() => []); const me = _wdMe(), _tIds = await _gmTestIds(), _tst = (u) => u !== me.uid && _tIds.has(u);
+  const pairs = {}; all.forEach(d => { if (!d || !d.uid || _tst(d.uid)) return; const m = _h2hMap(d, f);
+    Object.keys(m).forEach(o => { if (_tst(o)) return; const k = [d.uid, o].sort().join('|'), lo = d.uid < o; // merge both players' copies, taking the fuller count of each side
       const w = lo ? (m[o].w || 0) : (m[o].l || 0), l = lo ? (m[o].l || 0) : (m[o].w || 0), P0 = pairs[k];
       const me1 = { uid: d.uid, name: d.name || 'Player' }, op1 = { uid: o, name: m[o].n || 'Player' };
       if (!P0) pairs[k] = { a: lo ? me1 : op1, b: lo ? op1 : me1, w, l };
@@ -29235,7 +29240,7 @@ window.hlShare = function() { const mode = _hlGetMode(), st = mode === 'inf' ? w
   if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) navigator.share({ text: txt }).catch(() => {}); else if (navigator.clipboard) navigator.clipboard.writeText(txt).then(() => { if (typeof showToast === 'function') showToast('📋 Copied — paste it in Discord!', 'success'); }); };
 async function _hlLeaderboardHtml() {
   // All-time board: never resets daily. Ranked by fastest perfect 10/10, then total correct answers.
-  const day = _dailyKey(); const rows = (await dbGetAll('wordleScores', { fresh: true }).catch(() => [])).filter(r => r && r.uid && (r.hlDays || 0) > 0)
+  const day = _dailyKey(); const rows = (await _gmNoTest(await dbGetAll('wordleScores', { fresh: true }).catch(() => []))).filter(r => r && r.uid && (r.hlDays || 0) > 0)
     .sort((a, b) => (a.hlBestTen || 9e9) - (b.hlBestTen || 9e9) || (b.hlCorrect || 0) - (a.hlCorrect || 0) || (b.hlTens || 0) - (a.hlTens || 0));
   const me = _wdMe(), mi = rows.findIndex(r => r.uid === me.uid), sec = (ms) => ms ? (ms / 1000).toFixed(1) + 's' : '—';
   const head = `<div class="hlb-row hlb-head"><span>#</span><span>Player</span><span class="c">Today</span><span class="c">Best 10/10</span><span class="c x" title="Perfect 10/10 rounds">💯</span><span class="c x" title="Current streak">🔥</span><span class="c x">Played</span><span class="c x">Correct</span></div>`;
@@ -29534,7 +29539,7 @@ async function _grAwardDaily(st) {
   } catch (e) { console.warn('grid score failed', e); }
 }
 async function _grLeaderboardHtml() {
-  const rows = (await dbGetAll('wordleScores', { fresh: true }).catch(() => [])).filter(r => r && (r.gridPts || 0) > 0)
+  const rows = (await _gmNoTest(await dbGetAll('wordleScores', { fresh: true }).catch(() => []))).filter(r => r && (r.gridPts || 0) > 0)
     .sort((a, b) => (b.gridPts || 0) - (a.gridPts || 0) || (b.gridPerfect || 0) - (a.gridPerfect || 0));
   const me = _wdMe(), myIdx = rows.findIndex(r => r.uid === me.uid), today = _wdDayKey();
   const line = (r, i) => `<div class="wd-lb-row${r.uid === me.uid ? ' me' : ''}"><span class="wd-lb-pos">${i + 1}</span><span class="wd-lb-name">${esc(r.name || 'Player')}${r.gridLastDay === today ? ` <i title="Played today">${r.gridLastScore}/9 today</i>` : ''}</span><small style="color:var(--muted);margin-right:8px;white-space:nowrap">${(() => { const k = r.gridLastDay === today || r.gridLastDay === _wdYesterdayKey() ? (r.gridStreak || 0) : 0;
