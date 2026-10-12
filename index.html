@@ -25801,6 +25801,7 @@ window.betSetBoost = function(market, selCsv, odds, label) {
       <button class="bst-x" onclick="betBoostClose()" aria-label="Close">✕</button></div>
     <div class="bst-cmp"><div><i>Current</i><b>${fmtOdds(odds)}</b></div><span class="bst-arr">→</span><div class="now"><i>Boosted</i><b id="bst-new">${fmtOdds(sug)}</b><small id="bst-pct">+50%</small></div></div>
     <div class="bst-q">${[1.25, 1.5, 2, 3].map(m => `<button onclick="betBoostMul(${m})" data-m="${m}" class="${m === 1.5 ? 'on' : ''}">×${m}</button>`).join('')}</div>
+    <label class="bst-in"><span>Hype title (optional)</span><input id="bst-title" type="text" maxlength="60" placeholder="e.g. Can anyone stop Ussh?!"></label>
     <label class="bst-in"><span>Decimal odds</span><input id="bst-val" type="number" step="0.01" min="${(odds + 0.01).toFixed(2)}" value="${sug.toFixed(2)}" oninput="betBoostPrev()"></label>
     <div class="bst-err" id="bst-err"></div>
     <div class="bst-act"><button class="bst-c" onclick="betBoostClose()">Cancel</button><button class="bst-go" onclick="betBoostSave()">Boost it</button></div></div>`;
@@ -25822,7 +25823,7 @@ window.betBoostSave = async function() {
   const same = (b) => b.div === d.div && b.market === d.market && (b.sel || []).join('-') === d.sel.join('-');
   const rest = cur.filter(b => !same(b));
   if (rest.length >= BET_MAX_BOOSTS) { document.getElementById('bst-err').textContent = 'Max ' + BET_MAX_BOOSTS + ' boosts per round — remove one first.'; return; }
-  const list = [...rest, { raceName: d.raceName, div: d.div, market: d.market, sel: d.sel, label: d.label, was: d.was, odds: Math.round(n * 100) / 100, setAt: Date.now() }];
+  const list = [...rest, { raceName: d.raceName, div: d.div, market: d.market, sel: d.sel, label: d.label, was: d.was, odds: Math.round(n * 100) / 100, title: ((document.getElementById('bst-title') || {}).value || '').trim().slice(0, 60), setAt: Date.now() }];
   await dbSet('settings', 'betBoost', { value: { raceName: d.raceName, list } });
   betBoostClose(); window._betBoostMode = false; if (typeof showToast === 'function') showToast('🚀 Boost set: ' + d.label + ' @ ' + fmtOdds(n), 'success'); renderBets();
 };
@@ -26715,7 +26716,7 @@ window.renderBets = async function() {
     <div class="bo-ticker" id="bo-ticker">${_betTickerHtml(window._betAllBets || [], teamBy)}</div>
     <div id="bet-of-week" style="display:none;margin:0 0 12px"></div><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="" style="display:none" onload="renderBetOfWeek()" onerror="renderBetOfWeek()">
     <div class="bo-disclaimer">Just for fun. IM$ are pretend money, with no value; they can't be bought, sold or cashed out.</div>
-    ${BOOSTS.length ? `<div class="bo-boosts">${BOOSTS.map((BOOST, bi) => `<div class="bo-boost"><div class="bo-boost-l"><div class="bo-kicker">🚀 Boosted odds · ${esc(BOOST.div)}</div><b>${esc(BOOST.label)}</b>
+    ${BOOSTS.length ? `<div class="bo-boosts">${BOOSTS.map((BOOST, bi) => `<div class="bo-boost"><div class="bo-boost-l"><div class="bo-kicker">🚀 Boosted odds · ${esc(BOOST.div)}</div>${BOOST.title ? `<div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.02rem;line-height:1.1;text-transform:uppercase;letter-spacing:.3px;color:#ffd24a;margin-top:2px">${esc(BOOST.title)}</div>` : ''}<b>${esc(BOOST.label)}</b>
         <div class="bo-boost-o"><s>${fmtOdds(BOOST.was)}</s> → <em>${fmtOdds(BOOST.odds)}</em></div></div>
         <div class="bo-boost-r">${BOOST.div === div ? oddsBtn(BOOST.market, BOOST.sel, BOOST.label, BOOST.odds) : `<button class="btn btn-primary btn-sm" onclick="betDiv('${esc(BOOST.div)}')">Go to ${esc(BOOST.div)} →</button>`}
         ${adminLoggedIn ? `<button class="btn btn-secondary btn-sm" onclick="betClearBoost(${bi})" title="Remove boost">✕</button>` : ''}</div></div>`).join('')}</div>` : ''}
