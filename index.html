@@ -5074,10 +5074,15 @@ window.ensureRaceDoc = async function(name, raceNum) {
     if (!name) return null;
     const races = await dbGetAll('races', { fresh: true }).catch(() => []);
     const nn = String(name).toLowerCase().trim();
-    const hit = races.find(r => (r.name || '').toLowerCase().trim() === nn) || (raceNum ? races.find(r => r.raceNum === raceNum && !(r.driverPoints && Object.keys(r.driverPoints).length)) : null);
+    // Only an UNSCORED doc counts — a same-named round from an earlier season (or an already-scored
+    // round) must not stand in for the upcoming one.
+    const scored = (r) => r.driverPoints && Object.keys(r.driverPoints).length;
+    const hit = races.find(r => !scored(r) && (r.name || '').toLowerCase().trim() === nn) || (raceNum ? races.find(r => !scored(r) && r.raceNum === raceNum) : null);
     if (hit) return hit;
+    if (races.some(r => scored(r) && (r.name || '').toLowerCase().trim() === nn && (!raceNum || r.raceNum === raceNum))) return null; // this round is already done
     const sn = Number(window.currentSeason) || Number(((await dbGet('settings', 'seasonNumber').catch(() => null)) || {}).value) || 8;
-    const id = 'race_' + String(name).toLowerCase().replace(/[^a-z0-9]/g, '_') + '_s' + sn;
+    let id = 'race_' + String(name).toLowerCase().replace(/[^a-z0-9]/g, '_') + '_s' + sn;
+    if (races.some(r => r.id === id)) id += '_r' + (raceNum || Date.now());
     const doc = { id, name: String(name).trim(), raceNum: raceNum || 0, createdAt: Date.now() };
     await dbSet('races', id, doc);
     try { dbInvalidate && dbInvalidate('races'); } catch (e) {}
