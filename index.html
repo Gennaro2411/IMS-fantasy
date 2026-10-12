@@ -388,6 +388,11 @@
   .cn-tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;aspect-ratio:1/1;padding:8px 4px;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#fff;cursor:pointer;transition:transform .1s,background .15s,border-color .15s;min-width:0}
   .cn-tile span{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:.92rem;letter-spacing:.3px;text-transform:uppercase;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .cn-tile:hover{border-color:rgba(155,111,212,.6)}
+  .cn-tile{position:relative;overflow:hidden;isolation:isolate;background:radial-gradient(120% 90% at 50% 0%,rgba(155,111,212,.16),transparent 60%),linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.015))}
+  .cn-tile::before{content:'';position:absolute;right:-18%;bottom:-18%;width:72%;aspect-ratio:1;background:url('icons/icon-192.png?v=3') center/contain no-repeat;opacity:.07;transform:rotate(-14deg);filter:grayscale(1) brightness(1.6);z-index:-1;pointer-events:none;transition:opacity .15s}
+  .cn-tile::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(135deg,rgba(255,255,255,.025) 0 2px,transparent 2px 9px);z-index:-1;pointer-events:none}
+  .cn-tile:hover::before{opacity:.12}
+  .cn-tile.on::before{opacity:.18;filter:grayscale(1) brightness(2.2)}
   .cn-tile.on{background:linear-gradient(160deg,#7B4FBF,#b04a8f);border-color:#d6b8ff;transform:scale(.97)}
   .cn-solved{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:var(--c);color:#14141f;animation:cnPop .3s ease}
   @keyframes cnPop{from{transform:scale(.94);opacity:.4}to{transform:none;opacity:1}}
