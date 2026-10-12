@@ -28170,7 +28170,10 @@ window.cnSubmit = function() {
     const hid = mode === 'daily' && (() => { const pool = window._cnPool || [], ps = s.map(id => pool.find(p => p.id === id)); if (ps.some(p => !p)) return null;
       return _grCategories(pool).find(c => !st.groups.some(g => g.id === c.id) && !(st.hiddenCats || []).includes(c.id) && ps.every(p => c.test(p))); })(); // each hidden group only counts once
     if (hid) { st.hidden = (st.hidden || []).concat([key]); st.hiddenCats = (st.hiddenCats || []).concat([hid.id]); window._cnSel = []; window._cnMsg = '🕵️ Hidden group: ' + hid.label + '! Not an answer, but no life lost — +10 IM$';
-      _cnSave(st, mode); _gameCoins('cn-hidden', 10); renderGames(); return; }
+      _cnSave(st, mode); _gameCoins('cn-hidden', 10);
+      (async () => { try { const me = _wdMe(), id = _wdScoreId(me.uid); dbInvalidate('wordleScores'); const cur = await dbGet('wordleScores', id).catch(() => null) || {};
+        await dbSet('wordleScores', id, { uid: me.uid, name: me.name, cnHidden: (cur.cnHidden || 0) + 1 }); if (document.getElementById('cn-stats')) renderGames(); } catch (e) {} })();
+      renderGames(); return; }
     st.mistakes++; const close = st.groups.some((g, i) => !st.solved.includes(i) && g.ids.filter(id => s.includes(id)).length === 3);
     window._cnMsg = close ? 'One away…' : 'Not quite'; window._cnShake = true;
     if (st.mistakes >= CN_LIVES) { st.done = true; st.won = false; st.foundBeforeEnd = st.solved.length; st.solved = st.solved.concat([0, 1, 2, 3].filter(i => !st.solved.includes(i))); window._cnSel = []; } }
@@ -28218,7 +28221,7 @@ async function _cnStatsHtml() {
   const bar = (k, lbl) => `<div style="display:flex;align-items:center;gap:6px;font-size:.72rem"><span style="width:62px;color:var(--muted)">${lbl}</span><div style="flex:1;height:14px;border-radius:4px;background:rgba(255,255,255,.05);overflow:hidden"><div style="height:100%;width:${Math.round((dist[k] || 0) / mx * 100)}%;background:${k === 'X' ? '#ff5470' : '#c084fc'}"></div></div><b style="width:18px;text-align:right">${dist[k] || 0}</b></div>`;
   const st = (v, l) => `<div style="text-align:center"><b style="display:block;font-family:'Barlow Condensed',sans-serif;font-size:1.4rem">${v}</b><small style="color:var(--muted);font-size:.62rem;text-transform:uppercase;letter-spacing:1px">${l}</small></div>`;
   return `<div class="wd-lb" id="cn-stats"><div class="wd-lb-h"><span>📊 Your Connections stats</span></div>
-    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:6px 0 10px">${st(cur.cnPlayed || 0, 'Played')}${st(cur.cnPlayed ? Math.round((cur.cnWon || 0) / cur.cnPlayed * 100) + '%' : '—', 'Solved')}${st(cur.cnPerfect || 0, 'Perfect')}${st(cur.cnStreak || 0, 'Streak')}${st(cur.cnBest || 0, 'Best')}</div>
+    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin:6px 0 10px">${st(cur.cnPlayed || 0, 'Played')}${st(cur.cnPlayed ? Math.round((cur.cnWon || 0) / cur.cnPlayed * 100) + '%' : '—', 'Solved')}${st(cur.cnPerfect || 0, 'Perfect')}${st(cur.cnStreak || 0, 'Streak')}${st(cur.cnBest || 0, 'Best')}${st('🕵️ ' + (cur.cnHidden || 0), 'Hidden')}</div>
     <div style="display:flex;flex-direction:column;gap:4px">${bar('0', '0 mistakes')}${bar('1', '1 mistake')}${bar('2', '2 mistakes')}${bar('3', '3 mistakes')}${bar('X', 'Not solved')}</div></div>`;
 }
 async function _cnLeaderboardHtml() {
