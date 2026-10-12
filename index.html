@@ -28288,6 +28288,7 @@ async function renderConnGame(el) {
     <div class="cn-btns"><button class="btn btn-secondary" onclick="cnShuffle()">🔀 Shuffle</button><button class="btn btn-secondary" onclick="cnClear()" ${sel.length ? '' : 'disabled'}>Deselect</button><button class="btn btn-primary" onclick="cnSubmit()" ${sel.length === 4 && !locked ? '' : 'disabled'}>Submit</button><button class="btn btn-secondary" onclick="cnGiveUp()">Give up</button></div>`}
     ${mode === 'duel' ? '' : end}
     ${mode === 'daily' ? await _cnStatsHtml() + await _cnLeaderboardHtml() : ''}
+    ${adminLoggedIn ? `<div class="wd-panel" style="margin-top:14px;border:1px dashed rgba(239,68,68,.5)"><h4>🛠️ Admin — answers <small>only you can see this</small></h4>${st.groups.map(g => `<div style="margin:6px 0;padding:8px 10px;border-radius:10px;border-left:4px solid ${CN_COLS[g.col]};background:rgba(255,255,255,.04)"><b>${esc(g.label)}</b><div style="font-size:.85rem;color:var(--muted)">${g.ids.map(id => esc(P(id).name)).join(', ')}</div></div>`).join('')}</div>` : ''}
     <div class="wd-info"><h3>How to play</h3><ul>
       <li>Pick <b>4 drivers</b> you think share a link and hit <b>Submit</b>.</li>
       <li>Links come from IMS data: teams they've driven for, nationality, current division, Drivers' titles, BOTTs, race wins and podiums.</li>
