@@ -388,6 +388,10 @@
   .cn-tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;aspect-ratio:1/1;padding:8px 4px;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#fff;cursor:pointer;transition:transform .1s,background .15s,border-color .15s;min-width:0}
   .cn-tile span{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:.92rem;letter-spacing:.3px;text-transform:uppercase;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .cn-tile:hover{border-color:rgba(155,111,212,.6)}
+  .cn-tile.cn-flip{animation:cnFlip .55s cubic-bezier(.5,0,.5,1) forwards;pointer-events:none}
+  @keyframes cnFlip{0%{transform:perspective(500px) rotateY(0) scale(.97)}45%{transform:perspective(500px) rotateY(90deg) scale(1);background:linear-gradient(160deg,#7B4FBF,#b04a8f)}55%{transform:perspective(500px) rotateY(90deg)}100%{transform:perspective(500px) rotateY(180deg) scale(.2);opacity:0}}
+  .cn-solved.cn-pop{animation:cnPop .45s cubic-bezier(.2,1.4,.4,1)}
+  @keyframes cnPop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
   .cn-tile{position:relative;overflow:hidden;isolation:isolate;background:radial-gradient(120% 90% at 50% 0%,rgba(155,111,212,.16),transparent 60%),linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.015))}
   .cn-tile::before{content:'';position:absolute;right:-18%;bottom:-18%;width:72%;aspect-ratio:1;background:url('icons/icon-192.png?v=3') center/contain no-repeat;opacity:.07;transform:rotate(-14deg);filter:grayscale(1) brightness(1.6);z-index:-1;pointer-events:none;transition:opacity .15s}
   .cn-tile::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(135deg,rgba(255,255,255,.025) 0 2px,transparent 2px 9px);z-index:-1;pointer-events:none}
@@ -28131,13 +28135,17 @@ window.cnShuffle = function() { const st = window._cnCur; if (!st) return; const
   for (let i = left.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [left[i], left[j]] = [left[j], left[i]]; }
   st.order = st.groups.filter((_, gi) => st.solved.includes(gi)).flatMap(g => g.ids).concat(left); _cnSave(st, _cnGetMode()); renderGames(); };
 window.cnSubmit = function() {
-  const st = window._cnCur, mode = _cnGetMode(), s = (window._cnSel || []).slice(); if (!st || st.done || s.length !== 4) return;
+  const st = window._cnCur, mode = _cnGetMode(), s = (window._cnSel || []).slice(); if (!st || st.done || s.length !== 4 || window._cnAnim) return;
   const key = s.slice().sort().join(',');
   if (st.guesses.some(g => g.slice().sort().join(',') === key)) { window._cnMsg = 'Already guessed!'; renderGames(); return; }
   st.guesses.push(s);
   const gi = st.groups.findIndex((g, i) => !st.solved.includes(i) && g.ids.every(id => s.includes(id)));
   if (gi >= 0) { st.solved.push(gi); window._cnSel = []; window._cnMsg = '';
-    if (st.solved.length === 4) { st.done = true; st.won = true; st.wonAt = Date.now(); } }
+    if (st.solved.length === 4) { st.done = true; st.won = true; st.wonAt = Date.now(); }
+    // Found a group: the four cards flip over one by one and vanish, then the group bar pops in.
+    _cnSave(st, mode); if (mode === 'duel') _cnDuelPush(st); window._cnAnim = true; window._cnNewGi = gi;
+    s.forEach((id, i) => { const t = document.querySelector(`.cn-tile[onclick="cnPick('${id}')"]`); if (t) { t.style.animationDelay = (i * 90) + 'ms'; t.classList.add('cn-flip'); } });
+    setTimeout(() => { window._cnAnim = false; renderGames(); }, 900); return; }
   else { st.mistakes++; const close = st.groups.some((g, i) => !st.solved.includes(i) && g.ids.filter(id => s.includes(id)).length === 3);
     window._cnMsg = close ? 'One away…' : 'Not quite'; window._cnShake = true;
     if (st.mistakes >= CN_LIVES) { st.done = true; st.won = false; st.foundBeforeEnd = st.solved.length; st.solved = st.solved.concat([0, 1, 2, 3].filter(i => !st.solved.includes(i))); window._cnSel = []; } }
@@ -28262,7 +28270,7 @@ async function renderConnGame(el) {
   window._cnCur = st; const sel = window._cnSel || (window._cnSel = []);
   const P = (id) => pool.find(p => p.id === id) || { name: '?' };
   const solvedHtml = st.solved.map(gi => { const g = st.groups[gi]; const c = CN_COLS[g.col];
-    return `<div class="cn-solved" style="--c:${c}"><div class="cn-sv-av">${g.ids.slice(0, 2).map(id => _wdAv(P(id), 40)).join('')}</div><div class="cn-sv-t"><b>${esc(g.label)}</b><span>${g.ids.map(id => esc(P(id).name)).join(', ')}</span></div><div class="cn-sv-av">${g.ids.slice(2).map(id => _wdAv(P(id), 40)).join('')}</div></div>`; }).join('');
+    const nw = window._cnNewGi === gi; if (nw) window._cnNewGi = null; return `<div class="cn-solved${nw ? ' cn-pop' : ''}" style="--c:${c}"><div class="cn-sv-av">${g.ids.slice(0, 2).map(id => _wdAv(P(id), 40)).join('')}</div><div class="cn-sv-t"><b>${esc(g.label)}</b><span>${g.ids.map(id => esc(P(id).name)).join(', ')}</span></div><div class="cn-sv-av">${g.ids.slice(2).map(id => _wdAv(P(id), 40)).join('')}</div></div>`; }).join('');
   const left = st.order.filter(id => !st.solved.some(gi => st.groups[gi].ids.includes(id)));
   const tiles = left.map(id => { const p = P(id), on = sel.includes(id);
     return `<button class="cn-tile${on ? ' on' : ''}" onclick="cnPick('${id}')">${_wdAv(p, 52)}<span>${esc(p.name)}</span></button>`; }).join('');
