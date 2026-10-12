@@ -10766,7 +10766,7 @@ async function renderBriefingExtras() {
     if (hdrEl) {
       const racesH = await dbGetAll('races').catch(()=>[]);
       const sortedH = racesH.slice().sort((a,b)=>(a.raceNum||0)-(b.raceNum||0));
-      const up = sortedH.find(r => !r.driverPoints || Object.keys(r.driverPoints).length===0) || sortedH[sortedH.length-1];
+      const up = sortedH.find(r => !r.driverPoints || !Object.values(r.driverPoints).some(v => v > 0)) || sortedH[sortedH.length-1];
       const seasonDocH = await dbGet('settings','seasonNumber').catch(()=>null);
       const seasonN = seasonDocH && seasonDocH.value ? seasonDocH.value : '';
       if (up) {
@@ -11006,7 +11006,7 @@ async function renderBriefingExtras() {
     // Find the upcoming (first unscored) race to check the captain for that round.
     const racesForCap = await dbGetAll('races').catch(()=>[]);
     const sortedR = racesForCap.slice().sort((a,b)=>(a.raceNum||0)-(b.raceNum||0));
-    const upcomingRace = sortedR.find(r => !r.driverPoints || Object.keys(r.driverPoints).length === 0);
+    const upcomingRace = sortedR.find(r => !r.driverPoints || !Object.values(r.driverPoints).some(v => v > 0));
     const items = [];
     const sel = myTeam.selections || {};
     const ft = myTeam.freeTransfers !== undefined ? myTeam.freeTransfers : 1;
@@ -11189,7 +11189,7 @@ async function renderTrackHistoryForPage() {
   try {
     const [races, archives, drivers] = await Promise.all([dbGetAll('races'), dbGetAll('seasonArchives').catch(()=>[]), dbGetAll('drivers').catch(()=>[])]);
     const sorted = races.slice().sort((a,b) => (a.raceNum||0) - (b.raceNum||0));
-    const upcoming = sorted.find(r => !r.driverPoints || Object.keys(r.driverPoints).length === 0);
+    const upcoming = sorted.find(r => !r.driverPoints || !Object.values(r.driverPoints).some(v => v > 0));
     if (!upcoming) { el.innerHTML = ''; return; } // no upcoming race — briefing shows nothing
     await renderTrackHistory(upcoming, races, archives, drivers);
   } catch(e) { el.innerHTML = ''; }
@@ -11303,10 +11303,10 @@ async function renderAiRacePreview() {
   const drivers = (_allDrivers || []).filter(d => d && !d.isReserve);
 
   const sorted = races.slice().sort((a,b) => (a.raceNum||0) - (b.raceNum||0));
-  const upcoming = sorted.find(r => !r.driverPoints || Object.keys(r.driverPoints).length === 0);
+  const upcoming = sorted.find(r => !r.driverPoints || !Object.values(r.driverPoints).some(v => v > 0));
   if (!upcoming) { el.innerHTML = ''; return; } // no upcoming race — nothing to preview
 
-  const isUpcoming = !upcoming.driverPoints || Object.keys(upcoming.driverPoints).length === 0;
+  const isUpcoming = !upcoming.driverPoints || !Object.values(upcoming.driverPoints).some(v => v > 0);
 
   const completedRaces = sorted.filter(r => !r.excludeFromFantasy && r.driverPoints && Object.values(r.driverPoints).some(v => v > 0));
   const currentSeason = seasonDoc ? (seasonDoc.value || 7) : 7;
@@ -21725,7 +21725,7 @@ window.confirmTransfer = async function(oldDriverId, newDriverId, div, teamId, c
   const _races = await dbGetAll('races').catch(()=>[]);
   const _sortedR = _races.slice().sort((a,b)=>(a.raceNum||0)-(b.raceNum||0));
   // The round transfers are FOR = the next unraced round, else the latest.
-  const _currentRound = _sortedR.find(r => !r.driverPoints || Object.keys(r.driverPoints).length === 0) || _sortedR[_sortedR.length-1];
+  const _currentRound = _sortedR.find(r => !r.driverPoints || !Object.values(r.driverPoints).some(v => v > 0)) || _sortedR[_sortedR.length-1];
   const _roundKey = _currentRound ? _currentRound.id : 'none';
   // sellCounts = { roundId: { driverId: timesSold } }
   const sellCounts = (team.sellCounts && team.sellCounts[_roundKey]) ? {...team.sellCounts[_roundKey]} : {};
