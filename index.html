@@ -28181,8 +28181,8 @@ async function _cnDailyPuzzle(pool) {
     await dbSet('wordleScores', '_dailyShared', { value: Object.assign({}, v, { cnKey: key, cnPuzzle: JSON.stringify(pz) }) }); } catch (e) {}
   return pz;
 }
-// Points per daily: 4 for solving, +1 for each unused mistake (max 8). A loss scores 1 per group found.
-const _cnScore = (st) => st.won ? 4 + (CN_LIVES - st.mistakes) : (st.foundBeforeEnd || 0);
+// Points per daily: 1 per group found (max 4).
+const _cnScore = (st) => st.won ? 4 : (st.foundBeforeEnd || 0);
 async function _cnRecord(st) {
   const me = _wdMe(), day = st.day, id = _wdScoreId(me.uid);
   try { dbInvalidate('wordleScores'); const cur = await dbGet('wordleScores', id).catch(() => null) || {};
@@ -28208,7 +28208,7 @@ async function _cnLeaderboardHtml() {
   const rows = (await _gmNoTest(await dbGetAll('wordleScores', { fresh: true }).catch(() => []))).filter(r => r && (r.cnPts || 0) > 0).sort((a, b) => (b.cnPts || 0) - (a.cnPts || 0) || (b.cnPerfect || 0) - (a.cnPerfect || 0));
   const me = _wdMe(), myIdx = rows.findIndex(r => r.uid === me.uid), today = _wdDayKey();
   const line = (r, i) => `<div class="wd-lb-row${r.uid === me.uid ? ' me' : ''}"><span class="wd-lb-pos">${i + 1}</span><span class="wd-lb-name">${esc(r.name || 'Player')}${r.cnLastDay === today ? ` <i>${r.cnLastWon ? '✓' : '✕'} today</i>` : ''}</span><span class="wd-lb-sub"><span title="Perfect solves">💎 ${r.cnPerfect || 0}</span> · <span title="Solved">✅ ${r.cnWon || 0}/${r.cnPlayed || 0}</span> · <span title="Streak" style="color:${r.cnStreak ? '#fb923c' : 'inherit'}">🔥 ${r.cnStreak || 0}</span></span><b class="wd-lb-pts">${r.cnPts || 0}</b></div>`;
-  return `<div class="wd-lb"><div class="wd-lb-h"><span>🏆 Daily Connections leaderboard</span><small>Solve = 4 pts + 1 per mistake left · not solved = 1 per group found</small></div>
+  return `<div class="wd-lb"><div class="wd-lb-h"><span>🏆 Daily Connections leaderboard</span><small>1 point per group found</small></div>
     ${rows.length ? rows.slice(0, 10).map(line).join('') + (myIdx >= 10 ? '<div class="wd-lb-gap">…</div>' + line(rows[myIdx], myIdx) : '') : '<p class="text-muted" style="margin:6px 0 0">No scores yet — finish today\'s puzzle to get on the board.</p>'}</div>`;
 }
 // ---- Connections duel: same random puzzle for both, race to solve it ----
