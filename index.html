@@ -11139,17 +11139,25 @@ async function renderBriefingExtras() {
     // ── Driver form: each of my drivers vs what their price says they should score ──
     try {
       const _scored = sortedR.filter(r => r.driverPoints && Object.values(r.driverPoints).some(v => v > 0));
+      // Targets need a decent sample: pool last season's races in with this season's, so one race
+      // (where the winner's 27 becomes "the target") can't set an unrealistic bar.
+      let _pool = _scored;
+      try { const _cs = Number(window.currentSeason) || 8;
+        const _prev = (await dbGetAll('seasonArchives').catch(() => [])).filter(a => Number(a.season) === _cs - 1).flatMap(a => a.races || []).filter(r => r && r.driverPoints && Object.values(r.driverPoints).some(v => v > 0));
+        _pool = _scored.concat(_prev); } catch (e) {}
       // A driver's results = rounds they actually RACED (an entry in that round's per-division points),
       // in their own division. A blanket 0 for every non-racer must not count as a result.
-      const _hist = (id, dv) => _scored.filter(r => { const bd = r.driverPointsByDivision && r.driverPointsByDivision[id]; return bd ? (dv ? bd[dv] !== undefined : Object.keys(bd).length > 0) : (typeof (r.driverPoints || {})[id] === 'number' && r.driverPoints[id] > 0); })
+      const _histIn = (races, id, dv) => races.filter(r => { const bd = r.driverPointsByDivision && r.driverPointsByDivision[id]; return bd ? (dv ? bd[dv] !== undefined : Object.keys(bd).length > 0) : (typeof (r.driverPoints || {})[id] === 'number' && r.driverPoints[id] > 0); })
         .map(r => { const bd = r.driverPointsByDivision && r.driverPointsByDivision[id]; return bd ? (dv && bd[dv] !== undefined ? bd[dv] : Object.values(bd).reduce((a, v) => a + (v || 0), 0)) : r.driverPoints[id]; });
+      const _hist = (id, dv) => _histIn(_scored, id, dv);       // this season only — the driver's own form
+      const _histPool = (id, dv) => _histIn(_pool, id, dv);     // this + last season — for the target
       const _avg = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0;
       const _pr = d => (typeof driverPrice === 'function' ? driverPrice(d) : (d.price || 0));
       const _ownCount = id => teams.filter(t => Object.values(t.selections || {}).includes(id)).length;
       const _bank = typeof myTeam.budget === 'number' ? myTeam.budget : 0;
       const rowsF = myDrivers.map(d => {
         const h = _hist(d.id, d.division);
-        const peers = drivers.filter(x => x.division === d.division && !x._deleted && !x.isReserve).map(x => ({ x, h: _hist(x.id, d.division), p: _pr(x) })).filter(o => o.h.length);
+        const peers = drivers.filter(x => x.division === d.division && !x._deleted && !x.isReserve).map(x => ({ x, h: _histPool(x.id, d.division), hs: _hist(x.id, d.division), p: _pr(x) })).filter(o => o.h.length >= 2);
         // Expected points from price: least-squares fit of avg points vs price in this division.
         // Expected points by price RANK: the Nth most expensive driver should score like the
         // Nth best scorer in the division (averaged with neighbours to smooth it out).
@@ -11165,7 +11173,7 @@ async function renderBriefingExtras() {
         }
         const last3 = h.slice(-3), sAvg = _avg(h), rAvg = _avg(last3);
         const dnf = Object.keys(d.dnfRaces || {}).length || d.seasonDnfs || 0;
-        const rankList = peers.map(o => ({ id: o.x.id, a: _avg(o.h.slice(-3)) })).sort((a, b) => b.a - a.a);
+        const rankList = peers.filter(o => o.hs.length).map(o => ({ id: o.x.id, a: _avg(o.hs.slice(-3)) })).sort((a, b) => b.a - a.a);
         const rank = rankList.findIndex(o => o.id === d.id) + 1;
         const own = teams.length ? Math.round(_ownCount(d.id) / teams.length * 100) : 0;
         const ppm = _pr(d) ? rAvg / _pr(d) : 0;
@@ -11186,8 +11194,8 @@ async function renderBriefingExtras() {
         }
         if (dnf >= 2) notes.push(`${dnf} DNFs this season, a real reliability risk.`);
         // Replacement: better recent form, same division, affordable after selling.
-        const alt = peers.filter(o => o.x.id !== d.id && !Object.values(sel).includes(o.x.id) && o.h.length >= 2 && o.p <= _pr(d) + _bank && !isDriverBanned(o.x))
-          .map(o => ({ ...o, r: _avg(o.h.slice(-3)) })).filter(o => o.r > rAvg * 1.2 && o.r - rAvg >= 3).sort((a, b) => (b.r / b.p) - (a.r / a.p))[0];
+        const alt = peers.filter(o => o.x.id !== d.id && !Object.values(sel).includes(o.x.id) && o.hs.length >= 2 && o.p <= _pr(d) + _bank && !isDriverBanned(o.x))
+          .map(o => ({ ...o, h: o.hs, r: _avg(o.hs.slice(-3)) })).filter(o => o.r > rAvg * 1.2 && o.r - rAvg >= 3).sort((a, b) => (b.r / b.p) - (a.r / a.p))[0];
         // Overview: plain-English summary built only from the numbers above.
         const tot = h.reduce((x, y) => x + y, 0), best = h.length ? Math.max(...h) : 0, worst = h.length ? Math.min(...h) : 0;
         const nm = esc(d.name);
