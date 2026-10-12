@@ -28103,6 +28103,7 @@ function _cnBuild(pool, seed) {
   const CN_OK = ['ch:1', 'ch:2', 'bott:1', 'bott:2', 'win:1', 'win:5', 'win:0', 'pod:u1']; // easy stat groups only — no podium/starts/points counts
   const rnd = _grRng(seed), C = _grCategories(pool).filter(c => !/^divh/.test(c.kind) && (!/^stat/.test(c.kind) || CN_OK.includes(c.id)) && !(c.kind === 'team' && /kick|sauber/i.test(c.label || ''))); // no points-threshold or Kick Sauber groups
   const shuf = (a) => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  window._cnAllCats = _grCategories(pool).filter(c => c.kind === 'team' || c.kind === 'nat'); // every team (incl. Kick Sauber) + nationality is checked for fake groups
   const members = {}; C.forEach(c => { members[c.id] = pool.filter(p => c.test(p)).map(p => p.id); });
   // Mostly well-known faces: drivers in the all-time top 100 for points are strongly preferred.
   const top = new Set(pool.slice().sort((a, b) => (b.p || 0) - (a.p || 0)).slice(0, 100).map(p => p.id));
@@ -28121,7 +28122,7 @@ function _cnBuild(pool, seed) {
     if (!ok) continue;
     // No red-herring answers: an unused category (e.g. "American") must not also fit 4+ of the 16, unless those are exactly one real group.
     const all16 = groups.flatMap(g => g.ids), pickedKinds = new Set(pick.map(c => c.kind)), P16 = all16.map(id => pool.find(p => p.id === id));
-    if (C.some(c => { if (pick.includes(c) || (c.kind !== 'team' && pickedKinds.has(c.kind))) return false;
+    if (C.concat(window._cnAllCats || []).some(c => { if (pick.some(x => x.id === c.id) || (c.kind !== 'team' && pickedKinds.has(c.kind))) return false;
       const hit = P16.filter(p => c.test(p)).map(p => p.id); if (hit.length < 4) return false;
       return !groups.some(g => hit.length === 4 && g.ids.every(id => hit.includes(id))); })) continue;
     groups.sort((a, b) => b.size - a.size); // bigger category = easier (yellow)
