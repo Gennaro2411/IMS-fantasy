@@ -3234,8 +3234,11 @@ window.loadAttendance = async function() {
       const mRound = manifest.round != null ? Number(manifest.round) : null;
       const gen = manifest.generated_at_utc ? Date.parse(manifest.generated_at_utc) : NaN;
       let ok = !!up;
-      if (ok && mTrack) ok = tk(mTrack) === tk(up.name);
-      if (ok && mRound != null && up.raceNum != null) ok = mRound === Number(up.raceNum);
+      // Same round number is enough (the bot may say "Spain" for our "Barcelona"); without a round
+      // number, fall back to the track name.
+      const roundOk = mRound != null && up && up.raceNum != null && mRound === Number(up.raceNum);
+      const trackOk = mTrack && up && (tk(mTrack) === tk(up.name) || tk(mTrack).includes(tk(up.name)) || tk(up.name).includes(tk(mTrack)));
+      if (ok) ok = (mRound != null && up.raceNum != null) ? roundOk : (mTrack ? trackOk : ok);
       if (ok && isFinite(gen) && up.lockTime) ok = gen >= up.lockTime - 10 * 86400000 && gen <= up.lockTime + 86400000;
       if (ok && !mTrack && !isFinite(gen)) ok = false; // can't verify at all
       window._attendanceStale = !ok;
@@ -10987,6 +10990,7 @@ async function renderBriefingExtras() {
     } catch(e) { console.warn('reserves stepping in failed', e); }
   }
 
+  if (!attendanceHtml) attendanceHtml = `${_secHead('🟢', 'Availability', 'Who\'s racing this round', '#22c55e')}<div style="margin-top:10px;padding:14px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px dashed rgba(255,255,255,0.12);font-size:.82rem;color:var(--muted)">Check-ins for this round aren't in yet. Availability and reserves stepping in will show here once the check-in data is uploaded.</div>`;
   let checklistHtml = '';
   const myTeam = (currentUser && teams.find(t =>
     (window._myTeamDocId && t.id === window._myTeamDocId) ||
