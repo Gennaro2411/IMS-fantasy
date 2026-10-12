@@ -388,8 +388,13 @@
   .cn-tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;aspect-ratio:1/1;padding:8px 4px;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#fff;cursor:pointer;transition:transform .1s,background .15s,border-color .15s;min-width:0}
   .cn-tile span{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:.92rem;letter-spacing:.3px;text-transform:uppercase;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .cn-tile:hover{border-color:rgba(155,111,212,.6)}
-  .cn-tile.cn-flip{animation:cnFlip .55s cubic-bezier(.5,0,.5,1) forwards;pointer-events:none}
-  @keyframes cnFlip{0%{transform:perspective(500px) rotateY(0) scale(.97)}45%{transform:perspective(500px) rotateY(90deg) scale(1);background:linear-gradient(160deg,#7B4FBF,#b04a8f)}55%{transform:perspective(500px) rotateY(90deg)}100%{transform:perspective(500px) rotateY(180deg) scale(.2);opacity:0}}
+  .cn-tile.cn-f1{transition:transform .26s ease-in;transform:perspective(500px) rotateY(90deg);pointer-events:none}
+  .cn-tile.cn-back{background:var(--c);border-color:rgba(255,255,255,.6);color:#111;pointer-events:none;box-shadow:0 0 18px color-mix(in srgb,var(--c) 60%,transparent)}
+  .cn-tile.cn-back::before,.cn-tile.cn-back::after{display:none}
+  .cn-tile.cn-back b{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.05rem;text-transform:uppercase;text-align:center;line-height:1.05;padding:0 4px}
+  .cn-tile.cn-f2{animation:cnF2 .26s ease-out}
+  @keyframes cnF2{from{transform:perspective(500px) rotateY(-90deg)}to{transform:perspective(500px) rotateY(0)}}
+  .cn-tile.cn-out{transition:transform .3s ease-in,opacity .3s ease-in;transform:scale(.3);opacity:0}
   .cn-solved.cn-pop{animation:cnPop .45s cubic-bezier(.2,1.4,.4,1)}
   @keyframes cnPop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
   .cn-tile{position:relative;overflow:hidden;isolation:isolate;background:radial-gradient(120% 90% at 50% 0%,rgba(155,111,212,.16),transparent 60%),linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.015))}
@@ -28144,8 +28149,13 @@ window.cnSubmit = function() {
     if (st.solved.length === 4) { st.done = true; st.won = true; st.wonAt = Date.now(); }
     // Found a group: the four cards flip over one by one and vanish, then the group bar pops in.
     _cnSave(st, mode); if (mode === 'duel') _cnDuelPush(st); window._cnAnim = true; window._cnNewGi = gi;
-    s.forEach((id, i) => { const t = document.querySelector(`.cn-tile[onclick="cnPick('${id}')"]`); if (t) { t.style.animationDelay = (i * 90) + 'ms'; t.classList.add('cn-flip'); } });
-    setTimeout(() => { window._cnAnim = false; renderGames(); }, 900); return; }
+    // Each card flips to its back, which shows the group name in the group colour, holds so everyone can read it, then the four vanish.
+    const g = st.groups[gi], col = CN_COLS[g.col];
+    s.forEach((id, i) => { const t = document.querySelector(`.cn-tile[onclick="cnPick('${id}')"]`); if (!t) return;
+      setTimeout(() => { t.classList.add('cn-f1'); }, i * 110);
+      setTimeout(() => { t.classList.remove('cn-f1', 'on'); t.classList.add('cn-back', 'cn-f2'); t.style.setProperty('--c', col); t.innerHTML = `<b>${esc(g.label)}</b>`; }, i * 110 + 260);
+      setTimeout(() => { t.classList.add('cn-out'); }, 3 * 110 + 260 + 1800 + i * 60); });
+    setTimeout(() => { window._cnAnim = false; renderGames(); }, 3 * 110 + 260 + 1800 + 3 * 60 + 320); return; }
   else { st.mistakes++; const close = st.groups.some((g, i) => !st.solved.includes(i) && g.ids.filter(id => s.includes(id)).length === 3);
     window._cnMsg = close ? 'One away…' : 'Not quite'; window._cnShake = true;
     if (st.mistakes >= CN_LIVES) { st.done = true; st.won = false; st.foundBeforeEnd = st.solved.length; st.solved = st.solved.concat([0, 1, 2, 3].filter(i => !st.solved.includes(i))); window._cnSel = []; } }
