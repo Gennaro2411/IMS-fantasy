@@ -28088,14 +28088,17 @@ function _cnBuild(pool, seed) {
   const rnd = _grRng(seed), C = _grCategories(pool).filter(c => !/^divh/.test(c.kind));
   const shuf = (a) => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const members = {}; C.forEach(c => { members[c.id] = pool.filter(p => c.test(p)).map(p => p.id); });
+  // Mostly well-known faces: drivers in the all-time top 100 for points are strongly preferred.
+  const top = new Set(pool.slice().sort((a, b) => (b.p || 0) - (a.p || 0)).slice(0, 100).map(p => p.id));
+  const famous = (ids) => ids.map(id => ({ id, k: top.has(id) ? rnd() : 0.75 + rnd() })).sort((a, b) => a.k - b.k).map(x => x.id);
   for (let tries = 0; tries < 4000; tries++) {
     const pick = []; const kinds = {};
-    for (const c of shuf(C)) { if (pick.length === 4) break; const k = c.kind.replace(/:.*/, ''); if ((kinds[k] || 0) >= (k === 'team' ? 2 : 1)) continue; if (members[c.id].length < 4) continue; pick.push(c); kinds[k] = (kinds[k] || 0) + 1; }
+    for (const c of shuf(C)) { if (pick.length === 4) break; const k = c.kind.replace(/:.*/, ''); if ((kinds[k] || 0) >= (k === 'team' ? 2 : 1)) continue; if (members[c.id].length < 4 || members[c.id].filter(id => top.has(id)).length < 3) continue; pick.push(c); kinds[k] = (kinds[k] || 0) + 1; }
     if (pick.length < 4) continue;
     const used = new Set(), groups = []; let ok = true;
     for (const c of pick) {
       const others = pick.filter(o => o !== c);
-      const cand = shuf(members[c.id].filter(id => !used.has(id) && !others.some(o => o.test(pool.find(p => p.id === id)))));
+      const cand = famous(members[c.id].filter(id => !used.has(id) && !others.some(o => o.test(pool.find(p => p.id === id)))));
       if (cand.length < 4) { ok = false; break; }
       const ids = cand.slice(0, 4); ids.forEach(id => used.add(id)); groups.push({ id: c.id, label: c.label, ids, size: members[c.id].length });
     }
@@ -28106,9 +28109,8 @@ function _cnBuild(pool, seed) {
   }
   return null;
 }
-function _cnNew(pool, mode) {
-  const seed = mode === 'daily' ? _wdHash('cn' + _wdDayKey() + (_wdSalt() || '')) : Math.floor(Math.random() * 2 ** 31);
-  const pz = _cnBuild(pool, seed); if (!pz) return null;
+async function _cnNew(pool, mode) {
+  const pz = mode === 'daily' ? await _cnDailyPuzzle(pool) : _cnBuild(pool, Math.floor(Math.random() * 2 ** 31)); if (!pz) return null;
   const st = { day: _wdDayKey(), salt: _wdSalt(), groups: pz.groups, order: pz.order, solved: [], mistakes: 0, guesses: [], done: false, won: false };
   _cnSave(st, mode); return st;
 }
@@ -28129,25 +28131,102 @@ window.cnSubmit = function() {
   st.guesses.push(s);
   const gi = st.groups.findIndex((g, i) => !st.solved.includes(i) && g.ids.every(id => s.includes(id)));
   if (gi >= 0) { st.solved.push(gi); window._cnSel = []; window._cnMsg = '';
-    if (st.solved.length === 4) { st.done = true; st.won = true; } }
+    if (st.solved.length === 4) { st.done = true; st.won = true; st.wonAt = Date.now(); } }
   else { st.mistakes++; const close = st.groups.some((g, i) => !st.solved.includes(i) && g.ids.filter(id => s.includes(id)).length === 3);
     window._cnMsg = close ? 'One away…' : 'Not quite'; window._cnShake = true;
-    if (st.mistakes >= CN_LIVES) { st.done = true; st.won = false; st.solved = st.solved.concat([0, 1, 2, 3].filter(i => !st.solved.includes(i))); window._cnSel = []; } }
-  _cnSave(st, mode); renderGames();
+    if (st.mistakes >= CN_LIVES) { st.done = true; st.won = false; st.foundBeforeEnd = st.solved.length; st.solved = st.solved.concat([0, 1, 2, 3].filter(i => !st.solved.includes(i))); window._cnSel = []; } }
+  _cnSave(st, mode); if (mode === 'duel') _cnDuelPush(st); renderGames();
 };
 window.cnGiveUp = function() { const st = window._cnCur; if (!st || st.done) return; customConfirm('Give up and reveal all four groups?', () => {
-  st.done = true; st.won = false; st.gaveUp = true; st.solved = st.solved.concat([0, 1, 2, 3].filter(i => !st.solved.includes(i))); window._cnSel = []; _cnSave(st, _cnGetMode()); renderGames(); }); };
+  st.done = true; st.won = false; st.gaveUp = true; st.foundBeforeEnd = st.solved.length; if (_cnGetMode() === 'duel') _cnDuelPush(st); st.solved = st.solved.concat([0, 1, 2, 3].filter(i => !st.solved.includes(i))); window._cnSel = []; _cnSave(st, _cnGetMode()); renderGames(); }); };
 window.cnNext = function() { localStorage.removeItem('imsConn_inf'); window._cnSel = []; window._cnMsg = ''; renderGames(); };
 window.cnShare = function() { const st = window._cnCur; if (!st) return; const E = ['🟨', '🟩', '🟦', '🟪'];
   const rows = st.guesses.map(g => g.map(id => E[st.groups.findIndex(gr => gr.ids.includes(id))]).join(''));
   const txt = `IMS Connections ${_cnGetMode() === 'daily' ? '#' + _wdDayNum() : '∞'}\n${rows.join('\n')}\n${st.won ? 'Solved with ' + st.mistakes + ' mistake' + (st.mistakes === 1 ? '' : 's') : 'Out of lives'}\nfantasy.ims-league.com`;
   try { navigator.clipboard.writeText(txt); if (typeof showToast === 'function') showToast('Copied — paste it anywhere!', 'success'); } catch (e) { customAlert(txt); } };
+// ---- Connections: shared daily puzzle, stats, leaderboard ----
+// The daily puzzle is fixed in the database by whoever builds it first, so everyone gets the same 16.
+async function _cnDailyPuzzle(pool) {
+  const key = _dailyKey(); let sh = window._dailyShared || {};
+  try { dbInvalidate('wordleScores'); const d = await dbGet('wordleScores', '_dailyShared').catch(() => null); sh = (d && d.value) || sh; window._dailyShared = sh; } catch (e) {}
+  if (sh.cnKey === key && sh.cnPuzzle) { try { const pz = JSON.parse(sh.cnPuzzle); if (pz.groups.every(g => g.ids.every(id => pool.find(p => p.id === id)))) return pz; } catch (e) {} }
+  const pz = _cnBuild(pool, _wdHash('cn' + _wdDayKey() + (_wdSalt() || ''))); if (!pz) return null;
+  try { const d = await dbGet('wordleScores', '_dailyShared').catch(() => null); const v = (d && d.value) || {};
+    if (v.cnKey === key && v.cnPuzzle) return JSON.parse(v.cnPuzzle); // someone beat us to it — use theirs
+    await dbSet('wordleScores', '_dailyShared', { value: Object.assign({}, v, { cnKey: key, cnPuzzle: JSON.stringify(pz) }) }); } catch (e) {}
+  return pz;
+}
+// Points per daily: 4 for solving, +1 for each unused mistake (max 8). A loss scores 1 per group found.
+const _cnScore = (st) => st.won ? 4 + (CN_LIVES - st.mistakes) : (st.foundBeforeEnd || 0);
+async function _cnRecord(st) {
+  const me = _wdMe(), day = st.day, id = _wdScoreId(me.uid);
+  try { dbInvalidate('wordleScores'); const cur = await dbGet('wordleScores', id).catch(() => null) || {};
+    if (cur.cnLastDay === day) return;
+    const pts = _cnScore(st), streak = st.won ? (cur.cnLastDay === _wdYesterdayKey() && cur.cnLastWon ? (cur.cnStreak || 0) + 1 : 1) : 0;
+    let dist = {}; try { dist = JSON.parse(cur.cnDist || '{}'); } catch (e) {} const k = st.won ? String(st.mistakes) : 'X'; dist[k] = (dist[k] || 0) + 1;
+    await dbSet('wordleScores', id, { uid: me.uid, name: me.name, cnPts: (cur.cnPts || 0) + pts, cnPlayed: (cur.cnPlayed || 0) + 1, cnWon: (cur.cnWon || 0) + (st.won ? 1 : 0),
+      cnPerfect: (cur.cnPerfect || 0) + (st.won && !st.mistakes ? 1 : 0), cnStreak: streak, cnBest: Math.max(cur.cnBest || 0, streak), cnLastDay: day, cnLastWon: !!st.won, cnLastScore: pts, cnDist: JSON.stringify(dist) });
+    setTimeout(() => { if (document.getElementById('cn-stats')) renderGames(); }, 300);
+  } catch (e) { console.warn('connections score failed', e); }
+}
+async function _cnStatsHtml() {
+  const me = _wdMe(); const cur = await dbGet('wordleScores', _wdScoreId(me.uid)).catch(() => null) || {};
+  let dist = {}; try { dist = JSON.parse(cur.cnDist || '{}'); } catch (e) {}
+  const mx = Math.max(1, ...Object.values(dist));
+  const bar = (k, lbl) => `<div style="display:flex;align-items:center;gap:6px;font-size:.72rem"><span style="width:62px;color:var(--muted)">${lbl}</span><div style="flex:1;height:14px;border-radius:4px;background:rgba(255,255,255,.05);overflow:hidden"><div style="height:100%;width:${Math.round((dist[k] || 0) / mx * 100)}%;background:${k === 'X' ? '#ff5470' : '#c084fc'}"></div></div><b style="width:18px;text-align:right">${dist[k] || 0}</b></div>`;
+  const st = (v, l) => `<div style="text-align:center"><b style="display:block;font-family:'Barlow Condensed',sans-serif;font-size:1.4rem">${v}</b><small style="color:var(--muted);font-size:.62rem;text-transform:uppercase;letter-spacing:1px">${l}</small></div>`;
+  return `<div class="wd-lb" id="cn-stats"><div class="wd-lb-h"><span>📊 Your Connections stats</span></div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:6px 0 10px">${st(cur.cnPlayed || 0, 'Played')}${st(cur.cnPlayed ? Math.round((cur.cnWon || 0) / cur.cnPlayed * 100) + '%' : '—', 'Solved')}${st(cur.cnPerfect || 0, 'Perfect')}${st(cur.cnStreak || 0, 'Streak')}${st(cur.cnBest || 0, 'Best')}</div>
+    <div style="display:flex;flex-direction:column;gap:4px">${bar('0', '0 mistakes')}${bar('1', '1 mistake')}${bar('2', '2 mistakes')}${bar('3', '3 mistakes')}${bar('X', 'Not solved')}</div></div>`;
+}
+async function _cnLeaderboardHtml() {
+  const rows = (await dbGetAll('wordleScores', { fresh: true }).catch(() => [])).filter(r => r && (r.cnPts || 0) > 0).sort((a, b) => (b.cnPts || 0) - (a.cnPts || 0) || (b.cnPerfect || 0) - (a.cnPerfect || 0));
+  const me = _wdMe(), myIdx = rows.findIndex(r => r.uid === me.uid), today = _wdDayKey();
+  const line = (r, i) => `<div class="wd-lb-row${r.uid === me.uid ? ' me' : ''}"><span class="wd-lb-pos">${i + 1}</span><span class="wd-lb-name">${esc(r.name || 'Player')}${r.cnLastDay === today ? ` <i>${r.cnLastWon ? '✓' : '✕'} today</i>` : ''}</span><span class="wd-lb-sub"><span title="Perfect solves">💎 ${r.cnPerfect || 0}</span> · <span title="Solved">✅ ${r.cnWon || 0}/${r.cnPlayed || 0}</span> · <span title="Streak" style="color:${r.cnStreak ? '#fb923c' : 'inherit'}">🔥 ${r.cnStreak || 0}</span></span><b class="wd-lb-pts">${r.cnPts || 0}</b></div>`;
+  return `<div class="wd-lb"><div class="wd-lb-h"><span>🏆 Daily Connections leaderboard</span><small>Solve = 4 pts + 1 per mistake left · not solved = 1 per group found</small></div>
+    ${rows.length ? rows.slice(0, 10).map(line).join('') + (myIdx >= 10 ? '<div class="wd-lb-gap">…</div>' + line(rows[myIdx], myIdx) : '') : '<p class="text-muted" style="margin:6px 0 0">No scores yet — finish today\'s puzzle to get on the board.</p>'}</div>`;
+}
+// ---- Connections duel: same random puzzle for both, race to solve it ----
+const _cnDuelKey = () => { try { return JSON.parse(localStorage.getItem('imsCnDuel') || 'null'); } catch (e) { return null; } };
+const _cnDuelSet = (v) => { try { v ? localStorage.setItem('imsCnDuel', JSON.stringify(v)) : localStorage.removeItem('imsCnDuel'); } catch (e) {} };
+window.cnDuelCreate = async function() { const me = _wdMe(), code = _wdCode(), seed = Math.floor(Math.random() * 2 ** 31);
+  await dbSet('cnDuels', code, { code, seed, createdAt: Date.now(), host: JSON.stringify({ uid: me.uid, name: me.name }), guest: '' });
+  _cnDuelSet({ code, role: 'host' }); localStorage.removeItem('imsConn_duel'); renderGames(); };
+window.cnDuelJoin = async function() { const code = String((document.getElementById('cn-code') || {}).value || '').trim().toUpperCase(); if (!code) return;
+  const d = await dbGet('cnDuels', code).catch(() => null); if (!d) return customAlert('No duel with that code.'); if (d.guest) return customAlert('That duel is full.');
+  const me = _wdMe(); await dbSet('cnDuels', code, { guest: JSON.stringify({ uid: me.uid, name: me.name }) }); _cnDuelSet({ code, role: 'guest' }); localStorage.removeItem('imsConn_duel'); renderGames(); };
+window.cnDuelLeave = function() { clearInterval(window._cnPoll); _cnDuelSet(null); localStorage.removeItem('imsConn_duel'); window._cnSel = []; renderGames(); };
+async function _cnDuelPush(st) { const k = _cnDuelKey(); if (!k) return; try { await dbSet('cnDuels', k.code, { [k.role + 'P']: JSON.stringify({ solved: st.solved.length, mistakes: st.mistakes, done: st.done, won: st.won, at: Date.now() }) }); } catch (e) {} }
+async function _cnDuelBody(pool) {
+  const k = _cnDuelKey();
+  if (!k) return `<div class="wd-panel" style="text-align:center"><p style="margin:0 0 10px">Race a friend on the same puzzle — first to find all four groups wins. 4 mistakes and you're out.</p>
+    <button class="btn btn-primary" onclick="cnDuelCreate()">⚔️ Create a duel</button>
+    <div style="margin-top:12px;display:flex;gap:6px;justify-content:center"><input id="cn-code" placeholder="CODE" maxlength="5" style="max-width:110px;text-transform:uppercase;text-align:center"><button class="btn btn-secondary" onclick="cnDuelJoin()">Join</button></div></div>`;
+  dbInvalidate('cnDuels'); const d = await dbGet('cnDuels', k.code).catch(() => null);
+  if (!d) { _cnDuelSet(null); return '<div class="wd-panel">That duel has ended.</div>'; }
+  const host = d.host ? JSON.parse(d.host) : null, guest = d.guest ? JSON.parse(d.guest) : null;
+  clearInterval(window._cnPoll); window._cnPoll = setInterval(() => { if (window._games.view !== 'cn' || _cnGetMode() !== 'duel') { clearInterval(window._cnPoll); return; } renderGames(); }, 3000);
+  if (!guest) return `<div class="wd-panel" style="text-align:center"><p>Share this code with your opponent:</p><div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:2.4rem;letter-spacing:6px">${esc(k.code)}</div><p class="text-muted">Waiting for them to join…</p><button class="btn btn-secondary" onclick="cnDuelLeave()">Cancel</button></div>`;
+  let st = _cnState('duel');
+  if (!st || st.code !== k.code) { const pz = _cnBuild(pool, Number(d.seed)); if (!pz) return '<div class="wd-panel">Couldn\'t build a puzzle.</div>'; st = { code: k.code, groups: pz.groups, order: pz.order, solved: [], mistakes: 0, guesses: [], done: false, won: false }; _cnSave(st, 'duel'); }
+  const me = k.role === 'host' ? host : guest, opp = k.role === 'host' ? guest : host;
+  const oP = d[(k.role === 'host' ? 'guest' : 'host') + 'P'] ? JSON.parse(d[(k.role === 'host' ? 'guest' : 'host') + 'P']) : { solved: 0, mistakes: 0 };
+  const mP = { solved: st.solved.length, mistakes: st.mistakes, done: st.done, won: st.won, at: 0 };
+  const myWin = st.won && (!oP.won || (oP.at && st.wonAt && st.wonAt < oP.at)), oppWin = oP.won && (!st.won || (st.wonAt && oP.at < st.wonAt));
+  const over = (st.done && oP.done) || myWin || oppWin;
+  if (over && !st.duelDone) { st.duelDone = true; _cnSave(st, 'duel'); if (myWin) _gameCoins('duel-cn', 5); }
+  const bar = (nm, p) => `<div style="flex:1;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.04)"><b>${esc(nm)}</b><div style="font-size:.78rem;color:var(--muted)">${p.solved}/4 groups · ${p.mistakes} mistake${p.mistakes === 1 ? '' : 's'}${p.done ? (p.won ? ' · ✅ solved' : ' · ❌ out') : ''}</div></div>`;
+  window._cnCur = st;
+  return { st, header: `<div style="display:flex;gap:8px;margin-bottom:10px">${bar((me && me.name) || 'You', mP)}<span style="align-self:center;font-weight:900">VS</span>${bar((opp && opp.name) || 'Opponent', oP)}</div>
+    ${over ? `<div class="wd-end ${myWin ? 'won' : 'lost'}"><div><b>${myWin ? 'YOU WIN THE DUEL!' : oppWin ? 'THEY GOT THERE FIRST' : 'NOBODY SOLVED IT'}</b></div><button class="btn btn-secondary" onclick="cnDuelLeave()">Leave</button></div>` : `<div style="text-align:right;margin-bottom:6px"><button class="btn btn-sm btn-secondary" onclick="cnDuelLeave()">Leave duel</button></div>`}` };
+}
 async function renderConnGame(el) {
   const L = await _wdLoad(); const pool = (L.gridPool || L.pool || []).filter(p => p && p.name);
   const mode = _cnGetMode(), locked = !!(window._gamesLock || {}).cn && !adminLoggedIn && !_gamesAccess(); window._cnLocked = locked;
-  let st = _cnState(mode);
+  let st = _cnState(mode), duelHdr = '';
+  if (mode === 'duel') { const r = await _cnDuelBody(pool); if (typeof r === 'string') { el.innerHTML = `<div class="wd-wrap"><div class="wd-top"><button class="wd-back" onclick="openGame('hub')" title="Back to Games">←</button><div class="wd-brand"><img src="icons/icon-192.png?v=3" alt="IMS"><span>IMS <em>CONNECTIONS</em></span></div></div><div class="wd-modes">${[['daily', '📅', 'DAILY'], ['inf', '∞', 'INFINITE'], ['duel', '⚔️', 'DUEL']].map(([m, i, l]) => `<button class="${mode === m ? 'on' : ''}" onclick="setConnMode('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>${r}</div>`; return; } st = r.st; duelHdr = r.header; }
   if (mode === 'daily') { const srv = await _dailyPull('cnDaily'); if (srv && (!st || st.day !== srv.day || (srv.guesses || []).length > (st.guesses || []).length)) { st = srv; try { localStorage.setItem('imsConn_daily', JSON.stringify(srv)); } catch (e) {} } }
-  if (!st || (mode === 'daily' && (st.day !== _wdDayKey() || (st.salt || 0) !== _wdSalt())) || !st.groups || st.groups.some(g => g.ids.some(id => !pool.find(p => p.id === id)))) st = _cnNew(pool, mode);
+  if (mode !== 'duel' && (!st || (mode === 'daily' && (st.day !== _wdDayKey() || (st.salt || 0) !== _wdSalt())) || !st.groups || st.groups.some(g => g.ids.some(id => !pool.find(p => p.id === id))))) st = await _cnNew(pool, mode);
   if (!st) { el.innerHTML = '<div class="alert alert-warning">Not enough driver data to build a puzzle yet.</div>'; return; }
   window._cnCur = st; const sel = window._cnSel || (window._cnSel = []);
   const P = (id) => pool.find(p => p.id === id) || { name: '?' };
@@ -28157,25 +28236,26 @@ async function renderConnGame(el) {
   const tiles = left.map(id => { const p = P(id), on = sel.includes(id);
     return `<button class="cn-tile${on ? ' on' : ''}" onclick="cnPick('${id}')">${_wdAv(p, 52)}<span>${esc(p.name)}</span></button>`; }).join('');
   const lives = Array.from({ length: CN_LIVES }, (_, i) => `<i class="${i < CN_LIVES - st.mistakes ? 'on' : ''}"></i>`).join('');
-  const tabs = `<div class="wd-modes">${[['daily', '📅', 'DAILY'], ['inf', '∞', 'INFINITE']].map(([m, i, l]) => `<button class="${mode === m ? 'on' : ''}" onclick="setConnMode('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>`;
+  const tabs = `<div class="wd-modes">${[['daily', '📅', 'DAILY'], ['inf', '∞', 'INFINITE'], ['duel', '⚔️', 'DUEL']].map(([m, i, l]) => `<button class="${mode === m ? 'on' : ''}" onclick="setConnMode('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>`;
   const shake = window._cnShake; window._cnShake = false;
   const end = st.done ? `<div class="wd-end ${st.won ? 'won' : 'lost'}"><div class="wd-end-l"><div><b>${st.won ? (st.mistakes ? 'SOLVED!' : 'PERFECT — NO MISTAKES!') : st.gaveUp ? 'GIVEN UP' : 'OUT OF LIVES'}</b><div class="wd-end-sub">${st.won ? 'All four groups found with ' + st.mistakes + ' mistake' + (st.mistakes === 1 ? '' : 's') : 'Here were the four groups'}</div></div></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-primary" onclick="cnShare()">📤 Share</button>${mode === 'inf' ? '<button class="btn btn-secondary" onclick="cnNext()">🔄 New puzzle</button>' : ''}</div></div>` : '';
+    <div style="display:flex;gap:8px;flex-wrap:wrap">${mode !== 'duel' ? '<button class="btn btn-primary" onclick="cnShare()">📤 Share</button>' : ''}${mode === 'inf' ? '<button class="btn btn-secondary" onclick="cnNext()">🔄 New puzzle</button>' : ''}</div></div>` : '';
   el.innerHTML = `<div class="wd-wrap"><div class="wd-top"><button class="wd-back" onclick="openGame('hub')" title="Back to Games">←</button><div class="wd-brand"><img src="icons/icon-192.png?v=3" alt="IMS"><span>IMS <em>CONNECTIONS</em></span></div><div class="wd-meta">${mode === 'daily' ? `<span class="wd-pill">#${_wdDayNum()}</span>` : ''}</div></div>
     ${(window._gamesLock || {}).cn ? `<div class="wd-lockbar">🔒 <b>IMS Connections is locked</b><span>${locked ? 'Have a look — playing opens soon.' : 'Locked for players — you can still play.'}</span></div>` : ''}${tabs}
-    <p class="text-muted" style="text-align:center;margin:4px 0 12px;font-size:.85rem">Find four groups of four IMS drivers who share something.</p>
+    <p class="text-muted" style="text-align:center;margin:4px 0 12px;font-size:.85rem">Find four groups of four IMS drivers who share something.</p>${duelHdr}
     <div class="cn-board">${solvedHtml}<div class="cn-grid${shake ? ' shake' : ''}">${tiles}</div></div>
     ${st.done ? '' : `<div class="cn-lives"><span>Mistakes left</span>${lives}</div>
     <div class="cn-msg">${esc(window._cnMsg || '')}</div>
     <div class="cn-btns"><button class="btn btn-secondary" onclick="cnShuffle()">🔀 Shuffle</button><button class="btn btn-secondary" onclick="cnClear()" ${sel.length ? '' : 'disabled'}>Deselect</button><button class="btn btn-primary" onclick="cnSubmit()" ${sel.length === 4 && !locked ? '' : 'disabled'}>Submit</button><button class="btn btn-secondary" onclick="cnGiveUp()">Give up</button></div>`}
-    ${end}
+    ${mode === 'duel' ? '' : end}
+    ${mode === 'daily' ? await _cnStatsHtml() + await _cnLeaderboardHtml() : ''}
     <div class="wd-info"><h3>How to play</h3><ul>
       <li>Pick <b>4 drivers</b> you think share a link and hit <b>Submit</b>.</li>
       <li>Links come from IMS data: teams they've driven for, nationality, current division, Drivers' titles, BOTTs, wins, podiums, starts and points.</li>
       <li>Each driver fits only <b>one</b> of the four groups — watch out for red herrings.</li>
       <li><b>One away…</b> means 3 of your 4 belong together. You have <b>${CN_LIVES} mistakes</b>.</li>
       <li>Colours go from easiest (🟨) to hardest (🟪). Daily: <b>+25 IM$</b> for finishing, <b>+25 IM$</b> more for solving it.</li></ul></div></div>`;
-  if (st.done && mode === 'daily' && !window['_cnRec_' + st.day]) { window['_cnRec_' + st.day] = 1; _gameCoins('cn-daily', 25).then(() => { if (st.won) _gameCoins('cn-win', 25); }); }
+  if (st.done && mode === 'daily' && !window['_cnRec_' + st.day]) { window['_cnRec_' + st.day] = 1; _cnRecord(st); _gameCoins('cn-daily', 25).then(() => { if (st.won) _gameCoins('cn-win', 25); }); }
 }
 
 // ---- Render ----
@@ -28645,7 +28725,7 @@ async function _gameCoins(kind, amount) {
   } catch (e) { return 0; }
 }
 function _coinPop(n, kind) {
-  const lbl = { 'cn-daily': 'Daily Connections', 'cn-win': 'Connections solved!', 'wd-daily': 'Daily PaddockDle', 'gr-daily': 'Daily Grid', 'wd-win': 'Got the daily driver!', 'gr-win': 'Perfect 9/9 grid!', 'hl-daily': 'Daily Higher or Lower', 'hl-win': '8/10 or better!', 'duel-hl': 'Higher or Lower duel win', 'duel-wd': 'PaddockDle duel win', 'duel-gr': 'Grid duel win' }[kind] || 'Games';
+  const lbl = { 'duel-cn': 'Connections duel win', 'cn-daily': 'Daily Connections', 'cn-win': 'Connections solved!', 'wd-daily': 'Daily PaddockDle', 'gr-daily': 'Daily Grid', 'wd-win': 'Got the daily driver!', 'gr-win': 'Perfect 9/9 grid!', 'hl-daily': 'Daily Higher or Lower', 'hl-win': '8/10 or better!', 'duel-hl': 'Higher or Lower duel win', 'duel-wd': 'PaddockDle duel win', 'duel-gr': 'Grid duel win' }[kind] || 'Games';
   const el = document.createElement('div'); el.className = 'coin-pop'; const nOpen = document.querySelectorAll('.coin-pop').length; if (nOpen) el.style.top = (84 + nOpen * 78) + 'px';
   el.innerHTML = `<span class="imc" style="font-size:1.6rem"></span><div><b>+${n} IM$</b><small>${lbl}</small></div>`;
   document.body.appendChild(el); setTimeout(() => el.classList.add('out'), 2600); setTimeout(() => el.remove(), 3200);
