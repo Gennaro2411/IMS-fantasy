@@ -2920,7 +2920,7 @@
       </div>
       <div class="card">
         <div class="card-title"><div class="dot"></div>📈 Expected points (driver form targets)</div>
-        <p class="text-muted" style="margin-bottom:10px">Every market driver's target points per race, as used by the Driver Form Report: 75% price (price rank → expected finishing position → what that position usually scores, ×0.85, with a floor) + 25% their own recent form (last 5 results in their division).</p>
+        <p class="text-muted" style="margin-bottom:10px">Every market driver's target points per race, as used by the Driver Form Report: 75% price (where their price sits between the division's cheapest and dearest → expected finishing position → what that position usually scores, ×0.85, with a floor) + 25% their own recent form (last 5 results in their division).</p>
         <div class="form-row" style="gap:8px;align-items:flex-end;flex-wrap:wrap">
           <div class="form-group"><label>Division</label><select id="xp-div" onchange="renderExpectedTable()" style="max-width:120px"><option value="">All</option></select></div>
           <div class="form-group"><label>Search</label><input id="xp-q" type="text" placeholder="driver…" oninput="renderExpectedTable()" style="max-width:180px"></div>
@@ -11178,8 +11178,10 @@ async function renderBriefingExtras() {
         // target never depends on a handful of drivers' averages.
         {
           const mkt = drivers.filter(x => x.division === d.division && !x._deleted && !x.isReserve);
-          const above = mkt.filter(x => _pr(x) > _pr(d)).length;
-          const frac = mkt.length > 1 ? above / (mkt.length - 1) : 0;
+          // Where their PRICE sits between the division's cheapest and dearest (not their rank), so two
+          // drivers with similar prices get similar targets even if others are bunched between them.
+          const _ps = mkt.map(_pr).filter(v => v > 0), _hi = Math.max(..._ps), _lo = Math.min(..._ps);
+          const frac = _hi > _lo ? Math.min(1, Math.max(0, (_hi - _pr(d)) / (_hi - _lo))) : 0;
           if (!window._posPtsCache) {
             const sum = {}, cnt = {}, field = {};
             _pool.forEach(r => { const pbd = r.positionByDivision || {}, dpd = r.driverPointsByDivision || {}; const fc = {};
@@ -23354,7 +23356,9 @@ window._computeExpectedAll = async function() {
   const mktAll = drivers.filter(d => d && d.name && !d._deleted && !d.isReserve && d.division);
   return mktAll.map(d => {
     const mkt = mktAll.filter(x => x.division === d.division);
-    const above = mkt.filter(x => pr(x) > pr(d)).length, frac = mkt.length > 1 ? above / (mkt.length - 1) : 0;
+    const above = mkt.filter(x => pr(x) > pr(d)).length;
+    const ps = mkt.map(pr).filter(v => v > 0), hi = Math.max(...ps), lo = Math.min(...ps);
+    const frac = hi > lo ? Math.min(1, Math.max(0, (hi - pr(d)) / (hi - lo))) : 0;
     const fs = field[d.division] || [].concat(...Object.values(field)); const fieldSize = fs.length ? Math.round(avg(fs)) : 12;
     const expPos = 1 + frac * (fieldSize - 1);
     const at = p => PP[Math.max(1, Math.min(fieldSize, Math.round(p)))];
