@@ -11162,14 +11162,13 @@ async function renderBriefingExtras() {
         // Expected points by price RANK: the Nth most expensive driver should score like the
         // Nth best scorer in the division (averaged with neighbours to smooth it out).
         let exp = null;
+        // Expected = the division's average points per race, scaled by how this driver's price
+        // compares with the division's average price. Priced 20% above average → expected 20% more.
         if (peers.length >= 4) {
-          const avgs = peers.map(o => _avg(o.h)).sort((a, b) => b - a);
-          // Price rank across the whole division's market, scaled onto the drivers who've raced.
           const mkt = drivers.filter(x => x.division === d.division && !x._deleted && !x.isReserve);
-          const frac = mkt.length > 1 ? mkt.filter(x => _pr(x) > _pr(d)).length / mkt.length : 0;
-          const k = Math.min(avgs.length - 1, Math.floor(frac * avgs.length));
-          const win = avgs.slice(Math.max(0, k - 1), Math.min(avgs.length, k + 2));
-          exp = Math.max(1, _avg(win));
+          const avgPrice = _avg(mkt.map(_pr).filter(v => v > 0));
+          const avgPts = _avg(peers.map(o => _avg(o.h)));
+          if (avgPrice > 0) exp = Math.min(32, Math.max(1, avgPts * (_pr(d) / avgPrice)));
         }
         const last3 = h.slice(-3), sAvg = _avg(h), rAvg = _avg(last3);
         const dnf = Object.keys(d.dnfRaces || {}).length || d.seasonDnfs || 0;
