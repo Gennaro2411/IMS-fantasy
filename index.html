@@ -28164,7 +28164,14 @@ window.cnSubmit = function() {
       setTimeout(() => { t.classList.remove('cn-f1', 'on'); t.classList.add('cn-back', 'cn-f2'); t.style.setProperty('--c', col); t.innerHTML = `<b>${esc(g.label)}</b>`; }, i * 110 + 260);
       setTimeout(() => { t.classList.add('cn-out'); }, 3 * 110 + 260 + 1800 + i * 60); });
     setTimeout(() => { window._cnAnim = false; renderGames(); }, 3 * 110 + 260 + 1800 + 3 * 60 + 320); return; }
-  else { st.mistakes++; const close = st.groups.some((g, i) => !st.solved.includes(i) && g.ids.filter(id => s.includes(id)).length === 3);
+  else {
+    // Daily bonus: four drivers who genuinely share something (a team, nationality, stat…) that isn't one of the answers = hidden group.
+    // No life lost, +10 IM$ (once per day).
+    const hid = mode === 'daily' && (() => { const pool = window._cnPool || [], ps = s.map(id => pool.find(p => p.id === id)); if (ps.some(p => !p)) return null;
+      return _grCategories(pool).find(c => !st.groups.some(g => g.id === c.id) && !(st.hiddenCats || []).includes(c.id) && ps.every(p => c.test(p))); })(); // each hidden group only counts once
+    if (hid) { st.hidden = (st.hidden || []).concat([key]); st.hiddenCats = (st.hiddenCats || []).concat([hid.id]); window._cnSel = []; window._cnMsg = '🕵️ Hidden group: ' + hid.label + '! Not an answer, but no life lost — +10 IM$';
+      _cnSave(st, mode); _gameCoins('cn-hidden', 10); renderGames(); return; }
+    st.mistakes++; const close = st.groups.some((g, i) => !st.solved.includes(i) && g.ids.filter(id => s.includes(id)).length === 3);
     window._cnMsg = close ? 'One away…' : 'Not quite'; window._cnShake = true;
     if (st.mistakes >= CN_LIVES) { st.done = true; st.won = false; st.foundBeforeEnd = st.solved.length; st.solved = st.solved.concat([0, 1, 2, 3].filter(i => !st.solved.includes(i))); window._cnSel = []; } }
   _cnSave(st, mode); if (mode === 'duel') _cnDuelPush(st); renderGames();
@@ -28173,7 +28180,7 @@ window.cnGiveUp = function() { const st = window._cnCur; if (!st || st.done) ret
   st.done = true; st.won = false; st.gaveUp = true; st.foundBeforeEnd = st.solved.length; if (_cnGetMode() === 'duel') _cnDuelPush(st); st.solved = st.solved.concat([0, 1, 2, 3].filter(i => !st.solved.includes(i))); window._cnSel = []; _cnSave(st, _cnGetMode()); renderGames(); }); };
 window.cnNext = function() { localStorage.removeItem('imsConn_inf'); window._cnSel = []; window._cnMsg = ''; renderGames(); };
 window.cnShare = function() { const st = window._cnCur; if (!st) return; const E = ['🟨', '🟩', '🟦', '🟪'];
-  const rows = st.guesses.map(g => g.map(id => E[st.groups.findIndex(gr => gr.ids.includes(id))]).join(''));
+  const rows = st.guesses.map(g => (st.hidden || []).includes(g.slice().sort().join(',')) ? '🕵️🕵️🕵️🕵️' : g.map(id => E[st.groups.findIndex(gr => gr.ids.includes(id))]).join(''));
   const txt = `IMS Connections ${_cnGetMode() === 'daily' ? '#' + _wdDayNum() : '∞'}\n${rows.join('\n')}\n${st.won ? 'Solved with ' + st.mistakes + ' mistake' + (st.mistakes === 1 ? '' : 's') : 'Out of lives'}\nfantasy.ims-league.com`;
   try { navigator.clipboard.writeText(txt); if (typeof showToast === 'function') showToast('Copied — paste it anywhere!', 'success'); } catch (e) { customAlert(txt); } };
 // ---- Connections: shared daily puzzle, stats, leaderboard ----
@@ -28326,7 +28333,7 @@ async function renderConnGame(el) {
   if (mode === 'daily') { const srv = await _dailyPull('cnDaily'); if (srv && (srv.cnv || 1) === CN_V && (!st || st.day !== srv.day || (srv.guesses || []).length > (st.guesses || []).length)) { st = srv; try { localStorage.setItem('imsConn_daily', JSON.stringify(srv)); } catch (e) {} } }
   if (mode !== 'duel' && (!st || (mode === 'daily' && (st.day !== _wdDayKey() || (st.salt || 0) !== _wdSalt() || (st.cnv || 1) !== CN_V)) || !st.groups || st.groups.some(g => g.ids.some(id => !pool.find(p => p.id === id))))) st = await _cnNew(pool, mode);
   if (!st) { el.innerHTML = '<div class="alert alert-warning">Not enough driver data to build a puzzle yet.</div>'; return; }
-  window._cnCur = st; const sel = window._cnSel || (window._cnSel = []);
+  window._cnCur = st; window._cnPool = pool; const sel = window._cnSel || (window._cnSel = []);
   const P = (id) => pool.find(p => p.id === id) || { name: '?' };
   const solvedHtml = st.solved.map(gi => { const g = st.groups[gi]; const c = CN_COLS[g.col];
     const nw = window._cnNewGi === gi; if (nw) window._cnNewGi = null; return `<div class="cn-solved${nw ? ' cn-pop' : ''}" style="--c:${c}"><div class="cn-sv-av">${g.ids.slice(0, 2).map(id => _wdAv(P(id), 40)).join('')}</div><div class="cn-sv-t"><b>${esc(g.label)}</b><span>${g.ids.map(id => esc(P(id).name)).join(', ')}</span></div><div class="cn-sv-av">${g.ids.slice(2).map(id => _wdAv(P(id), 40)).join('')}</div></div>`; }).join('');
@@ -28354,6 +28361,7 @@ async function renderConnGame(el) {
       <li>Each driver fits only <b>one</b> of the four groups — watch out for red herrings.</li>
       <li><b>One away…</b> means 3 of your 4 belong together. You have <b>${CN_LIVES} mistakes</b>.</li>
       <li>Colours go from easiest (🟨) to hardest (🟪). Daily: <b>+25 IM$</b> for finishing, <b>+25 IM$</b> more for solving it.</li>
+      <li><b>🕵️ Hidden groups (daily):</b> if you pick four drivers who really do share something that isn't one of the answers, you don't lose a life and get <b>+10 IM$</b> (once a day).</li>
       <li><b>📤 Share</b> shows your guesses in order, one row per guess, without giving the answers away. Each square is a driver you picked, coloured by the group they really belong to: a row of one colour is a group found, a mixed row (e.g. 🟩🟩🟨🟨) is a mistake.</li></ul></div></div>`;
   if (st.done && mode === 'daily' && !window['_cnRec_' + st.day + (st.cnv || 1)]) { window['_cnRec_' + st.day + (st.cnv || 1)] = 1; _cnRecord(st).then(() => { if (window._games.view === 'cn' && _cnGetMode() === 'daily') renderGames(); }); // redraw so stats + leaderboard show the result straight away
     _gameCoins('cn-daily', 25).then(() => { if (st.won) _gameCoins('cn-win', 25); }); }
@@ -28818,7 +28826,7 @@ async function _gameCoins(kind, amount) {
   if (typeof currentUser === 'undefined' || !currentUser || !currentUser.userId) return 0; // guests don't earn IM$
   try { const c = await _betLoadCoins(currentUser.userId); const now = Date.now(); const g = c.gameRewards || {};
     let give = 0;
-    if (/^(wd|gr|hl|cn)-(daily|win)$/.test(kind)) { const day = _wdDayKey() + (_wdSalt() ? '#' + _wdSalt() : ''); if (g[kind] === day) return 0; g[kind] = day; give = amount; }
+    if (/^(wd|gr|hl|cn)-(daily|win|hidden)$/.test(kind)) { const day = _wdDayKey() + (_wdSalt() ? '#' + _wdSalt() : ''); if (g[kind] === day) return 0; g[kind] = day; give = amount; }
     else { const log = (g[kind] || []).filter(x => now - x.t < 864e5); const used = log.reduce((a, x) => a + x.a, 0); give = Math.max(0, Math.min(amount, 25 - used));
       if (!give) { g[kind] = log; return 0; } log.push({ t: now, a: give }); g[kind] = log; }
     c.balance = (c.balance || 0) + give; c.gameRewards = g; c.gameEarned = (c.gameEarned || 0) + give;
@@ -28826,7 +28834,7 @@ async function _gameCoins(kind, amount) {
   } catch (e) { return 0; }
 }
 function _coinPop(n, kind) {
-  const lbl = { 'duel-cn': 'Connections duel win', 'cn-daily': 'Daily Connections', 'cn-win': 'Connections solved!', 'wd-daily': 'Daily PaddockDle', 'gr-daily': 'Daily Grid', 'wd-win': 'Got the daily driver!', 'gr-win': 'Perfect 9/9 grid!', 'hl-daily': 'Daily Higher or Lower', 'hl-win': '8/10 or better!', 'duel-hl': 'Higher or Lower duel win', 'duel-wd': 'PaddockDle duel win', 'duel-gr': 'Grid duel win' }[kind] || 'Games';
+  const lbl = { 'cn-hidden': 'Found a hidden group!', 'duel-cn': 'Connections duel win', 'cn-daily': 'Daily Connections', 'cn-win': 'Connections solved!', 'wd-daily': 'Daily PaddockDle', 'gr-daily': 'Daily Grid', 'wd-win': 'Got the daily driver!', 'gr-win': 'Perfect 9/9 grid!', 'hl-daily': 'Daily Higher or Lower', 'hl-win': '8/10 or better!', 'duel-hl': 'Higher or Lower duel win', 'duel-wd': 'PaddockDle duel win', 'duel-gr': 'Grid duel win' }[kind] || 'Games';
   const el = document.createElement('div'); el.className = 'coin-pop'; const nOpen = document.querySelectorAll('.coin-pop').length; if (nOpen) el.style.top = (84 + nOpen * 78) + 'px';
   el.innerHTML = `<span class="imc" style="font-size:1.6rem"></span><div><b>+${n} IM$</b><small>${lbl}</small></div>`;
   document.body.appendChild(el); setTimeout(() => el.classList.add('out'), 2600); setTimeout(() => el.remove(), 3200);
