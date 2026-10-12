@@ -2920,7 +2920,7 @@
       </div>
       <div class="card">
         <div class="card-title"><div class="dot"></div>📈 Expected points (driver form targets)</div>
-        <p class="text-muted" style="margin-bottom:10px">Every market driver's target points per race, as used by the Driver Form Report: 75% price (where their price sits between the division's cheapest and dearest → expected finishing position → what that position usually scores, ×0.85, with a floor) + 25% their own recent form (last 5 results in their division).</p>
+        <p class="text-muted" style="margin-bottom:10px">Every market driver's target points per race, as used by the Driver Form Report: Credibility model: a price-based prediction (fitted per division from real results) blended with the driver's own record — the more races they have, the more their own record counts. Accuracy is backtested below.</p>
         <div class="form-row" style="gap:8px;align-items:flex-end;flex-wrap:wrap">
           <div class="form-group"><label>Division</label><select id="xp-div" onchange="renderExpectedTable()" style="max-width:120px"><option value="">All</option></select></div>
           <div class="form-group"><label>Search</label><input id="xp-q" type="text" placeholder="driver…" oninput="renderExpectedTable()" style="max-width:180px"></div>
@@ -11165,6 +11165,7 @@ async function renderBriefingExtras() {
       const _pr = d => (typeof driverPrice === 'function' ? driverPrice(d) : (d.price || 0));
       const _ownCount = id => teams.filter(t => Object.values(t.selections || {}).includes(id)).length;
       const _bank = typeof myTeam.budget === 'number' ? myTeam.budget : 0;
+      const _XM = window._expectedModel(drivers, _scored, _pool, _pr);
       const rowsF = myDrivers.map(d => {
         const h = _hist(d.id, d.division);
         const peers = drivers.filter(x => x.division === d.division && !x._deleted && !x.isReserve).map(x => ({ x, h: _histPool(x.id, d.division), hs: _hist(x.id, d.division), p: _pr(x) })).filter(o => o.h.length >= 2);
@@ -11172,42 +11173,7 @@ async function renderBriefingExtras() {
         // Expected points by price RANK: the Nth most expensive driver should score like the
         // Nth best scorer in the division (averaged with neighbours to smooth it out).
         let exp = null;
-        // Expected from PRICE RANK → expected FINISHING POSITION → the points that position is worth.
-        // e.g. 4th most expensive of 20 in a ~14-car field → expected ~P3–P4 → what P3–P4 typically scores.
-        // Position values come from every classified result (this + last season, all divisions), so the
-        // target never depends on a handful of drivers' averages.
-        {
-          const mkt = drivers.filter(x => x.division === d.division && !x._deleted && !x.isReserve);
-          // Where their PRICE sits between the division's cheapest and dearest (not their rank), so two
-          // drivers with similar prices get similar targets even if others are bunched between them.
-          const _ps = mkt.map(_pr).filter(v => v > 0), _hi = Math.max(..._ps), _lo = Math.min(..._ps);
-          const frac = _hi > _lo ? Math.min(1, Math.max(0, (_hi - _pr(d)) / (_hi - _lo))) : 0;
-          if (!window._posPtsCache) {
-            const sum = {}, cnt = {}, field = {};
-            _pool.forEach(r => { const pbd = r.positionByDivision || {}, dpd = r.driverPointsByDivision || {}; const fc = {};
-              Object.entries(pbd).forEach(([id, byDiv]) => Object.entries(byDiv || {}).forEach(([dv, pos]) => { pos = Number(pos); const pts = (dpd[id] || {})[dv];
-                if (pos > 0 && typeof pts === 'number') { sum[pos] = (sum[pos] || 0) + pts; cnt[pos] = (cnt[pos] || 0) + 1; fc[dv] = Math.max(fc[dv] || 0, pos); } }));
-              Object.entries(fc).forEach(([dv, n]) => { (field[dv] = field[dv] || []).push(n); }); });
-            const pts = {}; Object.keys(sum).forEach(p => { if (cnt[p] >= 3) pts[p] = sum[p] / cnt[p]; });
-            window._posPtsCache = { pts, field };
-          }
-          const PP = window._posPtsCache, fs = PP.field[d.division] || [].concat(...Object.values(PP.field));
-          const fieldSize = fs.length ? Math.round(_avg(fs)) : 12;
-          const expPos = 1 + frac * (fieldSize - 1);
-          const at = (p) => PP.pts[Math.max(1, Math.min(fieldSize, Math.round(p)))];
-          const vals = [at(expPos - 1), at(expPos), at(expPos + 1)].filter(v => typeof v === 'number');
-          // ×0.85: a realistic bar — nobody hits their 'on paper' finish every single week.
-          // Floor: back-of-the-field slots score ~0, but even the cheapest driver should have a fair bar
-          // (about a fifth of what the front-runners score, never under 3).
-          const _top = _avg([at(1), at(2), at(3)].filter(v => typeof v === 'number'));
-          const _floor = Math.max(3, (_top || 0) * 0.2);
-          if (vals.length) exp = Math.min(32, Math.max(_floor, _avg(vals) * 0.85));
-          // Blend: 75% price, 25% their own recent form (last 5 results in this division — this season
-          // first, topped up from last season). No form yet → price only.
-          if (exp != null) { const _rf = _hist(d.id, d.division).slice(-5); const _fill = _rf.length < 5 ? _histIn(_pool.filter(r => !_scored.includes(r)), d.id, d.division).slice(-(5 - _rf.length)) : [];
-            const _form = _rf.concat(_fill); if (_form.length) exp = Math.min(32, Math.max(_floor, exp * 0.75 + _avg(_form) * 0.25)); }
-          else if (peers.length >= 4) { const avgs = peers.map(o => _avg(o.h)).sort((a, b) => b - a); const k = Math.min(avgs.length - 1, Math.round(frac * (avgs.length - 1))); exp = Math.max(1, _avg(avgs.slice(Math.max(0, k - 1), k + 2))); }
-        }
+        exp = (_XM[d.id] && _XM[d.id].exp) || null;
         const last3 = h.slice(-3), sAvg = _avg(h), rAvg = _avg(last3);
         const dnf = Object.keys(d.dnfRaces || {}).length || d.seasonDnfs || 0;
         const rankList = peers.filter(o => o.hs.length).map(o => ({ id: o.x.id, a: _avg(o.hs.slice(-3)) })).sort((a, b) => b.a - a.a);
@@ -23338,6 +23304,73 @@ try { window._bottGapMode = localStorage.getItem('imsBottGapMode') || 'leader'; 
 // Flip every BOTT standings instance (current + archive tabs) between gap-to-leader and
 // interval-to-car-ahead without a re-render.
 
+
+// ===== EXPECTED POINTS MODEL (shared by the Driver Form Report and the admin table) =====
+// Empirical-Bayes / credibility model — the standard way to estimate a rate when some drivers have
+// lots of history and others almost none:
+//   1. PRIOR from price. Per division, fit points-per-race against price (weighted least squares,
+//      weight = races). Prices are built from ELO, dominance and last season's points, so price is the
+//      best available predictor for a driver with no history. Small divisions borrow strength from
+//      the league-wide slope (shrinkage), and the slope can't go negative (dearer ≠ worse).
+//   2. EVIDENCE from the driver's own results in that division (this season + last), recent races
+//      weighted more.
+//   3. BLEND by credibility: expected = (n·own + K·prior) / (n + K). With n = 0 it's pure price; as
+//      races pile up their own record takes over. K is chosen from the data (the value that best
+//      predicts held-out races), not guessed.
+// Accuracy is measured by leave-one-out backtesting (MAE in points per race) and shown in admin.
+window._expectedModel = function(drivers, scored, pool, priceOf) {
+  const avg = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0;
+  const mkt = (drivers || []).filter(d => d && d.name && !d._deleted && !d.isReserve && d.division);
+  const order = new Map(); (pool || []).forEach((r, i) => order.set(r, i));
+  // Results per driver in a division, newest first (this season before last).
+  const resIn = (id, dv) => (pool || []).filter(r => { const b = r.driverPointsByDivision && r.driverPointsByDivision[id]; return b && b[dv] !== undefined; })
+    .map(r => ({ p: Number(r.driverPointsByDivision[id][dv]) || 0, cur: (scored || []).includes(r), n: Number(r.raceNum) || 0 }))
+    .sort((a, b) => (b.cur - a.cur) || (b.n - a.n));
+  // Recency-weighted mean: each older race counts 85% of the one after it.
+  const wmean = (rs) => { let s = 0, w = 0; rs.forEach((x, i) => { const wi = Math.pow(0.85, i); s += x.p * wi; w += wi; }); return w ? s / w : 0; };
+  const data = {}; mkt.forEach(d => { data[d.id] = resIn(d.id, d.division); });
+  // --- price prior per division ---
+  const fit = (pts) => { // weighted LSQ: y = a + b·x
+    let W = 0, X = 0, Y = 0; pts.forEach(o => { W += o.w; X += o.w * o.x; Y += o.w * o.y; });
+    if (!W) return null; const mx = X / W, my = Y / W; let sxy = 0, sxx = 0;
+    pts.forEach(o => { sxy += o.w * (o.x - mx) * (o.y - my); sxx += o.w * (o.x - mx) ** 2; });
+    return { mx, my, b: sxx ? sxy / sxx : 0, W };
+  };
+  const divs = [...new Set(mkt.map(d => d.division))];
+  const byDiv = {}; divs.forEach(dv => { byDiv[dv] = mkt.filter(d => d.division === dv && data[d.id].length >= 2).map(d => ({ x: priceOf(d), y: wmean(data[d.id]), w: Math.min(8, data[d.id].length) })); });
+  // League-wide slope on prices centred within each division (so different price levels don't mix).
+  const centred = []; divs.forEach(dv => { const f = fit(byDiv[dv]); if (f) byDiv[dv].forEach(o => centred.push({ x: o.x - f.mx, y: o.y - f.my, w: o.w })); });
+  const lf = fit(centred); const leagueB = Math.max(0, lf ? lf.b : 0.8);
+  const prior = {}; divs.forEach(dv => {
+    const f = fit(byDiv[dv]); const n = byDiv[dv].length;
+    const allMean = avg(mkt.filter(d => d.division === dv).map(d => data[d.id]).flat().map(x => x.p));
+    const mx = f ? f.mx : avg(mkt.filter(d => d.division === dv).map(priceOf)), my = f ? f.my : allMean;
+    const lam = n / (n + 8); // trust the division's own slope more as it has more drivers
+    const b = Math.max(0, lam * (f ? f.b : leagueB) + (1 - lam) * leagueB);
+    prior[dv] = { mx, my, b, n };
+  });
+  const priorOf = (d) => { const P = prior[d.division]; if (!P) return null; return Math.min(32, Math.max(1, P.my + P.b * (priceOf(d) - P.mx))); };
+  // --- choose K by leave-one-out: predict each driver's newest race from everything else ---
+  const Ks = [1, 2, 3, 4, 6, 8, 12, 20]; let bestK = 4, bestErr = Infinity, errs = {};
+  // Hold out EVERY result in turn (not just the newest) so the choice rests on hundreds of
+  // predictions, and pick K by squared error (the right loss for an average); report MAE.
+  let bestMse = Infinity;
+  Ks.forEach(K => { let se = 0, ae = 0, c = 0;
+    mkt.forEach(d => { const rs = data[d.id]; if (rs.length < 2) return; const pr0 = priorOf(d); if (pr0 == null) return;
+      rs.forEach((held, j) => { const rest = rs.filter((_, i) => i !== j), n = Math.min(rest.length, 12);
+        const est = (n * wmean(rest.slice(0, 12)) + K * pr0) / (n + K); se += (est - held.p) ** 2; ae += Math.abs(est - held.p); c++; }); });
+    errs[K] = c ? ae / c : null; if (c && se / c < bestMse) { bestMse = se / c; bestErr = ae / c; bestK = K; } });
+  // Baseline for comparison: just predicting the division average for everyone.
+  let be = 0, bc = 0; mkt.forEach(d => { const rs = data[d.id]; if (rs.length < 2) return; const P = prior[d.division]; rs.forEach(x => { be += Math.abs(P.my - x.p); bc++; }); });
+  const out = {};
+  mkt.forEach(d => { const rs = data[d.id], n = Math.min(rs.length, 12), pr0 = priorOf(d);
+    const own = rs.length ? wmean(rs.slice(0, 12)) : null;
+    const exp = pr0 == null ? null : (own == null ? pr0 : (n * own + bestK * pr0) / (n + bestK));
+    out[d.id] = { exp: exp == null ? null : Math.round(exp * 10) / 10, prior: pr0, own, n: rs.length, credibility: rs.length ? n / (n + bestK) : 0 };
+  });
+  out._meta = { K: bestK, mae: isFinite(bestErr) ? bestErr : null, baselineMae: bc ? be / bc : null, samples: bc, leagueSlope: leagueB, prior, errs };
+  return out;
+};
 // ===== Admin: expected points per driver (same model as the Driver Form Report) =====
 window._computeExpectedAll = async function() {
   const [drivers, races, archives] = await Promise.all([dbGetAll('drivers').catch(() => []), dbGetAll('races').catch(() => []), dbGetAll('seasonArchives').catch(() => [])]);
@@ -23345,35 +23378,15 @@ window._computeExpectedAll = async function() {
   const real = r => r && r.driverPoints && Object.values(r.driverPoints).some(v => v > 0);
   const scored = races.filter(real);
   const pool = scored.concat(archives.filter(a => Number(a.season) === cs - 1).flatMap(a => a.races || []).filter(real));
-  const avg = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0;
   const pr = d => (typeof driverPrice === 'function' ? driverPrice(d) : (d.price || 0));
-  const sum = {}, cnt = {}, field = {};
-  pool.forEach(r => { const pbd = r.positionByDivision || {}, dpd = r.driverPointsByDivision || {}, fc = {};
-    Object.entries(pbd).forEach(([id, byDiv]) => Object.entries(byDiv || {}).forEach(([dv, pos]) => { pos = Number(pos); const p = (dpd[id] || {})[dv];
-      if (pos > 0 && typeof p === 'number') { sum[pos] = (sum[pos] || 0) + p; cnt[pos] = (cnt[pos] || 0) + 1; fc[dv] = Math.max(fc[dv] || 0, pos); } }));
-    Object.entries(fc).forEach(([dv, n]) => (field[dv] = field[dv] || []).push(n)); });
-  const PP = {}; Object.keys(sum).forEach(p => { if (cnt[p] >= 3) PP[p] = sum[p] / cnt[p]; });
-  const mktAll = drivers.filter(d => d && d.name && !d._deleted && !d.isReserve && d.division);
-  return mktAll.map(d => {
-    const mkt = mktAll.filter(x => x.division === d.division);
-    const above = mkt.filter(x => pr(x) > pr(d)).length;
-    const ps = mkt.map(pr).filter(v => v > 0), hi = Math.max(...ps), lo = Math.min(...ps);
-    const frac = hi > lo ? Math.min(1, Math.max(0, (hi - pr(d)) / (hi - lo))) : 0;
-    const fs = field[d.division] || [].concat(...Object.values(field)); const fieldSize = fs.length ? Math.round(avg(fs)) : 12;
-    const expPos = 1 + frac * (fieldSize - 1);
-    const at = p => PP[Math.max(1, Math.min(fieldSize, Math.round(p)))];
-    const vals = [at(expPos - 1), at(expPos), at(expPos + 1)].filter(v => typeof v === 'number');
-    const top = avg([at(1), at(2), at(3)].filter(v => typeof v === 'number'));
-    const floor = Math.max(3, top * 0.2);
-    let exp = vals.length ? Math.min(32, Math.max(floor, avg(vals) * 0.85)) : null;
-    const inDiv = (rs) => rs.filter(r => { const b = r.driverPointsByDivision && r.driverPointsByDivision[d.id]; return b ? b[d.division] !== undefined : false; }).map(r => r.driverPointsByDivision[d.id][d.division]);
-    const h = inDiv(scored);
-    const priceExp = exp;
-    if (exp != null) { const rf = h.slice(-5); const fill = rf.length < 5 ? inDiv(pool.filter(r => !scored.includes(r))).slice(-(5 - rf.length)) : []; const form = rf.concat(fill);
-      if (form.length) exp = Math.min(32, Math.max(floor, exp * 0.75 + avg(form) * 0.25)); }
-    const sAvg = avg(h), rAvg = avg(h.slice(-3)), ratio = exp && h.length ? (rAvg * .6 + sAvg * .4) / exp : null;
+  const M = window._expectedModel(drivers, scored, pool, pr); window._xpMeta = M._meta;
+  const avg = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0;
+  return drivers.filter(d => d && d.name && !d._deleted && !d.isReserve && d.division).map(d => {
+    const m = M[d.id] || {};
+    const h = scored.filter(r => { const b = r.driverPointsByDivision && r.driverPointsByDivision[d.id]; return b && b[d.division] !== undefined; }).map(r => r.driverPointsByDivision[d.id][d.division]);
+    const sAvg = avg(h), rAvg = avg(h.slice(-3)), ratio = m.exp && h.length ? (rAvg * .6 + sAvg * .4) / m.exp : null;
     const lab = ratio === null || h.length < 2 ? '—' : ratio < .6 ? 'Under (drastic)' : ratio < .85 ? 'Under' : ratio <= 1.15 ? 'OK' : ratio <= 1.4 ? 'Over' : 'Over (drastic)';
-    return { id: d.id, name: d.name, div: d.division, price: pr(d), rank: above + 1, of: mkt.length, expPos, exp, priceExp, races: h.length, sAvg, ratio, lab };
+    return { id: d.id, name: d.name, div: d.division, price: pr(d), prior: m.prior, own: m.own, hist: m.n || 0, cred: m.credibility || 0, exp: m.exp, races: h.length, sAvg, ratio, lab };
   });
 };
 window.renderExpectedTable = async function() {
@@ -23384,9 +23397,11 @@ window.renderExpectedTable = async function() {
   const dv = (sel || {}).value || '', q = ((document.getElementById('xp-q') || {}).value || '').toLowerCase().trim();
   const rows = window._xpData.filter(r => (!dv || r.div === dv) && (!q || r.name.toLowerCase().includes(q))).sort((a, b) => a.div.localeCompare(b.div) || b.price - a.price);
   const col = { 'Under (drastic)': '#ff3b4e', 'Under': '#ff8f3b', 'OK': '#94a3b8', 'Over': '#2ee6b6', 'Over (drastic)': '#22c55e' };
-  out.innerHTML = rows.length ? `<table style="width:100%;font-size:.78rem;border-collapse:collapse"><tr style="color:var(--muted);text-align:left"><th style="padding:4px 6px">Div</th><th>Driver</th><th style="text-align:right">Price</th><th style="text-align:right">Rank</th><th style="text-align:right">Exp. pos</th><th style="text-align:right">Price-only</th><th style="text-align:right">Expected</th><th style="text-align:right">S${Number(window.currentSeason) || 8} avg</th><th style="text-align:right">Races</th><th style="text-align:right">% of exp</th><th style="padding-left:8px">Form</th></tr>` +
-    rows.map(r => `<tr style="border-top:1px solid var(--border)"><td style="padding:4px 6px">${esc(r.div)}</td><td>${esc(r.name)}</td><td style="text-align:right">$${r.price.toFixed(1)}M</td><td style="text-align:right">${r.rank}/${r.of}</td><td style="text-align:right">P${Math.round(r.expPos)}</td><td style="text-align:right;color:var(--muted)">${r.priceExp != null ? r.priceExp.toFixed(1) : '—'}</td><td style="text-align:right;font-weight:800;color:var(--gold)">${r.exp != null ? r.exp.toFixed(1) : '—'}</td><td style="text-align:right">${r.races ? r.sAvg.toFixed(1) : '—'}</td><td style="text-align:right">${r.races}</td><td style="text-align:right">${r.ratio != null ? Math.round(r.ratio * 100) + '%' : '—'}</td><td style="padding-left:8px;color:${col[r.lab] || 'var(--muted)'};font-weight:700">${r.lab}</td></tr>`).join('') + '</table>'
-    : '<div class="text-muted">No drivers match.</div>';
+  const M = window._xpMeta || {};
+  const meta = M.mae != null ? `<div style="font-size:.76rem;margin-bottom:8px;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.04)">Model accuracy (leave-one-out backtest on ${M.samples} drivers): average error <b>${M.mae.toFixed(1)} pts/race</b> vs <b>${M.baselineMae != null ? M.baselineMae.toFixed(1) : '—'}</b> for just using the division average. Credibility K = <b>${M.K}</b> races (picked by best backtest). League price slope: <b>${(M.leagueSlope || 0).toFixed(2)}</b> pts per $1M.</div>` : '';
+  out.innerHTML = meta + (rows.length ? `<table style="width:100%;font-size:.78rem;border-collapse:collapse"><tr style="color:var(--muted);text-align:left"><th style="padding:4px 6px">Div</th><th>Driver</th><th style="text-align:right">Price</th><th style="text-align:right" title="What their price alone predicts">Price says</th><th style="text-align:right" title="Recency-weighted average of their own results in this division (this + last season)">Own record</th><th style="text-align:right">Races</th><th style="text-align:right" title="How much their own record counts">Weight</th><th style="text-align:right">Expected</th><th style="text-align:right">S${Number(window.currentSeason) || 8} avg</th><th style="text-align:right">% of exp</th><th style="padding-left:8px">Form</th></tr>` +
+    rows.map(r => `<tr style="border-top:1px solid var(--border)"><td style="padding:4px 6px">${esc(r.div)}</td><td>${esc(r.name)}</td><td style="text-align:right">$${r.price.toFixed(1)}M</td><td style="text-align:right;color:var(--muted)">${r.prior != null ? r.prior.toFixed(1) : '—'}</td><td style="text-align:right;color:var(--muted)">${r.own != null ? r.own.toFixed(1) : '—'}</td><td style="text-align:right">${r.hist}</td><td style="text-align:right">${Math.round(r.cred * 100)}%</td><td style="text-align:right;font-weight:800;color:var(--gold)">${r.exp != null ? r.exp.toFixed(1) : '—'}</td><td style="text-align:right">${r.races ? r.sAvg.toFixed(1) : '—'}</td><td style="text-align:right">${r.ratio != null ? Math.round(r.ratio * 100) + '%' : '—'}</td><td style="padding-left:8px;color:${col[r.lab] || 'var(--muted)'};font-weight:700">${r.lab}</td></tr>`).join('') + '</table>'
+    : '<div class="text-muted">No drivers match.</div>');
 };
 window.setHideDominance = async function(on) {
   const msg = document.getElementById('hide-dom-msg');
