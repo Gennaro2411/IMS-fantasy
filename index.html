@@ -28085,7 +28085,7 @@ const _cnSave = (st, m) => { try { localStorage.setItem('imsConn_' + m, JSON.str
 // Build a puzzle: 4 categories (mostly different kinds), 4 drivers each, and every chosen driver fits
 // ONLY its own group among the four — so there is exactly one correct answer.
 function _cnBuild(pool, seed) {
-  const rnd = _grRng(seed), C = _grCategories(pool).filter(c => !/^divh/.test(c.kind) && !/^pts:/.test(c.id)); // no points-threshold groups
+  const rnd = _grRng(seed), C = _grCategories(pool).filter(c => !/^divh/.test(c.kind) && !/^pts:/.test(c.id) && !(c.kind === 'team' && /kick|sauber/i.test(c.label || ''))); // no points-threshold or Kick Sauber groups
   const shuf = (a) => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const members = {}; C.forEach(c => { members[c.id] = pool.filter(p => c.test(p)).map(p => p.id); });
   // Mostly well-known faces: drivers in the all-time top 100 for points are strongly preferred.
