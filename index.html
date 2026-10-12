@@ -28190,7 +28190,7 @@ async function _cnRecord(st) {
     const pts = _cnScore(st), streak = st.won ? (cur.cnLastDay === _wdYesterdayKey() && cur.cnLastWon ? (cur.cnStreak || 0) + 1 : 1) : 0;
     let dist = {}; try { dist = JSON.parse(cur.cnDist || '{}'); } catch (e) {} const k = st.won ? String(st.mistakes) : 'X'; dist[k] = (dist[k] || 0) + 1;
     await dbSet('wordleScores', id, { uid: me.uid, name: me.name, cnPts: (cur.cnPts || 0) + pts, cnPlayed: (cur.cnPlayed || 0) + 1, cnWon: (cur.cnWon || 0) + (st.won ? 1 : 0),
-      cnPerfect: (cur.cnPerfect || 0) + (st.won && !st.mistakes ? 1 : 0), cnStreak: streak, cnBest: Math.max(cur.cnBest || 0, streak), cnLastDay: day, cnLastV: st.cnv || 1, cnLastWon: !!st.won, cnLastScore: pts, cnDist: JSON.stringify(dist) });
+      cnPerfect: (cur.cnPerfect || 0) + (st.won && !st.mistakes ? 1 : 0), cnStreak: streak, cnBest: Math.max(cur.cnBest || 0, streak), cnLastDay: day, cnLastV: st.cnv || 1, cnPtsV2: true, cnLastWon: !!st.won, cnLastScore: pts, cnDist: JSON.stringify(dist) });
     setTimeout(() => { if (document.getElementById('cn-stats')) renderGames(); }, 300);
   } catch (e) { console.warn('connections score failed', e); }
 }
@@ -28205,6 +28205,12 @@ async function _cnStatsHtml() {
     <div style="display:flex;flex-direction:column;gap:4px">${bar('0', '0 mistakes')}${bar('1', '1 mistake')}${bar('2', '2 mistakes')}${bar('3', '3 mistakes')}${bar('X', 'Not solved')}</div></div>`;
 }
 async function _cnLeaderboardHtml() {
+  // One-off fix: old scoring gave solves 4 + 1 per mistake left. Remove that bonus (exact, from each player's mistake distribution).
+  if (!window._cnMigr) { window._cnMigr = 1; try { dbInvalidate('wordleScores'); const raw = await _dbGetAllRaw('wordleScores', { fresh: true }).catch(() => []);
+    for (const r of raw) { if (!r || !r.uid || r.cnPtsV2 || !(r.cnPts > 0)) continue; let dist = {}; try { dist = JSON.parse(r.cnDist || '{}'); } catch (e) {}
+      const bonus = ['0', '1', '2', '3'].reduce((a, k) => a + (dist[k] || 0) * (CN_LIVES - Number(k)), 0);
+      await dbSet('wordleScores', r.id || _wdScoreId(r.uid), { cnPts: Math.max(0, (r.cnPts || 0) - bonus), cnPtsV2: true, cnLastScore: r.cnLastWon ? 4 : (r.cnLastScore || 0) }).catch(() => {}); }
+    dbInvalidate('wordleScores'); } catch (e) {} }
   const rows = (await _gmNoTest(await dbGetAll('wordleScores', { fresh: true }).catch(() => []))).filter(r => r && (r.cnPts || 0) > 0).sort((a, b) => (b.cnPts || 0) - (a.cnPts || 0) || (b.cnPerfect || 0) - (a.cnPerfect || 0));
   const me = _wdMe(), myIdx = rows.findIndex(r => r.uid === me.uid), today = _wdDayKey();
   const line = (r, i) => `<div class="wd-lb-row${r.uid === me.uid ? ' me' : ''}"><span class="wd-lb-pos">${i + 1}</span><span class="wd-lb-name">${esc(r.name || 'Player')}${r.cnLastDay === today ? ` <i>${r.cnLastWon ? '✓' : '✕'} today</i>` : ''}</span><span class="wd-lb-sub"><span title="Perfect solves">💎 ${r.cnPerfect || 0}</span> · <span title="Solved">✅ ${r.cnWon || 0}/${r.cnPlayed || 0}</span> · <span title="Streak" style="color:${r.cnStreak ? '#fb923c' : 'inherit'}">🔥 ${r.cnStreak || 0}</span></span><b class="wd-lb-pts">${r.cnPts || 0}</b></div>`;
