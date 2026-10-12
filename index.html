@@ -23347,9 +23347,15 @@ window._expectedModel = function(drivers, scored, pool, priceOf) {
     const mx = f ? f.mx : avg(mkt.filter(d => d.division === dv).map(priceOf)), my = f ? f.my : allMean;
     const lam = n / (n + 8); // trust the division's own slope more as it has more drivers
     const b = Math.max(0, lam * (f ? f.b : leagueB) + (1 - lam) * leagueB);
-    prior[dv] = { mx, my, b, n };
+    // A straight line overshoots at the extremes (cheap drivers fall to ~0). Keep the price prediction
+    // inside what drivers in this division actually average: no lower than the bottom quarter, no
+    // higher than the best.
+    const ys = byDiv[dv].map(o => o.y).sort((a, b) => a - b);
+    const q = (p) => ys.length ? ys[Math.min(ys.length - 1, Math.max(0, Math.floor(p * (ys.length - 1))))] : null;
+    prior[dv] = { mx, my, b, n, lo: ys.length >= 4 ? q(0.25) : null, hi: ys.length ? ys[ys.length - 1] : null };
   });
-  const priorOf = (d) => { const P = prior[d.division]; if (!P) return null; return Math.min(32, Math.max(1, P.my + P.b * (priceOf(d) - P.mx))); };
+  const priorOf = (d) => { const P = prior[d.division]; if (!P) return null; let v = P.my + P.b * (priceOf(d) - P.mx);
+    if (P.lo != null) v = Math.max(v, P.lo); if (P.hi != null) v = Math.min(v, P.hi); return Math.min(32, Math.max(1, v)); };
   // --- choose K by leave-one-out: predict each driver's newest race from everything else ---
   const Ks = [1, 2, 3, 4, 6, 8, 12, 20]; let bestK = 4, bestErr = Infinity, errs = {};
   // Hold out EVERY result in turn (not just the newest) so the choice rests on hundreds of
