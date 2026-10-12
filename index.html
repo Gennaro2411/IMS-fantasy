@@ -23860,6 +23860,9 @@ window.renderSeasonRecap = async function(seasonArg) {
 
   function racePtsFor(race) {
     if (race.excludeFromFantasy) return 0;
+    // Use the SAME scorer as the leaderboard / My Team (reserves, Triple Captain, Guardian Angel,
+    // penalties…) so the recap total always matches what players see everywhere else.
+    if (typeof window.fantasyTeamRacePts === 'function') { try { const v = window.fantasyTeamRacePts(myTeam, race, races); if (typeof v === 'number' && isFinite(v)) return v; } catch (e) {} }
     const snap = race.teamSnapshots && race.teamSnapshots[myTeam.id];
     const sel = (snap ? snap.selections : myTeam.selections) || {};
     // Prefer the captain frozen into the race snapshot (needed for past seasons after a reset wipes
