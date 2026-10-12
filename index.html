@@ -6734,6 +6734,7 @@ async function ensureDefaults() {
   }
   const season = await dbGet('settings','seasonNumber').catch(()=>null);
   if (!season && !dbGet.readFailed()) await dbSet('settings','seasonNumber',{value:8});
+  if (season && season.value) window.currentSeason = Number(season.value);
   const pricingLock = await dbGet('settings','pricingLocked').catch(()=>null);
   window._pricingLocked = !!(pricingLock && pricingLock.value);
   const baselinesDoc = await dbGet('settings','divisionBaselines').catch(()=>null);
@@ -8976,9 +8977,11 @@ window.renderTrophyShelf = function(trophies, opts) {
     return `<div title="${esc(t.tip||'')}" style="flex:1 1 0;min-width:0;max-width:78px;text-align:center;cursor:default">
       <div style="position:relative;display:inline-block">
         ${icon}
+        ${(() => { const m = String(t.season || '').match(/\d+/); if (!m) return ''; const hue = ['#9b6fd4','#e8002d','#27f4d2','#ffa751','#4aa3ff','#2ecc71'][(+m[0]) % 6];
+          return `<span title="Season ${m[0]}" style="position:absolute;right:-6px;top:-4px;min-width:20px;height:20px;padding:0 4px;border-radius:999px;background:${hue};color:#0b0b14;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:.68rem;line-height:20px;text-align:center;box-shadow:0 0 0 2px #14141f,0 2px 6px rgba(0,0,0,.5)">S${m[0]}</span>`; })()}
       </div>
       <div style="font-size:.5rem;font-weight:700;color:var(--text);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t.label||'')}</div>
-      ${t.season ? `<div style="font-size:.48rem;font-weight:700;color:var(--muted);letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t.season)}</div>` : ''}
+      ${t.season ? `<div style="font-size:.5rem;font-weight:800;color:#c9c3e6;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${(() => { const m = String(t.season).match(/\d+/); return m ? 'Season ' + m[0] : esc(t.season); })()}</div>` : ''}
     </div>`;
   };
   let shelves;
@@ -9745,7 +9748,7 @@ async function renderMyTeam() {
         const w = _norm(pod[0][0]);
         if (w && _meSet.has(w)) {
           const raceLabel = raceKey.replace(/\b\w/g, c => c.toUpperCase());
-          if (!_trophyList.some(x => x.emoji==='🏆' && (x.label||'').toLowerCase() === raceKey)) {
+          if (!_trophyList.some(x => x.emoji==='🏆' && x.season === 'S7' && (x.label||'').toLowerCase() === raceKey)) {
             _trophyList.push({ emoji:'🏆', label:raceLabel, season:'S7', flagName:raceLabel, glow:'#ffd24a', tip:`${raceLabel} (S7) — Round win, ${pod[0][1]} pts` });
           }
         }
@@ -25216,7 +25219,7 @@ window.openPlayerProfile = async function(userId, big) {
       // TROPHY CABINET — a real shelf: round wins (branded with the track flag) plus season
       // championships/podiums/fan-zone wins from archives, each labelled with the season it was won in.
       const _pl = [];
-      const _pSeason = 'S' + (window.currentSeason || 7);
+      const _pSeason = 'S' + (Number(window.currentSeason) || 8);
       const _pArchives = window._lbArchivesCache || [];
       const _pName = (t.playerName||'').toLowerCase().trim();
       const _pTeam = (t.teamName||'').toLowerCase().trim();
@@ -25245,7 +25248,7 @@ window.openPlayerProfile = async function(userId, big) {
       try {
         const _lt = window._lbTeamsCache || [];
         const _lr = window._lbRacesCache || [];
-        const _lseason = window.currentSeason || 7;
+        const _lseason = Number(window.currentSeason) || 8;
         const _ldivs = (typeof divisionsForSeason==='function') ? divisionsForSeason(_lseason) : ['D0','D1','D2','D3','D4'];
         const _ltotal = (window._champTotalRounds || window._lbTotalRounds || 0);
         const _isFullL = (r) => { if(!r.driverPointsByDivision||!Object.keys(r.driverPointsByDivision).length) return r.driverPoints && Object.values(r.driverPoints||{}).some(v=>v>0); const seen=new Set(); Object.values(r.driverPointsByDivision).forEach(bd=>Object.keys(bd||{}).forEach(dv=>seen.add(dv))); return _ldivs.every(dv=>seen.has(dv)); };
@@ -25294,7 +25297,7 @@ window.openPlayerProfile = async function(userId, big) {
           if (winnerName && _meSet.has(winnerName)) {
             const raceLabel = raceKey.replace(/\b\w/g, c => c.toUpperCase()); // "abu dhabi" -> "Abu Dhabi"
             // Avoid a duplicate if a live-race trophy for the same round already got added above.
-            if (!_pl.some(x => x.emoji==='🏆' && (x.label||'').toLowerCase() === raceKey)) {
+            if (!_pl.some(x => x.emoji==='🏆' && x.season === 'S7' && (x.label||'').toLowerCase() === raceKey)) {
               _pl.push({ emoji:'🏆', label:raceLabel, season:'S7', flagName:raceLabel, glow:'#ffd24a', tip:`${raceLabel} (S7) — Round win, ${pod[0][1]} pts` });
             }
           }
