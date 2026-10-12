@@ -380,6 +380,7 @@
   #login-overlay .btn-primary:hover{transform:translateY(-1px);box-shadow:0 10px 28px rgba(232,0,45,.35)}
   #login-overlay .btn-secondary{border-radius:12px}
   #login-overlay a[href*="discord.com/api/oauth2"]{border-radius:12px!important;padding:13px!important;box-shadow:0 8px 22px rgba(88,101,242,.3)}
+  body.hide-dom option[value="dom"]{display:none}
   .admin-badge{background:var(--red);color:white;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:3px;letter-spacing:1px;}
 
   main{max-width:1100px;margin:0 auto;padding:32px 24px;position:relative;}
@@ -2916,6 +2917,12 @@
         <p class="text-muted" style="margin-bottom:12px">Hides the ▲/▼ "up/down since last race" tags on every market row, driver blob, and driver/constructor profile. The <strong>biggest risers &amp; fallers ticker stays visible either way</strong>. Use this after adjusting prices manually so players don't see swings that don't reflect race results.</p>
         <label class="set-toggle" style="max-width:none"><input type="checkbox" id="admin-hide-price-moves" onchange="setHidePriceMoves(this.checked)"><span><strong>Hide price-change indicators</strong><em>Applies to all players. Prices themselves stay visible — only the change arrows/tags are hidden.</em></span></label>
         <div id="hide-price-moves-msg" style="margin-top:8px"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><div class="dot"></div>👑 Hide dominance</div>
+        <p class="text-muted" style="margin-bottom:12px">Hides every driver's dominance from players (profiles, market, compare, sort) — e.g. for Round 1 when there's no baseline yet. Pricing still uses it behind the scenes.</p>
+        <label class="set-toggle" style="max-width:none"><input type="checkbox" id="admin-hide-dom" onchange="setHideDominance(this.checked)"><span><strong>Hide dominance everywhere</strong><em>Applies to all players.</em></span></label>
+        <div id="hide-dom-msg" style="margin-top:8px"></div>
       </div>
       <div class="card">
         <div class="card-title"><div class="dot"></div>🔔 Send Push Notification</div>
@@ -6735,6 +6742,7 @@ async function ensureDefaults() {
   const season = await dbGet('settings','seasonNumber').catch(()=>null);
   if (!season && !dbGet.readFailed()) await dbSet('settings','seasonNumber',{value:8});
   if (season && season.value) window.currentSeason = Number(season.value);
+  try { const _hd = await dbGet('settings','hideDominance').catch(()=>null); window._hideDom = !!(_hd && _hd.value); document.body.classList.toggle('hide-dom', window._hideDom); } catch(e) {}
   const pricingLock = await dbGet('settings','pricingLocked').catch(()=>null);
   window._pricingLocked = !!(pricingLock && pricingLock.value);
   const baselinesDoc = await dbGet('settings','divisionBaselines').catch(()=>null);
@@ -11452,7 +11460,7 @@ async function renderAiRacePreview() {
       const last3 = completedRaces.slice(-3).filter(r => r.driverPoints && r.driverPoints[d.id] !== undefined);
       const avg = last3.length ? Math.round(last3.reduce((s,r) => s + (r.driverPoints[d.id]||0), 0) / last3.length) : 0;
       const seasonPts = completedRaces.reduce((s,r) => s + ((r.driverPoints && r.driverPoints[d.id])||0), 0);
-      const dom = (typeof d.lastDominance === 'number') ? `, dominance ${d.lastDominance.toFixed(1)}` : '';
+      const dom = (!window._hideDom && typeof d.lastDominance === 'number') ? `, dominance ${d.lastDominance.toFixed(1)}` : '';
       const hist = histDivRank[d.id];
       const histStr = hist
         ? `, S${lastSeasonNum} here: ${hist.pts}pts finishing P${hist.rank} of ${hist.of} in ${hist.div}${hist.rank===1?' (WON IT)':hist.rank<=3?' (podium)':hist.rank>hist.of-3?' (struggled)':''}`
@@ -13091,6 +13099,7 @@ function renderAdmin() {
     if (PROJECT_ID) { window._adminDriverCache = null;
       const _run = (fn) => { try { if (typeof fn === 'function') fn(); } catch(e) { console.error('admin render error:', e); } };
       _run(renderAdminDrivers); _run(renderAdminConstructors); _run(renderAdminTeams); _run(renderAdminSettings); _run(renderPointsInputs); _run(renderPastRacesList); _run(renderAdminPredictions); _run(renderAdminPhotoReqs); _run(renderScheduleList); _run(renderDominanceTable);
+      dbGet('settings','hideDominance').then(doc => { const cb = document.getElementById('admin-hide-dom'); if (cb) cb.checked = !!(doc && doc.value); }).catch(()=>{});
       dbGet('settings','hidePriceMoves').then(doc => { const cb = document.getElementById('admin-hide-price-moves'); if (cb) cb.checked = !!(doc && doc.value); window._hidePriceMoves = !!(doc && doc.value); }).catch(()=>{});
     }
   }
@@ -18235,11 +18244,12 @@ window.openDriverModal = async function(driverId) {
         }
       }
     }
+    if (window._hideDom) { hasDom = false; domVal = '–'; }
     const domDiv = driver.dominanceDivision;
     const domColor = hasDom ? ((domVal||0) >= 0 ? '#2ecc71' : 'var(--red)') : 'var(--muted)';
     const domSub = hasDom
       ? (domSubRace ? esc(domSubRace) + (viewDiv==null && domDiv && domDiv!==driver.division ? ` · ${esc(domDiv)}` : '') : '')
-      : (viewDiv ? `no dominance recorded in ${esc(viewDiv)}` : '');
+      : (window._hideDom ? 'Hidden for now' : viewDiv ? `no dominance recorded in ${esc(viewDiv)}` : '');
     // ELO is a single carry-across rating; only the baseline it's compared against is per-division.
     const eloBaseline = viewDiv ? (DIVISION_BASELINES[viewDiv] || 1500) : baseline;
     return `
@@ -20987,7 +20997,7 @@ window.renderCompareTray = function() {
     { label: 'Season pts',val: d => (window._driverPointTotals ? (window._driverPointTotals[d.id]||0) : 0), fmt: v => v, best: 'max' },
     { label: 'Last race', val: d => latestScoredRace ? (latestScoredRace.driverPoints[d.id]||0) : 0, fmt: v => v, best: 'max' },
     { label: 'ELO',       val: d => Math.round(d.currentElo||0),                                 fmt: v => v, best: 'max' },
-    { label: 'Dominance', val: d => (typeof d.lastDominance === 'number' ? d.lastDominance : null), fmt: v => v === null ? '—' : v.toFixed(1), best: 'max' },
+    { label: 'Dominance', val: d => (!window._hideDom && typeof d.lastDominance === 'number' ? d.lastDominance : null), fmt: v => v === null ? '—' : v.toFixed(1), best: 'max' },
     { label: 'Owned',     val: d => (window._ownershipPct ? (window._ownershipPct[d.id]||0) : 0), fmt: v => v + '%', best: 'none' },
     { label: 'Net cost',  val: d => { const mine = ctx.myFielded[d.division]; return mine && mine.id !== d.id ? Math.round((d.price - mine.price)*10)/10 : 0; }, fmt: v => (v>0?'+':'')+formatM(v), best: 'min' }
   ];
@@ -21596,7 +21606,7 @@ async function renderMarket() {
     const _inCmp = (window._compareIds||[]).includes(d.id);
     const _ring = isDriverBanned(d) ? RACE_BAN_RING : ((!isDriverBanned(d) && isDriverCheckedOut(d)) ? CHECKED_OUT_RING : (isDriverCheckedIn(d) ? CHECKED_IN_RING : ''));
     const _divCol = mktTeamCol ? mktTeamCol.accent : '#888';
-    const _dom = (d.lastDominance !== undefined && d.lastDominance !== null) ? d.lastDominance.toFixed(1) : '—';
+    const _dom = (!window._hideDom && d.lastDominance !== undefined && d.lastDominance !== null) ? d.lastDominance.toFixed(1) : '—';
     return `<div id="mkt-row-${d.id}" class="mkt-row${isMine?' is-mine':''}" onclick="openDriverModal('${d.id}')" style="--mk-acc:${mktAccent};--mk-brd:${mktBorder};--mk-bg:${mktTeamCol ? mktTeamCol.bg.replace('0.08','0.14') : 'rgba(255,255,255,0.02)'}">
       <div class="mkt-left">
         <div class="mkt-av"${_ring?` style="box-shadow:${_ring}"`:''}>
@@ -21616,7 +21626,7 @@ async function renderMarket() {
           <div class="mkt-stats">
             <span class="mkt-stat"><i>ELO</i>${elo}</span>
             ${_marketTab === 'ALL' ? (window._mktQGapAll && window._mktQGapAll[d.id] ? `<span class="mkt-stat" title="Average quali gap to the quickest driver on the WHOLE market (D0 to the bottom division), compared track by track, every quali counted equally. Ranked ${window._mktQGapAll[d.id].rank} of ${window._mktQGapAll[d.id].of}."><i>QUALI</i>${window._mktQGapAll[d.id].gap < 0.005 ? '⚡ fastest' : '+' + window._mktQGapAll[d.id].gap.toFixed(2) + '%'} <small style="opacity:.6">#${window._mktQGapAll[d.id].rank}</small></span>` : '') : (window._mktQGap && window._mktQGap[d.id] != null ? `<span class="mkt-stat" title="How far off the quickest qualifier in ${esc(dv)} they are on average — a straight average of their quali gaps, every quali counted equally"><i>QUALI</i>${window._mktQGap[d.id] < 0.005 ? '⚡ fastest' : '+' + window._mktQGap[d.id].toFixed(2) + '%'}</span>` : '')}
-            <span class="mkt-stat"><i>DOM</i>${_dom}</span>
+            ${window._hideDom ? '' : `<span class="mkt-stat"><i>DOM</i>${_dom}</span>`}
             <span class="mkt-stat"><i>PTS</i>${seasonPts}</span>
             ${ownershipBonus>0?'<span style="color:#ce93d8;font-weight:700">+$'+ownershipBonus.toFixed(1)+'M demand</span>':''}
             ${_mktTag||''}
@@ -21655,7 +21665,7 @@ async function renderMarket() {
       : _marketSort === 'quali' ? (_marketTab === 'ALL'
           ? (window._mktQGapAll && window._mktQGapAll[d.id] ? -window._mktQGapAll[d.id].gap : -Infinity)   // whole market
           : (window._mktQGap && window._mktQGap[d.id] != null ? -window._mktQGap[d.id] : -Infinity))     // fastest in this division first
-      : (typeof d.lastDominance === 'number' ? d.lastDominance : -Infinity);
+      : (!window._hideDom && typeof d.lastDominance === 'number' ? d.lastDominance : -Infinity);
     const flat = _marketTab === 'CONSTRUCTOR' ? [] : drivers
       .filter(d => _marketTab === 'ALL' ? true : d.division === _marketTab)
       .filter(d => (_marketSort === 'team' && _marketTeamFilter !== 'ALL') ? d.team === _marketTeamFilter : true)
@@ -23269,6 +23279,13 @@ window.showResultsTab = function(tab) {
 try { window._bottGapMode = localStorage.getItem('imsBottGapMode') || 'leader'; } catch(e){}
 // Flip every BOTT standings instance (current + archive tabs) between gap-to-leader and
 // interval-to-car-ahead without a re-render.
+window.setHideDominance = async function(on) {
+  const msg = document.getElementById('hide-dom-msg');
+  try { await dbSet('settings', 'hideDominance', { value: !!on }); window._hideDom = !!on; document.body.classList.toggle('hide-dom', !!on);
+    if (msg) msg.innerHTML = '<div class="alert alert-success">✔ Dominance is now ' + (on ? 'hidden from' : 'visible to') + ' all players.</div>';
+    if (typeof renderMarket === 'function') try { renderMarket(); } catch (e) {}
+  } catch (e) { if (msg) msg.innerHTML = '<div class="alert alert-error">Could not save — try again.</div>'; }
+};
 window.setDefaultMarketSort = function(mode) {
   _marketSort = mode;
   try { localStorage.setItem('imsMarketSort', mode); } catch(e){}
