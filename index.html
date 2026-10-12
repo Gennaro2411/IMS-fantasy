@@ -28189,24 +28189,38 @@ async function _cnLeaderboardHtml() {
 // ---- Connections duel: same random puzzle for both, race to solve it ----
 const _cnDuelKey = () => { try { return JSON.parse(localStorage.getItem('imsCnDuel') || 'null'); } catch (e) { return null; } };
 const _cnDuelSet = (v) => { try { v ? localStorage.setItem('imsCnDuel', JSON.stringify(v)) : localStorage.removeItem('imsCnDuel'); } catch (e) {} };
-window.cnDuelCreate = async function() { const me = _wdMe(), code = _wdCode(), seed = Math.floor(Math.random() * 2 ** 31);
-  await dbSet('cnDuels', code, { code, seed, createdAt: Date.now(), host: JSON.stringify({ uid: me.uid, name: me.name }), guest: '' });
+window.cnDuelCreate = async function(pub) { const me = _wdMe(), code = _wdCode(), seed = Math.floor(Math.random() * 2 ** 31);
+  await dbSet('cnDuels', code, { code, seed, public: !!pub, createdAt: Date.now(), hostSeen: Date.now(), hostName: me.name, hostAvatar: me.avatar || '', host: JSON.stringify({ uid: me.uid, name: me.name }), guest: '' });
   _cnDuelSet({ code, role: 'host' }); localStorage.removeItem('imsConn_duel'); renderGames(); };
-window.cnDuelJoin = async function() { const code = String((document.getElementById('cn-code') || {}).value || '').trim().toUpperCase(); if (!code) return;
+window.cnDuelJoin = async function(c) { const code = String(c || (document.getElementById('cn-code') || {}).value || '').trim().toUpperCase(); if (!code) return;
   const d = await dbGet('cnDuels', code).catch(() => null); if (!d) return customAlert('No duel with that code.'); if (d.guest) return customAlert('That duel is full.');
   const me = _wdMe(); await dbSet('cnDuels', code, { guest: JSON.stringify({ uid: me.uid, name: me.name }) }); _cnDuelSet({ code, role: 'guest' }); localStorage.removeItem('imsConn_duel'); renderGames(); };
 window.cnDuelLeave = function() { clearInterval(window._cnPoll); _cnDuelSet(null); localStorage.removeItem('imsConn_duel'); window._cnSel = []; renderGames(); };
 async function _cnDuelPush(st) { const k = _cnDuelKey(); if (!k) return; try { await dbSet('cnDuels', k.code, { [k.role + 'P']: JSON.stringify({ solved: st.solved.length, mistakes: st.mistakes, done: st.done, won: st.won, at: Date.now() }) }); } catch (e) {} }
 async function _cnDuelBody(pool) {
   const k = _cnDuelKey();
-  if (!k) return `<div class="wd-panel" style="text-align:center"><p style="margin:0 0 10px">Race a friend on the same puzzle — first to find all four groups wins. 4 mistakes and you're out.</p>
-    <button class="btn btn-primary" onclick="cnDuelCreate()">⚔️ Create a duel</button>
-    <div style="margin-top:12px;display:flex;gap:6px;justify-content:center"><input id="cn-code" placeholder="CODE" maxlength="5" style="max-width:110px;text-transform:uppercase;text-align:center"><button class="btn btn-secondary" onclick="cnDuelJoin()">Join</button></div></div>`;
+  if (!k) {
+    // Same lobby layout as the PaddockDle / Grid duels: start (public / private), join by code, open lobbies.
+    const me = _wdMe(), now = Date.now();
+    const all = await dbGetAll('cnDuels', { fresh: true }).catch(() => []);
+    all.filter(l => l && now - (l.createdAt || 0) > 6 * 36e5).forEach(l => dbDelete('cnDuels', l.id || l.code).catch(() => {}));
+    const open = all.filter(l => l && l.public && !l.guest && now - (l.hostSeen || l.createdAt || 0) < 30e3 && !String(l.host || '').includes('"' + me.uid + '"')).sort((a, b) => b.createdAt - a.createdAt);
+    clearInterval(window._cnPoll); window._cnPoll = setInterval(() => { if (!document.getElementById('cn-lobbies')) { clearInterval(window._cnPoll); return; } if (!document.activeElement || document.activeElement.id !== 'cn-code') renderGames(); }, 6000);
+    return `<div class="wd-duel-grid">
+      <div class="wd-panel"><h4>⚔️ Start a duel</h4><p>Same puzzle for both of you — first to find all four groups wins. ${CN_LIVES} mistakes and you're out.</p>
+        <div class="wd-btns"><button class="btn btn-primary" onclick="cnDuelCreate(true)">🌍 Public lobby</button><button class="btn btn-secondary" onclick="cnDuelCreate(false)">🔒 Private lobby</button></div>
+        <h4 style="margin-top:18px">🔑 Join with a code</h4>
+        <div class="wd-btns"><input id="cn-code" type="text" maxlength="5" placeholder="CODE" style="text-transform:uppercase;letter-spacing:4px;font-weight:800;max-width:140px" onkeydown="if(event.key==='Enter')cnDuelJoin(this.value)"><button class="btn btn-secondary" onclick="cnDuelJoin()">Join</button></div></div>
+      <div class="wd-panel" id="cn-lobbies"><h4>🌍 Open public lobbies <small>${open.length}</small></h4>
+        ${open.length ? open.map(l => `<div class="wd-lob"><span style="display:inline-flex;align-items:center;gap:8px;min-width:0">${_wdAv({ name: l.hostName || 'Player', photo: l.hostAvatar || '' }, 30)}<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(l.hostName || 'Player')}</span></span><button class="btn btn-sm btn-primary" onclick="cnDuelJoin('${esc(l.code || l.id)}')">Join</button></div>`).join('') : '<p class="text-muted" style="margin:0">No open lobbies right now — start a public one and someone can jump in.</p>'}
+      </div></div>`;
+  }
   dbInvalidate('cnDuels'); const d = await dbGet('cnDuels', k.code).catch(() => null);
   if (!d) { _cnDuelSet(null); return '<div class="wd-panel">That duel has ended.</div>'; }
   const host = d.host ? JSON.parse(d.host) : null, guest = d.guest ? JSON.parse(d.guest) : null;
   clearInterval(window._cnPoll); window._cnPoll = setInterval(() => { if (window._games.view !== 'cn' || _cnGetMode() !== 'duel') { clearInterval(window._cnPoll); return; } renderGames(); }, 3000);
-  if (!guest) return `<div class="wd-panel" style="text-align:center"><p>Share this code with your opponent:</p><div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:2.4rem;letter-spacing:6px">${esc(k.code)}</div><p class="text-muted">Waiting for them to join…</p><button class="btn btn-secondary" onclick="cnDuelLeave()">Cancel</button></div>`;
+  if (!guest && k.role === 'host') dbSet('cnDuels', k.code, { hostSeen: Date.now() }).catch(() => {});
+  if (!guest) return `<div class="wd-panel" style="text-align:center"><h4>${d.public ? '🌍 Public lobby' : '🔒 Private lobby'}</h4><p>Share this code with your opponent:</p><div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:2.4rem;letter-spacing:6px">${esc(k.code)}</div><p class="text-muted">Waiting for them to join…</p><button class="btn btn-secondary" onclick="cnDuelLeave()">Cancel</button></div>`;
   let st = _cnState('duel');
   if (!st || st.code !== k.code) { const pz = _cnBuild(pool, Number(d.seed)); if (!pz) return '<div class="wd-panel">Couldn\'t build a puzzle.</div>'; st = { code: k.code, groups: pz.groups, order: pz.order, solved: [], mistakes: 0, guesses: [], done: false, won: false }; _cnSave(st, 'duel'); }
   const me = k.role === 'host' ? host : guest, opp = k.role === 'host' ? guest : host;
