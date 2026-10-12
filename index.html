@@ -361,9 +361,9 @@
   #login-wall.on{opacity:1}
   #login-wall::after{content:'';position:absolute;inset:0;background:radial-gradient(60% 55% at 50% 50%,rgba(7,7,13,.92),rgba(7,7,13,.55) 70%,rgba(7,7,13,.75)),linear-gradient(160deg,rgba(123,79,191,.25),transparent 50%,rgba(232,0,45,.18))}
   .lw-cols{position:absolute;inset:-60px;display:flex;gap:10px;transform:rotate(-8deg) scale(1.15)}
-  .lw-col{flex:0 0 100px;display:flex;flex-direction:column;gap:10px;animation:lwScroll linear infinite}
-  .lw-col i{display:block;flex:0 0 100px;width:100px;height:100px;border-radius:16px;background:#1b1b2a center/cover no-repeat;filter:saturate(.85);box-shadow:0 0 0 1px rgba(255,255,255,.06)}
-  @keyframes lwScroll{from{transform:translateY(0)}to{transform:translateY(-50%)}}
+  .lw-col{flex:0 0 100px;display:flex;flex-direction:column;animation:lwScroll linear infinite;will-change:transform}
+  .lw-col i{display:block;flex:0 0 100px;width:100px;height:100px;margin-bottom:10px;border-radius:16px;background:#1b1b2a center/cover no-repeat;filter:saturate(.85);box-shadow:0 0 0 1px rgba(255,255,255,.06)}
+  @keyframes lwScroll{from{transform:translate3d(0,0,0)}to{transform:translate3d(0,-50%,0)}}
   body.reduce-motion .lw-col{animation:none}
   #login-overlay>*:not(#login-wall){position:relative;z-index:1}
   .admin-badge{background:var(--red);color:white;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:3px;letter-spacing:1px;}
@@ -6616,9 +6616,13 @@ window._loginWall = async function() {
     const ds = (await dbGetAll('drivers').catch(() => [])).filter(d => d && d.name && !d._deleted);
     pics = ds.map(d => (typeof driverPhoto === 'function' ? driverPhoto(d) : '')).filter(Boolean);
   } catch (e) {}
+  // Only keep pictures that actually load — a broken link would leave an empty tile.
+  pics = [...new Set(pics)];
+  const ok = await Promise.all(pics.map(u => new Promise(res => { const im = new Image(); const t = setTimeout(() => res(null), 6000); im.onload = () => { clearTimeout(t); res(im.naturalWidth > 8 ? u : null); }; im.onerror = () => { clearTimeout(t); res(null); }; im.src = u; })));
+  pics = ok.filter(Boolean);
   if (pics.length < 6) { wall.remove(); return; }
   for (let i = pics.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pics[i], pics[j]] = [pics[j], pics[i]]; }
-  const cols = Math.max(4, Math.ceil(window.innerWidth / 110) + 1), per = Math.max(8, Math.ceil(window.innerHeight / 110) + 2);
+  const cols = Math.max(4, Math.ceil(window.innerWidth / 110) + 1), per = Math.max(10, Math.ceil(window.innerHeight / 110) + 4);
   let k = 0, html = '';
   for (let c = 0; c < cols; c++) {
     const tiles = []; for (let r = 0; r < per; r++) tiles.push(pics[(k++) % pics.length]);
