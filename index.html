@@ -2919,6 +2919,16 @@
         <div id="hide-price-moves-msg" style="margin-top:8px"></div>
       </div>
       <div class="card">
+        <div class="card-title"><div class="dot"></div>📈 Expected points (driver form targets)</div>
+        <p class="text-muted" style="margin-bottom:10px">Every market driver's target points per race, as used by the Driver Form Report: price rank in their division → expected finishing position → what that position usually scores (×0.85, with a floor).</p>
+        <div class="form-row" style="gap:8px;align-items:flex-end;flex-wrap:wrap">
+          <div class="form-group"><label>Division</label><select id="xp-div" onchange="renderExpectedTable()" style="max-width:120px"><option value="">All</option></select></div>
+          <div class="form-group"><label>Search</label><input id="xp-q" type="text" placeholder="driver…" oninput="renderExpectedTable()" style="max-width:180px"></div>
+          <button class="btn btn-primary btn-sm" onclick="window._xpData=null;renderExpectedTable()">↻ Load / refresh</button>
+        </div>
+        <div id="xp-out" style="margin-top:10px;max-height:520px;overflow:auto"></div>
+      </div>
+      <div class="card">
         <div class="card-title"><div class="dot"></div>👑 Hide dominance</div>
         <p class="text-muted" style="margin-bottom:12px">Hides every driver's dominance from players (profiles, market, compare, sort) — e.g. for Round 1 when there's no baseline yet. Pricing still uses it behind the scenes.</p>
         <label class="set-toggle" style="max-width:none"><input type="checkbox" id="admin-hide-dom" onchange="setHideDominance(this.checked)"><span><strong>Hide dominance everywhere</strong><em>Applies to all players.</em></span></label>
@@ -23321,6 +23331,50 @@ window.showResultsTab = function(tab) {
 try { window._bottGapMode = localStorage.getItem('imsBottGapMode') || 'leader'; } catch(e){}
 // Flip every BOTT standings instance (current + archive tabs) between gap-to-leader and
 // interval-to-car-ahead without a re-render.
+
+// ===== Admin: expected points per driver (same model as the Driver Form Report) =====
+window._computeExpectedAll = async function() {
+  const [drivers, races, archives] = await Promise.all([dbGetAll('drivers').catch(() => []), dbGetAll('races').catch(() => []), dbGetAll('seasonArchives').catch(() => [])]);
+  const cs = Number(window.currentSeason) || 8;
+  const real = r => r && r.driverPoints && Object.values(r.driverPoints).some(v => v > 0);
+  const scored = races.filter(real);
+  const pool = scored.concat(archives.filter(a => Number(a.season) === cs - 1).flatMap(a => a.races || []).filter(real));
+  const avg = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0;
+  const pr = d => (typeof driverPrice === 'function' ? driverPrice(d) : (d.price || 0));
+  const sum = {}, cnt = {}, field = {};
+  pool.forEach(r => { const pbd = r.positionByDivision || {}, dpd = r.driverPointsByDivision || {}, fc = {};
+    Object.entries(pbd).forEach(([id, byDiv]) => Object.entries(byDiv || {}).forEach(([dv, pos]) => { pos = Number(pos); const p = (dpd[id] || {})[dv];
+      if (pos > 0 && typeof p === 'number') { sum[pos] = (sum[pos] || 0) + p; cnt[pos] = (cnt[pos] || 0) + 1; fc[dv] = Math.max(fc[dv] || 0, pos); } }));
+    Object.entries(fc).forEach(([dv, n]) => (field[dv] = field[dv] || []).push(n)); });
+  const PP = {}; Object.keys(sum).forEach(p => { if (cnt[p] >= 3) PP[p] = sum[p] / cnt[p]; });
+  const mktAll = drivers.filter(d => d && d.name && !d._deleted && !d.isReserve && d.division);
+  return mktAll.map(d => {
+    const mkt = mktAll.filter(x => x.division === d.division);
+    const above = mkt.filter(x => pr(x) > pr(d)).length, frac = mkt.length > 1 ? above / (mkt.length - 1) : 0;
+    const fs = field[d.division] || [].concat(...Object.values(field)); const fieldSize = fs.length ? Math.round(avg(fs)) : 12;
+    const expPos = 1 + frac * (fieldSize - 1);
+    const at = p => PP[Math.max(1, Math.min(fieldSize, Math.round(p)))];
+    const vals = [at(expPos - 1), at(expPos), at(expPos + 1)].filter(v => typeof v === 'number');
+    const top = avg([at(1), at(2), at(3)].filter(v => typeof v === 'number'));
+    const exp = vals.length ? Math.min(32, Math.max(Math.max(3, top * 0.2), avg(vals) * 0.85)) : null;
+    const h = scored.filter(r => { const b = r.driverPointsByDivision && r.driverPointsByDivision[d.id]; return b ? b[d.division] !== undefined : false; }).map(r => r.driverPointsByDivision[d.id][d.division]);
+    const sAvg = avg(h), rAvg = avg(h.slice(-3)), ratio = exp && h.length ? (rAvg * .6 + sAvg * .4) / exp : null;
+    const lab = ratio === null || h.length < 2 ? '—' : ratio < .6 ? 'Under (drastic)' : ratio < .85 ? 'Under' : ratio <= 1.15 ? 'OK' : ratio <= 1.4 ? 'Over' : 'Over (drastic)';
+    return { id: d.id, name: d.name, div: d.division, price: pr(d), rank: above + 1, of: mkt.length, expPos, exp, races: h.length, sAvg, ratio, lab };
+  });
+};
+window.renderExpectedTable = async function() {
+  const out = document.getElementById('xp-out'); if (!out) return;
+  if (!window._xpData) { out.innerHTML = '<div class="text-muted">Working it out…</div>'; window._xpData = await window._computeExpectedAll(); }
+  const sel = document.getElementById('xp-div');
+  if (sel && sel.options.length <= 1) [...new Set(window._xpData.map(r => r.div))].sort().forEach(dv => { const o = document.createElement('option'); o.value = dv; o.textContent = dv; sel.appendChild(o); });
+  const dv = (sel || {}).value || '', q = ((document.getElementById('xp-q') || {}).value || '').toLowerCase().trim();
+  const rows = window._xpData.filter(r => (!dv || r.div === dv) && (!q || r.name.toLowerCase().includes(q))).sort((a, b) => a.div.localeCompare(b.div) || b.price - a.price);
+  const col = { 'Under (drastic)': '#ff3b4e', 'Under': '#ff8f3b', 'OK': '#94a3b8', 'Over': '#2ee6b6', 'Over (drastic)': '#22c55e' };
+  out.innerHTML = rows.length ? `<table style="width:100%;font-size:.78rem;border-collapse:collapse"><tr style="color:var(--muted);text-align:left"><th style="padding:4px 6px">Div</th><th>Driver</th><th style="text-align:right">Price</th><th style="text-align:right">Rank</th><th style="text-align:right">Exp. pos</th><th style="text-align:right">Expected</th><th style="text-align:right">S${Number(window.currentSeason) || 8} avg</th><th style="text-align:right">Races</th><th style="text-align:right">% of exp</th><th style="padding-left:8px">Form</th></tr>` +
+    rows.map(r => `<tr style="border-top:1px solid var(--border)"><td style="padding:4px 6px">${esc(r.div)}</td><td>${esc(r.name)}</td><td style="text-align:right">$${r.price.toFixed(1)}M</td><td style="text-align:right">${r.rank}/${r.of}</td><td style="text-align:right">P${Math.round(r.expPos)}</td><td style="text-align:right;font-weight:800;color:var(--gold)">${r.exp != null ? r.exp.toFixed(1) : '—'}</td><td style="text-align:right">${r.races ? r.sAvg.toFixed(1) : '—'}</td><td style="text-align:right">${r.races}</td><td style="text-align:right">${r.ratio != null ? Math.round(r.ratio * 100) + '%' : '—'}</td><td style="padding-left:8px;color:${col[r.lab] || 'var(--muted)'};font-weight:700">${r.lab}</td></tr>`).join('') + '</table>'
+    : '<div class="text-muted">No drivers match.</div>';
+};
 window.setHideDominance = async function(on) {
   const msg = document.getElementById('hide-dom-msg');
   try { await dbSet('settings', 'hideDominance', { value: !!on }); window._hideDom = !!on; document.body.classList.toggle('hide-dom', !!on);
