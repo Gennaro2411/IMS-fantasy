@@ -11185,7 +11185,11 @@ async function renderBriefingExtras() {
           const at = (p) => PP.pts[Math.max(1, Math.min(fieldSize, Math.round(p)))];
           const vals = [at(expPos - 1), at(expPos), at(expPos + 1)].filter(v => typeof v === 'number');
           // ×0.85: a realistic bar — nobody hits their 'on paper' finish every single week.
-          if (vals.length) exp = Math.min(32, Math.max(1, _avg(vals) * 0.85));
+          // Floor: back-of-the-field slots score ~0, but even the cheapest driver should have a fair bar
+          // (about a fifth of what the front-runners score, never under 3).
+          const _top = _avg([at(1), at(2), at(3)].filter(v => typeof v === 'number'));
+          const _floor = Math.max(3, (_top || 0) * 0.2);
+          if (vals.length) exp = Math.min(32, Math.max(_floor, _avg(vals) * 0.85));
           else if (peers.length >= 4) { const avgs = peers.map(o => _avg(o.h)).sort((a, b) => b - a); const k = Math.min(avgs.length - 1, Math.round(frac * (avgs.length - 1))); exp = Math.max(1, _avg(avgs.slice(Math.max(0, k - 1), k + 2))); }
         }
         const last3 = h.slice(-3), sAvg = _avg(h), rAvg = _avg(last3);
