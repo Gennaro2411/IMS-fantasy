@@ -28181,6 +28181,9 @@ async function _cnDailyPuzzle(pool) {
     await dbSet('wordleScores', '_dailyShared', { value: Object.assign({}, v, { cnKey: key, cnPuzzle: JSON.stringify(pz) }) }); } catch (e) {}
   return pz;
 }
+// Total lives lost: stored from now on; older records are worked out from the mistake distribution.
+const _cnLivesLost = (r) => { if (r && r.cnMist != null) return r.cnMist; let d = {}; try { d = JSON.parse((r && r.cnDist) || '{}'); } catch (e) {}
+  return ['0', '1', '2', '3'].reduce((a, k) => a + (d[k] || 0) * Number(k), 0) + (d.X || 0) * CN_LIVES; };
 // Points per daily: 1 per group found (max 4).
 const _cnScore = (st) => st.won ? 4 : (st.foundBeforeEnd || 0);
 async function _cnRecord(st) {
@@ -28190,7 +28193,7 @@ async function _cnRecord(st) {
     const pts = _cnScore(st), streak = st.won ? (cur.cnLastDay === _wdYesterdayKey() && cur.cnLastWon ? (cur.cnStreak || 0) + 1 : 1) : 0;
     let dist = {}; try { dist = JSON.parse(cur.cnDist || '{}'); } catch (e) {} const k = st.won ? String(st.mistakes) : 'X'; dist[k] = (dist[k] || 0) + 1;
     await dbSet('wordleScores', id, { uid: me.uid, name: me.name, cnPts: (cur.cnPts || 0) + pts, cnPlayed: (cur.cnPlayed || 0) + 1, cnWon: (cur.cnWon || 0) + (st.won ? 1 : 0),
-      cnPerfect: (cur.cnPerfect || 0) + (st.won && !st.mistakes ? 1 : 0), cnStreak: streak, cnBest: Math.max(cur.cnBest || 0, streak), cnLastDay: day, cnLastV: st.cnv || 1, cnPtsV2: true, cnLastWon: !!st.won, cnLastScore: pts, cnDist: JSON.stringify(dist) });
+      cnPerfect: (cur.cnPerfect || 0) + (st.won && !st.mistakes ? 1 : 0), cnStreak: streak, cnBest: Math.max(cur.cnBest || 0, streak), cnLastDay: day, cnLastV: st.cnv || 1, cnPtsV2: true, cnMist: _cnLivesLost(cur) + (st.mistakes || 0), cnLastWon: !!st.won, cnLastScore: pts, cnDist: JSON.stringify(dist) });
     setTimeout(() => { if (document.getElementById('cn-stats')) renderGames(); }, 300);
   } catch (e) { console.warn('connections score failed', e); }
 }
@@ -28213,7 +28216,7 @@ async function _cnLeaderboardHtml() {
     dbInvalidate('wordleScores'); } catch (e) {} }
   const rows = (await _gmNoTest(await dbGetAll('wordleScores', { fresh: true }).catch(() => []))).filter(r => r && (r.cnPts || 0) > 0).sort((a, b) => (b.cnPts || 0) - (a.cnPts || 0) || (b.cnPerfect || 0) - (a.cnPerfect || 0));
   const me = _wdMe(), myIdx = rows.findIndex(r => r.uid === me.uid), today = _wdDayKey();
-  const line = (r, i) => `<div class="wd-lb-row${r.uid === me.uid ? ' me' : ''}"><span class="wd-lb-pos">${i + 1}</span><span class="wd-lb-name">${esc(r.name || 'Player')}${r.cnLastDay === today ? ` <i>${r.cnLastWon ? '✓' : '✕'} today</i>` : ''}</span><span class="wd-lb-sub"><span title="Perfect solves">💎 ${r.cnPerfect || 0}</span> · <span title="Solved">✅ ${r.cnWon || 0}/${r.cnPlayed || 0}</span> · <span title="Streak" style="color:${r.cnStreak ? '#fb923c' : 'inherit'}">🔥 ${r.cnStreak || 0}</span></span><b class="wd-lb-pts">${r.cnPts || 0}</b></div>`;
+  const line = (r, i) => `<div class="wd-lb-row${r.uid === me.uid ? ' me' : ''}"><span class="wd-lb-pos">${i + 1}</span><span class="wd-lb-name">${esc(r.name || 'Player')}${r.cnLastDay === today ? ` <i>${r.cnLastWon ? '✓' : '✕'} today</i>` : ''}</span><span class="wd-lb-sub"><span title="Perfect solves">💎 ${r.cnPerfect || 0}</span> · <span title="Solved">✅ ${r.cnWon || 0}/${r.cnPlayed || 0}</span> · <span title="Streak" style="color:${r.cnStreak ? '#fb923c' : 'inherit'}">🔥 ${r.cnStreak || 0}</span> · <span title="Total lives lost">💔 ${_cnLivesLost(r)}</span></span><b class="wd-lb-pts">${r.cnPts || 0}</b></div>`;
   return `<div class="wd-lb"><div class="wd-lb-h"><span>🏆 Daily Connections leaderboard</span><small>1 point per group found</small></div>
     ${rows.length ? rows.slice(0, 10).map(line).join('') + (myIdx >= 10 ? '<div class="wd-lb-gap">…</div>' + line(rows[myIdx], myIdx) : '') : '<p class="text-muted" style="margin:6px 0 0">No scores yet — finish today\'s puzzle to get on the board.</p>'}</div>`;
 }
