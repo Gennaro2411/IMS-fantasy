@@ -16056,6 +16056,12 @@ window.syncRosterMovesFromDb = async function(silent) {
     }
     const existing = await dbGetAll('rosterMoves').catch(() => []);
     const existingIds = new Set(existing.map(m => m.eventUuid).filter(Boolean));
+    // Where was each driver actually signed at any moment? Every 'signed' event, oldest first, per driver.
+    const signedBy = {}; try { const sr = _imsDb.exec("SELECT details_json, created_at_ts FROM contract_events WHERE action = 'signed' ORDER BY created_at_ts ASC");
+      ((sr[0] || {}).values || []).forEach(([dj, t]) => { let x = {}; try { x = JSON.parse(dj || '{}'); } catch (e) {} const k = x.driver_discord_id || String(x.driver_alias || '').toLowerCase(); if (k && x.team) (signedBy[k] = signedBy[k] || []).push({ t: Number(t) || 0, team: x.team }); }); } catch (e) {}
+    const teamAt = (k, t) => { const l = signedBy[k] || []; let tm = ''; for (const e of l) { if (e.t <= t) tm = e.team; else break; } return tm; };
+    const _norm = (x) => String(x || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const _leaving = (a) => !/^(signed|moved division)$/.test(a); window._rmSeen = {};
 
     const saves = [];
     let added = 0;
@@ -16078,6 +16084,13 @@ window.syncRosterMovesFromDb = async function(silent) {
       };
       // Stable doc id from the uuid so repeat syncs upsert instead of duplicating.
       const docId = 'move_' + String(move.eventUuid).replace(/[^a-zA-Z0-9_]/g, '').slice(0, 60);
+      // Departures: the team they left is the one they were actually signed to at that moment (the bot can log a stale old team).
+      if (_leaving(action)) { const real = teamAt(d.driver_discord_id || String(d.driver_alias || '').toLowerCase(), Number(ts) || 0), logged = d.from_team || d.team || '';
+        move.fromTeam = real || logged;
+        // Same driver leaving twice within 3 days (e.g. a stale old-team event + the real one) = one departure: keep the first, drop the repeat.
+        const dk = (d.driver_discord_id || _norm(move.driver)), seen = (window._rmSeen = window._rmSeen || {});
+        if (seen[dk] && Math.abs(seen[dk] - move.timestamp) < 3 * 864e5) { saves.push(dbDelete('rosterMoves', docId).catch(() => {})); return; }
+        seen[dk] = move.timestamp; move.toTeam = ''; move.fromDivision = move.fromDivision || d.division || ''; move.toDivision = ''; }
       if (!existingIds.has(move.eventUuid)) added++;
       saves.push(dbSet('rosterMoves', docId, move));
     });
