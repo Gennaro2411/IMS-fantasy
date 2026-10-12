@@ -28099,9 +28099,11 @@ const _cnState = (m) => { try { return JSON.parse(localStorage.getItem('imsConn_
 const _cnSave = (st, m) => { try { localStorage.setItem('imsConn_' + m, JSON.stringify(st)); } catch (e) {} if (m === 'daily') _dailySync('cnDaily', st); };
 // Build a puzzle: 4 categories (mostly different kinds), 4 drivers each, and every chosen driver fits
 // ONLY its own group among the four — so there is exactly one correct answer.
+// The categories Connections uses — for answers AND hidden groups.
+const CN_OK = ['ch:1', 'ch:2', 'bott:1', 'bott:2', 'win:1', 'win:5', 'win:0', 'pod:u1']; // easy stat groups only — no podium/starts/points counts
+const _cnCats = (pool) => _grCategories(pool).filter(c => !/^divh/.test(c.kind) && (!/^stat/.test(c.kind) || CN_OK.includes(c.id)) && !(c.kind === 'team' && /kick|sauber/i.test(c.label || '')));
 function _cnBuild(pool, seed) {
-  const CN_OK = ['ch:1', 'ch:2', 'bott:1', 'bott:2', 'win:1', 'win:5', 'win:0', 'pod:u1']; // easy stat groups only — no podium/starts/points counts
-  const rnd = _grRng(seed), C = _grCategories(pool).filter(c => !/^divh/.test(c.kind) && (!/^stat/.test(c.kind) || CN_OK.includes(c.id)) && !(c.kind === 'team' && /kick|sauber/i.test(c.label || ''))); // no points-threshold or Kick Sauber groups
+  const rnd = _grRng(seed), C = _cnCats(pool);
   const shuf = (a) => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   window._cnAllCats = _grCategories(pool).filter(c => c.kind === 'team' || c.kind === 'nat'); // every team (incl. Kick Sauber) + nationality is checked for fake groups
   const members = {}; C.forEach(c => { members[c.id] = pool.filter(p => c.test(p)).map(p => p.id); });
@@ -28168,7 +28170,7 @@ window.cnSubmit = function() {
     // Daily bonus: four drivers who genuinely share something (a team, nationality, stat…) that isn't one of the answers = hidden group.
     // No life lost, +10 IM$ (once per day).
     const hid = mode !== 'duel' && (() => { const pool = window._cnPool || [], ps = s.map(id => pool.find(p => p.id === id)); if (ps.some(p => !p)) return null;
-      return _grCategories(pool).find(c => !st.groups.some(g => g.id === c.id) && !(st.hiddenCats || []).includes(c.id) && ps.every(p => c.test(p))); })(); // each hidden group only counts once
+      return _cnCats(pool).find(c => !st.groups.some(g => g.id === c.id) && !(st.hiddenCats || []).includes(c.id) && ps.every(p => c.test(p))); })(); // each hidden group only counts once
     if (hid) { st.hidden = (st.hidden || []).concat([key]); st.hiddenCats = (st.hiddenCats || []).concat([hid.id]); window._cnSel = [];
       window._cnMsg = '🕵️ Hidden group: ' + hid.label + '! Not an answer, but no life lost' + (mode === 'daily' ? ' — +10 IM$' : '');
       _cnSave(st, mode); if (mode !== 'daily') { renderGames(); return; } _gameCoins('cn-hidden', 10);
@@ -28359,7 +28361,7 @@ async function renderConnGame(el) {
     ${mode === 'duel' ? '' : end}
     ${mode === 'daily' ? await _cnStatsHtml() + await _cnLeaderboardHtml() : ''}
     ${adminLoggedIn ? `<div class="wd-panel" style="margin-top:14px;border:1px dashed rgba(239,68,68,.5)"><h4>🛠️ Admin — answers <small>only you can see this</small></h4>${st.groups.map(g => `<div style="margin:6px 0;padding:8px 10px;border-radius:10px;border-left:4px solid ${CN_COLS[g.col]};background:rgba(255,255,255,.04)"><b>${esc(g.label)}</b><div style="font-size:.85rem;color:var(--muted)">${g.ids.map(id => esc(P(id).name)).join(', ')}</div></div>`).join('')}${(() => {
-      const hg = _grCategories(pool).filter(c => !st.groups.some(g => g.id === c.id)).map(c => ({ c, ids: st.order.filter(id => c.test(P(id))) }))
+      const hg = _cnCats(pool).filter(c => !st.groups.some(g => g.id === c.id)).map(c => ({ c, ids: st.order.filter(id => c.test(P(id))) }))
         .filter(x => x.ids.length >= 4 && !st.groups.some(g => x.ids.length === 4 && g.ids.every(id => x.ids.includes(id))));
       return `<h4 style="margin-top:14px">🕵️ Hidden groups <small>${hg.length} — any 4 of these score on the daily</small></h4>` + (hg.length ? hg.map(x => `<div style="margin:6px 0;padding:8px 10px;border-radius:10px;border-left:4px solid #9ca3af;background:rgba(255,255,255,.03)"><b>${esc(x.c.label)}</b> <small style="color:var(--muted)">${x.ids.length} drivers${(st.hiddenCats || []).includes(x.c.id) ? ' · ✓ found' : ''}</small><div style="font-size:.85rem;color:var(--muted)">${x.ids.map(id => esc(P(id).name)).join(', ')}</div></div>`).join('') : '<p class="text-muted" style="margin:4px 0 0">None in this puzzle.</p>'); })()}</div>` : ''}
     <div class="wd-info"><h3>How to play</h3><ul>
