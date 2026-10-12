@@ -16377,6 +16377,10 @@ window.submitRaceResults = async function() {
   const lockedSel2 = lockedDoc2 && lockedDoc2.value ? lockedDoc2.value : null;
   const teamSnapshots={};
   teams.forEach(t=>{ teamSnapshots[t.id] = lockedSel2 && lockedSel2[t.id] ? lockedSel2[t.id] : { selections: t.selections||{}, captains: t.captains||{} }; });
+  // All boxes left at 0 = adding the round ahead of time, not results: store it unscored, otherwise
+  // the whole app treats it as a finished race where everyone scored 0.
+  const _anyPts = Object.values(dp).some(v => v > 0) || Object.values(cp).some(v => v > 0);
+  if (!_anyPts) { await window.ensureRaceDoc(name, num); msg.innerHTML = `<div class="alert alert-success">✔ "${esc(name)}" added as the upcoming round (no results yet).</div>`; return; }
   await dbAdd('races',{name,raceNum:num,createdAt:Date.now(),driverPoints:dp,constructorPoints:cp,teamSnapshots});
   // Give every team a captain for this race (carry forward, or auto-assign if never set)
   try {
