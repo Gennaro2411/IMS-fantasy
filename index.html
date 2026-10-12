@@ -9711,7 +9711,7 @@ async function renderMyTeam() {
       const scoredForCab = races.filter(r => r.driverPoints && Object.values(r.driverPoints).some(v=>v>0));
       const scoredRoundSet = new Set(); scoredForCab.forEach(r => scoredRoundSet.add(r.raceNum || r.name));
       const finalForCab = scoredForCab.slice().sort((a,b)=>(b.raceNum||0)-(a.raceNum||0))[0];
-      const seasonComplete = totalRoundsForCab > 0 && scoredRoundSet.size >= totalRoundsForCab && finalForCab && isFullCab(finalForCab);
+      const seasonComplete = window._seasonFinished(races, myTeamSeasonNum, totalRoundsForCab);
       if (seasonComplete) {
         // Points: champion / 2nd / 3rd
         const rankedCab = window.computeTeamRanksByPoints ? window.computeTeamRanksByPoints(teams, races) : [];
@@ -12201,6 +12201,23 @@ window.computeReservePlan = function(t, races) {
 
 // Cached per-team plan so we don't recompute on every fantasyTeamRacePts call (scoring runs a lot).
 window._reservePlanCache = window._reservePlanCache || {};
+// Season really over? Needs the season length (bible / admin Total Rounds), that many scored rounds,
+// and the FINAL round's last division (E3 from S8, D4 before) actually imported. No length known →
+// never "finished" (end-of-season trophies must not appear after round 1).
+window._seasonFinished = function(races, season, totalRounds) {
+  try {
+    let tot = Number(totalRounds) || 0;
+    if (!tot && typeof window.totalRoundsForSeason === 'function') tot = Number(window.totalRoundsForSeason(season)) || 0;
+    if (!tot) return false;
+    const divs = (typeof divisionsForSeason === 'function') ? divisionsForSeason(season) : ['D0','D1','D2','D3','D4'];
+    const lastDiv = divs.includes('E3') && !divs.includes('D4') ? 'E3' : 'D4';
+    const scored = (races || []).filter(r => r && r.driverPoints && Object.values(r.driverPoints).some(v => v > 0));
+    if (new Set(scored.map(r => r.raceNum || r.name)).size < tot) return false;
+    const fin = scored.find(r => Number(r.raceNum) === tot) || scored.slice().sort((a, b) => (b.raceNum || 0) - (a.raceNum || 0))[0];
+    if (!fin || !fin.driverPointsByDivision) return false;
+    return Object.values(fin.driverPointsByDivision).some(bd => bd && bd[lastDiv] !== undefined);
+  } catch (e) { return false; }
+};
 window.getReservePlan = function(t, races) {
   const key = t && t.id;
   if (!key) return { byRace: {}, tokensUsed: 0, tokensLeft: window.RESERVE_TOKENS_PER_SEASON };
@@ -25173,7 +25190,7 @@ window.openPlayerProfile = async function(userId, big) {
         const _isFullL = (r) => { if(!r.driverPointsByDivision||!Object.keys(r.driverPointsByDivision).length) return r.driverPoints && Object.values(r.driverPoints||{}).some(v=>v>0); const seen=new Set(); Object.values(r.driverPointsByDivision).forEach(bd=>Object.keys(bd||{}).forEach(dv=>seen.add(dv))); return _ldivs.every(dv=>seen.has(dv)); };
         const _scoredL = _lr.filter(r => r.driverPoints && Object.values(r.driverPoints).some(v=>v>0));
         const _finalL = _scoredL.slice().sort((a,b)=>(b.raceNum||0)-(a.raceNum||0))[0];
-        const _completeL = _ltotal>0 ? (new Set(_scoredL.map(r=>r.raceNum||r.name)).size >= _ltotal && _finalL && _isFullL(_finalL)) : (_finalL && _isFullL(_finalL) && _scoredL.length>0);
+        const _completeL = window._seasonFinished(_lr, _lseason, _ltotal);
         if (_completeL && _lt.length) {
           // Champion / podium from the points ranking.
           const rankedL = window.computeTeamRanksByPoints ? window.computeTeamRanksByPoints(_lt, _lr) : [];
