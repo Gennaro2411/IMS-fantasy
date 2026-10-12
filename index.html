@@ -11454,9 +11454,11 @@ ${isUpcoming
       const _real = (r)=>{ if(r.driverPointsByDivision){for(const id in r.driverPointsByDivision){const bd=r.driverPointsByDivision[id];if(bd&&Object.values(bd).some(v=>typeof v==='number'&&v>0))return true;}} return r.driverPoints&&Object.values(r.driverPoints).some(v=>typeof v==='number'&&v>0); };
       const _cal = new Set(), _scored = new Set();
       (races||[]).forEach(r=>{ if(r&&r.name){_cal.add(r.name.toLowerCase().trim()); if(_real(r))_scored.add(r.name.toLowerCase().trim());}});
-      const _sched2 = (typeof _sched!=='undefined' && _sched) ? _sched : [];
+      const _sched2 = (typeof _sched!=='undefined' && _sched) ? _sched : (await dbGetAll('schedule').catch(()=>[]));
       _sched2.forEach(s=>{ if(s&&s.name)_cal.add(s.name.toLowerCase().trim()); });
-      remainingRaces = Math.max(0, _cal.size - _scored.size);
+      // The season length from the bible (e.g. 10 rounds) wins over a partial calendar.
+      let _tot = 0; try { _tot = (typeof window.totalRoundsForSeason === 'function' ? Number(window.totalRoundsForSeason(window.currentSeason)) : 0) || Number(((await dbGet('settings','totalRounds').catch(()=>null))||{}).value) || 0; } catch(e) {}
+      remainingRaces = Math.max(0, Math.max(_cal.size, _tot) - _scored.size);
     } catch(e) { remainingRaces = Math.max(0, totalRaces - completedRaces.length); }
     const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
     const rng = (n) => Math.floor(Math.random() * n);
