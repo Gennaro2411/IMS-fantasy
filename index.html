@@ -10621,20 +10621,49 @@ window.activateGuardianAngel = async function(teamId, raceId) {
 
 window.pickGuardianAngelDriver = async function(teamId, raceId) {
   const [drivers, team] = await Promise.all([dbGetAll('drivers'), dbGet('teams', teamId)]);
-  const sel = team.selections || {};
-  const ownedIds = new Set(Object.values(sel));
-  const available = drivers.filter(d => !ownedIds.has(d.id)).sort((a,b)=>a.division.localeCompare(b.division)||a.name.localeCompare(b.name));
-  const options = available.map(d => `<option value="${d.id}">${esc(d.division)} — ${esc(d.name)}</option>`).join('');
-  document.getElementById('modal-title').innerHTML = '😇 Pick Guardian Angel Driver';
-  document.getElementById('modal-body').innerHTML = `
-    <p class="text-muted" style="margin-bottom:12px">Pick a driver not already in your team. They score normally this race then vanish.</p>
-    <select id="ga-driver-select" class="form-control" style="width:100%;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text)">${options}</select>
-    <button class="btn btn-primary" style="margin-top:12px;width:100%" onclick="confirmGuardianAngelPick('${teamId}','${raceId}')">Confirm Pick</button>`;
+  const ownedIds = new Set(Object.values(team.selections || {}));
+  const cur = ((team.chips || {}).guardianAngel || {}).driverId || null;
+  window._gaPick = { teamId, raceId, cur, div: 'all', list: drivers.filter(d => d && !ownedIds.has(d.id) && !d.retired).map(d => { let pr = null; try { pr = driverPrice(d); } catch (e) {} return Object.assign({}, d, { _pr: pr }); }).sort((a, b) => String(a.division).localeCompare(String(b.division)) || (b._pr || 0) - (a._pr || 0) || a.name.localeCompare(b.name)) };
+  const divs = [...new Set(window._gaPick.list.map(d => d.division).filter(Boolean))].sort();
+  document.getElementById('modal-title').innerHTML = '<span style="display:inline-flex;align-items:center;gap:8px">😇 <span>Choose your Guardian Angel</span></span>';
+  document.getElementById('modal-body').innerHTML = `<style>
+      .gap-hero{margin:-4px 0 12px;padding:12px 14px;border-radius:14px;background:linear-gradient(135deg,rgba(255,215,90,.16),rgba(255,255,255,.04));border:1px solid rgba(255,215,90,.35);font-size:.82rem;color:var(--muted)}
+      .gap-hero b{color:#ffd86b}
+      .gap-search{width:100%;padding:11px 14px;border-radius:12px;border:1px solid var(--border);background:var(--surface2);color:#fff;font-size:.95rem;margin-bottom:10px}
+      .gap-search:focus{outline:none;border-color:#ffd86b;box-shadow:0 0 0 3px rgba(255,216,107,.18)}
+      .gap-chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:6px;scrollbar-width:none}
+      .gap-chips button{flex-shrink:0;padding:5px 12px;border-radius:999px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-weight:800;font-size:.75rem;letter-spacing:.5px;cursor:pointer;font-family:'Barlow Condensed',sans-serif}
+      .gap-chips button.on{background:linear-gradient(135deg,#ffd86b,#f0a830);color:#2a1a00;border-color:transparent}
+      .gap-list{display:flex;flex-direction:column;gap:6px;max-height:min(56vh,460px);overflow-y:auto;padding-right:2px}
+      .gap-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:var(--surface2);border:1px solid var(--border);border-left:4px solid var(--tc,#888);cursor:pointer;transition:transform .1s,border-color .15s,background .15s;text-align:left;color:inherit;font:inherit;width:100%}
+      .gap-row:hover{border-color:#ffd86b;background:rgba(255,216,107,.07)}.gap-row:active{transform:scale(.98)}
+      .gap-row.cur{border-color:#ffd86b;background:rgba(255,216,107,.12)}
+      .gap-row .nm{flex:1;min-width:0}.gap-row .nm b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .gap-row .nm small{color:var(--muted);font-size:.72rem}
+      .gap-row .dv{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:.75rem;padding:2px 7px;border-radius:6px;background:rgba(255,255,255,.08)}
+      .gap-row .pr{font-family:'Barlow Condensed',sans-serif;font-weight:800;color:#ffd86b;min-width:44px;text-align:right}
+    </style>
+    <div class="gap-hero">Pick <b>any driver not in your team</b>. They score for you <b>this race only</b> — free — then fly off. Hold the angel card afterwards to replay the cutscene.</div>
+    <input id="gap-q" class="gap-search" type="text" placeholder="🔍 Search drivers or teams…" autocomplete="off" oninput="_gaPickRender()">
+    <div class="gap-chips">${['all'].concat(divs).map(d => `<button data-d="${esc(d)}" class="${d === 'all' ? 'on' : ''}" onclick="window._gaPick.div='${esc(d)}';this.parentNode.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b===this));_gaPickRender()">${d === 'all' ? 'ALL' : esc(d)}</button>`).join('')}</div>
+    <div id="gap-list" class="gap-list"></div>`;
   document.getElementById('modal-overlay').classList.remove('hidden');
+  _gaPickRender(); setTimeout(() => { const q = document.getElementById('gap-q'); if (q && window.innerWidth > 640) q.focus(); }, 50);
+};
+window._gaPickRender = function() {
+  const P = window._gaPick, box = document.getElementById('gap-list'); if (!P || !box) return;
+  const q = ((document.getElementById('gap-q') || {}).value || '').trim().toLowerCase();
+  const f = (x) => String(x || '').toLowerCase();
+  const rows = P.list.filter(d => (P.div === 'all' || d.division === P.div) && (!q || f(d.name).includes(q) || f(d.team).includes(q) || f(d.division) === q));
+  box.innerHTML = rows.length ? rows.slice(0, 150).map(d => { const tc = (typeof getTeamCardColour === 'function' && d.team) ? getTeamCardColour(d.team) : null;
+    return `<button class="gap-row${d.id === P.cur ? ' cur' : ''}" style="--tc:${tc ? tc.accent : '#888'}" onclick="confirmGuardianAngelPick('${P.teamId}','${P.raceId}','${d.id}')">
+      ${_wdAv({ name: d.name, photo: driverPhoto(d) }, 38)}<span class="nm"><b>${esc(d.name)}</b><small>${esc(d.team || 'Reserve')}</small></span>
+      <span class="dv">${esc(d.division || '')}</span><span class="pr">${d._pr != null && !isNaN(d._pr) ? '$' + Number(d._pr).toFixed(1) + 'M' : ''}</span>${d.id === P.cur ? '<span title="Current angel">😇</span>' : ''}</button>`; }).join('')
+    : '<p class="text-muted" style="text-align:center;margin:18px 0">No drivers match that search.</p>';
 };
 
-window.confirmGuardianAngelPick = async function(teamId, raceId) {
-  const driverId = document.getElementById('ga-driver-select').value;
+window.confirmGuardianAngelPick = async function(teamId, raceId, pickedId) {
+  const driverId = pickedId || ((document.getElementById('ga-driver-select') || {}).value);
   if (!driverId) return;
   const team = await dbGet('teams', teamId);
   const chips = team.chips || {};
