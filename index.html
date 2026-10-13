@@ -10654,6 +10654,18 @@ async function _tcMaybeLaunch(teamDocId, raceId) {
     const [drs, sch] = await Promise.all([dbGetAll('drivers'), dbGetAll('schedule').catch(() => [])]); const d = drs.find(x => x.id === capId);
     if (d) _tcCutscene(d, (sch || []).filter(x => x && x.name).sort((a, b) => (a.raceNum || 0) - (b.raceNum || 0) || (a.lockTime || 0) - (b.lockTime || 0)));
   } catch (e) {} }
+// Rocket launch sound, made in the browser (no file): engine ignition rumble during the countdown, a roar at lift-off, then fading away.
+function _tcRocketSound() {
+  try { const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return () => {}; const ctx = new AC(), t0 = ctx.currentTime;
+    const buf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate), dt = buf.getChannelData(0); for (let i = 0; i < dt.length; i++) dt[i] = Math.random() * 2 - 1;
+    const noise = ctx.createBufferSource(); noise.buffer = buf; noise.loop = true;
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.setValueAtTime(120, t0); lp.frequency.linearRampToValueAtTime(400, t0 + 3); lp.frequency.exponentialRampToValueAtTime(1400, t0 + 3.6); lp.frequency.exponentialRampToValueAtTime(300, t0 + 6);
+    const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.08, t0 + 1.2); g.gain.linearRampToValueAtTime(0.25, t0 + 3); g.gain.linearRampToValueAtTime(0.6, t0 + 3.5); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 6.1);
+    const sub = ctx.createOscillator(); sub.type = 'sine'; sub.frequency.setValueAtTime(38, t0); sub.frequency.linearRampToValueAtTime(55, t0 + 3.5);
+    const sg = ctx.createGain(); sg.gain.setValueAtTime(0.0001, t0); sg.gain.exponentialRampToValueAtTime(0.25, t0 + 1.3); sg.gain.linearRampToValueAtTime(0.45, t0 + 3.4); sg.gain.exponentialRampToValueAtTime(0.0001, t0 + 6);
+    noise.connect(lp).connect(g).connect(ctx.destination); sub.connect(sg).connect(ctx.destination); noise.start(t0); sub.start(t0); noise.stop(t0 + 6.3); sub.stop(t0 + 6.3);
+    return () => { try { ctx.close(); } catch (e) {} };
+  } catch (e) { return () => {}; } }
 function _tcCutscene(d, tracks) {
   document.getElementById('tc-launch')?.remove();
   const photo = driverPhoto(d), ini = esc(String(d.name || '?').slice(0, 2).toUpperCase());
@@ -10713,7 +10725,12 @@ function _tcCutscene(d, tracks) {
     <div class="win">${face}</div><div class="fl"></div></div>
   <div class="ttl"><small>TRIPLE CAPTAIN</small><div>${esc(d.name || 'Captain')}</div><em>3× POINTS 🚀</em></div>
   <div class="skip">tap to skip</div>`;
-  const close = () => { if (!el.isConnected) return; el.style.transition = 'opacity .35s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 360); };
+  // Pause the music while the rocket launches, play the launch sound, and resume the music afterwards.
+  const bg = document.getElementById('bg-music'), wasPlaying = !!(bg && !bg.paused); if (wasPlaying) bg.pause();
+  let muted = false; try { muted = localStorage.getItem('musicMuted') === '1'; } catch (e) {}
+  const stopSfx = muted ? () => {} : _tcRocketSound();
+  const close = () => { if (!el.isConnected) return; el.style.transition = 'opacity .35s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 360);
+    stopSfx(); if (wasPlaying && bg) bg.play().catch(() => {}); };
   el.addEventListener('click', close); document.body.appendChild(el);
   setTimeout(() => { try { fireConfetti({ count: 160 }); } catch (e) {} }, 3700);
   setTimeout(close, 6200);
