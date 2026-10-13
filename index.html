@@ -21506,13 +21506,24 @@ window.setHidePriceMoves = async function(on) {
 
 // Renders the market's "Recent Transfers" strip as a self-cycling slide (IMS LIVE style):
 // one real-league roster move at a time, fading to the next every few seconds, with position dots.
+// Wire channels: LEAGUE (real roster moves) and MANAGERS (fantasy transfers).
+window.rtChannel = function(ch) { window._rtChannel = ch; const el = document.getElementById('market-transfer-wire'); if (!el) return;
+  if (window._rtTimer) { clearInterval(window._rtTimer); window._rtTimer = null; }
+  el.innerHTML = buildRecentTransfers(window._marketRosterMoves); el.style.display = ''; setTimeout(() => { try { rtCycle(); } catch (e) {} }, 30); };
 function buildRecentTransfers(moves) {
-  if (!Array.isArray(moves) || !moves.length) return '';
+  const _mgr = window._rtChannel === 'managers';
+  if (_mgr) moves = window._marketMgrMoves || [];
+  const _chBtns = `<span style="display:flex;align-items:center;gap:3px;margin-left:6px">${[['league', 'LEAGUE'], ['managers', 'MANAGERS']].map(([k, l]) => `<button onclick="rtChannel('${k}')" style="border:0;cursor:pointer;font:inherit;font-weight:900;font-size:.62rem;letter-spacing:1px;padding:2px 7px;border-radius:3px;${(k === 'managers') === _mgr ? 'background:#ffd400;color:#000' : 'background:rgba(255,255,255,.12);color:#fff'}">${l}</button>`).join('')}</span>`;
+  if (!Array.isArray(moves) || !moves.length) {
+    if (!_mgr && !(window._marketMgrMoves || []).length) return '';
+    return `<div class="card rt-sky" style="padding:10px 12px;display:flex;align-items:center;gap:8px;background:radial-gradient(120% 140% at 85% 0%,#1d3a8a 0%,#0b1f5c 45%,#06123a 100%);border:1px solid rgba(80,130,255,.35);border-radius:12px;color:#fff;font-weight:700;font-size:.8rem"><b style="background:#e10600;padding:2px 8px">TRANSFER WIRE</b>${_chBtns}<span style="opacity:.7">${_mgr ? 'No manager transfers yet.' : 'No league moves yet.'}</span></div>`;
+  }
   const sorted = moves.slice().sort((a,b) => (b.timestamp||0) - (a.timestamp||0)).slice(0, 8);
+  window._rtCh = _mgr ? 'managers' : 'league';
   window._rtMoves = sorted;
   window._rtIdx = 0;
   const dots = sorted.map((_,i)=>`<span id="rt-dot-${i}" onclick="rtGoto(${i})" style="width:${i===0?'16px':'6px'};height:6px;border-radius:3px;background:${i===0?'linear-gradient(90deg,var(--gold),#ffa751)':'rgba(255,255,255,0.18)'};display:inline-block;transition:all .35s;cursor:pointer"></span>`).join('');
-  const _tk = sorted.map(m => { const v = (m.toTeam || m.fromTeam) ? `${(m.action||'').toUpperCase()} · ${esc(m.toTeam || m.fromTeam)}` : (m.action||'').toUpperCase(); return `<span style="margin-right:34px"><b style="color:#fff">${esc(m.driver||'')}</b> <span style="color:#ffd400">${v}</span></span>`; }).join('');
+  const _tk = sorted.map(m => { const v = m.action === 'fantasy' ? `${m.soldOnly ? 'SOLD' : 'IN'} · ${esc(m.manager)}` : (m.toTeam || m.fromTeam) ? `${(m.action||'').toUpperCase()} · ${esc(m.toTeam || m.fromTeam)}` : (m.action||'').toUpperCase(); return `<span style="margin-right:34px"><b style="color:#fff">${esc(m.driver||'')}</b> <span style="color:#ffd400">${v}</span></span>`; }).join('');
   if (!window._rtClock) window._rtClock = setInterval(() => { const c = document.getElementById('rt-clock'); if (!c) { clearInterval(window._rtClock); window._rtClock = null; return; } c.textContent = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }); }, 10000);
   return `<style>
     @keyframes rtPulse{0%,100%{opacity:1}50%{opacity:.35}}
@@ -21529,7 +21540,7 @@ function buildRecentTransfers(moves) {
     <div style="position:relative;display:flex;align-items:stretch;justify-content:space-between;height:28px">
       <div style="display:flex;align-items:stretch">
         <span style="display:flex;align-items:center;padding:0 6px;background:#fff"><img src="icons/icon-192.png?v=3" alt="IMS Fantasy" style="height:22px;width:22px;object-fit:contain;border-radius:4px"></span>
-        <span style="display:flex;align-items:center;padding:0 12px;background:#e10600;color:#fff;font-weight:900;font-size:.82rem;letter-spacing:2px;white-space:nowrap;clip-path:polygon(0 0,100% 0,calc(100% - 10px) 100%,0 100%);padding-right:20px">TRANSFER WIRE</span>
+        <span style="display:flex;align-items:center;padding:0 12px;background:#e10600;color:#fff;font-weight:900;font-size:.82rem;letter-spacing:2px;white-space:nowrap;clip-path:polygon(0 0,100% 0,calc(100% - 10px) 100%,0 100%);padding-right:20px">TRANSFER WIRE</span>${_chBtns}
         <span style="display:flex;align-items:center;gap:5px;padding:0 8px;color:#fff;font-weight:800;font-size:.72rem;letter-spacing:1.5px"><span style="width:7px;height:7px;border-radius:50%;background:#e10600;box-shadow:0 0 8px #e10600;animation:rtPulse 1.4s ease infinite"></span>LIVE</span>
       </div>
       <div style="display:flex;gap:8px;align-items:center;padding-right:8px">
@@ -21566,7 +21577,8 @@ function rtSlideHtml(m) {
     'auto-fire':       { icon: '🔴', col: '#ff5470', tag: 'DROPPED',  verb: (x) => `dropped by <strong>${esc(x.fromTeam)}</strong>` },
     'auto_fire':       { icon: '🔴', col: '#ff5470', tag: 'DROPPED',  verb: (x) => `dropped by <strong>${esc(x.fromTeam)}</strong>` },
     'departed':        { icon: '🔴', col: '#ff5470', tag: 'DEPARTED', verb: (x) => `left the league` },
-    'released':        { icon: '🔴', col: '#ff5470', tag: 'RELEASED', verb: (x) => `released by <strong>${esc(x.fromTeam)}</strong>` }
+    'released':        { icon: '🔴', col: '#ff5470', tag: 'RELEASED', verb: (x) => `released by <strong>${esc(x.fromTeam)}</strong>` },
+    'fantasy':         { icon: '💼', col: '#4aa3ff', tag: 'MANAGER MOVE', verb: (x) => x.soldOnly ? `sold by <strong>${esc(x.manager)}</strong>` : `signed by <strong>${esc(x.manager)}</strong>${x.outName ? ` · out: ${esc(x.outName)}` : ''}` }
   };
   const meta = META[m.action] || { icon: '•', col: 'var(--muted)', tag: (m.action||'').toUpperCase(), verb: () => '' };
   const when = m.timestamp ? formatTimeAgo(m.timestamp) : '';
@@ -21681,6 +21693,12 @@ async function renderMarket() {
 
   const [allDrivers, constrs, teams, races, lockDoc, lastSyncedDoc, schedule, mktTransfers, hidePmDoc, rosterMoves] = await Promise.all([dbGetAll('drivers'), dbGetAll('constructors'), dbGetAll('teams'), dbGetAll('races'), dbGet('settings','teamsLocked'), dbGet('settings','lastSynced'), dbGetAll('schedule').catch(()=>[]), dbGetAll('transfers').catch(()=>[]), dbGet('settings','hidePriceMoves').catch(()=>null), dbGetAll('rosterMoves').catch(()=>[])]);
   window._marketRosterMoves = rosterMoves || [];
+  // Managers' fantasy transfers for the wire's MANAGERS channel — newest 8, names hidden until deadline day like elsewhere.
+  { const _rev = transferNamesRevealed(schedule || []), _tn = {}; (teams || []).forEach(t => { if (t && t.userId) _tn[t.userId] = (t.testAccount ? null : (t.teamName || t.playerName || 'A manager')); });
+    window._marketMgrMoves = (mktTransfers || []).filter(t => t && t.timestamp && t.type !== 'constructor' && _tn[t.userId] !== null && (t.newName || t.oldName))
+      .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)).slice(0, 8)
+      .map(t => ({ action: 'fantasy', timestamp: t.timestamp, toDivision: t.div || '', manager: _rev ? (_tn[t.userId] || 'A manager') : 'A manager',
+        driver: (t.newName && t.newName !== '—') ? t.newName : t.oldName, outName: (t.newName && t.newName !== '—') ? (t.oldName || '') : '', soldOnly: !(t.newName && t.newName !== '—') })); }
   // Quali pace vs the rest of each driver's CURRENT division (same model as the pole odds).
   window._mktQGap = {};
   try {
