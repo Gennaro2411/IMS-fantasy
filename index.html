@@ -14658,6 +14658,7 @@ window.importDbRound = async function(roundNo, trackName) {
       }
     });
 
+    const dsqCountByDriver = {}; // dId -> DSQs this round (they jump straight to the $1M tier)
     const dnfCountByDriver = {}; // dId -> non-finishes this round (col_i = DNF/DNS/DSQ instead of a race time) — all carry the price penalty
     const statusByDriver = {}; // dId -> 'DNF' | 'DNS' | 'DSQ' for display (worst across own-division sessions)
     // Per-division status, mirroring driverPointsByDivision. A driver can race in more than one
@@ -14724,6 +14725,7 @@ window.importDbRound = async function(roundNo, trackName) {
           if (rtStatus === 'DNF' || rtStatus === 'DNS' || rtStatus === 'DSQ') {
             // All three carry the same price penalty — a non-finish is a non-finish
             dnfCountByDriver[dId] = (dnfCountByDriver[dId] || 0) + 1;
+            if (rtStatus === 'DSQ') dsqCountByDriver[dId] = (dsqCountByDriver[dId] || 0) + 1;
             // DSQ outranks DNF outranks DNS if a driver hit several own-division sessions
             const rank = { DNS: 1, DNF: 2, DSQ: 3 };
             if (!statusByDriver[dId] || rank[rtStatus] > rank[statusByDriver[dId]]) statusByDriver[dId] = rtStatus;
@@ -15214,6 +15216,8 @@ window.importDbRound = async function(roundNo, trackName) {
     // The more DNFs a driver racks up in a season, the more of a scoring wildcard they are —
     // and their price pays for it. Season deduction ladder (totals double per your spec):
     // 1st DNF -$0.5M · 2nd -$0.5M (total $1M) · 3rd -$1M (total $2M) · 4th+ -$2M each.
+    // A DSQ skips the ladder: it's at least -$1M (the 3rd-tier charge), and once a driver has a DSQ
+    // this season every further DNF/DNS/DSQ costs -$2M.
     // Applied only when this round's pricing settles (with D4, like every other price force),
     // recorded per-race so re-imports are no-ops, with delta top-up when a later batch reveals
     // an extra DNF for an already-recorded race.
@@ -15230,17 +15234,23 @@ window.importDbRound = async function(roundNo, trackName) {
           const rec = dnfRaces[trackName];
           const recCount = rec ? (rec.count || 0) : 0;
           const recCharge = rec ? (rec.priceChange || 0) : 0;
-          if (newCount === recCount) return Promise.resolve(); // already applied — re-import no-op
+          const newDsq = dsqCountByDriver[dId] || 0, recDsq = rec ? (rec.dsq || 0) : 0;
+          if (newCount === recCount && newDsq === recDsq) return Promise.resolve(); // already applied — re-import no-op
           const priorSeason = Math.max(0, (d.seasonDnfs || 0) - recCount); // season DNFs excluding this race
-          let totalCharge = 0;
-          for (let n = priorSeason + 1; n <= priorSeason + newCount; n++) totalCharge += nthDnfCharge(n);
+          const priorDsq = Math.max(0, (d.seasonDsqs || 0) - recDsq);     // season DSQs excluding this race
+          let totalCharge = 0, dsqSeen = priorDsq > 0, dsqLeft = newDsq;
+          for (let n = priorSeason + 1; n <= priorSeason + newCount; n++) {
+            const isDsq = dsqLeft > 0; if (isDsq) dsqLeft--; // this round's DSQs are charged first
+            totalCharge += dsqSeen ? 2.0 : isDsq ? Math.max(1.0, nthDnfCharge(n)) : nthDnfCharge(n);
+            if (isDsq) dsqSeen = true;
+          }
           totalCharge = Math.round(totalCharge * 10) / 10;
           const adjust = Math.round((totalCharge - recCharge) * 10) / 10; // top-up only
           if (adjust === 0) return Promise.resolve();
           const newPrice = Math.max(PRICE_FLOOR, Math.round((d.price - adjust) * 10) / 10);
-          dnfRaces[trackName] = { count: newCount, priceChange: totalCharge };
+          dnfRaces[trackName] = { count: newCount, dsq: newDsq, priceChange: totalCharge };
           dnfPenaltyBreakdown.push({ name: d.name, dnfs: newCount, seasonDnfs: priorSeason + newCount, oldPrice: d.price, newPrice, change: -adjust });
-          return dbSet('drivers', d.id, { ...d, price: newPrice, dnfRaces, seasonDnfs: priorSeason + newCount, lastDnfPenalty: adjust });
+          return dbSet('drivers', d.id, { ...d, price: newPrice, dnfRaces, seasonDnfs: priorSeason + newCount, seasonDsqs: priorDsq + newDsq, lastDnfPenalty: adjust });
         }));
       }
     }
@@ -19587,15 +19597,18 @@ window.rebuildDnfRecords = async function() {
   await Promise.all(drivers.map(d => {
     if (d.price === undefined || d.price === null) return Promise.resolve();
     const newDnfRaces = {};
-    let seasonCount = 0, totalCharged = 0;
+    let seasonCount = 0, totalCharged = 0, seasonDsq = 0;
     ordered.forEach(r => {
       const cnt = (r.dnfByDriver && r.dnfByDriver[d.id]) || 0;
       if (cnt <= 0) return;
-      let charge = 0;
-      for (let n = seasonCount + 1; n <= seasonCount + cnt; n++) charge += nthDnfCharge(n);
+      // Same ladder as import: a DSQ is at least -$1M, and after a DSQ every non-finish is -$2M.
+      const dsq = Math.min(cnt, ((r.raceStatusByDriver || {})[d.id] === 'DSQ') ? 1 : 0);
+      let charge = 0, dsqSeen = seasonDsq > 0, dsqLeft = dsq;
+      for (let n = seasonCount + 1; n <= seasonCount + cnt; n++) { const isDsq = dsqLeft > 0; if (isDsq) dsqLeft--;
+        charge += dsqSeen ? 2.0 : isDsq ? Math.max(1.0, nthDnfCharge(n)) : nthDnfCharge(n); if (isDsq) dsqSeen = true; }
       charge = Math.round(charge * 10) / 10;
-      newDnfRaces[r.name] = { count: cnt, priceChange: charge };
-      seasonCount += cnt;
+      newDnfRaces[r.name] = { count: cnt, dsq, priceChange: charge };
+      seasonCount += cnt; seasonDsq += dsq;
       totalCharged += charge;
     });
     const oldCharged = Object.values(d.dnfRaces || {}).reduce((s,x) => s + (x.priceChange||0), 0);
@@ -19604,7 +19617,7 @@ window.rebuildDnfRecords = async function() {
     const refund = Math.round((oldCharged - totalCharged) * 10) / 10; // +ve = give price back
     const newPrice = Math.max(PRICE_FLOOR, Math.round((d.price + refund) * 10) / 10);
     changes.push({ name: d.name, oldCount, newCount: seasonCount, refund });
-    return dbSet('drivers', d.id, { ...d, dnfRaces: newDnfRaces, seasonDnfs: seasonCount, price: newPrice });
+    return dbSet('drivers', d.id, { ...d, dnfRaces: newDnfRaces, seasonDnfs: seasonCount, seasonDsqs: seasonDsq, price: newPrice });
   }));
   if (!changes.length) { msg.innerHTML = '<div class="alert alert-success">✔ All DNF records already match the current races — nothing to change.</div>'; return; }
   let rows = changes.sort((a,b)=>b.refund-a.refund).map(ch =>
