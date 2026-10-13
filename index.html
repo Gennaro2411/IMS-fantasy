@@ -14563,7 +14563,7 @@ window.importDbRound = async function(roundNo, trackName) {
     const res = _imsDb.exec(`
       SELECT col_e as driver, col_g as team, col_c as race_div, col_n as finish_pos,
              col_as as fantasy_pts, elo_post_race, elo_change, rowid as row_order,
-             col_i as race_time
+             col_i as race_time, bott_points_effective, COALESCE(seasonal_license_before, col_bb) as licence
       FROM inputs_rows 
       WHERE col_a='${IMPORT_SEASON}' AND col_ad='${trackName.replace(/'/g, "''")}'
         AND col_c IN (${IMPORT_DIVS.map(d=>`'${d}'`).join(',')})
@@ -14599,6 +14599,7 @@ window.importDbRound = async function(roundNo, trackName) {
     const positionByDivision = {}; // { driverId: { div: finishPosition } } — real finishing place per
     // division that race, so profiles can show "P3 · 18 pts" alongside points.
     const constructorPoints = {};
+    const bottBonusByDivision = {}; // { driverId: { div: extra BOTT pts } } — the +5 for non-licence-0 drivers in D0
     const seenDriver = new Set(); // dedupe — one result per driver for this track
 
     const [drivers, constrs] = await Promise.all([dbGetAll('drivers'), dbGetAll('constructors')]);
@@ -14643,7 +14644,7 @@ window.importDbRound = async function(roundNo, trackName) {
     // result in another. { dId: { div: 'DNF' } }
     const statusByDriverDivision = {};
     const batchDriverIds = new Set(); // every driver seen in this batch — for stale-status cleanup
-    rows.forEach(([driver, team, raceDiv, finishPos, pts, eloPost, eloChange, rowOrder, raceTime]) => {
+    rows.forEach(([driver, team, raceDiv, finishPos, pts, eloPost, eloChange, rowOrder, raceTime, bottEff, licence]) => {
       const driverKey = (driver||'').toLowerCase().trim();
       // Dedupe by driver+division, not just driver — a driver can legitimately race in more
       // than one division in the same event, and both results should count.
@@ -14797,6 +14798,13 @@ window.importDbRound = async function(roundNo, trackName) {
         const teamKeyNoSpace = teamKey.replace(/\s+/g, '');
         cId = Object.entries(constrNameMap).find(([k]) => k.replace(/\s+/g, '') === teamKeyNoSpace)?.[1];
       }
+      // BOTT bonus (league rule): a driver who ISN'T licence 0 driving in D0 earns their team +5 BOTT points
+      // for that race. BOTT only — their own driver points are unchanged. If the .db's bott_points_effective
+      // already includes it, that figure is used instead (never counted twice).
+      const _lic = String(licence || '').trim().toUpperCase(), _d0 = String(raceDiv || '').trim().toUpperCase() === 'D0';
+      const _eff = parseFloat(String(bottEff == null ? '' : bottEff).replace(',', '.'));
+      const _bonus = Math.max((_d0 && _lic && _lic !== 'L0') ? 5 : 0, isFinite(_eff) ? Math.round(_eff) - fantasyPts : 0);
+      if (_bonus > 0 && dId) { (bottBonusByDivision[dId] = bottBonusByDivision[dId] || {})[DIVISIONS.includes(raceDiv) ? raceDiv : 'D0'] = _bonus; }
       if (cId && fantasyPts > 0) {
         constructorPoints[cId] = (constructorPoints[cId] || 0) + fantasyPts;
       }
@@ -14908,9 +14916,14 @@ window.importDbRound = async function(roundNo, trackName) {
     // guarantees the constructor total always matches what's actually in driverPointsByDivision,
     // with no possibility of double-counting on a re-import.
     const mergedConstructorPoints = {};
+    // BOTT bonuses: this batch's divisions overwrite, others carry over from the stored race.
+    const mergedBottBonus = JSON.parse(JSON.stringify((existingRace && existingRace.bottBonusByDivision) || {}));
+    Object.keys(mergedBottBonus).forEach(dId => { Object.keys(mergedBottBonus[dId] || {}).forEach(dv => { if (IMPORT_DIVS.includes(dv)) delete mergedBottBonus[dId][dv]; }); });
+    Object.entries(bottBonusByDivision).forEach(([dId, byDiv]) => { mergedBottBonus[dId] = { ...(mergedBottBonus[dId] || {}), ...byDiv }; });
     Object.entries(mergedDriverPointsByDivision).forEach(([dId, byDiv]) => {
       const teamsForThisDriver = mergedDriverTeamByDivision[dId] || {};
-      Object.entries(byDiv).forEach(([div, pts]) => {
+      Object.entries(byDiv).forEach(([div, pts0]) => {
+        const pts = (pts0 || 0) + (((mergedBottBonus[dId] || {})[div]) || 0);
         if (pts <= 0) return;
         // Prefer the race-specific team for this exact division; fall back to the driver's
         // current team only if we genuinely have no historical record of who they raced for
@@ -15037,6 +15050,7 @@ window.importDbRound = async function(roundNo, trackName) {
       driverTeamByDivision: mergedDriverTeamByDivision,
       driverNames,
       constructorPoints: mergedConstructorPoints,
+      bottBonusByDivision: mergedBottBonus,
       dnfByDriver: mergedDnfByDriver,
       raceStatusByDriver: mergedStatusByDriver,
       raceStatusByDivision: mergedStatusByDivision,
