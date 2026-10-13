@@ -10712,7 +10712,14 @@ function _gaCutscene(angel, crew) {
     <path d="M118 40C90 6 40 0 4 10c22 6 36 14 46 24C30 30 14 34 2 44c24 0 40 4 52 12C36 58 22 66 12 78c26-6 46-6 64 2C70 84 62 92 58 100c26-8 46-24 60-60Z"/>
     <path d="M118 40C100 28 80 24 60 26" fill="none" stroke="#c9d8f5"/><path d="M114 52C96 46 78 46 62 50" fill="none" stroke="#c9d8f5"/></g></svg>`;
   const angelHtml = (cls) => `<div class="an ${cls}"><div class="halo"></div>${wing('l')}${wing('r')}<div class="face">${pf(angel, 'pp')}</div></div>`;
-  const crewHtml = crew.slice(0, 8).map((d, i) => `<div class="cr" style="--i:${i}">${pf(d, 'pp')}<small>${esc(d.name || '')}</small></div>`).join('');
+  // Speech bubbles: worried while the monster's there, grateful once the angel saves them.
+  const shuf = (a) => a.map(x => [Math.random(), x]).sort((p, q) => p[0] - q[0]).map(x => x[1]);
+  const WORRY = shuf(["We're done for 😱", 'Not like this…', 'Someone DO something!', 'Box box box!!', "I'm too young to DNF", 'Mum come pick me up', 'Is it too late to transfer out?', 'HELP 😭', 'My points!!!', 'Who let it in the paddock?!']);
+  const THANKS = shuf(['THANK YOU 😇', 'Legend!!', 'Our hero 🙌', 'Owe you one!', 'Angel on the grid ✨', 'Saved the season!', 'GOAT 🐐', 'Never doubted you', 'Pure class 🙏', 'Drinks on me 🍾']);
+  const CW = crew.slice(0, 8), spec = CW.length ? [Math.floor(Math.random() * CW.length), 0] : [];
+  if (CW.length > 1) { spec[1] = (spec[0] + 1 + Math.floor(Math.random() * (CW.length - 1))) % CW.length; }
+  const crewHtml = CW.map((d, i) => { const w = i === spec[0] ? 'Greedy F***' : i === spec[1] ? 'Webbah slow' : WORRY[i % WORRY.length];
+    return `<div class="cr" style="--i:${i}"><div class="bb${i % 2 ? ' hi' : ''}"><span class="w">${esc(w)}</span><span class="g">${esc(THANKS[i % THANKS.length])}</span></div>${pf(d, 'pp')}<small>${esc(d.name || '')}</small></div>`; }).join('');
   const el = document.createElement('div'); el.id = 'ga-scene';
   el.innerHTML = `<style>
     #ga-scene{position:fixed;inset:0;z-index:99999;overflow:hidden;cursor:pointer;font-family:'Barlow Condensed',sans-serif;color:#fff;background:#120508;animation:gaIn .3s ease-out}
@@ -10725,9 +10732,16 @@ function _gaCutscene(angel, crew) {
     #ga-scene .mon .hd{position:absolute;left:50%;top:40px;width:150px;height:150px;margin-left:-75px;border-radius:50%;background:url('icons/ga-monster.png') center/cover;box-shadow:0 0 0 5px #ff8a00,0 0 30px #ff3d00;animation:gaRoar .25s ease-in-out .4s 6 alternate}
     #ga-scene .mon .armL{transform-origin:95px 150px;animation:gaArmL .5s ease-in-out infinite alternate}#ga-scene .mon .armR{transform-origin:205px 150px;animation:gaArmR .5s ease-in-out infinite alternate}
     #ga-scene .boom{position:absolute;left:50%;bottom:38%;width:40px;height:40px;margin-left:-20px;border-radius:50%;background:radial-gradient(#fff,#ffe9a8 40%,rgba(255,180,60,0) 70%);opacity:0;animation:gaBoom .9s ease-out 4.25s forwards}
-    #ga-scene .crew{position:absolute;left:0;right:0;bottom:4%;display:flex;justify-content:center;flex-wrap:wrap;gap:8px;padding:0 10px;animation:gaCrewUp .7s ease-out 5.3s forwards}
-    #ga-scene .cr{display:flex;flex-direction:column;align-items:center;width:58px;animation:gaCower .18s ease-in-out infinite alternate,gaJump .5s cubic-bezier(.3,0,.3,1) calc(5.6s + var(--i) * .07s) infinite alternate}
-    #ga-scene .cr .pp{width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid #fff;background:#333;display:flex;align-items:center;justify-content:center;font-weight:900}
+    #ga-scene .crew{position:absolute;left:0;right:0;bottom:4%;display:flex;justify-content:center;flex-wrap:nowrap;gap:4px;padding:0 6px;animation:gaCrewUp .7s ease-out 5.3s forwards}
+    #ga-scene .cr{display:flex;flex-direction:column;align-items:center;width:58px;flex:0 1 58px;min-width:0;animation:gaCower .18s ease-in-out infinite alternate,gaJump .5s cubic-bezier(.3,0,.3,1) calc(5.6s + var(--i) * .07s) infinite alternate}
+    #ga-scene .cr{position:relative}
+    #ga-scene .bb{position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);min-width:64px;max-width:92px;padding:4px 7px;border-radius:10px;background:#fff;color:#1a1a1a;font-family:system-ui,sans-serif;font-size:.62rem;font-weight:700;line-height:1.15;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,.35);opacity:0;animation:gaBb .35s cubic-bezier(.2,1.5,.4,1) calc(.6s + var(--i) * .18s) forwards;z-index:3}
+    #ga-scene .bb.hi{bottom:calc(100% + 34px)}
+    #ga-scene .bb::after{content:'';position:absolute;top:100%;left:50%;margin-left:-5px;border:5px solid transparent;border-top-color:#fff}
+    #ga-scene .bb.hi::after{border-top-width:30px;border-left-width:2px;border-right-width:2px;margin-left:-2px;border-top-color:rgba(255,255,255,.85)}
+    #ga-scene .bb span{display:block}#ga-scene .bb .g{display:none}
+    #ga-scene.saved .bb .w{display:none}#ga-scene.saved .bb .g{display:block}#ga-scene.saved .bb{background:#fff8dc;animation:gaBb .35s cubic-bezier(.2,1.5,.4,1) forwards}
+    #ga-scene .cr .pp{width:min(46px,10vw);height:min(46px,10vw);border-radius:50%;object-fit:cover;border:2px solid #fff;background:#333;display:flex;align-items:center;justify-content:center;font-weight:900}
     #ga-scene .cr small{font-size:.6rem;font-weight:700;max-width:58px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px;opacity:.85}
     #ga-scene .an{position:absolute;left:50%;width:110px;height:110px;margin-left:-55px}
     #ga-scene .an .face{position:absolute;inset:18px;border-radius:50%;overflow:hidden;border:3px solid #fff;box-shadow:0 0 22px #fff,0 0 40px #ffe08a;z-index:2;background:#333}
@@ -10760,6 +10774,7 @@ function _gaCutscene(angel, crew) {
     @keyframes gaDive{90%{opacity:1}to{top:52%;transform:scale(.7);opacity:0}}
     @keyframes gaBeam{0%{opacity:0}30%{opacity:1}80%{opacity:1}100%{opacity:0}}
     @keyframes gaHero{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:none}}
+    @keyframes gaBb{from{opacity:0;transform:translateX(-50%) scale(.3)}to{opacity:1;transform:translateX(-50%) scale(1)}}
     @keyframes gaTtl{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
     @media (prefers-reduced-motion:reduce){#ga-scene *{animation-duration:.01s!important;animation-delay:0s!important}}
   </style>
@@ -10784,6 +10799,7 @@ function _gaCutscene(angel, crew) {
   el.addEventListener('click', close); document.body.appendChild(el);
   if (!muted) { at(400, () => _gaSfx('roar')); at(3700, () => _gaSfx('whoosh')); at(4250, () => _gaSfx('boom')); at(5200, () => _gaSfx('choir')); }
   at(5600, () => { try { fireConfetti({ count: 180 }); } catch (e) {} });
+  at(5450, () => { el.classList.add('saved'); el.querySelectorAll('.bb').forEach((b, i) => { b.style.animationDelay = (i * .12) + 's'; b.style.animationName = 'none'; void b.offsetWidth; b.style.animationName = ''; }); });
   at(9800, close);
 }
 // ===== Triple Captain launch cutscene =====
