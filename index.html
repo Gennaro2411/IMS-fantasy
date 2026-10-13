@@ -2636,17 +2636,17 @@
     <div id="admin-tab-teams" class="section">
       <div class="card">
         <div class="card-title"><div class="dot"></div>Manage Chips</div>
-        <p class="text-muted" style="margin-bottom:12px">Grant or reset chips for a specific player.</p>
+        <p class="text-muted" style="margin-bottom:12px">Remove a chip someone played by accident (or for testing) — it becomes unused again and is taken off any locked round, so it won't score.</p>
         <div class="form-group">
           <label>Player Name (in-game)</label>
           <input type="text" id="chip-player-name" placeholder="e.g. Gennaro">
         </div>
         <div class="flex gap-2" style="flex-wrap:wrap">
-          <button class="btn btn-secondary" onclick="adminGrantChip('tripleCaptain')">🚀 Grant Triple Captain</button>
+          <button class="btn btn-secondary" onclick="adminGrantChip('tripleCaptain')">🚀 Remove / reset Triple Captain</button>
           <button class="btn btn-secondary" onclick="adminToggleTestAccount()">🧪 Toggle test account</button>
           <button class="btn btn-secondary" onclick="adminGiveFreeBet()">🎁 Give free bet</button>
-          <button class="btn btn-secondary" onclick="adminGrantChip('wildcard')">🃏 Grant Wildcard</button>
-          <button class="btn btn-secondary" onclick="adminGrantChip('guardianAngel')">😇 Grant Guardian Angel</button>
+          <button class="btn btn-secondary" onclick="adminGrantChip('wildcard')">🃏 Remove / reset Wildcard</button>
+          <button class="btn btn-secondary" onclick="adminGrantChip('guardianAngel')">😇 Remove / reset Guardian Angel</button>
           <button class="btn btn-secondary" onclick="adminGrantFreeTransfer()">🔄 Grant Free Transfer</button>
           <button class="btn btn-secondary" onclick="adminResetPlayerPassword()">🔑 Reset Password</button>
           <button class="btn" style="background:#2a0a0a;color:var(--red);border:1px solid var(--red)" onclick="adminResetChips()">✕ Reset All Chips</button>
@@ -17492,6 +17492,18 @@ window.adminToggleTestAccount = async function() {
   msg.innerHTML=`<div class="alert alert-success">🧪 ${esc(team.playerName)} is ${on?'now a test account (hidden from the leaderboard)':'no longer a test account'}.</div>`;
 };
 
+// Removing a chip must also take it off any race snapshot it was locked into, or that round would still
+// score it (e.g. a triple captain played by accident after the lock).
+async function _adminStripChipFromSnapshots(teamId, chipTypes) {
+  const races = await dbGetAll('races', { fresh: true }).catch(() => []); let n = 0;
+  for (const r of races) { const sn = r.teamSnapshots && r.teamSnapshots[teamId]; if (!sn || !sn.chips) continue;
+    const ch = { ...sn.chips }; let hit = false;
+    chipTypes.forEach(k => { if (ch[k]) { delete ch[k]; hit = true; } if (k === 'wildcard' && ch.wildcardUsed) { delete ch.wildcardUsed; hit = true; } if (k === 'guardianAngel' && ch.guardianAngelUsed) { delete ch.guardianAngelUsed; hit = true; } });
+    if (chipTypes.includes('guardianAngel') && sn.guardianAngelDriverId) hit = true;
+    if (!hit) continue;
+    const snaps = { ...r.teamSnapshots, [teamId]: { ...sn, chips: ch, ...(chipTypes.includes('guardianAngel') ? { guardianAngelDriverId: null } : {}) } };
+    await dbSet('races', r.id, { teamSnapshots: snaps }); n++; }
+  return n; }
 window.adminGrantChip = async function(chipType) {
   const name = document.getElementById('chip-player-name').value.trim().toLowerCase();
   const msg = document.getElementById('chip-admin-msg');
@@ -17499,11 +17511,13 @@ window.adminGrantChip = async function(chipType) {
   const teams = await dbGetAll('teams');
   const team = teams.find(t => t.playerName.toLowerCase() === name);
   if (!team) { msg.innerHTML='<div class="alert alert-error">Player not found.</div>'; return; }
-  const chips = team.chips || {};
-  delete chips[chipType]; // reset so they can use it again
+  const chips = { ...(team.chips || {}) };
+  const had = !!(chips[chipType] || (chipType === 'wildcard' && chips.wildcardUsed) || (chipType === 'guardianAngel' && chips.guardianAngelUsed));
+  delete chips[chipType]; if (chipType === 'wildcard') delete chips.wildcardUsed; if (chipType === 'guardianAngel') delete chips.guardianAngelUsed; // reset so they can use it again
   await dbSet('teams', team.id, {...team, chips});
-  const label = chipType === 'tripleCaptain' ? '🚀 Triple Captain' : '🃏 Wildcard';
-  msg.innerHTML=`<div class="alert alert-success">✔ ${label} granted to ${esc(team.playerName)}.</div>`;
+  const nSnap = await _adminStripChipFromSnapshots(team.id, [chipType]).catch(() => 0);
+  const label = chipType === 'tripleCaptain' ? '🚀 Triple Captain' : chipType === 'guardianAngel' ? '😇 Guardian Angel' : '🃏 Wildcard';
+  msg.innerHTML=`<div class="alert alert-success">✔ ${label} ${had ? 'removed from' : 'reset for'} ${esc(team.playerName)} — it's unused again${nSnap ? ' and taken off ' + nSnap + ' locked round' + (nSnap > 1 ? 's' : '') : ''}.</div>`;
   setTimeout(()=>msg.innerHTML='', 3000);
 };
 
@@ -17515,7 +17529,8 @@ window.adminResetChips = async function() {
   const team = teams.find(t => t.playerName.toLowerCase() === name);
   if (!team) { msg.innerHTML='<div class="alert alert-error">Player not found.</div>'; return; }
   await dbSet('teams', team.id, {...team, chips: {}});
-  msg.innerHTML=`<div class="alert alert-success">✔ All chips reset for ${esc(team.playerName)}.</div>`;
+  const nSnap = await _adminStripChipFromSnapshots(team.id, ['tripleCaptain', 'wildcard', 'guardianAngel']).catch(() => 0);
+  msg.innerHTML=`<div class="alert alert-success">✔ All chips reset for ${esc(team.playerName)}${nSnap ? ' (also taken off ' + nSnap + ' locked round' + (nSnap > 1 ? 's' : '') + ')' : ''}.</div>`;
   setTimeout(()=>msg.innerHTML='', 3000);
 };
 
