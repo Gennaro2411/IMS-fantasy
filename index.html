@@ -10309,12 +10309,14 @@ async function renderMyTeam() {
     // Team-colour identity stripe across the top of the card
     html += '<div style="height:3px;border-radius:12px 12px 0 0;background:linear-gradient(90deg,'+stripeCol+',transparent 85%)"></div>';
     html += '<div class="mt-card-row" style="padding:10px 10px 0;display:flex;gap:10px;align-items:center">';
-    const _banned = isDriverBanned(driver);
+    // Looking back at a past round: today's check-ins and race bans don't belong to that race — hide them.
+    const _pastView = (typeof _snapView !== 'undefined') && !!_snapView;
+    const _banned = !_pastView && isDriverBanned(driver);
     // Check-OUT takes priority over check-in: an explicit checkout ("not racing") overrides a stray
     // check-in that may appear under a different division's session (e.g. after a division move), so
     // the profile matches the briefing availability board.
-    const _co = !_banned && isDriverCheckedOut(driver);
-    const _ci = !_banned && !_co && isDriverCheckedIn(driver);
+    const _co = !_pastView && !_banned && isDriverCheckedOut(driver);
+    const _ci = !_pastView && !_banned && !_co && isDriverCheckedIn(driver);
     html += '<div style="width:44px;height:52px;border-radius:8px;background:var(--surface3);flex-shrink:0;position:relative'+(_banned?';box-shadow:'+RACE_BAN_RING:(_ci?';box-shadow:'+CHECKED_IN_RING:(_co?';box-shadow:'+CHECKED_OUT_RING:'')))+'">';
     html += '<div style="width:100%;height:100%;border-radius:8px;overflow:hidden;position:relative">';
     html += driverPhoto(driver) ? '<img src="'+esc(driverPhoto(driver))+'" style="width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.parentElement.innerHTML=\'<div style=display:flex;align-items:center;justify-content:center;height:100%;font-size:1.5rem>👤</div>\'">' : '<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:1.5rem">👤</div>';
@@ -10346,7 +10348,7 @@ async function renderMyTeam() {
     if (teamLogo) html += '<img src="'+teamLogo+'" style="height:12px;object-fit:contain;margin-bottom:3px;display:block" onerror="this.style.display=\'none\'">';
     html += '<div style="font-weight:700;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2">'+esc(driver.name)+'</div>';
     if (_reserveIn) html += '<div '+(_reserveIn.id?'onclick="event.stopPropagation();openDriverModal(\''+_reserveIn.id+'\')" style="margin-top:3px;cursor:pointer"':'style="margin-top:3px"')+'><span style="display:inline-flex;align-items:center;gap:3px;font-size:.54rem;font-weight:800;letter-spacing:.5px;color:#0a1a1a;background:linear-gradient(135deg,#27f4d2,#1ec8ac);border-radius:4px;padding:1px 6px;box-shadow:0 0 8px rgba(39,244,210,0.5)">🔄 RESERVE IN</span> <span style="font-size:.6rem;color:#27f4d2;font-weight:700">'+esc(_reserveIn.name)+'</span></div>';
-    if (driver.raceBanRacesLeft>0 || driver.raceBanned) html += '<div style="margin-top:2px"><span title="This driver has a race ban" style="display:inline-block;font-size:.54rem;font-weight:800;letter-spacing:.5px;color:#fff;background:#ff5470;border-radius:4px;padding:1px 6px">🚫 RACE BAN'+(driver.raceBanRacesLeft>0?' · '+driver.raceBanRacesLeft+' RACE'+(driver.raceBanRacesLeft>1?'S':''):'')+'</span></div>';
+    if (!_pastView && (driver.raceBanRacesLeft>0 || driver.raceBanned)) html += '<div style="margin-top:2px"><span title="This driver has a race ban" style="display:inline-block;font-size:.54rem;font-weight:800;letter-spacing:.5px;color:#fff;background:#ff5470;border-radius:4px;padding:1px 6px">🚫 RACE BAN'+(driver.raceBanRacesLeft>0?' · '+driver.raceBanRacesLeft+' RACE'+(driver.raceBanRacesLeft>1?'S':''):'')+'</span></div>';
     html += '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px"><span class="mt-tag sm">$'+price.toFixed(1)+'M</span>'+(priceChangeStr||'')+'</div>';
     html += '</div>';
     // Points — centred block beneath the identity row (the old layout's centre-stage points,
