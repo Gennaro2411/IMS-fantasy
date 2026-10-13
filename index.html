@@ -3878,6 +3878,18 @@ window.fitTheatreZoom = function() {
   const z = Math.max(1, Math.min(availW / w, availH / h, 3.2));
   sceneEl.style.zoom = z;
 };
+// Phones, small box: lay each scene out at a comfortable 500px width, then shrink the whole thing
+// to fit the screen (and the box height), so nothing is squashed, cut off or hidden.
+window.fitMiniZoom = function() {
+  const box = document.getElementById('broadcast-box'), sc = document.getElementById('bc-scene'), w = sc && sc.querySelector('.bc-fit');
+  if (!w) return; w.style.zoom = 1; w.style.width = '';
+  if (box.classList.contains('bc-theatre') || window.innerWidth > 640) return;
+  const cs = getComputedStyle(sc), availW = sc.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight), availH = sc.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+  const DW = 500; if (availW >= DW) return;
+  w.style.width = DW + 'px'; const h = Math.max(1, w.scrollHeight);
+  w.style.zoom = Math.max(.5, Math.min(availW / DW, availH / h));
+};
+window.addEventListener('resize', () => { try { fitMiniZoom(); } catch (e) {} });
 window.toggleBroadcastTheatre = function() {
   const box = document.getElementById('broadcast-box');
   const btn = document.getElementById('bc-expand-btn');
@@ -3888,6 +3900,7 @@ window.toggleBroadcastTheatre = function() {
   if (btn) { btn.textContent = on ? '✕' : '⛶'; btn.title = on ? 'Exit theatre mode' : 'Theatre mode'; }
   if (!on && sceneEl) sceneEl.style.zoom = '';
   if (on) setTimeout(fitTheatreZoom, 30);
+  setTimeout(() => { try { fitMiniZoom(); if (on) fitTheatreZoom(); } catch (e) {} }, 40);
 };
 window.addEventListener('resize', () => { if (document.getElementById('broadcast-box')?.classList.contains('bc-theatre')) fitTheatreZoom(); });
 // ===== HOME: live Twitch stream (only shown while IMSttv26 is actually live) =====
@@ -4797,9 +4810,10 @@ function bcShowScene() {
   const scene = scenes[_bcSceneIdx % scenes.length];
   sceneEl.style.opacity = 0;
   setTimeout(() => {
-    sceneEl.innerHTML = scene.html;
+    sceneEl.innerHTML = `<div class="bc-fit">${scene.html}</div>`;
     if (labelEl) labelEl.innerHTML = scene.label;
     if (typeof fitTheatreZoom === 'function') fitTheatreZoom();
+    fitMiniZoom();
     sceneEl.style.opacity = 1;
   }, 500);
   _bcSceneIdx++;
