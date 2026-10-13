@@ -10737,7 +10737,7 @@ function _gaCutscene(angel, crew) {
   const angelHtml = (cls) => `<div class="an ${cls}"><div class="halo"></div>${wing('l')}${wing('r')}<div class="face">${pf(angel, 'pp')}</div></div>`;
   // Speech bubbles: worried while the monster's there, grateful once the angel saves them.
   const shuf = (a) => a.map(x => [Math.random(), x]).sort((p, q) => p[0] - q[0]).map(x => x[1]);
-  const WORRY = shuf(["We're done for 😱", 'Not like this…', 'Someone DO something!', 'Box box box!!', "I'm too young to DNF", 'Mum come pick me up', 'Is it too late to transfer out?', 'HELP 😭', 'My points!!!', 'Who let it in the paddock?!']);
+  const WORRY = shuf(["We're done for 😱", 'Not like this…', 'Someone DO something!', 'Box box box!!', "I'm too young to DNF", 'Mum come pick me up', 'Is it too late to transfer out?', 'HELP 😭', 'My points!!!', 'Who let it in the paddock?!', 'Jean_Claude04 has retired from the Session']);
   const THANKS = shuf(['THANK YOU 😇', 'Legend!!', 'Our hero 🙌', 'Owe you one!', 'Angel on the grid ✨', 'Saved the season!', 'GOAT 🐐', 'Never doubted you', 'Pure class 🙏', 'Drinks on me 🍾']);
   const CW = crew.slice(0, 8), spec = CW.length ? [Math.floor(Math.random() * CW.length), 0] : [];
   if (CW.length > 1) { spec[1] = (spec[0] + 1 + Math.floor(Math.random() * (CW.length - 1))) % CW.length; }
