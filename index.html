@@ -9039,6 +9039,17 @@ window._trophySvg = function(t) {
   const logo = t.logo ? `<img src="${esc(t.logo)}" alt="" onerror="this.remove()" style="position:absolute;left:50%;top:${kind==='value'?'14':'11'}px;transform:translateX(-50%);width:15px;height:15px;object-fit:contain;filter:drop-shadow(0 0 2px rgba(0,0,0,.6))">` : '';
   return `<div style="position:relative;width:38px;height:44px;margin:0 auto">${svg}${logo}${plaque}</div>`;
 };
+// Finishing position AFTER verdicts: the stored finish is the raw result, but verdicts change points,
+// so re-rank the division by points (ties keep raw order; DNF/DNS/DSQ excluded) — same order as the results table.
+window._postVerdictPos = function(race, dId, div) { try {
+  const bd = race && race.driverPointsByDivision; if (!bd || !bd[dId] || bd[dId][div] === undefined) return null;
+  const pd = race.positionByDivision || {}, sd = race.raceStatusByDivision || {};
+  const out = (id) => !!((sd[id] || {})[div]);
+  if (out(dId)) return null;
+  const rows = Object.entries(bd).filter(([id, by]) => by && by[div] !== undefined && !out(id))
+    .map(([id, by]) => ({ id, pts: Number(by[div]) || 0, raw: Number((pd[id] || {})[div]) || 999 }))
+    .sort((a, b) => b.pts - a.pts || a.raw - b.raw);
+  const i = rows.findIndex(r => r.id === dId); return i >= 0 ? i + 1 : null; } catch (e) { return null; } };
 window.renderTrophyShelf = function(trophies, opts) {
   opts = opts || {};
   // One trophy per award per season: the same round win can arrive from several sources (live races,
@@ -18396,7 +18407,7 @@ window.openDriverModal = async function(driverId) {
         const st = statusForDiv(race, div);
         const hue = DIV_HUES[div] || 'var(--muted)';
         // Finishing position for this division (if we have it and it wasn't a DNF/DSQ/DNS).
-        const finPos = (race.positionByDivision && race.positionByDivision[driver.id] && race.positionByDivision[driver.id][div]) || null;
+        const finPos = window._postVerdictPos(race, driver.id, div) || (race.positionByDivision && race.positionByDivision[driver.id] && race.positionByDivision[driver.id][div]) || null;
         const divBadge = div
           ? `<span style="font-size:.6rem;font-weight:800;color:${hue};border:1px solid ${hue}88;background:${hue}1a;border-radius:3px;padding:0 4px;vertical-align:middle" title="Scored in ${esc(div)}">${esc(div)}</span>`
           : '';
