@@ -25612,8 +25612,9 @@ window.openPlayerProfile = async function(userId, big) {
       const pts = completedRaces.reduce((s, race) => fanZoneRaceCounts(z, race) ? s + (teamRacePtsFn ? teamRacePtsFn(tm, race) : 0) : s, 0);
       zoneTotals[z.constructorId] = (zoneTotals[z.constructorId]||0) + pts;
     });
-    if (teamRacePtsFn) Object.entries(window.fanZoneAvgTotals(teams, completedRaces, teamRacePtsFn)).forEach(([cId,z]) => { zoneTotals[cId] = z.pts; });
+    // Points share uses the zone's ADDED-UP total (everyone's points); the standings rank uses the average.
     fzZoneTotal = zoneTotals[fz.id] || 0;
+    if (teamRacePtsFn) Object.entries(window.fanZoneAvgTotals(teams, completedRaces, teamRacePtsFn)).forEach(([cId,z]) => { zoneTotals[cId] = z.pts; });
     const sorted = Object.entries(zoneTotals).sort((a,b)=>b[1]-a[1]);
     fzRank = sorted.findIndex(([cid]) => cid === fz.id) + 1;
   }
