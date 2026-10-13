@@ -10664,17 +10664,18 @@ function _tcCutscene(d, tracks) {
   const T = (tracks || []).slice(0, 24), n = T.length;
   const trackStars = T.map((t, i) => { const row = n > 1 ? i / (n - 1) : .5, side = i % 2 ? 1 : -1;
     const x = 50 + side * (12 + ((i * 37) % 21)), y = 6 + row * 52 + ((i * 13) % 5); const nx = t === nextT, past = (t.lockTime || 0) && t.lockTime < now;
-    return `<b class="tk${nx ? ' nx' : ''}${past ? ' past' : ''}" style="left:${x}%;top:${y}%;animation-delay:${(i * .07).toFixed(2)}s"><s></s><span>${esc(t.name)}</span></b>`; }).join('');
+    const u = (typeof getTrackOutlineUrl === 'function') ? getTrackOutlineUrl(t.name) : null; if (!u) return '';
+    return `<img class="tk${nx ? ' nx' : ''}${past ? ' past' : ''}" src="${esc(u)}" alt="" onerror="this.remove()" style="left:${x}%;top:${y}%;animation-delay:${(i * .07).toFixed(2)}s,${(.6 + i * .07).toFixed(2)}s">`; }).join('');
   const el = document.createElement('div'); el.id = 'tc-launch';
   el.innerHTML = `<style>
     #tc-launch{position:fixed;inset:0;z-index:99999;overflow:hidden;background:radial-gradient(ellipse at 50% 110%,#3b1f63 0%,#140a2a 45%,#05030d 100%);display:flex;align-items:center;justify-content:center;cursor:pointer;animation:tcIn .3s ease-out;font-family:'Barlow Condensed',sans-serif}
-    #tc-launch .st i{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;animation:tcTw 1.6s ease-in-out infinite alternate}
+    #tc-launch .st i{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;animation:tcTwS 1.6s ease-in-out infinite alternate}
     #tc-launch .st{position:absolute;inset:0;animation:tcStars 4.6s cubic-bezier(.6,0,.9,.4) forwards}
-    #tc-launch .tk{position:absolute;display:flex;align-items:center;gap:5px;transform:translate(-50%,-50%);opacity:0;animation:tcTk .6s ease-out forwards;font-weight:700;font-size:.72rem;letter-spacing:.5px;color:rgba(255,255,255,.75);white-space:nowrap;text-transform:uppercase}
-    #tc-launch .tk s{width:9px;height:9px;flex-shrink:0;background:#fff;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);box-shadow:0 0 6px #fff;animation:tcTw 1.4s ease-in-out infinite alternate}
-    #tc-launch .tk.past{color:rgba(255,255,255,.4)}#tc-launch .tk.past s{opacity:.5}
-    #tc-launch .tk.nx{color:#ffd24a;font-size:.8rem}#tc-launch .tk.nx s{width:13px;height:13px;background:#ffd24a;filter:drop-shadow(0 0 6px #ffd24a)}
+    #tc-launch .tk{position:absolute;width:34px;height:34px;object-fit:contain;transform:translate(-50%,-50%);opacity:0;filter:brightness(0) invert(1) drop-shadow(0 0 3px #cfe0ff) drop-shadow(0 0 8px rgba(207,224,255,.6));animation:tcTk .6s ease-out forwards}
+    #tc-launch .tk.past{filter:brightness(0) invert(1) drop-shadow(0 0 2px #cfe0ff);width:28px;height:28px}
+    #tc-launch .tk.nx{width:46px;height:46px;filter:brightness(0) invert(1) sepia(1) saturate(6) hue-rotate(2deg) drop-shadow(0 0 6px #ffd24a)}
     @keyframes tcTk{from{opacity:0;transform:translate(-50%,-50%) scale(.4)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+    @keyframes tcTwk{from{filter:brightness(0) invert(1) drop-shadow(0 0 3px #cfe0ff)}to{filter:brightness(0) invert(1) drop-shadow(0 0 3px #cfe0ff) drop-shadow(0 0 10px #fff)}}
     #tc-launch .pad{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:260px;height:26px;background:linear-gradient(#2a2340,#120d20);border-radius:8px 8px 0 0;box-shadow:0 -2px 0 #9b59b6}
     #tc-launch .rk{position:absolute;left:50%;bottom:26px;width:150px;margin-left:-75px;animation:tcShake .08s linear 1.2s 30,tcLift 1.7s ease-in 1.4s forwards,tcFly 1.9s cubic-bezier(.55,0,.85,.3) 3.1s forwards}
     #tc-launch .rk svg{display:block;width:150px;height:auto;filter:drop-shadow(0 0 18px rgba(155,89,182,.6))}
@@ -10690,7 +10691,7 @@ function _tcCutscene(d, tracks) {
     #tc-launch .ttl em{font-style:normal;display:inline-block;padding:2px 14px;border-radius:999px;background:linear-gradient(90deg,#9b59b6,#e91e63);font-weight:900;font-size:1.4rem}
     #tc-launch .skip{position:absolute;bottom:14px;right:16px;color:rgba(255,255,255,.5);font-size:.8rem;letter-spacing:1px}
     @keyframes tcIn{from{opacity:0}to{opacity:1}}
-    @keyframes tcTw{to{opacity:.15}}
+    @keyframes tcTwS{to{opacity:.15}}
     @keyframes tcShake{0%{transform:translate(1px,0)}50%{transform:translate(-1px,1px)}100%{transform:translate(1px,-1px)}}
     @keyframes tcLift{to{bottom:150px}}
     @keyframes tcFly{0%{transform:translateY(0)}100%{transform:translateY(-130vh)}}
