@@ -10666,6 +10666,11 @@ function _tcRocketSound() {
     noise.connect(lp).connect(g).connect(ctx.destination); sub.connect(sg).connect(ctx.destination); noise.start(t0); sub.start(t0); noise.stop(t0 + 6.3); sub.stop(t0 + 6.3);
     return () => { try { ctx.close(); } catch (e) {} };
   } catch (e) { return () => {}; } }
+// The little 'ting' when something disappears into the distance.
+function _tcTing() { try { const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return; const c = new AC(), t = c.currentTime;
+  [[2093, 0], [3136, .04]].forEach(([f, dl]) => { const o = c.createOscillator(), g = c.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(f, t + dl);
+    g.gain.setValueAtTime(0.0001, t + dl); g.gain.exponentialRampToValueAtTime(0.18, t + dl + .01); g.gain.exponentialRampToValueAtTime(0.0001, t + dl + .6); o.connect(g).connect(c.destination); o.start(t + dl); o.stop(t + dl + .65); });
+  setTimeout(() => { try { c.close(); } catch (e) {} }, 1000); } catch (e) {} }
 function _tcCutscene(d, tracks) {
   document.getElementById('tc-launch')?.remove();
   const photo = driverPhoto(d), ini = esc(String(d.name || '?').slice(0, 2).toUpperCase());
@@ -10709,8 +10714,10 @@ function _tcCutscene(d, tracks) {
     #tc-launch.aim .rk{animation:tcShake .08s linear 1.2s 30,tcLift 1.7s ease-in 1.4s forwards}
     #tc-launch.aim .st{animation:none}
     #tc-launch.aim .ttl{top:58%}
-    #tc-launch .blink{position:absolute;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:#fff;box-shadow:0 0 12px 4px #ffd24a,0 0 30px 10px rgba(255,210,74,.6);animation:tcBlink .45s ease-out 3 forwards;pointer-events:none}
-    @keyframes tcBlink{0%{transform:scale(.2);opacity:0}30%{transform:scale(1.4);opacity:1}100%{transform:scale(.4);opacity:0}}
+    #tc-launch .blink{position:absolute;width:56px;height:56px;margin:-28px 0 0 -28px;pointer-events:none;animation:tcGlint .75s cubic-bezier(.2,1.6,.4,1) forwards}
+    #tc-launch .blink::before{content:'';position:absolute;inset:0;background:#fff;clip-path:polygon(50% 0,56% 44%,100% 50%,56% 56%,50% 100%,44% 56%,0 50%,44% 44%);filter:drop-shadow(0 0 6px #fff) drop-shadow(0 0 14px #ffd24a)}
+    #tc-launch .blink::after{content:'';position:absolute;left:50%;top:50%;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:#fff;box-shadow:0 0 10px 4px #fff,0 0 22px 8px rgba(255,210,74,.7)}
+    @keyframes tcGlint{0%{transform:scale(0) rotate(0deg);opacity:1}35%{transform:scale(1.15) rotate(45deg);opacity:1}70%{transform:scale(.9) rotate(70deg);opacity:1}100%{transform:scale(0) rotate(90deg);opacity:0}}
     @keyframes tcLift{to{bottom:150px}}
     @keyframes tcFly{0%{transform:translateY(0)}100%{transform:translateY(-130vh)}}
     @keyframes tcStars{0%,68%{transform:translateY(0)}100%{transform:translateY(60vh)}}
@@ -10748,7 +10755,7 @@ function _tcCutscene(d, tracks) {
     rk.animate([{ transform: 'translate(0,0) rotate(0deg) scale(1)' }, { offset: .2, transform: `translate(${dx * .06}px,${dy * .1}px) rotate(${ang}deg) scale(.9)` }, { transform: `translate(${dx}px,${dy}px) rotate(${ang}deg) scale(.03)` }],
       { duration: 1800, easing: 'cubic-bezier(.45,0,.75,1)', fill: 'forwards' });
     setTimeout(() => { if (!el.isConnected) return; rk.style.visibility = 'hidden'; const bl = document.createElement('div'); bl.className = 'blink';
-      bl.style.left = (b.left + b.width / 2) + 'px'; bl.style.top = (b.top + b.height / 2) + 'px'; el.appendChild(bl); }, 1750);
+      bl.style.left = (b.left + b.width / 2) + 'px'; bl.style.top = (b.top + b.height / 2) + 'px'; el.appendChild(bl); if (!muted) _tcTing(); }, 1750);
   }, 3100);
   const _aim = !!el.querySelector('.tk.nx'); // with a target, the title + confetti wait until the rocket has blinked out
   setTimeout(() => { try { fireConfetti({ count: 160 }); } catch (e) {} }, _aim ? 5200 : 3700);
