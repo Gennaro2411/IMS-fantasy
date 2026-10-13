@@ -15494,6 +15494,9 @@ window.importDbRound = async function(roundNo, trackName) {
       }
     }
 
+    // Verdict re-import of a round that was already handed over: its round-end snapshot (prices after the
+    // round, team values) was saved from the pre-verdict results — refresh it with the post-verdict prices.
+    if (existingRace && existingRace.priceAfterAt && typeof window.snapshotRoundEnd === 'function') { try { await window.snapshotRoundEnd(true, existingRace.id); } catch (e) {} }
     let resultMsg = `<div class="alert alert-success">✔ Round ${roundNo} (${esc(trackName)}) imported — ${Object.keys(driverPoints).length} drivers, ${Object.keys(constructorPoints).length} constructors. Prices updated from dominance.</div>`;
 
     // ===== PUSH NOTIFICATIONS (ntfy) =====
@@ -19906,22 +19909,28 @@ async function refreshCurrentRaceSnapshots(reason) {
 // verdicts), save every team's state as the round was LEFT — season total including it, team
 // value after the price changes, budget, banked transfers and reserve tokens — onto that race's
 // team snapshot. Looking back at the round shows exactly these.
-window.snapshotRoundEnd = async function(quiet) {
+window.snapshotRoundEnd = async function(quiet, raceId) {
   try {
-    const [races, teams, drv, con] = await Promise.all([dbGetAll('races', { fresh: true }), dbGetAll('teams', { fresh: true }), dbGetAll('drivers'), dbGetAll('constructors')]);
+    dbInvalidate('drivers'); dbInvalidate('constructors');
+    const [races, teams, drv, con] = await Promise.all([dbGetAll('races', { fresh: true }), dbGetAll('teams', { fresh: true }), dbGetAll('drivers', { fresh: true }), dbGetAll('constructors', { fresh: true })]);
     const scored = races.filter(r => r.driverPoints && Object.values(r.driverPoints).some(v => v > 0)).sort((a, b) => (b.raceNum || 0) - (a.raceNum || 0));
-    const race = scored[0]; if (!race) return null;
+    const race = raceId ? races.find(r => r.id === raceId) : scored[0]; if (!race) return null;
     const upTo = races.filter(r => (r.raceNum || 0) <= (race.raceNum || 0));
     const snaps = { ...(race.teamSnapshots || {}) }; let n = 0;
     teams.forEach(t => {
       if (!snaps[t.id]) return; // only teams that played this round (an empty snapshot would zero them)
       try {
         const sel = snaps[t.id].selections || t.selections || {}; let val = 0;
-        Object.entries(t.selections || {}).forEach(([k, id]) => { if (!id) return; if (k === 'CONSTRUCTOR') { const c = con.find(x => x.id === id); if (c) val += constructorPrice(c); } else { const d = drv.find(x => x.id === id); if (d) val += driverPrice(d); } });
+        Object.entries(sel).forEach(([k, id]) => { if (!id) return; if (k === 'CONSTRUCTOR') { const c = con.find(x => x.id === id); if (c) val += constructorPrice(c); } else { const d = drv.find(x => x.id === id); if (d) val += driverPrice(d); } });
         const tot = upTo.reduce((a, r) => a + (window.fantasyTeamRacePts(t, r, races) || 0), 0);
         let tok = null; try { tok = window.getReservePlan(t, upTo).tokensLeft; } catch(e) {}
+        const prevEnd = snaps[t.id].endStats;
         snaps[t.id] = { ...snaps[t.id], endStats: { teamValue: Math.round(val * 10) / 10, budget: t.budget != null ? t.budget : null, freeTransfers: t.freeTransfers != null ? t.freeTransfers : null,
-          seasonTotal: Math.round(tot * 10) / 10, reserveTokensLeft: tok, at: Date.now() } }; n++;
+          seasonTotal: Math.round(tot * 10) / 10, reserveTokensLeft: tok, at: Date.now() } };
+        // Refreshing an older round (verdicts came in later): only prices, value and total change — the budget,
+        // banked transfers and tokens it was left with stay as they were (teams may have moved on since).
+        if (raceId && prevEnd) Object.assign(snaps[t.id].endStats, { budget: prevEnd.budget, freeTransfers: prevEnd.freeTransfers, reserveTokensLeft: prevEnd.reserveTokensLeft });
+        n++;
       } catch(e) {}
     });
     // Every driver's and constructor's price as the round was left.
