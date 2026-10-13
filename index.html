@@ -218,7 +218,7 @@
   }
   #page-my-team [data-logo]{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
   /* Guardian Angel card: wings, halo, light rays and rising sparkles */
-  .ga-card{grid-column:1/-1;position:relative;overflow:hidden;display:flex;align-items:center;gap:16px;padding:14px 18px 14px 14px;border-radius:16px;cursor:pointer;
+  .ga-card{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;grid-column:1/-1;position:relative;overflow:hidden;display:flex;align-items:center;gap:16px;padding:14px 18px 14px 14px;border-radius:16px;cursor:pointer;
     background:radial-gradient(120% 140% at 12% 50%,rgba(124,242,198,.22),transparent 55%),linear-gradient(120deg,rgba(255,255,255,.07),rgba(39,174,96,.10) 60%,rgba(255,255,255,.03));
     border:1px solid rgba(124,242,198,.55);box-shadow:0 0 0 1px rgba(255,255,255,.04) inset,0 0 26px rgba(124,242,198,.18);transition:transform .18s ease,box-shadow .18s ease}
   @media (hover:hover){.ga-card:hover{transform:translateY(-3px);box-shadow:0 0 0 1px rgba(255,255,255,.06) inset,0 10px 30px rgba(124,242,198,.28)}}
@@ -10142,7 +10142,7 @@ async function renderMyTeam() {
       <path fill="url(#gaw${side})" d="M62 14C46 2 18 2 3 20c12-3 21-1 27 3C17 25 7 33 3 46c12-7 23-8 31-6-11 6-18 15-19 27 13-11 29-17 46-30z"/>
       <path fill="none" stroke="#ffffff" stroke-opacity=".55" stroke-width="1.2" stroke-linecap="round" d="M60 18C44 12 24 14 12 22M58 26C42 24 24 30 14 40M56 34C44 36 32 44 24 56"/></svg>`;
     const _ph = driverPhoto(gaDriver);
-    html += `<div class="ga-card" onclick="openDriverModal('${gaDriverId}')">
+    html += `<div class="ga-card" data-ga-team="${esc(myTeam.id)}" data-ga-angel="${esc(gaDriverId)}" onclick="if(window._gaHeld){window._gaHeld=0;return;}openDriverModal('${gaDriverId}')">
       <div class="ga-rays"></div>
       ${['8%','22%','37%','63%','78%','92%'].map((l, k) => `<span class="ga-spark" style="left:${l};animation-delay:${(k * 0.55).toFixed(2)}s"></span>`).join('')}
       <div class="ga-figure">${_wing('l')}${_wing('r')}<div class="ga-halo"></div>
@@ -10656,6 +10656,17 @@ async function _gaMaybeShow(teamDocId, raceId) {
     const crew = Object.values(team.selections || {}).filter(Boolean).map(id => drs.find(x => x.id === id)).filter(Boolean);
     _gaCutscene(angel, crew);
   } catch (e) {} }
+// Hold (or pinch) the Guardian Angel card on My Team to watch the cutscene again.
+window._gaReplay = async function(teamDocId, angelId) { try { const [team, drs] = await Promise.all([dbGet('teams', teamDocId), dbGetAll('drivers')]); const angel = drs.find(x => x.id === angelId); if (!angel) return;
+  _gaCutscene(angel, Object.values((team || {}).selections || {}).filter(Boolean).map(id => drs.find(x => x.id === id)).filter(Boolean)); } catch (e) {} };
+(function () { let tm = null, start = null; const card = (e) => e.target && e.target.closest && e.target.closest('.ga-card[data-ga-angel]');
+  const fire = (c) => { clearTimeout(tm); tm = null; window._gaHeld = 1; setTimeout(() => { window._gaHeld = 0; }, 800); if (navigator.vibrate) try { navigator.vibrate(30); } catch (e) {} window._gaReplay(c.dataset.gaTeam, c.dataset.gaAngel); };
+  document.addEventListener('touchstart', (e) => { const c = card(e); if (c && e.touches.length >= 2) { e.preventDefault(); fire(c); } }, { passive: false }); // pinch
+  document.addEventListener('pointerdown', (e) => { const c = card(e); if (!c) return; start = [e.clientX, e.clientY]; clearTimeout(tm); tm = setTimeout(() => fire(c), 550); }); // hold
+  document.addEventListener('pointermove', (e) => { if (tm && start && Math.hypot(e.clientX - start[0], e.clientY - start[1]) > 12) { clearTimeout(tm); tm = null; } });
+  ['pointerup', 'pointercancel'].forEach(t => document.addEventListener(t, () => { clearTimeout(tm); tm = null; }));
+  document.addEventListener('contextmenu', (e) => { if (card(e)) e.preventDefault(); });
+})();
 function _gaSfx(kind) { try { const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return; const c = new AC(), t = c.currentTime;
   if (kind === 'boom') { const b = c.createBuffer(1, c.sampleRate, c.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 2);
     const s = c.createBufferSource(); s.buffer = b; const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 600; const g = c.createGain(); g.gain.value = .9; s.connect(lp).connect(g).connect(c.destination); s.start(t); }
