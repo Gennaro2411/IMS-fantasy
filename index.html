@@ -10698,6 +10698,7 @@ function _tcCutscene(d, tracks) {
     #tc-launch .cd{position:absolute;top:18%;width:100%;text-align:center;color:#fff;font-weight:900;font-size:5rem;text-shadow:0 0 24px #9b59b6}
     #tc-launch .cd b{position:absolute;left:0;right:0;opacity:0;animation:tcCd .9s ease-out forwards}
     #tc-launch .ttl{position:absolute;top:30%;width:100%;text-align:center;color:#fff;opacity:0;animation:tcTitle .6s cubic-bezier(.2,1.4,.4,1) 3.6s forwards}
+    #tc-launch.aim .ttl{animation-delay:5.1s}
     #tc-launch .ttl small{display:block;letter-spacing:6px;font-weight:800;color:#ce93d8;font-size:1rem}
     #tc-launch .ttl div{font-weight:900;font-size:clamp(1.6rem,9vw,2.8rem);line-height:1;margin:6px 16px;text-transform:uppercase;overflow-wrap:anywhere}
     #tc-launch .ttl em{font-style:normal;display:inline-block;padding:2px 14px;border-radius:999px;background:linear-gradient(90deg,#9b59b6,#e91e63);font-weight:900;font-size:1.4rem}
@@ -10705,6 +10706,11 @@ function _tcCutscene(d, tracks) {
     @keyframes tcIn{from{opacity:0}to{opacity:1}}
     @keyframes tcTwS{to{opacity:.15}}
     @keyframes tcShake{0%{transform:translate(1px,0)}50%{transform:translate(-1px,1px)}100%{transform:translate(1px,-1px)}}
+    #tc-launch.aim .rk{animation:tcShake .08s linear 1.2s 30,tcLift 1.7s ease-in 1.4s forwards}
+    #tc-launch.aim .st{animation:none}
+    #tc-launch.aim .ttl{top:58%}
+    #tc-launch .blink{position:absolute;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:#fff;box-shadow:0 0 12px 4px #ffd24a,0 0 30px 10px rgba(255,210,74,.6);animation:tcBlink .45s ease-out 3 forwards;pointer-events:none}
+    @keyframes tcBlink{0%{transform:scale(.2);opacity:0}30%{transform:scale(1.4);opacity:1}100%{transform:scale(.4);opacity:0}}
     @keyframes tcLift{to{bottom:150px}}
     @keyframes tcFly{0%{transform:translateY(0)}100%{transform:translateY(-130vh)}}
     @keyframes tcStars{0%,68%{transform:translateY(0)}100%{transform:translateY(60vh)}}
@@ -10732,8 +10738,21 @@ function _tcCutscene(d, tracks) {
   const close = () => { if (!el.isConnected) return; el.style.transition = 'opacity .35s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 360);
     stopSfx(); if (wasPlaying && bg) bg.play().catch(() => {}); };
   el.addEventListener('click', close); document.body.appendChild(el);
-  setTimeout(() => { try { fireConfetti({ count: 160 }); } catch (e) {} }, 3700);
-  setTimeout(close, 6200);
+  // Steer the rocket at the next race (the gold track): it turns, flies there, shrinks to a dot and blinks out in the distance.
+  const tgt0 = el.querySelector('.tk.nx'); if (tgt0) el.classList.add('aim');
+  setTimeout(() => { if (!el.isConnected) return; const rk = el.querySelector('.rk'), tg = el.querySelector('.tk.nx'), svg = rk && rk.querySelector('svg');
+    if (!rk || !rk.animate) return;
+    if (!tg) { rk.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-130vh)' }], { duration: 1900, easing: 'cubic-bezier(.55,0,.85,.3)', fill: 'forwards' }); return; }
+    const a = svg.getBoundingClientRect(), b = tg.getBoundingClientRect(), dx = (b.left + b.width / 2) - (a.left + a.width / 2), dy = (b.top + b.height / 2) - (a.top + a.height / 2);
+    const ang = Math.atan2(dx, -dy) * 180 / Math.PI;
+    rk.animate([{ transform: 'translate(0,0) rotate(0deg) scale(1)' }, { offset: .2, transform: `translate(${dx * .06}px,${dy * .1}px) rotate(${ang}deg) scale(.9)` }, { transform: `translate(${dx}px,${dy}px) rotate(${ang}deg) scale(.03)` }],
+      { duration: 1800, easing: 'cubic-bezier(.45,0,.75,1)', fill: 'forwards' });
+    setTimeout(() => { if (!el.isConnected) return; rk.style.visibility = 'hidden'; const bl = document.createElement('div'); bl.className = 'blink';
+      bl.style.left = (b.left + b.width / 2) + 'px'; bl.style.top = (b.top + b.height / 2) + 'px'; el.appendChild(bl); }, 1750);
+  }, 3100);
+  const _aim = !!el.querySelector('.tk.nx'); // with a target, the title + confetti wait until the rocket has blinked out
+  setTimeout(() => { try { fireConfetti({ count: 160 }); } catch (e) {} }, _aim ? 5200 : 3700);
+  setTimeout(close, _aim ? 7600 : 6200);
 }
 window.useTripleCaptain = async function(teamId, raceId) {
   customConfirm('🚀 Activate Triple Captain? Your captain will score 3× points this race. This can only be used once per season.', async () => {
