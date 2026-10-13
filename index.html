@@ -26714,7 +26714,7 @@ async function _betSettleMine(userId, races, coins) {
       await dbSet('bets', b.id, { ...b, status: 'void', payout: b.free ? 0 : b.stake, settledAt: Date.now(), voidReason: 'checked-out' }).catch(() => {});
       if (b.free) { if (b.gifted) coins.freeBetGifts = (coins.freeBetGifts || 0) + 1; else coins.freeBetUsed = null; } else coins.balance += b.stake;
       (coins.notices = coins.notices || []).push({ id: 'n' + Date.now() + Math.random().toString(36).slice(2, 6), at: Date.now(), seen: false, betId: b.id, label: b.label, raceName: b.raceName || '',
-        from: 'open', to: 'refunded', delta: b.stake, reason: 'A driver in this bet checked out of the race, so your full stake has been returned.' });
+        from: 'open', to: 'refunded', delta: b.stake, reason: 'A driver in this bet is out of the race (checked out or race-banned), so your full stake has been returned.' });
       coins.notices = coins.notices.slice(-20);
       Object.assign(b, { status: 'void', payout: b.stake });
       changed = true; continue;
@@ -26821,6 +26821,8 @@ window.renderBets = async function() {
     const _up = (schedule || []).filter(r => r.lockTime > Date.now()).sort((a, b) => a.lockTime - b.lockTime)[0] || null;
     const outIds = new Set();
     if (_up) drivers.forEach(d => { if (!d.isReserve && _betChk(window.isDriverCheckedOut, d)) outIds.add(d.id); });
+    // Race-banned drivers can't race this round either — same treatment: out of every market, bets on them refunded.
+    if (_up) drivers.forEach(d => { if (d.raceBanRacesLeft > 0 || d.raceBanned) outIds.add(d.id); });
     window._betOutIds = outIds; window._betOutRace = _up ? _up.name : null;
   }
   const coins = await _betLoadCoins(me);
@@ -27273,7 +27275,7 @@ window.renderBets = async function() {
         <div class="bo-divs">${divs.map(d => `<button class="${d === div ? 'on' : ''}" style="--h:${HUE[d] || '#7b7fe8'}" onclick="betDiv('${d}')">${d}</button>`).join('')}
           <span class="bo-fmt"><button class="${_betFmtMode() === 'dec' ? 'on' : ''}" onclick="setOddsFmt('dec')" title="Decimal odds — total return per 1 coin">2.50</button><button class="${_betFmtMode() === 'frac' ? 'on' : ''}" onclick="setOddsFmt('frac')" title="Fractional odds — profit : stake">6/4</button></span></div>
         <div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>${isC ? '🏭 Constructors' : '🏁 Race markets'}</span><span class="bo-cols">${isC ? '' : '<i>POLE</i>'}<i>${isC ? 'TOP' : 'WIN'}</i>${isC ? '' : '<i>PODIUM</i>'}<i>${isC ? 'TOP 3' : 'TOP 5'}</i></span></div>${rows || '<div class="text-muted" style="padding:14px">Nothing to price here yet.</div>'}
-          ${_outHere.length ? `<div class="bo-out-h">✕ Checked out — not racing, no bets</div>` + _outHere.map(d => `<div class="bo-row bo-out">${photo(d)}<div class="bo-nm"><b>${esc(d.name)} <span class="bo-ci out">OUT</span></b><small>${formatM(_pr(d))} · removed from all ${esc(div)} markets</small></div><span class="bo-odd-x">—</span><span class="bo-odd-x">—</span><span class="bo-odd-x">—</span><span class="bo-odd-x">—</span></div>`).join('') : ''}</div>
+          ${_outHere.length ? `<div class="bo-out-h">✕ Not racing — no bets</div>` + _outHere.map(d => `<div class="bo-row bo-out">${photo(d)}<div class="bo-nm"><b>${esc(d.name)} <span class="bo-ci out">${(d.raceBanRacesLeft > 0 || d.raceBanned) ? 'RACE BAN' : 'OUT'}</span></b><small>${formatM(_pr(d))} · removed from all ${esc(div)} markets</small></div><span class="bo-odd-x">—</span><span class="bo-odd-x">—</span><span class="bo-odd-x">—</span><span class="bo-odd-x">—</span></div>`).join('') : ''}</div>
         ${h2h ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>⚔️ Head to head</span>${isC ? '<small>Who scores more BOTT points</small>' : `<span class="bo-fmt"><button class="${_h2hQ ? '' : 'on'}" onclick="setH2hMode('race')">Race</button><button class="${_h2hQ ? 'on' : ''}" onclick="setH2hMode('quali')">Quali</button></span>`}</div><div class="bo-h2h-wrap">${h2h || '<div class="text-muted" style="padding:6px">Not enough qualifying laps to price these yet.</div>'}</div></div>` : ''}
         ${_pgap ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>⏱ Pole gap</span><small>Pole margin to P2 in qualifying</small></div>
           <div class="bo-pgap">${[['lt01', 'Under 0.1 s'], ['01to02', '0.1 – 0.2 s'], ['gt02', 'Over 0.2 s']].map(([k, l], ix) => `<div class="bo-pg-opt"><span>${l}</span>${oddsBtn('pgap', [k], div + ' pole gap: ' + l, finalOdds('pgap', [k], _betOdds(_pgap[ix])))}</div>`).join('')}</div></div>` : ''}
@@ -27420,7 +27422,7 @@ window._betBgSettle = async function() {
       if (typeof loadAttendance === 'function') await loadAttendance();
       const [sch, drs] = await Promise.all([dbGetAll('schedule').catch(() => []), dbGetAll('drivers').catch(() => [])]);
       const up = (sch || []).filter(r => r.lockTime > Date.now()).sort((a, b) => a.lockTime - b.lockTime)[0] || null;
-      const outIds = new Set(); if (up) drs.forEach(d => { if (!d.isReserve && _betChk(window.isDriverCheckedOut, d)) outIds.add(d.id); });
+      const outIds = new Set(); if (up) drs.forEach(d => { if (!d.isReserve && _betChk(window.isDriverCheckedOut, d)) outIds.add(d.id); }); if (up) drs.forEach(d => { if (d.raceBanRacesLeft > 0 || d.raceBanned) outIds.add(d.id); });
       window._betOutIds = outIds; window._betOutRace = up ? up.name : null;
     } catch(e) {}
     const coins = await _betLoadCoins(currentUser.userId);
@@ -27805,7 +27807,7 @@ window.betPlace = async function() {
   if (useFree && !(coins.freeBetGifts > 0) && coins.freeBetUsed === ctx.upcoming.name) return err('You\'ve already used your free bet this round.');
   if (!useFree && stake > coins.balance) return err('Not enough coins.');
   if (legs.some(l => l.market === 'pole' && !(window._betPoleOk && window._betPoleOk.has(l.sel[0])))) return err('Pole bets need a driver with at least 3 recorded qualifying laps.');
-  if (window._betOutIds && legs.some(l => l.sel.some(id => window._betOutIds.has(id)))) return err('A driver on your slip has checked out of this race — remove them first.');
+  if (window._betOutIds && legs.some(l => l.sel.some(id => window._betOutIds.has(id)))) return err('A driver on your slip is out of this race (checked out or race-banned) — remove them first.');
   const id = 'bet_' + currentUser.userId + '_' + Date.now();
   let doc, label, odds;
   if (legs.length === 1) {
