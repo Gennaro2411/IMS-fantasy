@@ -12837,49 +12837,59 @@ function _roundReel(t, race, pts) {
   const pic = photo ? `<img src="${esc(photo)}" alt="">` : `<span>${esc(String(name).slice(0, 2).toUpperCase())}</span>`;
   const el = document.createElement('div'); el.id = 'rr-reel';
   el.innerHTML = `<style>
-    #rr-reel{position:fixed;inset:0;z-index:99990;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.7);animation:rrIn .3s ease-out;font-family:'Barlow Condensed',sans-serif}
-    #rr-reel .ph{position:relative;width:min(340px,86vw);aspect-ratio:9/16;max-height:82vh;border-radius:22px;overflow:hidden;background:#07060d;box-shadow:0 20px 60px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.12);color:#fff}
-    #rr-reel .bar{position:absolute;top:10px;left:12px;right:12px;height:3px;border-radius:2px;background:rgba(255,255,255,.25);z-index:9;overflow:hidden}
-    #rr-reel .bar i{display:block;height:100%;width:0;background:#fff;animation:rrBar 20s linear forwards}
-    #rr-reel .hd{position:absolute;top:20px;left:12px;right:12px;display:flex;align-items:center;gap:8px;z-index:9;font-family:system-ui,sans-serif;font-size:.78rem;font-weight:700}
-    #rr-reel .hd img.lg{width:26px;height:26px;border-radius:50%}
-    #rr-reel .x{margin-left:auto;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:999px;padding:3px 10px;font-weight:800;cursor:pointer;font-family:inherit;font-size:.72rem}
-    #rr-reel .bg{position:absolute;inset:-70%;background:radial-gradient(circle at 30% 30%,rgba(255,45,117,.85),transparent 42%),radial-gradient(circle at 75% 70%,rgba(123,79,191,.9),transparent 42%),radial-gradient(circle at 60% 20%,rgba(255,184,0,.7),transparent 38%),#0b0814;will-change:transform;animation:rrSpin 14s linear infinite}
-    #rr-reel .pf{position:absolute;left:50%;top:44%;width:66%;aspect-ratio:1;border-radius:50%;overflow:hidden;transform:translate(-50%,-50%);border:4px solid #fff;box-shadow:0 0 40px rgba(255,255,255,.35);background:#222;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:3rem;will-change:transform;animation:rrZoom 13s ease-in-out 1.6s both}
-    #rr-reel .ring{position:absolute;left:50%;top:44%;width:66%;aspect-ratio:1;border-radius:50%;border:3px solid #ffd24a;transform:translate(-50%,-50%);opacity:0;will-change:transform,opacity;animation:rrRing .48s ease-out 1.6s 27;z-index:5;pointer-events:none}
-    #rr-reel .pf img{width:100%;height:100%;object-fit:cover}
-    #rr-reel .fl{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:7}
-    #rr-reel .fl.go{animation:rrFlash .35s ease-out}
-    #rr-reel .tx{position:absolute;left:0;right:0;text-align:center;z-index:6;text-transform:uppercase;font-weight:900;text-shadow:0 3px 12px rgba(0,0,0,.6);opacity:0}
-    #rr-reel .t0{top:38%;font-size:2.4rem;line-height:.95;animation:rrPop .5s cubic-bezier(.2,1.5,.4,1) .2s forwards,rrOut .3s ease-in 1.5s forwards}
-    #rr-reel .t1{bottom:15%;font-size:2rem;animation:rrSlide .45s ease-out 2.4s forwards,rrOut .3s ease-in 6.4s forwards}
-    #rr-reel .t2{bottom:15%;font-size:1.25rem;letter-spacing:2px;animation:rrSlide .45s ease-out 6.8s forwards,rrOut .3s ease-in 10.4s forwards}
-    #rr-reel .t3{bottom:13%;font-size:3.2rem;color:#ffd24a;animation:rrPop .5s cubic-bezier(.2,1.5,.4,1) 10.8s forwards,rrOut .3s ease-in 14.2s forwards}
-    #rr-reel .end{position:absolute;inset:0;z-index:8;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:radial-gradient(circle at 50% 40%,rgba(255,210,74,.35),rgba(7,6,13,.92) 65%);opacity:0;animation:rrFade .6s ease-out 14.6s forwards}
-    #rr-reel .end .ep{position:relative;width:46%;aspect-ratio:1;border-radius:50%;overflow:hidden;border:4px solid #ffd24a;box-shadow:0 0 24px rgba(255,210,74,.7);background:#222;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:2rem}
-    #rr-reel .end .ep img{width:100%;height:100%;object-fit:cover}
-    #rr-reel .end .tr{font-size:4rem;line-height:1;margin-top:-34px;animation:rrTr .7s cubic-bezier(.2,1.6,.4,1) 15s both}
-    #rr-reel .end b{font-size:1.7rem;text-transform:uppercase;text-align:center;line-height:1}
-    #rr-reel .end small{font-family:system-ui,sans-serif;font-weight:700;color:#ffd24a;letter-spacing:2px;text-transform:uppercase;font-size:.72rem;display:flex;align-items:center;gap:6px}
-    #rr-reel .snd{position:absolute;bottom:10px;left:0;right:0;text-align:center;font-family:system-ui,sans-serif;font-size:.65rem;opacity:.6;z-index:9}
-    @keyframes rrIn{from{opacity:0}}@keyframes rrBar{to{width:100%}}@keyframes rrSpin{to{transform:rotate(360deg)}}
-    @keyframes rrZoom{0%{transform:translate(-50%,-50%) scale(.6) rotate(-6deg)}30%{transform:translate(-50%,-50%) scale(1.05) rotate(3deg)}60%{transform:translate(-50%,-56%) scale(.92) rotate(-2deg)}100%{transform:translate(-50%,-50%) scale(1.12) rotate(0)}}
-    @keyframes rrRing{0%{transform:translate(-50%,-50%) scale(1);opacity:.8}100%{transform:translate(-50%,-50%) scale(1.35);opacity:0}}
-    @keyframes rrFlash{0%{opacity:.85}100%{opacity:0}}
-    @keyframes rrPop{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:none}}
-    @keyframes rrSlide{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:none}}
-    @keyframes rrOut{to{opacity:0;transform:scale(1.2)}}@keyframes rrFade{to{opacity:1}}
-    @keyframes rrTr{from{transform:translateY(40px) scale(.3);opacity:0}to{transform:none;opacity:1}}
+    /* Cold edit: black & white, hard contrast, blood-red accents, grain, letterbox, shake on the hits. */
+    #rr-reel{position:fixed;inset:0;z-index:99990;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.82);animation:rrIn .25s ease-out;font-family:'Barlow Condensed',sans-serif}
+    #rr-reel .ph{position:relative;width:min(340px,86vw);aspect-ratio:9/16;max-height:82vh;border-radius:14px;overflow:hidden;background:#050505;box-shadow:0 20px 60px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.08);color:#fff;will-change:transform}
+    #rr-reel .ph.shk{animation:rrShake .28s steps(4)}
+    #rr-reel .bar{position:absolute;top:10px;left:12px;right:12px;height:2px;background:rgba(255,255,255,.18);z-index:9;overflow:hidden}
+    #rr-reel .bar i{display:block;height:100%;width:0;background:#e10600;animation:rrBar 20s linear forwards}
+    #rr-reel .hd{position:absolute;top:18px;left:12px;right:12px;display:flex;align-items:center;gap:8px;z-index:9;font-family:system-ui,sans-serif;font-size:.72rem;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:#bbb}
+    #rr-reel .hd img.lg{width:24px;height:24px;border-radius:50%;filter:grayscale(1)}
+    #rr-reel .x{margin-left:auto;background:#000;border:1px solid #444;color:#fff;border-radius:4px;padding:3px 10px;font-weight:800;cursor:pointer;font-family:inherit;font-size:.7rem;letter-spacing:1px}
+    #rr-reel .bg{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 42%,#1c1c1c 0%,#0a0a0a 55%,#000 100%)}
+    #rr-reel .lb{position:absolute;left:0;right:0;height:9%;background:#000;z-index:6}#rr-reel .lb.t{top:0}#rr-reel .lb.b{bottom:0}
+    #rr-reel .grain{position:absolute;inset:-50%;z-index:7;pointer-events:none;opacity:.16;mix-blend-mode:screen;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1.4 -.35'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");will-change:transform;animation:rrGrain .5s steps(5) infinite}
+    #rr-reel .slash{position:absolute;left:-20%;right:-20%;top:41%;height:16%;background:#e10600;transform:rotate(-8deg) scaleX(0);transform-origin:left;z-index:1;animation:rrSlash .35s cubic-bezier(.7,0,.2,1) 1.6s forwards}
+    #rr-reel .pf{position:absolute;left:50%;top:44%;width:64%;aspect-ratio:1;overflow:hidden;transform:translate(-50%,-50%);border:3px solid #fff;background:#222;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:3rem;clip-path:polygon(6% 0,100% 0,94% 100%,0 100%);will-change:transform;z-index:2;animation:rrZoom 13s cubic-bezier(.3,0,.2,1) 1.6s both}
+    #rr-reel .pf img{width:100%;height:100%;object-fit:cover;filter:grayscale(1) contrast(1.45) brightness(.95)}
+    #rr-reel .ring{display:none}
+    #rr-reel .fl{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:8}
+    #rr-reel .fl.go{animation:rrFlash .22s steps(2)}
+    #rr-reel .tx{position:absolute;left:0;right:0;text-align:center;z-index:9;text-transform:uppercase;font-weight:900;font-style:italic;letter-spacing:-.5px;opacity:0}
+    #rr-reel .t0{top:36%;font-size:3rem;line-height:.85;color:#fff;animation:rrSlam .35s cubic-bezier(.2,1.4,.4,1) .25s forwards,rrOut .2s ease-in 1.5s forwards}
+    #rr-reel .t0 em{display:block;font-style:italic;color:#e10600}
+    #rr-reel .t1{bottom:13%;font-size:clamp(1.1rem,7vw,2.3rem);padding:0 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;animation:rrSlam .3s cubic-bezier(.2,1.4,.4,1) 2.4s forwards,rrOut .2s ease-in 6.4s forwards}
+    #rr-reel .t2{bottom:13.5%;font-size:1.1rem;letter-spacing:4px;font-style:normal;color:#aaa;animation:rrSlide .3s ease-out 6.8s forwards,rrOut .2s ease-in 10.4s forwards}
+    #rr-reel .t3{bottom:11%;font-size:4rem;color:#fff;animation:rrSlam .3s cubic-bezier(.2,1.4,.4,1) 10.8s forwards,rrOut .2s ease-in 14.2s forwards}
+    #rr-reel .t3 span{color:#e10600}
+    #rr-reel .end{position:absolute;inset:0;z-index:8;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:#050505;opacity:0;animation:rrFade .25s steps(2) 14.6s forwards}
+    #rr-reel .end .ep{position:relative;width:46%;aspect-ratio:1;overflow:hidden;border:3px solid #fff;background:#222;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:2rem;clip-path:polygon(6% 0,100% 0,94% 100%,0 100%)}
+    #rr-reel .end .ep img{width:100%;height:100%;object-fit:cover;filter:grayscale(1) contrast(1.45)}
+    #rr-reel .end .tr{font-size:3.6rem;line-height:1;margin-top:-30px;filter:grayscale(.15) saturate(.7);animation:rrTr .45s cubic-bezier(.2,1.6,.4,1) 15s both}
+    #rr-reel .end b{font-size:clamp(1.3rem,8vw,2rem);max-width:92%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-transform:uppercase;font-style:italic;text-align:center;line-height:1;letter-spacing:-.5px}
+    #rr-reel .end small{font-family:system-ui,sans-serif;font-weight:800;color:#e10600;letter-spacing:3px;text-transform:uppercase;font-size:.7rem;display:flex;align-items:center;gap:6px}
+    #rr-reel .end small img{filter:grayscale(1)}
+    #rr-reel .snd{position:absolute;bottom:2.6%;left:0;right:0;text-align:center;font-family:system-ui,sans-serif;font-size:.6rem;letter-spacing:1px;color:#666;z-index:9;text-transform:uppercase}
+    @keyframes rrIn{from{opacity:0}}@keyframes rrBar{to{width:100%}}
+    @keyframes rrGrain{0%{transform:translate(0,0)}20%{transform:translate(-3%,2%)}40%{transform:translate(2%,-3%)}60%{transform:translate(-2%,-1%)}80%{transform:translate(3%,3%)}100%{transform:translate(0,0)}}
+    @keyframes rrShake{0%{transform:translate(0,0)}25%{transform:translate(-6px,3px)}50%{transform:translate(5px,-4px)}75%{transform:translate(-3px,-2px)}100%{transform:translate(0,0)}}
+    @keyframes rrSlash{to{transform:rotate(-8deg) scaleX(1)}}
+    @keyframes rrZoom{0%{transform:translate(-50%,-50%) scale(1.5) rotate(-4deg)}8%{transform:translate(-50%,-50%) scale(1) rotate(0)}55%{transform:translate(-50%,-50%) scale(1.06)}56%{transform:translate(-50%,-50%) scale(1.18) rotate(2deg)}100%{transform:translate(-50%,-50%) scale(1.26) rotate(2deg)}}
+    @keyframes rrFlash{0%{opacity:.9}100%{opacity:0}}
+    @keyframes rrSlam{0%{opacity:0;transform:scale(2.2)}100%{opacity:1;transform:none}}
+    @keyframes rrSlide{from{opacity:0;transform:translateX(-40px)}to{opacity:1;transform:none}}
+    @keyframes rrOut{to{opacity:0}}@keyframes rrFade{to{opacity:1}}
+    @keyframes rrTr{from{transform:translateY(40px) scale(.4);opacity:0}to{transform:none;opacity:1}}
   </style>
-  <div class="ph"><div class="bg"></div><div class="bar"><i></i></div>
+  <div class="ph"><div class="bg"></div><div class="slash"></div><div class="grain"></div><div class="lb t"></div><div class="lb b"></div><div class="bar"><i></i></div>
     <div class="hd"><img class="lg" src="icons/icon-192.png?v=3" alt=""><span>IMS Fantasy · ${esc(race.name || '')}</span><button class="x">Skip ✕</button></div>
-    <div class="tx t0">Round<br>winner</div>
+    <div class="tx t0">Round<em>winner</em></div>
     <div class="pf">${pic}</div><div class="ring"></div>
     <div class="tx t1">${esc(name)}</div>
     <div class="tx t2">${esc(team)}</div>
-    <div class="tx t3">${pts} pts</div>
+    <div class="tx t3">${pts}<span> pts</span></div>
     <div class="fl"></div>
-    <div class="end"><div class="ep">${pic}</div><div class="tr">🏆</div><b>${esc(name)}</b><small>${flag}${esc(race.name || '')} · round winner</small></div>
+    <div class="end"><div class="ep">${pic}</div><div class="tr">🏆</div><b>${esc(name)}</b><small>${flag}${esc(race.name || '')} · no contest</small></div>
     <div class="snd">🔊 sound on</div></div>`;
   const bg = document.getElementById('bg-music'), wasPlaying = !!(bg && !bg.paused); if (wasPlaying) bg.pause();
   let muted = false; try { muted = localStorage.getItem('musicMuted') === '1'; } catch (e) {}
@@ -12889,8 +12899,8 @@ function _roundReel(t, race, pts) {
   el.querySelector('.x').addEventListener('click', close);
   el.addEventListener('click', (e) => { if (e.target === el) close(); });
   document.body.appendChild(el);
-  const fl = el.querySelector('.fl'); [1600, 2400, 6800, 10800, 14600].forEach(ms => at(ms, () => { fl.classList.remove('go'); void fl.offsetWidth; fl.classList.add('go'); }));
-  at(15200, () => { try { fireConfetti({ count: 160 }); } catch (e) {} });
+  const fl = el.querySelector('.fl'), ph = el.querySelector('.ph');
+  [1600, 2400, 6800, 9800, 10800, 14600].forEach(ms => at(ms, () => { fl.classList.remove('go'); ph.classList.remove('shk'); void fl.offsetWidth; fl.classList.add('go'); ph.classList.add('shk'); }));
   if (au) at(20000, () => { let v = au.volume; const f = setInterval(() => { v -= .1; if (v <= 0) { clearInterval(f); au.pause(); } else au.volume = v; }, 60); });
   at(21500, close);
 }
