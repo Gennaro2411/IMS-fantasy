@@ -27131,11 +27131,13 @@ window.renderBets = async function() {
     const st = ((window.computeDriverChampStandings && window.computeDriverChampStandings(races, drivers)) || {})[div] || {};
     const order = Object.entries(st).filter(([, p]) => p > 0).sort((x, y) => y[1] - x[1]).map(([id, p], i) => ({ id, p, pos: i + 1 }));
     const inF = (id) => field.find(d => d.id === id);
+    const tk = (id) => String((inF(id) || {}).team || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const mates = (x, y) => !!tk(x) && tk(x) === tk(y); // teammates already have their own battle — never pair them here
     const add = (x, y, tag) => { const a = inF(x.id), b = inF(y.id); if (!a || !b) return false; if (pairs.some(q => (q[0].id === a.id && q[1].id === b.id) || (q[0].id === b.id && q[1].id === a.id))) return true; pairs.push([a, b, tag]); return true; };
     let titleIds = [];
-    for (let i = 0; i + 1 < Math.min(order.length, 4); i += 2) { if (inF(order[i].id) && inF(order[i + 1].id)) { add(order[i], order[i + 1], `🏆 Championship rivals · P${order[i].pos} v P${order[i + 1].pos} (${Math.round(order[i].p - order[i + 1].p)} pts apart)`); titleIds = [order[i].id, order[i + 1].id]; break; } }
+    for (let i = 0; i + 1 < Math.min(order.length, 4); i += 2) { if (inF(order[i].id) && inF(order[i + 1].id) && !mates(order[i].id, order[i + 1].id)) { add(order[i], order[i + 1], `🏆 Championship rivals · P${order[i].pos} v P${order[i + 1].pos} (${Math.round(order[i].p - order[i + 1].p)} pts apart)`); titleIds = [order[i].id, order[i + 1].id]; break; } }
     let best = null; for (let i = 3; i + 1 < Math.min(order.length, 10); i++) { const x = order[i], y = order[i + 1];
-      if (titleIds.includes(x.id) || titleIds.includes(y.id) || !inF(x.id) || !inF(y.id)) continue; const gap = x.p - y.p; if (!best || gap < best.gap) best = { x, y, gap }; }
+      if (titleIds.includes(x.id) || titleIds.includes(y.id) || !inF(x.id) || !inF(y.id) || mates(x.id, y.id)) continue; const gap = x.p - y.p; if (!best || gap < best.gap) best = { x, y, gap }; }
     if (best) add(best.x, best.y, `⚔️ Midfield scrap · P${best.x.pos} v P${best.y.pos} (${Math.round(best.gap)} pts apart)`);
   } catch (e) {} }
   // Every teammate pairing in this division (a 3-driver team gives 3 battles), grouped by team
