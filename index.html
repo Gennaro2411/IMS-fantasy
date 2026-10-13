@@ -1706,6 +1706,7 @@
   <div class="card">
     <div class="card-title"><div class="dot"></div>Race Results History</div>
     <div id="race-history-content"></div>
+    <button class="btn btn-secondary" style="margin-top:10px;width:100%" onclick="playRoundReel()">▶ Replay last round's winner reel</button>
   </div>
   <div id="archived-seasons-section"></div>
 </div>
@@ -12807,6 +12808,15 @@ window.computeTeamRanksByPoints = function(teams, races) {
 // manager, set to the first 20 seconds of the reel track, ending on them with their round trophy.
 // Shown once per round per device.
 const ROUND_REEL_TRACK = 'https://files.catbox.moe/dxaas1.mp3';
+function _roundReelPick(teams, races) {
+  const done = (races || []).filter(r => r && r.priceAfterAt && r.driverPoints && Object.keys(r.driverPoints).length).sort((a, b) => (b.raceNum || 0) - (a.raceNum || 0))[0];
+  if (!done) return null;
+  let top = typeof window.getRoundWinOverride === 'function' ? window.getRoundWinOverride(done, teams) : null, pts = 0;
+  if (top) pts = window.fantasyTeamRacePts(top, done, races) || 0;
+  else teams.forEach(t => { if (t.testAccount) return; const p = window.fantasyTeamRacePts(t, done, races) || 0; if (p > pts) { pts = p; top = t; } });
+  return (top && pts > 0) ? { top, race: done, pts: Math.round(pts) } : null; }
+window.playRoundReel = async function() { const [teams, races] = await Promise.all([dbGetAll('teams'), dbGetAll('races')]);
+  const w = _roundReelPick(teams.filter(t => !t.testAccount), races); if (w) _roundReel(w.top, w.race, w.pts); else if (typeof showToast === 'function') showToast('No settled round yet', 'info'); };
 async function _roundReelMaybe(teams, races) {
   try {
     const done = (races || []).filter(r => r && r.priceAfterAt && r.driverPoints && Object.keys(r.driverPoints).length).sort((a, b) => (b.raceNum || 0) - (a.raceNum || 0))[0];
@@ -12827,15 +12837,16 @@ function _roundReel(t, race, pts) {
   const pic = photo ? `<img src="${esc(photo)}" alt="">` : `<span>${esc(String(name).slice(0, 2).toUpperCase())}</span>`;
   const el = document.createElement('div'); el.id = 'rr-reel';
   el.innerHTML = `<style>
-    #rr-reel{position:fixed;inset:0;z-index:99990;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.55);backdrop-filter:blur(3px);animation:rrIn .3s ease-out;font-family:'Barlow Condensed',sans-serif}
+    #rr-reel{position:fixed;inset:0;z-index:99990;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.7);animation:rrIn .3s ease-out;font-family:'Barlow Condensed',sans-serif}
     #rr-reel .ph{position:relative;width:min(340px,86vw);aspect-ratio:9/16;max-height:82vh;border-radius:22px;overflow:hidden;background:#07060d;box-shadow:0 20px 60px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.12);color:#fff}
     #rr-reel .bar{position:absolute;top:10px;left:12px;right:12px;height:3px;border-radius:2px;background:rgba(255,255,255,.25);z-index:9;overflow:hidden}
     #rr-reel .bar i{display:block;height:100%;width:0;background:#fff;animation:rrBar 20s linear forwards}
     #rr-reel .hd{position:absolute;top:20px;left:12px;right:12px;display:flex;align-items:center;gap:8px;z-index:9;font-family:system-ui,sans-serif;font-size:.78rem;font-weight:700}
     #rr-reel .hd img.lg{width:26px;height:26px;border-radius:50%}
     #rr-reel .x{margin-left:auto;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:999px;padding:3px 10px;font-weight:800;cursor:pointer;font-family:inherit;font-size:.72rem}
-    #rr-reel .bg{position:absolute;inset:-20%;background:radial-gradient(circle at 30% 30%,#ff2d75,transparent 45%),radial-gradient(circle at 75% 70%,#7b4fbf,transparent 45%),radial-gradient(circle at 60% 20%,#ffb800,transparent 40%),#0b0814;filter:blur(30px);animation:rrHue 6s linear infinite}
-    #rr-reel .pf{position:absolute;left:50%;top:44%;width:66%;aspect-ratio:1;border-radius:50%;overflow:hidden;transform:translate(-50%,-50%);border:4px solid #fff;box-shadow:0 0 40px rgba(255,255,255,.35);background:#222;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:3rem;animation:rrZoom 13s ease-in-out 1.6s both,rrBeat .48s ease-in-out 1.6s 27}
+    #rr-reel .bg{position:absolute;inset:-35%;background:radial-gradient(circle at 30% 30%,rgba(255,45,117,.85),transparent 42%),radial-gradient(circle at 75% 70%,rgba(123,79,191,.9),transparent 42%),radial-gradient(circle at 60% 20%,rgba(255,184,0,.7),transparent 38%),#0b0814;will-change:transform;animation:rrSpin 14s linear infinite}
+    #rr-reel .pf{position:absolute;left:50%;top:44%;width:66%;aspect-ratio:1;border-radius:50%;overflow:hidden;transform:translate(-50%,-50%);border:4px solid #fff;box-shadow:0 0 40px rgba(255,255,255,.35);background:#222;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:3rem;will-change:transform;animation:rrZoom 13s ease-in-out 1.6s both}
+    #rr-reel .ring{position:absolute;left:50%;top:44%;width:66%;aspect-ratio:1;border-radius:50%;border:3px solid #ffd24a;transform:translate(-50%,-50%);opacity:0;will-change:transform,opacity;animation:rrRing .48s ease-out 1.6s 27;z-index:5;pointer-events:none}
     #rr-reel .pf img{width:100%;height:100%;object-fit:cover}
     #rr-reel .fl{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:7}
     #rr-reel .fl.go{animation:rrFlash .35s ease-out}
@@ -12845,15 +12856,15 @@ function _roundReel(t, race, pts) {
     #rr-reel .t2{bottom:15%;font-size:1.25rem;letter-spacing:2px;animation:rrSlide .45s ease-out 6.8s forwards,rrOut .3s ease-in 10.4s forwards}
     #rr-reel .t3{bottom:13%;font-size:3.2rem;color:#ffd24a;animation:rrPop .5s cubic-bezier(.2,1.5,.4,1) 10.8s forwards,rrOut .3s ease-in 14.2s forwards}
     #rr-reel .end{position:absolute;inset:0;z-index:8;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:radial-gradient(circle at 50% 40%,rgba(255,210,74,.35),rgba(7,6,13,.92) 65%);opacity:0;animation:rrFade .6s ease-out 14.6s forwards}
-    #rr-reel .end .ep{position:relative;width:46%;aspect-ratio:1;border-radius:50%;overflow:hidden;border:4px solid #ffd24a;box-shadow:0 0 30px #ffd24a;background:#222;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:2rem}
+    #rr-reel .end .ep{position:relative;width:46%;aspect-ratio:1;border-radius:50%;overflow:hidden;border:4px solid #ffd24a;box-shadow:0 0 24px rgba(255,210,74,.7);background:#222;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:2rem}
     #rr-reel .end .ep img{width:100%;height:100%;object-fit:cover}
-    #rr-reel .end .tr{font-size:4rem;line-height:1;margin-top:-34px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.6));animation:rrTr .7s cubic-bezier(.2,1.6,.4,1) 15s both}
+    #rr-reel .end .tr{font-size:4rem;line-height:1;margin-top:-34px;animation:rrTr .7s cubic-bezier(.2,1.6,.4,1) 15s both}
     #rr-reel .end b{font-size:1.7rem;text-transform:uppercase;text-align:center;line-height:1}
     #rr-reel .end small{font-family:system-ui,sans-serif;font-weight:700;color:#ffd24a;letter-spacing:2px;text-transform:uppercase;font-size:.72rem;display:flex;align-items:center;gap:6px}
     #rr-reel .snd{position:absolute;bottom:10px;left:0;right:0;text-align:center;font-family:system-ui,sans-serif;font-size:.65rem;opacity:.6;z-index:9}
-    @keyframes rrIn{from{opacity:0}}@keyframes rrBar{to{width:100%}}@keyframes rrHue{to{filter:blur(30px) hue-rotate(360deg)}}
+    @keyframes rrIn{from{opacity:0}}@keyframes rrBar{to{width:100%}}@keyframes rrSpin{to{transform:rotate(360deg)}}
     @keyframes rrZoom{0%{transform:translate(-50%,-50%) scale(.6) rotate(-6deg)}30%{transform:translate(-50%,-50%) scale(1.05) rotate(3deg)}60%{transform:translate(-50%,-56%) scale(.92) rotate(-2deg)}100%{transform:translate(-50%,-50%) scale(1.12) rotate(0)}}
-    @keyframes rrBeat{50%{box-shadow:0 0 70px rgba(255,255,255,.7);border-color:#ffd24a}}
+    @keyframes rrRing{0%{transform:translate(-50%,-50%) scale(1);opacity:.8}100%{transform:translate(-50%,-50%) scale(1.35);opacity:0}}
     @keyframes rrFlash{0%{opacity:.85}100%{opacity:0}}
     @keyframes rrPop{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:none}}
     @keyframes rrSlide{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:none}}
@@ -12863,7 +12874,7 @@ function _roundReel(t, race, pts) {
   <div class="ph"><div class="bg"></div><div class="bar"><i></i></div>
     <div class="hd"><img class="lg" src="icons/icon-192.png?v=3" alt=""><span>IMS Fantasy · ${esc(race.name || '')}</span><button class="x">Skip ✕</button></div>
     <div class="tx t0">Round<br>winner</div>
-    <div class="pf">${pic}</div>
+    <div class="pf">${pic}</div><div class="ring"></div>
     <div class="tx t1">${esc(name)}</div>
     <div class="tx t2">${esc(team)}</div>
     <div class="tx t3">${pts} pts</div>
