@@ -24255,7 +24255,8 @@ window.showRaceResults = function(raceId, season) {
       const acc = team ? ((getTeamCardColour(team) || {}).accent || '#444') : '#444';
       const g = _gridOf(item.name);
       const fin = (item.dId && _pd[item.dId] && _pd[item.dId][div]) || (item.driver && _pd[item.driver.id] && _pd[item.driver.id][div]) || null;
-      const gained = (g && fin && !out) ? g - Number(fin) : null;
+      // +/- uses the position shown in this table (post-verdict order), not the stored pre-verdict finish.
+      const gained = (g && !out) ? g - (i + 1) : null;
       const chips = (isPole ? _chip('POLE', 'pole') : '') + (isFL ? _chip('FL', 'fl') : '') + (rowStatus ? _chip(esc(rowStatus), 'out') : '') + (item.isReserve ? _chip('RES', 'res') : '');
       html += `<div class="rr-row${i < 3 && !out ? ' pod' : ''}${out ? ' is-out' : ''}" style="--team:${acc}">
         ${_posCell(i + 1, out)}
