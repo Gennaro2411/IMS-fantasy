@@ -4794,7 +4794,7 @@ function bcScenes() {
     const teamName = {}; D.teams.forEach(t => { teamName[t.userId] = t.teamName || t.playerName || '?'; });
     const teamAv = {}; D.teams.forEach(t => { teamAv[t.userId] = t.discordAvatar || ''; });
     const revealed = transferNamesRevealed(D.schedule);
-    scenes.push({ label: revealed ? 'TRANSFER WIRE — DEADLINE DAY' : 'TRANSFER WIRE', html:
+    scenes.push({ label: revealed ? 'MANAGER TRANSFERS — DEADLINE DAY' : 'MANAGER TRANSFERS', html:
       recentTx.map((t,i) => `
         <div style="display:flex;align-items:center;gap:8px;padding:5px 8px;font-size:.85rem;animation:pageFade .4s ease ${i*0.1}s backwards">
           ${revealed ? bcAvatar(teamAv[t.userId], teamName[t.userId]||'?', 22) : '<span>'+_ico('hidden')+'</span>'}<b style="color:${gold}">${revealed ? esc(teamName[t.userId]||'?') : 'A manager'}</b>
