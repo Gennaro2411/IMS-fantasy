@@ -4785,7 +4785,9 @@ function bcScenes() {
 
   // SCENE: transfer wire — every transfer since the last round was handed over (teams unlocked),
   // so it stays on all week; falls back to the last 7 days if that time isn't known.
-  const _txSince = (D.lastUnlockTime && D.lastUnlockTime < Date.now()) ? D.lastUnlockTime : Date.now() - 7 * 864e5;
+  // Since the last race's lock (re-locking/unlocking teams in admin mustn't wipe the wire), else the last 7 days.
+  const _lastLock = Math.max(0, ...(D.schedule || []).map(r => r && r.lockTime || 0).filter(t => t && t < Date.now()));
+  const _txSince = _lastLock || Date.now() - 7 * 864e5;
   const recentTx = D.transfers.filter(t => (t.timestamp||0) >= _txSince)
     .sort((a,b)=>(b.timestamp||0)-(a.timestamp||0)).slice(0,4);
   if (recentTx.length) {
