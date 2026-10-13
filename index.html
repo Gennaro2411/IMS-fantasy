@@ -21179,10 +21179,10 @@ function priceMoveDetail(entity) {
   const _fr = window._priceForRace;
   if (_fr) { const rk = (n) => typeof raceTrackKey === 'function' ? raceTrackKey(n) : String(n || '').toLowerCase().trim();
     const pick = (m) => { if (!m) return undefined; if (m[_fr] !== undefined) return m[_fr]; const k = Object.keys(m).find(x => rk(x) === rk(_fr)); return k ? m[k] : undefined; };
-    const pr = pick(entity.pricedRaces), dm = pick(entity.domPriceByRace), er = pick(entity.eloRaces);
+    const pr = pick(entity.pricedRaces), dm = pick(entity.domPriceByRace), er = pick(entity.eloRaces), dr = pick(entity.dnfRaces);
     if (pr && typeof pr.priceChange === 'number' && entity.eloRaces === undefined) return { change: Math.round(pr.priceChange * 10) / 10, race: _fr, dom: 0, elo: 0 };
-    const dom = typeof dm === 'number' ? dm : 0, elo = (er && typeof er.priceChange === 'number') ? er.priceChange : 0;
-    return { change: Math.round((dom + elo) * 10) / 10, race: _fr, dom, elo }; }
+    const dom = typeof dm === 'number' ? dm : 0, elo = (er && typeof er.priceChange === 'number') ? er.priceChange : 0, dnf = (dr && typeof dr.priceChange === 'number') ? dr.priceChange : 0;
+    return { change: Math.round((dom + elo - dnf) * 10) / 10, race: _fr, dom, elo, dnf }; }
   // Constructors don't move on dominance/ELO like drivers — their per-race change is stored in
   // pricedRaces[raceName].priceChange (the same data the price GRAPH plots). Use the most recent
   // priced race so the tag matches the graph exactly.
@@ -21210,7 +21210,8 @@ function priceMoveDetail(entity) {
   // Gather every race this driver has a recorded move for, from both dom and ELO records.
   const domMap = entity.domPriceByRace || {};
   const eloMap = entity.eloRaces || {};
-  const raceNames = new Set([...Object.keys(domMap), ...Object.keys(eloMap)]);
+  const dnfMap = entity.dnfRaces || {}; // DNF/DNS/DSQ price penalties (positive charge = price drop)
+  const raceNames = new Set([...Object.keys(domMap), ...Object.keys(eloMap), ...Object.keys(dnfMap)]);
   if (!raceNames.size) {
     // No per-race history — fall back to the stored last move if any.
     const lc = Math.round(((entity.lastPriceChange||0) + (entity.lastEloPriceChange||0)) * 10) / 10;
@@ -21233,8 +21234,9 @@ function priceMoveDetail(entity) {
     const dom = typeof domMap[nm] === 'number' ? domMap[nm] : 0;
     const eloRec = eloMap[nm];
     const elo = (eloRec && typeof eloRec.priceChange === 'number') ? eloRec.priceChange : 0;
-    const combined = Math.round((dom + elo) * 10) / 10;
-    if (combined !== 0) return { change: combined, race: nm, dom, elo };
+    const dnf = (dnfMap[nm] && typeof dnfMap[nm].priceChange === 'number') ? dnfMap[nm].priceChange : 0;
+    const combined = Math.round((dom + elo - dnf) * 10) / 10;
+    if (combined !== 0) return { change: combined, race: nm, dom, elo, dnf };
   }
   return { change: 0, race: null, dom: 0, elo: 0 };
 }
@@ -21280,6 +21282,7 @@ function priceChangeTag(entity, fontSize) {
   const parts = [];
   if (mv.dom) parts.push((mv.dom>0?'+':'')+mv.dom.toFixed(1)+'M dominance');
   if (mv.elo) parts.push((mv.elo>0?'+':'')+mv.elo.toFixed(1)+'M ELO');
+  if (mv.dnf) parts.push('-'+mv.dnf.toFixed(1)+'M DNF/DSQ');
   const tip = (chg>0?'Rose':'Dropped')+' $'+Math.abs(chg).toFixed(1)+'M at '+raceName + (parts.length?(' ('+parts.join(', ')+')'):'');
   return '<span title="'+tip.replace(/"/g,'&quot;')+'" style="color:'+col+';font-size:'+fs+';cursor:help">'+arrow+'$'+Math.abs(chg).toFixed(1)+'M</span>';
 }
