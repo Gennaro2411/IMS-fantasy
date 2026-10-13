@@ -10651,8 +10651,8 @@ async function _tcMaybeLaunch(teamDocId, raceId) {
     if (!tc || tc.raceId !== raceId) return; const capId = (team.captains || {})[raceId]; if (!capId) return;
     const key = 'tcLaunch_' + teamDocId + '_' + raceId; let seen = null; try { seen = localStorage.getItem(key); } catch (e) {}
     if (seen === capId) return; try { localStorage.setItem(key, capId); } catch (e) {}
-    const [drs, sch] = await Promise.all([dbGetAll('drivers'), dbGetAll('schedule').catch(() => [])]); const d = drs.find(x => x.id === capId);
-    if (d) _tcCutscene(d, (sch || []).filter(x => x && x.name).sort((a, b) => (a.raceNum || 0) - (b.raceNum || 0) || (a.lockTime || 0) - (b.lockTime || 0)));
+    const [drs, sch, rc] = await Promise.all([dbGetAll('drivers'), dbGetAll('schedule').catch(() => []), dbGet('races', raceId).catch(() => null)]); const d = drs.find(x => x.id === capId);
+    if (d) _tcCutscene(d, (sch || []).filter(x => x && x.name).sort((a, b) => (a.raceNum || 0) - (b.raceNum || 0) || (a.lockTime || 0) - (b.lockTime || 0)), rc && rc.name);
   } catch (e) {} }
 // Rocket launch sound, made in the browser (no file): engine ignition rumble during the countdown, a roar at lift-off, then fading away.
 function _tcRocketSound() {
@@ -10671,13 +10671,15 @@ function _tcTing() { try { const AC = window.AudioContext || window.webkitAudioC
   [[2093, 0], [3136, .04]].forEach(([f, dl]) => { const o = c.createOscillator(), g = c.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(f, t + dl);
     g.gain.setValueAtTime(0.0001, t + dl); g.gain.exponentialRampToValueAtTime(0.18, t + dl + .01); g.gain.exponentialRampToValueAtTime(0.0001, t + dl + .6); o.connect(g).connect(c.destination); o.start(t + dl); o.stop(t + dl + .65); });
   setTimeout(() => { try { c.close(); } catch (e) {} }, 1000); } catch (e) {} }
-function _tcCutscene(d, tracks) {
+function _tcCutscene(d, tracks, raceName) {
   document.getElementById('tc-launch')?.remove();
   const photo = driverPhoto(d), ini = esc(String(d.name || '?').slice(0, 2).toUpperCase());
   const face = photo ? `<img src="${esc(photo)}" alt="">` : `<span>${ini}</span>`;
   const stars = Array.from({ length: 60 }, () => `<i style="left:${Math.random() * 100}%;top:${Math.random() * 100}%;animation-delay:${(Math.random() * 2).toFixed(2)}s;opacity:${(.3 + Math.random() * .7).toFixed(2)}"></i>`).join('');
   // This season's calendar as named stars: spread over the sky in a loose zig-zag, next race in gold.
-  const now = Date.now(), nextT = (tracks || []).filter(t => (t.lockTime || 0) > now).sort((a, b) => a.lockTime - b.lockTime)[0];
+  const now = Date.now(), _tk = (n) => (typeof raceTrackKey === 'function' ? raceTrackKey(n) : String(n || '').toLowerCase());
+  // Gold target = the track this Triple Captain is for; falls back to the next race on the calendar.
+  const nextT = (raceName && (tracks || []).find(t => _tk(t.name) === _tk(raceName))) || (tracks || []).filter(t => (t.lockTime || 0) > now).sort((a, b) => a.lockTime - b.lockTime)[0];
   const T = (tracks || []).slice(0, 24), n = T.length;
   const trackStars = T.map((t, i) => { const row = n > 1 ? i / (n - 1) : .5, side = i % 2 ? 1 : -1;
     const x = 50 + side * (12 + ((i * 37) % 21)), y = 6 + row * 52 + ((i * 13) % 5); const nx = t === nextT, past = (t.lockTime || 0) && t.lockTime < now;
