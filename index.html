@@ -28340,7 +28340,8 @@ async function _wdLoad() {
     // Every division they've ever raced in (from the per-season points keys, e.g. "S5 E2"), plus their current one.
     // Races per division: past seasons from the .db build + this season's imported results.
     const dh = Object.assign({}, s2.dh || {}, s.dh || {}); Object.entries(liveDv[d.id] || {}).forEach(([v, n]) => { dh[v] = (dh[v] || 0) + n; });
-    if (d.team && !/^reserve$/i.test(String(d.team).trim())) th[_wdNorm(d.team)] = d.team; // their current team always counts, even with 0 starts
+    // Their current team counts once they've actually raced for it (1+ start this season) — being signed isn't driving for them.
+    if (d.team && !/^reserve$/i.test(String(d.team).trim()) && ((liveTm[d.id] || {})[_wdNorm(d.team)] || {}).n >= 1) th[_wdNorm(d.team)] = d.team;
     Object.entries(liveTm[d.id] || {}).forEach(([k, t]) => { if (t.n >= 3 || (s.tc && s.tc[k] && s.tc[k].n + t.n >= 3)) th[k] = t.name; }); // this season's races count too
     return { id: d.id, name: d.name, res: !!d.isReserve, dv: d.division || d.lastDivision || d.prevDivision || '', team: d.isReserve ? 'Reserve' : (d.team || '—'), div: d.division || '', nat: _natFix(d.name, s.nat) || '', b: s.b || 0, // All-time table (matched on the market name) + this season's .db results — so a driver whose .db
     // alias differs from their market name still gets their real points/wins.
