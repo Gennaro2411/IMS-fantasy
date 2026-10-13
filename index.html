@@ -10651,18 +10651,30 @@ async function _tcMaybeLaunch(teamDocId, raceId) {
     if (!tc || tc.raceId !== raceId) return; const capId = (team.captains || {})[raceId]; if (!capId) return;
     const key = 'tcLaunch_' + teamDocId + '_' + raceId; let seen = null; try { seen = localStorage.getItem(key); } catch (e) {}
     if (seen === capId) return; try { localStorage.setItem(key, capId); } catch (e) {}
-    const d = (await dbGetAll('drivers')).find(x => x.id === capId); if (d) _tcCutscene(d);
+    const [drs, sch] = await Promise.all([dbGetAll('drivers'), dbGetAll('schedule').catch(() => [])]); const d = drs.find(x => x.id === capId);
+    if (d) _tcCutscene(d, (sch || []).filter(x => x && x.name).sort((a, b) => (a.raceNum || 0) - (b.raceNum || 0) || (a.lockTime || 0) - (b.lockTime || 0)));
   } catch (e) {} }
-function _tcCutscene(d) {
+function _tcCutscene(d, tracks) {
   document.getElementById('tc-launch')?.remove();
   const photo = driverPhoto(d), ini = esc(String(d.name || '?').slice(0, 2).toUpperCase());
   const face = photo ? `<img src="${esc(photo)}" alt="">` : `<span>${ini}</span>`;
   const stars = Array.from({ length: 60 }, () => `<i style="left:${Math.random() * 100}%;top:${Math.random() * 100}%;animation-delay:${(Math.random() * 2).toFixed(2)}s;opacity:${(.3 + Math.random() * .7).toFixed(2)}"></i>`).join('');
+  // This season's calendar as named stars: spread over the sky in a loose zig-zag, next race in gold.
+  const now = Date.now(), nextT = (tracks || []).filter(t => (t.lockTime || 0) > now).sort((a, b) => a.lockTime - b.lockTime)[0];
+  const T = (tracks || []).slice(0, 24), n = T.length;
+  const trackStars = T.map((t, i) => { const row = n > 1 ? i / (n - 1) : .5, side = i % 2 ? 1 : -1;
+    const x = 50 + side * (12 + ((i * 37) % 21)), y = 6 + row * 52 + ((i * 13) % 5); const nx = t === nextT, past = (t.lockTime || 0) && t.lockTime < now;
+    return `<b class="tk${nx ? ' nx' : ''}${past ? ' past' : ''}" style="left:${x}%;top:${y}%;animation-delay:${(i * .07).toFixed(2)}s"><s></s><span>${esc(t.name)}</span></b>`; }).join('');
   const el = document.createElement('div'); el.id = 'tc-launch';
   el.innerHTML = `<style>
     #tc-launch{position:fixed;inset:0;z-index:99999;overflow:hidden;background:radial-gradient(ellipse at 50% 110%,#3b1f63 0%,#140a2a 45%,#05030d 100%);display:flex;align-items:center;justify-content:center;cursor:pointer;animation:tcIn .3s ease-out;font-family:'Barlow Condensed',sans-serif}
     #tc-launch .st i{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;animation:tcTw 1.6s ease-in-out infinite alternate}
     #tc-launch .st{position:absolute;inset:0;animation:tcStars 4.6s cubic-bezier(.6,0,.9,.4) forwards}
+    #tc-launch .tk{position:absolute;display:flex;align-items:center;gap:5px;transform:translate(-50%,-50%);opacity:0;animation:tcTk .6s ease-out forwards;font-weight:700;font-size:.72rem;letter-spacing:.5px;color:rgba(255,255,255,.75);white-space:nowrap;text-transform:uppercase}
+    #tc-launch .tk s{width:9px;height:9px;flex-shrink:0;background:#fff;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);box-shadow:0 0 6px #fff;animation:tcTw 1.4s ease-in-out infinite alternate}
+    #tc-launch .tk.past{color:rgba(255,255,255,.4)}#tc-launch .tk.past s{opacity:.5}
+    #tc-launch .tk.nx{color:#ffd24a;font-size:.8rem}#tc-launch .tk.nx s{width:13px;height:13px;background:#ffd24a;filter:drop-shadow(0 0 6px #ffd24a)}
+    @keyframes tcTk{from{opacity:0;transform:translate(-50%,-50%) scale(.4)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
     #tc-launch .pad{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:260px;height:26px;background:linear-gradient(#2a2340,#120d20);border-radius:8px 8px 0 0;box-shadow:0 -2px 0 #9b59b6}
     #tc-launch .rk{position:absolute;left:50%;bottom:26px;width:150px;margin-left:-75px;animation:tcShake .08s linear 1.2s 30,tcLift 1.7s ease-in 1.4s forwards,tcFly 1.9s cubic-bezier(.55,0,.85,.3) 3.1s forwards}
     #tc-launch .rk svg{display:block;width:150px;height:auto;filter:drop-shadow(0 0 18px rgba(155,89,182,.6))}
@@ -10690,7 +10702,7 @@ function _tcCutscene(d) {
     @keyframes tcTitle{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
     @media (prefers-reduced-motion:reduce){#tc-launch *{animation-duration:.01s!important;animation-delay:0s!important}}
   </style>
-  <div class="st">${stars}</div><div class="smk"></div><div class="pad"></div>
+  <div class="st">${stars}${trackStars}</div><div class="smk"></div><div class="pad"></div>
   <div class="cd"><b style="animation-delay:.1s">3</b><b style="animation-delay:1s">2</b><b style="animation-delay:1.9s">1</b></div>
   <div class="rk"><svg viewBox="0 0 150 300"><defs><linearGradient id="tcB" x1="0" x2="1"><stop offset="0" stop-color="#cfc6e6"/><stop offset=".5" stop-color="#ffffff"/><stop offset="1" stop-color="#a99cc9"/></linearGradient></defs>
     <path d="M75 4C112 40 120 110 118 230H32C30 110 38 40 75 4Z" fill="url(#tcB)"/><path d="M75 4C95 22 106 46 112 74H38C44 46 55 22 75 4Z" fill="#9b59b6"/>
