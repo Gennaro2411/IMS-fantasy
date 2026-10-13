@@ -4783,8 +4783,10 @@ function bcScenes() {
       </div>` });
   }
 
-  // SCENE: transfer wire (last 48h)
-  const recentTx = D.transfers.filter(t => Date.now() - (t.timestamp||0) < 172800000)
+  // SCENE: transfer wire — every transfer since the last round was handed over (teams unlocked),
+  // so it stays on all week; falls back to the last 7 days if that time isn't known.
+  const _txSince = (D.lastUnlockTime && D.lastUnlockTime < Date.now()) ? D.lastUnlockTime : Date.now() - 7 * 864e5;
+  const recentTx = D.transfers.filter(t => (t.timestamp||0) >= _txSince)
     .sort((a,b)=>(b.timestamp||0)-(a.timestamp||0)).slice(0,4);
   if (recentTx.length) {
     const teamName = {}; D.teams.forEach(t => { teamName[t.userId] = t.teamName || t.playerName || '?'; });
