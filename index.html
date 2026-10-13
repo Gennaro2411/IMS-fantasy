@@ -10641,9 +10641,111 @@ window.confirmGuardianAngelPick = async function(teamId, raceId) {
   chips.guardianAngel = { used: true, raceId, driverId };
   await dbSet('teams', teamId, {...team, chips});
   closeModal();
-  renderMyTeam();
+  renderMyTeam(); _gaMaybeShow(teamId, raceId);
 };
 
+// ===== Guardian Angel cutscene =====
+// Plays when a Guardian Angel driver is picked, and again only if the pick changes: a monster threatens the team,
+// the angel flies down with wings + halo and destroys it, then the whole team celebrates being saved.
+async function _gaMaybeShow(teamDocId, raceId) {
+  try { const team = await dbGet('teams', teamDocId); if (!team) return; const ga = (team.chips || {}).guardianAngel;
+    if (!ga || ga.raceId !== raceId || !ga.driverId) return;
+    const key = 'gaShow_' + teamDocId + '_' + raceId; let seen = null; try { seen = localStorage.getItem(key); } catch (e) {}
+    if (seen === ga.driverId) return; try { localStorage.setItem(key, ga.driverId); } catch (e) {}
+    const drs = await dbGetAll('drivers'); const angel = drs.find(x => x.id === ga.driverId); if (!angel) return;
+    const crew = Object.values(team.selections || {}).filter(Boolean).map(id => drs.find(x => x.id === id)).filter(Boolean);
+    _gaCutscene(angel, crew);
+  } catch (e) {} }
+function _gaSfx(kind) { try { const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return; const c = new AC(), t = c.currentTime;
+  if (kind === 'boom') { const b = c.createBuffer(1, c.sampleRate, c.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 2);
+    const s = c.createBufferSource(); s.buffer = b; const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 600; const g = c.createGain(); g.gain.value = .9; s.connect(lp).connect(g).connect(c.destination); s.start(t); }
+  if (kind === 'roar') { const o = c.createOscillator(), g = c.createGain(), lp = c.createBiquadFilter(); o.type = 'sawtooth'; o.frequency.setValueAtTime(90, t); o.frequency.linearRampToValueAtTime(55, t + 1.2); lp.type = 'lowpass'; lp.frequency.value = 500;
+    g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.25, t + .15); g.gain.exponentialRampToValueAtTime(.0001, t + 1.3); o.connect(lp).connect(g).connect(c.destination); o.start(t); o.stop(t + 1.4); }
+  if (kind === 'choir') { [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => { const o = c.createOscillator(), g = c.createGain(); o.type = 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(.0001, t + i * .06); g.gain.exponentialRampToValueAtTime(.07, t + .4 + i * .06); g.gain.exponentialRampToValueAtTime(.0001, t + 2.6); o.connect(g).connect(c.destination); o.start(t + i * .06); o.stop(t + 2.7); }); }
+  if (kind === 'whoosh') { const b = c.createBuffer(1, c.sampleRate, c.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    const s = c.createBufferSource(); s.buffer = b; const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.setValueAtTime(400, t); bp.frequency.exponentialRampToValueAtTime(3000, t + .9); const g = c.createGain(); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.35, t + .6); g.gain.exponentialRampToValueAtTime(.0001, t + 1); s.connect(bp).connect(g).connect(c.destination); s.start(t); s.stop(t + 1); }
+  setTimeout(() => { try { c.close(); } catch (e) {} }, 3000); } catch (e) {} }
+function _gaCutscene(angel, crew) {
+  document.getElementById('ga-scene')?.remove();
+  const pf = (d, cls) => { const p = driverPhoto(d); return p ? `<img class="${cls}" src="${esc(p)}" alt="">` : `<span class="${cls} ini">${esc(String(d.name || '?').slice(0, 2).toUpperCase())}</span>`; };
+  const wing = (side) => `<svg class="wg ${side}" viewBox="0 0 120 100"><g fill="#fff" stroke="#d9e6ff" stroke-width="1.5"${side === 'r' ? ' transform="translate(120,0) scale(-1,1)"' : ''}>
+    <path d="M118 40C90 6 40 0 4 10c22 6 36 14 46 24C30 30 14 34 2 44c24 0 40 4 52 12C36 58 22 66 12 78c26-6 46-6 64 2C70 84 62 92 58 100c26-8 46-24 60-60Z"/>
+    <path d="M118 40C100 28 80 24 60 26" fill="none" stroke="#c9d8f5"/><path d="M114 52C96 46 78 46 62 50" fill="none" stroke="#c9d8f5"/></g></svg>`;
+  const angelHtml = (cls) => `<div class="an ${cls}"><div class="halo"></div>${wing('l')}${wing('r')}<div class="face">${pf(angel, 'pp')}</div></div>`;
+  const crewHtml = crew.slice(0, 8).map((d, i) => `<div class="cr" style="--i:${i}">${pf(d, 'pp')}<small>${esc(d.name || '')}</small></div>`).join('');
+  const el = document.createElement('div'); el.id = 'ga-scene';
+  el.innerHTML = `<style>
+    #ga-scene{position:fixed;inset:0;z-index:99999;overflow:hidden;cursor:pointer;font-family:'Barlow Condensed',sans-serif;color:#fff;background:#120508;animation:gaIn .3s ease-out}
+    #ga-scene .sky{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%,#5a0f1e 0%,#2a060e 55%,#0d0204 100%);animation:gaSky .8s ease-in 5s forwards}
+    #ga-scene .gold{position:absolute;inset:0;opacity:0;background:radial-gradient(ellipse at 50% 30%,#fff7d6 0%,#ffd86b 30%,#d68a1c 70%,#6b3a07 100%);animation:gaFade 1s ease-out 5s forwards}
+    #ga-scene .rays{position:absolute;left:50%;top:28%;width:900px;height:900px;margin:-450px 0 0 -450px;opacity:0;background:repeating-conic-gradient(rgba(255,255,255,.35) 0 6deg,transparent 6deg 18deg);animation:gaFade .8s ease-out 5.2s forwards,gaSpin 30s linear infinite;border-radius:50%;-webkit-mask:radial-gradient(circle,#000 20%,transparent 65%);mask:radial-gradient(circle,#000 20%,transparent 65%)}
+    #ga-scene .cap{position:absolute;top:7%;left:0;right:0;text-align:center;font-weight:900;letter-spacing:4px;font-size:1.25rem;color:#ff6b6b;text-shadow:0 0 14px #ff2a2a;animation:gaCap 2.6s ease-out forwards}
+    #ga-scene .mon{position:absolute;left:50%;bottom:24%;width:300px;height:330px;margin-left:-150px;animation:gaStomp .5s ease-in-out infinite alternate,gaDie .9s ease-in 4.3s forwards}
+    #ga-scene .mon svg{position:absolute;inset:0;width:100%;height:100%}
+    #ga-scene .mon .hd{position:absolute;left:50%;top:40px;width:150px;height:150px;margin-left:-75px;border-radius:50%;background:url('icons/ga-monster.png') center/cover;box-shadow:0 0 0 5px #ff8a00,0 0 30px #ff3d00;animation:gaRoar .25s ease-in-out .4s 6 alternate}
+    #ga-scene .mon .armL{transform-origin:95px 150px;animation:gaArmL .5s ease-in-out infinite alternate}#ga-scene .mon .armR{transform-origin:205px 150px;animation:gaArmR .5s ease-in-out infinite alternate}
+    #ga-scene .boom{position:absolute;left:50%;bottom:38%;width:40px;height:40px;margin-left:-20px;border-radius:50%;background:radial-gradient(#fff,#ffe9a8 40%,rgba(255,180,60,0) 70%);opacity:0;animation:gaBoom .9s ease-out 4.25s forwards}
+    #ga-scene .crew{position:absolute;left:0;right:0;bottom:4%;display:flex;justify-content:center;flex-wrap:wrap;gap:8px;padding:0 10px;animation:gaCrewUp .7s ease-out 5.3s forwards}
+    #ga-scene .cr{display:flex;flex-direction:column;align-items:center;width:58px;animation:gaCower .18s ease-in-out infinite alternate,gaJump .5s cubic-bezier(.3,0,.3,1) calc(5.6s + var(--i) * .07s) infinite alternate}
+    #ga-scene .cr .pp{width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid #fff;background:#333;display:flex;align-items:center;justify-content:center;font-weight:900}
+    #ga-scene .cr small{font-size:.6rem;font-weight:700;max-width:58px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px;opacity:.85}
+    #ga-scene .an{position:absolute;left:50%;width:110px;height:110px;margin-left:-55px}
+    #ga-scene .an .face{position:absolute;inset:18px;border-radius:50%;overflow:hidden;border:3px solid #fff;box-shadow:0 0 22px #fff,0 0 40px #ffe08a;z-index:2;background:#333}
+    #ga-scene .an .pp{width:100%;height:100%;object-fit:cover;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1.4rem}
+    #ga-scene .an .halo{position:absolute;left:50%;top:-14px;width:64px;height:16px;margin-left:-32px;border-radius:50%;border:4px solid #ffd24a;box-shadow:0 0 12px #ffd24a,inset 0 0 6px #ffd24a;z-index:3;animation:gaHalo 1s ease-in-out infinite alternate}
+    #ga-scene .an .wg{position:absolute;top:6px;width:100px;height:84px;z-index:1;filter:drop-shadow(0 0 8px rgba(255,255,255,.8))}
+    #ga-scene .an .wg.l{right:62%;transform-origin:100% 40%;animation:gaFlapL .28s ease-in-out infinite alternate}
+    #ga-scene .an .wg.r{left:62%;transform-origin:0 40%;animation:gaFlapR .28s ease-in-out infinite alternate}
+    #ga-scene .an.dive{top:-140px;animation:gaDescend 1.3s cubic-bezier(.3,.7,.4,1) 2.2s forwards,gaDive .55s cubic-bezier(.6,0,1,.6) 3.75s forwards}
+    #ga-scene .an.hero{top:12%;width:150px;height:150px;margin-left:-75px;opacity:0;animation:gaHero .7s cubic-bezier(.2,1.5,.4,1) 5.2s forwards}
+    #ga-scene .an.hero .face{inset:24px}#ga-scene .an.hero .wg{width:130px;height:110px}#ga-scene .an.hero .halo{width:84px;height:20px;margin-left:-42px;top:-16px}
+    #ga-scene .beam{position:absolute;left:50%;top:0;width:160px;height:62%;margin-left:-80px;background:linear-gradient(rgba(255,250,220,.75),rgba(255,250,220,0));opacity:0;filter:blur(6px);animation:gaBeam 2.2s ease-in-out 1.9s forwards}
+    #ga-scene .ttl{position:absolute;top:44%;left:0;right:0;text-align:center;opacity:0;animation:gaTtl .6s cubic-bezier(.2,1.4,.4,1) 5.5s forwards;color:#3a2200}
+    #ga-scene .ttl small{display:block;letter-spacing:5px;font-weight:800;font-size:.95rem}
+    #ga-scene .ttl div{font-weight:900;font-size:clamp(1.5rem,8vw,2.5rem);line-height:1.05;text-transform:uppercase;margin:4px 14px}
+    #ga-scene .skip{position:absolute;bottom:8px;right:12px;font-size:.7rem;opacity:.5;letter-spacing:1px}
+    @keyframes gaIn{from{opacity:0}}@keyframes gaFade{to{opacity:1}}@keyframes gaSky{to{opacity:0}}@keyframes gaSpin{to{transform:rotate(360deg)}}
+    @keyframes gaCap{0%{opacity:0;transform:scale(1.4)}15%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0}}
+    @keyframes gaStomp{from{transform:translateY(0)}to{transform:translateY(-10px)}}
+    @keyframes gaRoar{to{transform:scale(1.08) rotate(-3deg)}}
+    @keyframes gaArmL{from{transform:rotate(0)}to{transform:rotate(-14deg)}}@keyframes gaArmR{from{transform:rotate(0)}to{transform:rotate(14deg)}}
+    @keyframes gaDie{0%{filter:none}30%{filter:brightness(4) saturate(0)}100%{transform:translateY(20px) scale(1.4);opacity:0;filter:brightness(6) blur(8px)}}
+    @keyframes gaBoom{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(28)}}
+    @keyframes gaCower{from{transform:translateX(-1px)}to{transform:translateX(1px)}}
+    @keyframes gaJump{from{transform:translateY(0)}to{transform:translateY(-22px)}}
+    @keyframes gaCrewUp{to{bottom:18%}}
+    @keyframes gaHalo{to{transform:translateY(-3px)}}
+    @keyframes gaFlapL{from{transform:rotate(12deg)}to{transform:rotate(-22deg)}}@keyframes gaFlapR{from{transform:rotate(-12deg)}to{transform:rotate(22deg)}}
+    @keyframes gaDescend{to{top:14%}}
+    @keyframes gaDive{90%{opacity:1}to{top:52%;transform:scale(.7);opacity:0}}
+    @keyframes gaBeam{0%{opacity:0}30%{opacity:1}80%{opacity:1}100%{opacity:0}}
+    @keyframes gaHero{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:none}}
+    @keyframes gaTtl{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
+    @media (prefers-reduced-motion:reduce){#ga-scene *{animation-duration:.01s!important;animation-delay:0s!important}}
+  </style>
+  <div class="sky"></div><div class="gold"></div><div class="rays"></div>
+  <div class="cap">⚠️ A MONSTER APPROACHES ⚠️</div>
+  <div class="mon"><svg viewBox="0 0 300 330"><g fill="#5b1f6b" stroke="#2a0b33" stroke-width="5" stroke-linejoin="round">
+      <path d="M118 225c-6 40-14 62-34 84h48c10-24 14-50 14-80Z"/><path d="M182 225c6 40 14 62 34 84h-48c-10-24-14-50-14-80Z"/>
+      <ellipse cx="104" cy="312" rx="38" ry="14"/><ellipse cx="196" cy="312" rx="38" ry="14"/>
+      <path d="M110 120c-10 50-4 90 10 112h60c14-22 20-62 10-112Z"/>
+      <g class="armL"><path d="M110 140C70 120 40 130 30 170c-8 30 8 48 26 40 6-24 18-40 50-36Z"/><ellipse cx="62" cy="152" rx="34" ry="26"/><circle cx="40" cy="214" r="26"/></g>
+      <g class="armR"><path d="M190 140c40-20 70-10 80 30 8 30-8 48-26 40-6-24-18-40-50-36Z"/><ellipse cx="238" cy="152" rx="34" ry="26"/><circle cx="260" cy="214" r="26"/></g>
+    </g></svg><div class="hd"></div></div>
+  <div class="boom"></div><div class="beam"></div>
+  ${angelHtml('dive')}${angelHtml('hero')}
+  <div class="crew">${crewHtml}</div>
+  <div class="ttl"><small>SAVED BY THE GUARDIAN ANGEL</small><div>${esc(angel.name || 'Angel')}</div></div>
+  <div class="skip">tap to skip</div>`;
+  const bg = document.getElementById('bg-music'), wasPlaying = !!(bg && !bg.paused); if (wasPlaying) bg.pause();
+  let muted = false; try { muted = localStorage.getItem('musicMuted') === '1'; } catch (e) {}
+  const timers = [], at = (ms, fn) => timers.push(setTimeout(fn, ms));
+  const close = () => { if (!el.isConnected) return; timers.forEach(clearTimeout); el.style.transition = 'opacity .35s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 360); if (wasPlaying && bg) bg.play().catch(() => {}); };
+  el.addEventListener('click', close); document.body.appendChild(el);
+  if (!muted) { at(400, () => _gaSfx('roar')); at(3700, () => _gaSfx('whoosh')); at(4250, () => _gaSfx('boom')); at(5200, () => _gaSfx('choir')); }
+  at(5600, () => { try { fireConfetti({ count: 180 }); } catch (e) {} });
+  at(9800, close);
+}
 // ===== Triple Captain launch cutscene =====
 // Plays the first time Triple Captain is active with a captain, and again only if the captain changes.
 async function _tcMaybeLaunch(teamDocId, raceId) {
