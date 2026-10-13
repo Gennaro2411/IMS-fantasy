@@ -1540,6 +1540,14 @@
     #broadcast-box.bc-theatre #bc-ticker{font-size:1rem;padding-top:6px;padding-bottom:6px}
     #broadcast-box.bc-theatre #bc-expand-btn{top:16px}
     body.bc-theatre-open{overflow:hidden}
+    /* Phones: the scene title moves under the IMS LIVE badge instead of overlapping it, side-by-side grids stack, and the scene scrolls if it's tall */
+    @media (max-width:640px){
+      #bc-scene-label{max-width:calc(100% - 150px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      #broadcast-box.bc-theatre #bc-scene-label{top:58px !important;left:20px !important;right:20px !important;max-width:none;white-space:normal;font-size:.78rem !important;text-align:left}
+      #broadcast-box.bc-theatre #bc-scene{top:100px !important;bottom:52px !important;justify-content:flex-start !important;overflow-y:auto;padding:8px 14px !important}
+      #broadcast-box.bc-theatre #bc-scene [style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr !important}
+      #broadcast-box.bc-theatre #bc-scene [style*="grid-template-columns:repeat(2"]{grid-template-columns:1fr !important}
+    }
   body.reduce-motion *{animation:none !important;transition:none !important;scroll-behavior:auto !important}
   </style>
   <div id="broadcast-box" style="width:100%;border-radius:12px;overflow:hidden;margin-bottom:20px;height:280px;position:relative;background:linear-gradient(120deg,#16101f,#0c0c12);border:1px solid rgba(123,79,191,0.4)">
@@ -3862,6 +3870,7 @@ window.fitTheatreZoom = function() {
   const sceneEl = document.getElementById('bc-scene');
   if (!box || !sceneEl || !box.classList.contains('bc-theatre')) return;
   sceneEl.style.zoom = 1;
+  if (window.innerWidth <= 640) return; // phones: no zoom — it pushed scenes off the right edge; the mobile layout stacks them instead
   const availW = window.innerWidth * 0.92;
   const availH = window.innerHeight - 130; // badge row + ticker breathing room
   const w = Math.max(1, sceneEl.scrollWidth - 0);
