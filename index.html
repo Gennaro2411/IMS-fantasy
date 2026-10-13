@@ -9072,11 +9072,10 @@ window.renderTrophyShelf = function(trophies, opts) {
     return `<div title="${esc(t.tip||'')}" style="flex:1 1 0;min-width:0;max-width:78px;text-align:center;cursor:default">
       <div style="position:relative;display:inline-block">
         ${icon}
-        ${(() => { const m = String(t.season || '').match(/\d+/); if (!m) return ''; const hue = ['#9b6fd4','#e8002d','#27f4d2','#ffa751','#4aa3ff','#2ecc71'][(+m[0]) % 6];
-          return `<span title="Season ${m[0]}" style="position:absolute;right:-6px;top:-4px;min-width:20px;height:20px;padding:0 4px;border-radius:999px;background:${hue};color:#0b0b14;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:.68rem;line-height:20px;text-align:center;box-shadow:0 0 0 2px #14141f,0 2px 6px rgba(0,0,0,.5)">S${m[0]}</span>`; })()}
       </div>
       <div style="font-size:.5rem;font-weight:700;color:var(--text);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t.label||'')}</div>
-      ${t.season ? `<div style="font-size:.5rem;font-weight:800;color:#c9c3e6;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${(() => { const m = String(t.season).match(/\d+/); return m ? 'Season ' + m[0] : esc(t.season); })()}</div>` : ''}
+      ${t.season ? (() => { const m = String(t.season).match(/\d+/); const hue = m ? ['#9b6fd4','#e8002d','#27f4d2','#ffa751','#4aa3ff','#2ecc71'][(+m[0]) % 6] : '#c9c3e6';
+        return `<div style="font-size:.5rem;font-weight:800;color:${hue};letter-spacing:.6px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m ? 'Season ' + m[0] : esc(t.season)}</div>`; })() : ''}
     </div>`;
   };
   let shelves;
