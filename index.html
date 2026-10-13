@@ -10741,8 +10741,12 @@ function _gaCutscene(angel, crew) {
   const THANKS = shuf(['THANK YOU 😇', 'Legend!!', 'Our hero 🙌', 'Owe you one!', 'Angel on the grid ✨', 'Saved the season!', 'GOAT 🐐', 'Never doubted you', 'Pure class 🙏', 'Drinks on me 🍾']);
   const CW = crew.slice(0, 8), spec = CW.length ? [Math.floor(Math.random() * CW.length), 0] : [];
   if (CW.length > 1) { spec[1] = (spec[0] + 1 + Math.floor(Math.random() * (CW.length - 1))) % CW.length; }
+  // Once saved, one driver says "Absolute camper van" — always forestalwaif1 if he's in the team.
+  const _fw = CW.findIndex(d => String(d.name || '').toLowerCase().replace(/[^a-z0-9]/g, '') === 'forestalwaif1');
+  const camper = _fw >= 0 ? _fw : (CW.length ? Math.floor(Math.random() * CW.length) : -1);
   const crewHtml = CW.map((d, i) => { const w = i === spec[0] ? 'Greedy F***' : i === spec[1] ? 'Webbah slow' : WORRY[i % WORRY.length];
-    return `<div class="cr" style="--i:${i}"><div class="bb${i % 2 ? ' hi' : ''}"><span class="w">${esc(w)}</span><span class="g">${esc(THANKS[i % THANKS.length])}</span></div>${pf(d, 'pp')}<small>${esc(d.name || '')}</small></div>`; }).join('');
+    const g = i === camper ? 'Absolute camper van' : THANKS[i % THANKS.length];
+    return `<div class="cr" style="--i:${i}"><div class="bb${i % 2 ? ' hi' : ''}"><span class="w">${esc(w)}</span><span class="g">${esc(g)}</span></div>${pf(d, 'pp')}<small>${esc(d.name || '')}</small></div>`; }).join('');
   const el = document.createElement('div'); el.id = 'ga-scene';
   el.innerHTML = `<style>
     #ga-scene{position:fixed;inset:0;z-index:99999;overflow:hidden;cursor:pointer;font-family:'Barlow Condensed',sans-serif;color:#fff;background:#120508;animation:gaIn .3s ease-out}
