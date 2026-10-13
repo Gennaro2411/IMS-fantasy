@@ -28382,7 +28382,10 @@ async function _wdLoad() {
     window._wdFullPool = pool; }
   // PaddockDle and Grid: market drivers + reserves with 25+ race starts.
   const P = pool.filter(p => !p.res || (p.st || 0) >= 25 || p.ch >= 1 || p.b >= 1); // reserves: 25+ starts, or any champion / BOTT winner
-  return { cfg: window._wordleCfg, pool: P, gridPool: P, hasData: !!window._wordleData };
+  // Drivers left out of every game (PaddockDle, Grid, Higher or Lower, Connections).
+  const _GAME_EXCLUDE = ['z4yf1']; const _gx = (n) => String(n || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const PX = P.filter(p => p && !_GAME_EXCLUDE.includes(_gx(p.name)));
+  return { cfg: window._wordleCfg, pool: PX, gridPool: PX, hasData: !!window._wordleData };
 }
 const _wdDayKey = () => new Date().toLocaleDateString('en-GB', { timeZone: 'Europe/London' });
 // Milliseconds until the next midnight UK time — when the daily driver changes.
