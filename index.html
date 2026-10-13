@@ -9041,6 +9041,12 @@ window._trophySvg = function(t) {
 };
 window.renderTrophyShelf = function(trophies, opts) {
   opts = opts || {};
+  // One trophy per award per season: the same round win can arrive from several sources (live races,
+  // the season archive, the published S7 podiums) with season written as "S7" / "Season 7" and the race
+  // as "Abu Dhabi" / "Yas Marina" — normalise both so it only shows once.
+  { const seen = new Set(), sn = (x) => { const m = String(x || '').match(/\d+/); return m ? m[0] : String(x || '').toLowerCase(); };
+    const lk = (t) => t.emoji === '🏆' && typeof raceTrackKey === 'function' ? raceTrackKey(t.flagName || t.label) : String(t.label || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    trophies = (trophies || []).filter(t => { const k = (t.emoji || '') + '|' + sn(t.season) + '|' + lk(t); if (seen.has(k)) return false; seen.add(k); return true; }); }
   const title = opts.title || '🏆 TROPHY CABINET';
   const perShelf = opts.perShelf || 5; // trophies per shelf row; overflow starts a new shelf below
   const tileHtml = (t) => {
