@@ -27402,7 +27402,12 @@ window.renderBets = async function() {
   }
   if (isC) {
     const cr = [...(_prevArc ? (_prevArc.races || []) : []), ...(races || [])].filter(r => r.constructorPoints && Object.values(r.constructorPoints).some(v => v > 0)).sort(_byNum);
-    field.forEach(c => { const rr = cr.filter(r => r.constructorPoints[c.id] != null); const tk = (r) => window.trackKey ? window.trackKey(r.name) : String(r.name || '').toLowerCase();
+    // Constructor lines = this season's average BOTT points per round (rounded to a .5 line).
+    const _curC = (races || []).filter(r => r.constructorPoints && Object.values(r.constructorPoints).some(v => v > 0));
+    field.forEach(c => { const _vs = _curC.filter(r => r.constructorPoints[c.id] != null).map(r => Number(r.constructorPoints[c.id]) || 0);
+      if (_vs.length) { const avg = _vs.reduce((a, v) => a + v, 0) / _vs.length, line = Math.floor(avg) + 0.5, over = _vs.filter(v => v > line).length;
+        _ouCons[c.id] = { line, po: (over + 1) / (_vs.length + 2), n: _vs.length }; return; }
+      const rr = cr.filter(r => r.constructorPoints[c.id] != null); const tk = (r) => window.trackKey ? window.trackKey(r.name) : String(r.name || '').toLowerCase();
       const pts = rr.map((r, i) => ({ v: Number(r.constructorPoints[c.id]) || 0, w: (i >= rr.length - 3 ? 2 : 1) * (_upK && tk(r) === _upK ? 3 : 1) }));
       const o = _ouFrom(pts, 1); if (o) _ouCons[c.id] = o; });
   }
