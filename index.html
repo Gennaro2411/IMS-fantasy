@@ -12912,8 +12912,11 @@ function _roundReel(t, race, pts, margin, nav) {
   const name = t.playerName || t.teamName || 'Manager', team = t.teamName || '', photo = t.discordAvatar || '';
   const flag = (typeof trackFlagImg === 'function') ? trackFlagImg(race.name, 22) : '';
   const pic = photo ? `<img src="${esc(photo)}" alt="">` : `<span>${esc(String(name).slice(0, 2).toUpperCase())}</span>`;
-  // Every play rolls a different look: accent colour, slash angle, portrait cut, headline and sign-off.
-  const _pk = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  // Each round's reel has its own look (accent colour, slash angle, portrait cut, headline, sign-off, quotes),
+  // seeded from the round — different from the other rounds, but the same every time that reel is replayed.
+  let _sd = 2166136261; for (const ch of String(race.id || race.name || '') + '|' + String(t.userId || name)) { _sd ^= ch.charCodeAt(0); _sd = Math.imul(_sd, 16777619) >>> 0; }
+  const _rnd = () => { _sd = (_sd + 0x6D2B79F5) >>> 0; let x = _sd; x = Math.imul(x ^ (x >>> 15), x | 1); x ^= x + Math.imul(x ^ (x >>> 7), x | 61); return ((x ^ (x >>> 14)) >>> 0) / 4294967296; };
+  const _pk = (arr) => arr[Math.floor(_rnd() * arr.length)];
   const RV = { ac: _pk(['#e10600', '#ffd400', '#00e0ff', '#39ff14', '#ff2bd6', '#ff7a00']), ang: _pk([-8, -5, 6, -11, 8, -3]),
     clip: _pk(['polygon(6% 0,100% 0,94% 100%,0 100%)', 'polygon(0 0,94% 0,100% 100%,6% 100%)', 'polygon(0 6%,100% 0,100% 94%,0 100%)', 'polygon(10% 0,90% 0,100% 50%,90% 100%,10% 100%,0 50%)', 'polygon(0 0,100% 0,100% 100%,0 100%)']),
     head: _pk([['Round', 'winner'], ['Top', 'manager'], ['Week\'s', 'best'], ['Points', 'machine'], ['Round', 'boss'], ['Race', 'ruler']]),
@@ -13025,7 +13028,7 @@ function _roundReel(t, race, pts, margin, nav) {
   const QUOTES = [`${pts} points. Read that again.`, `${rc} wasn't a race. It was a statement.`, `Nobody saw it coming. Except ${nm}.`, `Picked the team. Took the week.`, `They came to compete. ${nm} came to collect.`,
     `Top of the pile at ${rc}.`, `Every pick landed.`, `The rest are playing catch-up now.`, `Cold. Calculated. Clinical.`, `Some teams score points. This one scored a message.`]
     .concat(margin > 0 ? [`Won it by ${margin} points. Not close.`, `${margin} clear. Let that sink in.`] : []);
-  const qs = QUOTES.map(q => [Math.random(), q]).sort((a, b) => a[0] - b[0]).slice(0, 3).map(x => x[1]);
+  const qs = QUOTES.map(q => [_rnd(), q]).sort((a, b) => a[0] - b[0]).slice(0, 3).map(x => x[1]);
   const qEl = el.querySelector('.q');
   [4300, 8500, 12400].forEach((ms, i) => { at(ms, () => { ph.classList.add('frz'); fl.classList.remove('go'); void fl.offsetWidth; fl.classList.add('go');
       qEl.innerHTML = `“${esc(qs[i] || '')}”<small>— IMS FANTASY</small>`; qEl.classList.remove('on'); void qEl.offsetWidth; qEl.classList.add('on'); });
