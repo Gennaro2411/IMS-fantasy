@@ -12814,9 +12814,10 @@ function _roundReelPick(teams, races) {
   let top = typeof window.getRoundWinOverride === 'function' ? window.getRoundWinOverride(done, teams) : null, pts = 0;
   if (top) pts = window.fantasyTeamRacePts(top, done, races) || 0;
   else teams.forEach(t => { if (t.testAccount) return; const p = window.fantasyTeamRacePts(t, done, races) || 0; if (p > pts) { pts = p; top = t; } });
-  return (top && pts > 0) ? { top, race: done, pts: Math.round(pts) } : null; }
+  let second = 0; teams.forEach(t => { if (t === top || t.testAccount) return; const p = window.fantasyTeamRacePts(t, done, races) || 0; if (p > second) second = p; });
+  return (top && pts > 0) ? { top, race: done, pts: Math.round(pts), margin: Math.round(pts - second) } : null; }
 window.playRoundReel = async function() { const [teams, races] = await Promise.all([dbGetAll('teams'), dbGetAll('races')]);
-  const w = _roundReelPick(teams.filter(t => !t.testAccount), races); if (w) _roundReel(w.top, w.race, w.pts); else if (typeof showToast === 'function') showToast('No settled round yet', 'info'); };
+  const w = _roundReelPick(teams.filter(t => !t.testAccount), races); if (w) _roundReel(w.top, w.race, w.pts, w.margin); else if (typeof showToast === 'function') showToast('No settled round yet', 'info'); };
 async function _roundReelMaybe(teams, races) {
   try {
     const done = (races || []).filter(r => r && r.priceAfterAt && r.driverPoints && Object.keys(r.driverPoints).length).sort((a, b) => (b.raceNum || 0) - (a.raceNum || 0))[0];
@@ -12828,9 +12829,9 @@ async function _roundReelMaybe(teams, races) {
     else teams.forEach(t => { if (t.testAccount) return; const p = window.fantasyTeamRacePts(t, done, races) || 0; if (p > pts) { pts = p; top = t; } });
     if (!top || pts <= 0) return;
     try { localStorage.setItem(key, '1'); } catch (e) {}
-    _roundReel(top, done, Math.round(pts));
+    const _w = _roundReelPick(teams, races); _roundReel(top, done, Math.round(pts), _w && _w.race.id === done.id ? _w.margin : 0);
   } catch (e) { console.warn('round reel failed', e); } }
-function _roundReel(t, race, pts) {
+function _roundReel(t, race, pts, margin) {
   document.getElementById('rr-reel')?.remove();
   const name = t.playerName || t.teamName || 'Manager', team = t.teamName || '', photo = t.discordAvatar || '';
   const flag = (typeof trackFlagImg === 'function') ? trackFlagImg(race.name, 22) : '';
@@ -12851,7 +12852,7 @@ function _roundReel(t, race, pts) {
     #rr-reel .grain{position:absolute;inset:-50%;z-index:7;pointer-events:none;opacity:.16;mix-blend-mode:screen;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1.4 -.35'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");will-change:transform;animation:rrGrain .5s steps(5) infinite}
     #rr-reel .slash{position:absolute;left:-20%;right:-20%;top:41%;height:16%;background:#e10600;transform:rotate(-8deg) scaleX(0);transform-origin:left;z-index:1;animation:rrSlash .35s cubic-bezier(.7,0,.2,1) 1.6s forwards}
     #rr-reel .pf{position:absolute;left:50%;top:44%;width:64%;aspect-ratio:1;overflow:hidden;transform:translate(-50%,-50%);border:3px solid #fff;background:#222;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:3rem;clip-path:polygon(6% 0,100% 0,94% 100%,0 100%);will-change:transform;z-index:2;animation:rrZoom 13s cubic-bezier(.3,0,.2,1) 1.6s both}
-    #rr-reel .pf img{width:100%;height:100%;object-fit:cover;filter:grayscale(1) contrast(1.45) brightness(.95)}
+    #rr-reel .pf img{width:100%;height:100%;object-fit:cover;filter:contrast(1.12) saturate(1.1)}
     #rr-reel .ring{display:none}
     #rr-reel .fl{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:8}
     #rr-reel .fl.go{animation:rrFlash .22s steps(2)}
@@ -12864,12 +12865,17 @@ function _roundReel(t, race, pts) {
     #rr-reel .t3 span{color:#e10600}
     #rr-reel .end{position:absolute;inset:0;z-index:8;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:#050505;opacity:0;animation:rrFade .25s steps(2) 14.6s forwards}
     #rr-reel .end .ep{position:relative;width:46%;aspect-ratio:1;overflow:hidden;border:3px solid #fff;background:#222;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:2rem;clip-path:polygon(6% 0,100% 0,94% 100%,0 100%)}
-    #rr-reel .end .ep img{width:100%;height:100%;object-fit:cover;filter:grayscale(1) contrast(1.45)}
+    #rr-reel .end .ep img{width:100%;height:100%;object-fit:cover;filter:contrast(1.12) saturate(1.1)}
     #rr-reel .end .tr{font-size:3.6rem;line-height:1;margin-top:-30px;filter:grayscale(.15) saturate(.7);animation:rrTr .45s cubic-bezier(.2,1.6,.4,1) 15s both}
     #rr-reel .end b{font-size:clamp(1.3rem,8vw,2rem);max-width:92%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-transform:uppercase;font-style:italic;text-align:center;line-height:1;letter-spacing:-.5px}
     #rr-reel .end small{font-family:system-ui,sans-serif;font-weight:800;color:#e10600;letter-spacing:3px;text-transform:uppercase;font-size:.7rem;display:flex;align-items:center;gap:6px}
     #rr-reel .end small img{filter:grayscale(1)}
     #rr-reel .snd{position:absolute;bottom:2.6%;left:0;right:0;text-align:center;font-family:system-ui,sans-serif;font-size:.6rem;letter-spacing:1px;color:#666;z-index:9;text-transform:uppercase}
+    #rr-reel .ph.frz .pf,#rr-reel .ph.frz .grain,#rr-reel .ph.frz .bar i{animation-play-state:paused}
+    #rr-reel .q{position:absolute;left:8%;right:8%;top:14%;z-index:9;background:#000;border-left:4px solid #e10600;padding:10px 12px;font-style:italic;font-weight:800;font-size:1.25rem;line-height:1.1;text-transform:uppercase;opacity:0;transform:translateX(-30px)}
+    #rr-reel .q small{display:block;margin-top:5px;font-family:system-ui,sans-serif;font-style:normal;font-size:.6rem;letter-spacing:2px;color:#e10600}
+    #rr-reel .q.on{animation:rrQ .25s cubic-bezier(.2,1.4,.4,1) forwards}
+    @keyframes rrQ{to{opacity:1;transform:none}}
     @keyframes rrIn{from{opacity:0}}@keyframes rrBar{to{width:100%}}
     @keyframes rrGrain{0%{transform:translate(0,0)}20%{transform:translate(-3%,2%)}40%{transform:translate(2%,-3%)}60%{transform:translate(-2%,-1%)}80%{transform:translate(3%,3%)}100%{transform:translate(0,0)}}
     @keyframes rrShake{0%{transform:translate(0,0)}25%{transform:translate(-6px,3px)}50%{transform:translate(5px,-4px)}75%{transform:translate(-3px,-2px)}100%{transform:translate(0,0)}}
@@ -12888,7 +12894,7 @@ function _roundReel(t, race, pts) {
     <div class="tx t1">${esc(name)}</div>
     <div class="tx t2">${esc(team)}</div>
     <div class="tx t3">${pts}<span> pts</span></div>
-    <div class="fl"></div>
+    <div class="fl"></div><div class="q"></div>
     <div class="end"><div class="ep">${pic}</div><div class="tr">🏆</div><b>${esc(name)}</b><small>${flag}${esc(race.name || '')} · no contest</small></div>
     <div class="snd">🔊 sound on</div></div>`;
   const bg = document.getElementById('bg-music'), wasPlaying = !!(bg && !bg.paused); if (wasPlaying) bg.pause();
@@ -12900,6 +12906,16 @@ function _roundReel(t, race, pts) {
   el.addEventListener('click', (e) => { if (e.target === el) close(); });
   document.body.appendChild(el);
   const fl = el.querySelector('.fl'), ph = el.querySelector('.ph');
+  // Freeze-frame hype quotes: the edit pauses on a hit and a line about their round slams in.
+  const nm = String(name).toUpperCase(), rc = String(race.name || 'this round').toUpperCase();
+  const QUOTES = [`${pts} points. Read that again.`, `${rc} wasn't a race. It was a statement.`, `Nobody saw it coming. Except ${nm}.`, `Picked the team. Took the week.`, `They came to compete. ${nm} came to collect.`,
+    `Top of the pile at ${rc}.`, `Every pick landed.`, `The rest are playing catch-up now.`, `Cold. Calculated. Clinical.`, `Some teams score points. This one scored a message.`]
+    .concat(margin > 0 ? [`Won it by ${margin} points. Not close.`, `${margin} clear. Let that sink in.`] : []);
+  const qs = QUOTES.map(q => [Math.random(), q]).sort((a, b) => a[0] - b[0]).slice(0, 3).map(x => x[1]);
+  const qEl = el.querySelector('.q');
+  [4300, 8500, 12400].forEach((ms, i) => { at(ms, () => { ph.classList.add('frz'); fl.classList.remove('go'); void fl.offsetWidth; fl.classList.add('go');
+      qEl.innerHTML = `“${esc(qs[i] || '')}”<small>— IMS FANTASY</small>`; qEl.classList.remove('on'); void qEl.offsetWidth; qEl.classList.add('on'); });
+    at(ms + 1500, () => { ph.classList.remove('frz'); qEl.classList.remove('on'); }); });
   [1600, 2400, 6800, 9800, 10800, 14600].forEach(ms => at(ms, () => { fl.classList.remove('go'); ph.classList.remove('shk'); void fl.offsetWidth; fl.classList.add('go'); ph.classList.add('shk'); }));
   if (au) at(20000, () => { let v = au.volume; const f = setInterval(() => { v -= .1; if (v <= 0) { clearInterval(f); au.pause(); } else au.volume = v; }, 60); });
   at(21500, close);
