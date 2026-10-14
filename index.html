@@ -3457,12 +3457,19 @@ window.revealAdminEntry = function() {
 };
 // Accounts that are admin without typing the password: userIds listed in settings/adminUsers.
 // Granted from the Admin panel ("Make my account admin"); checked on load and when opening Admin.
+// Synchronous fast path: this device remembers which account was granted admin, so there's no wait on the database.
+window._adminFlagOk = function() {
+  try { if (adminLoggedIn) return true; if (!currentUser || !currentUser.userId) return false;
+    if (localStorage.getItem('imsAdminAccount') === currentUser.userId) { adminLoggedIn = true; revealAdminEntry(); return true; } } catch (e) {}
+  return false;
+};
 window._adminAutoCheck = async function() {
   try {
     if (adminLoggedIn || !currentUser || !currentUser.userId || !PROJECT_ID) return false;
     const doc = await dbGet('settings', 'adminUsers');
     const ids = (doc && Array.isArray(doc.ids)) ? doc.ids : [];
-    if (!ids.includes(currentUser.userId)) return false;
+    if (!ids.includes(currentUser.userId)) { try { if (localStorage.getItem('imsAdminAccount') === currentUser.userId) localStorage.removeItem('imsAdminAccount'); } catch (e) {} return false; }
+    try { localStorage.setItem('imsAdminAccount', currentUser.userId); } catch (e) {}
     adminLoggedIn = true; revealAdminEntry();
     const pg = document.getElementById('page-admin'); if (pg && pg.classList.contains('active')) renderAdmin();
     return true;
@@ -3475,6 +3482,7 @@ window.adminToggleMyAccount = async function() {
   const has = ids.includes(currentUser.userId);
   ids = has ? ids.filter(x => x !== currentUser.userId) : ids.concat(currentUser.userId);
   await dbSet('settings', 'adminUsers', { ids });
+  try { if (has) localStorage.removeItem('imsAdminAccount'); else localStorage.setItem('imsAdminAccount', currentUser.userId); } catch (e) {}
   dbInvalidate('settings');
   if (typeof showToast === 'function') showToast(has ? 'Admin removed from your account' : '✔ Your account is now admin — no password needed on this account', 'success');
   renderAdminSelfGrant();
@@ -6915,7 +6923,7 @@ async function init() {
       }
     } catch(e) { /* offline / fetch failed — leave session as-is rather than lock them out */ }
   }
-  try { window._adminAutoCheck(); } catch (e) {} // accounts granted admin skip the password
+  try { window._adminFlagOk(); window._adminAutoCheck(); } catch (e) {} // accounts granted admin skip the password
   // Re-check periodically so a tab left open after an admin deletes the account signs itself
   // out, rather than lingering in a ghost state until the next manual refresh
   if (!window._accountAliveTimer) {
@@ -13679,7 +13687,7 @@ window.showRaceBreakdown = async function(raceId) {
 
 // ===== ADMIN =====
 function renderAdmin() {
-  if (!adminLoggedIn) { window._adminAutoCheck(); }
+  if (!adminLoggedIn && !window._adminFlagOk()) { window._adminAutoCheck(); }
   if (adminLoggedIn) { try { renderAdminSelfGrant(); } catch (e) {} }
   if (!adminLoggedIn) {
     document.getElementById('admin-login-section').style.display='block';
