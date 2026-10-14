@@ -3467,13 +3467,12 @@ window._adminFlagOk = function() {
 };
 window._adminAutoCheck = async function() {
   try {
-    if (adminLoggedIn || !currentUser || !currentUser.userId || !PROJECT_ID) return false;
+    if (adminLoggedIn || window._adminNoAuto || !currentUser || !currentUser.userId || !PROJECT_ID) return false;
     const doc = await dbGet('settings', 'adminUsers');
     const ids = (doc && Array.isArray(doc.ids)) ? doc.ids : [];
     if (!ids.includes(currentUser.userId)) { try { if (localStorage.getItem('imsAdminAccount') === currentUser.userId) localStorage.removeItem('imsAdminAccount'); } catch (e) {} return false; }
     try { localStorage.setItem('imsAdminAccount', currentUser.userId); } catch (e) {}
     adminLoggedIn = true; revealAdminEntry();
-    const pg = document.getElementById('page-admin'); if (pg && pg.classList.contains('active')) renderAdmin();
     return true;
   } catch (e) { return false; }
 };
@@ -3491,7 +3490,7 @@ window.adminToggleMyAccount = async function() {
 };
 window.renderAdminSelfGrant = async function() {
   const box = document.getElementById('admin-self-grant'); if (!box) return;
-  const _devBtn = ` <button class="btn btn-secondary btn-sm" onclick="try{localStorage.removeItem('imsAdminDevice');localStorage.removeItem('imsAdminAccount')}catch(e){};adminLoggedIn=false;showToast('Admin cleared on this device — password needed next time','info');renderAdmin()">🚪 Sign out of admin on this device</button>`;
+  const _devBtn = ` <button class="btn btn-secondary btn-sm" onclick="try{localStorage.removeItem('imsAdminDevice');localStorage.removeItem('imsAdminAccount')}catch(e){};window._adminNoAuto=true;adminLoggedIn=false;showToast('Admin cleared on this device — password needed next time','info');renderAdmin()">🚪 Sign out of admin on this device</button>`;
   if (!currentUser || !currentUser.userId) { box.innerHTML = '<span class="text-muted" style="font-size:.8rem">This device stays admin after the password is entered once.</span>' + _devBtn; return; }
   const doc = await dbGet('settings', 'adminUsers').catch(() => null);
   const has = !!(doc && Array.isArray(doc.ids) && doc.ids.includes(currentUser.userId));
@@ -13689,8 +13688,13 @@ window.showRaceBreakdown = async function(raceId) {
 };
 
 // ===== ADMIN =====
-function renderAdmin() {
-  if (!adminLoggedIn && !window._adminFlagOk()) { window._adminAutoCheck(); }
+async function renderAdmin() {
+  // Admin accounts go straight in: check the account BEFORE showing the password form (no race).
+  if (!adminLoggedIn && !window._adminFlagOk() && currentUser && currentUser.userId) {
+    const ls = document.getElementById('admin-login-section'), ap = document.getElementById('admin-panel');
+    if (ls) ls.style.display = 'none'; if (ap) ap.style.display = 'none';
+    await window._adminAutoCheck();
+  }
   if (adminLoggedIn) { try { renderAdminSelfGrant(); } catch (e) {} }
   if (!adminLoggedIn) {
     document.getElementById('admin-login-section').style.display='block';
@@ -13724,7 +13728,9 @@ window.adminLogin = async function() {
     const stored = await dbGet('settings','adminPassword');
     correct = stored && stored.value===pw;
   }
-  if (correct) { clearLoginAttempts('__admin__'); try { localStorage.setItem('imsAdminDevice', '1'); } catch (e) {} adminLoggedIn=true; if (window.revealAdminEntry) revealAdminEntry(); errEl.style.display='none'; renderAdmin(); }
+  if (correct) { clearLoginAttempts('__admin__'); try { localStorage.setItem('imsAdminDevice', '1'); } catch (e) {} adminLoggedIn=true;
+    if (currentUser && currentUser.userId) { try { const d = await dbGet('settings', 'adminUsers').catch(() => null); const ids = (d && Array.isArray(d.ids)) ? d.ids : [];
+      if (!ids.includes(currentUser.userId)) await dbSet('settings', 'adminUsers', { ids: ids.concat(currentUser.userId) }); localStorage.setItem('imsAdminAccount', currentUser.userId); } catch (e) { console.warn('admin grant failed', e); } } if (window.revealAdminEntry) revealAdminEntry(); errEl.style.display='none'; renderAdmin(); }
   else {
     recordFailedLogin('__admin__');
     const after = checkLoginRate('__admin__');
