@@ -4895,7 +4895,7 @@ async function initBroadcast() {
     if (_bcCycleTimer) clearInterval(_bcCycleTimer);
     _bcCycleTimer = setInterval(bcShowScene, 10000);
     if (_bcRefreshTimer) clearInterval(_bcRefreshTimer);
-    _bcRefreshTimer = setInterval(() => bcLoadData().catch(()=>{}), 60000);
+    _bcRefreshTimer = setInterval(() => { if (document.hidden) return; bcLoadData().catch(()=>{}); }, 300000); // was 60s — re-reads teams/races/drivers/etc. every time; 5 min and only while the tab is visible (Firestore read cost)
     startHeroCountdown(); // powers the countdown scene's ticking digits
   } catch(e) { console.log('broadcast init failed (non-fatal):', e); }
 }
@@ -6887,8 +6887,8 @@ async function init() {
   // out, rather than lingering in a ghost state until the next manual refresh
   if (!window._accountAliveTimer) {
     window._accountAliveTimer = setInterval(() => {
-      if (currentUser) ensureAccountAlive();
-    }, 120000);
+      if (currentUser && !document.hidden) ensureAccountAlive(); // reads every team doc — was every 2 min, now 15 min and only while visible
+    }, 900000);
   }
   initAliveWatch();
   // Handle Discord OAuth callback before showing login
@@ -27044,12 +27044,13 @@ function _betStartTicker() {
   window._betTickerTimer = setInterval(async () => {
     const pg = document.getElementById('page-bets');
     if (!pg || !pg.classList.contains('active')) { clearInterval(window._betTickerTimer); window._betTickerTimer = null; return; }
+    if (document.hidden) return; // don't re-read every bet while the tab is in the background
     const all = await dbGetAll('bets').catch(() => null); if (!all) return;
     const prevTop = (window._betAllBets || []).reduce((m, b) => Math.max(m, b.placedAt || 0), 0);
     const newTop = all.reduce((m, b) => Math.max(m, b.placedAt || 0), 0);
     window._betAllBets = all;
     if (newTop > prevTop) { const el = document.getElementById('bo-ticker'); if (el) el.innerHTML = _betTickerHtml(all, window._betTeamBy || {}); }
-  }, 20000);
+  }, 60000); // was 20s — each poll reads the whole bets collection
 }
 // Betting uses check-in status regardless of the viewer's "hide check-in ticks" setting.
 function _betChk(fn, d) { const h = window._hideCheckin; window._hideCheckin = false; try { return typeof fn === 'function' ? !!fn(d) : false; } finally { window._hideCheckin = h; } }
