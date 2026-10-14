@@ -12808,6 +12808,9 @@ window.computeTeamRanksByPoints = function(teams, races) {
 // manager, set to the first 20 seconds of the reel track, ending on them with their round trophy.
 // Shown once per round per device.
 const ROUND_REEL_TRACK = 'https://files.catbox.moe/dxaas1.mp3';
+// Preload the reel track in the background (a few seconds after the app opens) so it starts instantly.
+function _rrAudioEl() { if (!window._rrAudio) { const a = new Audio(); a.preload = 'auto'; a.src = ROUND_REEL_TRACK; try { a.load(); } catch (e) {} window._rrAudio = a; } return window._rrAudio; }
+setTimeout(() => { try { _rrAudioEl(); } catch (e) {} }, 3000);
 function _roundReelPick(teams, races) {
   const done = (races || []).filter(r => r && r.priceAfterAt && r.driverPoints && Object.keys(r.driverPoints).length).sort((a, b) => (b.raceNum || 0) - (a.raceNum || 0))[0];
   if (!done) return null;
@@ -12924,10 +12927,15 @@ function _roundReel(t, race, pts, margin, nav) {
   const bg = document.getElementById('bg-music');
   if (window._rrResume === undefined) window._rrResume = !!(bg && !bg.paused); // remembered across story steps
   const wasPlaying = window._rrResume; if (bg && !bg.paused) bg.pause();
-  let muted = false; try { muted = localStorage.getItem('musicMuted') === '1'; } catch (e) {}
-  const au = muted ? null : new Audio(ROUND_REEL_TRACK); if (au) { au.volume = 0.8; au.play().catch(() => {}); }
+  // The reel always has its track (even if the app's music is muted) — reuse the preloaded audio so it starts instantly.
+  // If the browser blocks autoplay, the first tap anywhere on the reel starts it at the right point.
+  const au = _rrAudioEl(); const t0 = Date.now();
+  try { au.pause(); au.currentTime = 0; } catch (e) {} au.volume = 0.8;
+  au.play().catch(() => { const snd = el.querySelector('.snd'); if (snd) { snd.textContent = '🔇 tap for sound'; snd.style.color = '#fff'; }
+    const kick = () => { el.removeEventListener('pointerdown', kick, true); try { au.currentTime = Math.min(19, (Date.now() - t0) / 1000); } catch (e) {} au.play().catch(() => {}); if (snd) { snd.textContent = '🔊 sound on'; snd.style.color = ''; } };
+    el.addEventListener('pointerdown', kick, true); });
   const timers = [], at = (ms, fn) => timers.push(setTimeout(fn, ms));
-  const stop = () => { timers.forEach(clearTimeout); if (au) { au.pause(); au.src = ''; } };
+  const stop = () => { timers.forEach(clearTimeout); if (au) { au.pause(); try { au.currentTime = 0; } catch (e) {} au.volume = 0.8; } };
   el._stop = stop;
   const close = () => { if (!el.isConnected) return; stop(); el.style.transition = 'opacity .3s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 320); if (wasPlaying && bg) bg.play().catch(() => {}); window._rrResume = undefined; };
   const go = (k) => { if (k < 0 || k >= nav.list.length) return close(); _roundReelOpen(nav.list, k); };
@@ -12964,7 +12972,7 @@ async function renderLeaderboard() {
   const [teams,races,drivers,constrs,lockDoc] = await Promise.all([dbGetAll('teams'),dbGetAll('races'),dbGetAll('drivers'),dbGetAll('constructors'),dbGet('settings','teamsLocked').catch(()=>null)]);
   { const _keep = teams.filter(t => !t.testAccount); teams.length = 0; teams.push(..._keep); }
   const _teamsLocked = !!(lockDoc && lockDoc.value);
-  setTimeout(() => _roundReelMaybe(teams, races), 600); // settled round's winner reel (once per round)
+  setTimeout(() => _roundReelMaybe(teams, races), 0); // settled round's winner reel (once per round)
   races.sort((a,b)=>(b.raceNum||0)-(a.raceNum||0));
   const driverMap={};
   drivers.forEach(d=>driverMap[d.id]=d.name);
