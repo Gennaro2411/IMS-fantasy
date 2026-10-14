@@ -3459,7 +3459,9 @@ window.revealAdminEntry = function() {
 // Granted from the Admin panel ("Make my account admin"); checked on load and when opening Admin.
 // Synchronous fast path: this device remembers which account was granted admin, so there's no wait on the database.
 window._adminFlagOk = function() {
-  try { if (adminLoggedIn) return true; if (!currentUser || !currentUser.userId) return false;
+  try { if (adminLoggedIn) return true;
+    if (localStorage.getItem('imsAdminDevice') === '1') { adminLoggedIn = true; revealAdminEntry(); return true; } // this device already passed the password
+    if (!currentUser || !currentUser.userId) return false;
     if (localStorage.getItem('imsAdminAccount') === currentUser.userId) { adminLoggedIn = true; revealAdminEntry(); return true; } } catch (e) {}
   return false;
 };
@@ -3489,10 +3491,11 @@ window.adminToggleMyAccount = async function() {
 };
 window.renderAdminSelfGrant = async function() {
   const box = document.getElementById('admin-self-grant'); if (!box) return;
-  if (!currentUser || !currentUser.userId) { box.innerHTML = '<span class="text-muted" style="font-size:.8rem">Log in to a player account to make it admin without the password.</span>'; return; }
+  const _devBtn = ` <button class="btn btn-secondary btn-sm" onclick="try{localStorage.removeItem('imsAdminDevice');localStorage.removeItem('imsAdminAccount')}catch(e){};adminLoggedIn=false;showToast('Admin cleared on this device — password needed next time','info');renderAdmin()">🚪 Sign out of admin on this device</button>`;
+  if (!currentUser || !currentUser.userId) { box.innerHTML = '<span class="text-muted" style="font-size:.8rem">This device stays admin after the password is entered once.</span>' + _devBtn; return; }
   const doc = await dbGet('settings', 'adminUsers').catch(() => null);
   const has = !!(doc && Array.isArray(doc.ids) && doc.ids.includes(currentUser.userId));
-  box.innerHTML = `<button class="btn btn-secondary btn-sm" onclick="adminToggleMyAccount()">${has ? '🔓 Remove admin from my account' : '🔐 Make my account admin (skip password)'}</button> <span class="text-muted" style="font-size:.75rem">Signed in as ${esc(currentUser.name || currentUser.userId)}${has ? ' — admin ✔' : ''}</span>`;
+  box.innerHTML = `<button class="btn btn-secondary btn-sm" onclick="adminToggleMyAccount()">${has ? '🔓 Remove admin from my account' : '🔐 Make my account admin (skip password)'}</button>${_devBtn} <span class="text-muted" style="font-size:.75rem">Signed in as ${esc(currentUser.name || currentUser.userId)}${has ? ' — admin ✔' : ''}</span>`;
 };
 
 // ===== CONFIG =====
@@ -13721,7 +13724,7 @@ window.adminLogin = async function() {
     const stored = await dbGet('settings','adminPassword');
     correct = stored && stored.value===pw;
   }
-  if (correct) { clearLoginAttempts('__admin__'); adminLoggedIn=true; if (window.revealAdminEntry) revealAdminEntry(); errEl.style.display='none'; renderAdmin(); }
+  if (correct) { clearLoginAttempts('__admin__'); try { localStorage.setItem('imsAdminDevice', '1'); } catch (e) {} adminLoggedIn=true; if (window.revealAdminEntry) revealAdminEntry(); errEl.style.display='none'; renderAdmin(); }
   else {
     recordFailedLogin('__admin__');
     const after = checkLoginRate('__admin__');
