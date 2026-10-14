@@ -1706,7 +1706,7 @@
   <div class="card">
     <div class="card-title"><div class="dot"></div>Race Results History</div>
     <div id="race-history-content"></div>
-    <button class="btn btn-secondary" style="margin-top:10px;width:100%" onclick="playRoundReel()">▶ Replay last round's winner reel</button>
+    <button class="btn btn-secondary" style="margin-top:10px;width:100%" onclick="playRoundReel()">▶ Play every round's winner reel</button>
   </div>
   <div id="archived-seasons-section"></div>
 </div>
@@ -12830,7 +12830,7 @@ function _roundReelAll(teams, races) {
     return (top && pts > 0) ? { top, race: done, pts: Math.round(pts), margin: Math.round(pts - second) } : null; }).filter(Boolean); }
 function _roundReelOpen(list, idx) { const e = list[idx]; if (e) _roundReel(e.top, e.race, e.pts, e.margin, { list, idx }); }
 window.playRoundReel = async function() { const [teams, races] = await Promise.all([dbGetAll('teams'), dbGetAll('races')]);
-  const L = _roundReelAll(teams, races); if (L.length) { window._rrResume = undefined; _roundReelOpen(L, L.length - 1); } else if (typeof showToast === 'function') showToast('No settled round yet', 'info'); };
+  const L = _roundReelAll(teams, races); if (L.length) { window._rrResume = undefined; _roundReelOpen(L, 0); } else if (typeof showToast === 'function') showToast('No settled round yet', 'info'); };
 async function _roundReelMaybe(teams, races) {
   try {
     const done = (races || []).filter(r => r && r.priceAfterAt && r.driverPoints && Object.keys(r.driverPoints).length).sort((a, b) => (b.raceNum || 0) - (a.raceNum || 0))[0];
