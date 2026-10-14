@@ -14820,11 +14820,11 @@ window.importDbRound = async function(roundNo, trackName) {
   const dbTrack = trackName;
   try {
     const low = (x) => String(x || '').toLowerCase().trim();
-    const known = [...(await dbGetAll('races').catch(() => [])), ...(await dbGetAll('schedule').catch(() => []))].filter(x => x && x.name);
-    if (!known.some(x => low(x.name) === low(trackName)) && window.trackKey) {
-      const k = window.trackKey(trackName), m = known.find(x => window.trackKey(x.name) === k);
-      if (m) trackName = m.name;
-    }
+    // The current season's schedule decides the name (so an old season's "Spain" race can never catch it).
+    const sched = (await dbGetAll('schedule').catch(() => [])).filter(x => x && x.name);
+    const k = window.trackKey ? window.trackKey(trackName) : low(trackName);
+    const m = sched.find(x => low(x.name) === low(trackName)) || sched.find(x => (window.trackKey ? window.trackKey(x.name) : low(x.name)) === k);
+    if (m) trackName = m.name;
   } catch (e) { console.warn('track name mapping failed', e); }
   const msg = document.getElementById('db-import-msg');
   if (!_imsDb) { msg.innerHTML = '<div class="alert alert-error">No database loaded.</div>'; return; }
