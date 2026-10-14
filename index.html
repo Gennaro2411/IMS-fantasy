@@ -26933,7 +26933,12 @@ async function _betSettleMine(userId, races, coins) {
         if (legsChanged || part.some((l, i) => (l.result || null) !== ((b.legs || [])[i].result || null))) { b.legs = part; await dbSet('bets', b.id, b).catch(() => {}); }
         continue; }
       const oldPay = b.status === 'open' ? 0 : (b.payout || 0);
-      if (b.status === st && oldPay === pay) continue;
+      if (b.status === st && oldPay === pay) {
+        // Bet outcome unchanged, but leg results may have been recomputed (e.g. BOTT points corrected after the first settle) — refresh stale ✕/✓ on the legs.
+        const fresh = (b.legs || []).map((l, i) => ({ ...l, result: ls[i] != null ? ls[i] : (l.result || null) }));
+        if (fresh.some((l, i) => (l.result || null) !== ((b.legs || [])[i].result || null))) { b.legs = fresh; await dbSet('bets', b.id, b).catch(() => {}); changed = true; }
+        continue;
+      }
       const delta = pay - oldPay;
       coins.balance += delta;
       if (b.status === 'won') { coins.betsWon = Math.max(0, (coins.betsWon || 0) - 1); coins.won = Math.max(0, (coins.won || 0) - oldPay); }
@@ -27716,7 +27721,7 @@ window.renderAdminBetVerdicts = async function() {
   box.innerHTML = list.length ? list.map(b => { const t = tb[b.userId] || {};
     return `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 4px;border-bottom:1px solid var(--border)">
       <span style="width:8px;height:8px;border-radius:50%;background:${col[b.status] || '#666'};flex-shrink:0"></span>
-      <div style="flex:1;min-width:200px"><b style="font-size:.85rem">${esc(b.label)}</b><div style="font-size:.7rem;color:var(--muted)">${esc(t.playerName || t.teamName || b.userId)} · ${esc(b.raceName || '')} ${esc(b.div || '')} · ${b.stake} <i class="imc" title="IM$"></i> @ ${Number(b.odds).toFixed(2)} · <b style="color:${col[b.status]}">${b.status === 'void' ? 'refunded' : b.status === 'open' ? 'not decided yet' : b.status === 'cashed' ? 'cashed out' : b.status}</b>${b.placedAt ? ' · placed ' + new Date(b.placedAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}${b.adminOverride ? ' · ✎ edited' : ''}</div></div>
+      <div style="flex:1;min-width:200px"><b style="font-size:.85rem">${esc(b.label)}</b><div style="font-size:.7rem;color:var(--muted)">${esc(t.playerName || t.teamName || b.userId)} · ${esc(b.raceName || '')} ${esc(b.div || '')} · ${b.stake} <i class="imc" title="IM$"></i> @ ${Number(b.odds).toFixed(2)} · <b style="color:${col[b.status]}">${b.status === 'void' ? 'refunded' : b.status === 'open' ? 'not decided yet' : b.status === 'cashed' ? 'cashed out' : b.status}</b>${b.placedAt ? ' · placed ' + new Date(b.placedAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}${b.adminOverride ? ' · ✎ edited' : ''}</div>${b.market === 'acca' ? `<div style="display:flex;flex-direction:column;gap:2px;margin-top:5px;font-size:.74rem">${(b.legs || []).map(l => { const r = l.void ? 'void' : l.result; return `<div style="${r === 'void' ? 'opacity:.55;text-decoration:line-through' : ''}">${r === 'won' ? '✅' : r === 'lost' ? '❌' : r === 'void' ? '↩️' : '⏳'} ${esc(l.label || '')} <b style="color:var(--gold)">${Number(l.odds).toFixed(2)}</b></div>`; }).join('')}</div>` : ''}</div>
       <div style="display:flex;gap:4px">${btn(b, 'won', '✅ Won')}${btn(b, 'lost', '❌ Lost')}${btn(b, 'void', '↩️ Refund')}</div></div>`; }).join('')
     : '<div class="text-muted">No bets match.</div>';
   box.innerHTML = `<div style="font-size:.78rem;color:var(--muted);margin-bottom:6px">${bets.length} bets ever · <b style="color:#7b7fe8">${nOpen} not decided yet</b> · ${bets.length - nOpen} decided · showing ${list.length} of ${all.length} matching</div>` + box.innerHTML
