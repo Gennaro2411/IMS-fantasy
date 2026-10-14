@@ -7039,8 +7039,8 @@ window.showPage = function(page) {
       else if (page==='market') await renderMarket();
       else if (page==='bets') await renderBets();
       else if (page==='games') await renderGames();
-      if (page !== 'bets' && typeof window._betBgSettle === 'function') window._betBgSettle();
       else if (page==='admin') await renderAdmin();
+      if (page !== 'bets' && typeof window._betBgSettle === 'function') window._betBgSettle();
     } catch(e) { console.warn('page render error', e); }
     hidePageLoader();
   })();
