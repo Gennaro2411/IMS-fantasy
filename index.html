@@ -26829,7 +26829,7 @@ function _betOutcome(b, races) {
   const race = races.filter(r => (r.name || '').toLowerCase().trim() === (b.raceName || '').toLowerCase().trim() && (b.div === 'BOTT' ? r.constructorPoints : r.positionByDivision))
     .sort((x, y) => ((b.div === 'BOTT' ? _raceAllDivsIn(y) : 0) - (b.div === 'BOTT' ? _raceAllDivsIn(x) : 0)) || ((y.updatedAt || y.createdAt || 0) - (x.updatedAt || x.createdAt || 0)) || ((y.raceNum || 0) - (x.raceNum || 0)))[0];
   if (!race) return null;
-  if (b.div === 'BOTT' && !_raceAllDivsIn(race)) return null; // still waiting on later divisions — don't settle on partial BOTT points
+  if (b.div === 'BOTT' && !b._resettle && !_raceAllDivsIn(race)) return null; // still waiting on later divisions — don't settle on partial BOTT points
   let pos;
   if (b.div === 'BOTT') {
     // Constructors: rank by this round's BOTT points. Ties share the better position.
@@ -26922,7 +26922,7 @@ async function _betSettleMine(userId, races, coins) {
       // stake back. Waits until every other leg has a result.
       let legsChanged = false;
       (b.legs || []).forEach(l => { if (!l.void && b.status === 'open' && window._betOutIds && window._betOutRace === b.raceName && l.div !== 'BOTT' && (l.sel || []).some(id => window._betOutIds.has(id))) { l.void = true; legsChanged = true; } });
-      const ls = (b.legs || []).map(l => l.void ? 'void' : _betOutcome({ ...l, raceName: b.raceName }, races));
+      const ls = (b.legs || []).map(l => l.void ? 'void' : _betOutcome({ ...l, raceName: b.raceName, _resettle: b.status !== 'open' }, races));
       if ((b.legs || []).some(l => l.div === 'BOTT')) console.log('[BET ACCA]', b.id, b.label, b.raceName, 'status', b.status, 'legs', (b.legs || []).map((l, i) => l.label + ' => ' + ls[i] + ' (stored ' + l.result + ')').join(' | '), 'races named so:', races.filter(r => (r.name || '').toLowerCase().trim() === (b.raceName || '').toLowerCase().trim()).map(r => r.id + ' divsIn=' + _raceAllDivsIn(r) + ' hasCP=' + !!r.constructorPoints).join(', '));
       let st = null, pay = 0, eff = null;
       if (ls.includes('lost')) { st = 'lost'; }
@@ -26968,7 +26968,7 @@ async function _betSettleMine(userId, races, coins) {
       Object.assign(b, { status: 'void', payout: b.stake });
       changed = true; continue;
     }
-    const result = _betOutcome(b, races);
+    const result = _betOutcome({ ...b, _resettle: b.status !== 'open' }, races);
     if (!result || result === b.status) continue;
     if (b.status === 'open') {
       const payout = _betPay(b, result);
