@@ -27248,7 +27248,7 @@ window.renderBets = async function() {
   // Compare each outcome's share of the money with its fair share of probability; heavily-backed
   // picks shorten, neglected ones drift. Needs 200+ coins in the market, full effect at 1,000+,
   // and never moves more than 30% from the calculated price. Admin overrides are never adjusted.
-  const _openAll = (window._betAllBets || []).filter(b => b.status === 'open' && upcoming && b.raceName === upcoming.name && b.div === div);
+  const _openAll = window._betMarketBets(window._betAllBets).filter(b => b.status === 'open' && upcoming && b.raceName === upcoming.name && b.div === div);
   let _openHere = _openAll;
   const _stakeOn = (market, key) => _openHere.filter(b => b.market === market && b.sel.join('-') === key).reduce((a, b) => a + (b.stake || 0), 0);
   const _dyn = (auto, share, fair, total) => {
@@ -27905,7 +27905,7 @@ window._betLive = function(b, exclMe) {
   if (R.fixed != null) return R.fixed;
   if (b.odds > R.auto * 1.31) return null; // taken at a boost that's since gone — never value it off the normal line
   const me = currentUser && currentUser.userId;
-  const pool = (window._betAllBets || []).filter(x => x.status === 'open' && x.raceName === b.raceName && x.div === b.div && x.market === b.market && !(exclMe && x.userId === me));
+  const pool = window._betMarketBets(window._betAllBets).filter(x => x.status === 'open' && x.raceName === b.raceName && x.div === b.div && x.market === b.market && !(exclMe && x.userId === me));
   const on = (k) => pool.filter(x => (x.sel || []).join('-') === k).reduce((t, x) => t + (x.stake || 0), 0);
   const a = on(key), tot = R.opp ? a + on(R.opp) : pool.reduce((t, x) => t + (x.stake || 0), 0);
   if (tot < 200) return R.auto;
@@ -27914,6 +27914,19 @@ window._betLive = function(b, exclMe) {
 };
 // Live price of an over/under / yes-no bet (any division tab), from everyone's open money on both sides.
 // exclMe: leave the player's own stakes out (used for cash-out, so you can't move your own price).
+// Market money: singles at full stake, plus every OPEN accumulator's legs at stake ÷ number of legs
+// (a leg only pays if the others land too, so acca money moves a price less than a single — like a real book).
+window._betMarketBets = function(all) {
+  const out = [];
+  (all || []).forEach(b => {
+    if (!b) return;
+    if (b.market !== 'acca') { out.push(b); return; }
+    if (b.status !== 'open') return;
+    const legs = (b.legs || []).filter(l => !l.void && !l.result); const n = (b.legs || []).length || 1;
+    legs.forEach(l => out.push({ status: 'open', raceName: b.raceName, userId: b.userId, div: l.div, market: l.market, sel: l.sel || [], stake: (b.stake || 0) / n, fromAcca: true }));
+  });
+  return out;
+};
 window._betOuLive = function(b, exclMe) {
   if (!b || !['ou', 'cou', 'yn'].includes(b.market)) return null;
   let reg = window._betOuReg; if (!reg) { try { reg = JSON.parse(localStorage.getItem('imsBetOuReg') || '{}'); } catch (e) { reg = {}; } }
@@ -27923,7 +27936,7 @@ window._betOuLive = function(b, exclMe) {
   if (b.odds > R.auto * 1.31) return null; // taken above anything the market could reach = a boost price
   const opp = (b.sel || []).slice(); opp[1] = ({ over: 'under', under: 'over', yes: 'no', no: 'yes' })[opp[1]] || opp[1]; const oKey = opp.join('-');
   const me = currentUser && currentUser.userId;
-  const pool = (window._betAllBets || []).filter(x => x.status === 'open' && x.raceName === b.raceName && x.div === b.div && x.market === b.market && !(exclMe && x.userId === me));
+  const pool = window._betMarketBets(window._betAllBets).filter(x => x.status === 'open' && x.raceName === b.raceName && x.div === b.div && x.market === b.market && !(exclMe && x.userId === me));
   const sum = (k) => pool.filter(x => (x.sel || []).join('-') === k).reduce((t, x) => t + (x.stake || 0), 0);
   const a = sum(key), o = sum(oKey), tot = a + o; if (tot < 200) return R.auto;
   const f = Math.max(0.7, Math.min(1.3, 1 - 0.8 * (a / tot - R.p) * Math.min(1, tot / 1000)));
