@@ -12850,7 +12850,13 @@ function _roundReel(t, race, pts, margin, nav) {
   const name = t.playerName || t.teamName || 'Manager', team = t.teamName || '', photo = t.discordAvatar || '';
   const flag = (typeof trackFlagImg === 'function') ? trackFlagImg(race.name, 22) : '';
   const pic = photo ? `<img src="${esc(photo)}" alt="">` : `<span>${esc(String(name).slice(0, 2).toUpperCase())}</span>`;
-  const el = document.createElement('div'); el.id = 'rr-reel';
+  // Every play rolls a different look: accent colour, slash angle, portrait cut, headline and sign-off.
+  const _pk = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const RV = { ac: _pk(['#e10600', '#ffd400', '#00e0ff', '#39ff14', '#ff2bd6', '#ff7a00']), ang: _pk([-8, -5, 6, -11, 8, -3]),
+    clip: _pk(['polygon(6% 0,100% 0,94% 100%,0 100%)', 'polygon(0 0,94% 0,100% 100%,6% 100%)', 'polygon(0 6%,100% 0,100% 94%,0 100%)', 'polygon(10% 0,90% 0,100% 50%,90% 100%,10% 100%,0 50%)', 'polygon(0 0,100% 0,100% 100%,0 100%)']),
+    head: _pk([['Round', 'winner'], ['Top', 'manager'], ['Week\'s', 'best'], ['Points', 'machine'], ['Round', 'boss'], ['Race', 'ruler']]),
+    tail: _pk(['no contest', 'untouchable', 'clinical', 'on top', 'case closed', 'a class apart']) };
+  const el = document.createElement('div'); el.id = 'rr-reel'; el.style.setProperty('--ac', RV.ac); el.style.setProperty('--ang', RV.ang + 'deg'); el.style.setProperty('--clip', RV.clip);
   el.innerHTML = `<style>
     /* Cold edit: black & white, hard contrast, blood-red accents, grain, letterbox, shake on the hits. */
     #rr-reel{position:fixed;inset:0;z-index:99990;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.82);animation:rrIn .25s ease-out;font-family:'Barlow Condensed',sans-serif}
@@ -12915,14 +12921,14 @@ function _roundReel(t, race, pts, margin, nav) {
     ${nav.idx > 0 ? '<button class="nav l" title="Previous winner">‹</button>' : ''}${nav.idx < nav.list.length - 1 ? '<button class="nav r" title="Next winner">›</button>' : ''}
     <div class="rx">${['🔥', '🐐', '👏', '😂', '😮', '💀'].map(e => `<button data-e="${e}">${e}<b></b></button>`).join('')}</div>
     <div class="hd"><img class="lg" src="icons/icon-192.png?v=3" alt=""><span>IMS Fantasy · ${esc(race.name || '')}</span><button class="x">Skip ✕</button></div>
-    <div class="tx t0">Round<em>winner</em></div>
+    <div class="tx t0">${RV.head[0]}<em>${RV.head[1]}</em></div>
     <div class="pf">${pic}</div><div class="ring"></div>
     <div class="tx t1">${esc(name)}</div>
     <div class="tx t2">${esc(team)}</div>
     <div class="tx t3">${pts}<span> pts</span></div>
     <div class="fl"></div><div class="q"></div>
-    <div class="end"><div class="ep">${pic}</div><div class="tr">🏆</div><b>${esc(name)}</b><small>${flag}${esc(race.name || '')} · no contest</small></div>
-    <div class="snd">🔊 sound on</div></div>`;
+    <div class="end"><div class="ep">${pic}</div><div class="tr">🏆</div><b>${esc(name)}</b><small>${flag}${esc(race.name || '')} · ${RV.tail}</small></div>
+    <div class="snd">🔊 sound on</div></div>`.replace(/#e10600/g, 'var(--ac)').replace(/rotate\(-8deg\)/g, 'rotate(var(--ang))').replace(/polygon\(6% 0,100% 0,94% 100%,0 100%\)/g, 'var(--clip)');
   const bg = document.getElementById('bg-music');
   if (window._rrResume === undefined) window._rrResume = !!(bg && !bg.paused); // remembered across story steps
   const wasPlaying = window._rrResume; if (bg && !bg.paused) bg.pause();
