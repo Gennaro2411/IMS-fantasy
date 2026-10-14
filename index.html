@@ -2413,6 +2413,7 @@
     <div id="admin-login-error" class="alert alert-error" style="display:none;margin-top:12px"></div>
   </div>
   <div id="admin-panel" style="display:none">
+    <div id="admin-self-grant" style="margin-bottom:10px"></div>
     <div class="tabs">
       <button class="tab active" onclick="showAdminTab('drivers',this)">Drivers</button>
       <button class="tab" onclick="showAdminTab('constructors',this)">Constructors</button>
@@ -3453,6 +3454,37 @@ window.logoTap = function() {
 window.revealAdminEntry = function() {
   const a = document.getElementById('nav-admin-btn'); if (a) a.style.display='';
   const m = document.getElementById('mobile-admin-btn'); if (m) m.style.display='';
+};
+// Accounts that are admin without typing the password: userIds listed in settings/adminUsers.
+// Granted from the Admin panel ("Make my account admin"); checked on load and when opening Admin.
+window._adminAutoCheck = async function() {
+  try {
+    if (adminLoggedIn || !currentUser || !currentUser.userId || !PROJECT_ID) return false;
+    const doc = await dbGet('settings', 'adminUsers');
+    const ids = (doc && Array.isArray(doc.ids)) ? doc.ids : [];
+    if (!ids.includes(currentUser.userId)) return false;
+    adminLoggedIn = true; revealAdminEntry();
+    const pg = document.getElementById('page-admin'); if (pg && pg.classList.contains('active')) renderAdmin();
+    return true;
+  } catch (e) { return false; }
+};
+window.adminToggleMyAccount = async function() {
+  if (!adminLoggedIn || !currentUser || !currentUser.userId) return;
+  const doc = await dbGet('settings', 'adminUsers').catch(() => null);
+  let ids = (doc && Array.isArray(doc.ids)) ? doc.ids.slice() : [];
+  const has = ids.includes(currentUser.userId);
+  ids = has ? ids.filter(x => x !== currentUser.userId) : ids.concat(currentUser.userId);
+  await dbSet('settings', 'adminUsers', { ids });
+  dbInvalidate('settings');
+  if (typeof showToast === 'function') showToast(has ? 'Admin removed from your account' : '✔ Your account is now admin — no password needed on this account', 'success');
+  renderAdminSelfGrant();
+};
+window.renderAdminSelfGrant = async function() {
+  const box = document.getElementById('admin-self-grant'); if (!box) return;
+  if (!currentUser || !currentUser.userId) { box.innerHTML = '<span class="text-muted" style="font-size:.8rem">Log in to a player account to make it admin without the password.</span>'; return; }
+  const doc = await dbGet('settings', 'adminUsers').catch(() => null);
+  const has = !!(doc && Array.isArray(doc.ids) && doc.ids.includes(currentUser.userId));
+  box.innerHTML = `<button class="btn btn-secondary btn-sm" onclick="adminToggleMyAccount()">${has ? '🔓 Remove admin from my account' : '🔐 Make my account admin (skip password)'}</button> <span class="text-muted" style="font-size:.75rem">Signed in as ${esc(currentUser.name || currentUser.userId)}${has ? ' — admin ✔' : ''}</span>`;
 };
 
 // ===== CONFIG =====
@@ -6883,6 +6915,7 @@ async function init() {
       }
     } catch(e) { /* offline / fetch failed — leave session as-is rather than lock them out */ }
   }
+  try { window._adminAutoCheck(); } catch (e) {} // accounts granted admin skip the password
   // Re-check periodically so a tab left open after an admin deletes the account signs itself
   // out, rather than lingering in a ghost state until the next manual refresh
   if (!window._accountAliveTimer) {
@@ -13646,6 +13679,8 @@ window.showRaceBreakdown = async function(raceId) {
 
 // ===== ADMIN =====
 function renderAdmin() {
+  if (!adminLoggedIn) { window._adminAutoCheck(); }
+  if (adminLoggedIn) { try { renderAdminSelfGrant(); } catch (e) {} }
   if (!adminLoggedIn) {
     document.getElementById('admin-login-section').style.display='block';
     document.getElementById('admin-panel').style.display='none';
