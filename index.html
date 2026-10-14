@@ -14815,6 +14815,17 @@ function buildConstructorPriceBreakdownHtml(constrBreakdown) {
 }
 
 window.importDbRound = async function(roundNo, trackName) {
+  // The .db may title a round differently from the app (e.g. "Spain" vs "Barcelona"). Query the .db with
+  // its own name (dbTrack), but store/match everything in the app under the app's race name (trackName).
+  const dbTrack = trackName;
+  try {
+    const low = (x) => String(x || '').toLowerCase().trim();
+    const known = [...(await dbGetAll('races').catch(() => [])), ...(await dbGetAll('schedule').catch(() => []))].filter(x => x && x.name);
+    if (!known.some(x => low(x.name) === low(trackName)) && window.trackKey) {
+      const k = window.trackKey(trackName), m = known.find(x => window.trackKey(x.name) === k);
+      if (m) trackName = m.name;
+    }
+  } catch (e) { console.warn('track name mapping failed', e); }
   const msg = document.getElementById('db-import-msg');
   if (!_imsDb) { msg.innerHTML = '<div class="alert alert-error">No database loaded.</div>'; return; }
   // Which season are we importing? Read the live season number so S8+ imports pull the right rows and
@@ -14831,7 +14842,7 @@ window.importDbRound = async function(roundNo, trackName) {
              col_as as fantasy_pts, elo_post_race, elo_change, rowid as row_order,
              col_i as race_time, bott_points_effective, COALESCE(seasonal_license_before, col_bb) as licence
       FROM inputs_rows 
-      WHERE col_a='${IMPORT_SEASON}' AND col_ad='${trackName.replace(/'/g, "''")}'
+      WHERE col_a='${IMPORT_SEASON}' AND col_ad='${dbTrack.replace(/'/g, "''")}'
         AND col_c IN (${IMPORT_DIVS.map(d=>`'${d}'`).join(',')})
       ORDER BY CAST(col_n as INTEGER)
     `);
@@ -15223,7 +15234,7 @@ window.importDbRound = async function(roundNo, trackName) {
       };
       const flRes = _imsDb.exec(`
         SELECT col_e as driver, col_j as fl, col_c as race_div
-        FROM inputs_rows WHERE col_a='${getImportSeason()}' AND col_ad='${trackName.replace(/'/g, "''")}' AND col_c IN (${importDivCsv()})
+        FROM inputs_rows WHERE col_a='${getImportSeason()}' AND col_ad='${dbTrack.replace(/'/g, "''")}' AND col_c IN (${importDivCsv()})
           AND col_j IS NOT NULL AND col_j != ''`);
       if (flRes.length) {
         const best = {};
@@ -15243,7 +15254,7 @@ window.importDbRound = async function(roundNo, trackName) {
     try {
       const poleRes = _imsDb.exec(`
         SELECT col_e as driver, col_h as quali, col_c as race_div
-        FROM inputs_rows WHERE col_a='${getImportSeason()}' AND col_ad='${trackName.replace(/'/g, "''")}' AND col_c IN (${importDivCsv()})
+        FROM inputs_rows WHERE col_a='${getImportSeason()}' AND col_ad='${dbTrack.replace(/'/g, "''")}' AND col_c IN (${importDivCsv()})
           AND col_h IS NOT NULL AND col_h != ''`);
       if (poleRes.length) {
         const bestQ = {}, allQ = {};
@@ -15268,7 +15279,7 @@ window.importDbRound = async function(roundNo, trackName) {
     try {
       const spRes = _imsDb.exec(`
         SELECT col_e as driver, col_g as team, col_c as race_div, col_p as sp_pos, col_o as sp_grid, col_k as sp_time, col_l as sp_fl
-        FROM inputs_rows WHERE col_a='${getImportSeason()}' AND col_ad='${trackName.replace(/'/g, "''")}' AND col_c IN (${importDivCsv()})
+        FROM inputs_rows WHERE col_a='${getImportSeason()}' AND col_ad='${dbTrack.replace(/'/g, "''")}' AND col_c IN (${importDivCsv()})
           AND col_p IS NOT NULL AND col_p != ''`);
       if (spRes.length) {
         for (const [drvName, team, rowDivRaw, spPos, spGrid, spTime, spFl] of spRes[0].values) {
@@ -15286,10 +15297,10 @@ window.importDbRound = async function(roundNo, trackName) {
       }
     } catch(e) { console.log('sprint extraction failed (non-fatal):', e); }
     let raceStatsComputed = {};
-    try { raceStatsComputed = _raceStatsFromDb(getImportSeason(), trackName); } catch(e) { console.log('race stats extraction failed (non-fatal):', e); }
+    try { raceStatsComputed = _raceStatsFromDb(getImportSeason(), dbTrack); } catch(e) { console.log('race stats extraction failed (non-fatal):', e); }
     // Race grid start (col_m) per division, keyed by normalised driver name — for "from P4 ▲3".
     let raceGridByDivComputed = {};
-    try { raceGridByDivComputed = _raceGridFromDb(getImportSeason(), trackName); } catch(e) { console.log('grid extraction failed (non-fatal):', e); }
+    try { raceGridByDivComputed = _raceGridFromDb(getImportSeason(), dbTrack); } catch(e) { console.log('grid extraction failed (non-fatal):', e); }
 
     // DNFs recorded on the race doc for display ("DNF" instead of 0 pts) — merged across
     // batches, each batch overwriting only the drivers it contains
@@ -15531,7 +15542,7 @@ window.importDbRound = async function(roundNo, trackName) {
       // SQLite happened to return the junk row first.
       const domRes = _imsDb.exec(`
         SELECT col_e as driver, CAST(dominance_tracker as REAL) as race_dom, col_c as race_div
-        FROM inputs_rows WHERE col_a='${getImportSeason()}' AND col_ad='${trackName.replace(/'/g, "''")}' AND col_c IN (${importDivCsv()})
+        FROM inputs_rows WHERE col_a='${getImportSeason()}' AND col_ad='${dbTrack.replace(/'/g, "''")}' AND col_c IN (${importDivCsv()})
       `);
       // Per-division diagnostics: how many rows this track has per division and how many of
       // those actually carry a dominance value — surfaces divisions whose dominance_tracker
