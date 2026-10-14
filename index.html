@@ -26327,6 +26327,7 @@ window.trackKey = function(name) {
   const n = (name || '').toLowerCase().replace(/grand prix|gp/g, '').trim();
   // Whole-word match, so "spa" doesn't match inside "Spain" (Belgium ≠ Spain).
   const hasWord = (a) => new RegExp('(^|[^a-z])' + a.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '($|[^a-z])').test(n);
+  if (['madrid', 'madring'].some(hasWord)) return 'madrid'; // Madrid (Madring) is its own circuit — never Barcelona, even if the name also says Spain/Spanish
   const gi = window.TRACK_ALIASES.findIndex(g => g.some(hasWord));
   return gi >= 0 ? 'g' + gi : n;
 };
