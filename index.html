@@ -12816,8 +12816,18 @@ function _roundReelPick(teams, races) {
   else teams.forEach(t => { if (t.testAccount) return; const p = window.fantasyTeamRacePts(t, done, races) || 0; if (p > pts) { pts = p; top = t; } });
   let second = 0; teams.forEach(t => { if (t === top || t.testAccount) return; const p = window.fantasyTeamRacePts(t, done, races) || 0; if (p > second) second = p; });
   return (top && pts > 0) ? { top, race: done, pts: Math.round(pts), margin: Math.round(pts - second) } : null; }
+// Every settled round this season, oldest first — the reel "story" you can step through like Instagram.
+function _roundReelAll(teams, races) {
+  const T = (teams || []).filter(t => !t.testAccount);
+  return (races || []).filter(r => r && r.priceAfterAt && r.driverPoints && Object.keys(r.driverPoints).length).sort((a, b) => (a.raceNum || 0) - (b.raceNum || 0)).map(done => {
+    let top = typeof window.getRoundWinOverride === 'function' ? window.getRoundWinOverride(done, T) : null, pts = 0;
+    if (top) pts = window.fantasyTeamRacePts(top, done, races) || 0;
+    else T.forEach(t => { const p = window.fantasyTeamRacePts(t, done, races) || 0; if (p > pts) { pts = p; top = t; } });
+    let second = 0; T.forEach(t => { if (t === top) return; const p = window.fantasyTeamRacePts(t, done, races) || 0; if (p > second) second = p; });
+    return (top && pts > 0) ? { top, race: done, pts: Math.round(pts), margin: Math.round(pts - second) } : null; }).filter(Boolean); }
+function _roundReelOpen(list, idx) { const e = list[idx]; if (e) _roundReel(e.top, e.race, e.pts, e.margin, { list, idx }); }
 window.playRoundReel = async function() { const [teams, races] = await Promise.all([dbGetAll('teams'), dbGetAll('races')]);
-  const w = _roundReelPick(teams.filter(t => !t.testAccount), races); if (w) _roundReel(w.top, w.race, w.pts, w.margin); else if (typeof showToast === 'function') showToast('No settled round yet', 'info'); };
+  const L = _roundReelAll(teams, races); if (L.length) { window._rrResume = undefined; _roundReelOpen(L, L.length - 1); } else if (typeof showToast === 'function') showToast('No settled round yet', 'info'); };
 async function _roundReelMaybe(teams, races) {
   try {
     const done = (races || []).filter(r => r && r.priceAfterAt && r.driverPoints && Object.keys(r.driverPoints).length).sort((a, b) => (b.raceNum || 0) - (a.raceNum || 0))[0];
@@ -12829,10 +12839,11 @@ async function _roundReelMaybe(teams, races) {
     else teams.forEach(t => { if (t.testAccount) return; const p = window.fantasyTeamRacePts(t, done, races) || 0; if (p > pts) { pts = p; top = t; } });
     if (!top || pts <= 0) return;
     try { localStorage.setItem(key, '1'); } catch (e) {}
-    const _w = _roundReelPick(teams, races); _roundReel(top, done, Math.round(pts), _w && _w.race.id === done.id ? _w.margin : 0);
+    const L = _roundReelAll(teams, races); window._rrResume = undefined; _roundReelOpen(L, Math.max(0, L.findIndex(x => x.race.id === done.id)));
   } catch (e) { console.warn('round reel failed', e); } }
-function _roundReel(t, race, pts, margin) {
-  document.getElementById('rr-reel')?.remove();
+function _roundReel(t, race, pts, margin, nav) {
+  nav = nav || { list: [{ top: t, race, pts, margin }], idx: 0 };
+  const _prev = document.getElementById('rr-reel'); if (_prev) { try { _prev._stop && _prev._stop(); } catch (e) {} _prev.remove(); }
   const name = t.playerName || t.teamName || 'Manager', team = t.teamName || '', photo = t.discordAvatar || '';
   const flag = (typeof trackFlagImg === 'function') ? trackFlagImg(race.name, 22) : '';
   const pic = photo ? `<img src="${esc(photo)}" alt="">` : `<span>${esc(String(name).slice(0, 2).toUpperCase())}</span>`;
@@ -12843,9 +12854,20 @@ function _roundReel(t, race, pts, margin) {
     #rr-reel .ph{position:relative;width:min(340px,86vw);aspect-ratio:9/16;max-height:82vh;border-radius:14px;overflow:hidden;background:#050505;box-shadow:0 20px 60px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.08);color:#fff;will-change:transform}
     #rr-reel .ph.shk{animation:rrShake .28s steps(4)}
     #rr-reel .bar{position:absolute;top:10px;left:12px;right:12px;height:2px;background:rgba(255,255,255,.18);z-index:9;overflow:hidden}
+    #rr-reel .bar{display:flex;gap:3px;background:none}
+    #rr-reel .bar s{flex:1;height:100%;background:rgba(255,255,255,.18);overflow:hidden;display:block}
+    #rr-reel .bar s.done{background:#e10600}
     #rr-reel .bar i{display:block;height:100%;width:0;background:#e10600;animation:rrBar 20s linear forwards}
+    #rr-reel .nav{position:absolute;top:50%;z-index:10;width:34px;height:34px;margin-top:-17px;border-radius:50%;border:1px solid #444;background:rgba(0,0,0,.6);color:#fff;font-size:1.1rem;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center}
+    #rr-reel .nav.l{left:6px}#rr-reel .nav.r{right:6px}
+    #rr-reel .rx{position:absolute;left:8px;right:8px;bottom:5.5%;z-index:10;display:flex;justify-content:center;gap:6px}
+    #rr-reel .rx button{background:rgba(0,0,0,.6);border:1px solid #333;border-radius:999px;color:#fff;padding:3px 7px;font-size:.95rem;cursor:pointer;display:flex;align-items:center;gap:3px;font-family:system-ui,sans-serif}
+    #rr-reel .rx button b{font-size:.62rem;color:#bbb}
+    #rr-reel .rx button.me{border-color:#e10600;background:rgba(225,6,0,.25)}
+    #rr-reel .fly{position:absolute;bottom:9%;z-index:11;font-size:1.8rem;pointer-events:none;animation:rrFly 1.2s ease-out forwards}
+    @keyframes rrFly{to{transform:translateY(-220px) scale(1.4);opacity:0}}
     #rr-reel .hd{position:absolute;top:18px;left:12px;right:12px;display:flex;align-items:center;gap:8px;z-index:9;font-family:system-ui,sans-serif;font-size:.72rem;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:#bbb}
-    #rr-reel .hd img.lg{width:24px;height:24px;border-radius:50%;filter:grayscale(1)}
+    #rr-reel .hd img.lg{width:24px;height:24px;border-radius:50%}
     #rr-reel .x{margin-left:auto;background:#000;border:1px solid #444;color:#fff;border-radius:4px;padding:3px 10px;font-weight:800;cursor:pointer;font-family:inherit;font-size:.7rem;letter-spacing:1px}
     #rr-reel .bg{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 42%,#1c1c1c 0%,#0a0a0a 55%,#000 100%)}
     #rr-reel .lb{position:absolute;left:0;right:0;height:9%;background:#000;z-index:6}#rr-reel .lb.t{top:0}#rr-reel .lb.b{bottom:0}
@@ -12870,7 +12892,7 @@ function _roundReel(t, race, pts, margin) {
     #rr-reel .end b{font-size:clamp(1.3rem,8vw,2rem);max-width:92%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-transform:uppercase;font-style:italic;text-align:center;line-height:1;letter-spacing:-.5px}
     #rr-reel .end small{font-family:system-ui,sans-serif;font-weight:800;color:#e10600;letter-spacing:3px;text-transform:uppercase;font-size:.7rem;display:flex;align-items:center;gap:6px}
     #rr-reel .end small img{filter:grayscale(1)}
-    #rr-reel .snd{position:absolute;bottom:2.6%;left:0;right:0;text-align:center;font-family:system-ui,sans-serif;font-size:.6rem;letter-spacing:1px;color:#666;z-index:9;text-transform:uppercase}
+    #rr-reel .snd{position:absolute;bottom:1.2%;left:0;right:0;text-align:center;font-family:system-ui,sans-serif;font-size:.6rem;letter-spacing:1px;color:#666;z-index:9;text-transform:uppercase}
     #rr-reel .ph.frz .pf,#rr-reel .ph.frz .grain,#rr-reel .ph.frz .bar i{animation-play-state:paused}
     #rr-reel .q{position:absolute;left:8%;right:8%;top:14%;z-index:9;background:#000;border-left:4px solid #e10600;padding:10px 12px;font-style:italic;font-weight:800;font-size:1.25rem;line-height:1.1;text-transform:uppercase;opacity:0;transform:translateX(-30px)}
     #rr-reel .q small{display:block;margin-top:5px;font-family:system-ui,sans-serif;font-style:normal;font-size:.6rem;letter-spacing:2px;color:#e10600}
@@ -12887,7 +12909,9 @@ function _roundReel(t, race, pts, margin) {
     @keyframes rrOut{to{opacity:0}}@keyframes rrFade{to{opacity:1}}
     @keyframes rrTr{from{transform:translateY(40px) scale(.4);opacity:0}to{transform:none;opacity:1}}
   </style>
-  <div class="ph"><div class="bg"></div><div class="slash"></div><div class="grain"></div><div class="lb t"></div><div class="lb b"></div><div class="bar"><i></i></div>
+  <div class="ph"><div class="bg"></div><div class="slash"></div><div class="grain"></div><div class="lb t"></div><div class="lb b"></div><div class="bar">${nav.list.map((_, k) => k < nav.idx ? '<s class="done"></s>' : k === nav.idx ? '<s><i></i></s>' : '<s></s>').join('')}</div>
+    ${nav.idx > 0 ? '<button class="nav l" title="Previous winner">‹</button>' : ''}${nav.idx < nav.list.length - 1 ? '<button class="nav r" title="Next winner">›</button>' : ''}
+    <div class="rx">${['🔥', '🐐', '👏', '😂', '😮', '💀'].map(e => `<button data-e="${e}">${e}<b></b></button>`).join('')}</div>
     <div class="hd"><img class="lg" src="icons/icon-192.png?v=3" alt=""><span>IMS Fantasy · ${esc(race.name || '')}</span><button class="x">Skip ✕</button></div>
     <div class="tx t0">Round<em>winner</em></div>
     <div class="pf">${pic}</div><div class="ring"></div>
@@ -12897,11 +12921,26 @@ function _roundReel(t, race, pts, margin) {
     <div class="fl"></div><div class="q"></div>
     <div class="end"><div class="ep">${pic}</div><div class="tr">🏆</div><b>${esc(name)}</b><small>${flag}${esc(race.name || '')} · no contest</small></div>
     <div class="snd">🔊 sound on</div></div>`;
-  const bg = document.getElementById('bg-music'), wasPlaying = !!(bg && !bg.paused); if (wasPlaying) bg.pause();
+  const bg = document.getElementById('bg-music');
+  if (window._rrResume === undefined) window._rrResume = !!(bg && !bg.paused); // remembered across story steps
+  const wasPlaying = window._rrResume; if (bg && !bg.paused) bg.pause();
   let muted = false; try { muted = localStorage.getItem('musicMuted') === '1'; } catch (e) {}
   const au = muted ? null : new Audio(ROUND_REEL_TRACK); if (au) { au.volume = 0.8; au.play().catch(() => {}); }
   const timers = [], at = (ms, fn) => timers.push(setTimeout(fn, ms));
-  const close = () => { if (!el.isConnected) return; timers.forEach(clearTimeout); if (au) { au.pause(); au.src = ''; } el.style.transition = 'opacity .3s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 320); if (wasPlaying && bg) bg.play().catch(() => {}); };
+  const stop = () => { timers.forEach(clearTimeout); if (au) { au.pause(); au.src = ''; } };
+  el._stop = stop;
+  const close = () => { if (!el.isConnected) return; stop(); el.style.transition = 'opacity .3s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 320); if (wasPlaying && bg) bg.play().catch(() => {}); window._rrResume = undefined; };
+  const go = (k) => { if (k < 0 || k >= nav.list.length) return close(); _roundReelOpen(nav.list, k); };
+  el.querySelectorAll('.nav').forEach(b => b.addEventListener('click', (ev) => { ev.stopPropagation(); go(nav.idx + (b.classList.contains('l') ? -1 : 1)); }));
+  // Emoji reactions — one per person per reel, shared with everyone (reelReactions/{raceId}: r_<userId> = emoji).
+  const me = ((typeof currentUser !== 'undefined' && currentUser && currentUser.userId) ? String(currentUser.userId).replace(/[^A-Za-z0-9_]/g, '_') : null), rxEl = el.querySelector('.rx');
+  const paintRx = (doc) => { const cnt = {}; let mine = null; Object.entries(doc || {}).forEach(([k, v]) => { if (k.startsWith('r_') && v) { cnt[v] = (cnt[v] || 0) + 1; if (me && k === 'r_' + me) mine = v; } });
+    rxEl.querySelectorAll('button').forEach(b => { const n = cnt[b.dataset.e] || 0; b.querySelector('b').textContent = n ? n : ''; b.classList.toggle('me', b.dataset.e === mine); }); };
+  dbGet('reelReactions', race.id).then(paintRx).catch(() => {});
+  rxEl.querySelectorAll('button').forEach(b => b.addEventListener('click', async (ev) => { ev.stopPropagation();
+    const f = document.createElement('div'); f.className = 'fly'; f.textContent = b.dataset.e; f.style.left = (b.offsetLeft + 8) + 'px'; el.querySelector('.ph').appendChild(f); setTimeout(() => f.remove(), 1300);
+    if (!me) { if (typeof showToast === 'function') showToast('Log in to react', 'info'); return; }
+    try { await dbSet('reelReactions', race.id, { ['r_' + me]: b.dataset.e }); dbInvalidate('reelReactions'); paintRx(await dbGet('reelReactions', race.id)); } catch (e) {} }));
   el.querySelector('.x').addEventListener('click', close);
   el.addEventListener('click', (e) => { if (e.target === el) close(); });
   document.body.appendChild(el);
@@ -12918,7 +12957,7 @@ function _roundReel(t, race, pts, margin) {
     at(ms + 1500, () => { ph.classList.remove('frz'); qEl.classList.remove('on'); }); });
   [1600, 2400, 6800, 9800, 10800, 14600].forEach(ms => at(ms, () => { fl.classList.remove('go'); ph.classList.remove('shk'); void fl.offsetWidth; fl.classList.add('go'); ph.classList.add('shk'); }));
   if (au) at(20000, () => { let v = au.volume; const f = setInterval(() => { v -= .1; if (v <= 0) { clearInterval(f); au.pause(); } else au.volume = v; }, 60); });
-  at(21500, close);
+  at(21500, () => nav.idx < nav.list.length - 1 ? go(nav.idx + 1) : close()); // like a story: roll on to the next winner
 }
 async function renderLeaderboard() {
   if (!PROJECT_ID) { document.getElementById('leaderboard-content').innerHTML='<div class="alert alert-warning">Database not connected.</div>'; return; }
