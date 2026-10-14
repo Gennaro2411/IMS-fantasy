@@ -26825,7 +26825,9 @@ function _raceAllDivsIn(race) {
   return divs.every(d => have.has(d));
 }
 function _betOutcome(b, races) {
-  const race = races.find(r => (r.name || '').toLowerCase().trim() === (b.raceName || '').toLowerCase().trim() && (b.div === 'BOTT' ? r.constructorPoints : r.positionByDivision));
+  // If several race docs share the name (re-imports / old copies), use the most complete, most recently updated one — not just the first.
+  const race = races.filter(r => (r.name || '').toLowerCase().trim() === (b.raceName || '').toLowerCase().trim() && (b.div === 'BOTT' ? r.constructorPoints : r.positionByDivision))
+    .sort((x, y) => ((b.div === 'BOTT' ? _raceAllDivsIn(y) : 0) - (b.div === 'BOTT' ? _raceAllDivsIn(x) : 0)) || ((y.updatedAt || y.createdAt || 0) - (x.updatedAt || x.createdAt || 0)) || ((y.raceNum || 0) - (x.raceNum || 0)))[0];
   if (!race) return null;
   if (b.div === 'BOTT' && !_raceAllDivsIn(race)) return null; // still waiting on later divisions — don't settle on partial BOTT points
   let pos;
@@ -26893,6 +26895,7 @@ function _betOutcome(b, races) {
     const a = pos(b.sel[0]), o = pos(b.sel[1]);
     const bothIn = a != null && o != null && (b.div === 'BOTT' || (stOf(b.sel[0]) !== 'DNS' && stOf(b.sel[1]) !== 'DNS'));
     result = !bothIn ? 'void' : a === o ? 'void' : a < o ? 'won' : 'lost';
+    if (b.div === 'BOTT') console.log('[BET BOTT h2h]', b.raceName, b.sel, 'pos', a, o, 'pts', (race.constructorPoints || {})[b.sel[0]], (race.constructorPoints || {})[b.sel[1]], '->', result);
   }
   return result;
 }
