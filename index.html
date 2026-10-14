@@ -26923,6 +26923,7 @@ async function _betSettleMine(userId, races, coins) {
       let legsChanged = false;
       (b.legs || []).forEach(l => { if (!l.void && b.status === 'open' && window._betOutIds && window._betOutRace === b.raceName && l.div !== 'BOTT' && (l.sel || []).some(id => window._betOutIds.has(id))) { l.void = true; legsChanged = true; } });
       const ls = (b.legs || []).map(l => l.void ? 'void' : _betOutcome({ ...l, raceName: b.raceName }, races));
+      if ((b.legs || []).some(l => l.div === 'BOTT')) console.log('[BET ACCA]', b.id, b.label, b.raceName, 'status', b.status, 'legs', (b.legs || []).map((l, i) => l.label + ' => ' + ls[i] + ' (stored ' + l.result + ')').join(' | '), 'races named so:', races.filter(r => (r.name || '').toLowerCase().trim() === (b.raceName || '').toLowerCase().trim()).map(r => r.id + ' divsIn=' + _raceAllDivsIn(r) + ' hasCP=' + !!r.constructorPoints).join(', '));
       let st = null, pay = 0, eff = null;
       if (ls.includes('lost')) { st = 'lost'; }
       else if (!ls.includes(null)) {
