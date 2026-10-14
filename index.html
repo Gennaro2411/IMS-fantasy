@@ -3458,43 +3458,62 @@ window.revealAdminEntry = function() {
 // Accounts that are admin without typing the password: userIds listed in settings/adminUsers.
 // Granted from the Admin panel ("Make my account admin"); checked on load and when opening Admin.
 // Synchronous fast path: this device remembers which account was granted admin, so there's no wait on the database.
+// Every key that identifies this account — Discord-made accounts may have no userId, so also the
+// team document id and the player name. Admin is granted to all of them and matched on any.
+window._adminKeys = function() {
+  if (!currentUser) return [];
+  const k = [];
+  if (currentUser.userId) k.push(String(currentUser.userId));
+  let doc = window._myTeamDocId; try { doc = doc || localStorage.getItem('imsMyTeamDocId'); } catch (e) {}
+  if (doc) k.push('team:' + doc);
+  if (currentUser.discordId) k.push('discord:' + currentUser.discordId);
+  const nm = String(currentUser.name || '').toLowerCase().trim(); if (nm && !k.length) k.push('name:' + nm); // name only as a last resort
+  return k;
+};
 window._adminFlagOk = function() {
   try { if (adminLoggedIn) return true;
     if (localStorage.getItem('imsAdminDevice') === '1') { adminLoggedIn = true; revealAdminEntry(); return true; } // this device already passed the password
-    if (!currentUser || !currentUser.userId) return false;
-    if (localStorage.getItem('imsAdminAccount') === currentUser.userId) { adminLoggedIn = true; revealAdminEntry(); return true; } } catch (e) {}
+    const acc = localStorage.getItem('imsAdminAccount');
+    if (acc && window._adminKeys().includes(acc)) { adminLoggedIn = true; revealAdminEntry(); return true; } } catch (e) {}
   return false;
 };
 window._adminAutoCheck = async function() {
   try {
-    if (adminLoggedIn || window._adminNoAuto || !currentUser || !currentUser.userId || !PROJECT_ID) return false;
+    const keys = window._adminKeys();
+    if (adminLoggedIn || window._adminNoAuto || !keys.length || !PROJECT_ID) return false;
     const doc = await dbGet('settings', 'adminUsers');
     const ids = (doc && Array.isArray(doc.ids)) ? doc.ids : [];
-    if (!ids.includes(currentUser.userId)) { try { if (localStorage.getItem('imsAdminAccount') === currentUser.userId) localStorage.removeItem('imsAdminAccount'); } catch (e) {} return false; }
-    try { localStorage.setItem('imsAdminAccount', currentUser.userId); } catch (e) {}
+    const hit = keys.find(k => ids.includes(k));
+    if (!hit) return false;
+    try { localStorage.setItem('imsAdminAccount', hit); } catch (e) {}
     adminLoggedIn = true; revealAdminEntry();
     return true;
   } catch (e) { return false; }
 };
-window.adminToggleMyAccount = async function() {
-  if (!adminLoggedIn || !currentUser || !currentUser.userId) return;
+window._adminGrantMe = async function(on) {
+  const keys = window._adminKeys(); if (!keys.length) return false;
   const doc = await dbGet('settings', 'adminUsers').catch(() => null);
   let ids = (doc && Array.isArray(doc.ids)) ? doc.ids.slice() : [];
-  const has = ids.includes(currentUser.userId);
-  ids = has ? ids.filter(x => x !== currentUser.userId) : ids.concat(currentUser.userId);
-  await dbSet('settings', 'adminUsers', { ids });
-  try { if (has) localStorage.removeItem('imsAdminAccount'); else localStorage.setItem('imsAdminAccount', currentUser.userId); } catch (e) {}
-  dbInvalidate('settings');
+  ids = on ? [...new Set(ids.concat(keys))] : ids.filter(x => !keys.includes(x));
+  await dbSet('settings', 'adminUsers', { ids }); dbInvalidate('settings');
+  try { if (on) localStorage.setItem('imsAdminAccount', keys[0]); else localStorage.removeItem('imsAdminAccount'); } catch (e) {}
+  return true;
+};
+window.adminToggleMyAccount = async function() {
+  if (!adminLoggedIn || !window._adminKeys().length) return;
+  const doc = await dbGet('settings', 'adminUsers').catch(() => null);
+  const has = !!(doc && Array.isArray(doc.ids) && window._adminKeys().some(k => doc.ids.includes(k)));
+  await window._adminGrantMe(!has);
   if (typeof showToast === 'function') showToast(has ? 'Admin removed from your account' : '✔ Your account is now admin — no password needed on this account', 'success');
   renderAdminSelfGrant();
 };
 window.renderAdminSelfGrant = async function() {
   const box = document.getElementById('admin-self-grant'); if (!box) return;
   const _devBtn = ` <button class="btn btn-secondary btn-sm" onclick="try{localStorage.removeItem('imsAdminDevice');localStorage.removeItem('imsAdminAccount')}catch(e){};window._adminNoAuto=true;adminLoggedIn=false;showToast('Admin cleared on this device — password needed next time','info');renderAdmin()">🚪 Sign out of admin on this device</button>`;
-  if (!currentUser || !currentUser.userId) { box.innerHTML = '<span class="text-muted" style="font-size:.8rem">This device stays admin after the password is entered once.</span>' + _devBtn; return; }
+  if (!window._adminKeys().length) { box.innerHTML = '<span class="text-muted" style="font-size:.8rem">This device stays admin after the password is entered once.</span>' + _devBtn; return; }
   const doc = await dbGet('settings', 'adminUsers').catch(() => null);
-  const has = !!(doc && Array.isArray(doc.ids) && doc.ids.includes(currentUser.userId));
-  box.innerHTML = `<button class="btn btn-secondary btn-sm" onclick="adminToggleMyAccount()">${has ? '🔓 Remove admin from my account' : '🔐 Make my account admin (skip password)'}</button>${_devBtn} <span class="text-muted" style="font-size:.75rem">Signed in as ${esc(currentUser.name || currentUser.userId)}${has ? ' — admin ✔' : ''}</span>`;
+  const has = !!(doc && Array.isArray(doc.ids) && window._adminKeys().some(k => doc.ids.includes(k)));
+  box.innerHTML = `<button class="btn btn-secondary btn-sm" onclick="adminToggleMyAccount()">${has ? '🔓 Remove admin from my account' : '🔐 Make my account admin (skip password)'}</button>${_devBtn} <span class="text-muted" style="font-size:.75rem">Signed in as ${esc(currentUser.name || currentUser.userId || '')}${has ? ' — admin ✔' : ''}</span>`;
 };
 
 // ===== CONFIG =====
@@ -13690,7 +13709,7 @@ window.showRaceBreakdown = async function(raceId) {
 // ===== ADMIN =====
 async function renderAdmin() {
   // Admin accounts go straight in: check the account BEFORE showing the password form (no race).
-  if (!adminLoggedIn && !window._adminFlagOk() && currentUser && currentUser.userId) {
+  if (!adminLoggedIn && !window._adminFlagOk() && window._adminKeys().length) {
     const ls = document.getElementById('admin-login-section'), ap = document.getElementById('admin-panel');
     if (ls) ls.style.display = 'none'; if (ap) ap.style.display = 'none';
     await window._adminAutoCheck();
@@ -13729,8 +13748,7 @@ window.adminLogin = async function() {
     correct = stored && stored.value===pw;
   }
   if (correct) { clearLoginAttempts('__admin__'); try { localStorage.setItem('imsAdminDevice', '1'); } catch (e) {} adminLoggedIn=true;
-    if (currentUser && currentUser.userId) { try { const d = await dbGet('settings', 'adminUsers').catch(() => null); const ids = (d && Array.isArray(d.ids)) ? d.ids : [];
-      if (!ids.includes(currentUser.userId)) await dbSet('settings', 'adminUsers', { ids: ids.concat(currentUser.userId) }); localStorage.setItem('imsAdminAccount', currentUser.userId); } catch (e) { console.warn('admin grant failed', e); } } if (window.revealAdminEntry) revealAdminEntry(); errEl.style.display='none'; renderAdmin(); }
+    if (currentUser) { try { await window._adminGrantMe(true); } catch (e) { console.warn('admin grant failed', e); } } if (window.revealAdminEntry) revealAdminEntry(); errEl.style.display='none'; renderAdmin(); }
   else {
     recordFailedLogin('__admin__');
     const after = checkLoginRate('__admin__');
