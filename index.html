@@ -30969,6 +30969,8 @@ function _ptDailyQs(pool, salt) {
   while (d >= days.length) { d -= days.length; c++; days = _ptCycle(ids, c, salt); if (!days.length) return null; }
   return days[d];
 }
+// Pointless's own daily number: launch day (15 Oct 2026) is #0.
+const _ptDayNum = () => { const p = _wdDayKey().split('/'); return Math.max(0, Math.round((Date.UTC(+p[2], +p[1] - 1, +p[0]) - Date.UTC(2026, 9, 15)) / 864e5)); };
 const PT_PRAC_MAX = 3;
 const _ptPracUsed = () => { if (typeof adminLoggedIn !== 'undefined' && adminLoggedIn) return 0; try { const o = JSON.parse(localStorage.getItem('imsPtPrac') || 'null'); return o && o.day === _wdDayKey() ? o.n : 0; } catch (e) { return 0; } };
 const _ptPracBump = () => { try { localStorage.setItem('imsPtPrac', JSON.stringify({ day: _wdDayKey(), n: _ptPracUsed() + 1 })); } catch (e) {} };
@@ -31072,7 +31074,7 @@ async function renderPTGame(el) {
   const locked = !!(window._gamesLock || {}).pt && !adminLoggedIn && !_gamesAccess(); window._ptLocked = locked;
   const tabs = `<div class="wd-modes">${[['daily', '📅', 'DAILY'], ['inf', '∞', 'PRACTICE'], ['duel', '⚔️', 'DUEL']].map(([m, i, l]) => `<button class="${mode === m ? 'on' : ''}" onclick="setPTMode('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>`;
   const st0 = mode === 'duel' ? null : _ptState(mode, pool), lim = st0 === 'limit', st = lim ? null : st0, tot = st ? st.ans.reduce((a, x) => a + x.pts, 0) : 0;
-  let body = `<div class="wd-top"><button class="wd-back" onclick="openGame('hub')" title="Back to Games">←</button><div class="wd-brand"><img src="icons/icon-192.png?v=3" alt="IMS"><span>POINT<em>LESS</em></span></div><div class="wd-meta">${mode === 'daily' ? `<span class="wd-pill">#${_wdDayNum()}</span>` : ''}<span class="wd-pill">🎯 ${tot} pts</span>${_ptSndBtn()}</div></div>
+  let body = `<div class="wd-top"><button class="wd-back" onclick="openGame('hub')" title="Back to Games">←</button><div class="wd-brand"><img src="icons/icon-192.png?v=3" alt="IMS"><span>POINT<em>LESS</em></span></div><div class="wd-meta">${mode === 'daily' ? `<span class="wd-pill">#${_ptDayNum()}</span>` : ''}<span class="wd-pill">🎯 ${tot} pts</span>${_ptSndBtn()}</div></div>
     ${(window._gamesLock || {}).pt ? `<div class="wd-lockbar">🔒 <b>Pointless is locked</b><span>${locked ? 'It\'ll open soon.' : 'Locked for players — you can still play.'}</span></div>` : ''}${tabs}`;
   if (mode === 'duel') { el.innerHTML = `<div class="wd-wrap">${locked ? body + '<div class="wd-panel" style="text-align:center">Duels open when the game is unlocked.</div>' : await _pdBody(pool, body)}</div>`; return; }
   clearInterval(window._pdPoll); clearInterval(window._pdCd);
