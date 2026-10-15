@@ -812,7 +812,7 @@
   @media (max-width:420px){ .rr-cols,.rr-row{grid-template-columns:28px minmax(0,1fr) 34px 32px 32px;padding:0 10px 0 8px;column-gap:6px} .rr-av{width:26px;height:26px} }
   /* Championship + BOTT standings — same vibe as the race tiles: dark glass, glowing circuit, lit podium rows */
   .rr-std{position:relative;isolation:isolate;border-radius:22px!important;background:radial-gradient(120% 60% at 100% 0%,color-mix(in srgb,var(--acc) 16%,transparent),transparent 60%),linear-gradient(160deg,#18132b,#0d0b16 70%)!important;border:1px solid color-mix(in srgb,var(--acc) 28%,rgba(255,255,255,.06))!important;box-shadow:0 24px 50px -28px color-mix(in srgb,var(--acc) 55%,transparent),inset 0 1px 0 rgba(255,255,255,.06)!important}
-  .rr-std-trk{position:absolute;right:-30px;top:-34px;width:190px;height:190px;object-fit:contain;z-index:-1;pointer-events:none;transform:rotate(-10deg);opacity:.13;filter:saturate(1.2) drop-shadow(0 0 22px var(--acc))}
+  .rr-std-trk{position:absolute;right:-30px;top:-34px;width:190px;height:190px;object-fit:contain;z-index:-1;pointer-events:none;transform:rotate(-10deg);opacity:.22;border-radius:50%;mix-blend-mode:screen;filter:saturate(1.2)} /* screen blend: the logo's black background vanishes, only the bright logo shows */
   .rr-std .rr-head{background:transparent!important;border-bottom:1px solid rgba(255,255,255,.06)}
   .rr-std .rr-title b{font-style:italic;font-size:1.65rem;letter-spacing:.5px;text-shadow:0 2px 16px rgba(0,0,0,.5)}
   .rr-std .rr-title span{font-size:.62rem;letter-spacing:2.5px}
