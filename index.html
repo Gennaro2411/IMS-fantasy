@@ -30943,7 +30943,7 @@ function _ptDailyQs(pool, salt) {
   return days[d];
 }
 const PT_PRAC_MAX = 3;
-const _ptPracUsed = () => { try { const o = JSON.parse(localStorage.getItem('imsPtPrac') || 'null'); return o && o.day === _wdDayKey() ? o.n : 0; } catch (e) { return 0; } };
+const _ptPracUsed = () => { if (typeof adminLoggedIn !== 'undefined' && adminLoggedIn) return 0; try { const o = JSON.parse(localStorage.getItem('imsPtPrac') || 'null'); return o && o.day === _wdDayKey() ? o.n : 0; } catch (e) { return 0; } };
 const _ptPracBump = () => { try { localStorage.setItem('imsPtPrac', JSON.stringify({ day: _wdDayKey(), n: _ptPracUsed() + 1 })); } catch (e) {} };
 function _ptState(mode, pool) {
   if (mode === 'inf') { if (!window._ptInf) { if (_ptPracUsed() >= PT_PRAC_MAX) return 'limit'; const qs = _ptMakeQs(pool, Math.random); if (qs) _ptPracBump(); window._ptInf = qs ? { qs, ans: [], done: false } : null; } return window._ptInf; }
