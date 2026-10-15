@@ -7775,7 +7775,10 @@ async function renderDashboard() {
     if (hype) {
       const mgrs = (teams || []).filter(t => t && !t.testAccount).length, drv = (drivers || []).filter(d => d && !d.isReserve).length;
       const nDiv = (typeof divisionsForSeason === 'function') ? divisionsForSeason().length : 5;
-      const done = (races || []).filter(r => r.driverPoints && Object.keys(r.driverPoints).length).length, total = Math.max(done, (schedule || []).length);
+      const done = (races || []).filter(r => r.driverPoints && Object.keys(r.driverPoints).length).length;
+      // Season length = the admin-set total rounds (same source as the rest of the app); the schedule only lists upcoming rounds.
+      let _tot = 0; try { _tot = (typeof window.totalRoundsForSeason === 'function' ? Number(window.totalRoundsForSeason(window.currentSeason)) : 0) || Number(((await dbGet('settings', 'totalRounds').catch(() => null)) || {}).value) || 0; } catch (e) {}
+      const total = Math.max(done, _tot || (schedule || []).length);
       const tile = (pg, ico, t, sub, c) => `<button class="hh-act" style="--c:${c}" onclick="showPage('${pg}')"><span class="hh-ico">${ico}</span><b>${t}</b><small>${sub}</small></button>`;
       const manifesto = `<div class="hh-man"><img class="hh-logo" src="icons/icon-512.png?v=3" alt="">
           <div class="hh-q">A second championship <em>on top of the first</em></div>
