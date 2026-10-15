@@ -2379,6 +2379,13 @@
     .hl-over b:first-child{font-family:'Barlow Condensed',sans-serif;font-size:1.4rem;letter-spacing:1px}.hl-final{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:3rem;color:#fb923c;line-height:1;margin:6px 0 12px}.hl-final small{display:block;font-size:.8rem;color:var(--muted);letter-spacing:2px}
     .pt-arena{position:relative;z-index:1;padding:26px 20px 22px;border-radius:24px;text-align:center;background:radial-gradient(120% 90% at 50% 0%,rgba(56,189,248,.18),transparent 60%),linear-gradient(160deg,#0d1b3a,#14112b 55%,#0a0a14);border:1px solid rgba(125,211,252,.25);box-shadow:0 20px 50px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.06);animation:wdFlip .45s both}
     .pt-arena::before{content:'';position:absolute;inset:0;border-radius:inherit;background:radial-gradient(60% 40% at 20% 0%,rgba(125,211,252,.16),transparent 70%),radial-gradient(50% 40% at 90% 100%,rgba(253,224,71,.08),transparent 70%);pointer-events:none}
+    .pt-arena.themed{--acc:#7dd3fc;background:radial-gradient(120% 90% at 50% 0%,color-mix(in srgb,var(--acc) 22%,transparent),transparent 60%),linear-gradient(160deg,#16161f,#0f0f17 55%,#0a0a10);border-color:color-mix(in srgb,var(--acc) 45%,transparent)}
+    .pt-bg{position:absolute;inset:0;border-radius:inherit;overflow:hidden;pointer-events:none;background-size:cover;background-position:center;opacity:.28;-webkit-mask-image:linear-gradient(180deg,#000 0%,rgba(0,0,0,.55) 45%,transparent 85%);mask-image:linear-gradient(180deg,#000 0%,rgba(0,0,0,.55) 45%,transparent 85%);animation:ptBg 18s ease-in-out infinite alternate}
+    .pt-bg.flag{opacity:.38;filter:saturate(1.15)}.pt-bg.logo{background-size:55%;background-repeat:no-repeat;background-position:50% 30%;opacity:.16;filter:drop-shadow(0 0 30px var(--acc))}
+    .pt-bg.txt,.pt-bg.emo{display:flex;align-items:flex-start;justify-content:center;padding-top:14px;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:7.5rem;line-height:1;color:var(--acc);opacity:.13;letter-spacing:4px}.pt-bg.emo{font-size:8rem;opacity:.12;filter:grayscale(.2)}
+    .pt-arena>*:not(.pt-bg){position:relative}
+    @keyframes ptBg{from{transform:scale(1)}to{transform:scale(1.08)}}
+    .pt-arena.themed .pt-qn{color:var(--acc)}.pt-arena.themed .pt-go{background:linear-gradient(135deg,color-mix(in srgb,var(--acc) 70%,#fff),var(--acc));color:#08080c;box-shadow:0 8px 24px color-mix(in srgb,var(--acc) 40%,transparent)}
     .pt-qn{position:relative;font-size:.68rem;letter-spacing:4px;color:#7dd3fc;font-weight:800}.pt-qt{position:relative;font-family:'Barlow Condensed',sans-serif;font-size:1.75rem;font-weight:700;line-height:1.15;margin-top:8px;letter-spacing:.3px}.pt-qt b{color:#fde047}
     .pt-hint{position:relative;color:var(--muted);font-size:.78rem;margin-top:8px}
     .pt-skip{margin-top:12px;background:none;border:1px solid rgba(255,255,255,.15);color:var(--muted);border-radius:999px;padding:7px 16px;font-size:.78rem;cursor:pointer}.pt-skip:hover{color:#fff;border-color:rgba(255,255,255,.35)}
@@ -30839,8 +30846,19 @@ window.setPTMode = function(m) { window._ptMode = m; window._ptReveal = null; re
 const _ptLoadSt = () => { try { return JSON.parse(localStorage.getItem('imsPtDaily') || 'null'); } catch (e) { return null; } };
 const _ptSave = (st) => { try { localStorage.setItem('imsPtDaily', JSON.stringify(st)); } catch (e) {} };
 const _ptA = (w) => /^[aeiou]/i.test(String(w)) ? 'an' : 'a';
+// Background theme for a question: nationality → flag, team → logo + team colour, division → big D-number, else an icon.
+function _ptTheme(c) {
+  const m = c.meta || {}, id = c.id;
+  if (m.nat) { const cc = natCode(m.nat); return cc ? { img: `https://flagcdn.com/w640/${cc}.png`, cls: 'flag' } : {}; }
+  if (m.team) { const lg = typeof getTeamLogo === 'function' ? getTeamLogo(m.team) : '', col = typeof getTeamCardColour === 'function' ? getTeamCardColour(m.team) : null;
+    return { img: lg, cls: 'logo', acc: col && col.accent }; }
+  const d = (id.match(/D[0-4]/g) || []); if (d.length) return { txt: d.join(' · '), acc: { D0: '#e5e7eb', D1: '#facc15', D2: '#60a5fa', D3: '#f87171', D4: '#4ade80' }[d[0]] };
+  if (id.startsWith('fs') || id === 'old') return { txt: id === 'old' ? 'S1–S3' : 'S' + id.slice(2), acc: '#c084fc' };
+  const ico = /^w|tw|dw|nw/.test(id) ? '🏆' : /^pd|np/.test(id) ? '🥇' : /^pl/.test(id) ? '⏱️' : /^b/.test(id) ? '🏗️' : /^ch/.test(id) ? '👑' : /^p\d/.test(id) ? '💯' : /^res/.test(id) ? '🪑' : /^th/.test(id) ? '🔄' : '🏁';
+  return { emo: ico, acc: { '🏆': '#fbbf24', '🥇': '#f59e0b', '⏱️': '#a78bfa', '👑': '#fde047', '💯': '#34d399', '🏗️': '#fb923c' }[ico] || '#7dd3fc' };
+}
 function _ptCats(pool) {
-  const C = [], add = (id, q, f, min, v, vl) => { const ids = pool.filter(f).map(p => p.id); if (ids.length >= (min || 3)) C.push({ id, q, ids, v, vl }); };
+  let meta = null; const C = [], add = (id, q, f, min, v, vl) => { const ids = pool.filter(f).map(p => p.id); if (ids.length >= (min || 3)) C.push({ id, q, ids, v, vl, meta }); };
   add('w', 'Name an IMS driver who has <b>won a race</b>', p => p.w >= 1);
   add('w5', 'Name an IMS driver with <b>5 or more race wins</b>', p => p.w >= 5);
   add('pd', 'Name an IMS driver who has <b>finished on the podium</b>', p => p.pd >= 1);
@@ -30876,11 +30894,12 @@ function _ptCats(pool) {
   // Winners / podiums by division they've raced in
   ['D0', 'D1', 'D2', 'D3', 'D4'].forEach(d => add('dw' + d, `Name a <b>race winner</b> who has raced in <b>${d}</b>`, p => p.w >= 1 && (p.dh || {})[d] > 0, 3, p => (p.dh || {})[d] || 0, d + ' appearances'));
   const nats = {}; pool.forEach(p => { if (p.nat) nats[p.nat] = (nats[p.nat] || 0) + 1; });
-  Object.keys(nats).forEach(n => add('n' + n, `Name ${_ptA(n)} <b>${esc(n)}</b> ${_wdFlag(n)} IMS driver`, p => p.nat === n));
-  Object.keys(nats).forEach(n => { add('nw' + n, `Name ${_ptA(n)} <b>${esc(n)}</b> ${_wdFlag(n)} IMS <b>race winner</b>`, p => p.nat === n && p.w >= 1); add('np' + n, `Name ${_ptA(n)} <b>${esc(n)}</b> ${_wdFlag(n)} IMS driver with a <b>podium</b>`, p => p.nat === n && p.pd >= 1); });
+  Object.keys(nats).forEach(n => { meta = { nat: n }; add('n' + n, `Name ${_ptA(n)} <b>${esc(n)}</b> ${_wdFlag(n)} IMS driver`, p => p.nat === n); });
+  Object.keys(nats).forEach(n => { meta = { nat: n }; add('nw' + n, `Name ${_ptA(n)} <b>${esc(n)}</b> ${_wdFlag(n)} IMS <b>race winner</b>`, p => p.nat === n && p.w >= 1); add('np' + n, `Name ${_ptA(n)} <b>${esc(n)}</b> ${_wdFlag(n)} IMS driver with a <b>podium</b>`, p => p.nat === n && p.pd >= 1); });
   const tms = {}; pool.forEach(p => Object.entries(p.th || {}).forEach(([k, n]) => { tms[k] = tms[k] || n; }));
-  Object.entries(tms).forEach(([k, n]) => { add('ct' + k, `Name a driver <b>currently racing for ${esc(n)}</b>`, p => !p.res && _wdNorm(p.team) === k, 3, p => (p.tn || {})[k] || 0, 'appearances for ' + n); add('tw' + k, `Name a <b>race winner</b> who has driven for <b>${esc(n)}</b>`, p => (p.th || {})[k] && p.w >= 1, 3, p => (p.tn || {})[k] || 0, 'appearances for ' + n); });
-  Object.entries(tms).forEach(([k, n]) => add('t' + k, `Name an IMS driver who has driven for <b>${esc(n)}</b>`, p => (p.th || {})[k], 6, p => (p.tn || {})[k] || 0, 'appearances for ' + n));
+  Object.entries(tms).forEach(([k, n]) => { meta = { team: n }; add('ct' + k, `Name a driver <b>currently racing for ${esc(n)}</b>`, p => !p.res && _wdNorm(p.team) === k, 3, p => (p.tn || {})[k] || 0, 'appearances for ' + n); add('tw' + k, `Name a <b>race winner</b> who has driven for <b>${esc(n)}</b>`, p => (p.th || {})[k] && p.w >= 1, 3, p => (p.tn || {})[k] || 0, 'appearances for ' + n); });
+  Object.entries(tms).forEach(([k, n]) => (meta = { team: n }) && add('t' + k, `Name an IMS driver who has driven for <b>${esc(n)}</b>`, p => (p.th || {})[k], 6, p => (p.tn || {})[k] || 0, 'appearances for ' + n));
+  meta = null;
   const fss = {}; pool.forEach(p => { if (p.fs) fss[p.fs] = 1; });
   Object.keys(fss).forEach(s => add('fs' + s, `Name an IMS driver whose <b>first season was S${s}</b>`, p => String(p.fs) === s));
   return C;
@@ -30897,7 +30916,7 @@ function _ptScores(cid, pool) {
   const c = _ptCats(pool).find(x => x.id === cid); if (!c) return null;
   const V = c.v || (p => p.st), ps = c.ids.map(id => pool.find(p => p.id === id)).filter(Boolean).map(p => Object.assign({}, p, { st: V(p) })).sort((a, b) => a.st - b.st), mx = Math.max(...ps.map(p => p.st)), mn = ps.length ? ps[0].st : 0, nz = Math.max(1, Math.round(ps.length * 0.1)), sc = {};
   ps.forEach((p, i) => { sc[p.id] = i < nz || mx === mn ? 0 : Math.max(1, Math.round((p.st - mn) / (mx - mn) * 100)); });
-  return { q: c.q, sc, list: ps.slice().reverse(), vl: c.vl || 'IMS appearances' };
+  return { q: c.q, sc, list: ps.slice().reverse(), vl: c.vl || 'IMS appearances', th: _ptTheme(c) };
 }
 // Daily questions without repeats: every question is shuffled once per "cycle" and dealt out 5 a day
 // (max one team / nationality / division / first-season question per day) until the cycle runs out.
@@ -30974,7 +30993,8 @@ async function _ptLeaderboardHtml() {
 const _ptProg = (st, i, live) => `<div class="hl-progress">${Array.from({ length: PT_N }, (_, k) => { const a = st.ans[k]; return `<span class="${a ? (a.pts === 0 && a.id ? 'pz' : a.pts >= 100 ? 'bad' : 'ok') : k === i && live ? 'cur' : ''}"></span>`; }).join('')}<b>Q${Math.min(i + 1, PT_N)}/${PT_N}</b></div>`;
 function _ptQHtml(st, pool, i, reveal) {
   const S = _ptScores(st.qs[i], pool); if (!S) return '<div class="alert alert-warning">This question can\'t be built any more.</div>';
-  let h = _ptProg(st, i, !reveal) + `<div class="pt-arena"><div class="pt-qn">QUESTION ${i + 1}</div><div class="pt-qt">${S.q}</div>`;
+  const T = S.th || {}, bg = T.img ? `<div class="pt-bg ${T.cls || ''}" style="background-image:url('${esc(T.img)}')"></div>` : T.txt ? `<div class="pt-bg txt">${esc(T.txt)}</div>` : T.emo ? `<div class="pt-bg emo">${T.emo}</div>` : '';
+  let h = _ptProg(st, i, !reveal) + `<div class="pt-arena themed" style="${T.acc ? '--acc:' + T.acc : ''}">${bg}<div class="pt-qn">QUESTION ${i + 1}</div><div class="pt-qt">${S.q}</div>`;
   if (!reveal) return h + `<div class="pt-hint">${S.list.length} valid answers · fewest ${S.vl} = fewest points</div>
     <div class="wd-search" style="margin-top:16px"><span class="wd-search-ico">🔍</span><input id="pt-input" type="text" placeholder="Name an IMS driver…" autocomplete="off" oninput="ptSuggest(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();ptPickFirst();}"><div id="pt-sugg"></div></div>
     <button class="pt-skip" onclick="ptPass()" ${window._ptLocked ? 'disabled' : ''}>Skip · 100 pts</button></div>`;
