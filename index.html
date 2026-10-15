@@ -1639,7 +1639,7 @@
   body.reduce-motion *{animation:none !important;transition:none !important;scroll-behavior:auto !important}
   </style>
   <div id="home-hype"></div>
-  <div id="broadcast-box" style="width:100%;border-radius:12px;overflow:hidden;margin-bottom:20px;height:280px;position:relative;background:linear-gradient(120deg,#16101f,#0c0c12);border:1px solid rgba(123,79,191,0.4)">
+  <div id="broadcast-box" style="width:100%;border-radius:12px;overflow:hidden;margin-bottom:20px;height:280px;transition:height .35s ease;position:relative;background:linear-gradient(120deg,#16101f,#0c0c12);border:1px solid rgba(123,79,191,0.4)">
     <div class="bc-live-badge" style="position:absolute;top:10px;left:12px;z-index:5;display:flex;align-items:center;gap:6px;background:rgba(0,0,0,0.55);border-radius:6px;padding:3px 9px">
       <span class="dd-dot"></span><span style="font-size:.62rem;font-weight:900;letter-spacing:2px">IMS LIVE</span>
     </div>
@@ -4043,13 +4043,21 @@ window.fitTheatreZoom = function() {
 // Phones, small box: lay each scene out at a comfortable 500px width, then shrink the whole thing
 // to fit the screen (and the box height), so nothing is squashed, cut off or hidden.
 window.fitMiniZoom = function() {
+  // Phones: lay the scene out at 400px (so text stays big), scale it to the screen width, then GROW the box
+  // to the scene's height (capped at 75% of the screen) so nothing is cut off. Only if a scene is taller than
+  // that cap does it shrink further to fit. Desktop / theatre keep the fixed 280px TV.
   const box = document.getElementById('broadcast-box'), sc = document.getElementById('bc-scene'), w = sc && sc.querySelector('.bc-fit');
-  if (!w) return; w.style.zoom = 1; w.style.width = '';
-  if (box.classList.contains('bc-theatre') || window.innerWidth > 640) return;
-  const cs = getComputedStyle(sc), availW = sc.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight), availH = sc.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
-  const DW = 500; if (availW >= DW) return;
-  w.style.width = DW + 'px'; const h = Math.max(1, w.scrollHeight);
-  w.style.zoom = Math.max(.5, Math.min(availW / DW, availH / h));
+  if (!w || !box) return; w.style.zoom = 1; w.style.width = '';
+  if (box.classList.contains('bc-theatre') || window.innerWidth > 640) { if (!box.classList.contains('bc-theatre')) box.style.height = ''; return; }
+  const cs = getComputedStyle(sc), padT = parseFloat(cs.paddingTop), padB = parseFloat(cs.paddingBottom);
+  const availW = sc.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  const DW = 400; let z = 1;
+  if (availW < DW) { w.style.width = DW + 'px'; z = availW / DW; }
+  const h = Math.max(1, w.scrollHeight), ticker = 30, chrome = padT + padB + ticker + 6;
+  const maxH = Math.round(window.innerHeight * 0.75);
+  if (h * z + chrome > maxH) z = Math.max(.55, (maxH - chrome) / h); // very tall scene: shrink just enough to fit
+  w.style.zoom = z;
+  box.style.height = Math.max(280, Math.ceil(h * z + chrome)) + 'px';
 };
 window.addEventListener('resize', () => { try { fitMiniZoom(); } catch (e) {} });
 window.toggleBroadcastTheatre = function() {
