@@ -29227,7 +29227,7 @@ window.buildWordleData = async function(btn) { window._dhSeen = new Set();
       // A team only counts as "driven for" with 3+ starts for it (worked out below); current team always counts.
       if (sn && tm && !/^A/i.test(String(dv || '').trim()) && !/^(n\/?a|none|-|tbd)$/i.test(String(tm).trim())) {
         const tk = sn + '|' + rn + '|' + String(dv || '').trim().toUpperCase() + '|' + _wdNorm(nm);
-        if (!thSeen.has(tk)) { thSeen.add(tk); s.tc = s.tc || {}; const t = s.tc[_wdNorm(tm)] = s.tc[_wdNorm(tm)] || { name: String(tm).trim(), n: 0 }; t.n++; } }
+        if (!thSeen.has(tk)) { thSeen.add(tk); s.tc = s.tc || {}; const t = s.tc[_wdNorm(tm)] = s.tc[_wdNorm(tm)] || { name: String(tm).trim(), n: 0 }; t.n++; if (sn < curS) { s.tc0 = s.tc0 || {}; s.tc0[_wdNorm(tm)] = (s.tc0[_wdNorm(tm)] || 0) + 1; } } }
       // Every division raced in, any race (official or not), pre-season / academy excluded.
       { let dvh = String(dv || '').trim().toUpperCase(); if (/^\d$/.test(dvh)) dvh = 'D' + dvh; const hk = sn + '|' + rn + '|' + dvh + '|' + _wdNorm(nm);
         if (sn && sn < curS && /^[B-Z]\d+$/.test(dvh) && !(window._dhSeen = window._dhSeen || new Set()).has(hk)) { window._dhSeen.add(hk); s.dh = s.dh || {}; s.dh[dvh] = (s.dh[dvh] || 0) + 1; } }
@@ -29382,7 +29382,10 @@ async function _wdLoad() {
     // Wins per division: past seasons from the .db win list + this season's imported results.
     const dw = _ptDivWins(((s.ws || []).length >= (s2.ws || []).length ? s.ws : s2.ws) || []); Object.entries(liveDw[d.id] || {}).forEach(([v, n]) => { dw[v] = (dw[v] || 0) + n; });
     // Races per team (past seasons + this season) — used by Pointless team questions.
-    const tn = {}; new Set([...Object.keys(s.tc || {}), ...Object.keys(s2.tc || {}), ...Object.keys(liveTm[d.id] || {})]).forEach(k => { tn[k] = Math.max(((s.tc || {})[k] || {}).n || 0, ((s2.tc || {})[k] || {}).n || 0) + (((liveTm[d.id] || {})[k] || {}).n || 0); });
+    // Past seasons only from the .db (tc0) + this season live — tc also holds this season's .db rows, so adding live on top double-counted them.
+    // Older builds without tc0: take the bigger of the .db count and the live count instead of adding them.
+    const tn = {}; new Set([...Object.keys(s.tc || {}), ...Object.keys(s2.tc || {}), ...Object.keys(liveTm[d.id] || {})]).forEach(k => { const lv = ((liveTm[d.id] || {})[k] || {}).n || 0, has0 = s.tc0 || s2.tc0;
+      tn[k] = has0 ? Math.max(((s.tc0 || {})[k] || 0), ((s2.tc0 || {})[k] || 0)) + lv : Math.max(((s.tc || {})[k] || {}).n || 0, ((s2.tc || {})[k] || {}).n || 0, lv); });
     // Their current team counts once they've actually raced for it (1+ start this season) — being signed isn't driving for them.
     if (d.team && !/^reserve$/i.test(String(d.team).trim()) && ((liveTm[d.id] || {})[_wdNorm(d.team)] || {}).n >= 1) { th[_wdNorm(d.team)] = d.team; thw[_wdNorm(d.team)] = 'current team, ' + liveTm[d.id][_wdNorm(d.team)].n + ' start(s) this season'; }
     Object.entries(liveTm[d.id] || {}).forEach(([k, t]) => { if (t.n >= 3 || (s.tc && s.tc[k] && s.tc[k].n + t.n >= 3)) { th[k] = t.name; thw[k] = (thw[k] ? thw[k] + ' + ' : '') + t.n + ' start(s) this season'; } }); // this season's races count too
