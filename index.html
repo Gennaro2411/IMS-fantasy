@@ -30838,6 +30838,7 @@ const _ptGetMode = () => window._ptMode || 'daily';
 window.setPTMode = function(m) { window._ptMode = m; window._ptReveal = null; renderGames(); };
 const _ptLoadSt = () => { try { return JSON.parse(localStorage.getItem('imsPtDaily') || 'null'); } catch (e) { return null; } };
 const _ptSave = (st) => { try { localStorage.setItem('imsPtDaily', JSON.stringify(st)); } catch (e) {} };
+const _ptA = (w) => /^[aeiou]/i.test(String(w)) ? 'an' : 'a';
 function _ptCats(pool) {
   const C = [], add = (id, q, f, min, v, vl) => { const ids = pool.filter(f).map(p => p.id); if (ids.length >= (min || 3)) C.push({ id, q, ids, v, vl }); };
   add('w', 'Name an IMS driver who has <b>won a race</b>', p => p.w >= 1);
@@ -30875,8 +30876,8 @@ function _ptCats(pool) {
   // Winners / podiums by division they've raced in
   ['D0', 'D1', 'D2', 'D3', 'D4'].forEach(d => add('dw' + d, `Name a <b>race winner</b> who has raced in <b>${d}</b>`, p => p.w >= 1 && (p.dh || {})[d] > 0, 3, p => (p.dh || {})[d] || 0, d + ' appearances'));
   const nats = {}; pool.forEach(p => { if (p.nat) nats[p.nat] = (nats[p.nat] || 0) + 1; });
-  Object.keys(nats).forEach(n => add('n' + n, `Name an IMS driver from <b>${esc(n)}</b> ${_wdFlag(n)}`, p => p.nat === n));
-  Object.keys(nats).forEach(n => { add('nw' + n, `Name an IMS <b>race winner</b> from <b>${esc(n)}</b> ${_wdFlag(n)}`, p => p.nat === n && p.w >= 1); add('np' + n, `Name an IMS driver from <b>${esc(n)}</b> ${_wdFlag(n)} with a <b>podium</b>`, p => p.nat === n && p.pd >= 1); });
+  Object.keys(nats).forEach(n => add('n' + n, `Name ${_ptA(n)} <b>${esc(n)}</b> ${_wdFlag(n)} IMS driver`, p => p.nat === n));
+  Object.keys(nats).forEach(n => { add('nw' + n, `Name ${_ptA(n)} <b>${esc(n)}</b> ${_wdFlag(n)} IMS <b>race winner</b>`, p => p.nat === n && p.w >= 1); add('np' + n, `Name ${_ptA(n)} <b>${esc(n)}</b> ${_wdFlag(n)} IMS driver with a <b>podium</b>`, p => p.nat === n && p.pd >= 1); });
   const tms = {}; pool.forEach(p => Object.entries(p.th || {}).forEach(([k, n]) => { tms[k] = tms[k] || n; }));
   Object.entries(tms).forEach(([k, n]) => { add('ct' + k, `Name a driver <b>currently racing for ${esc(n)}</b>`, p => !p.res && _wdNorm(p.team) === k, 3, p => (p.tn || {})[k] || 0, 'appearances for ' + n); add('tw' + k, `Name a <b>race winner</b> who has driven for <b>${esc(n)}</b>`, p => (p.th || {})[k] && p.w >= 1, 3, p => (p.tn || {})[k] || 0, 'appearances for ' + n); });
   Object.entries(tms).forEach(([k, n]) => add('t' + k, `Name an IMS driver who has driven for <b>${esc(n)}</b>`, p => (p.th || {})[k], 6, p => (p.tn || {})[k] || 0, 'appearances for ' + n));
