@@ -810,6 +810,25 @@
   .rr-cbar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--team),color-mix(in srgb,var(--team) 55%,#fff))}
   .rr-row.is-out .rr-pts{color:var(--muted)}
   @media (max-width:420px){ .rr-cols,.rr-row{grid-template-columns:28px minmax(0,1fr) 34px 32px 32px;padding:0 10px 0 8px;column-gap:6px} .rr-av{width:26px;height:26px} }
+  /* Championship + BOTT standings — same vibe as the race tiles: dark glass, glowing circuit, lit podium rows */
+  .rr-std{position:relative;isolation:isolate;border-radius:22px!important;background:radial-gradient(120% 60% at 100% 0%,color-mix(in srgb,var(--acc) 16%,transparent),transparent 60%),linear-gradient(160deg,#18132b,#0d0b16 70%)!important;border:1px solid color-mix(in srgb,var(--acc) 28%,rgba(255,255,255,.06))!important;box-shadow:0 24px 50px -28px color-mix(in srgb,var(--acc) 55%,transparent),inset 0 1px 0 rgba(255,255,255,.06)!important}
+  .rr-std-trk{position:absolute;right:-24px;top:-10px;width:230px;max-width:60%;height:150px;object-fit:contain;z-index:-1;pointer-events:none;transform:rotate(-6deg);opacity:.28;filter:invert(1) drop-shadow(0 0 6px var(--acc)) drop-shadow(0 0 18px var(--acc))}
+  .rr-std .rr-head{background:transparent!important;border-bottom:1px solid rgba(255,255,255,.06)}
+  .rr-std .rr-title b{font-style:italic;font-size:1.65rem;letter-spacing:.5px;text-shadow:0 2px 16px rgba(0,0,0,.5)}
+  .rr-std .rr-title span{font-size:.62rem;letter-spacing:2.5px}
+  .rr-std .rr-cols{background:rgba(0,0,0,.18)}
+  .rr-std .rr-row{border-left-width:0;position:relative;transition:background .2s,transform .2s}
+  .rr-std .rr-row::before{content:'';position:absolute;left:5px;top:12px;bottom:12px;width:3px;border-radius:3px;background:var(--team);box-shadow:0 0 6px color-mix(in srgb,var(--team) 70%,transparent)}
+  .rr-std .rr-row:hover{background:rgba(255,255,255,.045);transform:translateX(3px)}
+  .rr-std .rr-row.pod:nth-child(2){background:linear-gradient(90deg,rgba(255,210,74,.14),transparent 70%)}
+  .rr-std .rr-row.pod:nth-child(3){background:linear-gradient(90deg,rgba(220,226,238,.08),transparent 70%)}
+  .rr-std .rr-row.pod:nth-child(4){background:linear-gradient(90deg,rgba(224,162,106,.09),transparent 70%)}
+  .rr-std .rr-pos.p1{box-shadow:0 0 14px rgba(255,210,74,.55)}
+  .rr-std .rr-av,.rr-std .rr-clogo{transition:transform .2s} .rr-std .rr-row:hover .rr-av,.rr-std .rr-row:hover .rr-clogo{transform:scale(1.08)}
+  .rr-std .rr-pts{font-size:1.25rem;text-shadow:0 0 12px rgba(255,210,74,.25)}
+  .rr-std .rr-cbar{height:5px}
+  .rr-std .rr-cbar i{box-shadow:0 0 8px var(--team)}
+  .rr-std button{transition:all .2s}
   /* ===== Edit Team: constructor picker ===== */
   .cpk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:10px}
   .cpk{position:relative;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 10px 10px;border-radius:14px;
@@ -23983,6 +24002,7 @@ async function renderResults() {
         const _remaining = Math.max(0, _cal.size - _scoredNm.size);
         window._bottClinchInfo = { racesLeft: _cal.size ? _remaining : Math.max(0, _at - _scoredNm.size), totalKnown: (_at > 0 || _cal.size > _scoredNm.size) };
       } catch(e) { window._bottClinchInfo = { racesLeft: 0, totalKnown: false }; }
+      window._rxLatestName = ((completedRaces || [])[0] || {}).name || ''; // latest circuit drawn behind the standings headers
       html += buildBottStandings(constrRanked);
     }
 
@@ -24133,7 +24153,7 @@ async function renderResults() {
         } catch(e) { window._champRacesLeft = 0; window._champMaxPerRaceByDiv = {}; window._champConstrMaxPerRaceByDiv = {}; window._champMaxPerRaceDefault = 32; window._champCanClinch = false; }
         if (!window._champDiv || !champDivs.includes(window._champDiv)) window._champDiv = champDivs[0];
         if (window._champMode !== 'constructors') window._champMode = 'drivers';
-        html += `<div class="card rr-card" style="padding:0;overflow:hidden">
+        html += `<div class="card rr-card rr-std" style="padding:0;overflow:hidden;--acc:#7b7fe8">${(() => { const _o = (typeof getTrackOutlineUrl === 'function' && window._rxLatestName) ? getTrackOutlineUrl(window._rxLatestName) : null; return _o ? `<img class="rr-std-trk" src="${_o}" alt="">` : ''; })()}
           <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px 8px;flex-wrap:wrap;background:linear-gradient(90deg,rgba(123,127,232,.18),transparent 75%)">
             <div class="rr-title"><b>Championship</b><span style="color:#7b7fe8">Standings</span></div>
             <div style="display:flex;gap:5px;flex-wrap:wrap">
@@ -24402,7 +24422,7 @@ function buildBottStandings(ranked, seasonOver) {
   const maxPts = ranked[0].pts || 1;
   const mode = window._bottGapMode || 'leader';
   const btn = (m, label) => `<button onclick="setBottGapMode('${m}')" class="bott-gap-btn" data-mode="${m}" style="font-size:.6rem;font-weight:800;letter-spacing:1px;padding:3px 10px;border-radius:20px;cursor:pointer;border:1px solid ${mode===m?'rgba(255,200,0,0.5)':'rgba(255,255,255,0.12)'};background:${mode===m?'rgba(255,200,0,0.12)':'transparent'};color:${mode===m?'var(--gold)':'var(--muted)'}">${label}</button>`;
-  let html = `<div class="card rr-card" style="margin-bottom:16px;padding:0;overflow:hidden">
+  let html = `<div class="card rr-card rr-std" style="margin-bottom:16px;padding:0;overflow:hidden;--acc:#ffd24a">${(() => { const _o = (typeof getTrackOutlineUrl === 'function' && window._rxLatestName) ? getTrackOutlineUrl(window._rxLatestName) : null; return _o ? `<img class="rr-std-trk" src="${_o}" alt="">` : ''; })()}
     <div class="rr-head" style="--acc:#ffd24a;padding:14px 16px;flex-wrap:wrap">
       <div class="rr-title"><b>BOTT</b><span>Standings</span></div>
       <div style="display:flex;gap:4px">${btn('leader','Gap to leader')}${btn('next','Interval')}</div>
