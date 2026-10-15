@@ -26648,6 +26648,23 @@ const BET_MARGIN = 1.08; // bookie margin baked into the odds
 window._betSlip = null;
 
 function _betStrength(elo) { return Math.pow(10, (elo || 1500) / 400); }
+// Full finishing-order simulation (same model as win/podium) → each driver's chance of every position.
+function _betPosSim(field, sims, seed) {
+  field = field.slice().sort((a, b) => String(a.id).localeCompare(String(b.id)));
+  const rnd = _betRng((seed || 'ims') + '|pos'), n = field.length, out = {};
+  const base = field.map(d => ({ id: d.id, s: _betStrength(d.elo) })); base.forEach(d => { out[d.id] = new Array(n + 1).fill(0); });
+  for (let k = 0; k < sims; k++) { let pool = base.slice(), total = pool.reduce((a, d) => a + d.s, 0);
+    for (let place = 1; place <= n; place++) { let r = rnd() * total, i = 0; while (i < pool.length - 1 && (r -= pool[i].s) > 0) i++;
+      const pick = pool[i]; out[pick.id][place]++; total -= pick.s; pool.splice(i, 1); } }
+  Object.values(out).forEach(a => { for (let i = 0; i < a.length; i++) a[i] /= sims; });
+  return out;
+}
+// Tricast: exact 1-2-3. Under the strength model this is exact: s1/S × s2/(S−s1) × s3/(S−s1−s2).
+function _betTriP(field, ids) {
+  const S0 = field.reduce((a, d) => a + _betStrength(d.elo), 0); let S = S0, p = 1;
+  for (const id of ids) { const d = field.find(x => x.id === id); if (!d) return 0; const sv = _betStrength(d.elo); p *= sv / S; S -= sv; }
+  return p;
+}
 function _betOdds(p) { const m = 1 + ((window._betCfg && typeof window._betCfg.margin === 'number') ? window._betCfg.margin : 8) / 100;
   if (!(p > 0)) return 1000; const o = 1 / (p * m); return Math.max(1.01, Math.min(1000, o >= 100 ? Math.round(o) : Math.round(o * 100) / 100)); }
 // Odds display: decimal (5.00) or fractional (4/1) — the viewer's choice, remembered per device.
@@ -26732,7 +26749,7 @@ window.betShowResults = function(list) {
   const L = list.slice().sort((a, b) => (ord[a.status] ?? 3) - (ord[b.status] ?? 3));
   const W = L.filter(b => b.status === 'won'), Lo = L.filter(b => b.status === 'lost');
   const won = W.reduce((a, b) => a + (Number(b.payout) || 0), 0), staked = L.filter(b => b.status !== 'void').reduce((a, b) => a + (b.free ? 0 : Number(b.stake) || 0), 0);
-  const COIN = '<i class="imc"></i>', mkt = { win: 'Win', pod: 'Podium', top5: 'Top 5', h2h: 'Head to head', qh2h: 'Quali H2H', pole: 'Pole', pgap: 'Pole gap', wmar: 'Winning margin', ou: 'Over / under', cou: 'Constructor pts', yn: 'Special', acca: 'Accumulator' };
+  const COIN = '<i class="imc"></i>', mkt = { win: 'Win', pod: 'Podium', top5: 'Top 5', h2h: 'Head to head', qh2h: 'Quali H2H', pole: 'Pole', pgap: 'Pole gap', wmar: 'Winning margin', ou: 'Over / under', cou: 'Constructor pts', yn: 'Special', spw: 'Sprint win', spp: 'Sprint podium', tri: 'Tricast', acca: 'Accumulator' };
   const row = (b) => { const st = b.status, odds = Number(b.odds) || 0;
     const res = st === 'won' ? `<b class="bsr-w">+${(Number(b.payout) || 0).toLocaleString()} ${COIN}</b>` : st === 'lost' ? `<b class="bsr-l">−${b.free ? 0 : (Number(b.stake) || 0).toLocaleString()} ${COIN}</b>` : `<b class="bsr-v">Refunded</b>`;
     const legs = (b.legs && b.legs.length) ? `<div class="bsr-legs">${b.legs.map(l => `<span class="${l.result || ''}">${l.result === 'won' ? '✓' : l.result === 'lost' ? '✕' : '•'} ${esc(l.label || '')}</span>`).join('')}</div>` : '';
@@ -26956,10 +26973,32 @@ function _betOutcome(b, races) {
   if (b.market === 'win') { const p = pos(b.sel[0]); if (p != null) result = p === 1 ? 'won' : 'lost'; }
   else if (b.market === 'top5') { const p = pos(b.sel[0]); if (p != null) result = p <= (b.div === 'BOTT' ? 3 : 5) ? 'won' : 'lost'; }
   else if (b.market === 'pod') { const p = pos(b.sel[0]); if (p != null) result = p <= 3 ? 'won' : 'lost'; }
-  else if (b.market === 'ou') {
+  else if (b.market === 'ou' && !String(b.sel[0]).startsWith('fpos:')) {
     const v = b.sel[0] === 'margin' ? (race.winMarginByDiv || {})[b.div] : ['dnf', 'wgrid', 'gain', 'fin', 'flt'].includes(b.sel[0]) ? ((race.raceStatsByDiv || {})[b.div] || {})[b.sel[0]] : (race.winTimeByDiv || {})[b.div];
     const line = Number(b.sel[2]);
     result = (v == null || !isFinite(line)) ? 'void' : ((b.sel[1] === 'over') === (Number(v) > line) ? 'won' : 'lost');
+  }
+  else if (b.market === 'yn' && String(b.sel[0]).startsWith('ddnf:')) {
+    // Driver to DNF: void if they didn't start / didn't race in this division.
+    const id = String(b.sel[0]).slice(5), st = String((((race.raceStatusByDivision || {})[id]) || {})[b.div] || '').toUpperCase();
+    const took = ((race.positionByDivision || {})[id] || {})[b.div] != null || st === 'DNF' || st === 'DSQ';
+    result = (st === 'DNS' || !took) ? 'void' : ((b.sel[1] === 'yes') === (st === 'DNF') ? 'won' : 'lost');
+  }
+  else if (b.market === 'ou' && String(b.sel[0]).startsWith('fpos:')) {
+    // Finishing position line: a DNF/DSQ ranks behind every finisher (counts as OVER). No result → void.
+    const p = pos(String(b.sel[0]).slice(5)), line = Number(b.sel[2]);
+    result = (p == null || !isFinite(line)) ? 'void' : ((b.sel[1] === 'over') === (p > line) ? 'won' : 'lost');
+  }
+  else if (b.market === 'spw' || b.market === 'spp') {
+    // Sprint: settled from the sprint results (rows by driver name). No sprint rows → void.
+    const rows = window._spRowsOf ? window._spRowsOf(race, b.div) : null; const nm = (x) => String(x || '').replace(/^\[[^\]]*\]\s*/, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const mine = nm((b.selNames && b.selNames[0]) || (race.driverNames || {})[b.sel[0]]); const row = rows && mine ? rows.find(x => nm(x.name) === mine) : null;
+    if (!rows || !row || String(row.status || '') === 'DNS') result = 'void';
+    else result = (row.pos != null && row.pos <= (b.market === 'spw' ? 1 : 3)) ? 'won' : 'lost';
+  }
+  else if (b.market === 'tri') {
+    const ps = (b.sel || []).map(id => pos(id));
+    result = ps.length !== 3 || ps.some(x => x == null) ? 'void' : (ps[0] === 1 && ps[1] === 2 && ps[2] === 3 ? 'won' : 'lost');
   }
   else if (b.market === 'yn') {
     const st = (race.raceStatsByDiv || {})[b.div] || {};
@@ -27278,7 +27317,8 @@ window.renderBets = async function() {
     else if (market === 'h2h') R = { auto, fair: 1 / (1 + Math.pow(10, ((field.find(d => d.id === sel[1]) || {}).elo - (field.find(d => d.id === sel[0]) || {}).elo) / 400)), opp: sel.slice().reverse().join('-') };
     else if (market === 'ou' || market === 'cou' || market === 'yn') { const OR = (window._betOuReg || {})[market + ':' + key]; if (!OR) return; const os = sel.slice(); os[1] = ({ over: 'under', under: 'over', yes: 'no', no: 'yes' })[sel[1]] || sel[1]; R = { auto, fair: OR.p, opp: os.join('-') }; }
     else if (market === 'pgap' || market === 'wmar') R = { fixed: auto };
-    else { const probs = market === 'win' ? P.win : market === 'pod' ? (P.pod || {}) : market === 'pole' ? (P.pole || {}) : P.top5; const sumP = Object.values(probs).reduce((x, y) => x + y, 0) || 1; R = { auto, fair: (probs[sel[0]] || 0) / sumP }; }
+    else if (market === 'tri') R = { fixed: auto };
+    else { const probs = (market === 'win' || market === 'spw') ? P.win : (market === 'pod' || market === 'spp') ? (P.pod || {}) : market === 'pole' ? (P.pole || {}) : P.top5; const sumP = Object.values(probs).reduce((x, y) => x + y, 0) || 1; R = { auto, fair: (probs[sel[0]] || 0) / sumP }; }
     const old = window._betReg[rk]; if (!old || JSON.stringify(old) !== JSON.stringify(R)) { window._betReg[rk] = R; _regSave(); } };
   const finalOdds = (market, sel, auto) => { try { _regPut(market, sel, auto); } catch (e) {} return _finalRaw(market, sel, auto); };
   const _finalRaw = (market, sel, auto) => {
@@ -27301,8 +27341,8 @@ window.renderBets = async function() {
       const oppSel = sel.slice(); oppSel[1] = ({ over: 'under', under: 'over', yes: 'no', no: 'yes' })[sel[1]] || sel[1];
       const a = _stakeOn(market, key), b = _stakeOn(market, oppSel.join('-')), tot = a + b;
       return tot ? _dyn(auto, a / tot, fair, tot) : auto; }
-    if (market === 'pgap' || market === 'wmar') return auto;
-    const probs = market === 'win' ? P.win : market === 'pod' ? (P.pod || {}) : market === 'pole' ? (P.pole || {}) : P.top5; const sumP = Object.values(probs).reduce((x, y) => x + y, 0) || 1;
+    if (market === 'pgap' || market === 'wmar' || market === 'tri') return auto;
+    const probs = (market === 'win' || market === 'spw') ? P.win : (market === 'pod' || market === 'spp') ? (P.pod || {}) : market === 'pole' ? (P.pole || {}) : P.top5; const sumP = Object.values(probs).reduce((x, y) => x + y, 0) || 1;
     const tot = _openHere.filter(b => b.market === market).reduce((x, b) => x + (b.stake || 0), 0);
     return tot ? _dyn(auto, _stakeOn(market, key) / tot, (probs[sel[0]] || 0) / sumP, tot) : auto;
   };
@@ -27319,8 +27359,9 @@ window.renderBets = async function() {
     // price in this function — they used to fall through to the top-5 table and show a fake 'now' price, which let
     // players cash out for instant profit. Return null so their cash-out is simply stake − 5%.
     if (market === 'ou' || market === 'cou' || market === 'yn') { const R = (window._betOuReg || {})[market + ':' + sel.join('-')]; return R ? R.auto : null; }
-    if (!['win', 'pod', 'pole', 'top5'].includes(market)) return null;
-    const pr = market === 'win' ? P.win[sel[0]] : market === 'pod' ? (P.pod || {})[sel[0]] : market === 'pole' ? (P.pole || {})[sel[0]] : P.top5[sel[0]]; return pr == null ? null : _betOdds(pr);
+    if (market === 'tri') { const p = _betTriP(field, sel); return p > 0 ? _betOdds(p) : null; }
+    if (!['win', 'pod', 'pole', 'top5', 'spw', 'spp'].includes(market)) return null;
+    const pr = (market === 'win' || market === 'spw') ? P.win[sel[0]] : (market === 'pod' || market === 'spp') ? (P.pod || {})[sel[0]] : market === 'pole' ? (P.pole || {})[sel[0]] : P.top5[sel[0]]; return pr == null ? null : _betOdds(pr);
   };
   window._betDivNow = div;
   // Cache odds per race+division so they don't wobble on every re-render.
@@ -27328,6 +27369,25 @@ window.renderBets = async function() {
   window._betOddsCache = window._betOddsCache || {};
   if (!window._betOddsCache[oKey] && field.length) window._betOddsCache[oKey] = _betSim(field, 60000, oKey, isC ? 3 : 5);
   const P = window._betOddsCache[oKey] || { win: {}, top5: {} };
+  // Driver specials: DNF chance (each driver's own DNF rate, pulled towards the league average) and a
+  // finishing-position line from the full simulated order. A DNF/DSQ counts as finishing last (OVER).
+  const _dnfR = {}, _fpos = {};
+  if (!isC && field.length) {
+    const per = {}; let T = 0, D = 0;
+    _allRaceSets.forEach(r => { const pbd = r.positionByDivision || {}, sbd = r.raceStatusByDivision || {};
+      field.forEach(d => { const pp = pbd[d.id] || {}, ss = sbd[d.id] || {};
+        Object.keys(Object.assign({}, pp, ss)).forEach(dv => { const st = String(ss[dv] || '').toUpperCase(); if (st === 'DNS') return;
+          if (pp[dv] == null && st !== 'DNF' && st !== 'DSQ') return;
+          const x = per[d.id] = per[d.id] || { n: 0, f: 0 }; x.n++; T++; if (st === 'DNF') { x.f++; D++; } }); }); });
+    const baseR = T ? D / T : 0.1;
+    field.forEach(d => { const x = per[d.id] || { n: 0, f: 0 }; _dnfR[d.id] = Math.min(0.6, Math.max(0.02, (x.f + 4 * baseR) / (x.n + 4))); });
+    const pk = oKey + '|pos'; if (!window._betOddsCache[pk]) window._betOddsCache[pk] = _betPosSim(field, 20000, oKey);
+    const PD = window._betOddsCache[pk];
+    field.forEach(d => { const a = PD[d.id]; if (!a) return; let best = null, bd = Infinity, c = 0;
+      for (let k = 1; k < a.length - 1; k++) { c += a[k]; const dd = Math.abs(c - 0.5); if (dd < bd) { bd = dd; best = { line: k + 0.5, under: c }; } }
+      if (best) { const dn = _dnfR[d.id] || 0; _fpos[d.id] = { line: best.line, po: dn + (1 - dn) * (1 - best.under) }; } });
+  }
+  window._betTriField = isC ? [] : field.map(d => ({ id: d.id, elo: d.elo, name: d.name }));
   // Pole: exact Plackett–Luce on a qualifying rating = race rating adjusted by qualifying pace.
   const _pole = isC ? {} : _betPoleRatings(field, _qpDoc && _qpDoc.value);
   if (!isC) { P.pole = _betPoleProbs(field, _pole); window._betPoleLast = _pole; }
@@ -27495,7 +27555,7 @@ window.renderBets = async function() {
   }).join('') + (board.length > 10 ? `<button onclick="window._betLbAll=!window._betLbAll;renderBets()" style="display:block;width:100%;padding:9px;border:none;border-top:1px solid var(--bline);background:transparent;color:var(--muted);font-family:inherit;font-size:.75rem;font-weight:700;cursor:pointer">${window._betLbAll ? '▲ Show top 10' : '▼ Show all ' + board.length}</button>` : '')
     || '<div class="text-muted" style="padding:10px 14px;font-size:.8rem">No bettors yet — be the first.</div>';
   // Your betting stats
-  const _MKN = { win: 'Win', pod: 'Podium', top5: 'Top 5 / Top 3', h2h: 'Head to head', qh2h: 'Quali H2H', pole: 'Pole', pgap: 'Pole gap', wmar: 'Winning margin', ou: 'Over / under', cou: 'Constructor pts', yn: 'Specials', acca: 'Accumulators' };
+  const _MKN = { win: 'Win', pod: 'Podium', top5: 'Top 5 / Top 3', h2h: 'Head to head', qh2h: 'Quali H2H', pole: 'Pole', pgap: 'Pole gap', wmar: 'Winning margin', ou: 'Over / under', cou: 'Constructor pts', yn: 'Specials', spw: 'Sprint win', spp: 'Sprint podium', tri: 'Tricast', acca: 'Accumulators' };
   const _mine = myBets.filter(b => ['won', 'lost', 'cashed'].includes(b.status)).sort((a, b) => (a.settledAt || a.placedAt || 0) - (b.settledAt || b.placedAt || 0));
   const _pnl = (b) => b.status === 'lost' ? -(Number(b.stake) || 0) : (Number(b.payout) || 0) - (Number(b.stake) || 0);
   let _myStatsHtml = '';
@@ -27666,6 +27726,21 @@ window.renderBets = async function() {
           ${_yn.map(([k, l, p]) => `<div class="bo-ou"><div><b>${l}</b></div>
             <div class="bo-ou-b"><i>YES</i>${oddsBtn('yn', [k, 'yes'], div + ' ' + l.toLowerCase() + ': yes', _ouOdds('yn', [k, 'yes'], p))}</div>
             <div class="bo-ou-b"><i>NO</i>${oddsBtn('yn', [k, 'no'], div + ' ' + l.toLowerCase() + ': no', _ouOdds('yn', [k, 'no'], 1 - p))}</div></div>`).join('')}</div>` : ''}
+        ${(!isC && upcoming && upcoming.isSprint && field.length) ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>⚡ Sprint</span><span class="bo-cols"><i>WIN</i><i>PODIUM</i></span></div>
+          ${field.map(d => `<div class="bo-row">${photo(d)}<div class="bo-nm"><b>${esc(d.name)}</b><small>Sprint race</small></div>${oddsBtn('spw', [d.id], d.name + ' to win the ' + div + ' sprint', finalOdds('spw', [d.id], _betOdds(P.win[d.id])))}${oddsBtn('spp', [d.id], d.name + ' sprint podium in ' + div, finalOdds('spp', [d.id], _betOdds((P.pod || {})[d.id])))}</div>`).join('')}</div>` : ''}
+        ${(!isC && Object.keys(_fpos).length) ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>📍 Finishing position</span><small>Over = finishes lower (a DNF counts as over)</small></div>
+          ${field.filter(d => _fpos[d.id]).map(d => { const o = _fpos[d.id], L = String(o.line); return `<div class="bo-ou"><div class="bo-ou-c">${photo(d)}<div><b>${esc(d.name)}</b><span class="bo-ou-line">LINE <em>P${o.line}</em></span></div></div>
+            <div class="bo-ou-b"><i>OVER</i>${oddsBtn('ou', ['fpos:' + d.id, 'over', L], d.name + ' finishing position over ' + o.line + ' (' + div + ')', _ouOdds('ou', ['fpos:' + d.id, 'over', L], o.po))}</div>
+            <div class="bo-ou-b"><i>UNDER</i>${oddsBtn('ou', ['fpos:' + d.id, 'under', L], d.name + ' finishing position under ' + o.line + ' (' + div + ')', _ouOdds('ou', ['fpos:' + d.id, 'under', L], 1 - o.po))}</div></div>`; }).join('')}</div>` : ''}
+        ${(!isC && Object.keys(_dnfR).length) ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>💥 Driver to DNF</span><small>From each driver's DNF rate</small></div>
+          ${field.filter(d => _dnfR[d.id] != null).map(d => { const p = _dnfR[d.id]; return `<div class="bo-ou"><div class="bo-ou-c">${photo(d)}<div><b>${esc(d.name)}</b><span class="bo-ou-line">DNF RATE <em>${Math.round(p * 100)}%</em></span></div></div>
+            <div class="bo-ou-b"><i>YES</i>${oddsBtn('yn', ['ddnf:' + d.id, 'yes'], d.name + ' to DNF (' + div + '): yes', _ouOdds('yn', ['ddnf:' + d.id, 'yes'], p))}</div>
+            <div class="bo-ou-b"><i>NO</i>${oddsBtn('yn', ['ddnf:' + d.id, 'no'], d.name + ' to DNF (' + div + '): no', _ouOdds('yn', ['ddnf:' + d.id, 'no'], 1 - p))}</div></div>`; }).join('')}</div>` : ''}
+        ${(!isC && field.length >= 3) ? (() => { const ts = (window._triSel && window._triSel.div === div) ? window._triSel.ids : [field[0].id, field[1].id, field[2].id];
+          const opt = (k) => `<select id="tri-${k}" class="bo-tri-s" onchange="betTriUpdate()">${field.map(d => `<option value="${esc(d.id)}"${ts[k] === d.id ? ' selected' : ''}>${esc(d.name)}</option>`).join('')}</select>`;
+          return `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>🎰 Tricast</span><small>Pick 1st, 2nd & 3rd in exact order</small></div>
+          <div style="display:flex;flex-direction:column;gap:6px;padding:10px 14px"><label style="display:flex;gap:8px;align-items:center"><b style="width:32px">1st</b>${opt(0)}</label><label style="display:flex;gap:8px;align-items:center"><b style="width:32px">2nd</b>${opt(1)}</label><label style="display:flex;gap:8px;align-items:center"><b style="width:32px">3rd</b>${opt(2)}</label>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:4px"><span id="tri-odds" style="font-weight:800;color:var(--gold)"></span><button class="btn btn-primary btn-sm" ${open ? '' : 'disabled'} onclick="betTriAdd()">Add to slip</button></div></div></div>`; })() : ''}
         ${(isC && Object.keys(_ouCons).length) ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>📏 Constructor points</span><small>Over / under BOTT points this round</small></div>
           ${field.filter(c => _ouCons[c.id]).map(c => { const o = _ouCons[c.id]; return `<div class="bo-ou"><div class="bo-ou-c">${photo(c)}<div><b>${esc(c.name)}</b><span class="bo-ou-line">LINE <em>${o.line} pts</em></span></div></div>
             <div class="bo-ou-b"><i>OVER</i>${oddsBtn('cou', [c.id, 'over', String(o.line)], c.name + ' over ' + o.line + ' BOTT pts', _ouOdds('cou', [c.id, 'over', String(o.line)], o.po))}</div>
@@ -28149,6 +28224,7 @@ function _betLegClashes(legs) {
     const a = legs[i], b = legs[j]; if (a.div !== b.div) continue;
     const clash = (a.market === 'win' && b.market === 'win') || (a.market === 'pole' && b.market === 'pole') || (a.market === 'wmar' && b.market === 'wmar') || (a.market === 'pgap' && b.market === 'pgap') || ((a.market === 'ou' || a.market === 'cou' || a.market === 'yn') && a.market === b.market && a.sel[0] === b.sel[0])
       || (a.market === b.market && (a.market === 'h2h' || a.market === 'qh2h') && a.sel.slice().sort().join() === b.sel.slice().sort().join())
+      || (a.market === 'spw' && b.market === 'spw') || (a.market === 'tri' && b.market === 'tri') || (['spw', 'spp'].includes(a.market) && ['spw', 'spp'].includes(b.market) && a.market !== b.market && a.sel[0] === b.sel[0])
       || (['win', 'pod', 'top5'].includes(a.market) && ['win', 'pod', 'top5'].includes(b.market) && a.market !== b.market && a.sel[0] === b.sel[0]);
     if (clash) { bad.add(a.key); bad.add(b.key); }
   }
@@ -28164,6 +28240,17 @@ window.betPick = function(market, selCsv, odds, label) {
   else { if (legs.length >= 10) { if (typeof showToast === 'function') showToast('Max 10 picks on one slip.', 'error'); return; } legs.push({ key, div, market, sel, odds, label }); }
   const st = document.getElementById('bo-stake'); if (st) window._betStake = parseInt(st.value) || window._betStake;
   renderBets();
+};
+window.betTriUpdate = function() {
+  const ids = [0, 1, 2].map(k => (document.getElementById('tri-' + k) || {}).value); const el = document.getElementById('tri-odds'); if (!el) return null;
+  window._triSel = { div: window._betDiv, ids };
+  if (new Set(ids).size < 3) { el.textContent = 'Pick 3 different drivers'; return null; }
+  const p = _betTriP(window._betTriField || [], ids), o = p > 0 ? _betOdds(p) : null; el.textContent = o ? 'Odds ' + fmtOdds(o) : '—'; return o;
+};
+window.betTriAdd = function() {
+  const o = window.betTriUpdate(); if (!o) { if (typeof showToast === 'function') showToast('Pick 3 different drivers.', 'error'); return; }
+  const ids = window._triSel.ids, nm = (id) => ((window._betTriField || []).find(d => d.id === id) || {}).name || '?';
+  betPick('tri', ids.join(','), o, window._betDiv + ' tricast: ' + ids.map(nm).join(' – '));
 };
 window.betRemoveLeg = function(key) { window._betLegs = (window._betLegs || []).filter(l => l.key !== key); renderBets(); };
 window.betClearSlip = function() { window._betLegs = []; renderBets(); };
