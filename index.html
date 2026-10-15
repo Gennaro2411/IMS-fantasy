@@ -8408,7 +8408,7 @@ async function renderTeamBuilder(existingTeam, locked, allTeams) {
         </div>
       </div>
 
-      ${(existingTeam&&(existingTeam.chips||{}).wildcard) ? '<div style="background:rgba(243,156,18,0.15);border-bottom:1px solid #f39c12;color:#f39c12;padding:10px 20px;font-size:.85rem;font-weight:600">🃏 Wildcard active — unlimited transfers this round!</div>' : ''}
+      ${(existingTeam && (existingTeam.chips||{}).wildcard && (existingTeam.chips.wildcard.raceId === ((races||[]).slice().sort((a,b)=>(b.raceNum||0)-(a.raceNum||0))[0]||{}).id)) ? '<div style="background:rgba(243,156,18,0.15);border-bottom:1px solid #f39c12;color:#f39c12;padding:10px 20px;font-size:.85rem;font-weight:600">🃏 Wildcard active — unlimited transfers this round!</div>' : ''}
 
       <!-- Team selector + drivers -->
       <div style="padding:12px 20px">
@@ -11128,6 +11128,13 @@ window.useTripleCaptain = async function(teamId, raceId) {
   }, 'Activate');
 };
 
+// A wildcard is only ACTIVE for the round it was played in (its raceId = the latest race at activation).
+// Once a newer race exists it's just "used" — no banner, no unlimited transfers.
+function _wcActive(team, races) {
+  const wc = team && (team.chips || {}).wildcard; if (!wc || !wc.raceId) return false;
+  const latest = (races || []).slice().sort((a, b) => (b.raceNum || 0) - (a.raceNum || 0))[0];
+  return !!(latest && wc.raceId === latest.id);
+}
 window.useWildcard = async function(teamId, raceId) {
   customConfirm('🃏 Activate Wildcard? You can make unlimited free transfers this round. Your team stays afterwards. Once per season.', async () => {
     const team = await dbGet('teams', teamId);
@@ -22280,7 +22287,7 @@ async function renderMarket() {
     const freeTransfers = myTeam ? (myTeam.freeTransfers !== undefined ? myTeam.freeTransfers : 1) : null;
     // Wildcard active this round? (chip set with a raceId). Shows an unlimited-transfers banner.
     const heroWcChip = myTeam ? (myTeam.chips||{}).wildcard : null;
-    const heroWcActive = !!(heroWcChip && heroWcChip.raceId);
+    const heroWcActive = _wcActive(myTeam, races);
 
     // Squad value — sum of the player's fielded drivers + constructor
     let squadValue = null;
@@ -22638,7 +22645,7 @@ window.confirmTransfer = async function(oldDriverId, newDriverId, div, teamId, c
 
   const freeTransfers = team.freeTransfers !== undefined ? team.freeTransfers : 1;
   const wcChip = (team.chips||{}).wildcard;
-  const wcActiveNow = !!(wcChip && wcChip.raceId);
+  const wcActiveNow = _wcActive(team, await dbGetAll('races').catch(() => []));
 
   // Past your free transfers (and not on a wildcard) you can still transfer, but each move beyond
   // the free limit docks 30 points from the current round. Confirmed further down.
