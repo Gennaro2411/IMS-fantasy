@@ -1961,6 +1961,13 @@
     #page-bets .bo-odd-x{width:58px;text-align:center;color:var(--muted);font-weight:800}
     #page-bets .bo-slip-n{font-style:normal;display:inline-grid;place-items:center;min-width:18px;height:18px;border-radius:9px;background:var(--br);color:#fff;font-size:.62rem;margin-left:4px;padding:0 5px}
     #page-bets .bo-legs{display:flex;flex-direction:column;gap:6px;margin:10px 0 4px;max-height:260px;overflow-y:auto}
+    #page-bets .bo-secbar{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:2px 0 14px}
+    #page-bets .bo-secbar button{display:flex;align-items:center;gap:9px;padding:12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:linear-gradient(160deg,rgba(255,255,255,.055),rgba(255,255,255,.015));color:var(--text);font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:.92rem;letter-spacing:.8px;text-transform:uppercase;text-align:left;cursor:pointer;transition:transform .15s,border-color .2s,background .2s,box-shadow .2s;backdrop-filter:blur(6px)}
+    #page-bets .bo-secbar button span{display:grid;place-items:center;width:30px;height:30px;border-radius:10px;background:color-mix(in srgb,var(--h) 18%,transparent);font-size:1rem;flex-shrink:0}
+    #page-bets .bo-secbar button:hover{transform:translateY(-1px);border-color:color-mix(in srgb,var(--h) 45%,transparent)}
+    #page-bets .bo-secbar button.on{border-color:var(--h);background:linear-gradient(160deg,color-mix(in srgb,var(--h) 26%,transparent),color-mix(in srgb,var(--h) 8%,transparent));box-shadow:0 6px 22px color-mix(in srgb,var(--h) 22%,transparent)}
+    #page-bets .bo-secbar button.on span{background:var(--h);color:#000}
+    #page-bets .bo-sec{scroll-margin-top:70px}
     #page-bets .bo-leg{display:grid;grid-template-columns:minmax(0,1fr) auto 22px;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.07)}
     #page-bets .bo-leg > div{min-width:0} #page-bets .bo-leg b{display:block;font-size:.82rem;line-height:1.25;white-space:normal;overflow-wrap:anywhere} #page-bets .bo-leg small{font-size:.6rem;color:var(--muted)}
     #page-bets .bo-leg > span{font-family:'Barlow Condensed',sans-serif;font-weight:800;color:#fff}
@@ -27481,6 +27488,7 @@ window.renderBets = async function() {
   const open = !!upcoming;
   const openStake = myBets.filter(b => b.status === 'open').reduce((s, b) => s + (b.stake || 0), 0);
 
+  const _secHid = (k) => (isC || window._betSec === k) ? '' : ' style="display:none"'; // driver divisions: one section open at a time
   const oddsBtn = (market, sel, label, odds) => {
     const key = market + ':' + sel.join('-');
     const on = (window._betLegs || []).some(l => l.key === div + '|' + key);
@@ -27713,6 +27721,14 @@ window.renderBets = async function() {
           <span class="bo-fmt"><button class="${_betFmtMode() === 'dec' ? 'on' : ''}" onclick="setOddsFmt('dec')" title="Decimal odds — total return per 1 coin">2.50</button><button class="${_betFmtMode() === 'frac' ? 'on' : ''}" onclick="setOddsFmt('frac')" title="Fractional odds — profit : stake">6/4</button></span></div>
         <div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>${isC ? '🏭 Constructors' : '🏁 Race markets'}</span><span class="bo-cols">${isC ? '' : '<i>POLE</i>'}<i>${isC ? 'TOP' : 'WIN'}</i>${isC ? '' : '<i>PODIUM</i>'}<i>${isC ? 'TOP 3' : 'TOP 5'}</i></span></div>${rows || '<div class="text-muted" style="padding:14px">Nothing to price here yet.</div>'}
           ${_outHere.length ? `<div class="bo-out-h">✕ Not racing — no bets</div>` + _outHere.map(d => `<div class="bo-row bo-out">${photo(d)}<div class="bo-nm"><b>${esc(d.name)} <span class="bo-ci out">${(d.raceBanRacesLeft > 0 || d.raceBanned) ? 'RACE BAN' : 'OUT'}</span></b><small>${formatM(_pr(d))} · removed from all ${esc(div)} markets</small></div><span class="bo-odd-x">—</span><span class="bo-odd-x">—</span><span class="bo-odd-x">—</span><span class="bo-odd-x">—</span></div>`).join('') : ''}</div>
+        ${(() => { if (isC) return ''; const B = [
+            ['more', '⚔️', 'H2H & specials', !!(h2h || _pgap || _wmar || _ouMargin || _ouTime || _ouDnf || _ouMore.length || _yn.length)],
+            ['sprint', '⚡', 'Sprint', !!(upcoming && upcoming.isSprint && field.length)],
+            ['fpos', '📍', 'Finish position', Object.keys(_fpos).length > 0],
+            ['dnf', '💥', 'Driver to DNF', Object.keys(_dnfR).length > 0],
+            ['tri', '🎰', 'Tricast', field.length >= 3]].filter(x => x[3]);
+          return B.length ? `<div class="bo-secbar" style="--h:${hue}">${B.map(([k, i, l]) => `<button class="${window._betSec === k ? 'on' : ''}" data-k="${k}" onclick="betSec('${k}')"><span>${i}</span>${l}</button>`).join('')}</div>` : ''; })()}
+        <div class="bo-sec" data-sec="more"${_secHid('more')}>
         ${h2h ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>⚔️ Head to head</span>${isC ? '<small>Who scores more BOTT points</small>' : `<span class="bo-fmt"><button class="${_h2hQ ? '' : 'on'}" onclick="setH2hMode('race')">Race</button><button class="${_h2hQ ? 'on' : ''}" onclick="setH2hMode('quali')">Quali</button></span>`}</div><div class="bo-h2h-wrap">${h2h || '<div class="text-muted" style="padding:6px">Not enough qualifying laps to price these yet.</div>'}</div></div>` : ''}
         ${_pgap ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>⏱ Pole gap</span><small>Pole margin to P2 in qualifying</small></div>
           <div class="bo-pgap">${[['lt01', 'Under 0.1 s'], ['01to02', '0.1 – 0.2 s'], ['gt02', 'Over 0.2 s']].map(([k, l], ix) => `<div class="bo-pg-opt"><span>${l}</span>${oddsBtn('pgap', [k], div + ' pole gap: ' + l, finalOdds('pgap', [k], _betOdds(_pgap[ix])))}</div>`).join('')}</div></div>` : ''}
@@ -27726,21 +27742,26 @@ window.renderBets = async function() {
           ${_yn.map(([k, l, p]) => `<div class="bo-ou"><div><b>${l}</b></div>
             <div class="bo-ou-b"><i>YES</i>${oddsBtn('yn', [k, 'yes'], div + ' ' + l.toLowerCase() + ': yes', _ouOdds('yn', [k, 'yes'], p))}</div>
             <div class="bo-ou-b"><i>NO</i>${oddsBtn('yn', [k, 'no'], div + ' ' + l.toLowerCase() + ': no', _ouOdds('yn', [k, 'no'], 1 - p))}</div></div>`).join('')}</div>` : ''}
+        </div><div class="bo-sec" data-sec="sprint"${_secHid('sprint')}>
         ${(!isC && upcoming && upcoming.isSprint && field.length) ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>⚡ Sprint</span><span class="bo-cols"><i>WIN</i><i>PODIUM</i></span></div>
           ${field.map(d => `<div class="bo-row">${photo(d)}<div class="bo-nm"><b>${esc(d.name)}</b><small>Sprint race</small></div>${oddsBtn('spw', [d.id], d.name + ' to win the ' + div + ' sprint', finalOdds('spw', [d.id], _betOdds(P.win[d.id])))}${oddsBtn('spp', [d.id], d.name + ' sprint podium in ' + div, finalOdds('spp', [d.id], _betOdds((P.pod || {})[d.id])))}</div>`).join('')}</div>` : ''}
+        </div><div class="bo-sec" data-sec="fpos"${_secHid('fpos')}>
         ${(!isC && Object.keys(_fpos).length) ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>📍 Finishing position</span><small>Over = finishes lower (a DNF counts as over)</small></div>
           ${field.filter(d => _fpos[d.id]).map(d => { const o = _fpos[d.id], L = String(o.line); return `<div class="bo-ou"><div class="bo-ou-c">${photo(d)}<div><b>${esc(d.name)}</b><span class="bo-ou-line">LINE <em>P${o.line}</em></span></div></div>
             <div class="bo-ou-b"><i>OVER</i>${oddsBtn('ou', ['fpos:' + d.id, 'over', L], d.name + ' finishing position over ' + o.line + ' (' + div + ')', _ouOdds('ou', ['fpos:' + d.id, 'over', L], o.po))}</div>
             <div class="bo-ou-b"><i>UNDER</i>${oddsBtn('ou', ['fpos:' + d.id, 'under', L], d.name + ' finishing position under ' + o.line + ' (' + div + ')', _ouOdds('ou', ['fpos:' + d.id, 'under', L], 1 - o.po))}</div></div>`; }).join('')}</div>` : ''}
+        </div><div class="bo-sec" data-sec="dnf"${_secHid('dnf')}>
         ${(!isC && Object.keys(_dnfR).length) ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>💥 Driver to DNF</span><small>From each driver's DNF rate</small></div>
           ${field.filter(d => _dnfR[d.id] != null).map(d => { const p = _dnfR[d.id]; return `<div class="bo-ou"><div class="bo-ou-c">${photo(d)}<div><b>${esc(d.name)}</b><span class="bo-ou-line">DNF RATE <em>${Math.round(p * 100)}%</em></span></div></div>
             <div class="bo-ou-b"><i>YES</i>${oddsBtn('yn', ['ddnf:' + d.id, 'yes'], d.name + ' to DNF (' + div + '): yes', _ouOdds('yn', ['ddnf:' + d.id, 'yes'], p))}</div>
             <div class="bo-ou-b"><i>NO</i>${oddsBtn('yn', ['ddnf:' + d.id, 'no'], d.name + ' to DNF (' + div + '): no', _ouOdds('yn', ['ddnf:' + d.id, 'no'], 1 - p))}</div></div>`; }).join('')}</div>` : ''}
+        </div><div class="bo-sec" data-sec="tri"${_secHid('tri')}>
         ${(!isC && field.length >= 3) ? (() => { const ts = (window._triSel && window._triSel.div === div) ? window._triSel.ids : [field[0].id, field[1].id, field[2].id];
           const opt = (k) => `<select id="tri-${k}" class="bo-tri-s" onchange="betTriUpdate()">${field.map(d => `<option value="${esc(d.id)}"${ts[k] === d.id ? ' selected' : ''}>${esc(d.name)}</option>`).join('')}</select>`;
           return `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>🎰 Tricast</span><small>Pick 1st, 2nd & 3rd in exact order</small></div>
           <div style="display:flex;flex-direction:column;gap:6px;padding:10px 14px"><label style="display:flex;gap:8px;align-items:center"><b style="width:32px">1st</b>${opt(0)}</label><label style="display:flex;gap:8px;align-items:center"><b style="width:32px">2nd</b>${opt(1)}</label><label style="display:flex;gap:8px;align-items:center"><b style="width:32px">3rd</b>${opt(2)}</label>
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:4px"><span id="tri-odds" style="font-weight:800;color:var(--gold)"></span><button class="btn btn-primary btn-sm" ${open ? '' : 'disabled'} onclick="betTriAdd()">Add to slip</button></div></div></div>`; })() : ''}
+        </div>
         ${(isC && Object.keys(_ouCons).length) ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>📏 Constructor points</span><small>Over / under BOTT points this round</small></div>
           ${field.filter(c => _ouCons[c.id]).map(c => { const o = _ouCons[c.id]; return `<div class="bo-ou"><div class="bo-ou-c">${photo(c)}<div><b>${esc(c.name)}</b><span class="bo-ou-line">LINE <em>${o.line} pts</em></span></div></div>
             <div class="bo-ou-b"><i>OVER</i>${oddsBtn('cou', [c.id, 'over', String(o.line)], c.name + ' over ' + o.line + ' BOTT pts', _ouOdds('cou', [c.id, 'over', String(o.line)], o.po))}</div>
@@ -28240,6 +28261,14 @@ window.betPick = function(market, selCsv, odds, label) {
   else { if (legs.length >= 10) { if (typeof showToast === 'function') showToast('Max 10 picks on one slip.', 'error'); return; } legs.push({ key, div, market, sel, odds, label }); }
   const st = document.getElementById('bo-stake'); if (st) window._betStake = parseInt(st.value) || window._betStake;
   renderBets();
+};
+// Section buttons under the race markets: open one section at a time (tap again to close) and jump to it.
+window.betSec = function(k) {
+  window._betSec = window._betSec === k ? null : k;
+  document.querySelectorAll('#page-bets .bo-sec').forEach(el => { el.style.display = el.dataset.sec === window._betSec ? '' : 'none'; });
+  document.querySelectorAll('#page-bets .bo-secbar button').forEach(b => b.classList.toggle('on', b.dataset.k === window._betSec));
+  if (window._betSec) { const el = document.querySelector('#page-bets .bo-sec[data-sec="' + k + '"]'); if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 30); }
+  if (k === 'tri' && window._betSec) setTimeout(() => { try { betTriUpdate(); } catch (e) {} }, 40);
 };
 window.betTriUpdate = function() {
   const ids = [0, 1, 2].map(k => (document.getElementById('tri-' + k) || {}).value); const el = document.getElementById('tri-odds'); if (!el) return null;
