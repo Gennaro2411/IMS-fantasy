@@ -2309,10 +2309,10 @@
     .wd-search-ico{position:absolute;left:16px;top:50%;transform:translateY(-50%);opacity:.55;pointer-events:none}
     .wd-search input{width:100%;padding:14px 16px 14px 44px;border-radius:14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);color:#fff;font-size:1rem;outline:none;transition:border-color .15s,box-shadow .15s}
     .wd-search input:focus{border-color:rgba(46,204,113,.6);box-shadow:0 0 0 4px rgba(46,204,113,.12)}
-    #wd-sugg{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:50;background:rgba(22,22,32,0.98);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.1);border-radius:14px;max-height:320px;overflow-y:auto;box-shadow:0 18px 40px rgba(0,0,0,.55);padding:4px}
-    #wd-sugg:empty{display:none}
-    #wd-sugg button{display:flex;align-items:center;gap:12px;width:100%;padding:8px 10px;background:none;border:none;border-radius:10px;color:#fff;cursor:pointer;text-align:left;font-weight:700;font-size:.92rem}
-    #wd-sugg button:hover{background:rgba(46,204,113,0.12)}#wd-sugg img{width:30px;height:30px;border-radius:50%;object-fit:cover}
+    #wd-sugg,#pt-sugg{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:50;background:rgba(22,22,32,0.98);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.1);border-radius:14px;max-height:320px;overflow-y:auto;box-shadow:0 18px 40px rgba(0,0,0,.55);padding:4px}
+    #wd-sugg:empty,#pt-sugg:empty{display:none}
+    #wd-sugg button,#pt-sugg button{display:flex;align-items:center;gap:12px;width:100%;padding:8px 10px;background:none;border:none;border-radius:10px;color:#fff;cursor:pointer;text-align:left;font-weight:700;font-size:.92rem}
+    #wd-sugg button:hover,#pt-sugg button:hover{background:rgba(46,204,113,0.12)}#wd-sugg img{width:30px;height:30px;border-radius:50%;object-fit:cover}
     .wd-board{display:flex;flex-direction:column;gap:8px;overflow-x:auto;padding-bottom:4px}
     .wd-row{display:grid;grid-template-columns:1.5fr repeat(7,1fr);gap:8px;min-width:800px}
     .wd-head div{text-align:center;font-size:.62rem;font-weight:800;letter-spacing:2px;color:var(--muted);padding-bottom:2px}
@@ -2377,6 +2377,14 @@
     .hl-btn:hover:not([disabled]){filter:brightness(1.1);transform:translateY(-2px)}.hl-btn:active:not([disabled]){transform:scale(.97)}.hl-btn[disabled]{opacity:.45;cursor:default}
     .hl-over{text-align:center;margin-top:16px;padding:18px;border-radius:18px;background:linear-gradient(135deg,rgba(239,68,68,0.14),rgba(255,255,255,0.02) 65%);border:1px solid rgba(248,113,113,0.35);animation:wdFlip .5s both}
     .hl-over b:first-child{font-family:'Barlow Condensed',sans-serif;font-size:1.4rem;letter-spacing:1px}.hl-final{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:3rem;color:#fb923c;line-height:1;margin:6px 0 12px}.hl-final small{display:block;font-size:.8rem;color:var(--muted);letter-spacing:2px}
+    .pt-qn{font-size:.72rem;letter-spacing:2px;color:var(--muted);font-weight:700}.pt-qt{font-size:1.15rem;margin-top:6px;line-height:1.4}.pt-qt b{color:#2ecc71}
+    .pt-res{display:flex;gap:16px;align-items:center;margin:14px 0 10px}.pt-col{position:relative;width:54px;height:120px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid var(--border);overflow:hidden;flex:none}
+    .pt-fill{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(0deg,#2ecc71,#7cf0a8);animation:ptGrow .9s ease-out}.pt-col span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.2rem;text-shadow:0 1px 4px #000}
+    .pt-res.bad .pt-fill{background:linear-gradient(0deg,#e74c3c,#ff8a7a)}.pt-res.zero .pt-col{border-color:#f7cf55;box-shadow:0 0 18px rgba(247,207,85,.5)}@keyframes ptGrow{from{height:0}}
+    .pt-list{max-height:260px;overflow:auto;border:1px solid var(--border);border-radius:12px}.pt-list>div{display:grid;grid-template-columns:1fr auto 44px;gap:8px;padding:6px 10px;font-size:.84rem;border-bottom:1px solid var(--border)}
+    .pt-list small{color:var(--muted)}.pt-list b{text-align:right}.pt-list .z b{color:#f7cf55}.pt-list .me{background:rgba(46,204,113,.15)}
+    .pt-big{font-family:'Barlow Condensed',sans-serif;font-size:4rem;font-weight:800;color:#2ecc71;line-height:1}.pt-sum{margin-top:12px;text-align:left}.pt-sum>div{display:grid;grid-template-columns:34px 1fr auto;gap:8px;padding:6px 4px;border-bottom:1px solid var(--border);font-size:.86rem}
+    .pt-lb h3{font-size:.95rem;margin-bottom:6px}.pt-lb-row{display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:center;padding:6px 4px;border-bottom:1px solid var(--border);font-size:.84rem}.pt-lb-row small{display:block;color:var(--muted);font-size:.72rem}.pt-lb-row.me{background:rgba(46,204,113,.12)}
     .hlb-row{display:grid;grid-template-columns:26px minmax(0,1fr) 70px 70px 34px 34px 46px 50px;gap:4px;align-items:center;padding:7px 8px;font-size:.82rem;border-bottom:1px solid var(--border)}
     .hlb-row.me{background:rgba(59,130,246,.12);border-radius:8px}.hlb-head{font-size:.62rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:6px 8px}
     .hlb-row .c{text-align:center;white-space:nowrap;line-height:1.15}.hlb-row .c small{display:block;color:var(--muted);font-size:.68rem}.hlb-row .pos{font-weight:700;color:var(--muted)}
@@ -29769,6 +29777,7 @@ window.renderGames = async function() {
   if (window._games.view === 'grid') { clearInterval(window._wdDuelPoll); return renderGridGame(el); }
   if (window._games.view === 'hl') { clearInterval(window._wdDuelPoll); return renderHLGame(el); }
   if (window._games.view === 'cn') { clearInterval(window._wdDuelPoll); return renderConnGame(el); }
+  if (window._games.view === 'pt') { clearInterval(window._wdDuelPoll); return renderPTGame(el); }
   if (window._games.view !== 'wordle') {
     clearInterval(window._wdDuelPoll);
     { const lk = await dbGet('settings', 'gamesLock').catch(() => null); window._gamesLock = (lk && lk.value) || {}; }
@@ -29778,6 +29787,7 @@ window.renderGames = async function() {
       ${(() => { const gl = !!window._gamesLock.grid; return `<button class="gm-bubble${gl ? ' gm-locked' : ''}" onclick="openGame('grid')"><span class="gm-ico">${gl ? '🔒' : '🔢'}</span><b>IMS PADDOCKDLE GRID${gl ? ' <span class="gm-lock-tag">LOCKED</span>' : ''}</b><small>Fill a 3×3 grid with IMS drivers who fit both the row and column — nationality, team history, BOTTs, wins and more.</small></button>`; })()}
       ${(() => { const hl = !!window._gamesLock.hl; return `<button class="gm-bubble${hl ? ' gm-locked' : ''}" onclick="openGame('hl')"><span class="gm-ico">${hl ? '🔒' : '⬆️'}</span><b>IMS HIGHER OR LOWER${hl ? ' <span class="gm-lock-tag">LOCKED</span>' : ''}</b><small>10 questions: two IMS drivers, one stat — starts, wins, podiums, poles, points or BOTTs. Higher or lower?</small></button>`; })()}
       ${(() => { const cl = !!window._gamesLock.cn; return `<button class="gm-bubble${cl ? ' gm-locked' : ''}" onclick="openGame('cn')"><span class="gm-ico">${cl ? '🔒' : '🧩'}</span><b>IMS CONNECTIONS${cl ? ' <span class="gm-lock-tag">LOCKED</span>' : ''}</b><small>16 IMS drivers, 4 hidden groups. Find the four drivers who share a team, nationality, title or stat — 4 mistakes and you're out.</small></button>`; })()}
+      ${(() => { const pl = !!window._gamesLock.pt; return `<button class="gm-bubble${pl ? ' gm-locked' : ''}" onclick="openGame('pt')"><span class="gm-ico">${pl ? '🔒' : '🎯'}</span><b>IMS POINTLESS${pl ? ' <span class="gm-lock-tag">LOCKED</span>' : ''}</b><small>5 questions. Name an IMS driver who fits — the fewer IMS starts they have, the fewer points you score. Lowest total wins.</small></button>`; })()}
       <div class="gm-bubble gm-soon"><span class="gm-ico">🔒</span><b>MORE SOON</b><small>New games on the way.</small></div></div>`;
     return;
   }
@@ -30092,7 +30102,7 @@ window.careerLookup = async function(name) {
 };
 
 // ---- Admin: lock / unlock games ----
-const GAMES_LIST = [['wordle', '🟩', 'IMS PaddockDle'], ['grid', '🔢', 'IMS PaddockDle Grid'], ['hl', '⬆️', 'IMS Higher or Lower'], ['cn', '🧩', 'IMS Connections']];
+const GAMES_LIST = [['wordle', '🟩', 'IMS PaddockDle'], ['grid', '🔢', 'IMS PaddockDle Grid'], ['hl', '⬆️', 'IMS Higher or Lower'], ['cn', '🧩', 'IMS Connections'], ['pt', '🎯', 'IMS Pointless']];
 window.renderAdminGames = async function() {
   const box = document.getElementById('admin-games-locks'); if (!box) return;
   const lk = await dbGet('settings', 'gamesLock').catch(() => null); const L = (lk && lk.value) || {};
@@ -30160,7 +30170,7 @@ async function _gameCoins(kind, amount) {
   } catch (e) { return 0; }
 }
 function _coinPop(n, kind) {
-  const lbl = { 'cn-hidden': 'Found a hidden group!', 'duel-cn': 'Connections duel win', 'cn-daily': 'Daily Connections', 'cn-win': 'Connections solved!', 'wd-daily': 'Daily PaddockDle', 'gr-daily': 'Daily Grid', 'wd-win': 'Got the daily driver!', 'gr-win': 'Perfect 9/9 grid!', 'hl-daily': 'Daily Higher or Lower', 'hl-win': '8/10 or better!', 'duel-hl': 'Higher or Lower duel win', 'duel-wd': 'PaddockDle duel win', 'duel-gr': 'Grid duel win' }[kind] || 'Games';
+  const lbl = { 'cn-hidden': 'Found a hidden group!', 'duel-cn': 'Connections duel win', 'cn-daily': 'Daily Connections', 'cn-win': 'Connections solved!', 'wd-daily': 'Daily PaddockDle', 'gr-daily': 'Daily Grid', 'wd-win': 'Got the daily driver!', 'gr-win': 'Perfect 9/9 grid!', 'hl-daily': 'Daily Higher or Lower', 'pt-daily': 'Daily Pointless', 'pt-win': 'Pointless — 100 or under!', 'hl-win': '8/10 or better!', 'duel-hl': 'Higher or Lower duel win', 'duel-wd': 'PaddockDle duel win', 'duel-gr': 'Grid duel win' }[kind] || 'Games';
   const el = document.createElement('div'); el.className = 'coin-pop'; const nOpen = document.querySelectorAll('.coin-pop').length; if (nOpen) el.style.top = (84 + nOpen * 78) + 'px';
   el.innerHTML = `<span class="imc" style="font-size:1.6rem"></span><div><b>+${n} IM$</b><small>${lbl}</small></div>`;
   document.body.appendChild(el); setTimeout(() => el.classList.add('out'), 2600); setTimeout(() => el.remove(), 3200);
@@ -30794,6 +30804,122 @@ async function renderHLGame(el) {
   if (mode === 'daily' && document.getElementById('hl-timer')) { const until = _now() + _wdMsToMidnight(); clearInterval(window._wdTick);
     window._wdTick = setInterval(() => { const t = document.getElementById('hl-timer'); if (!t) { clearInterval(window._wdTick); return; } const ms = until - _now(); if (ms <= 0) { clearInterval(window._wdTick); renderGames(); return; }
       t.textContent = [Math.floor(ms / 36e5), Math.floor(ms / 6e4) % 60, Math.floor(ms / 1e3) % 60].map(x => String(x).padStart(2, '0')).join(':'); }, 1000); }
+}
+// ===== GAMES: IMS POINTLESS =====
+// 5 questions. Name an IMS driver who fits — score = their IMS race starts vs the most-raced valid answer (×100).
+// Lowest total wins. Bottom ~10% of valid answers (fewest starts) score 0 = POINTLESS. Wrong/blank = 100.
+// Pool: everyone on the market + reserves with 25+ starts.
+const PT_N = 5;
+const _ptGetMode = () => window._ptMode || 'daily';
+window.setPTMode = function(m) { window._ptMode = m; window._ptReveal = null; renderGames(); };
+const _ptLoadSt = () => { try { return JSON.parse(localStorage.getItem('imsPtDaily') || 'null'); } catch (e) { return null; } };
+const _ptSave = (st) => { try { localStorage.setItem('imsPtDaily', JSON.stringify(st)); } catch (e) {} };
+function _ptCats(pool) {
+  const C = [], add = (id, q, f, min) => { const ids = pool.filter(f).map(p => p.id); if (ids.length >= (min || 6)) C.push({ id, q, ids }); };
+  add('w', 'Name an IMS driver who has <b>won a race</b>', p => p.w >= 1);
+  add('w5', 'Name an IMS driver with <b>5 or more race wins</b>', p => p.w >= 5);
+  add('pd', 'Name an IMS driver who has <b>finished on the podium</b>', p => p.pd >= 1);
+  add('pd10', 'Name an IMS driver with <b>10 or more podiums</b>', p => p.pd >= 10);
+  add('pl', 'Name an IMS driver who has taken a <b>pole position</b>', p => p.pl >= 1);
+  add('b', 'Name an IMS driver who has won a <b>BOTT</b>', p => p.b >= 1);
+  add('p500', 'Name an IMS driver with <b>500+ career points</b>', p => p.p >= 500);
+  add('w0', 'Name an IMS driver with <b>50+ starts but no race wins</b>', p => p.st >= 50 && !p.w);
+  ['D0', 'D1', 'D2', 'D3', 'D4'].forEach(d => add('dh' + d, `Name an IMS driver who has raced in <b>${d}</b>`, p => (p.dh || {})[d] > 0));
+  const nats = {}; pool.forEach(p => { if (p.nat) nats[p.nat] = (nats[p.nat] || 0) + 1; });
+  Object.keys(nats).forEach(n => add('n' + n, `Name an IMS driver from <b>${esc(n)}</b> ${_wdFlag(n)}`, p => p.nat === n));
+  const tms = {}; pool.forEach(p => Object.entries(p.th || {}).forEach(([k, n]) => { tms[k] = tms[k] || n; }));
+  Object.entries(tms).forEach(([k, n]) => add('t' + k, `Name an IMS driver who has driven for <b>${esc(n)}</b>`, p => (p.th || {})[k]));
+  const fss = {}; pool.forEach(p => { if (p.fs) fss[p.fs] = 1; });
+  Object.keys(fss).forEach(s => add('fs' + s, `Name an IMS driver whose <b>first season was S${s}</b>`, p => String(p.fs) === s));
+  return C;
+}
+function _ptMakeQs(pool, rnd) {
+  const C = _ptCats(pool); if (C.length < PT_N) return null; const out = [], used = new Set();
+  // Prefer variety: at most one team, one nationality and one division question per round.
+  let guard = 0; while (out.length < PT_N && guard++ < 500) { const c = C[Math.floor(rnd() * C.length)]; const g = c.id[0] === 'd' ? 'dh' : c.id[0] === 'n' || c.id[0] === 't' || c.id.startsWith('fs') ? c.id.slice(0, c.id.startsWith('fs') ? 2 : 1) : c.id;
+    if (used.has(c.id) || (['t', 'n', 'dh', 'fs'].includes(g) && out.some(q => q.g === g))) continue; used.add(c.id); out.push({ c: c.id, g }); }
+  return out.length === PT_N ? out.map(q => q.c) : null;
+}
+// Score table for one question: {id: points}. Pointless = the fewest-starts ~10% of valid answers.
+function _ptScores(cid, pool) {
+  const c = _ptCats(pool).find(x => x.id === cid); if (!c) return null;
+  const ps = c.ids.map(id => pool.find(p => p.id === id)).filter(Boolean).sort((a, b) => a.st - b.st), mx = Math.max(1, ...ps.map(p => p.st)), nz = Math.max(1, Math.round(ps.length * 0.1)), sc = {};
+  ps.forEach((p, i) => { sc[p.id] = i < nz ? 0 : Math.max(1, Math.round(p.st / mx * 100)); });
+  return { q: c.q, sc, list: ps.slice().reverse() };
+}
+function _ptState(mode, pool) {
+  if (mode === 'inf') { if (!window._ptInf) { const qs = _ptMakeQs(pool, Math.random); window._ptInf = qs ? { qs, ans: [], done: false } : null; } return window._ptInf; }
+  const key = _dailyKey(); let st = _ptLoadSt(); if (st && st.key === key) return st;
+  const qs = _ptMakeQs(pool, _grRng(_wdHash('imspt' + key))); if (!qs) return null; st = { key, qs, ans: [], done: false }; _ptSave(st); return st;
+}
+window.ptSuggest = function(v) {
+  const box = document.getElementById('pt-sugg'); if (!box) return; const q = _wdNorm(v); if (!q) { box.innerHTML = ''; return; }
+  const st = _ptCur(), used = new Set((st && st.ans || []).map(a => a.id));
+  const m = (window._ptPool || []).filter(p => _wdNorm(p.name).includes(q) && !used.has(p.id)).slice(0, 8);
+  box.innerHTML = m.map(p => `<button onclick="ptAnswer('${esc(p.id)}')">${_wdAv(p, 26)}<span>${esc(p.name)}</span></button>`).join('');
+};
+window.ptPickFirst = function() { const f = document.querySelector('#pt-sugg button'); if (f) f.click(); };
+const _ptCur = () => _ptGetMode() === 'inf' ? window._ptInf : _ptLoadSt();
+window.ptAnswer = async function(id) {
+  if (window._ptLocked || window._ptReveal) return; const pool = window._ptPool || [], st = _ptCur(); if (!st || st.done) return;
+  const i = st.ans.length, S = _ptScores(st.qs[i], pool); if (!S) return;
+  const pts = id && S.sc[id] != null ? S.sc[id] : 100; st.ans.push({ id: id || '', pts });
+  if (st.ans.length >= PT_N) st.done = true; if (_ptGetMode() === 'daily') _ptSave(st);
+  window._ptReveal = { i }; renderGames();
+  if (st.done && _ptGetMode() === 'daily') { await _ptRecord(st); window._ptLb = null; }
+  if (st.done && st.ans.reduce((a, x) => a + x.pts, 0) <= 100) setTimeout(() => { try { fireConfetti({ count: 160 }); } catch (e) {} }, 250);
+};
+window.ptPass = function() { customConfirm('Skip this question? It counts as 100 points.', () => ptAnswer('')); };
+window.ptNext = function() { window._ptReveal = null; renderGames(); };
+window.ptAgain = function() { window._ptInf = null; window._ptReveal = null; renderGames(); };
+async function _ptRecord(st) {
+  const me = _wdMe(), id = _wdScoreId(me.uid), tot = st.ans.reduce((a, x) => a + x.pts, 0), pl = st.ans.filter(a => a.id && a.pts === 0).length;
+  try { dbInvalidate('wordleScores'); const cur = await dbGet('wordleScores', id).catch(() => null) || {}; if (cur.ptDay === st.key) return;
+    await dbSet('wordleScores', id, { uid: me.uid, name: me.name, points: cur.points || 0, ptDay: st.key, ptDayScore: tot, ptDays: (cur.ptDays || 0) + 1, ptTotal: (cur.ptTotal || 0) + tot,
+      ptBest: Math.min(cur.ptBest == null ? 9e9 : cur.ptBest, tot), ptPointless: (cur.ptPointless || 0) + pl }); } catch (e) {}
+  await _gameCoins('pt-daily', 25); if (tot <= 100) await _gameCoins('pt-win', 25);
+}
+async function _ptLeaderboardHtml() {
+  const day = _dailyKey(), rows = (await _gmNoTest(await dbGetAll('wordleScores', { fresh: true }).catch(() => []))).filter(r => r && r.uid && (r.ptDays || 0) > 0), me = _wdMe().uid;
+  const today = rows.filter(r => r.ptDay === day).sort((a, b) => a.ptDayScore - b.ptDayScore);
+  const all = rows.slice().sort((a, b) => (a.ptTotal / a.ptDays) - (b.ptTotal / b.ptDays) || b.ptDays - a.ptDays);
+  const line = (r, i, v, sub) => `<div class="pt-lb-row${r.uid === me ? ' me' : ''}"><span class="pos">${['🥇', '🥈', '🥉'][i] || i + 1}</span><span class="nm">${esc(r.name || 'Player')}<small>${sub}</small></span><b>${v}</b></div>`;
+  return `<div class="wd-panel pt-lb"><h3>📅 Today — lowest wins</h3>${today.length ? today.slice(0, 15).map((r, i) => line(r, i, r.ptDayScore, '')).join('') : '<div class="text-muted" style="font-size:.82rem">Nobody yet — be first.</div>'}
+    <h3 style="margin-top:14px">🏆 All-time average</h3>${all.slice(0, 15).map((r, i) => line(r, i, Math.round(r.ptTotal / r.ptDays), `${r.ptDays} played · 🎯 ${r.ptPointless || 0} pointless · best ${r.ptBest}`)).join('')}</div>`;
+}
+function _ptQHtml(st, pool, i, reveal) {
+  const S = _ptScores(st.qs[i], pool); if (!S) return '';
+  const a = reveal ? st.ans[i] : null, ap = a && pool.find(p => p.id === a.id);
+  let h = `<div class="wd-panel pt-q"><div class="pt-qn">QUESTION ${i + 1} / ${PT_N}</div><div class="pt-qt">${S.q}</div>`;
+  if (!reveal) return h + `<div class="wd-search" style="margin-top:14px"><span class="wd-search-ico">🔍</span><input id="pt-input" type="text" placeholder="Type an IMS driver…" autocomplete="off" oninput="ptSuggest(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();ptPickFirst();}"><div id="pt-sugg"></div></div>
+    <button class="btn btn-secondary" style="margin-top:10px" onclick="ptPass()" ${window._ptLocked ? 'disabled' : ''}>Skip (100)</button></div>`;
+  const cls = !a.id || a.pts === 100 && S.sc[a.id] == null ? 'bad' : a.pts === 0 ? 'zero' : '';
+  h += `<div class="pt-res ${cls}"><div class="pt-col"><div class="pt-fill" style="height:${a.pts}%"></div><span>${a.pts}</span></div>
+    <div><b>${ap ? esc(ap.name) : 'No answer'}</b><div class="text-muted" style="font-size:.85rem">${!a.id ? 'Skipped — 100 points' : S.sc[a.id] == null ? 'Not a valid answer — 100 points' : a.pts === 0 ? '🎯 POINTLESS! Nobody thinks of them.' : `${ap.st} IMS starts`}</div></div></div>
+    <div class="pt-list">${S.list.map(p => `<div class="${p.id === a.id ? 'me' : ''}${S.sc[p.id] === 0 ? ' z' : ''}"><span>${esc(p.name)}</span><small>${p.st} starts</small><b>${S.sc[p.id] === 0 ? '🎯 0' : S.sc[p.id]}</b></div>`).join('')}</div>
+    <button class="btn btn-primary" style="margin-top:12px;width:100%" onclick="ptNext()">${st.done && i === PT_N - 1 ? 'See result' : 'Next question →'}</button></div>`;
+  return h;
+}
+async function renderPTGame(el) {
+  if (!window._ptPool || _now() - (window._ptPoolAt || 0) > 10 * 60e3) { const { gridPool } = await _wdLoad(); window._ptPool = gridPool.filter(p => (p.st || 0) > 0 && (!p.res || p.st >= 25)); window._ptPoolAt = _now(); }
+  const pool = window._ptPool, mode = _ptGetMode();
+  const locked = !!(window._gamesLock || {}).pt && !adminLoggedIn && !_gamesAccess(); window._ptLocked = locked;
+  const tabs = `<div class="wd-modes">${[['daily', '📅', 'DAILY'], ['inf', '∞', 'PRACTICE']].map(([m, i, l]) => `<button class="${mode === m ? 'on' : ''}" onclick="setPTMode('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>`;
+  const st = _ptState(mode, pool), tot = st ? st.ans.reduce((a, x) => a + x.pts, 0) : 0;
+  let body = `<div class="wd-top"><button class="wd-back" onclick="openGame('hub')" title="Back to Games">←</button><div class="wd-brand"><img src="icons/icon-192.png?v=3" alt="IMS"><span>POINT<em>LESS</em></span></div><div class="wd-meta">${mode === 'daily' ? `<span class="wd-pill">#${_wdDayNum()}</span>` : ''}<span class="wd-pill">🎯 ${tot} pts</span></div></div>
+    ${(window._gamesLock || {}).pt ? `<div class="wd-lockbar">🔒 <b>Pointless is locked</b><span>${locked ? 'It\'ll open soon.' : 'Locked for players — you can still play.'}</span></div>` : ''}${tabs}`;
+  if (!st) body += '<div class="alert alert-warning">Not enough driver data yet — an admin needs to run Build PaddockDle Data From .db.</div>';
+  else if (window._ptReveal) body += _ptQHtml(st, pool, window._ptReveal.i, true);
+  else if (!st.done) body += _ptQHtml(st, pool, st.ans.length, false);
+  else { const pl = st.ans.filter(a => a.id && a.pts === 0).length;
+    body += `<div class="wd-panel" style="text-align:center"><div class="pt-qn">FINAL SCORE</div><div class="pt-big">${tot}</div><div class="text-muted">${pl ? `🎯 ${pl} pointless answer${pl > 1 ? 's' : ''} · ` : ''}lower is better</div>
+      <div class="pt-sum">${st.ans.map((a, i) => { const p = pool.find(x => x.id === a.id); return `<div><span>Q${i + 1}</span><span>${p ? esc(p.name) : '—'}</span><b>${a.pts === 0 && a.id ? '🎯 0' : a.pts}</b></div>`; }).join('')}</div>
+      ${mode === 'inf' ? '<button class="btn btn-primary" style="margin-top:12px" onclick="ptAgain()">Play again</button>' : '<div class="text-muted" style="margin-top:10px;font-size:.82rem">New questions at midnight (UK).</div>'}</div>`; }
+  if (mode === 'daily') body += (st && st.done || !window._ptLb) ? (window._ptLb = await _ptLeaderboardHtml()) : window._ptLb;
+  el.innerHTML = `<div class="wd-wrap">${body}<div class="wd-info"><h3>How to play</h3><p><b>${PT_N} questions.</b> Name an IMS driver who fits. You score their <b>IMS race starts</b> compared to the most-raced valid answer — the most-raced driver scores <b>100</b>, rarely-raced ones score close to 0. The fewest-raced answers score <b>0 — POINTLESS 🎯</b>. Wrong answers and skips score 100. <b>Lowest total wins.</b></p>
+    <p>Pool: everyone on the market, plus reserves with 25+ starts. Stats are all-time across every IMS season.</p>
+    <p style="margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(247,207,85,.08);border:1px solid rgba(247,207,85,.35);font-size:.84rem"><span class="imc"></span> <b>Earn IM$:</b> play the daily for <b>+25 IM$</b>, score <b>100 or under</b> for <b>another +25 IM$</b>. Log in to earn.</p></div></div>`;
+  const inp = document.getElementById('pt-input'); if (inp && !('ontouchstart' in window)) inp.focus();
 }
 // ===== GAMES: IMS PADDOCKDLE GRID =====
 // 3×3 grid: every cell needs a market driver who fits BOTH its row and column category. Each driver
