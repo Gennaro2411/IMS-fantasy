@@ -30854,8 +30854,7 @@ function _ptState(mode, pool) {
 }
 window.ptSuggest = function(v) {
   const box = document.getElementById('pt-sugg'); if (!box) return; const q = _wdNorm(v); if (!q) { box.innerHTML = ''; return; }
-  const st = _ptCur(), used = new Set((st && st.ans || []).map(a => a.id));
-  const m = (window._ptPool || []).filter(p => _wdNorm(p.name).includes(q) && !used.has(p.id)).slice(0, 8);
+  const m = (window._ptPool || []).filter(p => _wdNorm(p.name).includes(q)).slice(0, 8);
   box.innerHTML = m.map(p => `<button onclick="ptAnswer('${esc(p.id)}')">${_wdAv(p, 26)}<span>${esc(p.name)}</span></button>`).join('');
 };
 window.ptPickFirst = function() { const f = document.querySelector('#pt-sugg button'); if (f) f.click(); };
