@@ -1175,7 +1175,7 @@
     <div class="card lg-card">
       <div id="login-step-username">
         <div class="lg-head"><div class="lg-title">Welcome to the grid</div></div>
-        <a href="https://discord.com/api/oauth2/authorize?client_id=1497264243051987075&redirect_uri=https%3A%2F%2Ffantasy.ims-league.com%2F&response_type=token&scope=identify" 
+        <a href="https://discord.com/api/oauth2/authorize?client_id=1497264243051987075&redirect_uri=https%3A%2F%2Ffantasy.ims-league.com%2F&response_type=token&scope=identify" onclick="return discordLoginStart(event)" 
            style="display:flex;align-items:center;justify-content:center;gap:10px;background:#5865F2;color:#fff;padding:12px;border-radius:8px;text-decoration:none;font-weight:700;font-size:.95rem;margin-bottom:16px">
           <svg width="20" height="20" viewBox="0 0 71 55" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M60.1 4.9A58.6 58.6 0 0 0 45.5.4a40.6 40.6 0 0 0-1.8 3.7 54.2 54.2 0 0 0-16.3 0A39 39 0 0 0 25.6.4 58.5 58.5 0 0 0 11 4.9C1.6 19 -1 32.7.3 46.3a59 59 0 0 0 18 9.1 44.7 44.7 0 0 0 3.9-6.3 38.4 38.4 0 0 1-6.1-2.9l1.5-1.1a42.2 42.2 0 0 0 36 0l1.5 1.1a38.3 38.3 0 0 1-6.1 2.9 44.4 44.4 0 0 0 3.9 6.3 58.8 58.8 0 0 0 18-9.1C72.5 30.5 68.8 17 60.1 4.9ZM23.7 38c-3.5 0-6.4-3.2-6.4-7.2s2.8-7.2 6.4-7.2c3.5 0 6.4 3.2 6.3 7.2 0 4-2.8 7.2-6.3 7.2Zm23.6 0c-3.5 0-6.4-3.2-6.4-7.2s2.8-7.2 6.4-7.2c3.5 0 6.4 3.2 6.3 7.2 0 4-2.8 7.2-6.3 7.2Z"/></svg>
           Log in with Discord
@@ -5695,6 +5695,7 @@ async function handleDiscordCallback() {
   const hashParams = new URLSearchParams(hash);
   const accessToken = hashParams.get('access_token');
   const state = hashParams.get('state') || '';
+  if (state.startsWith('h:')) window._handoffNonce = state.slice(2);
 
   // Clear the hash
   history.replaceState(null, '', window.location.pathname);
@@ -5812,7 +5813,49 @@ window.loginRegister = async function() {
   try { localStorage.setItem('imsMyTeamDocId', ref); } catch(e){}
 };
 
+// ---- Discord login hand-off ----
+// On a home-screen app (iPhone especially) the Discord login opens in a SEPARATE browser window with its
+// own storage, so the app itself never got signed in. The app now tags the login with a one-time code;
+// the browser window that finishes the login stores the session under that code, and the app picks it up.
+window.discordLoginStart = function(ev) {
+  try {
+    const a = new Uint8Array(16); crypto.getRandomValues(a); const nonce = 'h' + [...a].map(x => x.toString(16).padStart(2, '0')).join('');
+    localStorage.setItem('imsHandoff', JSON.stringify({ nonce, at: Date.now() }));
+    const url = 'https://discord.com/api/oauth2/authorize?client_id=1497264243051987075&redirect_uri=https%3A%2F%2Ffantasy.ims-league.com%2F&response_type=token&scope=identify&state=' + encodeURIComponent('h:' + nonce);
+    if (ev) ev.preventDefault(); location.href = url; return false;
+  } catch (e) { return true; } // fall back to the plain link
+};
+async function _handoffPublish(team) {
+  const nonce = window._handoffNonce; if (!nonce || !currentUser) return;
+  window._handoffNonce = null;
+  let mine = null; try { mine = JSON.parse(localStorage.getItem('imsHandoff') || 'null'); } catch (e) {}
+  if (mine && mine.nonce === nonce) { try { localStorage.removeItem('imsHandoff'); } catch (e) {} return; } // same window — nothing to hand over
+  try { await dbSet('loginHandoff', nonce, { user: JSON.stringify(currentUser), teamDocId: (team && team.id) || '', at: Date.now() }); } catch (e) { return; }
+  if (typeof showToast === 'function') showToast('✔ Signed in — you can go back to the IMS Fantasy app now', 'success');
+}
+window._handoffCheck = async function() {
+  if (currentUser || !PROJECT_ID || window._handoffBusy) return false;
+  let h = null; try { h = JSON.parse(localStorage.getItem('imsHandoff') || 'null'); } catch (e) {}
+  if (!h || !h.nonce) return false;
+  if (Date.now() - (h.at || 0) > 30 * 60000) { try { localStorage.removeItem('imsHandoff'); } catch (e) {} return false; }
+  window._handoffBusy = true;
+  try {
+    const d = await _dbGetRaw('loginHandoff', h.nonce).catch(() => null);
+    if (!d || !d.user || Date.now() - (d.at || 0) > 30 * 60000) return false;
+    const u = JSON.parse(d.user); if (!u) return false;
+    if (d.teamDocId) try { localStorage.setItem('imsMyTeamDocId', d.teamDocId); } catch (e) {}
+    _saveSession(u); try { localStorage.removeItem('imsHandoff'); } catch (e) {}
+    dbDelete('loginHandoff', h.nonce).catch(() => {});
+    location.reload(); return true;
+  } finally { window._handoffBusy = false; }
+};
+// Check when the app comes back to the front, and every few seconds while the login screen is up.
+document.addEventListener('visibilitychange', () => { if (!document.hidden) window._handoffCheck(); });
+window.addEventListener('focus', () => window._handoffCheck());
+setInterval(() => { const ov = document.getElementById('login-overlay'); if (!currentUser && ov && ov.style.display === 'flex') window._handoffCheck(); }, 4000);
+
 function completeLogin(team, isNew = false) {
+  setTimeout(() => { try { _handoffPublish(team); } catch (e) {} }, 0);
   currentUser = { userId: team.userId, name: team.playerName, teamName: team.teamName };
   window._myTeamDocId = team.id || null;
   // Persisted so it survives refreshes: if this browser ever had a team document and that
@@ -6990,6 +7033,7 @@ async function init() {
   // Handle Discord OAuth callback before showing login
   const discordHandled = await handleDiscordCallback().catch(() => false);
   if (discordHandled) return;
+  if (!currentUser && await window._handoffCheck()) return; // a Discord login finished in another window — pick it up
   if (!currentUser) {
     showLoginOverlay();
     return;
