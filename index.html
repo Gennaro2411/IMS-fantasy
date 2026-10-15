@@ -31086,7 +31086,7 @@ async function renderPTGame(el) {
       ${mode === 'inf' ? (_ptPracUsed() < PT_PRAC_MAX ? `<button class="pt-go" onclick="ptAgain()">PLAY AGAIN · ${PT_PRAC_MAX - _ptPracUsed()} left today</button>` : '<div class="pt-hint" style="margin-top:12px">That was your last practice round today.</div>') : '<div class="pt-hint" style="margin-top:12px">New questions at midnight (UK).</div>'}</div>`; }
   if (mode === 'daily') body += (st && st.done || !window._ptLb) ? (window._ptLb = await _ptLeaderboardHtml()) : window._ptLb;
   el.innerHTML = `<div class="wd-wrap">${body}<div class="wd-info"><h3>How to play</h3><p><b>${PT_N} questions.</b> Name an IMS driver who fits. Points depend on their <b>IMS appearances</b> — the most-raced valid answer scores <b>100</b>, the least-raced score close to 0, and the very fewest are <b>POINTLESS 🎯 (0)</b>. Wrong answers and skips score 100. <b>Lowest total wins.</b></p>
-    <p>Pool: everyone on the market, plus reserves with 25+ appearances. Stats are all-time across every IMS season. <b>📅 Daily</b> — ${PT_N} new questions every day (no repeats until every question has been used). <b>∞ Practice</b> — up to ${PT_PRAC_MAX} rounds a day. <b>⚔️ Duel</b> — TV-show style: take turns, no repeating an answer already given, then a 3-answer Head-to-Head Final where a pointless answer wins outright. Win duels for <b>+5 IM$</b> (up to 25 a day).</p>
+    <p>Pool: everyone on the market, plus reserves with 25+ appearances. Stats are all-time across every IMS season. <b>📅 Daily</b> — ${PT_N} new questions every day (no repeats until every question has been used). <b>∞ Practice</b> — up to ${PT_PRAC_MAX} rounds a day. <b>⚔️ Duel</b> — TV-show style: take turns, no repeating an answer already given, then a Head-to-Head Final where you both give 3 answers at the same time — a pointless answer wins outright. Win duels for <b>+5 IM$</b> (up to 25 a day).</p>
     <p style="margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(247,207,85,.08);border:1px solid rgba(247,207,85,.35);font-size:.84rem"><span class="imc"></span> <b>Earn IM$:</b> play the daily for <b>+10 IM$</b>, score <b>${PT_WIN} or under</b> for <b>another +10 IM$</b>. Log in to earn.</p></div></div>`;
   _ptAnim(); const inp = document.getElementById('pt-input'); if (inp && !('ontouchstart' in window)) inp.focus();
 }
@@ -31098,10 +31098,11 @@ async function renderPTGame(el) {
 const PD_ROUNDS = 3, PD_TURN = 30e3, PD_FINAL_TURN = 50e3, PD_GRACE = 12e3;
 const _pdKey = () => { try { return JSON.parse(localStorage.getItem('imsPTDuel') || 'null'); } catch (e) { return null; } };
 const _pdSet = (v) => { try { v ? localStorage.setItem('imsPTDuel', JSON.stringify(v)) : localStorage.removeItem('imsPTDuel'); } catch (e) {} };
-const _pdFirst = (r) => r % 2 === 0 ? 'host' : 'guest';
+const _pdFirst = (r) => r % 2 === 0 ? 'host' : 'guest'; // rounds 1–2 alternate who goes first
 // Whose turn is it? → { r, who } or null when all rounds are answered.
 function _pdTurn(l) { const h = l.hostAns || [], g = l.guestAns || [];
-  for (let r = 0; r < PD_ROUNDS; r++) { const f = _pdFirst(r), s = f === 'host' ? 'guest' : 'host', fa = f === 'host' ? h : g, sa = f === 'host' ? g : h;
+  // The Head-to-Head Final is played at the same time, blind — nobody gets to go first.
+  for (let r = 0; r < PD_ROUNDS; r++) { if (r === PD_ROUNDS - 1) { if (h.length <= r || g.length <= r) return { r, who: 'both', host: h.length > r, guest: g.length > r }; continue; } const f = _pdFirst(r), s = f === 'host' ? 'guest' : 'host', fa = f === 'host' ? h : g, sa = f === 'host' ? g : h;
     if (fa.length <= r) return { r, who: f }; if (sa.length <= r) return { r, who: s }; } return null; }
 function _pdQs(pool) { const C = _ptCats(pool); if (C.length < 3) return null; const r = () => C[Math.floor(Math.random() * C.length)];
   const big = C.filter(c => c.ids.length >= 8); const out = []; let g = 0;
@@ -31156,23 +31157,24 @@ window.pdLockIn = function() { if (window._pdPicks.length) _pdSubmit(window._pdP
 function _pdPicksPaint() { const el = document.getElementById('pd-picks'); if (!el) return; const pool = window._ptPool || [];
   el.innerHTML = [0, 1, 2].map(i => { const p = pool.find(x => x.id === window._pdPicks[i]); return p ? `<div class="pd-pick on" onclick="pdUnpick(${i})">${_wdAv(p, 26)}<span>${esc(p.name)}</span><i>✕</i></div>` : `<div class="pd-pick">Answer ${i + 1}</div>`; }).join(''); }
 async function _pdSubmit(val) { const r = window._pdRef; if (!r || window._pdBusy) return; window._pdBusy = true;
-  try { dbInvalidate('wordleDuels'); const l = await dbGet('wordleDuels', r.code).catch(() => null); if (!l || l.done) return; const t = _pdTurn(l); if (!t || t.who !== r.role || t.r !== r.r) return;
-    const oa = _pdIds((l[(r.role === 'host' ? 'guest' : 'host') + 'Ans'] || [])[t.r]); val = _pdIds(val).filter((id, i, A) => !oa.includes(id) && A.indexOf(id) === i).join('|'); // no repeats within a round
-    const a = (l[r.role + 'Ans'] || []).slice(); a[t.r] = val; const upd = { [r.role + 'Ans']: a, turnAt: _now() };
+  try { dbInvalidate('wordleDuels'); const l = await dbGet('wordleDuels', r.code).catch(() => null); if (!l || l.done) return; const t = _pdTurn(l); if (!t || t.r !== r.r || (t.who !== r.role && !(t.who === 'both' && !t[r.role]))) return;
+    const oa = _pdIds((l[(r.role === 'host' ? 'guest' : 'host') + 'Ans'] || [])[t.r]); val = _pdIds(val).filter((id, i, A) => (t.who === 'both' || !oa.includes(id)) && A.indexOf(id) === i).join('|'); // no repeats within a round
+    const a = (l[r.role + 'Ans'] || []).slice(); a[t.r] = val; const upd = { [r.role + 'Ans']: a }; if (t.who !== 'both') upd.turnAt = _now(); // final: shared clock
     const nl = Object.assign({}, l, upd); if (!_pdTurn(nl)) upd.done = true; window._pdPicks = []; await dbSet('wordleDuels', r.code, upd); } finally { window._pdBusy = false; renderGames(); } }
 // Turn timer: the player on turn auto-submits when it runs out; the other player does it for them after a grace period (they left / lost signal).
 function _pdTimer(l, role, t) { clearInterval(window._pdCd); if (!t || l.done) return; const lim = t.r === PD_ROUNDS - 1 ? PD_FINAL_TURN : PD_TURN;
   window._pdCd = setInterval(async () => { const left = (l.turnAt || 0) + lim - _now(), el = document.getElementById('pd-cd'), fl = document.getElementById('pd-cd-fill');
     if (!document.getElementById('pd-duel')) { clearInterval(window._pdCd); return; }
-    { const sec = Math.ceil(left / 1000); if (sec !== window._pdLastSec) { window._pdLastSec = sec; if (sec > 0 && sec <= 5 && t.who === role) _ptSnd.tick(sec <= 3); } }
+    { const sec = Math.ceil(left / 1000); if (sec !== window._pdLastSec) { window._pdLastSec = sec; if (sec > 0 && sec <= 5 && (t.who === role || (t.who === 'both' && !t[role]))) _ptSnd.tick(sec <= 3); } }
     if (el) el.textContent = Math.max(0, Math.ceil(left / 1000)); if (fl) { fl.style.width = Math.max(0, Math.min(100, left / lim * 100)) + '%'; fl.parentNode.classList.toggle('low', left < 8e3); }
-    const mine = t.who === role; if ((mine && left <= 0) || (!mine && left <= -PD_GRACE)) { clearInterval(window._pdCd);
+    const both = t.who === 'both', mine = both ? !t[role] : t.who === role, oth = both ? (t[role === 'host' ? 'guest' : 'host'] ? '' : (role === 'host' ? 'guest' : 'host')) : t.who;
+    if ((mine && left <= 0) || (!mine && oth && left <= -PD_GRACE)) { clearInterval(window._pdCd);
       if (mine) { _pdSubmit(t.r === PD_ROUNDS - 1 ? window._pdPicks.join('|') : ''); return; }
       dbInvalidate('wordleDuels'); const l2 = await dbGet('wordleDuels', l.id).catch(() => null); const t2 = l2 && _pdTurn(l2);
-      if (t2 && t2.r === t.r && t2.who === t.who && !l2.done) { const a = (l2[t.who + 'Ans'] || []).slice(); a[t.r] = ''; const upd = { [t.who + 'Ans']: a, turnAt: _now() }; if (!_pdTurn(Object.assign({}, l2, upd))) upd.done = true; await dbSet('wordleDuels', l.id, upd); }
+      if (t2 && t2.r === t.r && (t2.who === oth || (t2.who === 'both' && !t2[oth])) && !l2.done) { const a = (l2[oth + 'Ans'] || []).slice(); a[t.r] = ''; const upd = { [oth + 'Ans']: a }; if (t2.who !== 'both') upd.turnAt = _now(); if (!_pdTurn(Object.assign({}, l2, upd))) upd.done = true; await dbSet('wordleDuels', l.id, upd); }
       renderGames(); } }, 250); }
 // After each answer, the big TV tower counts down on both screens (once per answer).
-function _pdLatest(l) { let best = null; ['host', 'guest'].forEach(ro => (l[ro + 'Ans'] || []).forEach((v, r) => { const k = r * 2 + (_pdFirst(r) === ro ? 0 : 1); if (!best || k > best.k) best = { k, ro, r }; })); return best; }
+function _pdLatest(l) { let best = null; ['host', 'guest'].forEach(ro => (l[ro + 'Ans'] || []).forEach((v, r) => { if (r === PD_ROUNDS - 1) return; /* final stays secret until both lock in */ const k = r * 2 + (_pdFirst(r) === ro ? 0 : 1); if (!best || k > best.k) best = { k, ro, r }; })); return best; }
 async function _pdBody(pool, top) {
   const me = _wdMe(), mine = _pdKey(); let lob = null;
   if (mine && mine.code) { dbInvalidate('wordleDuels'); lob = _duelPre(mine.code) || await dbGet('wordleDuels', mine.code).catch(() => null); if (!lob) _pdSet(null); }
@@ -31181,7 +31183,7 @@ async function _pdBody(pool, top) {
     const open = all.filter(l => l && l.game === 'pt' && l.public && l.status === 'waiting' && now - (l.hostSeen || l.createdAt || 0) < 30e3 && l.hostUid !== me.uid).sort((a, b) => b.createdAt - a.createdAt);
     window._pdPoll = setInterval(() => { if (!document.getElementById('pd-lobbies')) { clearInterval(window._pdPoll); return; } if (!document.activeElement || document.activeElement.id !== 'pd-join-code') renderGames(); }, 6000);
     return top + `<div class="wd-duel-grid">
-      <div class="wd-panel"><h4>⚔️ Start a Pointless duel</h4><p>Just like the TV show: take turns naming drivers — the fewer appearances, the fewer points. Two rounds, then the <b>Head-to-Head Final</b> with three answers each. Find a <b>pointless answer in the final</b> and you win outright.</p>
+      <div class="wd-panel"><h4>⚔️ Start a Pointless duel</h4><p>Just like the TV show: take turns naming drivers — the fewer appearances, the fewer points. Two rounds, then the <b>Head-to-Head Final</b>: both of you give three answers at the same time, blind. Find a <b>pointless answer in the final</b> and you win outright.</p>
         <div class="wd-btns"><button class="btn btn-primary" onclick="ptDuelCreate(true)">🌍 Public lobby</button><button class="btn btn-secondary" onclick="ptDuelCreate(false)">🔒 Private lobby</button></div>
         <h4 style="margin-top:18px">🔑 Join with a code</h4>
         <div class="wd-btns"><input id="pd-join-code" type="text" maxlength="5" placeholder="CODE" style="text-transform:uppercase;letter-spacing:4px;font-weight:800;max-width:140px" onkeydown="if(event.key==='Enter')ptDuelJoin(this.value)"><button class="btn btn-secondary" onclick="ptDuelJoin(document.getElementById('pd-join-code').value)">Join</button></div>
@@ -31191,7 +31193,7 @@ async function _pdBody(pool, top) {
       + await _liveDuelsHtml(all, 'pt', 'h2hPt') + await _h2hBoardHtml('h2hPt', 'Pointless H2H records'); }
   const role = mine.role, opp = role === 'host' ? 'guest' : 'host', round = lob.round || 1, rk = lob.id + '_p' + round;
   const P = (r) => ({ uid: lob[r + 'Uid'], name: lob[r + 'Name'] || 'Player', av: lob[r + 'Avatar'] || '' }), meP = P(role), opP = P(opp);
-  const quit = lob.hostQuit ? 'host' : lob.guestQuit ? 'guest' : '', done = lob.status === 'playing' && (!!lob.done || !!quit), t = done ? null : _pdTurn(lob);
+  const quit = lob.hostQuit ? 'host' : lob.guestQuit ? 'guest' : '', done = lob.status === 'playing' && (!!lob.done || !!quit || !_pdTurn(lob)), t = done ? null : _pdTurn(lob);
   const R = _pdResult(lob, pool); let winner = done ? (quit ? (quit === 'host' ? 'guest' : 'host') : R.w) : '';
   window._pdLive = { status: lob.status, done };
   if (done && winner === role && !_wdLS('pdCoin_' + rk)) { _wdLS('pdCoin_' + rk, 1); _gameCoins('duel-pt', 5); setTimeout(() => { try { fireConfetti({ count: 220 }); } catch (e) {} }, 300); }
@@ -31217,12 +31219,12 @@ async function _pdBody(pool, top) {
     clearInterval(window._wdTick); window._wdTick = setInterval(() => { const c = document.getElementById('pd-count'); if (!c) { clearInterval(window._wdTick); return; } const ms = lob.startedAt - _now(); c.textContent = ms > 0 ? Math.ceil(ms / 1000) : 'GO!'; }, 200);
     return top + `<div id="pd-duel" class="wd-face go" ${V}>${bigCard(meP, 'l', rec(meP))}<div class="wd-face-mid"><span class="wd-vs-big">VS</span><div class="wd-h2h"><b style="color:${h[0] > h[1] ? '#4ade80' : h[0] < h[1] ? '#f87171' : '#9ca3af'}">${h[0]}–${h[1]}</b><small>Head to head</small></div><div id="pd-count" class="wd-count">${Math.ceil(faceLeft / 1000)}</div></div>${bigCard(opP, 'r', rec(opP))}</div>`; }
   // ---- podiums (TV-style lecterns with running totals) ----
-  const pod = (p, ro) => { const on = t && t.who === ro; return `<div class="pd-pod${on ? ' on' : ''}${done && winner === ro ? ' win' : ''}${ro === role ? ' me' : ''}">${_wdAv({ name: p.name, photo: p.av }, 46)}<div class="pd-pn"><b>${esc(p.name)}</b><small>${ro === role ? 'You' : 'Opponent'}${on ? ' · answering' : ''}</small></div><div class="pd-tot">${R.T[ro]}</div></div>`; };
+  const pod = (p, ro) => { const on = t && (t.who === ro || (t.who === 'both' && !t[ro])); return `<div class="pd-pod${on ? ' on' : ''}${done && winner === ro ? ' win' : ''}${ro === role ? ' me' : ''}">${_wdAv({ name: p.name, photo: p.av }, 46)}<div class="pd-pn"><b>${esc(p.name)}</b><small>${ro === role ? 'You' : 'Opponent'}${on ? ' · answering' : ''}</small></div><div class="pd-tot">${R.T[ro]}</div></div>`; };
   let html = top + `<div id="pd-duel" ${V}><div class="pd-pods">${pod(meP, role)}<div class="pd-vs">VS</div>${pod(opP, opp)}</div>`;
   const rName = (r) => r === PD_ROUNDS - 1 ? 'HEAD-TO-HEAD FINAL' : 'ROUND ' + (r + 1);
   if (!done && t) {
-    const S = _ptScores(lob.qs[t.r], pool), T = S.th || {}, myTurn = t.who === role, fin = t.r === PD_ROUNDS - 1, oppA = (lob[opp + 'Ans'] || [])[t.r];
-    window._pdBan = oppA != null ? _pdIds(oppA) : []; window._pdRef = { code: lob.id, role, r: t.r, myTurn, final: fin };
+    const S = _ptScores(lob.qs[t.r], pool), T = S.th || {}, fin = t.r === PD_ROUNDS - 1, myTurn = fin ? !t[role] : t.who === role, oppA = (lob[opp + 'Ans'] || [])[t.r];
+    window._pdBan = !fin && oppA != null ? _pdIds(oppA) : []; window._pdRef = { code: lob.id, role, r: t.r, myTurn, final: fin };
     if (!myTurn) window._pdPicks = [];
     const bg = T.img ? `<div class="pt-bg ${T.cls || ''}" style="background-image:url('${esc(T.img)}')"></div>` : T.txt ? `<div class="pt-bg txt">${esc(T.txt)}</div>` : T.emo ? `<div class="pt-bg emo">${T.emo}</div>` : '';
     const L = _pdLatest(lob); let rev = '';
@@ -31234,12 +31236,12 @@ async function _pdBody(pool, top) {
         <div class="pt-tag">${lp.list.some(x => x.pz) ? '🎯 POINTLESS!' : lp.pts >= 100 * lp.list.length ? '✕ ' + lp.pts + ' POINTS' : lp.pts + ' POINTS'}</div></div></div></div>`; }
     const lim = fin ? PD_FINAL_TURN : PD_TURN, left = Math.max(0, (lob.turnAt || 0) + lim - _now());
     html += `<div class="pt-arena themed" style="${T.acc ? '--acc:' + T.acc : ''}">${bg}<div class="pt-qn">${rName(t.r)}</div><div class="pt-qt">${S.q}</div>
-      <div class="pt-hint">${fin ? 'Three answers each · a pointless answer wins the duel!' : `${S.list.length} valid answers`}${window._pdBan.length ? ' · already given: ' + window._pdBan.map(id => { const q = pool.find(x => x.id === id); return q ? esc(q.name) : ''; }).filter(Boolean).join(', ') : ''}</div>
-      <div class="pd-cd${left < 8e3 ? ' low' : ''}"><span id="pd-cd-fill" style="width:${left / lim * 100}%"></span></div><div class="pd-cdn"><b id="pd-cd">${Math.ceil(left / 1000)}</b>s · ${myTurn ? 'your turn' : esc(opP.name) + ' is answering…'}</div>
+      <div class="pt-hint">${fin ? 'Both players answer at the same time · three answers each · a pointless answer wins the duel!' : `${S.list.length} valid answers`}${window._pdBan.length ? ' · already given: ' + window._pdBan.map(id => { const q = pool.find(x => x.id === id); return q ? esc(q.name) : ''; }).filter(Boolean).join(', ') : ''}</div>
+      <div class="pd-cd${left < 8e3 ? ' low' : ''}"><span id="pd-cd-fill" style="width:${left / lim * 100}%"></span></div><div class="pd-cdn"><b id="pd-cd">${Math.ceil(left / 1000)}</b>s · ${fin ? (myTurn ? (t[opp] ? `<b style="color:#4ade80">${esc(opP.name)} has locked in</b> · your answers` : 'pick your 3 answers') : `locked in · waiting for ${esc(opP.name)}…`) : myTurn ? 'your turn' : esc(opP.name) + ' is answering…'}</div>
       ${myTurn ? (fin ? `<div id="pd-picks" class="pd-picks"></div>` : '') + `<div class="wd-search" style="margin-top:12px"><span class="wd-search-ico">🔍</span><input id="pd-input" type="text" placeholder="${fin ? 'Add an answer…' : 'Name an IMS driver…'}" autocomplete="off" oninput="pdSuggest(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();pdPickFirst();}"><div id="pd-sugg" class="pd-sugg"></div></div>
         ${fin ? '<button class="pt-go" onclick="pdLockIn()">LOCK IN</button>' : `<button class="pt-skip" onclick="pdPick('')">Pass · 100 pts</button>`}` : `<div class="pd-wait"><span class="wd-spin"></span></div>`}
       ${rev}</div>`;
-    if ((lob[_pdFirst(t.r) + 'Ans'] || []).length <= t.r) _ptStingOnce(lob.id + '|' + round + '|r' + t.r); // new round, nobody has answered yet
+    if (fin ? !t.host && !t.guest : (lob[_pdFirst(t.r) + 'Ans'] || []).length <= t.r) _ptStingOnce(lob.id + '|' + round + '|r' + t.r); // new round, nobody has answered yet
     _pdTimer(lob, role, t);
     setTimeout(() => { _pdPicksPaint(); _ptAnim(); const i = document.getElementById('pd-input'); if (i && !('ontouchstart' in window)) i.focus(); }, 0);
   } else {
