@@ -28937,17 +28937,27 @@ document.addEventListener('DOMContentLoaded', () => { const a = document.getElem
   document.addEventListener('click', (e) => { if (fired && cardOf(e.target)) { e.stopPropagation(); e.preventDefault(); fired = false; } }, true);
   document.addEventListener('contextmenu', (e) => { if (cardOf(e.target)) e.preventDefault(); });
 })();
+// The song ACTUALLY playing (from the audio element), not the list index — the list can be re-ordered after
+// start-up (admin playlist loads in), which made the index point at a different song.
+window._musicCurUrl = function() {
+  const a = document.getElementById('bg-music'); if (!a || !a.src) return null;
+  return _musicOrder.find(u => { try { return new URL(u, location.href).href === a.src; } catch (e) { return u === a.src; } }) || a.src;
+};
+window._musicRemember = function(u) {
+  if (!u) return; let r = []; try { r = JSON.parse(localStorage.getItem('imsMusicRecent') || '[]'); } catch (e) {}
+  r = r.filter(x => x !== u).concat(u).slice(-8); try { localStorage.setItem('imsMusicRecent', JSON.stringify(r)); } catch (e) {}
+  window._musicRecent = r; return r;
+};
 window.nextTrack = function() {
   const audio = document.getElementById('bg-music');
   if (!audio) return;
   if (_musicBlocked()) { audio.pause(); _setPlayIcon(false); return; }
   // Random pick, but a song can't come back until at least 8 OTHER songs have played (remembered across reloads).
-  let _rec = []; try { _rec = JSON.parse(localStorage.getItem('imsMusicRecent') || '[]'); } catch (e) {}
-  _rec = _rec.filter(u => u !== _musicOrder[musicTrackIdx]).concat(_musicOrder[musicTrackIdx]).filter(Boolean).slice(-8); // the last 8 played are off-limits → every song waits for at least 8 others try { localStorage.setItem('imsMusicRecent', JSON.stringify(_rec)); } catch (e) {}
-  window._musicRecent = _rec;
+  const _cur = window._musicCurUrl();
+  const _rec = window._musicRemember(_cur) || []; // the last 8 songs that actually played are off-limits, so every song waits for at least 8 others
   const _hid = _musicHidden(), _ok = (i) => !_hid.includes(_musicOrder[i]);
   const _pool = _musicOrder.map((_, i) => i).filter(i => !_rec.includes(_musicOrder[i]) && _ok(i));
-  const _choices = _pool.length ? _pool : _musicOrder.map((_, i) => i).filter(i => i !== musicTrackIdx && _ok(i));
+  const _choices = _pool.length ? _pool : _musicOrder.map((_, i) => i).filter(i => _musicOrder[i] !== _cur && _ok(i));
   if (_choices.length) musicTrackIdx = _choices[Math.floor(Math.random() * _choices.length)];
   audio.pause();
   audio.src = _musicOrder[musicTrackIdx];
@@ -29026,6 +29036,7 @@ window.setMusicMuted = function(on) {
   audio.addEventListener('ended', nextTrack);
   audio.addEventListener('play', () => _setPlayIcon(true));
   audio.addEventListener('playing', () => showNowPlaying(audio));
+  audio.addEventListener('playing', () => { try { window._musicRemember(window._musicCurUrl()); } catch (e) {} }); // every song that starts counts towards the 8
   audio.addEventListener('pause', hideNowPlaying);
   audio.addEventListener('pause', () => _setPlayIcon(false));
   // Deliberately NO auto-skip on "error" events: browsers fire misleading error events when the src
