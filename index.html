@@ -17641,7 +17641,7 @@ window.copyWeeklyAwards = async function(btn) {
     if (!wk || !wk.awards.length) { customAlert('No awards to generate yet — a round needs to be scored first.'); if (btn){btn.disabled=false;btn.textContent=orig;} return; }
     let txt = `🎖️ **${wk.raceName.toUpperCase()} — WEEKLY AWARDS** 🎖️\n\n`;
     wk.awards.forEach(a => { txt += `${a.emoji} **${a.label}** — ${a.winner} (${a.detail})\n`; });
-    txt += `\n📊 Full standings: fantasy.ims-league.com`;
+    txt += `\n📊 Full standings: https://fantasy.ims-league.com`;
     try {
       await navigator.clipboard.writeText(txt);
       if (btn) { btn.textContent = '✔ Copied!'; setTimeout(()=>{ btn.textContent = orig; btn.disabled = false; }, 1800); }
@@ -29557,7 +29557,7 @@ window.cnGiveUp = function() { const st = window._cnCur; if (!st || st.done) ret
 window.cnNext = function() { localStorage.removeItem('imsConn_inf'); window._cnSel = []; window._cnMsg = ''; renderGames(); };
 window.cnShare = function() { const st = window._cnCur; if (!st) return; const E = ['🟨', '🟩', '🟦', '🟪'];
   const rows = st.guesses.map(g => (st.hidden || []).includes(g.slice().sort().join(',')) ? '🕵️🕵️🕵️🕵️' : g.map(id => E[st.groups.findIndex(gr => gr.ids.includes(id))]).join(''));
-  const txt = `IMS Connections ${_cnGetMode() === 'daily' ? '#' + _wdDayNum() : '∞'}\n${rows.join('\n')}\n${st.won ? 'Solved with ' + st.mistakes + ' mistake' + (st.mistakes === 1 ? '' : 's') : 'Out of lives'}\nfantasy.ims-league.com`;
+  const txt = `IMS Connections ${_cnGetMode() === 'daily' ? '#' + _wdDayNum() : '∞'}\n${rows.join('\n')}\n${st.won ? 'Solved with ' + st.mistakes + ' mistake' + (st.mistakes === 1 ? '' : 's') : 'Out of lives'}\nhttps://fantasy.ims-league.com`;
   try { navigator.clipboard.writeText(txt); if (typeof showToast === 'function') showToast('Copied — paste it anywhere!', 'success'); } catch (e) { customAlert(txt); } };
 // ---- Connections: shared daily puzzle, stats, leaderboard ----
 // The daily puzzle is fixed in the database by whoever builds it first, so everyone gets the same 16.
@@ -29990,7 +29990,7 @@ window.wordleShare = function() {
     sq(g.nat && ans.nat && g.nat.toLowerCase() === ans.nat.toLowerCase(), _natSameCont(g.nat, ans.nat)), sq(_wdNorm(g.team) === _wdNorm(ans.team), _wdPastTeam(g, ans)), sq(g.dv && g.dv === ans.dv),
     sq(g.b === ans.b, _wdClose(g.b, ans.b, 'b')), sq(g.st === ans.st, _wdClose(g.st, ans.st, 'st')), sq(g.p === ans.p, _wdClose(g.p, ans.p, 'p')), sq(g.w === ans.w, _wdClose(g.w, ans.w, 'w'))].join(''));
   const head = mode === 'daily' ? 'IMS PaddockDle #' + _wdDayNum() : 'IMS PaddockDle ∞';
-  const txt = head + ' · ' + (st.won ? st.guesses.length + '/' + max : 'X/' + max) + '\n' + rows.join('\n') + '\n' + location.href.split('#')[0];
+  const txt = head + ' · ' + (st.won ? st.guesses.length + '/' + max : 'X/' + max) + '\n' + rows.join('\n') + '\n' + 'https://fantasy.ims-league.com';
   const done = () => (typeof showToast === 'function' ? showToast('📋 Result copied — paste it in Discord!', 'success') : customAlert('Copied!'));
   if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) navigator.share({ text: txt }).catch(() => {});
   else if (navigator.clipboard) navigator.clipboard.writeText(txt).then(done).catch(() => prompt('Copy your result:', txt));
@@ -30666,7 +30666,7 @@ async function _hlRecordDaily(st) {
 async function _hlRecordPractice(sc) { try { const me = _wdMe(), id = _wdScoreId(me.uid); const cur = await dbGet('wordleScores', id).catch(() => null) || {};
   await dbSet('wordleScores', id, { uid: me.uid, name: me.name, points: cur.points || 0, hlPracBest: Math.max(cur.hlPracBest || 0, sc), hlPracPlayed: (cur.hlPracPlayed || 0) + 1 }); } catch (e) {} }
 window.hlShare = function() { const mode = _hlGetMode(), st = mode === 'inf' ? window._hlInf : _hlLoadSt('daily'); if (!st || !st.done) return;
-  const sc = st.ans.filter(Boolean).length; const txt = `IMS Higher or Lower ${mode === 'daily' ? '#' + _wdDayNum() : '∞'} · ${sc}/${HL_N}\n${_hlDots(st.ans)}\n` + location.href.split('#')[0];
+  const sc = st.ans.filter(Boolean).length; const txt = `IMS Higher or Lower ${mode === 'daily' ? '#' + _wdDayNum() : '∞'} · ${sc}/${HL_N}\n${_hlDots(st.ans)}\n` + 'https://fantasy.ims-league.com';
   if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) navigator.share({ text: txt }).catch(() => {}); else if (navigator.clipboard) navigator.clipboard.writeText(txt).then(() => { if (typeof showToast === 'function') showToast('📋 Copied — paste it in Discord!', 'success'); }); };
 async function _hlLeaderboardHtml() {
   // All-time board: never resets daily. Ranked by fastest perfect 10/10, then total correct answers.
@@ -31000,6 +31000,12 @@ window.ptAnswer = async function(id) {
 };
 window.ptPass = function() { customConfirm('Skip this question? It counts as 100 points.', () => ptAnswer('')); };
 window.ptNext = function() { window._ptReveal = null; renderGames(); };
+window.ptShare = function() { const mode = _ptGetMode(), st = mode === 'inf' ? window._ptInf : _ptLoadSt(); if (!st || !st.done) return;
+  const tot = st.ans.reduce((a, x) => a + x.pts, 0), sq = (p, ok) => !ok ? '🟥' : p === 0 ? '🎯' : p <= 25 ? '🟩' : p <= 60 ? '🟨' : '🟧';
+  const pool = window._ptPool || [], lines = st.ans.map((a, i) => { const ok = a.id && (_ptScores(st.qs[i], pool) || { sc: {} }).sc[a.id] != null; return `${sq(a.pts, ok)} ${a.id && ok && a.pts === 0 ? 'POINTLESS' : a.pts}`; });
+  const txt = `IMS Pointless ${mode === 'daily' ? '#' + _ptDayNum() : '∞'} · ${tot} pts\n${lines.join('\n')}\nhttps://fantasy.ims-league.com`;
+  if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) navigator.share({ text: txt }).catch(() => {});
+  else if (navigator.clipboard) navigator.clipboard.writeText(txt).then(() => { if (typeof showToast === 'function') showToast('📋 Copied — paste it in Discord!', 'success'); }).catch(() => prompt('Copy your result:', txt)); else prompt('Copy your result:', txt); };
 window.ptAgain = function() { window._ptInf = null; window._ptReveal = null; renderGames(); };
 async function _ptRecord(st) {
   const me = _wdMe(), id = _wdScoreId(me.uid), tot = st.ans.reduce((a, x) => a + x.pts, 0), pl = st.ans.filter(a => a.id && a.pts === 0).length;
@@ -31088,6 +31094,7 @@ async function renderPTGame(el) {
   else { const pl = st.ans.filter(a => a.id && a.pts === 0).length, good = tot <= PT_WIN;
     body += _ptProg(st, PT_N - 1, false) + `<div class="pt-arena pt-end${good ? ' good' : ''}"><div class="pt-qn">FINAL SCORE</div><div class="pt-big">${tot}</div><div class="pt-hint">${pl ? `🎯 ${pl} pointless answer${pl > 1 ? 's' : ''} · ` : ''}lower is better</div>
       <div class="pt-sum">${st.ans.map((a, i) => { const p = pool.find(x => x.id === a.id), z = a.pts === 0 && a.id; return `<div class="${z ? 'z' : a.pts >= 100 ? 'bad' : ''}"><span class="q">Q${i + 1}</span><span>${p ? esc(p.name) : '—'}</span><b>${z ? '🎯 0' : a.pts}</b></div>`; }).join('')}</div>
+      <button class="pt-go" style="background:linear-gradient(135deg,#5865f2,#4752c4);color:#fff" onclick="ptShare()">📤 SHARE RESULT</button>
       ${mode === 'inf' ? (_ptPracUsed() < PT_PRAC_MAX ? `<button class="pt-go" onclick="ptAgain()">PLAY AGAIN · ${PT_PRAC_MAX - _ptPracUsed()} left today</button>` : '<div class="pt-hint" style="margin-top:12px">That was your last practice round today.</div>') : '<div class="pt-hint" style="margin-top:12px">New questions at midnight (UK).</div>'}</div>`; }
   if (mode === 'daily') body += (st && st.done || !window._ptLb) ? (window._ptLb = await _ptLeaderboardHtml()) : window._ptLb;
   el.innerHTML = `<div class="wd-wrap">${body}<div class="wd-info"><h3>How to play</h3><p><b>${PT_N} questions.</b> Name an IMS driver who fits. Points depend on their <b>IMS appearances</b> — the most-raced valid answer scores <b>100</b>, the least-raced score close to 0, and the very fewest are <b>POINTLESS 🎯 (0)</b>. Wrong answers and skips score 100. <b>Lowest total wins.</b></p>
