@@ -30194,7 +30194,7 @@ async function _gameCoins(kind, amount) {
   if (typeof currentUser === 'undefined' || !currentUser || !currentUser.userId) return 0; // guests don't earn IM$
   try { const c = await _betLoadCoins(currentUser.userId); const now = Date.now(); const g = c.gameRewards || {};
     let give = 0;
-    if (/^(wd|gr|hl|cn)-(daily|win|hidden)$/.test(kind)) { const day = _wdDayKey() + (_wdSalt() ? '#' + _wdSalt() : ''); if (g[kind] === day) return 0; g[kind] = day; give = amount; }
+    if (/^(wd|gr|hl|cn|pt)-(daily|win|hidden)$/.test(kind)) { const day = _wdDayKey() + (_wdSalt() ? '#' + _wdSalt() : ''); if (g[kind] === day) return 0; g[kind] = day; give = amount; }
     else { const log = (g[kind] || []).filter(x => now - x.t < 864e5); const used = log.reduce((a, x) => a + x.a, 0); give = Math.max(0, Math.min(amount, 25 - used));
       if (!give) { g[kind] = log; return 0; } log.push({ t: now, a: give }); g[kind] = log; }
     c.balance = (c.balance || 0) + give; c.gameRewards = g; c.gameEarned = (c.gameEarned || 0) + give;
@@ -30842,6 +30842,7 @@ async function renderHLGame(el) {
 // Lowest total wins. Bottom ~10% of valid answers (fewest starts) score 0 = POINTLESS. Wrong/blank = 100.
 // Pool: everyone on the market + reserves with 25+ starts.
 const PT_N = 5;
+const PT_REV = '#r2'; // bump to re-roll today's Pointless daily for everyone
 const _ptGetMode = () => window._ptMode || 'daily';
 window.setPTMode = function(m) { window._ptMode = m; window._ptReveal = null; renderGames(); };
 const _ptLoadSt = () => { try { return JSON.parse(localStorage.getItem('imsPtDaily') || 'null'); } catch (e) { return null; } };
@@ -30957,8 +30958,8 @@ const _ptPracUsed = () => { if (typeof adminLoggedIn !== 'undefined' && adminLog
 const _ptPracBump = () => { try { localStorage.setItem('imsPtPrac', JSON.stringify({ day: _wdDayKey(), n: _ptPracUsed() + 1 })); } catch (e) {} };
 function _ptState(mode, pool) {
   if (mode === 'inf') { if (!window._ptInf) { if (_ptPracUsed() >= PT_PRAC_MAX) return 'limit'; const qs = _ptMakeQs(pool, Math.random); if (qs) _ptPracBump(); window._ptInf = qs ? { qs, ans: [], done: false } : null; } return window._ptInf; }
-  const key = _dailyKey(); let st = _ptLoadSt(); if (st && st.key === key) return st;
-  const qs = _ptDailyQs(pool, (_wdSalt() || 0)); if (!qs) return null; st = { key, qs, ans: [], done: false }; _ptSave(st); return st;
+  const key = _dailyKey() + PT_REV; let st = _ptLoadSt(); if (st && st.key === key) return st;
+  const qs = _ptDailyQs(pool, (_wdSalt() || 0) + PT_REV); if (!qs) return null; st = { key, qs, ans: [], done: false }; _ptSave(st); return st;
 }
 window.ptSuggest = function(v) {
   const box = document.getElementById('pt-sugg'); if (!box) return; const q = _wdNorm(v); if (!q) { box.innerHTML = ''; return; }
@@ -30982,8 +30983,9 @@ window.ptAgain = function() { window._ptInf = null; window._ptReveal = null; ren
 async function _ptRecord(st) {
   const me = _wdMe(), id = _wdScoreId(me.uid), tot = st.ans.reduce((a, x) => a + x.pts, 0), pl = st.ans.filter(a => a.id && a.pts === 0).length;
   try { dbInvalidate('wordleScores'); const cur = await dbGet('wordleScores', id).catch(() => null) || {}; if (cur.ptDay === st.key) return;
-    const streak = cur.ptDayPlain === _wdYesterdayKey() ? (cur.ptStreak || 0) + 1 : 1;
-    await dbSet('wordleScores', id, { uid: me.uid, name: me.name, points: cur.points || 0, ptDay: st.key, ptDayPlain: _wdDayKey(), ptStreak: streak, ptDayScore: tot, ptDays: (cur.ptDays || 0) + 1, ptTotal: (cur.ptTotal || 0) + tot,
+    // Same-day replay (daily re-rolled by an admin): replace today's score instead of adding a second round.
+    const again = cur.ptDayPlain === _wdDayKey(), streak = again ? (cur.ptStreak || 1) : cur.ptDayPlain === _wdYesterdayKey() ? (cur.ptStreak || 0) + 1 : 1;
+    await dbSet('wordleScores', id, { uid: me.uid, name: me.name, points: cur.points || 0, ptDay: st.key, ptDayPlain: _wdDayKey(), ptStreak: streak, ptDayScore: tot, ptDays: (cur.ptDays || 0) + (again ? 0 : 1), ptTotal: (cur.ptTotal || 0) - (again ? (cur.ptDayScore || 0) : 0) + tot,
       ptBest: Math.min(cur.ptBest == null ? 9e9 : cur.ptBest, tot), ptPointless: (cur.ptPointless || 0) + pl }); } catch (e) {}
   await _gameCoins('pt-daily', 10); if (tot <= 100) await _gameCoins('pt-win', 10);
 }
