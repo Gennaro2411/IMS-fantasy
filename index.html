@@ -29719,7 +29719,7 @@ async function renderConnGame(el) {
       <li>Links come from IMS data: teams they've driven for, nationality, current division, Drivers' titles, BOTTs, race wins and podiums.</li>
       <li>Each driver fits only <b>one</b> of the four groups — watch out for red herrings.</li>
       <li><b>One away…</b> means 3 of your 4 belong together. You have <b>${CN_LIVES} mistakes</b>.</li>
-      <li>Colours go from easiest (🟨) to hardest (🟪). Daily: <b>+25 IM$</b> for finishing, <b>+25 IM$</b> more for solving it.</li>
+      <li>Colours go from easiest (🟨) to hardest (🟪). Daily: <b>+10 IM$</b> for finishing, <b>+10 IM$</b> more for solving it.</li>
       <li><b>🕵️ Hidden groups:</b> if you pick four drivers who really do share something that isn't one of the answers, you don't lose a life (daily and infinite). On the daily you also get <b>+10 IM$</b> (once a day). Each hidden group only counts once — e.g. after a hidden Williams group, any other four Williams drivers cost a life.</li>
       <li><b>📤 Share</b> shows your guesses in order, one row per guess, without giving the answers away. Each square is a driver you picked, coloured by the group they really belong to: a row of one colour is a group found, a mixed row (e.g. 🟩🟩🟨🟨) is a mistake.</li></ul></div></div>`;
   if (st.done && mode === 'daily') { // countdown to the next daily, same as PaddockDle
@@ -29728,7 +29728,7 @@ async function renderConnGame(el) {
       if (ms <= 0) { clearInterval(window._cnTick); renderGames(); return; } const h = Math.floor(ms / 36e5), m = Math.floor(ms / 6e4) % 60, s2 = Math.floor(ms / 1e3) % 60; t.textContent = [h, m, s2].map(x => String(x).padStart(2, '0')).join(':'); };
     tick(); window._cnTick = setInterval(tick, 1000); }
   if (st.done && mode === 'daily' && !window['_cnRec_' + st.day + (st.cnv || 1)]) { window['_cnRec_' + st.day + (st.cnv || 1)] = 1; _cnRecord(st).then(() => { if (window._games.view === 'cn' && _cnGetMode() === 'daily') renderGames(); }); // redraw so stats + leaderboard show the result straight away
-    _gameCoins('cn-daily', 25).then(() => { if (st.won) _gameCoins('cn-win', 25); }); }
+    _gameCoins('cn-daily', 10).then(() => { if (st.won) _gameCoins('cn-win', 10); }); }
 }
 
 // ---- Render ----
@@ -29859,7 +29859,7 @@ window.renderGames = async function() {
       + `<div class="wd-board">${_WD_HEAD}${_wdRowsHtml(st.guesses, ans, pool)}${st.done ? '' : empties}</div>${endCard}`
       + (mode === 'daily' ? await _wdStatsPanelHtml(st.done ? st : null) + await _wdLeaderboardHtml() : '');
     if (st.done && mode === 'daily') {
-      if (!window['_wdStRec_' + st.day]) { window['_wdStRec_' + st.day] = 1; _wdRecordStats(st); _gameCoins('wd-daily', 25).then(() => { if (st.won) _gameCoins('wd-win', 25); }); }
+      if (!window['_wdStRec_' + st.day]) { window['_wdStRec_' + st.day] = 1; _wdRecordStats(st); _gameCoins('wd-daily', 10).then(() => { if (st.won) _gameCoins('wd-win', 10); }); }
       const until = Date.now() + _wdMsToMidnight();
       const tick = () => { const t = document.getElementById('wd-timer'); if (!t) { clearInterval(window._wdTick); return; } const ms = until - Date.now();
         if (ms <= 0) { clearInterval(window._wdTick); renderGames(); return; } const h = Math.floor(ms / 36e5), m = Math.floor(ms / 6e4) % 60, s = Math.floor(ms / 1e3) % 60; t.textContent = [h, m, s].map(x => String(x).padStart(2, '0')).join(':'); };
@@ -29870,7 +29870,7 @@ window.renderGames = async function() {
     <div class="wd-info">
       <h3>What is IMS PaddockDle?</h3>
       <p>IMS PaddockDle is a driver guessing game built on International Motorsport Series data. A mystery IMS driver is picked and you work out who it is from colour-coded clues about their nationality, division, team, BOTT titles, all-time points, wins and race starts.</p>
-      <p style="margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(247,207,85,.08);border:1px solid rgba(247,207,85,.35);font-size:.84rem"><span class="imc"></span> <b>Earn IM$:</b> finish the daily for <b>+25 IM$</b> (once a day), get <b>another +25 IM$</b> for solving it (PaddockDle: guess the driver · Grid: a perfect 9/9), and win duels for <b>+5 IM$</b> each — up to 25 IM$ from duels per game every 24 hours. Log in to earn.</p>
+      <p style="margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(247,207,85,.08);border:1px solid rgba(247,207,85,.35);font-size:.84rem"><span class="imc"></span> <b>Earn IM$:</b> finish the daily for <b>+10 IM$</b> (once a day), get <b>another +10 IM$</b> for solving it (PaddockDle: guess the driver · Grid: a perfect 9/9), and win duels for <b>+5 IM$</b> each — up to 25 IM$ from duels per game every 24 hours. Log in to earn.</p>
       <h3>Reading the colour clues</h3>
       <div class="wd-legend">
         <div><span class="wd-sw ok"></span><b>Green</b><small>Exact match</small></div>
@@ -30186,7 +30186,7 @@ const _duelPickerHtml = () => { const mine = _myDuelColour();
     ${DUEL_PALETTE.flat().map(sw).join('')}${sw('#ffffff')}${sw('#111111')}</div>
   <small class="text-muted" style="display:block;margin-top:6px">If you and your opponent pick the same colour, it's orange vs blue.</small>` : ''}`; };
 // ---- IM$ rewards for games ----
-// Daily PaddockDle / daily Grid finished: +25 IM$ once per day each.
+// Daily PaddockDle / daily Grid finished: +10 IM$ once per day each.
 // Duel wins: +5 IM$ each, up to 25 IM$ per game mode in any rolling 24 hours.
 async function _gameCoins(kind, amount) {
   if (typeof currentUser === 'undefined' || !currentUser || !currentUser.userId) return 0; // guests don't earn IM$
@@ -30640,7 +30640,7 @@ async function _hlRecordDaily(st) {
   try { dbInvalidate('wordleScores'); const cur = await dbGet('wordleScores', id).catch(() => null) || {}; if (cur.hlDay === day) return;
     const streak = cur.hlDayPlain === _wdYesterdayKey() ? (cur.hlStreak || 0) + 1 : 1;
     await dbSet('wordleScores', id, { uid: me.uid, name: me.name, points: cur.points || 0, hlDay: day, hlDayPlain: _wdDayKey(), hlDayScore: sc, hlDayTime: (st.t1 || Date.now()) - (st.t0 || Date.now()), hlDays: (cur.hlDays || 0) + 1, hlCorrect: (cur.hlCorrect || 0) + sc, hlTens: (cur.hlTens || 0) + (sc === 10 ? 1 : 0), hlStreak: streak, ...(sc === 10 ? { hlBestTen: Math.min(cur.hlBestTen || 9e9, (st.t1 || Date.now()) - (st.t0 || Date.now())) } : {}) }); } catch (e) {}
-  await _gameCoins('hl-daily', 25); if (sc >= 8) await _gameCoins('hl-win', 25);
+  await _gameCoins('hl-daily', 10); if (sc >= 8) await _gameCoins('hl-win', 10);
 }
 async function _hlRecordPractice(sc) { try { const me = _wdMe(), id = _wdScoreId(me.uid); const cur = await dbGet('wordleScores', id).catch(() => null) || {};
   await dbSet('wordleScores', id, { uid: me.uid, name: me.name, points: cur.points || 0, hlPracBest: Math.max(cur.hlPracBest || 0, sc), hlPracPlayed: (cur.hlPracPlayed || 0) + 1 }); } catch (e) {} }
@@ -30668,7 +30668,7 @@ async function _hlLeaderboardHtml() {
     <div class="hlb-key"><b>Today</b> score &amp; time taken · <b>Best 10/10</b> fastest perfect round · 💯 perfect rounds · 🔥 daily streak · <b>Played</b> dailies played · <b>Correct</b> total right answers</div></div>`;
 }
 const _hlEndHtml = (st, mode) => { const sc = st.ans.filter(Boolean).length, good = sc >= 8;
-  const chip = (on, txt) => `<div class="hl-chip${on ? ' on' : ''}"><span class="imc"></span><b>+25</b><small>${txt}</small>${on ? '<i>✓</i>' : '<i>🔒</i>'}</div>`;
+  const chip = (on, txt) => `<div class="hl-chip${on ? ' on' : ''}"><span class="imc"></span><b>+10</b><small>${txt}</small>${on ? '<i>✓</i>' : '<i>🔒</i>'}</div>`;
   return `<div class="hl-over ${good ? 'good' : ''}">
     <div class="hl-end-t">${sc === 10 ? '💯 PERFECT ROUND' : good ? '🔥 GREAT ROUND' : '🏁 ROUND OVER'}</div>
     <div class="hl-final">${sc}<span>/${HL_N}</span></div>
@@ -30829,7 +30829,7 @@ async function renderHLGame(el) {
   el.innerHTML = `<div class="wd-wrap">${body}
     <div class="wd-info"><h3>How to play</h3><p>Each round is <b>${HL_N} questions</b>. You see two IMS drivers and one stat — race starts, wins, podiums, pole positions, career points or BOTTs. The left driver's number is shown: is the right driver's <b>higher</b> or <b>lower</b>? Equal numbers count as right.</p>
       <p><b>📅 Daily</b> — the same ${HL_N} questions for everyone, once a day. <b>∞ Practice</b> — as many rounds as you like. <b>⚔️ Duel</b> — you and an opponent get the same ${HL_N} questions at the same time; most right wins, and if it's level the faster finisher wins.</p>
-      <p style="margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(247,207,85,.08);border:1px solid rgba(247,207,85,.35);font-size:.84rem"><span class="imc"></span> <b>Earn IM$:</b> play the daily for <b>+25 IM$</b>, score <b>8/10 or better</b> for <b>another +25 IM$</b>, and win duels for <b>+5 IM$</b> each (up to 25 IM$ from duels every 24 hours). Log in to earn.</p>
+      <p style="margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(247,207,85,.08);border:1px solid rgba(247,207,85,.35);font-size:.84rem"><span class="imc"></span> <b>Earn IM$:</b> play the daily for <b>+10 IM$</b>, score <b>8/10 or better</b> for <b>another +10 IM$</b>, and win duels for <b>+5 IM$</b> each (up to 25 IM$ from duels every 24 hours). Log in to earn.</p>
       <p>Same driver pool as PaddockDle: everyone on the market, plus reserves with 25+ starts (or a title / BOTT). Stats are all-time across every IMS season.</p></div></div>`;
   if (mode === 'daily' && document.getElementById('hl-timer')) { const until = _now() + _wdMsToMidnight(); clearInterval(window._wdTick);
     window._wdTick = setInterval(() => { const t = document.getElementById('hl-timer'); if (!t) { clearInterval(window._wdTick); return; } const ms = until - _now(); if (ms <= 0) { clearInterval(window._wdTick); renderGames(); return; }
@@ -30975,7 +30975,7 @@ async function _ptRecord(st) {
     const streak = cur.ptDayPlain === _wdYesterdayKey() ? (cur.ptStreak || 0) + 1 : 1;
     await dbSet('wordleScores', id, { uid: me.uid, name: me.name, points: cur.points || 0, ptDay: st.key, ptDayPlain: _wdDayKey(), ptStreak: streak, ptDayScore: tot, ptDays: (cur.ptDays || 0) + 1, ptTotal: (cur.ptTotal || 0) + tot,
       ptBest: Math.min(cur.ptBest == null ? 9e9 : cur.ptBest, tot), ptPointless: (cur.ptPointless || 0) + pl }); } catch (e) {}
-  await _gameCoins('pt-daily', 25); if (tot <= 100) await _gameCoins('pt-win', 25);
+  await _gameCoins('pt-daily', 10); if (tot <= 100) await _gameCoins('pt-win', 10);
 }
 async function _ptLeaderboardHtml() {
   const rows = (await _gmNoTest(await dbGetAll('wordleScores', { fresh: true }).catch(() => []))).filter(r => r && r.uid && (r.ptDays || 0) > 0), me = _wdMe().uid;
@@ -31031,7 +31031,7 @@ async function renderPTGame(el) {
   if (mode === 'daily') body += (st && st.done || !window._ptLb) ? (window._ptLb = await _ptLeaderboardHtml()) : window._ptLb;
   el.innerHTML = `<div class="wd-wrap">${body}<div class="wd-info"><h3>How to play</h3><p><b>${PT_N} questions.</b> Name an IMS driver who fits. Points depend on their <b>IMS appearances</b> — the most-raced valid answer scores <b>100</b>, the least-raced score close to 0, and the very fewest are <b>POINTLESS 🎯 (0)</b>. Wrong answers and skips score 100. <b>Lowest total wins.</b></p>
     <p>Pool: everyone on the market, plus reserves with 25+ appearances. Stats are all-time across every IMS season. <b>📅 Daily</b> — 5 new questions every day (no repeats until every question has been used). <b>∞ Practice</b> — up to ${PT_PRAC_MAX} rounds a day.</p>
-    <p style="margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(247,207,85,.08);border:1px solid rgba(247,207,85,.35);font-size:.84rem"><span class="imc"></span> <b>Earn IM$:</b> play the daily for <b>+25 IM$</b>, score <b>100 or under</b> for <b>another +25 IM$</b>. Log in to earn.</p></div></div>`;
+    <p style="margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(247,207,85,.08);border:1px solid rgba(247,207,85,.35);font-size:.84rem"><span class="imc"></span> <b>Earn IM$:</b> play the daily for <b>+10 IM$</b>, score <b>100 or under</b> for <b>another +10 IM$</b>. Log in to earn.</p></div></div>`;
   _ptAnim(); const inp = document.getElementById('pt-input'); if (inp && !('ontouchstart' in window)) inp.focus();
 }
 // ===== GAMES: IMS PADDOCKDLE GRID =====
@@ -31136,7 +31136,7 @@ async function _grStatsPanelHtml(todayScore) {
 async function _grAwardDaily(st) {
   const me = _wdMe(), day = _wdDayKey(), id = _wdScoreId(me.uid), filled = Object.keys(st.cells || {}).length;
   try { dbInvalidate('wordleScores'); const cur = await dbGet('wordleScores', id).catch(() => null) || {};
-    _gameCoins('gr-daily', 25).then(() => { if (filled === 9) _gameCoins('gr-win', 25); });
+    _gameCoins('gr-daily', 10).then(() => { if (filled === 9) _gameCoins('gr-win', 10); });
     if (cur.gridLastDay === day) return;
     let dist = {}; try { dist = JSON.parse(cur.grDist || '{}'); } catch (e) {} dist[filled] = (dist[filled] || 0) + 1;
     // Streak = daily grids in a row with at least 1 correct cell (a 0/9 grid breaks it).
@@ -31250,7 +31250,7 @@ async function renderGridGame(el) {
     <div class="wd-info">
       <h3>What is IMS PaddockDle Grid?</h3>
       <p>The sister game to IMS PaddockDle. Instead of guessing one mystery driver, you fill a 3×3 grid where every row and column is its own IMS category — nationality, team, division, BOTT winners, race wins, podiums, starts, points and more. Each cell needs a driver who fits <b>both</b> the row and the column it sits in.</p>
-      <p>The driver pool is every driver currently on the IMS fantasy market, plus <b>reserves with 25 or more race starts</b> (any <b>Drivers' champion or BOTT winner</b> is always in, whatever their starts). Team categories count <b>any team a driver has driven for</b>, not just their current one — as long as they've made <b>3 or more race starts</b> for that team. A driver's <b>current team</b> always counts, even before they've raced for it.</p><p style="margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(247,207,85,.08);border:1px solid rgba(247,207,85,.35);font-size:.84rem"><span class="imc"></span> <b>Earn IM$:</b> finish the daily for <b>+25 IM$</b> (once a day), get <b>another +25 IM$</b> for solving it (PaddockDle: guess the driver · Grid: a perfect 9/9), and win duels for <b>+5 IM$</b> each — up to 25 IM$ from duels per game every 24 hours. Log in to earn.</p>
+      <p>The driver pool is every driver currently on the IMS fantasy market, plus <b>reserves with 25 or more race starts</b> (any <b>Drivers' champion or BOTT winner</b> is always in, whatever their starts). Team categories count <b>any team a driver has driven for</b>, not just their current one — as long as they've made <b>3 or more race starts</b> for that team. A driver's <b>current team</b> always counts, even before they've raced for it.</p><p style="margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(247,207,85,.08);border:1px solid rgba(247,207,85,.35);font-size:.84rem"><span class="imc"></span> <b>Earn IM$:</b> finish the daily for <b>+10 IM$</b> (once a day), get <b>another +10 IM$</b> for solving it (PaddockDle: guess the driver · Grid: a perfect 9/9), and win duels for <b>+5 IM$</b> each — up to 25 IM$ from duels per game every 24 hours. Log in to earn.</p>
       <h3>How to play</h3>
       <div class="gr-steps">
         <div><i>1</i><b>Pick a cell</b><small>Tap any of the 9 cells where a row category meets a column category.</small></div>
