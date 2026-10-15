@@ -893,7 +893,9 @@
   .rh-cd-box .hero-cd-num{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:2rem;line-height:1;color:var(--rh-num,#fff);font-variant-numeric:tabular-nums;text-shadow:0 0 14px var(--rh-numglow,rgba(255,255,255,0.18))}
   .rh-cd-lbl{font-size:.52rem;font-weight:800;letter-spacing:1.6px;color:var(--muted);margin-top:4px}
   /* ===== Home manifesto ===== */
-  .hh-man{position:relative;overflow:hidden;text-align:center;padding:34px 18px 26px;margin-bottom:14px;border-radius:26px;background:radial-gradient(70% 90% at 50% 0%,rgba(155,111,212,.28),transparent 70%),radial-gradient(60% 70% at 50% 120%,rgba(255,176,32,.16),transparent 70%),#09080f;border:1px solid rgba(255,255,255,.07)}
+  .hh-man{position:relative;isolation:isolate;overflow:hidden;text-align:center;padding:34px 18px 26px;margin-bottom:14px;border-radius:26px;background:radial-gradient(70% 90% at 50% 0%,rgba(155,111,212,.28),transparent 70%),radial-gradient(60% 70% at 50% 120%,rgba(255,176,32,.16),transparent 70%),#09080f;border:1px solid rgba(255,255,255,.07)}
+  .hh-logo{position:absolute;left:50%;top:50%;width:min(360px,88%);aspect-ratio:1;transform:translate(-50%,-50%) rotate(-8deg);border-radius:50%;opacity:.16;mix-blend-mode:screen;z-index:-1;pointer-events:none;filter:saturate(1.15) blur(.3px);animation:hhLogo 14s ease-in-out infinite alternate}
+  @keyframes hhLogo{from{transform:translate(-50%,-50%) rotate(-8deg) scale(1)}to{transform:translate(-50%,-50%) rotate(-3deg) scale(1.06)}}
   .hh-q{position:relative;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;text-transform:uppercase;font-size:clamp(2rem,8.5vw,4rem);line-height:.95;letter-spacing:-.5px;color:#fff;max-width:900px;margin:0 auto}
   .hh-q em{display:block;font-style:italic;background:linear-gradient(100deg,#fff6d6,#ffd24a 30%,#ff9d1c 55%,#fff3c4 70%,#ffd24a);background-size:220% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:hofSheen 6s linear infinite}
   .hh-qm{position:absolute;left:50%;top:-.45em;transform:translateX(-50%);font-size:3.2em;line-height:1;color:rgba(155,111,212,.22);font-style:normal;pointer-events:none}
@@ -7777,8 +7779,8 @@ async function renderDashboard() {
       const nDiv = (typeof divisionsForSeason === 'function') ? divisionsForSeason().length : 5;
       const done = (races || []).filter(r => r.driverPoints && Object.keys(r.driverPoints).length).length, total = Math.max(done, (schedule || []).length);
       const tile = (pg, ico, t, sub, c) => `<button class="hh-act" style="--c:${c}" onclick="showPage('${pg}')"><span class="hh-ico">${ico}</span><b>${t}</b><small>${sub}</small></button>`;
-      const manifesto = `<div class="hh-man">
-          <div class="hh-q"><span class="hh-qm">“</span>A second championship <em>on top of the first</em></div>
+      const manifesto = `<div class="hh-man"><img class="hh-logo" src="icons/icon-512.png?v=3" alt="">
+          <div class="hh-q">A second championship <em>on top of the first</em></div>
           <p>IMS Fantasy is not a side game; it is a second title fight running on top of the first.</p>
           <div class="hh-pills">${['💰 $100M team build', '🏁 Five divisions', '📊 ELO-driven prices', '👑 Captains', '🃏 Chips and transfers'].map(x => `<span>${x}</span>`).join('')}</div>
         </div>`;
