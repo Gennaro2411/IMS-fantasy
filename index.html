@@ -1635,6 +1635,9 @@
       #broadcast-box.bc-theatre #bc-scene{top:100px !important;bottom:52px !important;justify-content:flex-start !important;overflow-y:auto;padding:8px 14px !important}
       #broadcast-box.bc-theatre #bc-scene [style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr !important}
       #broadcast-box.bc-theatre #bc-scene [style*="grid-template-columns:repeat(2"]{grid-template-columns:1fr !important}
+      /* the small TV on phones: side-by-side scene grids stack too, so nothing runs off the right edge */
+      #broadcast-box:not(.bc-theatre) #bc-scene [style*="grid-template-columns:1fr 1fr"],
+      #broadcast-box:not(.bc-theatre) #bc-scene [style*="grid-template-columns:repeat(2"]{grid-template-columns:1fr !important}
     }
   body.reduce-motion *{animation:none !important;transition:none !important;scroll-behavior:auto !important}
   </style>
@@ -4053,6 +4056,7 @@ window.fitMiniZoom = function() {
   const availW = sc.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
   const DW = 400; let z = 1;
   if (availW < DW) { w.style.width = DW + 'px'; z = availW / DW; }
+  const sw = w.scrollWidth; if (sw > (availW < DW ? DW : availW) + 2) z = Math.min(z, availW / sw); // anything wider than the frame scales down to fit
   const h = Math.max(1, w.scrollHeight), ticker = 30, chrome = padT + padB + ticker + 6;
   const maxH = Math.round(window.innerHeight * 0.75);
   if (h * z + chrome > maxH) z = Math.max(.55, (maxH - chrome) / h); // very tall scene: shrink just enough to fit
