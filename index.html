@@ -29357,13 +29357,15 @@ async function _wdLoad() {
     // Every division they've ever raced in (from the per-season points keys, e.g. "S5 E2"), plus their current one.
     // Races per division: past seasons from the .db build + this season's imported results.
     const dh = Object.assign({}, s2.dh || {}, s.dh || {}); Object.entries(liveDv[d.id] || {}).forEach(([v, n]) => { dh[v] = (dh[v] || 0) + n; });
+    // Races per team (past seasons + this season) — used by Pointless team questions.
+    const tn = {}; new Set([...Object.keys(s.tc || {}), ...Object.keys(s2.tc || {}), ...Object.keys(liveTm[d.id] || {})]).forEach(k => { tn[k] = Math.max(((s.tc || {})[k] || {}).n || 0, ((s2.tc || {})[k] || {}).n || 0) + (((liveTm[d.id] || {})[k] || {}).n || 0); });
     // Their current team counts once they've actually raced for it (1+ start this season) — being signed isn't driving for them.
     if (d.team && !/^reserve$/i.test(String(d.team).trim()) && ((liveTm[d.id] || {})[_wdNorm(d.team)] || {}).n >= 1) { th[_wdNorm(d.team)] = d.team; thw[_wdNorm(d.team)] = 'current team, ' + liveTm[d.id][_wdNorm(d.team)].n + ' start(s) this season'; }
     Object.entries(liveTm[d.id] || {}).forEach(([k, t]) => { if (t.n >= 3 || (s.tc && s.tc[k] && s.tc[k].n + t.n >= 3)) { th[k] = t.name; thw[k] = (thw[k] ? thw[k] + ' + ' : '') + t.n + ' start(s) this season'; } }); // this season's races count too
     return { id: d.id, name: d.name, res: !!d.isReserve, dv: d.division || d.lastDivision || d.prevDivision || '', team: d.isReserve ? 'Reserve' : (d.team || '—'), div: d.division || '', nat: _natFix(d.name, s.nat) || '', b: s.b || 0, // All-time table (matched on the market name) + this season's .db results — so a driver whose .db
     // alias differs from their market name still gets their real points/wins.
     p: WORDLE_BASE[_wdNorm(d.name)] ? bs[0] + Math.round(s.p8 || 0) : (s.p != null ? s.p : 0),
-    w: WORDLE_BASE[_wdNorm(d.name)] ? bs[1] + Math.max(s.w8 || 0, liveW[d.id] || 0) : (s.w != null ? s.w : 0) + Math.max(0, (liveW[d.id] || 0) - (s.w8 || 0)), st: (s.st0 || 0) + (liveSt[d.id] || 0), pd: (bs[2] || 0) + Math.max(s.pd8 || 0, livePd[d.id] || 0), pl: _poleFix(d.name, Math.max(s.pl || 0, s2.pl || 0) + Math.max(0, (livePl[d.id] || 0) - Math.max(s.pl8 || 0, s2.pl8 || 0))), th, thw, dh, fs: _wdFirstSeason(s, s2), ch: DRIVER_CHAMPS.filter(([, n]) => { const c = _wdNorm(n); return c === k || c === _wdNorm(d.name); }).length, photo: (typeof driverPhoto === 'function') ? driverPhoto(d) : '' };
+    w: WORDLE_BASE[_wdNorm(d.name)] ? bs[1] + Math.max(s.w8 || 0, liveW[d.id] || 0) : (s.w != null ? s.w : 0) + Math.max(0, (liveW[d.id] || 0) - (s.w8 || 0)), st: (s.st0 || 0) + (liveSt[d.id] || 0), pd: (bs[2] || 0) + Math.max(s.pd8 || 0, livePd[d.id] || 0), pl: _poleFix(d.name, Math.max(s.pl || 0, s2.pl || 0) + Math.max(0, (livePl[d.id] || 0) - Math.max(s.pl8 || 0, s2.pl8 || 0))), th, thw, dh, tn, fs: _wdFirstSeason(s, s2), ch: DRIVER_CHAMPS.filter(([, n]) => { const c = _wdNorm(n); return c === k || c === _wdNorm(d.name); }).length, photo: (typeof driverPhoto === 'function') ? driverPhoto(d) : '' };
   }).sort((a, b) => a.id < b.id ? -1 : 1);
   // Drivers who are only in the .db (not in the fantasy app) — same 25+ starts / champion / BOTT rule as reserves.
   { const curS = Number(window._reserveSeason) || 8, have = new Set();
@@ -29375,7 +29377,7 @@ async function _wdLoad() {
       let photo = ''; try { photo = (window._avatarByName && typeof _normName === 'function' && window._avatarByName[_normName(s.n)]) || ''; } catch (e) {}
       pool.push({ id: 'db:' + k, name: s.n, res: true, dbOnly: true, dv: ld, team: 'Reserve', div: '', nat: _natFix(s.n, s.nat || ''), b: s.b || 0,
         p: bs ? bs[0] + Math.round(s.p8 || 0) : Math.round(s.p || 0), w: bs ? bs[1] + (s.w8 || 0) : (s.w || 0), st: s.st0 || 0, pd: (bs ? bs[2] : 0) + (s.pd8 || 0),
-        th: Object.assign({}, s.th || {}), dh: Object.assign({}, s.dh || {}), fs: _wdFirstSeason(s), pl: _poleFix(s.n, s.pl || 0), ch: DRIVER_CHAMPS.filter(([, n]) => _wdNorm(n) === k).length, photo }); }); }
+        th: Object.assign({}, s.th || {}), dh: Object.assign({}, s.dh || {}), tn: Object.fromEntries(Object.entries(s.tc || {}).map(([k, t]) => [k, t.n])), fs: _wdFirstSeason(s), pl: _poleFix(s.n, s.pl || 0), ch: DRIVER_CHAMPS.filter(([, n]) => _wdNorm(n) === k).length, photo }); }); }
   // Admin stat overrides (settings/statOverrides, keyed by normalised name) — applied last so they win everywhere.
   { const so = await dbGet('settings', 'statOverrides').catch(() => null); window._statOv = (so && so.value) || {};
     pool.forEach(p => { p._orig = { p: p.p, w: p.w, pd: p.pd, pl: p.pl, st: p.st, b: p.b, ch: p.ch, nat: p.nat };
@@ -30850,7 +30852,7 @@ function _ptCats(pool) {
   const nats = {}; pool.forEach(p => { if (p.nat) nats[p.nat] = (nats[p.nat] || 0) + 1; });
   Object.keys(nats).forEach(n => add('n' + n, `Name an IMS driver from <b>${esc(n)}</b> ${_wdFlag(n)}`, p => p.nat === n));
   const tms = {}; pool.forEach(p => Object.entries(p.th || {}).forEach(([k, n]) => { tms[k] = tms[k] || n; }));
-  Object.entries(tms).forEach(([k, n]) => add('t' + k, `Name an IMS driver who has driven for <b>${esc(n)}</b>`, p => (p.th || {})[k]));
+  Object.entries(tms).forEach(([k, n]) => add('t' + k, `Name an IMS driver who has driven for <b>${esc(n)}</b>`, p => (p.th || {})[k], 6, p => (p.tn || {})[k] || 0, 'appearances for ' + n));
   const fss = {}; pool.forEach(p => { if (p.fs) fss[p.fs] = 1; });
   Object.keys(fss).forEach(s => add('fs' + s, `Name an IMS driver whose <b>first season was S${s}</b>`, p => String(p.fs) === s));
   return C;
