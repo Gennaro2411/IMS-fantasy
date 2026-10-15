@@ -10472,8 +10472,11 @@ async function renderMyTeam() {
     html += driverPhoto(driver) ? '<img src="'+esc(driverPhoto(driver))+'" style="width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.parentElement.innerHTML=\'<div style=display:flex;align-items:center;justify-content:center;height:100%;font-size:1.5rem>👤</div>\'">' : '<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:1.5rem">👤</div>';
     html += '</div>';
     if (_banned) html += raceBanCrossOverlay('8px');
-    if (!_banned && _ci) html += checkedInTickSvg(16);
-    else if (_co) html += checkedOutBadgeSvg(16);
+    { // My Team: the captain's C badge sits bottom-right, so a captain's tick / X moves to the bottom-LEFT
+      const _side = (h) => isCap ? h.replace('right:-3px', 'left:-3px') : h;
+      if (!_banned && _ci) html += _side(checkedInTickSvg(16));
+      else if (_co) html += _side(checkedOutBadgeSvg(16));
+    }
     // Reserve stepped in: a small teal driver-swap chip overlapping the corner — the reserve's face
     // over the original, with a swap arrow — plus a RESERVE ribbon (added below on the card).
     if (_reserveIn) {
