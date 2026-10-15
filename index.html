@@ -27490,7 +27490,7 @@ window.renderBets = async function() {
   const open = !!upcoming;
   const openStake = myBets.filter(b => b.status === 'open').reduce((s, b) => s + (b.stake || 0), 0);
 
-  const _secHid = (k) => (isC || window._betSec === k) ? '' : ' style="display:none"'; // driver divisions: one section open at a time
+  const _secHid = (k) => (window._betSec === k) ? '' : ' style="display:none"'; // driver divisions: one section open at a time
   const oddsBtn = (market, sel, label, odds) => {
     const key = market + ':' + sel.join('-');
     const on = (window._betLegs || []).some(l => l.key === div + '|' + key);
@@ -27723,7 +27723,9 @@ window.renderBets = async function() {
           <span class="bo-fmt"><button class="${_betFmtMode() === 'dec' ? 'on' : ''}" onclick="setOddsFmt('dec')" title="Decimal odds — total return per 1 coin">2.50</button><button class="${_betFmtMode() === 'frac' ? 'on' : ''}" onclick="setOddsFmt('frac')" title="Fractional odds — profit : stake">6/4</button></span></div>
         <div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>${isC ? '🏭 Constructors' : '🏁 Race markets'}</span><span class="bo-cols">${isC ? '' : '<i>POLE</i>'}<i>${isC ? 'TOP' : 'WIN'}</i>${isC ? '' : '<i>PODIUM</i>'}<i>${isC ? 'TOP 3' : 'TOP 5'}</i></span></div>${rows || '<div class="text-muted" style="padding:14px">Nothing to price here yet.</div>'}
           ${_outHere.length ? `<div class="bo-out-h">✕ Not racing — no bets</div>` + _outHere.map(d => `<div class="bo-row bo-out">${photo(d)}<div class="bo-nm"><b>${esc(d.name)} <span class="bo-ci out">${(d.raceBanRacesLeft > 0 || d.raceBanned) ? 'RACE BAN' : 'OUT'}</span></b><small>${formatM(_pr(d))} · removed from all ${esc(div)} markets</small></div><span class="bo-odd-x">—</span><span class="bo-odd-x">—</span><span class="bo-odd-x">—</span><span class="bo-odd-x">—</span></div>`).join('') : ''}</div>
-        ${(() => { if (isC) return ''; const B = [
+        ${(() => { const B = isC ? [
+            ['more', '⚔️', 'Head to head', !!h2h],
+            ['cou', '📏', 'BOTT points', Object.keys(_ouCons).length > 0]].filter(x => x[3]) : [
             ['more', '⚔️', 'H2H & specials', !!(h2h || _pgap || _wmar || _ouMargin || _ouTime || _ouDnf || _ouMore.length || _yn.length)],
             ['sprint', '⚡', 'Sprint', !!(upcoming && upcoming.isSprint && field.length)],
             ['fpos', '📍', 'Finish position', Object.keys(_fpos).length > 0],
@@ -27763,11 +27765,11 @@ window.renderBets = async function() {
           return `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>🎰 Tricast</span><small>Pick 1st, 2nd & 3rd in exact order</small></div>
           <div style="display:flex;flex-direction:column;gap:6px;padding:10px 14px"><label style="display:flex;gap:8px;align-items:center"><b style="width:32px">1st</b>${opt(0)}</label><label style="display:flex;gap:8px;align-items:center"><b style="width:32px">2nd</b>${opt(1)}</label><label style="display:flex;gap:8px;align-items:center"><b style="width:32px">3rd</b>${opt(2)}</label>
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:4px"><span id="tri-odds" style="font-weight:800;color:var(--gold)"></span><button class="btn btn-primary btn-sm" ${open ? '' : 'disabled'} onclick="betTriAdd()">Add to slip</button></div></div></div>`; })() : ''}
-        </div>
+        </div><div class="bo-sec" data-sec="cou"${_secHid('cou')}>
         ${(isC && Object.keys(_ouCons).length) ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>📏 Constructor points</span><small>Over / under BOTT points this round</small></div>
           ${field.filter(c => _ouCons[c.id]).map(c => { const o = _ouCons[c.id]; return `<div class="bo-ou"><div class="bo-ou-c">${photo(c)}<div><b>${esc(c.name)}</b><span class="bo-ou-line">LINE <em>${o.line} pts</em></span></div></div>
             <div class="bo-ou-b"><i>OVER</i>${oddsBtn('cou', [c.id, 'over', String(o.line)], c.name + ' over ' + o.line + ' BOTT pts', _ouOdds('cou', [c.id, 'over', String(o.line)], o.po))}</div>
-            <div class="bo-ou-b"><i>UNDER</i>${oddsBtn('cou', [c.id, 'under', String(o.line)], c.name + ' under ' + o.line + ' BOTT pts', _ouOdds('cou', [c.id, 'under', String(o.line)], 1 - o.po))}</div></div>`; }).join('')}</div>` : ''}
+            <div class="bo-ou-b"><i>UNDER</i>${oddsBtn('cou', [c.id, 'under', String(o.line)], c.name + ' under ' + o.line + ' BOTT pts', _ouOdds('cou', [c.id, 'under', String(o.line)], 1 - o.po))}</div></div>`; }).join('')}</div>` : ''}</div>
       </div>
       <div class="bo-side">
         ${slipHtml}
