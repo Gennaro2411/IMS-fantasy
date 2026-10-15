@@ -892,6 +892,47 @@
   .rh-cd-box::before{content:'';position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,transparent,var(--rh-accent),transparent);opacity:.8}
   .rh-cd-box .hero-cd-num{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:2rem;line-height:1;color:var(--rh-num,#fff);font-variant-numeric:tabular-nums;text-shadow:0 0 14px var(--rh-numglow,rgba(255,255,255,0.18))}
   .rh-cd-lbl{font-size:.52rem;font-weight:800;letter-spacing:1.6px;color:var(--muted);margin-top:4px}
+  /* ===== Home manifesto ===== */
+  .hh-man{position:relative;overflow:hidden;text-align:center;padding:34px 18px 26px;margin-bottom:14px;border-radius:26px;background:radial-gradient(70% 90% at 50% 0%,rgba(155,111,212,.28),transparent 70%),radial-gradient(60% 70% at 50% 120%,rgba(255,176,32,.16),transparent 70%),#09080f;border:1px solid rgba(255,255,255,.07)}
+  .hh-q{position:relative;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;text-transform:uppercase;font-size:clamp(2rem,8.5vw,4rem);line-height:.95;letter-spacing:-.5px;color:#fff;max-width:900px;margin:0 auto}
+  .hh-q em{display:block;font-style:italic;background:linear-gradient(100deg,#fff6d6,#ffd24a 30%,#ff9d1c 55%,#fff3c4 70%,#ffd24a);background-size:220% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:hofSheen 6s linear infinite}
+  .hh-qm{position:absolute;left:50%;top:-.45em;transform:translateX(-50%);font-size:3.2em;line-height:1;color:rgba(155,111,212,.22);font-style:normal;pointer-events:none}
+  .hh-man p{max-width:520px;margin:14px auto 0;color:#b6b1cf;font-size:.95rem;line-height:1.45}
+  .hh-pills{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:18px}
+  .hh-pills span{padding:9px 15px;border-radius:999px;font:800 .78rem/1 'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase;color:#f1eefc;background:linear-gradient(160deg,rgba(255,255,255,.08),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.08);transition:transform .2s,border-color .2s}
+  .hh-pills span:hover{transform:translateY(-2px);border-color:rgba(255,210,74,.55)}
+  /* ===== Home sections: timings, stats, team of the week ===== */
+  .hm-sec{border-radius:24px!important;background:linear-gradient(170deg,#15112a,#0c0b14 70%)!important;border:1px solid rgba(255,255,255,.07)!important;box-shadow:0 24px 50px -32px rgba(90,94,201,.6)}
+  .hm-sec .card-title{font-family:'Barlow Condensed',sans-serif;font-style:italic;font-size:1.5rem;letter-spacing:1px}
+  .hm-times{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:6px}
+  .hm-time{position:relative;overflow:hidden;display:flex;align-items:center;gap:12px;padding:14px;border-radius:18px;background:radial-gradient(100% 120% at 0% 0%,color-mix(in srgb,var(--h) 22%,transparent),transparent 60%),rgba(255,255,255,.025);border:1px solid color-mix(in srgb,var(--h) 30%,rgba(255,255,255,.05));transition:transform .2s,box-shadow .2s}
+  .hm-time:hover{transform:translateY(-3px)}
+  .hm-time.next{border-color:var(--h);box-shadow:0 0 0 1px var(--h),0 14px 30px -14px var(--h)}
+  .hm-time.done{opacity:.45;filter:saturate(.5)}
+  .hm-time-div{display:grid;place-items:center;width:50px;height:50px;border-radius:14px;flex-shrink:0;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;font-size:1.45rem;color:#fff;background:linear-gradient(150deg,var(--h),color-mix(in srgb,var(--h) 45%,#000));box-shadow:0 6px 18px -6px var(--h)}
+  .hm-time-r small{display:block;font:800 .58rem/1 system-ui,sans-serif;letter-spacing:2px;color:#8f89ab}
+  .hm-time-r b{display:block;margin-top:4px;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.45rem;line-height:1;color:#fff}
+  .hm-time-tag{position:absolute;top:8px;right:9px;font:900 .5rem/1 system-ui,sans-serif;letter-spacing:1.4px;color:var(--h);animation:hofPulse 1.8s ease-in-out infinite}
+  .hm-time-tag.d{color:#8f89ab;animation:none}
+  .hm-stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+  .hm-stat{position:relative;overflow:hidden;min-width:0;padding:14px 15px;border-radius:18px;background:radial-gradient(120% 100% at 100% 0%,color-mix(in srgb,var(--c) 18%,transparent),transparent 60%),rgba(255,255,255,.025);border:1px solid color-mix(in srgb,var(--c) 26%,rgba(255,255,255,.05));transition:transform .2s,border-color .2s}
+  .hm-stat:hover{transform:translateY(-3px);border-color:var(--c)}
+  .hm-stat-l{display:flex;align-items:center;gap:7px;font:800 .56rem/1.2 system-ui,sans-serif;letter-spacing:1.6px;color:var(--c)}
+  .hm-stat-l span{display:grid;place-items:center;width:24px;height:24px;border-radius:8px;flex-shrink:0;background:color-mix(in srgb,var(--c) 18%,transparent)}
+  .hm-stat-l span svg{width:13px;height:13px}
+  .hm-stat-n{margin-top:10px;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.25rem;line-height:1.05;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hm-stat-s{font-size:.66rem;color:#8f89ab;margin-top:2px}
+  .hm-stat-v{margin-top:6px;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.6rem;line-height:1;color:var(--c)}
+  .hm-stat-v span{font-size:.75rem!important}
+  @media (max-width:640px){ .hm-stats{grid-template-columns:1fr 1fr;gap:8px} .hm-stat{padding:12px} .hm-stat-n{font-size:1.05rem} .hm-stat-v{font-size:1.3rem} .hm-stat-l{font-size:.5rem;letter-spacing:1px} .hm-times{grid-template-columns:1fr 1fr} .hm-time{padding:11px;gap:9px} .hm-time-div{width:42px;height:42px;font-size:1.2rem} .hm-time-r b{font-size:1.2rem} }
+  .hm-team{border-radius:24px!important;border-color:rgba(155,111,212,.35)!important;box-shadow:0 26px 56px -30px rgba(155,111,212,.6)}
+  .hm-team.gold{border-color:rgba(255,210,74,.4)!important;box-shadow:0 26px 56px -30px rgba(255,176,32,.55)}
+  .hm-team>div:first-child{height:0!important}
+  .hm-team>div:nth-child(2) span:first-child{font-style:italic;font-size:1.9rem!important}
+  .hm-team>div:nth-child(3)>div{border-radius:18px!important;transition:transform .25s cubic-bezier(.2,1,.3,1),box-shadow .25s}
+  .hm-team>div:nth-child(3)>div:hover{transform:translateY(-4px);box-shadow:0 16px 30px -16px rgba(0,0,0,.8)}
+  .hm-team>div:nth-child(3)>div>div[style*="border-radius:50%"]{width:62px!important;height:62px!important;box-shadow:0 0 18px -2px currentColor}
+  .hm-team>div:last-child>div{border-radius:16px!important}
   /* ===== Home hype (top of the home page) ===== */
   #home-hype .rh{isolation:isolate;min-height:330px;border-radius:26px;margin-bottom:12px;display:flex;flex-direction:column;justify-content:flex-end;box-shadow:0 30px 70px -30px rgba(90,94,201,.65),inset 0 1px 0 rgba(255,255,255,.07)}
   #home-hype .rh-photo{position:absolute;inset:0;background-size:cover;background-position:center 60%;opacity:.42;transform:scale(1.08);animation:hhPan 22s ease-in-out infinite alternate;pointer-events:none;z-index:-2}
@@ -7539,20 +7580,15 @@ async function renderDashboard() {
   // live/done, not "next".) Falls back to null once every session has started.
   const nextTiming = timingObjs.filter(t => t.local.when.getTime() > nowMs)
     .sort((a,b) => a.local.when - b.local.when)[0] || null;
-  const timingsHtml = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-top:4px">` +
+  const timingsHtml = `<div class="hm-times">` +
     timingObjs.map(t => {
       const hue = DIV_HUES[t.div] || '#9b6fd4';
       const done = _raceThisWeek && t.local.when.getTime() < nowMs - 3*3600000;
       const isNext = _raceThisWeek && nextTiming && nextTiming.div === t.div;
-      return `<div style="position:relative;overflow:hidden;border-radius:10px;padding:10px 12px;text-align:center;
-          border:1px solid ${isNext ? hue : done ? 'rgba(255,255,255,0.06)' : hue+'40'};
-          background:${isNext ? `linear-gradient(160deg,${hue}22,var(--surface2) 75%)` : done ? 'rgba(255,255,255,0.015)' : `linear-gradient(160deg,${hue}10,var(--surface2) 80%)`};
-          ${done ? 'opacity:.5;' : ''}transition:transform .15s ease" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
-        <div style="height:3px;position:absolute;top:0;left:0;right:0;background:linear-gradient(90deg,${hue},transparent 85%)"></div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.3rem;letter-spacing:1px;color:${hue}">${t.div}</div>
-        <div style="font-size:.6rem;font-weight:800;letter-spacing:1.5px;color:var(--muted);margin:2px 0 1px">${t.local.day}</div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.05rem">${t.local.time}</div>
-        ${isNext ? `<div style="font-size:.52rem;font-weight:800;letter-spacing:1.5px;color:${hue};margin-top:3px">● NEXT UP</div>` : done ? `<div style="font-size:.52rem;font-weight:800;letter-spacing:1.5px;color:var(--muted);margin-top:3px">✓ DONE</div>` : ''}
+      return `<div class="hm-time${isNext ? ' next' : ''}${done ? ' done' : ''}" style="--h:${hue}">
+        <div class="hm-time-div">${t.div}</div>
+        <div class="hm-time-r"><small>${t.local.day}</small><b>${t.local.time}</b></div>
+        ${isNext ? '<span class="hm-time-tag">● NEXT UP</span>' : done ? '<span class="hm-time-tag d">✓ DONE</span>' : ''}
       </div>`;
     }).join('') + `</div>`;
 
@@ -7588,7 +7624,7 @@ async function renderDashboard() {
     ) * 10) / 10;
 
     totwHtml = `
-    <div class="card" style="padding:0;overflow:hidden;position:relative;background:linear-gradient(150deg,#151022 0%,#101018 60%,#0d0d14 100%);border:1px solid rgba(123,79,191,0.4)">
+    <div class="card hm-team" style="padding:0;overflow:hidden;position:relative;background:linear-gradient(150deg,#151022 0%,#101018 60%,#0d0d14 100%);border:1px solid rgba(123,79,191,0.4)">
       <div style="height:3px;background:linear-gradient(90deg,var(--gold),#9b6fd4,transparent)"></div>
       <div style="padding:16px 18px 6px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
         <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.5rem;letter-spacing:2px;background:linear-gradient(90deg,#ffe259,#ffa751);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent"><span style="-webkit-text-fill-color:initial;color:#ffc800">${_ico('star')}</span> TEAM OF THE WEEK</span>
@@ -7664,7 +7700,7 @@ async function renderDashboard() {
       const totsTotalPts = totsDrivers.reduce((s,t)=>s+t.pts, 0) + (totsConstr ? Math.max(0, totsConstrPts) : 0);
       const totsTotalValue = Math.round((totsDrivers.reduce((s,t)=>s+driverPrice(t.driver), 0) + (totsConstr ? constructorPrice(totsConstr) : 0)) * 10) / 10;
       totsHtml = `
-    <div class="card" style="padding:0;overflow:hidden;position:relative;background:linear-gradient(150deg,#1a1508 0%,#141018 60%,#0d0d14 100%);border:1px solid rgba(255,200,0,0.45)">
+    <div class="card hm-team gold" style="padding:0;overflow:hidden;position:relative;background:linear-gradient(150deg,#1a1508 0%,#141018 60%,#0d0d14 100%);border:1px solid rgba(255,200,0,0.45)">
       <div style="height:3px;background:linear-gradient(90deg,#ffd24a,#ffa751,transparent)"></div>
       <div style="padding:16px 18px 6px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
         <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.5rem;letter-spacing:2px;background:linear-gradient(90deg,#ffe259,#ffa751);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent"><span style="-webkit-text-fill-color:initial;color:#ffc800">${_ico('crown')}</span> TEAM OF THE SEASON</span>
@@ -7725,12 +7761,11 @@ async function renderDashboard() {
 
   // Colour-coded stat card: icon watermark, category accent bar + tint, hover lift
   const statCard = (icon, label, name, sub, value, color) => `
-    <div style="position:relative;overflow:hidden;background:linear-gradient(160deg,${color}14,var(--surface2) 70%);border:1px solid ${color}45;border-left:4px solid ${color};border-radius:12px;padding:14px 16px;transition:transform .15s ease, box-shadow .15s ease" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 16px rgba(0,0,0,.3)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
-      <div style="position:absolute;right:2px;bottom:-8px;font-size:3rem;opacity:.08;pointer-events:none">${icon}</div>
-      <div style="font-size:.62rem;font-family:'Barlow Condensed',sans-serif;font-weight:800;letter-spacing:2px;color:${color};margin-bottom:6px">${icon} ${label}</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.25rem;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
-      ${sub ? `<div class="text-muted" style="font-size:.75rem">${sub}</div>` : ''}
-      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.55rem;color:${color};margin-top:4px">${value}</div>
+    <div class="hm-stat" style="--c:${color}">
+      <div class="hm-stat-l"><span>${icon}</span>${label}</div>
+      <div class="hm-stat-n">${name}</div>
+      ${sub ? `<div class="hm-stat-s">${sub}</div>` : ''}
+      <div class="hm-stat-v">${value}</div>
     </div>`;
   const GOLD='#ffc800', GREEN='#2ecc71', RED='#e8002d', PURPLE='#9b6fd4', TEAL='#27f4d2';
 
@@ -7742,7 +7777,12 @@ async function renderDashboard() {
       const nDiv = (typeof divisionsForSeason === 'function') ? divisionsForSeason().length : 5;
       const done = (races || []).filter(r => r.driverPoints && Object.keys(r.driverPoints).length).length, total = Math.max(done, (schedule || []).length);
       const tile = (pg, ico, t, sub, c) => `<button class="hh-act" style="--c:${c}" onclick="showPage('${pg}')"><span class="hh-ico">${ico}</span><b>${t}</b><small>${sub}</small></button>`;
-      hype.innerHTML = heroHtml + `
+      const manifesto = `<div class="hh-man">
+          <div class="hh-q"><span class="hh-qm">“</span>A second championship <em>on top of the first</em></div>
+          <p>IMS Fantasy is not a side game; it is a second title fight running on top of the first.</p>
+          <div class="hh-pills">${['💰 $100M team build', '🏁 Five divisions', '📊 ELO-driven prices', '👑 Captains', '🃏 Chips and transfers'].map(x => `<span>${x}</span>`).join('')}</div>
+        </div>`;
+      hype.innerHTML = manifesto + heroHtml + `
         <div class="hh-pulse">
           <div><b>${mgrs}</b><small>Managers</small></div>
           <div><b>${drv}</b><small>Drivers on track</small></div>
@@ -7758,16 +7798,16 @@ async function renderDashboard() {
     }
   }
   el.innerHTML = `<div id="home-twitch-live"></div>
-    <div class="card">
+    <div class="card hm-sec">
       <div class="card-title"><div class="dot"></div>Race Timings</div>
       ${timingsHtml}
       <div style="margin-top:10px;font-size:.75rem;color:var(--muted)">* Times shown in your local timezone (${userTZ.replace(/_/g,' ')})</div>
     </div>
 
-    <div class="card">
+    <div class="card hm-sec">
       <div class="card-title"><div class="dot"></div>Stats</div>
       ${!races.length ? emptyState(_ico('chart'),'No stats yet','Stats appear after the first race is imported.') : `
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+      <div class="hm-stats">
         ${statCard(_ico('crown'),'TOP DRIVER', topDriver ? esc(topDriver.name) : '—', topDriver ? esc(topDriver.division) : '', `${topDriverPts} <span style="font-size:.85rem;font-weight:400;color:var(--muted)">pts</span>`, GOLD)}
         ${statCard(_ico('shield'),'TOP CONSTRUCTOR', topConstr ? esc(topConstr.name) : '—', '', `${topConstrPts} <span style="font-size:.85rem;font-weight:400;color:var(--muted)">pts</span>`, GOLD)}
         ${statCard(_ico('star'),'MOST PICKED DRIVER', mostSelDriver ? esc(mostSelDriver.name) : '—', mostSelDriver ? esc(mostSelDriver.division) : '', `${mostSelPct}% <span style="font-size:.85rem;font-weight:400;color:var(--muted)">of teams</span>`, PURPLE)}
