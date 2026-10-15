@@ -28249,7 +28249,7 @@ function _betLegClashes(legs) {
       || (a.market === b.market && (a.market === 'h2h' || a.market === 'qh2h') && a.sel.slice().sort().join() === b.sel.slice().sort().join())
       || (a.market === 'tri' && b.market === 'tri')
       || ((a.market === 'tri') !== (b.market === 'tri') && (() => { // a tricast already fixes its 3 drivers' places: no other race pick on THOSE drivers can ride with it
-        const t = a.market === 'tri' ? a : b, o = a.market === 'tri' ? b : a; if (['spw', 'spp'].includes(o.market)) return false;
+        const t = a.market === 'tri' ? a : b, o = a.market === 'tri' ? b : a; if (['spw', 'spp', 'pole', 'qh2h', 'pgap'].includes(o.market)) return false; // sprint & qualifying markets don't touch the race result
         return (o.sel || []).some(x => t.sel.includes(String(x).replace(/^(fpos|ddnf):/, ''))); })())
       || (a.market === 'spw' && b.market === 'spw') || (['spw', 'spp'].includes(a.market) && ['spw', 'spp'].includes(b.market) && a.market !== b.market && a.sel[0] === b.sel[0])
       || (['win', 'pod', 'top5'].includes(a.market) && ['win', 'pod', 'top5'].includes(b.market) && a.market !== b.market && a.sel[0] === b.sel[0]);
