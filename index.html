@@ -30840,11 +30840,11 @@ function _ptMakeQs(pool, rnd) {
     if (used.has(c.id) || (['t', 'n', 'dh', 'fs'].includes(g) && out.some(q => q.g === g))) continue; used.add(c.id); out.push({ c: c.id, g }); }
   return out.length === PT_N ? out.map(q => q.c) : null;
 }
-// Score table for one question: {id: points}. Pointless = the fewest-starts ~10% of valid answers.
+// Score table: spread 0→100 between the fewest- and most-raced valid answer. Fewest-starts ~10% = 0 (pointless).
 function _ptScores(cid, pool) {
   const c = _ptCats(pool).find(x => x.id === cid); if (!c) return null;
-  const ps = c.ids.map(id => pool.find(p => p.id === id)).filter(Boolean).sort((a, b) => a.st - b.st), mx = Math.max(1, ...ps.map(p => p.st)), nz = Math.max(1, Math.round(ps.length * 0.1)), sc = {};
-  ps.forEach((p, i) => { sc[p.id] = i < nz ? 0 : Math.max(1, Math.round(p.st / mx * 100)); });
+  const ps = c.ids.map(id => pool.find(p => p.id === id)).filter(Boolean).sort((a, b) => a.st - b.st), mx = Math.max(...ps.map(p => p.st)), mn = ps.length ? ps[0].st : 0, nz = Math.max(1, Math.round(ps.length * 0.1)), sc = {};
+  ps.forEach((p, i) => { sc[p.id] = i < nz || mx === mn ? 0 : Math.max(1, Math.round((p.st - mn) / (mx - mn) * 100)); });
   return { q: c.q, sc, list: ps.slice().reverse() };
 }
 function _ptState(mode, pool) {
@@ -30916,7 +30916,7 @@ async function renderPTGame(el) {
       <div class="pt-sum">${st.ans.map((a, i) => { const p = pool.find(x => x.id === a.id); return `<div><span>Q${i + 1}</span><span>${p ? esc(p.name) : '—'}</span><b>${a.pts === 0 && a.id ? '🎯 0' : a.pts}</b></div>`; }).join('')}</div>
       ${mode === 'inf' ? '<button class="btn btn-primary" style="margin-top:12px" onclick="ptAgain()">Play again</button>' : '<div class="text-muted" style="margin-top:10px;font-size:.82rem">New questions at midnight (UK).</div>'}</div>`; }
   if (mode === 'daily') body += (st && st.done || !window._ptLb) ? (window._ptLb = await _ptLeaderboardHtml()) : window._ptLb;
-  el.innerHTML = `<div class="wd-wrap">${body}<div class="wd-info"><h3>How to play</h3><p><b>${PT_N} questions.</b> Name an IMS driver who fits. You score their <b>IMS race starts</b> compared to the most-raced valid answer — the most-raced driver scores <b>100</b>, rarely-raced ones score close to 0. The fewest-raced answers score <b>0 — POINTLESS 🎯</b>. Wrong answers and skips score 100. <b>Lowest total wins.</b></p>
+  el.innerHTML = `<div class="wd-wrap">${body}<div class="wd-info"><h3>How to play</h3><p><b>${PT_N} questions.</b> Name an IMS driver who fits. Your score depends on their <b>IMS race starts</b>, spread from the least-raced valid answer to the most-raced — the most-raced driver scores <b>100</b>, rarely-raced ones score close to 0. The fewest-raced answers score <b>0 — POINTLESS 🎯</b>. Wrong answers and skips score 100. <b>Lowest total wins.</b></p>
     <p>Pool: everyone on the market, plus reserves with 25+ starts. Stats are all-time across every IMS season.</p>
     <p style="margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(247,207,85,.08);border:1px solid rgba(247,207,85,.35);font-size:.84rem"><span class="imc"></span> <b>Earn IM$:</b> play the daily for <b>+25 IM$</b>, score <b>100 or under</b> for <b>another +25 IM$</b>. Log in to earn.</p></div></div>`;
   const inp = document.getElementById('pt-input'); if (inp && !('ontouchstart' in window)) inp.focus();
