@@ -975,24 +975,6 @@
   .lock-soon{animation:lockPulse 2.2s ease-in-out infinite;}
   @keyframes ddBlink{0%,100%{opacity:1}50%{opacity:.35}}
   .dd-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--red);animation:ddBlink 1.1s ease-in-out infinite;vertical-align:middle;margin-right:5px;}
-  /* ===== IMS LIVE — modern news-channel look (flat, calm, no glow) ===== */
-  #broadcast-box{background:linear-gradient(180deg,#0e1322,#080b14)!important;border:1px solid rgba(255,255,255,.08)!important;border-radius:16px!important;box-shadow:0 16px 40px -24px rgba(0,0,0,.9)!important}
-  #broadcast-box::before{content:'';position:absolute;top:0;left:0;right:0;height:40px;z-index:4;background:rgba(255,255,255,.03);border-bottom:1px solid rgba(255,255,255,.07);pointer-events:none}
-  #broadcast-box .bc-live-badge{top:9px!important;left:10px!important;background:#d90a1e!important;border-radius:4px!important;padding:5px 9px!important;gap:6px!important}
-  #broadcast-box .bc-live-badge span:last-child{font:900 .62rem/1 system-ui,sans-serif!important;letter-spacing:1.6px!important;color:#fff}
-  #broadcast-box .bc-live-badge .dd-dot{background:#fff!important;box-shadow:none!important;width:6px;height:6px}
-  #bc-scene-label{top:9px!important;left:110px!important;right:auto!important;max-width:calc(100% - 205px);background:#fff!important;color:#0b0f1a!important;border-radius:4px!important;padding:5px 10px!important;font:900 .62rem/1 system-ui,sans-serif!important;letter-spacing:1.4px!important;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  #bc-clock{position:absolute;top:13px;right:48px;z-index:5;font:800 .72rem/1 system-ui,sans-serif;letter-spacing:1px;color:#c9cfe0;font-variant-numeric:tabular-nums}
-  #bc-expand-btn{top:7px!important;background:rgba(255,255,255,.06)!important;border:1px solid rgba(255,255,255,.12)!important;border-radius:6px!important}
-  #bc-prog{position:absolute;top:39px;left:0;right:0;height:2px;z-index:5;background:transparent;pointer-events:none}
-  #bc-prog i{display:block;height:100%;width:0;background:#d90a1e;animation:bcProg 10s linear forwards}
-  @keyframes bcProg{to{width:100%}}
-  #bc-scene{padding-top:50px!important}
-  #bc-ticker{background:#05070d!important;border-top:1px solid rgba(255,255,255,.08)!important;padding-left:78px}
-  #bc-ticker .tk-item{color:#e6e9f2}
-  .bc-tk-lbl{position:absolute;left:0;bottom:0;z-index:6;height:30px;display:flex;align-items:center;padding:0 12px;background:#d90a1e;color:#fff;font:900 .6rem/1 system-ui,sans-serif;letter-spacing:1.6px}
-  .bc-tk-lbl::after{content:'';position:absolute;right:-10px;top:0;bottom:0;width:10px;background:linear-gradient(90deg,#d90a1e,transparent)}
-  @media (max-width:640px){ #bc-scene-label{max-width:calc(100% - 190px)} #bc-clock{font-size:.66rem} }
   .lock-ticker{overflow:hidden;white-space:nowrap;border-top:1px solid rgba(232,0,45,.3);background:rgba(232,0,45,.06);position:relative;}
   .lock-ticker-inner{display:inline-block;padding:7px 0;animation:tickerScroll 30s linear infinite;will-change:transform;}
   .lock-ticker:hover .lock-ticker-inner{animation-play-state:paused;}
@@ -4993,7 +4975,6 @@ function bcShowScene() {
   setTimeout(() => {
     sceneEl.innerHTML = `<div class="bc-fit">${scene.html}</div>`;
     if (labelEl) labelEl.innerHTML = scene.label;
-    const _pg = document.querySelector('#bc-prog i'); if (_pg) { _pg.style.animation = 'none'; void _pg.offsetWidth; _pg.style.animation = ''; } // segment timer restarts
     if (typeof fitTheatreZoom === 'function') fitTheatreZoom();
     fitMiniZoom();
     sceneEl.style.opacity = 1;
@@ -5003,15 +4984,6 @@ function bcShowScene() {
 
 async function initBroadcast() {
   if (!document.getElementById('broadcast-box')) return;
-  { // News-channel chrome (added once): live clock, segment timer bar, "LATEST" ticker tag
-    const box = document.getElementById('broadcast-box');
-    if (!document.getElementById('bc-clock')) {
-      box.insertAdjacentHTML('beforeend', '<div id="bc-clock"></div><div id="bc-prog"><i></i></div>');
-      const tk = document.getElementById('bc-ticker'); if (tk) tk.insertAdjacentHTML('beforebegin', '<div class="bc-tk-lbl">LATEST</div>');
-      const tick = () => { const c = document.getElementById('bc-clock'); if (c) c.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); };
-      tick(); setInterval(tick, 20000);
-    }
-  }
   try {
     await bcLoadData();
     // Bottom ticker headlines
