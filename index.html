@@ -30871,10 +30871,38 @@ function _ptScores(cid, pool) {
   ps.forEach((p, i) => { sc[p.id] = i < nz || mx === mn ? 0 : Math.max(1, Math.round((p.st - mn) / (mx - mn) * 100)); });
   return { q: c.q, sc, list: ps.slice().reverse(), vl: c.vl || 'IMS appearances' };
 }
+// Daily questions without repeats: every question is shuffled once per "cycle" and dealt out 5 a day
+// (max one team / nationality / division / first-season question per day) until the cycle runs out.
+const _ptGroup = (id) => id.startsWith('dh') ? 'dh' : id.startsWith('fs') ? 'fs' : /^[nt]/.test(id) ? id[0] : id;
+function _ptCycle(ids, c, salt) {
+  const rnd = _grRng(_wdHash('imsptcyc' + salt + '|' + c)), left = ids.slice().sort();
+  for (let i = left.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [left[i], left[j]] = [left[j], left[i]]; }
+  const days = [];
+  // Each slot takes the question from the biggest group still left (so teams/nationalities get spread across
+  // the cycle instead of piling up at the end). Only if a day can't be filled does it allow a 2nd from one group.
+  while (left.length >= PT_N) { const day = [], gs = new Set();
+    for (let relax = 0; relax < 2 && day.length < PT_N; relax++) while (day.length < PT_N) {
+      const cnt = {}; left.forEach(id => { const g = _ptGroup(id); cnt[g] = (cnt[g] || 0) + 1; });
+      let bi = -1; left.forEach((id, i) => { const g = _ptGroup(id); if (!relax && ['dh', 'fs', 'n', 't'].includes(g) && gs.has(g)) return; if (day.some(x => _ptGroup(x) === g) && !['dh', 'fs', 'n', 't'].includes(g)) return;
+        if (bi < 0 || cnt[g] > cnt[_ptGroup(left[bi])]) bi = i; });
+      if (bi < 0) break; gs.add(_ptGroup(left[bi])); day.push(left.splice(bi, 1)[0]); }
+    if (day.length < PT_N) break; days.push(day); }
+  return days;
+}
+function _ptDailyQs(pool, salt) {
+  const ids = _ptCats(pool).map(c => c.id); if (ids.length < PT_N) return null;
+  let d = _wdDayNum() - 1, c = 0, days = _ptCycle(ids, 0, salt);
+  if (!days.length) return null;
+  while (d >= days.length) { d -= days.length; c++; days = _ptCycle(ids, c, salt); if (!days.length) return null; }
+  return days[d];
+}
+const PT_PRAC_MAX = 3;
+const _ptPracUsed = () => { try { const o = JSON.parse(localStorage.getItem('imsPtPrac') || 'null'); return o && o.day === _wdDayKey() ? o.n : 0; } catch (e) { return 0; } };
+const _ptPracBump = () => { try { localStorage.setItem('imsPtPrac', JSON.stringify({ day: _wdDayKey(), n: _ptPracUsed() + 1 })); } catch (e) {} };
 function _ptState(mode, pool) {
-  if (mode === 'inf') { if (!window._ptInf) { const qs = _ptMakeQs(pool, Math.random); window._ptInf = qs ? { qs, ans: [], done: false } : null; } return window._ptInf; }
+  if (mode === 'inf') { if (!window._ptInf) { if (_ptPracUsed() >= PT_PRAC_MAX) return 'limit'; const qs = _ptMakeQs(pool, Math.random); if (qs) _ptPracBump(); window._ptInf = qs ? { qs, ans: [], done: false } : null; } return window._ptInf; }
   const key = _dailyKey(); let st = _ptLoadSt(); if (st && st.key === key) return st;
-  const qs = _ptMakeQs(pool, _grRng(_wdHash('imspt' + key))); if (!qs) return null; st = { key, qs, ans: [], done: false }; _ptSave(st); return st;
+  const qs = _ptDailyQs(pool, (_wdSalt() || 0)); if (!qs) return null; st = { key, qs, ans: [], done: false }; _ptSave(st); return st;
 }
 window.ptSuggest = function(v) {
   const box = document.getElementById('pt-sugg'); if (!box) return; const q = _wdNorm(v); if (!q) { box.innerHTML = ''; return; }
@@ -30942,19 +30970,20 @@ async function renderPTGame(el) {
   const pool = window._ptPool, mode = _ptGetMode();
   const locked = !!(window._gamesLock || {}).pt && !adminLoggedIn && !_gamesAccess(); window._ptLocked = locked;
   const tabs = `<div class="wd-modes">${[['daily', '📅', 'DAILY'], ['inf', '∞', 'PRACTICE']].map(([m, i, l]) => `<button class="${mode === m ? 'on' : ''}" onclick="setPTMode('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>`;
-  const st = _ptState(mode, pool), tot = st ? st.ans.reduce((a, x) => a + x.pts, 0) : 0;
+  const st0 = _ptState(mode, pool), lim = st0 === 'limit', st = lim ? null : st0, tot = st ? st.ans.reduce((a, x) => a + x.pts, 0) : 0;
   let body = `<div class="wd-top"><button class="wd-back" onclick="openGame('hub')" title="Back to Games">←</button><div class="wd-brand"><img src="icons/icon-192.png?v=3" alt="IMS"><span>POINT<em>LESS</em></span></div><div class="wd-meta">${mode === 'daily' ? `<span class="wd-pill">#${_wdDayNum()}</span>` : ''}<span class="wd-pill">🎯 ${tot} pts</span></div></div>
     ${(window._gamesLock || {}).pt ? `<div class="wd-lockbar">🔒 <b>Pointless is locked</b><span>${locked ? 'It\'ll open soon.' : 'Locked for players — you can still play.'}</span></div>` : ''}${tabs}`;
-  if (!st) body += '<div class="alert alert-warning">Not enough driver data yet — an admin needs to run Build PaddockDle Data From .db.</div>';
+  if (lim) body += `<div class="pt-arena"><div class="pt-qn">PRACTICE</div><div class="pt-qt">That's your <b>${PT_PRAC_MAX} practice rounds</b> for today</div><div class="pt-hint">More practice rounds at midnight (UK).</div></div>`;
+  else if (!st) body += '<div class="alert alert-warning">Not enough driver data yet — an admin needs to run Build PaddockDle Data From .db.</div>';
   else if (window._ptReveal) body += _ptQHtml(st, pool, window._ptReveal.i, true);
   else if (!st.done) body += _ptQHtml(st, pool, st.ans.length, false);
   else { const pl = st.ans.filter(a => a.id && a.pts === 0).length, good = tot <= 100;
     body += _ptProg(st, PT_N - 1, false) + `<div class="pt-arena pt-end${good ? ' good' : ''}"><div class="pt-qn">FINAL SCORE</div><div class="pt-big">${tot}</div><div class="pt-hint">${pl ? `🎯 ${pl} pointless answer${pl > 1 ? 's' : ''} · ` : ''}lower is better</div>
       <div class="pt-sum">${st.ans.map((a, i) => { const p = pool.find(x => x.id === a.id), z = a.pts === 0 && a.id; return `<div class="${z ? 'z' : a.pts >= 100 ? 'bad' : ''}"><span class="q">Q${i + 1}</span><span>${p ? esc(p.name) : '—'}</span><b>${z ? '🎯 0' : a.pts}</b></div>`; }).join('')}</div>
-      ${mode === 'inf' ? '<button class="pt-go" onclick="ptAgain()">PLAY AGAIN</button>' : '<div class="pt-hint" style="margin-top:12px">New questions at midnight (UK).</div>'}</div>`; }
+      ${mode === 'inf' ? (_ptPracUsed() < PT_PRAC_MAX ? `<button class="pt-go" onclick="ptAgain()">PLAY AGAIN · ${PT_PRAC_MAX - _ptPracUsed()} left today</button>` : '<div class="pt-hint" style="margin-top:12px">That was your last practice round today.</div>') : '<div class="pt-hint" style="margin-top:12px">New questions at midnight (UK).</div>'}</div>`; }
   if (mode === 'daily') body += (st && st.done || !window._ptLb) ? (window._ptLb = await _ptLeaderboardHtml()) : window._ptLb;
   el.innerHTML = `<div class="wd-wrap">${body}<div class="wd-info"><h3>How to play</h3><p><b>${PT_N} questions.</b> Name an IMS driver who fits. Points depend on their <b>IMS appearances</b> — the most-raced valid answer scores <b>100</b>, the least-raced score close to 0, and the very fewest are <b>POINTLESS 🎯 (0)</b>. Wrong answers and skips score 100. <b>Lowest total wins.</b></p>
-    <p>Pool: everyone on the market, plus reserves with 25+ appearances. Stats are all-time across every IMS season.</p>
+    <p>Pool: everyone on the market, plus reserves with 25+ appearances. Stats are all-time across every IMS season. <b>📅 Daily</b> — 5 new questions every day (no repeats until every question has been used). <b>∞ Practice</b> — up to ${PT_PRAC_MAX} rounds a day.</p>
     <p style="margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(247,207,85,.08);border:1px solid rgba(247,207,85,.35);font-size:.84rem"><span class="imc"></span> <b>Earn IM$:</b> play the daily for <b>+25 IM$</b>, score <b>100 or under</b> for <b>another +25 IM$</b>. Log in to earn.</p></div></div>`;
   _ptAnim(); const inp = document.getElementById('pt-input'); if (inp && !('ontouchstart' in window)) inp.focus();
 }
