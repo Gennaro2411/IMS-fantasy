@@ -26665,8 +26665,8 @@ function _betTriP(field, ids) {
   for (const id of ids) { const d = field.find(x => x.id === id); if (!d) return 0; const sv = _betStrength(d.elo); p *= sv / S; S -= sv; }
   return p;
 }
-function _betOdds(p) { const m = 1 + ((window._betCfg && typeof window._betCfg.margin === 'number') ? window._betCfg.margin : 8) / 100;
-  if (!(p > 0)) return 1000; const o = 1 / (p * m); return Math.max(1.01, Math.min(1000, o >= 100 ? Math.round(o) : Math.round(o * 100) / 100)); }
+function _betOdds(p, cap) { cap = cap || 1000; const m = 1 + ((window._betCfg && typeof window._betCfg.margin === 'number') ? window._betCfg.margin : 8) / 100;
+  if (!(p > 0)) return cap; const o = 1 / (p * m); return Math.max(1.01, Math.min(cap, o >= 100 ? Math.round(o) : Math.round(o * 100) / 100)); }
 // Odds display: decimal (5.00) or fractional (4/1) — the viewer's choice, remembered per device.
 function _betFmtMode() { try { return localStorage.getItem('ims_odds_fmt') === 'frac' ? 'frac' : 'dec'; } catch(e) { return 'dec'; } }
 function fmtOdds(o) {
@@ -27359,7 +27359,7 @@ window.renderBets = async function() {
     // price in this function — they used to fall through to the top-5 table and show a fake 'now' price, which let
     // players cash out for instant profit. Return null so their cash-out is simply stake − 5%.
     if (market === 'ou' || market === 'cou' || market === 'yn') { const R = (window._betOuReg || {})[market + ':' + sel.join('-')]; return R ? R.auto : null; }
-    if (market === 'tri') { const p = _betTriP(field, sel); return p > 0 ? _betOdds(p) : null; }
+    if (market === 'tri') { const p = _betTriP(field, sel); return p > 0 ? _betOdds(p, 10000) : null; }
     if (!['win', 'pod', 'pole', 'top5', 'spw', 'spp'].includes(market)) return null;
     const pr = (market === 'win' || market === 'spw') ? P.win[sel[0]] : (market === 'pod' || market === 'spp') ? (P.pod || {})[sel[0]] : market === 'pole' ? (P.pole || {})[sel[0]] : P.top5[sel[0]]; return pr == null ? null : _betOdds(pr);
   };
@@ -28245,7 +28245,7 @@ window.betTriUpdate = function() {
   const ids = [0, 1, 2].map(k => (document.getElementById('tri-' + k) || {}).value); const el = document.getElementById('tri-odds'); if (!el) return null;
   window._triSel = { div: window._betDiv, ids };
   if (new Set(ids).size < 3) { el.textContent = 'Pick 3 different drivers'; return null; }
-  const p = _betTriP(window._betTriField || [], ids), o = p > 0 ? _betOdds(p) : null; el.textContent = o ? 'Odds ' + fmtOdds(o) : '—'; return o;
+  const p = _betTriP(window._betTriField || [], ids), o = p > 0 ? _betOdds(p, 10000) : null; // tricasts cap at 10,000 el.textContent = o ? 'Odds ' + fmtOdds(o) : '—'; return o;
 };
 window.betTriAdd = function() {
   const o = window.betTriUpdate(); if (!o) { if (typeof showToast === 'function') showToast('Pick 3 different drivers.', 'error'); return; }
