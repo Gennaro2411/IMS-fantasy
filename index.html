@@ -27764,7 +27764,8 @@ window.renderBets = async function() {
         ${(() => { const B = isC ? [
             ['more', '⚔️', 'H2H & specials', !!(h2h || _ldx)],
             ['cou', '📏', 'BOTT points', Object.keys(_ouCons).length > 0]].filter(x => x[3]) : [
-            ['more', '⚔️', 'H2H & specials', !!(h2h || _pgap || _wmar || _ouMargin || _ouTime || _ouDnf || _ouMore.length || _yn.length || Object.keys(_spoonP).length)],
+            ['more', '⚔️', 'H2H & specials', !!(h2h || _pgap || _wmar || _ouMargin || _ouTime || _ouDnf || _ouMore.length || _yn.length)],
+            ['spoon', '🥄', 'Wooden spoon', Object.keys(_spoonP).length > 0],
             ['sprint', '⚡', 'Sprint', !!(upcoming && upcoming.isSprint && field.length)],
             ['fpos', '📍', 'Finish position', Object.keys(_fpos).length > 0],
             ['dnf', '💥', 'Driver to DNF', Object.keys(_dnfR).length > 0],
@@ -27784,13 +27785,14 @@ window.renderBets = async function() {
           ${_yn.map(([k, l, p]) => `<div class="bo-ou"><div><b>${l}</b></div>
             <div class="bo-ou-b"><i>YES</i>${oddsBtn('yn', [k, 'yes'], div + ' ' + l.toLowerCase() + ': yes', _ouOdds('yn', [k, 'yes'], p))}</div>
             <div class="bo-ou-b"><i>NO</i>${oddsBtn('yn', [k, 'no'], div + ' ' + l.toLowerCase() + ': no', _ouOdds('yn', [k, 'no'], 1 - p))}</div></div>`).join('')}</div>` : ''}
-        ${(!isC && Object.keys(_spoonP).length) ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>🥄 Wooden spoon</span><small>Last classified finisher</small></div>
-          ${field.filter(d => _spoonP[d.id] != null).slice().sort((a, b) => _spoonP[b.id] - _spoonP[a.id]).map(d => `<div class="bo-row">${photo(d)}<div class="bo-nm"><b>${esc(d.name)}</b><small>Finishes last of the classified</small></div>${oddsBtn('spoon', [d.id], d.name + ' wooden spoon in ' + div, finalOdds('spoon', [d.id], _betOdds(_spoonP[d.id])))}</div>`).join('')}</div>` : ''}
         ${(isC && _ldx) ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>🎯 Specials</span><small>Yes / no</small></div>
           <div class="bo-ou"><div><b>Leader extends lead</b><span class="bo-ou-line">${esc(_ldx.L.name)} <em>outscores</em> ${esc(_ldx.S.name)}</span></div>
             <div class="bo-ou-b"><i>YES</i>${oddsBtn('yn', ['ldx:' + _ldx.L.id + ':' + _ldx.S.id, 'yes'], 'BOTT leader ' + _ldx.L.name + ' outscores ' + _ldx.S.name + ': yes', _ouOdds('yn', ['ldx:' + _ldx.L.id + ':' + _ldx.S.id, 'yes'], _ldx.p))}</div>
             <div class="bo-ou-b"><i>NO</i>${oddsBtn('yn', ['ldx:' + _ldx.L.id + ':' + _ldx.S.id, 'no'], 'BOTT leader ' + _ldx.L.name + ' outscores ' + _ldx.S.name + ': no', _ouOdds('yn', ['ldx:' + _ldx.L.id + ':' + _ldx.S.id, 'no'], 1 - _ldx.p))}</div></div></div>` : ''}
-        </div><div class="bo-sec" data-sec="sprint\"${_secHid('sprint')}>
+        </div><div class="bo-sec" data-sec="spoon"${_secHid('spoon')}>
+        ${(!isC && Object.keys(_spoonP).length) ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>🥄 Wooden spoon</span><small>Last classified finisher</small></div>
+          ${field.filter(d => _spoonP[d.id] != null).slice().sort((a, b) => _spoonP[b.id] - _spoonP[a.id]).map(d => `<div class="bo-row">${photo(d)}<div class="bo-nm"><b>${esc(d.name)}</b><small>Finishes last of the classified</small></div>${oddsBtn('spoon', [d.id], d.name + ' wooden spoon in ' + div, finalOdds('spoon', [d.id], _betOdds(_spoonP[d.id])))}</div>`).join('')}</div>` : ''}
+        </div><div class="bo-sec" data-sec="sprint"${_secHid('sprint')}>
         ${(!isC && upcoming && upcoming.isSprint && field.length) ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>⚡ Sprint</span><span class="bo-cols"><i>WIN</i><i>PODIUM</i></span></div>
           ${field.map(d => `<div class="bo-row">${photo(d)}<div class="bo-nm"><b>${esc(d.name)}</b><small>Sprint race</small></div>${oddsBtn('spw', [d.id], d.name + ' to win the ' + div + ' sprint', finalOdds('spw', [d.id], _betOdds(P.win[d.id])))}${oddsBtn('spp', [d.id], d.name + ' sprint podium in ' + div, finalOdds('spp', [d.id], _betOdds((P.pod || {})[d.id])))}</div>`).join('')}</div>` : ''}
         </div><div class="bo-sec" data-sec="fpos"${_secHid('fpos')}>
