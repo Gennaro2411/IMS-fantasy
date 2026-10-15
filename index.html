@@ -23531,15 +23531,101 @@ async function renderHistory() {
   const av = (src, nm, size, ring) => { const s=size||30; return `<span style="position:relative;display:inline-block;width:${s}px;height:${s}px;flex-shrink:0"><span style="position:absolute;inset:0;border-radius:50%;background:#2a2a3d;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:${Math.round(s*0.33)}px;color:#c9c9e0;font-family:'Barlow Condensed',sans-serif">${initialsOf(nm)}</span>${src?`<img src="${esc(src)}" style="position:absolute;inset:0;width:${s}px;height:${s}px;border-radius:50%;object-fit:cover;object-position:top center">`:''}${ring?`<span style="position:absolute;inset:-2px;border-radius:50%;border:2px solid ${ring};pointer-events:none"></span>`:''}</span>`; };
 
   // ===== HERO =====
-  const hero = `
-    <div class="card" style="padding:0;overflow:hidden;position:relative;background:linear-gradient(130deg,#1a0f2e 0%,#12121c 55%,#0d0d14 100%);border:1px solid rgba(123,79,191,0.45);margin-bottom:18px">
-      <div style="height:3px;background:linear-gradient(90deg,var(--gold),#9b6fd4,transparent)"></div>
-      <img src="icons/icon-512.png?v=3" alt="" style="position:absolute;right:-28px;top:50%;transform:translateY(-50%) rotate(-8deg);height:190%;opacity:.10;pointer-events:none;filter:saturate(1.2) drop-shadow(0 0 24px rgba(123,79,191,0.5));mask-image:linear-gradient(100deg,transparent 5%,#000 45%);-webkit-mask-image:linear-gradient(100deg,transparent 5%,#000 45%)">
-      <div style="padding:22px 22px 18px;position:relative">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:2rem;letter-spacing:2px;line-height:1;background:linear-gradient(90deg,#ffd700,#ffa751 55%,#e8e8f5);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">FANTASY HALL OF FAME</div>
-        <div style="color:var(--muted);font-size:.8rem;margin-top:6px;max-width:520px">Every completed fantasy season — champions, the best value picks, and the sharpest team-builders in IMS Fantasy history.</div>
-        <div style="font-size:.62rem;color:var(--muted);margin-top:10px;font-weight:700;letter-spacing:1px">📚 ${archives.filter(a=>!a.live).length} ARCHIVED · ${archives.some(a=>a.live)?'CURRENT SEASON LIVE':'—'}</div>
+  // Hall of Fame look: dark "trophy vault" — drifting IMS-purple/gold aurora, metallic gold title with a sheen,
+  // a reigning-champion spotlight, glass cards and a glowing podium. All scoped under .hof-*.
+  const _hofCss = `<style>
+    #history-content{--hg:#ffd24a;--hg2:#ffb020;--hp:#9b6fd4;--hp2:#5b2fb0}
+    .hof-hero{position:relative;overflow:hidden;border-radius:24px;margin-bottom:18px;padding:30px 24px 24px;background:#07060d;border:1px solid rgba(255,210,74,.18);box-shadow:0 30px 80px -30px rgba(91,47,176,.55),inset 0 1px 0 rgba(255,255,255,.06);display:grid;grid-template-columns:1.3fr 1fr;gap:22px;align-items:center}
+    .hof-aurora{position:absolute;inset:-40%;background:radial-gradient(40% 35% at 25% 30%,rgba(155,111,212,.55),transparent 70%),radial-gradient(35% 30% at 75% 70%,rgba(255,176,32,.35),transparent 70%),radial-gradient(30% 30% at 60% 15%,rgba(91,47,176,.5),transparent 70%);filter:blur(30px);animation:hofDrift 18s ease-in-out infinite alternate;pointer-events:none}
+    .hof-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);background-size:34px 34px;mask-image:radial-gradient(ellipse at 30% 40%,#000 10%,transparent 75%);-webkit-mask-image:radial-gradient(ellipse at 30% 40%,#000 10%,transparent 75%);pointer-events:none}
+    .hof-hero>*:not(.hof-aurora):not(.hof-grid){position:relative}
+    .hof-eyebrow{display:inline-flex;align-items:center;gap:8px;font:800 .62rem/1 system-ui,sans-serif;letter-spacing:3px;color:var(--hg);padding:7px 11px;border-radius:999px;background:rgba(255,210,74,.08);border:1px solid rgba(255,210,74,.25)}
+    .hof-eyebrow i{width:6px;height:6px;border-radius:50%;background:var(--hg);box-shadow:0 0 10px var(--hg);animation:hofPulse 1.8s ease-in-out infinite}
+    .hof-title{margin:14px 0 8px;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;font-size:clamp(2.6rem,9vw,4.6rem);line-height:.86;letter-spacing:-1px;text-transform:uppercase;color:#fff}
+    .hof-title span{display:block;background:linear-gradient(100deg,#fff6d6 0%,#ffd24a 22%,#ff9d1c 45%,#fff3c4 55%,#ffd24a 70%,#b8860b 100%);background-size:220% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:hofSheen 6s linear infinite;filter:drop-shadow(0 6px 24px rgba(255,176,32,.35))}
+    .hof-sub{color:#b8b4cf;font-size:.86rem;line-height:1.45;max-width:440px;margin:0}
+    .hof-stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+    .hof-stat{padding:10px 13px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(8px);min-width:84px}
+    .hof-stat b{display:block;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.45rem;line-height:1;color:#fff}
+    .hof-stat small{display:block;margin-top:4px;font:700 .55rem/1.2 system-ui,sans-serif;letter-spacing:1.6px;color:#8d88a8;text-transform:uppercase}
+    .hof-champ{border-radius:20px;padding:20px 16px;text-align:center;background:linear-gradient(160deg,rgba(255,210,74,.12),rgba(155,111,212,.10) 60%,rgba(255,255,255,.02));border:1px solid rgba(255,210,74,.28);box-shadow:0 20px 50px -20px rgba(255,176,32,.35),inset 0 1px 0 rgba(255,255,255,.08);backdrop-filter:blur(10px)}
+    .hof-champ .lbl{font:800 .58rem/1 system-ui,sans-serif;letter-spacing:3px;color:var(--hg)}
+    .hof-ring{position:relative;width:96px;height:96px;margin:22px auto 10px}
+    .hof-ring::before{content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,#ffd24a,#9b6fd4,#ff9d1c,#fff3c4,#ffd24a);animation:hofSpin 6s linear infinite;box-shadow:0 0 34px rgba(255,210,74,.45)}
+    .hof-ring .face{position:absolute;inset:4px;border-radius:50%;overflow:hidden;background:#1b1828;display:flex;align-items:center;justify-content:center}
+    .hof-crown{position:absolute;top:-22px;left:50%;z-index:2;transform:translateX(-50%) rotate(-8deg);font-size:1.6rem;filter:drop-shadow(0 3px 6px rgba(0,0,0,.6));animation:hofFloat 3s ease-in-out infinite}
+    .hof-champ .nm{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.55rem;line-height:1;text-transform:uppercase;letter-spacing:.5px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .hof-champ .tm{color:#a9a4c4;font-size:.75rem;margin-top:4px}
+    .hof-champ .pts{display:inline-flex;align-items:baseline;gap:5px;margin-top:12px;padding:7px 14px;border-radius:999px;background:linear-gradient(90deg,#ffd24a,#ff9d1c);color:#1a1205;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.15rem;box-shadow:0 8px 22px rgba(255,157,28,.35)}
+    .hof-champ .pts small{font-size:.65rem;letter-spacing:1px}
+    /* nav */
+    .hof-chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px!important;scrollbar-width:none;flex-wrap:nowrap!important}
+    .hof-chips::-webkit-scrollbar{display:none}
+    .hof-chips button{flex-shrink:0;border-radius:999px!important;padding:8px 14px!important;background:rgba(255,255,255,.035)!important;border:1px solid rgba(255,255,255,.09)!important;color:#a29dbd!important;font-weight:800!important;letter-spacing:1px!important;transition:all .2s}
+    .hof-chips button[style*="rgba(255,200,0,0.6)"]{background:linear-gradient(90deg,#ffd24a,#ff9d1c)!important;color:#1a1205!important;border-color:transparent!important;box-shadow:0 6px 18px rgba(255,157,28,.3)}
+    .hof-seg{display:grid!important;grid-template-columns:repeat(3,1fr);gap:4px!important;padding:5px;border-radius:18px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.08);margin-bottom:16px!important}
+    .hof-seg button{border:0!important;border-radius:14px!important;padding:12px 6px!important;background:transparent!important;color:#9a95b6!important;font-size:.82rem!important;letter-spacing:1.2px!important;transition:all .2s;white-space:nowrap}
+    .hof-seg button[style*="var(--gold)"]{background:linear-gradient(160deg,rgba(155,111,212,.55),rgba(91,47,176,.55))!important;color:#fff!important;box-shadow:0 8px 22px -6px rgba(155,111,212,.6),inset 0 1px 0 rgba(255,255,255,.15)}
+    .hof-subs{gap:6px!important}
+    .hof-subs button{border-radius:999px!important;background:transparent!important;border:1px solid rgba(255,255,255,.1)!important;color:#9a95b6!important;transition:all .2s}
+    .hof-subs button[style*="var(--gold)"]{border-color:rgba(255,210,74,.6)!important;color:#ffe9a8!important;background:rgba(255,210,74,.1)!important}
+    /* boards */
+    #history-content .hof-board{border-radius:20px!important;background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.012))!important;border:1px solid rgba(255,255,255,.08)!important;box-shadow:0 20px 50px -30px rgba(0,0,0,.8)}
+    #history-content .hof-board>div:first-child{background:linear-gradient(90deg,rgba(155,111,212,.16),transparent)!important;border-bottom:1px solid rgba(255,255,255,.07)!important;padding:14px 18px!important;font-size:.9rem!important;letter-spacing:2px!important}
+    #history-content .hof-board>div:not(:first-child){border-bottom:1px solid rgba(255,255,255,.05)!important;transition:background .2s,transform .2s}
+    #history-content .hof-board>div:not(:first-child):hover{background:rgba(255,255,255,.04);transform:translateX(3px)}
+    #history-content .hof-board>div:nth-child(2){background:linear-gradient(90deg,rgba(255,210,74,.10),transparent 70%)}
+    #history-content .hof-board>div:nth-child(3){background:linear-gradient(90deg,rgba(192,198,212,.07),transparent 70%)}
+    #history-content .hof-board>div:nth-child(4){background:linear-gradient(90deg,rgba(205,127,50,.07),transparent 70%)}
+    /* podium */
+    .hof-podium{display:grid;grid-template-columns:1fr 1.15fr 1fr;align-items:end;gap:10px;max-width:620px;margin:6px auto 16px;padding:18px 10px 0;border-radius:22px;background:radial-gradient(60% 80% at 50% 100%,rgba(255,210,74,.12),transparent 70%)}
+    .hof-pod{text-align:center;opacity:0;animation:hofRise .7s cubic-bezier(.2,1.2,.4,1) forwards}
+    .hof-pod.p1{animation-delay:.25s}.hof-pod.p2{animation-delay:.1s}.hof-pod.p3{animation-delay:.4s}
+    .hof-pod .av{position:relative;display:inline-block;border-radius:50%;padding:3px;margin-bottom:8px}
+    .hof-pod.p1 .av{background:linear-gradient(135deg,#fff3c4,#ffd24a,#b8860b);box-shadow:0 0 28px rgba(255,210,74,.55)}
+    .hof-pod.p2 .av{background:linear-gradient(135deg,#fff,#c0c6d4,#7d8494);box-shadow:0 0 18px rgba(192,198,212,.35)}
+    .hof-pod.p3 .av{background:linear-gradient(135deg,#ffd0a1,#cd7f32,#7a4a1c);box-shadow:0 0 18px rgba(205,127,50,.35)}
+    .hof-pod .nm{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:.95rem;line-height:1.05;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 2px}
+    .hof-pod .pt{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.05rem;color:var(--hg);margin:2px 0 8px}
+    .hof-pod .pl{border-radius:14px 14px 0 0;display:flex;align-items:flex-start;justify-content:center;padding-top:10px;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;font-size:2.4rem;line-height:1;color:rgba(255,255,255,.9);border:1px solid rgba(255,255,255,.1);border-bottom:0}
+    .hof-pod.p1 .pl{height:118px;background:linear-gradient(180deg,rgba(255,210,74,.45),rgba(255,157,28,.08));color:#fff6d6;text-shadow:0 0 20px rgba(255,210,74,.8)}
+    .hof-pod.p2 .pl{height:88px;background:linear-gradient(180deg,rgba(192,198,212,.35),rgba(192,198,212,.05))}
+    .hof-pod.p3 .pl{height:66px;background:linear-gradient(180deg,rgba(205,127,50,.38),rgba(205,127,50,.05))}
+    @keyframes hofDrift{0%{transform:translate(0,0) rotate(0)}100%{transform:translate(4%,-3%) rotate(8deg)}}
+    @keyframes hofSheen{0%{background-position:120% 0}100%{background-position:-120% 0}}
+    @keyframes hofSpin{to{transform:rotate(360deg)}}
+    @keyframes hofFloat{0%,100%{transform:translateX(-50%) rotate(-8deg) translateY(0)}50%{transform:translateX(-50%) rotate(-4deg) translateY(-4px)}}
+    @keyframes hofPulse{0%,100%{opacity:1}50%{opacity:.35}}
+    @keyframes hofRise{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+    @media (max-width:640px){.hof-hero{grid-template-columns:1fr;padding:24px 18px 18px}.hof-seg button{font-size:.72rem!important;letter-spacing:.6px!important;padding:11px 2px!important}}
+    @media (prefers-reduced-motion:reduce){.hof-aurora,.hof-title span,.hof-ring,.hof-ring>span,.hof-crown,.hof-eyebrow i{animation:none}.hof-pod{animation:none;opacity:1}}
+  </style>`;
+  const _arch = archives.filter(a => !a.live), _champA = _arch.find(a => (a.leaderboard || [])[0]);
+  const _champ = _champA ? _champA.leaderboard[0] : null;
+  const _titleCount = {}; _arch.forEach(a => { const w = (a.leaderboard || [])[0]; if (w) { const k = w.playerName || w.teamName; if (k) _titleCount[k] = (_titleCount[k] || 0) + 1; } });
+  const _topTitle = Object.entries(_titleCount).sort((x, y) => y[1] - x[1])[0];
+  const _firstS = _arch.length ? _arch[_arch.length - 1].seasonName : '';
+  const hero = _hofCss + `
+    <div class="hof-hero">
+      <div class="hof-aurora"></div><div class="hof-grid"></div>
+      <div>
+        <span class="hof-eyebrow"><i></i>IMS FANTASY${_firstS ? ' · SINCE ' + esc(String(_firstS)).toUpperCase() : ''}</span>
+        <h1 class="hof-title">Hall of<span>Fame</span></h1>
+        <p class="hof-sub">Every completed fantasy season — the champions, the sharpest team-builders and the best value picks in IMS Fantasy history.</p>
+        <div class="hof-stats">
+          <div class="hof-stat"><b>${_arch.length}</b><small>Seasons archived</small></div>
+          <div class="hof-stat"><b>${Object.keys(_titleCount).length}</b><small>Champions</small></div>
+          ${_topTitle ? `<div class="hof-stat"><b>${esc(_topTitle[0])}</b><small>Most titles · ${_topTitle[1]}</small></div>` : ''}
+          ${archives.some(a => a.live) ? `<div class="hof-stat"><b style="color:#ff5470">● LIVE</b><small>Current season</small></div>` : ''}
+        </div>
       </div>
+      ${_champ ? `<div class="hof-champ">
+        <div class="lbl">REIGNING CHAMPION</div>
+        <div class="hof-ring"><span class="hof-crown">👑</span><span class="face">${av(_champ.discordAvatar, _champ.playerName || _champ.teamName, 88)}</span></div>
+        <div class="nm">${esc(_champ.playerName || _champ.teamName || '?')}</div>
+        <div class="tm">${esc(_champ.teamName || '')}${_champA.seasonName ? ' · ' + esc(_champA.seasonName) : ''}</div>
+        <div class="pts">${_champ.total || 0}<small>PTS</small></div>
+      </div>` : ''}
     </div>`;
 
   if (!archives.length) {
@@ -23557,7 +23643,7 @@ async function renderHistory() {
   // tables. Each archived (and the live) season is stored separately, so this just filters source.
   const sel = _historyView.season || 'all';
   const seasonPill = (val, label) => `<button onclick="setHistorySeason('${val}')" style="border:1px solid ${sel===val?'rgba(255,200,0,0.6)':'var(--border)'};background:${sel===val?'linear-gradient(135deg,rgba(255,200,0,0.18),rgba(255,167,81,0.08))':'var(--surface2)'};color:${sel===val?'var(--gold)':'var(--muted)'};border-radius:9px;padding:5px 12px;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:.82rem;letter-spacing:.5px;cursor:pointer;transition:all .2s;white-space:nowrap">${label}</button>`;
-  const seasonPills = `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+  const seasonPills = `<div class="hof-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
     ${seasonPill('all','⭐ ALL-TIME')}
     ${archives.map(a => seasonPill(a.seasonName, (a.live?'🔴 ':'') + esc(a.seasonName))).join('')}
   </div>`;
@@ -23678,7 +23764,7 @@ async function renderHistory() {
   if (mode === 'ppc') {
     // Driver leaderboards with sub-tabs. `av` is the avatar helper defined above.
     const subBtn = (k,label) => `<button onclick="setDrvSub('${k}')" style="border:1px solid ${drvSub===k?'var(--gold)':'var(--border)'};background:${drvSub===k?'rgba(255,200,0,0.14)':'transparent'};color:${drvSub===k?'#fff':'var(--muted)'};border-radius:16px;padding:5px 12px;font-family:'Barlow Condensed',sans-serif;font-size:.72rem;font-weight:800;letter-spacing:1px;cursor:pointer;white-space:nowrap">${label}</button>`;
-    const board = (title, sub, list, valFn, subFn) => list.length ? `<div class="card" style="padding:0;overflow:hidden">
+    const board = (title, sub, list, valFn, subFn) => list.length ? `<div class="card hof-board" style="padding:0;overflow:hidden">
       <div style="padding:11px 16px;border-bottom:1px solid var(--border);background:rgba(255,200,0,0.05);font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:.82rem;letter-spacing:1.5px">${title} <span style="color:var(--muted);font-weight:600;font-size:.7rem">${sub}</span></div>
       ${list.map((d,i) => `<div style="display:flex;align-items:center;gap:11px;padding:9px 16px;border-bottom:1px solid var(--border)">
         <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1rem;width:24px;text-align:center;color:${i===0?'var(--gold)':i===1?'#c0c6d4':i===2?'#cd7f32':'var(--muted)'}">${i+1}</span>
@@ -23693,11 +23779,11 @@ async function renderHistory() {
     else if (drvSub === 'captained') inner = board('👑 MOST CAPTAINED','armband selections ('+scopeLabel+')', captainedList, (d)=>`<div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;color:var(--gold);font-size:1.1rem">${d.captained}</div><div style="font-size:.5rem;letter-spacing:1px;color:var(--muted)">CAPS</div>`);
     else if (drvSub === 'risers') inner = board('📈 BIGGEST RISERS', sel==='all'?'biggest price gains (all-time)':'price gains ('+esc(sel)+')', riserList, (d)=>`<div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;color:#2ecc71;font-size:1.1rem">+${(d.priceChange||0).toFixed(1)}M</div><div style="font-size:.5rem;letter-spacing:1px;color:var(--muted)">RISE</div>`, (d)=>`${esc(d.season||'')} · ${esc(d.division||'')}`);
     else inner = board('🎯 MOST POINTS','total fantasy points ('+scopeLabel+')', pointsList, (d)=>`<div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;color:var(--gold);font-size:1.1rem">${d.points}</div><div style="font-size:.5rem;letter-spacing:1px;color:var(--muted)">PTS</div>`);
-    body = `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">${subBtn('points','🎯 POINTS')}${subBtn('value','💎 VALUE')}${subBtn('owned','🛒 BOUGHT')}${subBtn('captained','👑 CAPTAINED')}${subBtn('risers','📈 RISERS')}</div>${inner}`;
+    body = `<div class="hof-subs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">${subBtn('points','🎯 POINTS')}${subBtn('value','💎 VALUE')}${subBtn('owned','🛒 BOUGHT')}${subBtn('captained','👑 CAPTAINED')}${subBtn('risers','📈 RISERS')}</div>${inner}`;
   } else if (mode === 'constructors') {
     const cSubBtn = (k,label) => `<button onclick="setConSub('${k}')" style="border:1px solid ${conSub===k?'var(--gold)':'var(--border)'};background:${conSub===k?'rgba(255,200,0,0.14)':'transparent'};color:${conSub===k?'#fff':'var(--muted)'};border-radius:16px;padding:5px 12px;font-family:'Barlow Condensed',sans-serif;font-size:.72rem;font-weight:800;letter-spacing:1px;cursor:pointer;white-space:nowrap">${label}</button>`;
     const cLogo = (c,size) => { const s=size||30; return c.logo?`<img src="${esc(c.logo)}" style="width:${s}px;height:${s}px;object-fit:contain;flex-shrink:0">`:`<span style="width:${s}px;height:${s}px;display:flex;align-items:center;justify-content:center;font-size:${s*0.6}px;flex-shrink:0">🏎</span>`; };
-    const cBoard = (title,sub,list,valFn,subFn) => list.length ? `<div class="card" style="padding:0;overflow:hidden">
+    const cBoard = (title,sub,list,valFn,subFn) => list.length ? `<div class="card hof-board" style="padding:0;overflow:hidden">
       <div style="padding:11px 16px;border-bottom:1px solid var(--border);background:rgba(255,200,0,0.05);font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:.82rem;letter-spacing:1.5px">${title} <span style="color:var(--muted);font-weight:600;font-size:.7rem">${sub}</span></div>
       ${list.map((c,i) => `<div style="display:flex;align-items:center;gap:11px;padding:9px 16px;border-bottom:1px solid var(--border)">
         <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1rem;width:24px;text-align:center;color:${i===0?'var(--gold)':i===1?'#c0c6d4':i===2?'#cd7f32':'var(--muted)'}">${i+1}</span>
@@ -23711,11 +23797,13 @@ async function renderHistory() {
     else if (conSub === 'owned') cInner = cBoard('🛒 MOST BOUGHT', sel==='all'?'all-time buys':'all-time buys ('+esc(sel)+')', conOwned, (c)=>`<div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;color:var(--gold);font-size:1.1rem">${c.picked||0}</div><div style="font-size:.5rem;letter-spacing:1px;color:var(--muted)">BUYS</div>`);
     else if (conSub === 'risers') cInner = cBoard('📈 BIGGEST RISERS', sel==='all'?'biggest price gains (all-time)':'price gains ('+esc(sel)+')', conRisers, (c)=>`<div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;color:#2ecc71;font-size:1.1rem">+${(c.priceChange||0).toFixed(1)}M</div><div style="font-size:.5rem;letter-spacing:1px;color:var(--muted)">RISE</div>`, (c)=>esc(c.season||''));
     else cInner = cBoard('🎯 MOST POINTS','total fantasy points ('+scopeLabel+')', conPoints, (c)=>`<div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;color:var(--gold);font-size:1.1rem">${c.points}</div><div style="font-size:.5rem;letter-spacing:1px;color:var(--muted)">PTS</div>`);
-    body = `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">${cSubBtn('points','🎯 POINTS')}${cSubBtn('value','💎 VALUE')}${cSubBtn('owned','🛒 BOUGHT')}${cSubBtn('risers','📈 RISERS')}</div>${cInner}`;
+    body = `<div class="hof-subs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">${cSubBtn('points','🎯 POINTS')}${cSubBtn('value','💎 VALUE')}${cSubBtn('owned','🛒 BOUGHT')}${cSubBtn('risers','📈 RISERS')}</div>${cInner}`;
   } else {
     // Standings + Profit shown side by side  } else {
     // Standings + Profit shown side by side (stack on mobile).
-    const standingsCard = standingsList.length ? `<div class="card" style="padding:0;overflow:hidden">
+    const _pod = standingsList.length >= 3 ? `<div class="hof-podium">${[1, 0, 2].map(i => { const t = standingsList[i], sz = i === 0 ? 74 : 58;
+      return `<div class="hof-pod p${i + 1}"><span class="av">${av(t.avatar, t.name, sz)}</span><div class="nm">${esc(t.name)}</div><div class="pt">${t.points} pts</div><div class="pl">${i + 1}</div></div>`; }).join('')}</div>` : '';
+    const standingsCard = standingsList.length ? _pod + `<div class="card hof-board" style="padding:0;overflow:hidden">
       <div style="padding:11px 16px;border-bottom:1px solid var(--border);background:rgba(255,200,0,0.05);font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:.82rem;letter-spacing:1.5px">🏆 STANDINGS <span style="color:var(--muted);font-weight:600;font-size:.7rem">${scopeLabel==='all-time'?'all-time':esc(sel)} · ${standingsList.length} teams</span></div>
       ${standingsList.map((t,i) => `<div style="display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--border)">
         <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:.95rem;width:22px;text-align:center;color:${i===0?'var(--gold)':i===1?'#c0c6d4':i===2?'#cd7f32':'var(--muted)'};flex-shrink:0">${i+1}</span>
@@ -23725,7 +23813,7 @@ async function renderHistory() {
       </div>`).join('')}
     </div>` : emptyFeature('standings', 'once a season is archived');
 
-    const profitCard = profitList.length ? `<div class="card" style="padding:0;overflow:hidden">
+    const profitCard = profitList.length ? `<div class="card hof-board" style="padding:0;overflow:hidden">
       <div style="padding:11px 16px;border-bottom:1px solid var(--border);background:rgba(46,204,113,0.06);font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:.82rem;letter-spacing:1.5px">📈 MOST VALUE BUILT <span style="color:var(--muted);font-weight:600;font-size:.7rem">profit over budget · ${scopeLabel==='all-time'?'all-time':esc(sel)}</span></div>
       ${profitList.map((t,i) => `<div style="display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--border)">
         <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:.95rem;width:22px;text-align:center;color:${i===0?'var(--gold)':i===1?'#c0c6d4':i===2?'#cd7f32':'var(--muted)'};flex-shrink:0">${i+1}</span>
@@ -23735,7 +23823,7 @@ async function renderHistory() {
       </div>`).join('')}
     </div>` : emptyFeature('team profit records', 'once a season is archived');
 
-    const transfersCard = transfersList.length ? `<div class="card" style="padding:0;overflow:hidden">
+    const transfersCard = transfersList.length ? `<div class="card hof-board" style="padding:0;overflow:hidden">
       <div style="padding:11px 16px;border-bottom:1px solid var(--border);background:rgba(155,111,212,0.08);font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:.82rem;letter-spacing:1.5px">🔄 MOST TRANSFERS <span style="color:var(--muted);font-weight:600;font-size:.7rem">changes made · ${scopeLabel==='all-time'?'all-time':esc(sel)}</span></div>
       ${transfersList.map((t,i) => `<div style="display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--border)">
         <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:.95rem;width:22px;text-align:center;color:${i===0?'var(--gold)':i===1?'#c0c6d4':i===2?'#cd7f32':'var(--muted)'};flex-shrink:0">${i+1}</span>
@@ -23745,7 +23833,7 @@ async function renderHistory() {
       </div>`).join('')}
     </div>` : emptyFeature('transfer records', 'once players start making transfers');
 
-    const roundWinsCard = roundWinsList.length ? `<div class="card" style="padding:0;overflow:hidden">
+    const roundWinsCard = roundWinsList.length ? `<div class="card hof-board" style="padding:0;overflow:hidden">
       <div style="padding:11px 16px;border-bottom:1px solid var(--border);background:rgba(255,210,74,0.07);font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:.82rem;letter-spacing:1.5px">🏁 MOST ROUNDS WON <span style="color:var(--muted);font-weight:600;font-size:.7rem">race weekends topped · ${scopeLabel==='all-time'?'all-time':esc(sel)}</span></div>
       ${roundWinsList.map((t,i) => `<div style="display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--border)">
         <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:.95rem;width:22px;text-align:center;color:${i===0?'var(--gold)':i===1?'#c0c6d4':i===2?'#cd7f32':'var(--muted)'};flex-shrink:0">${i+1}</span>
@@ -23755,7 +23843,7 @@ async function renderHistory() {
       </div>`).join('')}
     </div>` : emptyFeature('round wins', 'once a round has a top scorer');
 
-    const titlesCard = titlesList.length ? `<div class="card" style="padding:0;overflow:hidden">
+    const titlesCard = titlesList.length ? `<div class="card hof-board" style="padding:0;overflow:hidden">
       <div style="padding:11px 16px;border-bottom:1px solid var(--border);background:rgba(255,200,0,0.08);font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:.82rem;letter-spacing:1.5px">👑 MOST TITLES <span style="color:var(--muted);font-weight:600;font-size:.7rem">fantasy championships · all-time</span></div>
       ${titlesList.map((t,i) => `<div style="display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--border)">
         <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:.95rem;width:22px;text-align:center;color:${i===0?'var(--gold)':i===1?'#c0c6d4':i===2?'#cd7f32':'var(--muted)'};flex-shrink:0">${i+1}</span>
@@ -23769,11 +23857,11 @@ async function renderHistory() {
     const teamSub = _historyView.teamSub || 'standings';
     const tSubBtn = (k,label) => `<button onclick="setTeamSub('${k}')" style="border:1px solid ${teamSub===k?'var(--gold)':'var(--border)'};background:${teamSub===k?'rgba(255,200,0,0.14)':'transparent'};color:${teamSub===k?'#fff':'var(--muted)'};border-radius:16px;padding:5px 12px;font-family:'Barlow Condensed',sans-serif;font-size:.72rem;font-weight:800;letter-spacing:1px;cursor:pointer;white-space:nowrap">${label}</button>`;
     const tInner = teamSub === 'profit' ? profitCard : teamSub === 'transfers' ? transfersCard : teamSub === 'rounds' ? roundWinsCard : teamSub === 'titles' ? titlesCard : standingsCard;
-    body = `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">${tSubBtn('standings','🏆 STANDINGS')}${tSubBtn('titles','👑 TITLES')}${tSubBtn('rounds','🏁 ROUND WINS')}${tSubBtn('profit','📈 PROFIT')}${tSubBtn('transfers','🔄 TRANSFERS')}</div>${tInner}`;
+    body = `<div class="hof-subs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">${tSubBtn('standings','🏆 STANDINGS')}${tSubBtn('titles','👑 TITLES')}${tSubBtn('rounds','🏁 ROUND WINS')}${tSubBtn('profit','📈 PROFIT')}${tSubBtn('transfers','🔄 TRANSFERS')}</div>${tInner}`;
   }
 
   el.innerHTML = hero + seasonPills +
-    `<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">${tabBtn('standings','👥 TEAMS')}${tabBtn('ppc','🏎️ DRIVERS')}${tabBtn('constructors','🏭 CONSTRUCTORS')}</div>` +
+    `<div class="hof-seg" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">${tabBtn('standings','👥 TEAMS')}${tabBtn('ppc','🏎️ DRIVERS')}${tabBtn('constructors','🏭 CONSTRUCTORS')}</div>` +
     body;
 
   function emptyFeature(what, when) {
