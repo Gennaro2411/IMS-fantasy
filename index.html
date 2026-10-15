@@ -30837,7 +30837,7 @@ window.setPTMode = function(m) { window._ptMode = m; window._ptReveal = null; re
 const _ptLoadSt = () => { try { return JSON.parse(localStorage.getItem('imsPtDaily') || 'null'); } catch (e) { return null; } };
 const _ptSave = (st) => { try { localStorage.setItem('imsPtDaily', JSON.stringify(st)); } catch (e) {} };
 function _ptCats(pool) {
-  const C = [], add = (id, q, f, min) => { const ids = pool.filter(f).map(p => p.id); if (ids.length >= (min || 6)) C.push({ id, q, ids }); };
+  const C = [], add = (id, q, f, min, v, vl) => { const ids = pool.filter(f).map(p => p.id); if (ids.length >= (min || 6)) C.push({ id, q, ids, v, vl }); };
   add('w', 'Name an IMS driver who has <b>won a race</b>', p => p.w >= 1);
   add('w5', 'Name an IMS driver with <b>5 or more race wins</b>', p => p.w >= 5);
   add('pd', 'Name an IMS driver who has <b>finished on the podium</b>', p => p.pd >= 1);
@@ -30846,7 +30846,7 @@ function _ptCats(pool) {
   add('b', 'Name an IMS driver who has won a <b>BOTT</b>', p => p.b >= 1);
   add('p500', 'Name an IMS driver with <b>500+ career points</b>', p => p.p >= 500);
   add('w0', 'Name an IMS driver with <b>50+ starts but no race wins</b>', p => p.st >= 50 && !p.w);
-  ['D0', 'D1', 'D2', 'D3', 'D4'].forEach(d => add('dh' + d, `Name an IMS driver who has raced in <b>${d}</b>`, p => (p.dh || {})[d] > 0));
+  ['D0', 'D1', 'D2', 'D3', 'D4'].forEach(d => add('dh' + d, `Name an IMS driver who has raced in <b>${d}</b>`, p => (p.dh || {})[d] > 0, 6, p => (p.dh || {})[d] || 0, d + ' appearances'));
   const nats = {}; pool.forEach(p => { if (p.nat) nats[p.nat] = (nats[p.nat] || 0) + 1; });
   Object.keys(nats).forEach(n => add('n' + n, `Name an IMS driver from <b>${esc(n)}</b> ${_wdFlag(n)}`, p => p.nat === n));
   const tms = {}; pool.forEach(p => Object.entries(p.th || {}).forEach(([k, n]) => { tms[k] = tms[k] || n; }));
@@ -30865,9 +30865,9 @@ function _ptMakeQs(pool, rnd) {
 // Score table: spread 0→100 between the fewest- and most-raced valid answer. Fewest-starts ~10% = 0 (pointless).
 function _ptScores(cid, pool) {
   const c = _ptCats(pool).find(x => x.id === cid); if (!c) return null;
-  const ps = c.ids.map(id => pool.find(p => p.id === id)).filter(Boolean).sort((a, b) => a.st - b.st), mx = Math.max(...ps.map(p => p.st)), mn = ps.length ? ps[0].st : 0, nz = Math.max(1, Math.round(ps.length * 0.1)), sc = {};
+  const V = c.v || (p => p.st), ps = c.ids.map(id => pool.find(p => p.id === id)).filter(Boolean).map(p => Object.assign({}, p, { st: V(p) })).sort((a, b) => a.st - b.st), mx = Math.max(...ps.map(p => p.st)), mn = ps.length ? ps[0].st : 0, nz = Math.max(1, Math.round(ps.length * 0.1)), sc = {};
   ps.forEach((p, i) => { sc[p.id] = i < nz || mx === mn ? 0 : Math.max(1, Math.round((p.st - mn) / (mx - mn) * 100)); });
-  return { q: c.q, sc, list: ps.slice().reverse() };
+  return { q: c.q, sc, list: ps.slice().reverse(), vl: c.vl || 'IMS appearances' };
 }
 function _ptState(mode, pool) {
   if (mode === 'inf') { if (!window._ptInf) { const qs = _ptMakeQs(pool, Math.random); window._ptInf = qs ? { qs, ans: [], done: false } : null; } return window._ptInf; }
@@ -30917,14 +30917,14 @@ const _ptProg = (st, i, live) => `<div class="hl-progress">${Array.from({ length
 function _ptQHtml(st, pool, i, reveal) {
   const S = _ptScores(st.qs[i], pool); if (!S) return '<div class="alert alert-warning">This question can\'t be built any more.</div>';
   let h = _ptProg(st, i, !reveal) + `<div class="pt-arena"><div class="pt-qn">QUESTION ${i + 1}</div><div class="pt-qt">${S.q}</div>`;
-  if (!reveal) return h + `<div class="pt-hint">${S.list.length} valid answers · fewest appearances = fewest points</div>
+  if (!reveal) return h + `<div class="pt-hint">${S.list.length} valid answers · fewest ${S.vl} = fewest points</div>
     <div class="wd-search" style="margin-top:16px"><span class="wd-search-ico">🔍</span><input id="pt-input" type="text" placeholder="Name an IMS driver…" autocomplete="off" oninput="ptSuggest(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();ptPickFirst();}"><div id="pt-sugg"></div></div>
     <button class="pt-skip" onclick="ptPass()" ${window._ptLocked ? 'disabled' : ''}>Skip · 100 pts</button></div>`;
   const a = st.ans[i], ap = a && pool.find(p => p.id === a.id), valid = a.id && S.sc[a.id] != null, cls = !valid ? 'bad' : a.pts === 0 ? 'zero' : 'ok';
   h += `<div class="pt-reveal ${cls}">
       <div class="pt-tower"><div class="pt-fill" data-to="${a.pts}"></div><div class="pt-ticks">${'<i></i>'.repeat(10)}</div><span id="pt-ctr">100</span></div>
       <div class="pt-who">${ap ? `<div class="wd-fc-av pt-av">${_wdAv(ap, 72)}</div><b>${esc(ap.name)}</b>` : '<div class="pt-av pt-noav">—</div><b>No answer</b>'}
-        <small>${!a.id ? 'Skipped' : !valid ? 'Not a valid answer' : `${ap.st} IMS appearances`}</small>
+        <small>${!a.id ? 'Skipped' : !valid ? 'Not a valid answer' : `${(S.list.find(x => x.id === ap.id) || ap).st} ${S.vl}`}</small>
         <div class="pt-tag">${!valid ? '✕ 100 POINTS' : a.pts === 0 ? '🎯 POINTLESS!' : a.pts + ' POINTS'}</div></div></div>
     <div class="pt-list">${S.list.map(p => { const v = S.sc[p.id]; return `<div class="${p.id === a.id ? 'me' : ''}${v === 0 ? ' z' : ''}"><span class="n">${esc(p.name)}</span><span class="bar"><i style="width:${Math.max(v, 2)}%"></i></span><small>${p.st}</small><b>${v === 0 ? '🎯' : v}</b></div>`; }).join('')}</div>
     <button class="pt-go" onclick="ptNext()">${st.done && i === PT_N - 1 ? 'SEE RESULT' : 'NEXT QUESTION →'}</button></div>`;
