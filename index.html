@@ -27764,17 +27764,20 @@ window.renderBets = async function() {
         <div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>${isC ? '🏭 Constructors' : '🏁 Race markets'}</span><span class="bo-cols">${isC ? '' : '<i>POLE</i>'}<i>${isC ? 'TOP' : 'WIN'}</i>${isC ? '' : '<i>PODIUM</i>'}<i>${isC ? 'TOP 3' : 'TOP 5'}</i></span></div>${rows || '<div class="text-muted" style="padding:14px">Nothing to price here yet.</div>'}
           ${_outHere.length ? `<div class="bo-out-h">✕ Not racing — no bets</div>` + _outHere.map(d => `<div class="bo-row bo-out">${photo(d)}<div class="bo-nm"><b>${esc(d.name)} <span class="bo-ci out">${(d.raceBanRacesLeft > 0 || d.raceBanned) ? 'RACE BAN' : 'OUT'}</span></b><small>${formatM(_pr(d))} · removed from all ${esc(div)} markets</small></div><span class="bo-odd-x">—</span><span class="bo-odd-x">—</span><span class="bo-odd-x">—</span><span class="bo-odd-x">—</span></div>`).join('') : ''}</div>
         ${(() => { const B = isC ? [
-            ['more', '⚔️', 'H2H & specials', !!(h2h || _ldx)],
+            ['h2h', '⚔️', 'Head to head', !!h2h],
+            ['spec', '🎯', 'Specials', !!_ldx],
             ['cou', '📏', 'BOTT points', Object.keys(_ouCons).length > 0]].filter(x => x[3]) : [
-            ['more', '⚔️', 'H2H & specials', !!(h2h || _pgap || _wmar || _ouMargin || _ouTime || _ouDnf || _ouMore.length || _yn.length)],
+            ['h2h', '⚔️', 'Head to head', !!h2h],
+            ['spec', '🎯', 'Specials', !!(_pgap || _wmar || _ouMargin || _ouTime || _ouDnf || _ouMore.length || _yn.length)],
             ['spoon', '🥄', 'Wooden spoon', Object.keys(_spoonP).length > 0],
             ['sprint', '⚡', 'Sprint', !!(upcoming && upcoming.isSprint && field.length)],
             ['fpos', '📍', 'Finish position', Object.keys(_fpos).length > 0],
             ['dnf', '💥', 'Driver to DNF', Object.keys(_dnfR).length > 0],
             ['tri', '🎰', 'Tricast', field.length >= 3]].filter(x => x[3]);
           return B.length ? `<div class="bo-secbar" style="--h:${hue}">${B.map(([k, i, l]) => `<button class="${window._betSec === k ? 'on' : ''}" data-k="${k}" onclick="betSec('${k}')"><span>${i}</span>${l}</button>`).join('')}</div>` : ''; })()}
-        <div class="bo-sec" data-sec="more"${_secHid('more')}>
+        <div class="bo-sec" data-sec="h2h"${_secHid('h2h')}>
         ${h2h ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>⚔️ Head to head</span>${isC ? '<small>Who scores more BOTT points</small>' : `<span class="bo-fmt"><button class="${_h2hQ ? '' : 'on'}" onclick="setH2hMode('race')">Race</button><button class="${_h2hQ ? 'on' : ''}" onclick="setH2hMode('quali')">Quali</button></span>`}</div><div class="bo-h2h-wrap">${h2h || '<div class="text-muted" style="padding:6px">Not enough qualifying laps to price these yet.</div>'}</div></div>` : ''}
+        </div><div class="bo-sec" data-sec="spec"${_secHid('spec')}>
         ${_pgap ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>⏱ Pole gap</span><small>Pole margin to P2 in qualifying</small></div>
           <div class="bo-pgap">${[['lt01', 'Under 0.1 s'], ['01to02', '0.1 – 0.2 s'], ['gt02', 'Over 0.2 s']].map(([k, l], ix) => `<div class="bo-pg-opt"><span>${l}</span>${oddsBtn('pgap', [k], div + ' pole gap: ' + l, finalOdds('pgap', [k], _betOdds(_pgap[ix])))}</div>`).join('')}</div></div>` : ''}
         ${_wmar ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>🏁 Winning margin</span><small>Winner's gap to P2 at the flag</small></div>
