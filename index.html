@@ -27423,7 +27423,9 @@ window.renderBets = async function() {
   const _spoonP = {};
   if (!isC && field.length >= 3 && window._betOddsCache[oKey + '|pos']) { const PD = window._betOddsCache[oKey + '|pos'], n = field.length; let T = 0;
     field.forEach(d => { const a = PD[d.id]; if (!a) return; const q = (a[n] + 0.35 * (a[n - 1] || 0)) * (1 - (_dnfR[d.id] || 0)); _spoonP[d.id] = q; T += q; });
-    if (T > 0) Object.keys(_spoonP).forEach(k => { _spoonP[k] /= T; }); }
+    // Anyone can have a nightmare (spins, penalties, damage): blend 25% of an equal share in so front-runners aren't priced at 1000.
+    const _ks = Object.keys(_spoonP), _u = 1 / (_ks.length || 1);
+    if (T > 0) _ks.forEach(k => { _spoonP[k] = 0.75 * (_spoonP[k] / T) + 0.25 * _u; }); }
   // Team 1-2: two teammates finish P1 & P2 — exact under the strength model: Σ over teammate pairs of P(a 1st, b 2nd) + P(b 1st, a 2nd).
   let _t12 = null;
   if (!isC && field.length >= 3) { const tk = (d) => String(d.team || '').toLowerCase().replace(/[^a-z0-9]/g, ''); let pp = 0;
