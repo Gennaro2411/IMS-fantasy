@@ -27246,13 +27246,13 @@ window.renderBets = async function() {
   const ovKey = (market, sel) => (upcoming ? upcoming.name : '') + '|' + div + '|' + market + '|' + sel.join('-');
   // Money-weighted odds: open stakes on this round+division shift the price like a real book.
   // Compare each outcome's share of the money with its fair share of probability; heavily-backed
-  // picks shorten, neglected ones drift. Needs 200+ coins in the market, full effect at 1,000+,
+  // picks shorten, neglected ones drift. Needs 50+ coins in the market (small markets move only a little), full effect at 1,000+,
   // and never moves more than 30% from the calculated price. Admin overrides are never adjusted.
   const _openAll = window._betMarketBets(window._betAllBets).filter(b => b.status === 'open' && upcoming && b.raceName === upcoming.name && b.div === div);
   let _openHere = _openAll;
   const _stakeOn = (market, key) => _openHere.filter(b => b.market === market && b.sel.join('-') === key).reduce((a, b) => a + (b.stake || 0), 0);
   const _dyn = (auto, share, fair, total) => {
-    if (total < 200) return auto;
+    if (total < 50) return auto;
     const f = Math.max(0.7, Math.min(1.3, 1 - 0.8 * (share - fair) * Math.min(1, total / 1000)));
     return Math.max(1.01, Math.round(auto * f * 100) / 100);
   };
@@ -27908,7 +27908,7 @@ window._betLive = function(b, exclMe) {
   const pool = window._betMarketBets(window._betAllBets).filter(x => x.status === 'open' && x.raceName === b.raceName && x.div === b.div && x.market === b.market && !(exclMe && x.userId === me));
   const on = (k) => pool.filter(x => (x.sel || []).join('-') === k).reduce((t, x) => t + (x.stake || 0), 0);
   const a = on(key), tot = R.opp ? a + on(R.opp) : pool.reduce((t, x) => t + (x.stake || 0), 0);
-  if (tot < 200) return R.auto;
+  if (tot < 50) return R.auto;
   const f = Math.max(0.7, Math.min(1.3, 1 - 0.8 * (a / tot - R.fair) * Math.min(1, tot / 1000)));
   return Math.max(1.01, Math.round(R.auto * f * 100) / 100);
 };
@@ -27938,7 +27938,7 @@ window._betOuLive = function(b, exclMe) {
   const me = currentUser && currentUser.userId;
   const pool = window._betMarketBets(window._betAllBets).filter(x => x.status === 'open' && x.raceName === b.raceName && x.div === b.div && x.market === b.market && !(exclMe && x.userId === me));
   const sum = (k) => pool.filter(x => (x.sel || []).join('-') === k).reduce((t, x) => t + (x.stake || 0), 0);
-  const a = sum(key), o = sum(oKey), tot = a + o; if (tot < 200) return R.auto;
+  const a = sum(key), o = sum(oKey), tot = a + o; if (tot < 50) return R.auto;
   const f = Math.max(0.7, Math.min(1.3, 1 - 0.8 * (a / tot - R.p) * Math.min(1, tot / 1000)));
   return Math.max(1.01, Math.round(R.auto * f * 100) / 100);
 };
