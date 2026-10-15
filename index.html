@@ -938,9 +938,8 @@
   /* ===== Home hype (top of the home page) ===== */
   #home-hype .rh{isolation:isolate;min-height:330px;border-radius:26px;margin-bottom:12px;display:flex;flex-direction:column;justify-content:flex-end;box-shadow:0 30px 70px -30px rgba(90,94,201,.65),inset 0 1px 0 rgba(255,255,255,.07)}
   #home-hype .rh-photo{position:absolute;inset:0;background-size:cover;background-position:center 60%;opacity:.42;transform:scale(1.08);animation:hhPan 22s ease-in-out infinite alternate;pointer-events:none;z-index:-2}
-  #home-hype .rh::before{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(0deg,rgba(9,8,14,.96) 12%,rgba(9,8,14,.55) 55%,rgba(9,8,14,.15) 100%)}
   #home-hype .rh-lines{animation:hhLines 1.6s linear infinite;opacity:.9}
-  #home-hype .rh-track{opacity:.55;height:115%;top:42%;right:-10px;filter:invert(1) drop-shadow(0 0 8px var(--rh-accent)) drop-shadow(0 0 22px var(--rh-accent));animation:hhGlow 3.2s ease-in-out infinite}
+  #home-hype .rh-track{opacity:.55;height:115%;top:42%;right:-10px;filter:invert(1) drop-shadow(0 0 8px var(--rh-accent)) drop-shadow(0 0 22px var(--rh-accent))}
   #home-hype .rh-title{font-style:italic;font-size:clamp(2.8rem,11vw,5.2rem);letter-spacing:-.5px;filter:drop-shadow(0 6px 24px rgba(0,0,0,.6))}
   #home-hype .rh-cd-box{background:rgba(10,8,18,.55);border-color:rgba(255,255,255,.14);backdrop-filter:blur(10px)}
   .hh-pulse{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
@@ -5247,7 +5246,6 @@ function buildRaceHero(nextRace, allRaces, schedule, actionBtnHtml, heroId, isLi
   return `
     <div class="card rh${isDeadlineDay?' lock-soon':''}" style="padding:0;${rhVars}">
       ${patternSvg}
-      ${(() => { const ln = String(nextRace.name || '').toLowerCase(); const ph = /singapore/.test(ln) ? 'track-photos/singapore-1.jpg' : /barcelona|catalunya/.test(ln) ? 'track-photos/barcelona-1.jpg' : ''; return ph ? `<div class="rh-photo" style="background-image:url('${ph}')"></div>` : ''; })()}
       <div class="rh-lines"></div>
       ${outlineImg}
       <div style="position:absolute;left:-6px;bottom:-30px;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:7rem;color:rgba(255,255,255,0.045);line-height:1;pointer-events:none">R${esc(String(nextRace.raceNum||''))}</div>
@@ -8253,7 +8251,7 @@ async function renderHomeStatCards(myTeam, allTeams) {
     </div>
   `).join('');
   // Season 8 cover art, under the stat cards.
-  if (!document.getElementById('home-s8-cover') && el.parentNode) {
+  if (false && !document.getElementById('home-s8-cover') && el.parentNode) { // Season 8 poster removed from the home page
     const cv = document.createElement('div');
     cv.id = 'home-s8-cover';
     cv.style.cssText = 'margin:14px 0 4px;border-radius:14px;overflow:hidden;border:1px solid rgba(255,215,106,.35);box-shadow:0 10px 30px rgba(0,0,0,.45),0 0 24px rgba(255,200,60,.12)';
