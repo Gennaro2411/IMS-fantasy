@@ -24186,7 +24186,7 @@ async function renderResults() {
       html += buildBottStandings(archiveConstrRanked, true);
     }
 
-    html += archiveRaces.length ? buildRaceList(archiveRaces) : '<div class="card"><p class="text-muted">No results found for this season.</p></div>';
+    html += archiveRaces.length ? buildRaceList(archiveRaces, false) : '<div class="card"><p class="text-muted">No results found for this season.</p></div>';
     html += `</div>`;
   });
 
@@ -24454,10 +24454,10 @@ function buildBottStandings(ranked, seasonOver) {
   return html;
 }
 
-function buildRaceList(raceList) {
+function buildRaceList(raceList, markLatest = true) {
   let html = `<div class="card">
     <div class="card-title"><div class="dot"></div>Select a Race</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:8px">`;
+    <div class="rx-grid">`;
   raceList.forEach(race => {
     // Top scorer preview across the whole field
     let topName = null, topPts = 0, topId = null;
@@ -24473,20 +24473,54 @@ function buildRaceList(raceList) {
         <span style="position:absolute;inset:0;border-radius:50%;background:#2a2a3d;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.5rem;color:#c9c9e0;font-family:'Barlow Condensed',sans-serif">${topInits}</span>
         ${topPhoto ? `<img src="${esc(topPhoto)}" style="position:absolute;inset:0;width:22px;height:22px;border-radius:50%;object-fit:cover;object-position:top center">` : ''}
       </span>` : '';
-    html += `<div onclick="showRaceResults('${race.id}')" class="race-card" style="cursor:pointer;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;position:relative;overflow:hidden;transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease">
-      <div style="position:absolute;right:-4px;top:-14px;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:3.4rem;color:rgba(255,255,255,0.04);line-height:1;pointer-events:none">R${esc(String(race.raceNum||''))}</div>
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-        <span style="font-size:1.3rem">${getRaceFlag(race.name)}</span>
-        <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.15rem;line-height:1.1;text-transform:uppercase">${esc(race.name)}</span>
+    // Modern race tile: the circuit layout glows across the card, the track photo sits faintly behind it.
+    const _out = (typeof getTrackOutlineUrl === 'function') ? getTrackOutlineUrl(race.name) : null;
+    const _ln = String(race.name || '').toLowerCase();
+    const _ph = /singapore/.test(_ln) ? 'track-photos/singapore-1.jpg' : /barcelona|catalunya/.test(_ln) ? 'track-photos/barcelona-1.jpg' : '';
+    const _sp = (typeof _isSprintWeekend === 'function' && _isSprintWeekend(race));
+    const _latest = markLatest && race === raceList[0];
+    html += `<div onclick="showRaceResults('${race.id}')" class="rx-card${_latest ? ' latest' : ''}">
+      ${_ph ? `<div class="rx-photo" style="background-image:url('${_ph}')"></div>` : ''}
+      <div class="rx-shade"></div>
+      ${_out ? `<img class="rx-track" src="${_out}" alt="" loading="lazy">` : ''}
+      <div class="rx-num">R${esc(String(race.raceNum || ''))}</div>
+      <div class="rx-top">
+        <span class="rx-round">ROUND ${esc(String(race.raceNum || '?'))}</span>
+        ${_latest ? '<span class="rx-tag new">LATEST</span>' : ''}${_sp ? '<span class="rx-tag sp">⚡ SPRINT</span>' : ''}
       </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
-        <span style="font-size:.68rem;font-weight:800;letter-spacing:1px;color:var(--muted)">ROUND ${esc(String(race.raceNum||'?'))}${(typeof _isSprintWeekend === 'function' && _isSprintWeekend(race)) ? ' <span style="color:#ffa751">· ⚡ SPRINT</span>' : ''}</span>
-        ${topName ? `<span style="font-size:.7rem;color:var(--gold);display:inline-flex;align-items:center;gap:5px;min-width:0">🏆 ${topAvatar} <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(topName)} · ${topPts}</span></span>` : ''}
-      </div>
+      <div class="rx-name"><span class="rx-flag">${getRaceFlag(race.name)}</span>${esc(race.name)}</div>
+      ${topName ? `<div class="rx-mvp"><span class="rx-mvp-l">TOP SCORER</span><span class="rx-mvp-r">${topAvatar}<b>${esc(topName)}</b><em>${topPts}</em></span></div>` : `<div class="rx-mvp"><span class="rx-mvp-l">Results pending</span></div>`}
+      <span class="rx-go">›</span>
     </div>`;
   });
   html += `</div></div>
-  <style>.race-card:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.35);border-color:rgba(123,79,191,0.5)!important}</style>`;
+  <style>
+    .rx-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-top:10px}
+    .rx-card{position:relative;overflow:hidden;cursor:pointer;min-height:168px;padding:16px 16px 14px;border-radius:20px;background:linear-gradient(150deg,#1a1430,#0e0c18 70%);border:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;justify-content:space-between;isolation:isolate;transition:transform .25s cubic-bezier(.2,1,.3,1),border-color .25s,box-shadow .25s}
+    .rx-card.latest{border-color:rgba(255,210,74,.35);box-shadow:0 18px 40px -22px rgba(255,176,32,.5)}
+    .rx-card:hover{transform:translateY(-4px);border-color:rgba(155,111,212,.6);box-shadow:0 22px 46px -20px rgba(155,111,212,.6)}
+    .rx-photo{position:absolute;inset:0;background-size:cover;background-position:center 60%;opacity:.28;z-index:-3;transition:opacity .35s,transform .6s;filter:saturate(1.1)}
+    .rx-card:hover .rx-photo{opacity:.4;transform:scale(1.05)}
+    .rx-shade{position:absolute;inset:0;z-index:-2;background:linear-gradient(100deg,rgba(10,8,18,.92) 0%,rgba(10,8,18,.6) 55%,rgba(10,8,18,.25) 100%)}
+    .rx-track{position:absolute;right:-6px;top:50%;width:58%;max-height:92%;object-fit:contain;transform:translateY(-50%) rotate(-4deg);z-index:-1;filter:invert(1) drop-shadow(0 0 6px rgba(155,111,212,.9)) drop-shadow(0 0 16px rgba(155,111,212,.55));opacity:.75;transition:transform .45s cubic-bezier(.2,1,.3,1),opacity .3s,filter .3s}
+    .rx-card.latest .rx-track{filter:invert(1) drop-shadow(0 0 6px rgba(255,210,74,.9)) drop-shadow(0 0 16px rgba(255,176,32,.55))}
+    .rx-card:hover .rx-track{opacity:1;transform:translateY(-50%) rotate(0) scale(1.06)}
+    .rx-num{position:absolute;right:12px;bottom:-14px;z-index:-1;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;font-size:4.8rem;line-height:1;color:rgba(255,255,255,.05);pointer-events:none}
+    .rx-top{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+    .rx-round{font:800 .6rem/1 system-ui,sans-serif;letter-spacing:2.5px;color:#a69fc6}
+    .rx-tag{font:900 .52rem/1 system-ui,sans-serif;letter-spacing:1.5px;padding:4px 7px;border-radius:999px}
+    .rx-tag.new{background:linear-gradient(90deg,#ffd24a,#ff9d1c);color:#1a1205}
+    .rx-tag.sp{background:rgba(255,167,81,.15);color:#ffb26b;border:1px solid rgba(255,167,81,.35)}
+    .rx-name{display:flex;align-items:center;gap:9px;margin:10px 0 14px;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;font-size:1.9rem;line-height:.95;text-transform:uppercase;letter-spacing:.3px;color:#fff;text-shadow:0 2px 14px rgba(0,0,0,.6);max-width:72%}
+    .rx-flag{font-size:1.35rem;font-style:normal;flex-shrink:0}
+    .rx-mvp{display:flex;flex-direction:column;gap:5px;align-self:flex-start;max-width:78%;padding:8px 11px;border-radius:12px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.07);backdrop-filter:blur(8px)}
+    .rx-mvp-l{font:800 .5rem/1 system-ui,sans-serif;letter-spacing:2px;color:#8e88ab;text-transform:uppercase}
+    .rx-mvp-r{display:flex;align-items:center;gap:7px;min-width:0;font-size:.78rem}
+    .rx-mvp-r b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#fff}
+    .rx-mvp-r em{font-style:normal;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:.95rem;color:#ffd24a;flex-shrink:0}
+    .rx-go{position:absolute;right:14px;top:12px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#fff;font-size:1rem;transition:background .25s,transform .25s}
+    .rx-card:hover .rx-go{background:#9b6fd4;transform:translateX(2px)}
+  </style>`;
   return html;
 }
 
