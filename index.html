@@ -3750,8 +3750,9 @@ async function dbSet(col, id, obj) {
   // to the CURRENT user's team we confirm the document still exists first. Without this the
   // PATCH would recreate it. Admin/system writes (a different team's id) skip the check.
   if (col === 'teams' && currentUser && window._myTeamDocId && id === window._myTeamDocId) {
+    dbGet._lastFailed = false;
     const stillThere = await dbGet('teams', id).catch(() => 'unknown');
-    if (stillThere === null) {
+    if (stillThere === null && !dbGet.readFailed()) { // a network blip returns null too — only a clean 404 means deleted
       try { window._deletedTeamIds.add(id); } catch(e){}
       if (typeof forceSignOutDeleted === 'function') forceSignOutDeleted();
       throw new Error('This account has been deleted.');
@@ -5405,6 +5406,39 @@ window.sendManualNotification = async function() {
 };
 
 // ===== AUTH =====
+// Sign-in lasts a month: the session is kept in localStorage AND a 30-day cookie (refreshed every time
+// the app opens), so a cleared localStorage or a fresh app launch doesn't force a new login.
+const _SESS_DAYS = 30;
+function _saveSession(u) {
+  if (!u) return;
+  try { localStorage.setItem('imsFantasyUser', JSON.stringify(u)); } catch (e) {}
+  try { document.cookie = 'imsSess=' + encodeURIComponent(JSON.stringify(u)) + '; max-age=' + (_SESS_DAYS * 86400) + '; path=/; SameSite=Lax'; } catch (e) {}
+}
+function _clearSession() {
+  try { localStorage.removeItem('imsFantasyUser'); } catch (e) {}
+  try { document.cookie = 'imsSess=; max-age=0; path=/; SameSite=Lax'; } catch (e) {}
+}
+function _readSession() {
+  try { const v = localStorage.getItem('imsFantasyUser'); if (v) return v; } catch (e) {}
+  try { const m = document.cookie.match(/(?:^|;\s*)imsSess=([^;]+)/); if (m) return decodeURIComponent(m[1]); } catch (e) {}
+  return null;
+}
+// Is this team document the signed-in player's? Stored team-doc id first (works for Discord accounts with no userId).
+function _isMyTeam(t) {
+  if (!t || !currentUser) return false;
+  let doc = window._myTeamDocId; try { doc = doc || localStorage.getItem('imsMyTeamDocId'); } catch (e) {}
+  const nameLc = (currentUser.name || '').toLowerCase().trim();
+  return (doc && t.id === doc) || (t.userId && t.userId === currentUser.userId) || (currentUser.discordId && t.discordId === currentUser.discordId) || (nameLc && (t.playerName || '').toLowerCase().trim() === nameLc);
+}
+// Only call an account deleted when its team document is CONFIRMED gone (a clean 404) — never on a
+// failed/slow read or a name that just didn't match.
+async function _accountConfirmedGone() {
+  let doc = window._myTeamDocId; try { doc = doc || localStorage.getItem('imsMyTeamDocId'); } catch (e) {}
+  if (!doc) return false;
+  dbGet._lastFailed = false;
+  const d = await _dbGetRaw('teams', doc).catch(() => 'err');
+  return d === null && !dbGet.readFailed();
+}
 // ===== DELETED-ACCOUNT GUARD =====
 // A logged-in browser keeps its session in localStorage, so deleting someone's team from
 // admin doesn't reach their open tab. Without this guard they can keep playing — and worse,
@@ -5418,13 +5452,8 @@ async function ensureAccountAlive() {
   try { teams = await dbGetAll('teams'); }
   catch(e) { return true; } // couldn't verify — don't lock anyone out on a network blip
   if (!Array.isArray(teams) || teams.length === 0) return true; // untrustworthy result
-  const nameLc = (currentUser.name || '').toLowerCase().trim();
-  const alive = teams.some(t =>
-    (t.userId && t.userId === currentUser.userId) ||
-    (currentUser.discordId && t.discordId === currentUser.discordId) ||
-    (nameLc && (t.playerName || '').toLowerCase().trim() === nameLc)
-  );
-  if (alive) return true;
+  if (teams.some(_isMyTeam)) return true;
+  if (!(await _accountConfirmedGone())) return true; // not matched, but not proven deleted — stay signed in
   forceSignOutDeleted();
   return false;
 }
@@ -5435,7 +5464,7 @@ let _lastAliveCheck = 0;
 function scheduleAliveCheck() {
   if (!currentUser) return;
   const now = Date.now();
-  if (now - _lastAliveCheck < 20000) return;
+  if (now - _lastAliveCheck < 600000) return; // at most every 10 min
   _lastAliveCheck = now;
   ensureAccountAlive();
 }
@@ -5453,7 +5482,7 @@ function initAliveWatch() {
 function forceSignOutDeleted() {
   currentUser = null;
   window._myTeamDocId = null;
-  try { localStorage.removeItem('imsFantasyUser'); } catch(e){}
+  _clearSession();
   try { localStorage.removeItem('imsMyTeamDocId'); } catch(e){}
   try { document.getElementById('logout-btn').style.display = 'none'; } catch(e){}
   try { document.getElementById('settings-btn').style.display = 'none'; } catch(e){}
@@ -5695,7 +5724,7 @@ async function handleDiscordCallback() {
     if (state.startsWith('link:')) {
       const userId = state.replace('link:', '');
       if (!currentUser) {
-        const session = localStorage.getItem('imsFantasyUser');
+        const session = _readSession();
         if (session) try { currentUser = JSON.parse(session); } catch(e) {}
       }
       const teams = await dbGetAll('teams');
@@ -5703,7 +5732,7 @@ async function handleDiscordCallback() {
       if (team) {
         await dbSet('teams', team.id, {...team, discordId, discordAvatar, discordUsername});
         currentUser = { userId: team.userId, name: team.playerName, teamName: team.teamName };
-        localStorage.setItem('imsFantasyUser', JSON.stringify(currentUser));
+        _saveSession(currentUser);
         document.getElementById('login-overlay').style.display = 'none';
         document.getElementById('logout-btn').style.display = '';
   try { document.getElementById('settings-btn').style.display = ''; } catch(e){}
@@ -5793,7 +5822,7 @@ function completeLogin(team, isNew = false) {
   // restored from localStorage does NOT get this flag, so it can never create a new team
   // document — that's what let deleted accounts resurrect themselves by saving a team.
   window._freshLogin = true;
-  localStorage.setItem('imsFantasyUser', JSON.stringify(currentUser));
+  _saveSession(currentUser);
   document.getElementById('login-overlay').style.display = 'none';
   document.getElementById('logout-btn').style.display = '';
   try { document.getElementById('settings-btn').style.display = ''; } catch(e){}
@@ -5822,7 +5851,7 @@ window.startDiscordLink = function(e) {
   e.preventDefault();
   if (!currentUser) return;
   // Save session so we can restore after redirect
-  localStorage.setItem('imsFantasyUser', JSON.stringify(currentUser));
+  _saveSession(currentUser);
   const state = 'link:' + currentUser.userId;
   const url = `https://discord.com/api/oauth2/authorize?client_id=1497264243051987075&redirect_uri=https%3A%2F%2Ffantasy.ims-league.com%2F&response_type=token&scope=identify&state=${encodeURIComponent(state)}`;
   window.location.href = url;
@@ -6761,7 +6790,7 @@ window.logoutUser = function() {
   customConfirm('Log out?', () => {
     currentUser = null;
     window._myTeamDocId = null;
-    localStorage.removeItem('imsFantasyUser');
+    _clearSession();
     try { localStorage.removeItem('imsMyTeamDocId'); } catch(e){}
     document.getElementById('logout-btn').style.display = 'none';
   try { document.getElementById('settings-btn').style.display = 'none'; } catch(e){}
@@ -6909,11 +6938,12 @@ async function init() {
   } catch(e) {
     console.error('Firebase connection failed:', e);
   }
-  const session = localStorage.getItem('imsFantasyUser');
+  const session = _readSession();
   try { window._myTeamDocId = localStorage.getItem('imsMyTeamDocId') || null; } catch(e){}
   if (session) {
     try {
       currentUser = JSON.parse(session);
+      _saveSession(currentUser); // refresh the month-long sign-in every time the app opens
       document.getElementById('logout-btn').style.display = '';
   try { document.getElementById('settings-btn').style.display = ''; } catch(e){}
     } catch(e) {}
@@ -6923,19 +6953,14 @@ async function init() {
   // "deleted but logged in" ghost state. Only sign out when the teams list loads successfully
   // AND is non-empty AND doesn't contain this account — an empty/failed load is untrustworthy
   // (a cold-start race with the database) and must NOT log anyone out.
-  if (currentUser && currentUser.userId && PROJECT_ID) {
+  if (currentUser && PROJECT_ID) {
     try {
       const liveTeams = await dbGetAll('teams');
       if (Array.isArray(liveTeams) && liveTeams.length > 0) {
         // Match the same way the delete does — some accounts don't carry a userId, and a
         // userId-only check would wrongly sign those people out
-        const nameLc = (currentUser.name || '').toLowerCase().trim();
-        const myTeamDoc = liveTeams.find(t =>
-          (t.userId && t.userId === currentUser.userId) ||
-          (currentUser.discordId && t.discordId === currentUser.discordId) ||
-          (nameLc && (t.playerName || '').toLowerCase().trim() === nameLc)
-        );
-        const stillExists = !!myTeamDoc;
+        const myTeamDoc = liveTeams.find(_isMyTeam);
+        const stillExists = !!myTeamDoc || !(await _accountConfirmedGone()); // only sign out if the team doc is confirmed deleted
         // Remember which document is theirs so dbSet can verify it still exists before writing.
         // If it's missing, keep any previously-known id — that's the evidence of deletion.
         if (myTeamDoc) {
@@ -6946,7 +6971,7 @@ async function init() {
         }
         if (!stillExists) {
           currentUser = null;
-          localStorage.removeItem('imsFantasyUser');
+          _clearSession();
           try { document.getElementById('logout-btn').style.display = 'none'; } catch(e){}
           try { document.getElementById('settings-btn').style.display = 'none'; } catch(e){}
         }
@@ -8851,7 +8876,7 @@ window.setupUser = async function() {
     const userId = 'u_'+Date.now()+'_'+Math.random().toString(36).substr(2,6);
     currentUser = {userId, name, teamName};
   }
-  localStorage.setItem('imsFantasyUser', JSON.stringify(currentUser));
+  _saveSession(currentUser);
   renderHome();
 };
 
@@ -10723,7 +10748,7 @@ window.saveProfileEdit = async function(teamDocId) {
   // Update local session
   currentUser.name = playerName;
   currentUser.teamName = teamName;
-  localStorage.setItem('imsFantasyUser', JSON.stringify(currentUser));
+  _saveSession(currentUser);
   msg.innerHTML='<div class="alert alert-success">✔ Saved!</div>';
   setTimeout(() => renderMyTeam(), 800);
 };
@@ -20625,7 +20650,7 @@ window.resetLeague = function() {
     const seasonDoc = await dbGet('settings','seasonNumber').catch(()=>null);
     const currentSeason = seasonDoc ? (seasonDoc.value || 6) : 6;
     await dbSet('settings','seasonNumber',{value: currentSeason + 1});
-    currentUser=null; localStorage.removeItem('imsFantasyUser');
+    currentUser=null; _clearSession();
     renderAdminTeams();
     showPage('dashboard');
   });
@@ -22643,7 +22668,7 @@ window.confirmTransfer = async function(oldDriverId, newDriverId, div, teamId, c
       cost: totalCost, timestamp: Date.now()
     });
     currentUser.selections = newSel;
-    localStorage.setItem('imsFantasyUser', JSON.stringify(currentUser));
+    _saveSession(currentUser);
     renderMarket();
     try { window._signedPopup(newDriverId, newName, isConstructor); } catch(e) {}
   }, confirmLabel);
@@ -24204,7 +24229,7 @@ window.settingsDeleteTeam = function() {
     }
     // Log out directly (no second confirm) and return to the login screen
     currentUser = null;
-    try { localStorage.removeItem('imsFantasyUser'); } catch(e){}
+    _clearSession();
     try { document.getElementById('logout-btn').style.display = 'none'; } catch(e){}
     try { document.getElementById('settings-btn').style.display = 'none'; } catch(e){}
     closeSettingsModal();
