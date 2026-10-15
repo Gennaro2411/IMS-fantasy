@@ -27002,6 +27002,15 @@ function _betOutcome(b, races) {
     const a = at(1), c = at(2);
     result = (!a || !c || !tn(a) || !tn(c)) ? 'void' : ((b.sel[1] === 'yes') === (tn(a) === tn(c)) ? 'won' : 'lost');
   }
+  else if (b.market === 'yn' && /^(ldw|gk|bmx|bgap):/.test(String(b.sel[0]))) {
+    const parts = String(b.sel[0]).split(':'), kind = parts[0], cp = race.constructorPoints || {};
+    const vals = Object.values(cp).map(Number).sort((a, b) => b - a); let yes = null;
+    if (kind === 'ldw') { const v = cp[parts[1]]; if (v != null && vals.length) yes = Number(v) === vals[0] ? (vals.filter(x => x === vals[0]).length > 1 ? null : true) : false; }  // tied for top → void
+    else if (kind === 'gk') { const a = cp[parts[2]], c = cp[parts[1]]; if (a != null && c != null && Number(a) !== Number(c)) yes = Number(a) > Number(c); }
+    else if (kind === 'bmx') { const L = Number(parts[1]); if (vals.length && isFinite(L)) yes = vals[0] > L; }
+    else if (kind === 'bgap') { const L = Number(parts[1]); if (vals.length >= 2 && isFinite(L)) yes = (vals[0] - vals[1]) > L; }
+    result = yes == null ? 'void' : ((b.sel[1] === 'yes') === yes ? 'won' : 'lost');
+  }
   else if (b.market === 'yn' && String(b.sel[0]).startsWith('ldx:')) {
     // BOTT leader extends lead: the leader (at bet time) scores MORE BOTT points this round than P2. Level → void.
     const [, L, S2] = String(b.sel[0]).split(':'), cp = race.constructorPoints || {};
@@ -27432,10 +27441,11 @@ window.renderBets = async function() {
     field.forEach(a => field.forEach(b => { if (a.id !== b.id && tk(a) && tk(a) === tk(b)) pp += _betTriP(field, [a.id, b.id]); }));
     if (pp > 0) _t12 = Math.min(0.95, Math.max(0.01, pp)); }
   // BOTT: does the championship leader outscore P2 this round? Leader/P2 = standings going into the round.
-  let _ldx = null;
+  let _ldx = null, _bSpec = [], _bSt = null;
   if (isC && field.length >= 2) { const tot = {}; field.forEach(c => { tot[c.id] = (c.seedPoints || 0) + (races || []).reduce((a, r) => a + ((r.constructorPoints && r.constructorPoints[c.id]) || 0), 0); });
     const st = field.slice().sort((a, b) => tot[b.id] - tot[a.id]), L = st[0], S = st[1];
-    if (L && S) _ldx = { L, S, p: 1 / (1 + Math.pow(10, (S.elo - L.elo) / 400)) }; }
+    if (L && S) _ldx = { L, S, p: 1 / (1 + Math.pow(10, (S.elo - L.elo) / 400)) };
+    _bSt = st; }
   // Pole: exact Plackett–Luce on a qualifying rating = race rating adjusted by qualifying pace.
   const _pole = isC ? {} : _betPoleRatings(field, _qpDoc && _qpDoc.value);
   if (!isC) { P.pole = _betPoleProbs(field, _pole); window._betPoleLast = _pole; }
@@ -27475,6 +27485,17 @@ window.renderBets = async function() {
     const po = (over + 1) / (W + 2); return { line, po, n: pts.length };
   };
   const _upK = upcoming && window.trackKey ? window.trackKey(upcoming.name) : null;
+  if (isC && _bSt && _bSt.length >= 2) { const st = _bSt, L = st[0];
+    // More BOTT specials. Each row: [selKey, title, subtitle, P(yes)].
+    const Z = st[st.length - 1], PW = (P && P.win) || {};
+    const hist = [...(_prevArc ? (_prevArc.races || []) : []), ...(races || [])].map(r => Object.values(r.constructorPoints || {}).map(Number).filter(v => v > 0).sort((a, b) => b - a)).filter(v => v.length >= 2);
+    const _bmx = _ouFrom(hist.map(v => ({ v: v[0], w: 1 })), 1), _bgp = _ouFrom(hist.map(v => ({ v: v[0] - v[1], w: 1 })), 1);
+    _bSpec = [
+      L && PW[L.id] != null ? ['ldw:' + L.id, 'Leader tops the round', esc(L.name) + ' <em>scores the most BOTT points</em>', Math.min(0.95, Math.max(0.03, PW[L.id]))] : null,
+      L && Z && Z.id !== L.id ? ['gk:' + L.id + ':' + Z.id, 'Giant killer', esc(Z.name) + ' (last) <em>outscores</em> ' + esc(L.name) + ' (1st)', 1 / (1 + Math.pow(10, (L.elo - Z.elo) / 400))] : null,
+      _bmx ? ['bmx:' + _bmx.line, 'Big haul', 'Round top scorer <em>over ' + _bmx.line + ' pts</em>', _bmx.po] : null,
+      _bgp ? ['bgap:' + _bgp.line, 'Runaway round', 'Top scorer wins the round by <em>over ' + _bgp.line + ' pts</em>', _bgp.po] : null
+    ].filter(Boolean); }
   const _rsS = (_rsDoc && _rsDoc.value && _rsDoc.value.sessions) || [];
   let _wmar = null, _ouMargin = null, _ouTime = null, _ouCons = {}, _ouDnf = null, _yn = [], _ouMore = [];
   // E3 is new this season: seed its history with last season's D4, then E3's own races add on top.
@@ -27765,7 +27786,7 @@ window.renderBets = async function() {
           ${_outHere.length ? `<div class="bo-out-h">✕ Not racing — no bets</div>` + _outHere.map(d => `<div class="bo-row bo-out">${photo(d)}<div class="bo-nm"><b>${esc(d.name)} <span class="bo-ci out">${(d.raceBanRacesLeft > 0 || d.raceBanned) ? 'RACE BAN' : 'OUT'}</span></b><small>${formatM(_pr(d))} · removed from all ${esc(div)} markets</small></div><span class="bo-odd-x">—</span><span class="bo-odd-x">—</span><span class="bo-odd-x">—</span><span class="bo-odd-x">—</span></div>`).join('') : ''}</div>
         ${(() => { const B = isC ? [
             ['h2h', '⚔️', 'Head to head', !!h2h],
-            ['spec', '🎯', 'Specials', !!_ldx],
+            ['spec', '🎯', 'Specials', !!(_ldx || _bSpec.length)],
             ['cou', '📏', 'BOTT points', Object.keys(_ouCons).length > 0]].filter(x => x[3]) : [
             ['h2h', '⚔️', 'Head to head', !!h2h],
             ['spec', '🎯', 'Specials', !!(_pgap || _wmar || _ouMargin || _ouTime || _ouDnf || _ouMore.length || _yn.length)],
@@ -27790,10 +27811,12 @@ window.renderBets = async function() {
           ${_yn.map(([k, l, p]) => `<div class="bo-ou"><div><b>${l}</b></div>
             <div class="bo-ou-b"><i>YES</i>${oddsBtn('yn', [k, 'yes'], div + ' ' + l.toLowerCase() + ': yes', _ouOdds('yn', [k, 'yes'], p))}</div>
             <div class="bo-ou-b"><i>NO</i>${oddsBtn('yn', [k, 'no'], div + ' ' + l.toLowerCase() + ': no', _ouOdds('yn', [k, 'no'], 1 - p))}</div></div>`).join('')}</div>` : ''}
-        ${(isC && _ldx) ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>🎯 Specials</span><small>Yes / no</small></div>
-          <div class="bo-ou"><div><b>Leader extends lead</b><span class="bo-ou-line">${esc(_ldx.L.name)} <em>outscores</em> ${esc(_ldx.S.name)}</span></div>
+        ${(isC && (_ldx || _bSpec.length)) ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>🎯 Specials</span><small>Yes / no</small></div>
+          ${_ldx ? `<div class="bo-ou"><div><b>Leader extends lead</b><span class="bo-ou-line">${esc(_ldx.L.name)} <em>outscores</em> ${esc(_ldx.S.name)}</span></div>
             <div class="bo-ou-b"><i>YES</i>${oddsBtn('yn', ['ldx:' + _ldx.L.id + ':' + _ldx.S.id, 'yes'], 'BOTT leader ' + _ldx.L.name + ' outscores ' + _ldx.S.name + ': yes', _ouOdds('yn', ['ldx:' + _ldx.L.id + ':' + _ldx.S.id, 'yes'], _ldx.p))}</div>
-            <div class="bo-ou-b"><i>NO</i>${oddsBtn('yn', ['ldx:' + _ldx.L.id + ':' + _ldx.S.id, 'no'], 'BOTT leader ' + _ldx.L.name + ' outscores ' + _ldx.S.name + ': no', _ouOdds('yn', ['ldx:' + _ldx.L.id + ':' + _ldx.S.id, 'no'], 1 - _ldx.p))}</div></div></div>` : ''}
+            <div class="bo-ou-b"><i>NO</i>${oddsBtn('yn', ['ldx:' + _ldx.L.id + ':' + _ldx.S.id, 'no'], 'BOTT leader ' + _ldx.L.name + ' outscores ' + _ldx.S.name + ': no', _ouOdds('yn', ['ldx:' + _ldx.L.id + ':' + _ldx.S.id, 'no'], 1 - _ldx.p))}</div></div>` : ''}${_bSpec.map(([k, t, sub, p]) => `<div class="bo-ou"><div><b>${t}</b><span class="bo-ou-line">${sub}</span></div>
+            <div class="bo-ou-b"><i>YES</i>${oddsBtn('yn', [k, 'yes'], 'BOTT ' + t.toLowerCase() + ': yes', _ouOdds('yn', [k, 'yes'], p))}</div>
+            <div class="bo-ou-b"><i>NO</i>${oddsBtn('yn', [k, 'no'], 'BOTT ' + t.toLowerCase() + ': no', _ouOdds('yn', [k, 'no'], 1 - p))}</div></div>`).join('')}</div>` : ''}
         </div><div class="bo-sec" data-sec="spoon"${_secHid('spoon')}>
         ${(!isC && Object.keys(_spoonP).length) ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>🥄 Wooden spoon</span><small>Last classified finisher</small></div>
           ${field.filter(d => _spoonP[d.id] != null).slice().sort((a, b) => _spoonP[b.id] - _spoonP[a.id]).map(d => `<div class="bo-row">${photo(d)}<div class="bo-nm"><b>${esc(d.name)}</b><small>Finishes last of the classified</small></div>${oddsBtn('spoon', [d.id], d.name + ' wooden spoon in ' + div, finalOdds('spoon', [d.id], _betOdds(_spoonP[d.id])))}</div>`).join('')}</div>` : ''}
