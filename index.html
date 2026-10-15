@@ -4048,7 +4048,7 @@ window.fitMiniZoom = function() {
   // that cap does it shrink further to fit. Desktop / theatre keep the fixed 280px TV.
   const box = document.getElementById('broadcast-box'), sc = document.getElementById('bc-scene'), w = sc && sc.querySelector('.bc-fit');
   if (!w || !box) return; w.style.zoom = 1; w.style.width = '';
-  if (box.classList.contains('bc-theatre') || window.innerWidth > 640) { if (!box.classList.contains('bc-theatre')) box.style.height = ''; return; }
+  if (box.classList.contains('bc-theatre') || window.innerWidth > 640) { if (!box.classList.contains('bc-theatre')) box.style.height = '280px'; return; } // keep the fixed TV height (clearing it collapsed the box to nothing)
   const cs = getComputedStyle(sc), padT = parseFloat(cs.paddingTop), padB = parseFloat(cs.paddingBottom);
   const availW = sc.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
   const DW = 400; let z = 1;
