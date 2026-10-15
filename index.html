@@ -28239,7 +28239,7 @@ window.buildQualiPace_marker = true;
 window.betHist = function(k) { window._betHistFilter = k; window._betHistPage = 1; renderBets(); };
 window.betHistPage = function(n) { window._betHistPage = n; renderBets(); };
 window.betDiv = function(d) { window._betDiv = d; renderBets(); };
-// Picks that can't sit on the same accumulator: a tricast with ANY other race pick in its division, two different winners (or two top-constructors) in
+// Picks that can't sit on the same accumulator: a tricast with another race pick on one of its 3 drivers, two different winners (or two top-constructors) in
 // the same division, both sides of one head-to-head, or a driver's win AND top 5 (top 5 is implied).
 function _betLegClashes(legs) {
   const bad = new Set();
@@ -28247,7 +28247,10 @@ function _betLegClashes(legs) {
     const a = legs[i], b = legs[j]; if (a.div !== b.div) continue;
     const clash = (a.market === 'win' && b.market === 'win') || (a.market === 'pole' && b.market === 'pole') || (a.market === 'wmar' && b.market === 'wmar') || (a.market === 'pgap' && b.market === 'pgap') || ((a.market === 'ou' || a.market === 'cou' || a.market === 'yn') && a.market === b.market && a.sel[0] === b.sel[0])
       || (a.market === b.market && (a.market === 'h2h' || a.market === 'qh2h') && a.sel.slice().sort().join() === b.sel.slice().sort().join())
-      || ((a.market === 'tri' || b.market === 'tri') && !['spw', 'spp'].includes(a.market) && !['spw', 'spp'].includes(b.market)) // a tricast already fixes P1–P3: no other race pick in that division can ride with it
+      || (a.market === 'tri' && b.market === 'tri')
+      || ((a.market === 'tri') !== (b.market === 'tri') && (() => { // a tricast already fixes its 3 drivers' places: no other race pick on THOSE drivers can ride with it
+        const t = a.market === 'tri' ? a : b, o = a.market === 'tri' ? b : a; if (['spw', 'spp'].includes(o.market)) return false;
+        return (o.sel || []).some(x => t.sel.includes(String(x).replace(/^(fpos|ddnf):/, ''))); })())
       || (a.market === 'spw' && b.market === 'spw') || (['spw', 'spp'].includes(a.market) && ['spw', 'spp'].includes(b.market) && a.market !== b.market && a.sel[0] === b.sel[0])
       || (['win', 'pod', 'top5'].includes(a.market) && ['win', 'pod', 'top5'].includes(b.market) && a.market !== b.market && a.sel[0] === b.sel[0]);
     if (clash) { bad.add(a.key); bad.add(b.key); }
