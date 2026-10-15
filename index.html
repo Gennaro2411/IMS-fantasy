@@ -892,6 +892,30 @@
   .rh-cd-box::before{content:'';position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,transparent,var(--rh-accent),transparent);opacity:.8}
   .rh-cd-box .hero-cd-num{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:2rem;line-height:1;color:var(--rh-num,#fff);font-variant-numeric:tabular-nums;text-shadow:0 0 14px var(--rh-numglow,rgba(255,255,255,0.18))}
   .rh-cd-lbl{font-size:.52rem;font-weight:800;letter-spacing:1.6px;color:var(--muted);margin-top:4px}
+  /* ===== Home hype (top of the home page) ===== */
+  #home-hype .rh{isolation:isolate;min-height:330px;border-radius:26px;margin-bottom:12px;display:flex;flex-direction:column;justify-content:flex-end;box-shadow:0 30px 70px -30px rgba(90,94,201,.65),inset 0 1px 0 rgba(255,255,255,.07)}
+  #home-hype .rh-photo{position:absolute;inset:0;background-size:cover;background-position:center 60%;opacity:.42;transform:scale(1.08);animation:hhPan 22s ease-in-out infinite alternate;pointer-events:none;z-index:-2}
+  #home-hype .rh::before{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(0deg,rgba(9,8,14,.96) 12%,rgba(9,8,14,.55) 55%,rgba(9,8,14,.15) 100%)}
+  #home-hype .rh-lines{animation:hhLines 1.6s linear infinite;opacity:.9}
+  #home-hype .rh-track{opacity:.55;height:115%;top:42%;right:-10px;filter:invert(1) drop-shadow(0 0 8px var(--rh-accent)) drop-shadow(0 0 22px var(--rh-accent));animation:hhGlow 3.2s ease-in-out infinite}
+  #home-hype .rh-title{font-style:italic;font-size:clamp(2.8rem,11vw,5.2rem);letter-spacing:-.5px;filter:drop-shadow(0 6px 24px rgba(0,0,0,.6))}
+  #home-hype .rh-cd-box{background:rgba(10,8,18,.55);border-color:rgba(255,255,255,.14);backdrop-filter:blur(10px)}
+  .hh-pulse{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+  .hh-pulse>div{padding:12px 10px;border-radius:16px;text-align:center;background:linear-gradient(160deg,rgba(255,255,255,.05),rgba(255,255,255,.015));border:1px solid rgba(255,255,255,.08)}
+  .hh-pulse b{display:block;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.6rem;line-height:1;color:#fff}
+  .hh-pulse b i{font-style:normal;font-size:.95rem;color:#8e88ab}
+  .hh-pulse small{display:block;margin-top:5px;font:800 .5rem/1.2 system-ui,sans-serif;letter-spacing:1.4px;text-transform:uppercase;color:#8e88ab}
+  .hh-acts{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+  .hh-act{position:relative;overflow:hidden;text-align:left;cursor:pointer;padding:16px 14px;border-radius:20px;color:#fff;background:radial-gradient(90% 90% at 100% 0%,color-mix(in srgb,var(--c) 26%,transparent),transparent 65%),linear-gradient(160deg,#17132a,#0e0c17);border:1px solid color-mix(in srgb,var(--c) 30%,rgba(255,255,255,.06));transition:transform .25s cubic-bezier(.2,1,.3,1),box-shadow .25s,border-color .25s}
+  .hh-act:hover{transform:translateY(-4px);border-color:var(--c);box-shadow:0 18px 36px -18px var(--c)}
+  .hh-ico{display:grid;place-items:center;width:44px;height:44px;border-radius:14px;margin-bottom:12px;font-size:1.4rem;background:color-mix(in srgb,var(--c) 22%,transparent);box-shadow:0 0 18px color-mix(in srgb,var(--c) 35%,transparent)}
+  .hh-act b{display:block;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.25rem;letter-spacing:.5px;text-transform:uppercase}
+  .hh-act small{display:block;margin-top:3px;font-size:.7rem;color:#a7a2c2;line-height:1.3}
+  @keyframes hhPan{from{transform:scale(1.08) translateX(-1.5%)}to{transform:scale(1.14) translateX(1.5%)}}
+  @keyframes hhLines{from{background-position:0 0}to{background-position:-40px 0}}
+  @keyframes hhGlow{0%,100%{opacity:.45}50%{opacity:.75}}
+  @media (max-width:640px){ .hh-acts{grid-template-columns:repeat(2,1fr)} .hh-pulse b{font-size:1.3rem} .hh-pulse small{font-size:.45rem;letter-spacing:.8px} #home-hype .rh{min-height:300px} }
+  @media (prefers-reduced-motion:reduce){ #home-hype .rh-photo,#home-hype .rh-lines,#home-hype .rh-track{animation:none} }
   @media (max-width:560px){ .rh-title{font-size:2.1rem} .rh-cd-wrap{width:100%} .rh-cd{width:100%} .rh-cd-box{flex:1;min-width:0} .rh-cd-box .hero-cd-num{font-size:1.6rem} .rh-track{max-width:70%;height:120%;top:34%} }
   #mobile-nav button{transition:color .15s ease, background .15s ease;}
   input,select,textarea{transition:border-color .15s ease, box-shadow .15s ease;}
@@ -1569,6 +1593,7 @@
     }
   body.reduce-motion *{animation:none !important;transition:none !important;scroll-behavior:auto !important}
   </style>
+  <div id="home-hype"></div>
   <div id="broadcast-box" style="width:100%;border-radius:12px;overflow:hidden;margin-bottom:20px;height:280px;position:relative;background:linear-gradient(120deg,#16101f,#0c0c12);border:1px solid rgba(123,79,191,0.4)">
     <div class="bc-live-badge" style="position:absolute;top:10px;left:12px;z-index:5;display:flex;align-items:center;gap:6px;background:rgba(0,0,0,0.55);border-radius:6px;padding:3px 9px">
       <span class="dd-dot"></span><span style="font-size:.62rem;font-weight:900;letter-spacing:2px">IMS LIVE</span>
@@ -5179,6 +5204,7 @@ function buildRaceHero(nextRace, allRaces, schedule, actionBtnHtml, heroId, isLi
   return `
     <div class="card rh${isDeadlineDay?' lock-soon':''}" style="padding:0;${rhVars}">
       ${patternSvg}
+      ${(() => { const ln = String(nextRace.name || '').toLowerCase(); const ph = /singapore/.test(ln) ? 'track-photos/singapore-1.jpg' : /barcelona|catalunya/.test(ln) ? 'track-photos/barcelona-1.jpg' : ''; return ph ? `<div class="rh-photo" style="background-image:url('${ph}')"></div>` : ''; })()}
       <div class="rh-lines"></div>
       ${outlineImg}
       <div style="position:absolute;left:-6px;bottom:-30px;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:7rem;color:rgba(255,255,255,0.045);line-height:1;pointer-events:none">R${esc(String(nextRace.raceNum||''))}</div>
@@ -7709,7 +7735,29 @@ async function renderDashboard() {
   const GOLD='#ffc800', GREEN='#2ecc71', RED='#e8002d', PURPLE='#9b6fd4', TEAL='#27f4d2';
 
   setTimeout(() => { try { window._homeTwitchCheck(); } catch (e) {} }, 0);
-  el.innerHTML = heroHtml + `<div id="home-twitch-live"></div>
+  { // ===== Home hype: next-race hero up top, league pulse, quick actions =====
+    const hype = document.getElementById('home-hype');
+    if (hype) {
+      const mgrs = (teams || []).filter(t => t && !t.testAccount).length, drv = (drivers || []).filter(d => d && !d.isReserve).length;
+      const nDiv = (typeof divisionsForSeason === 'function') ? divisionsForSeason().length : 5;
+      const done = (races || []).filter(r => r.driverPoints && Object.keys(r.driverPoints).length).length, total = Math.max(done, (schedule || []).length);
+      const tile = (pg, ico, t, sub, c) => `<button class="hh-act" style="--c:${c}" onclick="showPage('${pg}')"><span class="hh-ico">${ico}</span><b>${t}</b><small>${sub}</small></button>`;
+      hype.innerHTML = heroHtml + `
+        <div class="hh-pulse">
+          <div><b>${mgrs}</b><small>Managers</small></div>
+          <div><b>${drv}</b><small>Drivers on track</small></div>
+          <div><b>${nDiv}</b><small>Divisions</small></div>
+          <div><b>${done}<i>/${total || '–'}</i></b><small>Rounds done</small></div>
+        </div>
+        <div class="hh-acts">
+          ${tile('my-team', '🏎️', 'My Team', 'Your 5 drivers + constructor', '#9b6fd4')}
+          ${tile('market', '📈', 'Market', 'Buy, sell & chase value', '#27f4d2')}
+          ${tile('bets', '🎰', 'Betting', 'Back your calls with IM$', '#ffd24a')}
+          ${tile('results', '🏁', 'Results', 'Every round, every division', '#e8002d')}
+        </div>`;
+    }
+  }
+  el.innerHTML = `<div id="home-twitch-live"></div>
     <div class="card">
       <div class="card-title"><div class="dot"></div>Race Timings</div>
       ${timingsHtml}
