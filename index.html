@@ -5856,6 +5856,9 @@ window.addEventListener('focus', () => window._handoffCheck());
 setInterval(() => { const ov = document.getElementById('login-overlay'); if (!currentUser && ov && ov.style.display === 'flex') window._handoffCheck(); }, 4000);
 
 function completeLogin(team, isNew = false) {
+  // The welcome tour is for NEW players only — an existing account (made more than 2 days ago) never sees it again,
+  // even if this device's storage was wiped.
+  window._tourExisting = !isNew && (!(team && team.createdAt) || Date.now() - team.createdAt > 2 * 86400000);
   setTimeout(() => { try { _handoffPublish(team); } catch (e) {} }, 0);
   currentUser = { userId: team.userId, name: team.playerName, teamName: team.teamName };
   window._myTeamDocId = team.id || null;
@@ -26662,6 +26665,7 @@ window.endTour = function() {
 
 function maybeStartTour() {
   if (localStorage.getItem('imsTourComplete')) return;
+  if (window._tourExisting) { try { localStorage.setItem('imsTourComplete', '1'); } catch (e) {} return; }
   // Show welcome modal with option to start or skip
   const overlay = document.getElementById('tour-overlay');
   if (!overlay) return;
