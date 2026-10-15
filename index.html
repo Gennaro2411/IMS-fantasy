@@ -3653,7 +3653,8 @@ async function dbGetAll(col, opts) {
   if (col === 'teams' && Array.isArray(_r) && !(opts && opts.all)) {
     const me = (typeof currentUser !== 'undefined' && currentUser) ? currentUser.userId : null;
     if (!me) return _r; // not logged in yet (login / sign-up need every account, test ones included)
-    return _r.filter(t => !t || !t.testAccount || t.userId === me);
+    let myDoc = window._myTeamDocId; try { myDoc = myDoc || localStorage.getItem('imsMyTeamDocId'); } catch (e) {}
+    return _r.filter(t => !t || !t.testAccount || t.userId === me || (myDoc && t.id === myDoc));
   }
   return _r;
 }
@@ -9107,8 +9108,9 @@ window.submitTeam = async function() {
     // genuinely gone from the database. Checking the id alone wrongly blocked legitimate new
     // players (registration records an id, and a userId mismatch can leave `existing` unset).
     if (window._myTeamDocId) {
+      dbGet._lastFailed = false;
       const stillThere = await dbGet('teams', window._myTeamDocId).catch(() => 'unknown');
-      if (stillThere === null) { forceSignOutDeleted(); return; }
+      if (stillThere === null && !dbGet.readFailed()) { forceSignOutDeleted(); return; } // only a clean 404 means deleted
       if (stillThere && stillThere.id) {
         // The document exists — this session just failed to match it. Update it rather than
         // creating a duplicate account.
