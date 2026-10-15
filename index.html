@@ -27488,7 +27488,9 @@ window.renderBets = async function() {
   if (isC && _bSt && _bSt.length >= 2) { const st = _bSt, L = st[0];
     // More BOTT specials. Each row: [selKey, title, subtitle, P(yes)].
     const Z = st[st.length - 1], PW = (P && P.win) || {};
-    const hist = [...(_prevArc ? (_prevArc.races || []) : []), ...(races || [])].map(r => Object.values(r.constructorPoints || {}).map(Number).filter(v => v > 0).sort((a, b) => b - a)).filter(v => v.length >= 2);
+    const _isSp = !!(upcoming && upcoming.isSprint), _swk = (r) => !!(window._isSprintWeekend && window._isSprintWeekend(r)) === _isSp; // sprint rounds score far more — only compare like with like
+    const _hAll = [...(_prevArc ? (_prevArc.races || []) : []), ...(races || [])], _hSame = _hAll.filter(_swk);
+    const hist = (_hSame.length >= 3 ? _hSame : _hAll).map(r => Object.values(r.constructorPoints || {}).map(Number).filter(v => v > 0).sort((a, b) => b - a)).filter(v => v.length >= 2);
     const _bmx = _ouFrom(hist.map(v => ({ v: v[0], w: 1 })), 1), _bgp = _ouFrom(hist.map(v => ({ v: v[0] - v[1], w: 1 })), 1);
     _bSpec = [
       L && PW[L.id] != null ? ['ldw:' + L.id, 'Leader tops the round', esc(L.name) + ' <em>scores the most BOTT points</em>', Math.min(0.95, Math.max(0.03, PW[L.id]))] : null,
@@ -27533,7 +27535,9 @@ window.renderBets = async function() {
   if (isC) {
     const cr = [...(_prevArc ? (_prevArc.races || []) : []), ...(races || [])].filter(r => r.constructorPoints && Object.values(r.constructorPoints).some(v => v > 0)).sort(_byNum);
     // Constructor lines = this season's average BOTT points per round (rounded to a .5 line).
-    const _curC = (races || []).filter(r => r.constructorPoints && Object.values(r.constructorPoints).some(v => v > 0));
+    const _curAll = (races || []).filter(r => r.constructorPoints && Object.values(r.constructorPoints).some(v => v > 0));
+    const _spNow = !!(upcoming && upcoming.isSprint), _curSame = _curAll.filter(r => !!(window._isSprintWeekend && window._isSprintWeekend(r)) === _spNow);
+    const _curC = _curSame.length >= 2 ? _curSame : _curAll; // sprint weekends score far more — average like with like
     field.forEach(c => { const _vs = _curC.filter(r => r.constructorPoints[c.id] != null).map(r => Number(r.constructorPoints[c.id]) || 0);
       if (_vs.length) { const avg = _vs.reduce((a, v) => a + v, 0) / _vs.length, line = Math.floor(avg) + 0.5, over = _vs.filter(v => v > line).length;
         _ouCons[c.id] = { line, po: (over + 1) / (_vs.length + 2), n: _vs.length }; return; }
