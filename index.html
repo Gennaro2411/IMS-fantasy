@@ -31022,6 +31022,7 @@ function _ptQHtml(st, pool, i, reveal) {
   const S = _ptScores(st.qs[i], pool); if (!S) return '<div class="alert alert-warning">This question can\'t be built any more.</div>';
   const T = S.th || {}, bg = T.img ? `<div class="pt-bg ${T.cls || ''}" style="background-image:url('${esc(T.img)}')"></div>` : T.txt ? `<div class="pt-bg txt">${esc(T.txt)}</div>` : T.emo ? `<div class="pt-bg emo">${T.emo}</div>` : '';
   let h = _ptProg(st, i, !reveal) + `<div class="pt-arena themed" style="${T.acc ? '--acc:' + T.acc : ''}">${bg}<div class="pt-qn">QUESTION ${i + 1}</div><div class="pt-qt">${S.q}</div>`;
+  if (!reveal) _ptStingOnce((st.key || 'inf') + '|' + i + '|' + st.qs[i]);
   if (!reveal) return h + `<div class="pt-hint">${S.list.length} valid answers · fewest ${S.vl} = fewest points</div>
     <div class="wd-search" style="margin-top:16px"><span class="wd-search-ico">🔍</span><input id="pt-input" type="text" placeholder="Name an IMS driver…" autocomplete="off" oninput="ptSuggest(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();ptPickFirst();}"><div id="pt-sugg"></div></div>
     <button class="pt-skip" onclick="ptPass()" ${window._ptLocked ? 'disabled' : ''}>Skip · 100 pts</button></div>`;
@@ -31036,9 +31037,34 @@ function _ptQHtml(st, pool, i, reveal) {
   return h;
 }
 // TV-style: the tower counts down from 100 to the answer's score.
+// ---- Game-show sounds (synthesised in the browser — original sounds, no audio files) ----
+const _ptSnd = {
+  on() { try { return localStorage.getItem('imsPtSfx') !== '0'; } catch (e) { return true; } },
+  ctx() { if (!this.on()) return null; try { const C = window.AudioContext || window.webkitAudioContext; if (!C) return null; this.c = this.c || new C(); if (this.c.state === 'suspended') this.c.resume(); return this.c; } catch (e) { return null; } },
+  tone(f, t0, d, type, vol, f2) { const c = this.ctx(); if (!c) return; const o = c.createOscillator(), g = c.createGain(), lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2400;
+    o.type = type || 'triangle'; o.frequency.setValueAtTime(f, c.currentTime + t0); if (f2) o.frequency.exponentialRampToValueAtTime(f2, c.currentTime + t0 + d);
+    g.gain.setValueAtTime(0.0001, c.currentTime + t0); g.gain.exponentialRampToValueAtTime(vol || 0.18, c.currentTime + t0 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + t0 + d);
+    o.connect(lp); lp.connect(g); g.connect(c.destination); o.start(c.currentTime + t0); o.stop(c.currentTime + t0 + d + 0.05); },
+  // New question: bright 4-note brass-ish sting
+  sting() { [[392, 0], [523, .12], [659, .24], [784, .36]].forEach(([f, t]) => { this.tone(f, t, .22, 'sawtooth', .07); this.tone(f / 2, t, .22, 'triangle', .08); }); this.tone(1047, .5, .6, 'triangle', .1); },
+  // Tower falling: a falling hum plus a descending blip for every 10 points dropped
+  sweep(to, dur) { const d = dur / 1000; this.tone(520, 0, d, 'sawtooth', .05, Math.max(60, 520 * Math.pow(2, -(100 - to) / 33)));
+    const steps = Math.floor((100 - to) / 10); for (let i = 1; i <= steps; i++) { const k = i / Math.max(1, steps), tt = d * (1 - Math.sqrt(1 - Math.min(1, (i * 10) / Math.max(1, 100 - to)))); this.tone(880 * Math.pow(2, -i / 6), tt, .09, 'square', .05); } },
+  pointless() { [[523, 0], [659, .1], [784, .2], [1047, .3], [1319, .42], [1568, .54]].forEach(([f, t]) => this.tone(f, t, .35, 'triangle', .14)); [523, 659, 784].forEach(f => this.tone(f, .7, 1.1, 'sawtooth', .05)); },
+  wrong() { this.tone(140, 0, .55, 'sawtooth', .16, 110); this.tone(147, 0, .55, 'square', .06, 104); },
+  ding() { this.tone(988, 0, .5, 'triangle', .12); this.tone(1319, .08, .6, 'triangle', .08); },
+  tick(low) { this.tone(low ? 1200 : 900, 0, .06, 'square', low ? .07 : .04); },
+  win() { [[523, 0], [659, .15], [784, .3], [1047, .45]].forEach(([f, t]) => { this.tone(f, t, .3, 'triangle', .14); this.tone(f * 1.5, t, .3, 'sawtooth', .04); }); [523, 659, 784, 1047].forEach(f => this.tone(f, .65, 1.3, 'triangle', .07)); },
+  lose() { [[392, 0], [370, .25], [349, .5], [330, .75]].forEach(([f, t]) => this.tone(f, t, .32, 'sawtooth', .07)); }
+};
+window.ptSndToggle = function() { try { localStorage.setItem('imsPtSfx', _ptSnd.on() ? '0' : '1'); } catch (e) {} const b = document.getElementById('pt-snd'); if (b) b.textContent = _ptSnd.on() ? '🔊' : '🔇'; if (_ptSnd.on()) _ptSnd.ding(); };
+const _ptSndBtn = () => `<button id="pt-snd" class="wd-pill" style="cursor:pointer;border:none" onclick="ptSndToggle()" title="Game-show sounds on/off">${_ptSnd.on() ? '🔊' : '🔇'}</button>`;
+// Plays the new-question sting once per question.
+function _ptStingOnce(key) { if (window._ptStingK === key) return; window._ptStingK = key; setTimeout(() => _ptSnd.sting(), 120); }
 function _ptAnim() { const f = document.querySelector('.pt-fill[data-to]'), c = document.getElementById('pt-ctr'); if (!f || !c) return;
-  const to = +f.dataset.to, t0 = performance.now(), dur = 600 + (100 - to) * 18;
-  const step = (t) => { const k = Math.min(1, (t - t0) / dur), v = Math.round(100 - (100 - to) * (1 - Math.pow(1 - k, 2))); f.style.height = v + '%'; c.textContent = v; if (k < 1) requestAnimationFrame(step); else if (to === 0) { try { fireConfetti({ count: 90 }); } catch (e) {} } };
+  const to = +f.dataset.to, t0 = performance.now(), dur = 600 + (100 - to) * 18, bad = f.closest('.pt-reveal') && f.closest('.pt-reveal').classList.contains('bad');
+  if (bad) _ptSnd.wrong(); else _ptSnd.sweep(to, dur);
+  const step = (t) => { const k = Math.min(1, (t - t0) / dur), v = Math.round(100 - (100 - to) * (1 - Math.pow(1 - k, 2))); f.style.height = v + '%'; c.textContent = v; if (k < 1) requestAnimationFrame(step); else if (to === 0) { _ptSnd.pointless(); try { fireConfetti({ count: 90 }); } catch (e) {} } else if (!bad) _ptSnd.ding(); };
   f.style.height = '100%'; requestAnimationFrame(step); }
 async function renderPTGame(el) {
   if (!window._ptPool || _now() - (window._ptPoolAt || 0) > 10 * 60e3) { const { gridPool } = await _wdLoad(); window._ptPool = gridPool.filter(p => (p.st || 0) > 0 && (!p.res || p.st >= 25)); window._ptPoolAt = _now(); }
@@ -31046,7 +31072,7 @@ async function renderPTGame(el) {
   const locked = !!(window._gamesLock || {}).pt && !adminLoggedIn && !_gamesAccess(); window._ptLocked = locked;
   const tabs = `<div class="wd-modes">${[['daily', '📅', 'DAILY'], ['inf', '∞', 'PRACTICE'], ['duel', '⚔️', 'DUEL']].map(([m, i, l]) => `<button class="${mode === m ? 'on' : ''}" onclick="setPTMode('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>`;
   const st0 = mode === 'duel' ? null : _ptState(mode, pool), lim = st0 === 'limit', st = lim ? null : st0, tot = st ? st.ans.reduce((a, x) => a + x.pts, 0) : 0;
-  let body = `<div class="wd-top"><button class="wd-back" onclick="openGame('hub')" title="Back to Games">←</button><div class="wd-brand"><img src="icons/icon-192.png?v=3" alt="IMS"><span>POINT<em>LESS</em></span></div><div class="wd-meta">${mode === 'daily' ? `<span class="wd-pill">#${_wdDayNum()}</span>` : ''}<span class="wd-pill">🎯 ${tot} pts</span></div></div>
+  let body = `<div class="wd-top"><button class="wd-back" onclick="openGame('hub')" title="Back to Games">←</button><div class="wd-brand"><img src="icons/icon-192.png?v=3" alt="IMS"><span>POINT<em>LESS</em></span></div><div class="wd-meta">${mode === 'daily' ? `<span class="wd-pill">#${_wdDayNum()}</span>` : ''}<span class="wd-pill">🎯 ${tot} pts</span>${_ptSndBtn()}</div></div>
     ${(window._gamesLock || {}).pt ? `<div class="wd-lockbar">🔒 <b>Pointless is locked</b><span>${locked ? 'It\'ll open soon.' : 'Locked for players — you can still play.'}</span></div>` : ''}${tabs}`;
   if (mode === 'duel') { el.innerHTML = `<div class="wd-wrap">${locked ? body + '<div class="wd-panel" style="text-align:center">Duels open when the game is unlocked.</div>' : await _pdBody(pool, body)}</div>`; return; }
   clearInterval(window._pdPoll); clearInterval(window._pdCd);
@@ -31138,6 +31164,7 @@ async function _pdSubmit(val) { const r = window._pdRef; if (!r || window._pdBus
 function _pdTimer(l, role, t) { clearInterval(window._pdCd); if (!t || l.done) return; const lim = t.r === PD_ROUNDS - 1 ? PD_FINAL_TURN : PD_TURN;
   window._pdCd = setInterval(async () => { const left = (l.turnAt || 0) + lim - _now(), el = document.getElementById('pd-cd'), fl = document.getElementById('pd-cd-fill');
     if (!document.getElementById('pd-duel')) { clearInterval(window._pdCd); return; }
+    { const sec = Math.ceil(left / 1000); if (sec !== window._pdLastSec) { window._pdLastSec = sec; if (sec > 0 && sec <= 5 && t.who === role) _ptSnd.tick(sec <= 3); } }
     if (el) el.textContent = Math.max(0, Math.ceil(left / 1000)); if (fl) { fl.style.width = Math.max(0, Math.min(100, left / lim * 100)) + '%'; fl.parentNode.classList.toggle('low', left < 8e3); }
     const mine = t.who === role; if ((mine && left <= 0) || (!mine && left <= -PD_GRACE)) { clearInterval(window._pdCd);
       if (mine) { _pdSubmit(t.r === PD_ROUNDS - 1 ? window._pdPicks.join('|') : ''); return; }
@@ -31212,10 +31239,12 @@ async function _pdBody(pool, top) {
       ${myTurn ? (fin ? `<div id="pd-picks" class="pd-picks"></div>` : '') + `<div class="wd-search" style="margin-top:12px"><span class="wd-search-ico">🔍</span><input id="pd-input" type="text" placeholder="${fin ? 'Add an answer…' : 'Name an IMS driver…'}" autocomplete="off" oninput="pdSuggest(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();pdPickFirst();}"><div id="pd-sugg" class="pd-sugg"></div></div>
         ${fin ? '<button class="pt-go" onclick="pdLockIn()">LOCK IN</button>' : `<button class="pt-skip" onclick="pdPick('')">Pass · 100 pts</button>`}` : `<div class="pd-wait"><span class="wd-spin"></span></div>`}
       ${rev}</div>`;
+    if ((lob[_pdFirst(t.r) + 'Ans'] || []).length <= t.r) _ptStingOnce(lob.id + '|' + round + '|r' + t.r); // new round, nobody has answered yet
     _pdTimer(lob, role, t);
     setTimeout(() => { _pdPicksPaint(); _ptAnim(); const i = document.getElementById('pd-input'); if (i && !('ontouchstart' in window)) i.focus(); }, 0);
   } else {
     clearInterval(window._pdCd);
+    if (window._pdEndK !== rk) { window._pdEndK = rk; setTimeout(() => winner === role ? _ptSnd.win() : winner === 'draw' ? _ptSnd.ding() : _ptSnd.lose(), 300); }
     const msg = quit ? (winner === role ? `${esc(opP.name)} left — you win!` : 'You left the duel.') : winner === 'draw' ? 'It\'s a draw!' : winner === role ? (R.why === 'jackpot' ? '🎯 JACKPOT! A pointless answer in the final!' : 'You win!') : (R.why === 'jackpot' ? `${esc(opP.name)} hit the jackpot with a pointless answer` : `${esc(opP.name)} wins`);
     const rows = Array.from({ length: PD_ROUNDS }, (_, r) => { const S = _ptScores(lob.qs[r], pool), a = _pdPts(lob, role, r, pool), b = _pdPts(lob, opp, r, pool);
       const cell = (x) => !x ? '<span class="text-muted">—</span>' : x.list.map(y => { const q = pool.find(z => z.id === y.id); return `<div class="pd-fl${y.pz ? ' z' : ''}"><span>${q ? esc(q.name) : 'No answer'}</span><b>${y.pz ? '🎯 0' : y.pts}</b></div>`; }).join('');
