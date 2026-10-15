@@ -28245,7 +28245,8 @@ window.betTriUpdate = function() {
   const ids = [0, 1, 2].map(k => (document.getElementById('tri-' + k) || {}).value); const el = document.getElementById('tri-odds'); if (!el) return null;
   window._triSel = { div: window._betDiv, ids };
   if (new Set(ids).size < 3) { el.textContent = 'Pick 3 different drivers'; return null; }
-  const p = _betTriP(window._betTriField || [], ids), o = p > 0 ? _betOdds(p, 10000) : null; // tricasts cap at 10,000 el.textContent = o ? 'Odds ' + fmtOdds(o) : '—'; return o;
+  const p = _betTriP(window._betTriField || [], ids), o = p > 0 ? _betOdds(p, 10000) : null; // tricasts cap at 10,000
+  el.textContent = o ? 'Odds ' + fmtOdds(o) : '—'; return o;
 };
 window.betTriAdd = function() {
   const o = window.betTriUpdate(); if (!o) { if (typeof showToast === 'function') showToast('Pick 3 different drivers.', 'error'); return; }
