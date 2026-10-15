@@ -30839,7 +30839,7 @@ window.setPTMode = function(m) { window._ptMode = m; window._ptReveal = null; re
 const _ptLoadSt = () => { try { return JSON.parse(localStorage.getItem('imsPtDaily') || 'null'); } catch (e) { return null; } };
 const _ptSave = (st) => { try { localStorage.setItem('imsPtDaily', JSON.stringify(st)); } catch (e) {} };
 function _ptCats(pool) {
-  const C = [], add = (id, q, f, min, v, vl) => { const ids = pool.filter(f).map(p => p.id); if (ids.length >= (min || 6)) C.push({ id, q, ids, v, vl }); };
+  const C = [], add = (id, q, f, min, v, vl) => { const ids = pool.filter(f).map(p => p.id); if (ids.length >= (min || 3)) C.push({ id, q, ids, v, vl }); };
   add('w', 'Name an IMS driver who has <b>won a race</b>', p => p.w >= 1);
   add('w5', 'Name an IMS driver with <b>5 or more race wins</b>', p => p.w >= 5);
   add('pd', 'Name an IMS driver who has <b>finished on the podium</b>', p => p.pd >= 1);
@@ -30848,10 +30848,37 @@ function _ptCats(pool) {
   add('b', 'Name an IMS driver who has won a <b>BOTT</b>', p => p.b >= 1);
   add('p500', 'Name an IMS driver with <b>500+ career points</b>', p => p.p >= 500);
   add('w0', 'Name an IMS driver with <b>50+ starts but no race wins</b>', p => p.st >= 50 && !p.w);
-  ['D0', 'D1', 'D2', 'D3', 'D4'].forEach(d => add('dh' + d, `Name an IMS driver who has raced in <b>${d}</b>`, p => (p.dh || {})[d] > 0, 6, p => (p.dh || {})[d] || 0, d + ' appearances'));
+  ['D0', 'D1', 'D2', 'D3', 'D4'].forEach(d => add('dh' + d, `Name an IMS driver who has raced in <b>${d}</b>`, p => (p.dh || {})[d] > 0, 3, p => (p.dh || {})[d] || 0, d + ' appearances'));
+  // ---- more stat questions ----
+  add('w10', 'Name an IMS driver with <b>10 or more race wins</b>', p => p.w >= 10);
+  add('w1', 'Name an IMS driver with <b>exactly 1 race win</b>', p => p.w === 1);
+  add('pd0w', 'Name an IMS driver with a <b>podium but no race wins</b>', p => p.pd >= 1 && !p.w);
+  add('pd25', 'Name an IMS driver with <b>25 or more podiums</b>', p => p.pd >= 25);
+  add('pl3', 'Name an IMS driver with <b>3 or more pole positions</b>', p => p.pl >= 3);
+  add('pl0w', 'Name an IMS driver with a <b>pole but no race wins</b>', p => p.pl >= 1 && !p.w);
+  add('b2', 'Name an IMS driver with <b>2 or more BOTTs</b>', p => p.b >= 2);
+  add('ch', 'Name an IMS <b>division champion</b>', p => (p.ch || 0) >= 1);
+  add('chb', 'Name an IMS driver who has won a <b>division title AND a BOTT</b>', p => (p.ch || 0) >= 1 && p.b >= 1);
+  add('p1000', 'Name an IMS driver with <b>1000+ career points</b>', p => p.p >= 1000);
+  add('p100', 'Name an IMS driver with <b>under 100 career points</b>', p => p.p < 100);
+  add('st100', 'Name an IMS driver with <b>100+ appearances</b>', p => p.st >= 100);
+  add('st50', 'Name an IMS driver with <b>50+ appearances</b>', p => p.st >= 50);
+  add('dv3', 'Name an IMS driver who has raced in <b>3 or more different divisions</b>', p => Object.keys(p.dh || {}).filter(k => /^D/.test(k) && p.dh[k] > 0).length >= 3);
+  add('th3', 'Name an IMS driver who has driven for <b>3 or more teams</b>', p => Object.keys(p.th || {}).length >= 3);
+  add('th1', 'Name an IMS driver who has <b>only ever driven for one team</b>', p => Object.keys(p.th || {}).length === 1);
+  add('res', 'Name a current IMS <b>reserve driver</b>', p => p.res);
+  add('old', 'Name an IMS driver who <b>debuted in S1–S3</b>', p => p.fs && +p.fs <= 3);
+  // Current division (scored by appearances in that division)
+  ['D0', 'D1', 'D2', 'D3', 'D4'].forEach(d => add('cd' + d, `Name an IMS driver <b>currently racing in ${d}</b>`, p => !p.res && p.div === d, 3, p => (p.dh || {})[d] || 0, d + ' appearances'));
+  // Two-division combos
+  [['D0', 'D1'], ['D1', 'D2'], ['D2', 'D3'], ['D3', 'D4'], ['D0', 'D2'], ['D1', 'D3'], ['D2', 'D4']].forEach(([x, y]) => add('dd' + x + y, `Name an IMS driver who has raced in <b>both ${x} and ${y}</b>`, p => (p.dh || {})[x] > 0 && (p.dh || {})[y] > 0));
+  // Winners / podiums by division they've raced in
+  ['D0', 'D1', 'D2', 'D3', 'D4'].forEach(d => add('dw' + d, `Name a <b>race winner</b> who has raced in <b>${d}</b>`, p => p.w >= 1 && (p.dh || {})[d] > 0, 3, p => (p.dh || {})[d] || 0, d + ' appearances'));
   const nats = {}; pool.forEach(p => { if (p.nat) nats[p.nat] = (nats[p.nat] || 0) + 1; });
   Object.keys(nats).forEach(n => add('n' + n, `Name an IMS driver from <b>${esc(n)}</b> ${_wdFlag(n)}`, p => p.nat === n));
+  Object.keys(nats).forEach(n => { add('nw' + n, `Name an IMS <b>race winner</b> from <b>${esc(n)}</b> ${_wdFlag(n)}`, p => p.nat === n && p.w >= 1); add('np' + n, `Name an IMS driver from <b>${esc(n)}</b> ${_wdFlag(n)} with a <b>podium</b>`, p => p.nat === n && p.pd >= 1); });
   const tms = {}; pool.forEach(p => Object.entries(p.th || {}).forEach(([k, n]) => { tms[k] = tms[k] || n; }));
+  Object.entries(tms).forEach(([k, n]) => { add('ct' + k, `Name a driver <b>currently racing for ${esc(n)}</b>`, p => !p.res && _wdNorm(p.team) === k, 3, p => (p.tn || {})[k] || 0, 'appearances for ' + n); add('tw' + k, `Name a <b>race winner</b> who has driven for <b>${esc(n)}</b>`, p => (p.th || {})[k] && p.w >= 1, 3, p => (p.tn || {})[k] || 0, 'appearances for ' + n); });
   Object.entries(tms).forEach(([k, n]) => add('t' + k, `Name an IMS driver who has driven for <b>${esc(n)}</b>`, p => (p.th || {})[k], 6, p => (p.tn || {})[k] || 0, 'appearances for ' + n));
   const fss = {}; pool.forEach(p => { if (p.fs) fss[p.fs] = 1; });
   Object.keys(fss).forEach(s => add('fs' + s, `Name an IMS driver whose <b>first season was S${s}</b>`, p => String(p.fs) === s));
@@ -30860,7 +30887,7 @@ function _ptCats(pool) {
 function _ptMakeQs(pool, rnd) {
   const C = _ptCats(pool); if (C.length < PT_N) return null; const out = [], used = new Set();
   // Prefer variety: at most one team, one nationality and one division question per round.
-  let guard = 0; while (out.length < PT_N && guard++ < 500) { const c = C[Math.floor(rnd() * C.length)]; const g = c.id[0] === 'd' ? 'dh' : c.id[0] === 'n' || c.id[0] === 't' || c.id.startsWith('fs') ? c.id.slice(0, c.id.startsWith('fs') ? 2 : 1) : c.id;
+  let guard = 0; while (out.length < PT_N && guard++ < 500) { const c = C[Math.floor(rnd() * C.length)]; const g = _ptGroup(c.id);
     if (used.has(c.id) || (['t', 'n', 'dh', 'fs'].includes(g) && out.some(q => q.g === g))) continue; used.add(c.id); out.push({ c: c.id, g }); }
   return out.length === PT_N ? out.map(q => q.c) : null;
 }
@@ -30873,7 +30900,7 @@ function _ptScores(cid, pool) {
 }
 // Daily questions without repeats: every question is shuffled once per "cycle" and dealt out 5 a day
 // (max one team / nationality / division / first-season question per day) until the cycle runs out.
-const _ptGroup = (id) => id.startsWith('dh') ? 'dh' : id.startsWith('fs') ? 'fs' : /^[nt]/.test(id) ? id[0] : id;
+const _ptGroup = (id) => /^(dh|cd|dd|dw)/.test(id) ? 'dh' : id.startsWith('fs') ? 'fs' : /^n/.test(id) ? 'n' : /^th[13]$/.test(id) ? id : /^(t|ct)/.test(id) ? 't' : id;
 function _ptCycle(ids, c, salt) {
   const rnd = _grRng(_wdHash('imsptcyc' + salt + '|' + c)), left = ids.slice().sort();
   for (let i = left.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [left[i], left[j]] = [left[j], left[i]]; }
