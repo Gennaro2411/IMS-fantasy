@@ -2309,10 +2309,10 @@
     .wd-search-ico{position:absolute;left:16px;top:50%;transform:translateY(-50%);opacity:.55;pointer-events:none}
     .wd-search input{width:100%;padding:14px 16px 14px 44px;border-radius:14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);color:#fff;font-size:1rem;outline:none;transition:border-color .15s,box-shadow .15s}
     .wd-search input:focus{border-color:rgba(46,204,113,.6);box-shadow:0 0 0 4px rgba(46,204,113,.12)}
-    #wd-sugg,#pt-sugg{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:50;background:rgba(22,22,32,0.98);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.1);border-radius:14px;max-height:320px;overflow-y:auto;box-shadow:0 18px 40px rgba(0,0,0,.55);padding:4px}
-    #wd-sugg:empty,#pt-sugg:empty{display:none}
-    #wd-sugg button,#pt-sugg button{display:flex;align-items:center;gap:12px;width:100%;padding:8px 10px;background:none;border:none;border-radius:10px;color:#fff;cursor:pointer;text-align:left;font-weight:700;font-size:.92rem}
-    #wd-sugg button:hover,#pt-sugg button:hover{background:rgba(46,204,113,0.12)}#wd-sugg img{width:30px;height:30px;border-radius:50%;object-fit:cover}
+    #wd-sugg,#pt-sugg,#pd-sugg{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:50;background:rgba(22,22,32,0.98);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.1);border-radius:14px;max-height:320px;overflow-y:auto;box-shadow:0 18px 40px rgba(0,0,0,.55);padding:4px}
+    #wd-sugg:empty,#pt-sugg:empty,#pd-sugg:empty{display:none}
+    #wd-sugg button,#pt-sugg button,#pd-sugg button{display:flex;align-items:center;gap:12px;width:100%;padding:8px 10px;background:none;border:none;border-radius:10px;color:#fff;cursor:pointer;text-align:left;font-weight:700;font-size:.92rem}
+    #wd-sugg button:hover,#pt-sugg button:hover,#pd-sugg button:hover{background:rgba(46,204,113,0.12)}#wd-sugg img{width:30px;height:30px;border-radius:50%;object-fit:cover}
     .wd-board{display:flex;flex-direction:column;gap:8px;overflow-x:auto;padding-bottom:4px}
     .wd-row{display:grid;grid-template-columns:1.5fr repeat(7,1fr);gap:8px;min-width:800px}
     .wd-head div{text-align:center;font-size:.62rem;font-weight:800;letter-spacing:2px;color:var(--muted);padding-bottom:2px}
@@ -2409,6 +2409,22 @@
     .pt-big{position:relative;font-family:'Barlow Condensed',sans-serif;font-size:5rem;font-weight:900;line-height:1;margin-top:6px;background:linear-gradient(180deg,#fff,#7dd3fc);-webkit-background-clip:text;background-clip:text;color:transparent;animation:wdPop .6s both}.pt-end.good .pt-big{background:linear-gradient(180deg,#fef9c3,#fde047);-webkit-background-clip:text;background-clip:text}
     .pt-sum{position:relative;margin-top:16px;text-align:left;display:flex;flex-direction:column;gap:6px}.pt-sum>div{display:grid;grid-template-columns:36px 1fr auto;gap:10px;align-items:center;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);font-size:.9rem}
     .pt-sum .q{font-size:.7rem;letter-spacing:1px;color:#7dd3fc;font-weight:800}.pt-sum b{font-family:'Barlow Condensed',sans-serif;font-size:1.2rem}.pt-sum .z{border-color:rgba(253,224,71,.5);background:rgba(253,224,71,.08)}.pt-sum .z b{color:#fde047}.pt-sum .bad b{color:#f87171}
+    .pd-pods{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:stretch;margin-bottom:14px}.pd-vs{align-self:center;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;color:var(--muted)}
+    .pd-pod{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:16px;background:linear-gradient(160deg,#16161f,#0d0d14);border:1px solid rgba(255,255,255,.08);min-width:0;transition:box-shadow .2s,border-color .2s}
+    .pd-pod.me{border-color:color-mix(in srgb,var(--me,#38bdf8) 45%,transparent)}.pd-pod.on{border-color:#7dd3fc;box-shadow:0 0 0 2px rgba(125,211,252,.35),0 0 24px rgba(56,189,248,.35)}.pd-pod.win{border-color:#fde047;box-shadow:0 0 26px rgba(253,224,71,.45)}
+    .pd-pn{min-width:0;flex:1}.pd-pn b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pd-pn small{color:var(--muted);font-size:.7rem}
+    .pd-tot{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:2rem;line-height:1;padding:6px 10px;border-radius:10px;background:#04121f;color:#7dd3fc;border:1px solid rgba(125,211,252,.3);min-width:56px;text-align:center}
+    .pd-cd{position:relative;height:6px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:14px}.pd-cd span{position:absolute;inset:0 auto 0 0;background:var(--acc,#7dd3fc);transition:width .25s linear}.pd-cd.low span{background:#ef4444}
+    .pd-cdn{font-size:.78rem;color:var(--muted);margin-top:6px}.pd-cdn b{color:#fff;font-size:.95rem}.pd-wait{display:flex;justify-content:center;padding:14px 0 4px}
+    .pd-picks{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px}.pd-pick{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;border:1px dashed rgba(255,255,255,.2);color:var(--muted);font-size:.8rem;min-height:36px}
+    .pd-pick.on{border:1px solid var(--acc,#7dd3fc);color:#fff;background:rgba(255,255,255,.06);cursor:pointer}.pd-pick i{font-style:normal;color:#f87171;font-size:.75rem}
+    #pd-sugg button[disabled]{opacity:.45;cursor:not-allowed}
+    .pd-last{margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,.08)}.pd-last>small{color:var(--muted);font-size:.72rem;letter-spacing:1px;text-transform:uppercase}
+    .pd-fl{display:flex;justify-content:space-between;gap:10px;min-width:140px;padding:3px 0;font-size:.86rem}.pd-fl.z b{color:#fde047}
+    .pd-final{display:flex;justify-content:center;gap:30px;margin:12px 0 16px}.pd-final div{display:flex;flex-direction:column;align-items:center}.pd-final small{color:var(--muted)}.pd-final b{font-family:'Barlow Condensed',sans-serif;font-size:3rem;font-weight:900;line-height:1}
+    .pd-rr{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:10px;text-align:left;padding:8px 6px;border-top:1px solid rgba(255,255,255,.07);font-size:.82rem}.pd-rh{font-size:.68rem;letter-spacing:1px;text-transform:uppercase;color:var(--muted);border-top:none}
+    .pd-rq small{display:block;font-size:.62rem;letter-spacing:1.5px;color:var(--acc,#7dd3fc);font-weight:800}.pd-rq b{color:#fde047}
+    @media (max-width:640px){.pd-pod{padding:8px}.pd-pod img,.pd-pod .ia{display:none}.pd-tot{font-size:1.5rem;min-width:44px}.pd-rr{grid-template-columns:1fr 1fr;}.pd-rq{grid-column:1/-1}.pd-rh>div:first-child{display:none}}
     .ptb-row{display:grid;grid-template-columns:28px minmax(0,1fr) 48px 52px 34px 38px;gap:4px;align-items:center;padding:8px;font-size:.84rem;border-bottom:1px solid var(--border)}.ptb-head{font-size:.62rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
     .ptb-row .c{text-align:center}.ptb-row .pos{font-weight:700;color:var(--muted)}.ptb-row .nm{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ptb-row .nm small{display:block;font-weight:400;font-size:.68rem;color:var(--muted)}
     .ptb-row .best{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.1rem;color:#7dd3fc}.ptb-row.top .best{color:#fde047}.ptb-row .pz{color:#fde047;font-weight:700}.ptb-row.me{background:rgba(56,189,248,.12);border-radius:8px}
@@ -29734,7 +29750,7 @@ async function renderConnGame(el) {
 }
 
 // ---- Render ----
-window.openGame = function(g) { if (g !== window._games.view && _wdGuardLeave(() => openGame(g))) return; if (g !== 'cn' && typeof _cnEndDuel === 'function') _cnEndDuel(false); if (g !== 'hl' && typeof _hdLeave === 'function') _hdLeave(true); if (g !== 'wordle') _wdEndDuel(false); if (g !== 'grid' && typeof _gdEnd === 'function') _gdEnd(false); window._grSel = null; window._games.view = g; renderGames(); };
+window.openGame = function(g) { if (g !== window._games.view && _wdGuardLeave(() => openGame(g))) return; if (g !== 'cn' && typeof _cnEndDuel === 'function') _cnEndDuel(false); if (g !== 'hl' && typeof _hdLeave === 'function') _hdLeave(true); if (g !== 'pt' && typeof _pdLeave === 'function') _pdLeave(true); if (g !== 'wordle') _wdEndDuel(false); if (g !== 'grid' && typeof _gdEnd === 'function') _gdEnd(false); window._grSel = null; window._games.view = g; renderGames(); };
 // ---- Modes: 'daily' (one shared driver per UK day), 'inf' (random, back to back), 'duel' (1v1 race) ----
 const _wdGetMode = () => { try { return localStorage.getItem('imsWordleMode') || 'daily'; } catch (e) { return 'daily'; } };
 window.setWordleMode = function(m) { if (m !== _wdGetMode() && _wdGuardLeave(() => setWordleMode(m))) return; if (m !== 'duel') _wdEndDuel(false); try { localStorage.setItem('imsWordleMode', m); } catch (e) {} clearInterval(window._wdDuelPoll); renderGames(); };
@@ -30202,7 +30218,7 @@ async function _gameCoins(kind, amount) {
   } catch (e) { return 0; }
 }
 function _coinPop(n, kind) {
-  const lbl = { 'cn-hidden': 'Found a hidden group!', 'duel-cn': 'Connections duel win', 'cn-daily': 'Daily Connections', 'cn-win': 'Connections solved!', 'wd-daily': 'Daily PaddockDle', 'gr-daily': 'Daily Grid', 'wd-win': 'Got the daily driver!', 'gr-win': 'Perfect 9/9 grid!', 'hl-daily': 'Daily Higher or Lower', 'pt-daily': 'Daily Pointless', 'pt-win': 'Pointless — 60 or under!', 'hl-win': '8/10 or better!', 'duel-hl': 'Higher or Lower duel win', 'duel-wd': 'PaddockDle duel win', 'duel-gr': 'Grid duel win' }[kind] || 'Games';
+  const lbl = { 'cn-hidden': 'Found a hidden group!', 'duel-cn': 'Connections duel win', 'cn-daily': 'Daily Connections', 'cn-win': 'Connections solved!', 'wd-daily': 'Daily PaddockDle', 'gr-daily': 'Daily Grid', 'wd-win': 'Got the daily driver!', 'gr-win': 'Perfect 9/9 grid!', 'hl-daily': 'Daily Higher or Lower', 'pt-daily': 'Daily Pointless', 'pt-win': 'Pointless — 60 or under!', 'hl-win': '8/10 or better!', 'duel-hl': 'Higher or Lower duel win', 'duel-pt': 'Pointless duel win', 'duel-wd': 'PaddockDle duel win', 'duel-gr': 'Grid duel win' }[kind] || 'Games';
   const el = document.createElement('div'); el.className = 'coin-pop'; const nOpen = document.querySelectorAll('.coin-pop').length; if (nOpen) el.style.top = (84 + nOpen * 78) + 'px';
   el.innerHTML = `<span class="imc" style="font-size:1.6rem"></span><div><b>+${n} IM$</b><small>${lbl}</small></div>`;
   document.body.appendChild(el); setTimeout(() => el.classList.add('out'), 2600); setTimeout(() => el.remove(), 3200);
@@ -30375,7 +30391,7 @@ async function _liveDuelsHtml(all, game, f) {
   const now = _now();
   const live = (all || []).filter(l => l && (game === 'wd' ? !l.game : l.game === game) && l.status === 'playing' && !l.done && l.hostUid && l.guestUid
     && now - (l.hostSeen || 0) < 30e3 && now - (l.guestSeen || 0) < 30e3
-    && !(game === 'wd' && (l.hostWonAt || l.guestWonAt)) && !(game === 'hl' && l.hostDone && l.guestDone) && !(game === 'grid' && l.winner) && !l.drawAgreed);
+    && !(game === 'wd' && (l.hostWonAt || l.guestWonAt)) && !(game === 'hl' && l.hostDone && l.guestDone) && !(game === 'pt' && l.done) && !(game === 'grid' && l.winner) && !l.drawAgreed);
   if (!live.length) return '';
   let stats = {};
   try { (await dbGetAll('wordleScores').catch(() => [])).forEach(d => { if (d && d.uid) stats[d.uid] = d; }); } catch(e) {}
@@ -30844,7 +30860,7 @@ async function renderHLGame(el) {
 const PT_N = 3, PT_WIN = 60; // 3 questions; 60 or under earns the bonus
 const PT_REV = '#r3'; // bump to re-roll today's Pointless daily for everyone
 const _ptGetMode = () => window._ptMode || 'daily';
-window.setPTMode = function(m) { window._ptMode = m; window._ptReveal = null; renderGames(); };
+window.setPTMode = function(m) { if (m !== 'duel' && typeof _pdLeave === 'function') _pdLeave(true); window._ptMode = m; window._ptReveal = null; renderGames(); };
 const _ptLoadSt = () => { try { return JSON.parse(localStorage.getItem('imsPtDaily') || 'null'); } catch (e) { return null; } };
 const _ptSave = (st) => { try { localStorage.setItem('imsPtDaily', JSON.stringify(st)); } catch (e) {} };
 // Past-season wins per division from the .db win labels ("S7 R3 Monza D1") — this season comes from live results.
@@ -31028,10 +31044,12 @@ async function renderPTGame(el) {
   if (!window._ptPool || _now() - (window._ptPoolAt || 0) > 10 * 60e3) { const { gridPool } = await _wdLoad(); window._ptPool = gridPool.filter(p => (p.st || 0) > 0 && (!p.res || p.st >= 25)); window._ptPoolAt = _now(); }
   const pool = window._ptPool, mode = _ptGetMode();
   const locked = !!(window._gamesLock || {}).pt && !adminLoggedIn && !_gamesAccess(); window._ptLocked = locked;
-  const tabs = `<div class="wd-modes">${[['daily', '📅', 'DAILY'], ['inf', '∞', 'PRACTICE']].map(([m, i, l]) => `<button class="${mode === m ? 'on' : ''}" onclick="setPTMode('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>`;
-  const st0 = _ptState(mode, pool), lim = st0 === 'limit', st = lim ? null : st0, tot = st ? st.ans.reduce((a, x) => a + x.pts, 0) : 0;
+  const tabs = `<div class="wd-modes">${[['daily', '📅', 'DAILY'], ['inf', '∞', 'PRACTICE'], ['duel', '⚔️', 'DUEL']].map(([m, i, l]) => `<button class="${mode === m ? 'on' : ''}" onclick="setPTMode('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>`;
+  const st0 = mode === 'duel' ? null : _ptState(mode, pool), lim = st0 === 'limit', st = lim ? null : st0, tot = st ? st.ans.reduce((a, x) => a + x.pts, 0) : 0;
   let body = `<div class="wd-top"><button class="wd-back" onclick="openGame('hub')" title="Back to Games">←</button><div class="wd-brand"><img src="icons/icon-192.png?v=3" alt="IMS"><span>POINT<em>LESS</em></span></div><div class="wd-meta">${mode === 'daily' ? `<span class="wd-pill">#${_wdDayNum()}</span>` : ''}<span class="wd-pill">🎯 ${tot} pts</span></div></div>
     ${(window._gamesLock || {}).pt ? `<div class="wd-lockbar">🔒 <b>Pointless is locked</b><span>${locked ? 'It\'ll open soon.' : 'Locked for players — you can still play.'}</span></div>` : ''}${tabs}`;
+  if (mode === 'duel') { el.innerHTML = `<div class="wd-wrap">${locked ? body + '<div class="wd-panel" style="text-align:center">Duels open when the game is unlocked.</div>' : await _pdBody(pool, body)}</div>`; return; }
+  clearInterval(window._pdPoll); clearInterval(window._pdCd);
   if (lim) body += `<div class="pt-arena"><div class="pt-qn">PRACTICE</div><div class="pt-qt">That's your <b>${PT_PRAC_MAX} practice rounds</b> for today</div><div class="pt-hint">More practice rounds at midnight (UK).</div></div>`;
   else if (!st) body += '<div class="alert alert-warning">Not enough driver data yet — an admin needs to run Build PaddockDle Data From .db.</div>';
   else if (window._ptReveal) body += _ptQHtml(st, pool, window._ptReveal.i, true);
@@ -31042,9 +31060,172 @@ async function renderPTGame(el) {
       ${mode === 'inf' ? (_ptPracUsed() < PT_PRAC_MAX ? `<button class="pt-go" onclick="ptAgain()">PLAY AGAIN · ${PT_PRAC_MAX - _ptPracUsed()} left today</button>` : '<div class="pt-hint" style="margin-top:12px">That was your last practice round today.</div>') : '<div class="pt-hint" style="margin-top:12px">New questions at midnight (UK).</div>'}</div>`; }
   if (mode === 'daily') body += (st && st.done || !window._ptLb) ? (window._ptLb = await _ptLeaderboardHtml()) : window._ptLb;
   el.innerHTML = `<div class="wd-wrap">${body}<div class="wd-info"><h3>How to play</h3><p><b>${PT_N} questions.</b> Name an IMS driver who fits. Points depend on their <b>IMS appearances</b> — the most-raced valid answer scores <b>100</b>, the least-raced score close to 0, and the very fewest are <b>POINTLESS 🎯 (0)</b>. Wrong answers and skips score 100. <b>Lowest total wins.</b></p>
-    <p>Pool: everyone on the market, plus reserves with 25+ appearances. Stats are all-time across every IMS season. <b>📅 Daily</b> — ${PT_N} new questions every day (no repeats until every question has been used). <b>∞ Practice</b> — up to ${PT_PRAC_MAX} rounds a day.</p>
+    <p>Pool: everyone on the market, plus reserves with 25+ appearances. Stats are all-time across every IMS season. <b>📅 Daily</b> — ${PT_N} new questions every day (no repeats until every question has been used). <b>∞ Practice</b> — up to ${PT_PRAC_MAX} rounds a day. <b>⚔️ Duel</b> — TV-show style: take turns, no repeating an answer already given, then a 3-answer Head-to-Head Final where a pointless answer wins outright. Win duels for <b>+5 IM$</b> (up to 25 a day).</p>
     <p style="margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(247,207,85,.08);border:1px solid rgba(247,207,85,.35);font-size:.84rem"><span class="imc"></span> <b>Earn IM$:</b> play the daily for <b>+10 IM$</b>, score <b>${PT_WIN} or under</b> for <b>another +10 IM$</b>. Log in to earn.</p></div></div>`;
   _ptAnim(); const inp = document.getElementById('pt-input'); if (inp && !('ontouchstart' in window)) inp.focus();
+}
+// ===== POINTLESS DUEL (TV-show style) =====
+// 3 rounds, players take turns (first player alternates). Round 1 & 2: one answer each. Round 3 is the
+// HEAD-TO-HEAD FINAL: three answers each. Nobody can give an answer already given in the same round.
+// Lowest total wins — but a POINTLESS answer in the final wins it outright (the jackpot), unless both find one.
+// Answers are stored per round as strings ('' = out of time / skipped; final = 'id1|id2|id3').
+const PD_ROUNDS = 3, PD_TURN = 30e3, PD_FINAL_TURN = 50e3, PD_GRACE = 12e3;
+const _pdKey = () => { try { return JSON.parse(localStorage.getItem('imsPTDuel') || 'null'); } catch (e) { return null; } };
+const _pdSet = (v) => { try { v ? localStorage.setItem('imsPTDuel', JSON.stringify(v)) : localStorage.removeItem('imsPTDuel'); } catch (e) {} };
+const _pdFirst = (r) => r % 2 === 0 ? 'host' : 'guest';
+// Whose turn is it? → { r, who } or null when all rounds are answered.
+function _pdTurn(l) { const h = l.hostAns || [], g = l.guestAns || [];
+  for (let r = 0; r < PD_ROUNDS; r++) { const f = _pdFirst(r), s = f === 'host' ? 'guest' : 'host', fa = f === 'host' ? h : g, sa = f === 'host' ? g : h;
+    if (fa.length <= r) return { r, who: f }; if (sa.length <= r) return { r, who: s }; } return null; }
+function _pdQs(pool) { const C = _ptCats(pool); if (C.length < 3) return null; const r = () => C[Math.floor(Math.random() * C.length)];
+  const big = C.filter(c => c.ids.length >= 8); const out = []; let g = 0;
+  while (out.length < 2 && g++ < 300) { const c = r(); if (!out.includes(c.id) && !out.some(x => _ptGroup(x) === _ptGroup(c.id) && ['t', 'n', 'dh', 'fs'].includes(_ptGroup(x)))) out.push(c.id); }
+  const fin = (big.length ? big : C).filter(c => !out.includes(c.id)); if (!fin.length) return null; out.push(fin[Math.floor(Math.random() * fin.length)].id); return out; }
+const _pdIds = (s) => String(s || '').split('|').filter(Boolean);
+function _pdPts(l, role, r, pool) { const S = _ptScores(l.qs[r], pool); if (!S) return { pts: 0, list: [] };
+  const raw = (l[role + 'Ans'] || [])[r]; if (raw == null) return null; const ids = _pdIds(raw), n = r === PD_ROUNDS - 1 ? 3 : 1;
+  const list = Array.from({ length: n }, (_, k) => { const id = ids[k] || ''; const v = id && S.sc[id] != null ? S.sc[id] : 100; return { id, pts: v, pz: !!id && S.sc[id] === 0 }; });
+  return { pts: list.reduce((a, x) => a + x.pts, 0), list }; }
+function _pdResult(l, pool) { const T = { host: 0, guest: 0 }, PZ = { host: 0, guest: 0 }, FZ = { host: false, guest: false };
+  ['host', 'guest'].forEach(ro => { for (let r = 0; r < PD_ROUNDS; r++) { const p = _pdPts(l, ro, r, pool); if (!p) continue; T[ro] += p.pts; p.list.forEach(x => { if (x.pz) { PZ[ro]++; if (r === PD_ROUNDS - 1) FZ[ro] = true; } }); } });
+  let w = '', why = '';
+  if (FZ.host !== FZ.guest) { w = FZ.host ? 'host' : 'guest'; why = 'jackpot'; }
+  else if (T.host !== T.guest) { w = T.host < T.guest ? 'host' : 'guest'; why = 'score'; }
+  else if (PZ.host !== PZ.guest) { w = PZ.host > PZ.guest ? 'host' : 'guest'; why = 'pointless'; }
+  else w = 'draw';
+  return { T, PZ, FZ, w, why }; }
+window.ptDuelCreate = async function(pub) {
+  await _clockSync(); if (window._ptLocked) return; const me = _wdMe(), qs = _pdQs(window._ptPool || []); if (!qs) return;
+  let code = _wdCode(); for (let i = 0; i < 4 && await dbGet('wordleDuels', code).catch(() => null); i++) code = _wdCode();
+  await dbSet('wordleDuels', code, { game: 'pt', public: !!pub, status: 'waiting', createdAt: _now(), hostSeen: _now(), qs, round: 1, hostAns: [], guestAns: [], turnAt: 0,
+    hostUid: me.uid, hostName: me.name, hostAvatar: me.avatar || '', hostColor: _myDuelColour(), guestUid: '', guestName: '', guestAvatar: '' });
+  _pdSet({ code, role: 'host' }); renderGames(); };
+window.ptDuelJoin = async function(code) {
+  await _clockSync(); if (window._ptLocked) return; const msg = document.getElementById('pd-msg'), say = (t) => { if (msg) msg.innerHTML = '<div class="alert alert-error">' + t + '</div>'; };
+  code = String(code || '').trim().toUpperCase(); if (!code) return say('Enter a lobby code.');
+  dbInvalidate('wordleDuels'); const l = await dbGet('wordleDuels', code).catch(() => null); if (!l || l.game !== 'pt') return say('No Pointless lobby with that code.');
+  const me = _wdMe(); if (l.hostUid === me.uid) { _pdSet({ code, role: 'host' }); return renderGames(); }
+  if (l.status !== 'waiting' || (l.guestUid && l.guestUid !== me.uid)) return say('That duel has already started.');
+  if (_now() - (l.hostSeen || l.createdAt || 0) > 30e3) return say('That lobby has closed — the host left.');
+  const st = _now() + 5300; await dbSet('wordleDuels', code, { guestUid: me.uid, guestName: me.name, guestAvatar: me.avatar || '', guestColor: _myDuelColour(), status: 'playing', startedAt: st, turnAt: st });
+  _pdSet({ code, role: 'guest' }); renderGames(); };
+function _pdLeave(silent) { const k = _pdKey(); if (!k) return; clearInterval(window._pdPoll); clearInterval(window._pdCd); _pdSet(null); const s = window._pdLive || {};
+  if (s.status === 'waiting' && k.role === 'host') dbDelete('wordleDuels', k.code).catch(() => {});
+  else if (s.status === 'playing' && !s.done) dbSet('wordleDuels', k.code, { [k.role + 'Left']: true, [k.role + 'Quit']: true, done: true }).catch(() => {});
+  else if (s.status === 'playing') dbSet('wordleDuels', k.code, { [k.role + 'Left']: true }).catch(() => {});
+  if (!silent) setTimeout(() => renderGames(), 150); }
+window.ptDuelLeave = () => { const s = window._pdLive || {}; if (s.status === 'playing' && !s.done) return customConfirm('Leave the duel? You\'ll forfeit and your opponent wins.', () => _pdLeave(false)); _pdLeave(false); };
+window.ptDuelRematch = async function() { const r = window._pdRef; if (r) { await dbSet('wordleDuels', r.code, { [r.role + 'Rematch']: true }); renderGames(); } };
+// Final round: build up to 3 picks locally, then lock in.
+window._pdPicks = [];
+window.pdSuggest = function(v) { const box = document.getElementById('pd-sugg'); if (!box) return; const q = _wdNorm(v); if (!q) { box.innerHTML = ''; return; }
+  const ban = new Set([...(window._pdBan || []), ...window._pdPicks]);
+  box.innerHTML = (window._ptPool || []).filter(p => _wdNorm(p.name).includes(q)).slice(0, 8).map(p => ban.has(p.id) ? `<button disabled title="Already given this round">${_wdAv(p, 26)}<span>${esc(p.name)}</span><small style="margin-left:auto;color:#f87171">taken</small></button>` : `<button onclick="pdPick('${esc(p.id)}')">${_wdAv(p, 26)}<span>${esc(p.name)}</span></button>`).join(''); };
+window.pdPickFirst = function() { const f = document.querySelector('#pd-sugg button:not([disabled])'); if (f) f.click(); };
+window.pdPick = function(id) { const r = window._pdRef; if (!r || !r.myTurn) return;
+  if (r.final) { if (window._pdPicks.length < 3 && !window._pdPicks.includes(id)) window._pdPicks.push(id); const i = document.getElementById('pd-input'); if (i) i.value = ''; const b = document.getElementById('pd-sugg'); if (b) b.innerHTML = ''; _pdPicksPaint(); if (window._pdPicks.length === 3) setTimeout(() => _pdSubmit(window._pdPicks.join('|')), 250); return; }
+  _pdSubmit(id); };
+window.pdUnpick = function(i) { window._pdPicks.splice(i, 1); _pdPicksPaint(); };
+window.pdLockIn = function() { if (window._pdPicks.length) _pdSubmit(window._pdPicks.join('|')); };
+function _pdPicksPaint() { const el = document.getElementById('pd-picks'); if (!el) return; const pool = window._ptPool || [];
+  el.innerHTML = [0, 1, 2].map(i => { const p = pool.find(x => x.id === window._pdPicks[i]); return p ? `<div class="pd-pick on" onclick="pdUnpick(${i})">${_wdAv(p, 26)}<span>${esc(p.name)}</span><i>✕</i></div>` : `<div class="pd-pick">Answer ${i + 1}</div>`; }).join(''); }
+async function _pdSubmit(val) { const r = window._pdRef; if (!r || window._pdBusy) return; window._pdBusy = true;
+  try { dbInvalidate('wordleDuels'); const l = await dbGet('wordleDuels', r.code).catch(() => null); if (!l || l.done) return; const t = _pdTurn(l); if (!t || t.who !== r.role || t.r !== r.r) return;
+    const oa = _pdIds((l[(r.role === 'host' ? 'guest' : 'host') + 'Ans'] || [])[t.r]); val = _pdIds(val).filter((id, i, A) => !oa.includes(id) && A.indexOf(id) === i).join('|'); // no repeats within a round
+    const a = (l[r.role + 'Ans'] || []).slice(); a[t.r] = val; const upd = { [r.role + 'Ans']: a, turnAt: _now() };
+    const nl = Object.assign({}, l, upd); if (!_pdTurn(nl)) upd.done = true; window._pdPicks = []; await dbSet('wordleDuels', r.code, upd); } finally { window._pdBusy = false; renderGames(); } }
+// Turn timer: the player on turn auto-submits when it runs out; the other player does it for them after a grace period (they left / lost signal).
+function _pdTimer(l, role, t) { clearInterval(window._pdCd); if (!t || l.done) return; const lim = t.r === PD_ROUNDS - 1 ? PD_FINAL_TURN : PD_TURN;
+  window._pdCd = setInterval(async () => { const left = (l.turnAt || 0) + lim - _now(), el = document.getElementById('pd-cd'), fl = document.getElementById('pd-cd-fill');
+    if (!document.getElementById('pd-duel')) { clearInterval(window._pdCd); return; }
+    if (el) el.textContent = Math.max(0, Math.ceil(left / 1000)); if (fl) { fl.style.width = Math.max(0, Math.min(100, left / lim * 100)) + '%'; fl.parentNode.classList.toggle('low', left < 8e3); }
+    const mine = t.who === role; if ((mine && left <= 0) || (!mine && left <= -PD_GRACE)) { clearInterval(window._pdCd);
+      if (mine) { _pdSubmit(t.r === PD_ROUNDS - 1 ? window._pdPicks.join('|') : ''); return; }
+      dbInvalidate('wordleDuels'); const l2 = await dbGet('wordleDuels', l.id).catch(() => null); const t2 = l2 && _pdTurn(l2);
+      if (t2 && t2.r === t.r && t2.who === t.who && !l2.done) { const a = (l2[t.who + 'Ans'] || []).slice(); a[t.r] = ''; const upd = { [t.who + 'Ans']: a, turnAt: _now() }; if (!_pdTurn(Object.assign({}, l2, upd))) upd.done = true; await dbSet('wordleDuels', l.id, upd); }
+      renderGames(); } }, 250); }
+// After each answer, the big TV tower counts down on both screens (once per answer).
+function _pdLatest(l) { let best = null; ['host', 'guest'].forEach(ro => (l[ro + 'Ans'] || []).forEach((v, r) => { const k = r * 2 + (_pdFirst(r) === ro ? 0 : 1); if (!best || k > best.k) best = { k, ro, r }; })); return best; }
+async function _pdBody(pool, top) {
+  const me = _wdMe(), mine = _pdKey(); let lob = null;
+  if (mine && mine.code) { dbInvalidate('wordleDuels'); lob = _duelPre(mine.code) || await dbGet('wordleDuels', mine.code).catch(() => null); if (!lob) _pdSet(null); }
+  if (!lob) { clearInterval(window._pdPoll); clearInterval(window._pdCd);
+    const all = await dbGetAll('wordleDuels', { fresh: true }).catch(() => []), now = _now();
+    const open = all.filter(l => l && l.game === 'pt' && l.public && l.status === 'waiting' && now - (l.hostSeen || l.createdAt || 0) < 30e3 && l.hostUid !== me.uid).sort((a, b) => b.createdAt - a.createdAt);
+    window._pdPoll = setInterval(() => { if (!document.getElementById('pd-lobbies')) { clearInterval(window._pdPoll); return; } if (!document.activeElement || document.activeElement.id !== 'pd-join-code') renderGames(); }, 6000);
+    return top + `<div class="wd-duel-grid">
+      <div class="wd-panel"><h4>⚔️ Start a Pointless duel</h4><p>Just like the TV show: take turns naming drivers — the fewer appearances, the fewer points. Two rounds, then the <b>Head-to-Head Final</b> with three answers each. Find a <b>pointless answer in the final</b> and you win outright.</p>
+        <div class="wd-btns"><button class="btn btn-primary" onclick="ptDuelCreate(true)">🌍 Public lobby</button><button class="btn btn-secondary" onclick="ptDuelCreate(false)">🔒 Private lobby</button></div>
+        <h4 style="margin-top:18px">🔑 Join with a code</h4>
+        <div class="wd-btns"><input id="pd-join-code" type="text" maxlength="5" placeholder="CODE" style="text-transform:uppercase;letter-spacing:4px;font-weight:800;max-width:140px" onkeydown="if(event.key==='Enter')ptDuelJoin(this.value)"><button class="btn btn-secondary" onclick="ptDuelJoin(document.getElementById('pd-join-code').value)">Join</button></div>
+        <div id="pd-msg" style="margin-top:8px"></div>${_duelPickerHtml()}</div>
+      <div class="wd-panel" id="pd-lobbies"><h4>🌍 Open lobbies <small>${open.length}</small></h4>
+        ${open.length ? open.map(l => `<div class="wd-lob"><span style="display:inline-flex;align-items:center;gap:8px;min-width:0">${_wdAv({ name: l.hostName || 'Player', photo: l.hostAvatar || '' }, 30)}<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(l.hostName || 'Player')}</span></span><small>${Math.max(1, Math.round((now - l.createdAt) / 60e3))} min ago</small><button class="btn btn-primary btn-sm" onclick="ptDuelJoin('${esc(l.id)}')">Join</button></div>`).join('') : '<p class="text-muted" style="margin:6px 0 0">No open lobbies — start one and wait for someone to join.</p>'}</div></div>`
+      + await _liveDuelsHtml(all, 'pt', 'h2hPt') + await _h2hBoardHtml('h2hPt', 'Pointless H2H records'); }
+  const role = mine.role, opp = role === 'host' ? 'guest' : 'host', round = lob.round || 1, rk = lob.id + '_p' + round;
+  const P = (r) => ({ uid: lob[r + 'Uid'], name: lob[r + 'Name'] || 'Player', av: lob[r + 'Avatar'] || '' }), meP = P(role), opP = P(opp);
+  const quit = lob.hostQuit ? 'host' : lob.guestQuit ? 'guest' : '', done = lob.status === 'playing' && (!!lob.done || !!quit), t = done ? null : _pdTurn(lob);
+  const R = _pdResult(lob, pool); let winner = done ? (quit ? (quit === 'host' ? 'guest' : 'host') : R.w) : '';
+  window._pdLive = { status: lob.status, done };
+  if (done && winner === role && !_wdLS('pdCoin_' + rk)) { _wdLS('pdCoin_' + rk, 1); _gameCoins('duel-pt', 5); setTimeout(() => { try { fireConfetti({ count: 220 }); } catch (e) {} }, 300); }
+  if (done && winner !== 'draw' && winner && role === (quit ? winner : 'host') && (lob.recR || 0) !== round && !_wdLS('pdRec_' + rk)) { _wdLS('pdRec_' + rk, 1); _duelRecordBoth(lob, round, winner, quit, 'ptW', 'ptL', 'h2hPt'); }
+  if (done && role === 'host' && lob.hostRematch && lob.guestRematch && !lob[opp + 'Left']) { const qs = _pdQs(pool);
+    if (qs) { const st = _now() + 1500; await dbSet('wordleDuels', lob.id, { qs, round: round + 1, hostAns: [], guestAns: [], done: false, hostQuit: false, guestQuit: false, hostRematch: false, guestRematch: false, hostLeft: false, guestLeft: false, startedAt: st, turnAt: st }); setTimeout(() => renderGames(), 200); } }
+  clearInterval(window._pdPoll); window._pdPollBusy = false;
+  window._pdPoll = setInterval(async () => { if (!document.getElementById('pd-duel') || window._pdPollBusy || window._pdBusy) { if (!document.getElementById('pd-duel')) clearInterval(window._pdPoll); return; }
+    window._pdPollBusy = true; try { dbInvalidate('wordleDuels'); dbGet._lastFailed = false; const l2 = await dbGet('wordleDuels', lob.id).catch(() => undefined); if (l2) window._duelPrefetch = { id: lob.id, at: Date.now(), d: l2 };
+      if (l2 === undefined || dbGet.readFailed()) return; if (!l2) { _pdSet(null); renderGames(); return; }
+      if (l2.status === 'waiting' && role === 'host' && _now() - (l2.hostSeen || 0) > 10e3) dbSet('wordleDuels', lob.id, { hostSeen: _now() }).catch(() => {}); else if (l2.status === 'playing' && !l2.done && _now() - (l2[role + 'Seen'] || 0) > 10e3) dbSet('wordleDuels', lob.id, { [role + 'Seen']: _now() }).catch(() => {});
+      const sig = (x) => [x.status, x.round || 1, JSON.stringify(x.hostAns || []), JSON.stringify(x.guestAns || []), !!x.done, x.guestName || '', !!x.hostRematch, !!x.guestRematch, !!x.hostLeft, !!x.guestLeft, !!x.hostQuit, !!x.guestQuit].join('|');
+      if (sig(l2) !== sig(lob)) await renderGames(); } finally { window._pdPollBusy = false; } }, 1000);
+  const V = `style="${_duelVars(lob, role)}"`;
+  const bigCard = (p, side, st) => `<div class="wd-fc ${side}"><div class="wd-fc-av">${_wdAv({ name: p.name, photo: p.av }, 96)}</div><b>${esc(p.name)}</b><div class="wd-fc-st">${st}</div></div>`;
+  if (lob.status === 'waiting') return top + `<div id="pd-duel" class="wd-face wait" ${V}>${bigCard(meP, 'l', '<span>Pointless duel</span>')}
+      <div class="wd-face-mid"><div class="wd-code">${esc(lob.id)}</div><small>${lob.public ? 'Public lobby' : 'Private — share this code'}</small></div>
+      <div class="wd-fc r empty"><div class="wd-fc-av"><span class="wd-spin big"></span></div><b>Waiting for opponent…</b><div class="wd-fc-st"><span>${lob.public ? 'Listed in public lobbies' : 'Send them the code'}</span></div></div></div>
+      <div style="text-align:center;margin-top:12px"><button class="btn btn-secondary" onclick="ptDuelLeave()">Cancel lobby</button></div>`;
+  const faceLeft = lob.startedAt ? lob.startedAt - _now() : 0;
+  if (faceLeft > 0 && !(lob.hostAns || []).length) { setTimeout(() => { if (document.getElementById('pd-duel')) renderGames(); }, faceLeft + 50);
+    const st2 = await _wdStatsFor([meP.uid, opP.uid]), h = _h2hVs(st2, meP.uid, opP.uid, 'h2hPt'), rec = (p) => { const x = st2[p.uid] || {}; return `<span><i>${x.ptW || 0}–${x.ptL || 0}</i>Duels W–L</span>`; };
+    clearInterval(window._wdTick); window._wdTick = setInterval(() => { const c = document.getElementById('pd-count'); if (!c) { clearInterval(window._wdTick); return; } const ms = lob.startedAt - _now(); c.textContent = ms > 0 ? Math.ceil(ms / 1000) : 'GO!'; }, 200);
+    return top + `<div id="pd-duel" class="wd-face go" ${V}>${bigCard(meP, 'l', rec(meP))}<div class="wd-face-mid"><span class="wd-vs-big">VS</span><div class="wd-h2h"><b style="color:${h[0] > h[1] ? '#4ade80' : h[0] < h[1] ? '#f87171' : '#9ca3af'}">${h[0]}–${h[1]}</b><small>Head to head</small></div><div id="pd-count" class="wd-count">${Math.ceil(faceLeft / 1000)}</div></div>${bigCard(opP, 'r', rec(opP))}</div>`; }
+  // ---- podiums (TV-style lecterns with running totals) ----
+  const pod = (p, ro) => { const on = t && t.who === ro; return `<div class="pd-pod${on ? ' on' : ''}${done && winner === ro ? ' win' : ''}${ro === role ? ' me' : ''}">${_wdAv({ name: p.name, photo: p.av }, 46)}<div class="pd-pn"><b>${esc(p.name)}</b><small>${ro === role ? 'You' : 'Opponent'}${on ? ' · answering' : ''}</small></div><div class="pd-tot">${R.T[ro]}</div></div>`; };
+  let html = top + `<div id="pd-duel" ${V}><div class="pd-pods">${pod(meP, role)}<div class="pd-vs">VS</div>${pod(opP, opp)}</div>`;
+  const rName = (r) => r === PD_ROUNDS - 1 ? 'HEAD-TO-HEAD FINAL' : 'ROUND ' + (r + 1);
+  if (!done && t) {
+    const S = _ptScores(lob.qs[t.r], pool), T = S.th || {}, myTurn = t.who === role, fin = t.r === PD_ROUNDS - 1, oppA = (lob[opp + 'Ans'] || [])[t.r];
+    window._pdBan = oppA != null ? _pdIds(oppA) : []; window._pdRef = { code: lob.id, role, r: t.r, myTurn, final: fin };
+    if (!myTurn) window._pdPicks = [];
+    const bg = T.img ? `<div class="pt-bg ${T.cls || ''}" style="background-image:url('${esc(T.img)}')"></div>` : T.txt ? `<div class="pt-bg txt">${esc(T.txt)}</div>` : T.emo ? `<div class="pt-bg emo">${T.emo}</div>` : '';
+    const L = _pdLatest(lob); let rev = '';
+    if (L) { const lp = _pdPts(lob, L.ro, L.r, pool), who = P(L.ro), key = lob.id + '|' + round + '|' + L.k, anim = window._pdAnimK !== key; window._pdAnimK = key;
+      const one = lp.list.length === 1 ? lp.list[0] : null, ap = one && pool.find(x => x.id === one.id), cls = lp.list.every(x => x.pz) ? 'zero' : lp.list.some(x => x.pz) ? 'zero' : lp.pts >= 100 * lp.list.length ? 'bad' : 'ok';
+      rev = `<div class="pd-last"><small>${esc(who.name)} — ${rName(L.r).toLowerCase()}</small><div class="pt-reveal ${cls}" style="margin:8px 0 0">
+        <div class="pt-tower"><div class="pt-fill" ${anim ? `data-to="${Math.min(100, Math.round(lp.pts / lp.list.length))}"` : `style="height:${Math.min(100, Math.round(lp.pts / lp.list.length))}%"`}></div><div class="pt-ticks">${'<i></i>'.repeat(10)}</div><span id="pt-ctr">${anim ? 100 : lp.pts}</span></div>
+        <div class="pt-who">${one ? (ap ? `<div class="wd-fc-av pt-av">${_wdAv(ap, 64)}</div><b>${esc(ap.name)}</b>` : '<div class="pt-av pt-noav">⏱</div><b>Out of time</b>') : lp.list.map(x => { const q = pool.find(y => y.id === x.id); return `<div class="pd-fl${x.pz ? ' z' : ''}"><span>${q ? esc(q.name) : '—'}</span><b>${x.pz ? '🎯 0' : x.pts}</b></div>`; }).join('')}
+        <div class="pt-tag">${lp.list.some(x => x.pz) ? '🎯 POINTLESS!' : lp.pts >= 100 * lp.list.length ? '✕ ' + lp.pts + ' POINTS' : lp.pts + ' POINTS'}</div></div></div></div>`; }
+    const lim = fin ? PD_FINAL_TURN : PD_TURN, left = Math.max(0, (lob.turnAt || 0) + lim - _now());
+    html += `<div class="pt-arena themed" style="${T.acc ? '--acc:' + T.acc : ''}">${bg}<div class="pt-qn">${rName(t.r)}</div><div class="pt-qt">${S.q}</div>
+      <div class="pt-hint">${fin ? 'Three answers each · a pointless answer wins the duel!' : `${S.list.length} valid answers`}${window._pdBan.length ? ' · already given: ' + window._pdBan.map(id => { const q = pool.find(x => x.id === id); return q ? esc(q.name) : ''; }).filter(Boolean).join(', ') : ''}</div>
+      <div class="pd-cd${left < 8e3 ? ' low' : ''}"><span id="pd-cd-fill" style="width:${left / lim * 100}%"></span></div><div class="pd-cdn"><b id="pd-cd">${Math.ceil(left / 1000)}</b>s · ${myTurn ? 'your turn' : esc(opP.name) + ' is answering…'}</div>
+      ${myTurn ? (fin ? `<div id="pd-picks" class="pd-picks"></div>` : '') + `<div class="wd-search" style="margin-top:12px"><span class="wd-search-ico">🔍</span><input id="pd-input" type="text" placeholder="${fin ? 'Add an answer…' : 'Name an IMS driver…'}" autocomplete="off" oninput="pdSuggest(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();pdPickFirst();}"><div id="pd-sugg" class="pd-sugg"></div></div>
+        ${fin ? '<button class="pt-go" onclick="pdLockIn()">LOCK IN</button>' : `<button class="pt-skip" onclick="pdPick('')">Pass · 100 pts</button>`}` : `<div class="pd-wait"><span class="wd-spin"></span></div>`}
+      ${rev}</div>`;
+    _pdTimer(lob, role, t);
+    setTimeout(() => { _pdPicksPaint(); _ptAnim(); const i = document.getElementById('pd-input'); if (i && !('ontouchstart' in window)) i.focus(); }, 0);
+  } else {
+    clearInterval(window._pdCd);
+    const msg = quit ? (winner === role ? `${esc(opP.name)} left — you win!` : 'You left the duel.') : winner === 'draw' ? 'It\'s a draw!' : winner === role ? (R.why === 'jackpot' ? '🎯 JACKPOT! A pointless answer in the final!' : 'You win!') : (R.why === 'jackpot' ? `${esc(opP.name)} hit the jackpot with a pointless answer` : `${esc(opP.name)} wins`);
+    const rows = Array.from({ length: PD_ROUNDS }, (_, r) => { const S = _ptScores(lob.qs[r], pool), a = _pdPts(lob, role, r, pool), b = _pdPts(lob, opp, r, pool);
+      const cell = (x) => !x ? '<span class="text-muted">—</span>' : x.list.map(y => { const q = pool.find(z => z.id === y.id); return `<div class="pd-fl${y.pz ? ' z' : ''}"><span>${q ? esc(q.name) : 'No answer'}</span><b>${y.pz ? '🎯 0' : y.pts}</b></div>`; }).join('');
+      return `<div class="pd-rr"><div class="pd-rq"><small>${rName(r)}</small>${S ? S.q : ''}</div><div class="pd-rc">${cell(a)}</div><div class="pd-rc">${cell(b)}</div></div>`; }).join('');
+    html += `<div class="pt-arena pt-end${winner === role ? ' good' : ''}"><div class="pt-qn">${winner === role ? 'WINNER' : winner === 'draw' ? 'DRAW' : 'FULL TIME'}</div><div class="pt-qt">${msg}</div>
+      <div class="pd-final"><div><small>You</small><b>${R.T[role]}</b></div><div><small>${esc(opP.name)}</small><b>${R.T[opp]}</b></div></div>
+      <div class="pd-rr pd-rh"><div></div><div>You</div><div>${esc(opP.name)}</div></div>${rows}
+      <div class="wd-btns" style="justify-content:center;margin-top:14px">${lob[opp + 'Left'] ? `<span class="text-muted">${esc(opP.name)} left</span>` : `<button class="pt-go" style="width:auto;padding:12px 22px;margin:0" onclick="ptDuelRematch()" ${lob[role + 'Rematch'] ? 'disabled' : ''}>${lob[role + 'Rematch'] ? (lob[opp + 'Rematch'] ? 'Starting…' : 'Waiting for opponent…') : (lob[opp + 'Rematch'] ? '🔁 Accept rematch' : '🔁 Rematch')}</button>`}<button class="btn btn-secondary" onclick="ptDuelLeave()">Leave</button></div></div>`;
+  }
+  return html + '</div>';
 }
 // ===== GAMES: IMS PADDOCKDLE GRID =====
 // 3×3 grid: every cell needs a market driver who fits BOTH its row and column category. Each driver
