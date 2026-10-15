@@ -27491,13 +27491,19 @@ window.renderBets = async function() {
     const _isSp = !!(upcoming && upcoming.isSprint), _swk = (r) => !!(window._isSprintWeekend && window._isSprintWeekend(r)) === _isSp; // sprint rounds score far more — only compare like with like
     const _s7 = (window._betArchives || []).find(a => Number(a.season) === 7); // Big haul: Season 7 + Season 8 only
     const _hAll = [...(_s7 ? (_s7.races || []) : []), ...(races || [])], _hSame = _hAll.filter(_swk);
-    const hist = (_hSame.length >= 3 ? _hSame : _hAll).map(r => Object.values(r.constructorPoints || {}).map(Number).filter(v => v > 0).sort((a, b) => b - a)).filter(v => v.length >= 2);
+    const _s7set = new Set(_s7 ? (_s7.races || []) : []);
+    const _hSrc = (_hSame.length >= 3 ? _hSame : _hAll), hist = _hSrc.map(r => Object.values(r.constructorPoints || {}).map(Number).filter(v => v > 0).sort((a, b) => b - a)).filter(v => v.length >= 2);
     // Big haul is a FIXED bar (155+ pts), priced from how often a round's top scorer actually reached it (same weekend type).
-    const _BH = 155.5, _bmxK = hist.filter(v => v[0] > _BH).length, _bmx = hist.length >= 3 ? { line: _BH, k: _bmxK, n: hist.length, po: (_bmxK + 1) / (hist.length + 2) } : null;
+    const _BH = 155.5; let _bmxK = hist.filter(v => v[0] > _BH).length;
+    // Season 7 (Williams' dominant year) counts a quarter; Season 8 counts fully — so this season takes over as it goes on.
+    const _bh = _hSrc.map(r => ({ top: Math.max(0, ...Object.values(r.constructorPoints || {}).map(Number)), s7: _s7set.has(r) })).filter(x => x.top > 0);
+    const _bw = _bh.reduce((a, x) => a + (x.s7 ? 0.25 : 1), 0), _bo = _bh.reduce((a, x) => a + (x.top > _BH ? (x.s7 ? 0.25 : 1) : 0), 0);
+    const _c = (f) => _bh.filter(f).length, _s7n = _c(x => x.s7), _s7k = _c(x => x.s7 && x.top > _BH), _s8n = _c(x => !x.s7), _s8k = _c(x => !x.s7 && x.top > _BH);
+    const _bmx = _bh.length >= 3 ? { line: _BH, k: _bmxK, n: hist.length, txt: 'S7 ' + _s7k + '/' + _s7n + ' · S8 ' + _s8k + '/' + _s8n, po: (_bo + 0.5) / (_bw + 2) } : null;
     _bSpec = [
       L && PW[L.id] != null ? ['ldw:' + L.id, 'Leader tops the round', esc(L.name) + ' <em>scores the most BOTT points</em>', Math.min(0.95, Math.max(0.03, PW[L.id]))] : null,
       L && Z && Z.id !== L.id ? ['gk:' + L.id + ':' + Z.id, 'Giant killer', esc(Z.name) + ' (last) <em>outscores</em> ' + esc(L.name) + ' (1st)', 1 / (1 + Math.pow(10, (L.elo - Z.elo) / 400))] : null,
-      _bmx ? ['bmx:' + _bmx.line, 'Big haul', 'A team scores <em>155+ pts</em> · happened in ' + _bmx.k + ' of ' + _bmx.n + ' ' + (_isSp ? 'sprint' : 'normal') + ' rounds (S7–S8)', _bmx.po] : null
+      _bmx ? ['bmx:' + _bmx.line, 'Big haul', 'A team scores <em>155+ pts</em> · ' + (_isSp ? 'sprint' : 'normal') + ' rounds hit it: ' + _bmx.txt + ' (S7 counts ¼)', _bmx.po] : null
     ].filter(Boolean); }
   const _rsS = (_rsDoc && _rsDoc.value && _rsDoc.value.sessions) || [];
   let _wmar = null, _ouMargin = null, _ouTime = null, _ouCons = {}, _ouDnf = null, _yn = [], _ouMore = [];
