@@ -27489,14 +27489,15 @@ window.renderBets = async function() {
     // More BOTT specials. Each row: [selKey, title, subtitle, P(yes)].
     const Z = st[st.length - 1], PW = (P && P.win) || {};
     const _isSp = !!(upcoming && upcoming.isSprint), _swk = (r) => !!(window._isSprintWeekend && window._isSprintWeekend(r)) === _isSp; // sprint rounds score far more — only compare like with like
-    const _hAll = [...(_prevArc ? (_prevArc.races || []) : []), ...(races || [])], _hSame = _hAll.filter(_swk);
+    const _s7 = (window._betArchives || []).find(a => Number(a.season) === 7); // Big haul: Season 7 + Season 8 only
+    const _hAll = [...(_s7 ? (_s7.races || []) : []), ...(races || [])], _hSame = _hAll.filter(_swk);
     const hist = (_hSame.length >= 3 ? _hSame : _hAll).map(r => Object.values(r.constructorPoints || {}).map(Number).filter(v => v > 0).sort((a, b) => b - a)).filter(v => v.length >= 2);
-    const _bmx = _ouFrom(hist.map(v => ({ v: v[0], w: 1 })), 1), _bgp = _ouFrom(hist.map(v => ({ v: v[0] - v[1], w: 1 })), 1);
+    // Big haul is a FIXED bar (155+ pts), priced from how often a round's top scorer actually reached it (same weekend type).
+    const _BH = 155.5, _bmx = hist.length >= 3 ? { line: _BH, po: (hist.filter(v => v[0] > _BH).length + 1) / (hist.length + 2) } : null;
     _bSpec = [
       L && PW[L.id] != null ? ['ldw:' + L.id, 'Leader tops the round', esc(L.name) + ' <em>scores the most BOTT points</em>', Math.min(0.95, Math.max(0.03, PW[L.id]))] : null,
       L && Z && Z.id !== L.id ? ['gk:' + L.id + ':' + Z.id, 'Giant killer', esc(Z.name) + ' (last) <em>outscores</em> ' + esc(L.name) + ' (1st)', 1 / (1 + Math.pow(10, (L.elo - Z.elo) / 400))] : null,
-      _bmx ? ['bmx:' + _bmx.line, 'Big haul', 'Round top scorer <em>over ' + _bmx.line + ' pts</em>', _bmx.po] : null,
-      _bgp ? ['bgap:' + _bgp.line, 'Runaway round', 'Top scorer wins the round by <em>over ' + _bgp.line + ' pts</em>', _bgp.po] : null
+      _bmx ? ['bmx:' + _bmx.line, 'Big haul', 'A team scores <em>155+ pts</em> this round', _bmx.po] : null
     ].filter(Boolean); }
   const _rsS = (_rsDoc && _rsDoc.value && _rsDoc.value.sessions) || [];
   let _wmar = null, _ouMargin = null, _ouTime = null, _ouCons = {}, _ouDnf = null, _yn = [], _ouMore = [];
