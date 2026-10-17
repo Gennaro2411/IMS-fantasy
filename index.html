@@ -5509,7 +5509,6 @@ window.bulkAddCalendar = async function(commit) {
     const existing = await dbGetAll('schedule').catch(()=>[]);
     await Promise.all(existing.map(s => dbDelete('schedule', s.id).catch(()=>{})));
     await Promise.all(parsed.map(p => dbAdd('schedule', { name: p.name, raceNum: p.raceNum, lockTime: p.lockTime, isSprint: p.isSprint || false })));
-    for (const p of parsed) if (p.lockTime > Date.now()) await window.ensureRaceDoc(p.name, p.raceNum);
     msg.innerHTML = `<div class="alert alert-success">✔ Schedule set — ${parsed.length} race(s) added.${errors.length?' ('+errors.length+' line(s) skipped)':''}</div>`;
     renderScheduleList();
   }, 'Replace schedule');
@@ -11493,8 +11492,7 @@ async function renderBriefingExtras() {
   // If there's no genuinely upcoming race (every round already scored / season over), show a single
   // placeholder and render none of the briefing sections — a briefing for a finished race is noise.
   try {
-    try { const _sc = (await dbGetAll('schedule').catch(()=>[])).filter(x => x && x.name && x.lockTime > Date.now()).sort((a,b)=>a.lockTime-b.lockTime)[0];
-      if (_sc) await window.ensureRaceDoc(_sc.name, _sc.raceNum); } catch(e) {}
+    // (No auto-creating the next round here — the admin adds it manually, so the last race's points stay on show until then.)
     const _racesUp = await dbGetAll('races', { fresh: true }).catch(()=>[]);
     // An all-zero round (added ahead of time through the manual form) counts as upcoming too —
     // and gets cleaned so the rest of the app stops treating it as a finished 0-point race.
