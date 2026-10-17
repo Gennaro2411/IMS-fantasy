@@ -15112,7 +15112,9 @@ window.importDbRound = async function(roundNo, trackName) {
     // The current season's schedule decides the name (so an old season's "Spain" race can never catch it).
     const sched = (await dbGetAll('schedule').catch(() => [])).filter(x => x && x.name);
     const k = window.trackKey ? window.trackKey(trackName) : low(trackName);
-    const m = sched.find(x => low(x.name) === low(trackName)) || sched.find(x => (window.trackKey ? window.trackKey(x.name) : low(x.name)) === k);
+    const tk = (n) => window.trackKey ? window.trackKey(n) : low(n), rn = parseInt(roundNo, 10);
+    // Same round number + same circuit first (Round 2 "Spain" → the schedule's Round 2 "Barcelona"), then same circuit, then exact name.
+    const m = sched.find(x => +x.raceNum === rn && tk(x.name) === k) || sched.find(x => tk(x.name) === k && low(x.name) !== low(trackName)) || sched.find(x => low(x.name) === low(trackName));
     if (m) trackName = m.name;
   } catch (e) { console.warn('track name mapping failed', e); }
   const msg = document.getElementById('db-import-msg');
@@ -15416,7 +15418,19 @@ window.importDbRound = async function(roundNo, trackName) {
     // and is now being re-imported with final results.
     const existingRaces = await dbGetAll('races');
     const trackNameNorm = trackName.toLowerCase().trim();
-    const existingRace = existingRaces.find(r => (r.name||'').toLowerCase().trim() === trackNameNorm);
+    const _tk = (n) => window.trackKey ? window.trackKey(n) : String(n || '').toLowerCase();
+    const _thisSeason = (r) => { const id = String(r.id || ''); return id.endsWith('_s' + IMPORT_SEASON) || (!/_s\d+$/.test(id) && (!r.season || +r.season === +IMPORT_SEASON)); };
+    // This season's race(s) for the same round + circuit. Prefer the one under the app's own name (e.g. "Barcelona")
+    // over one an earlier import made under the .db's name ("Spain"); fall back to an exact-name match.
+    const _cands = existingRaces.filter(r => _thisSeason(r) && +r.raceNum === parseInt(roundNo, 10) && _tk(r.name) === _tk(trackName));
+    const existingRace = _cands.find(r => (r.name || '').toLowerCase().trim() !== String(dbTrack).toLowerCase().trim()) || _cands[0]
+      || existingRaces.find(r => (r.name||'').toLowerCase().trim() === trackNameNorm);
+    // Name: the schedule's name if it mapped one, otherwise the existing race's name.
+    if (existingRace && existingRace.name && trackName.toLowerCase().trim() === String(dbTrack).toLowerCase().trim()) trackName = existingRace.name;
+    // Clean up a duplicate made by an earlier import under the .db's name (e.g. a separate "Spain" race next to "Barcelona").
+    try { const dupes = existingRace ? _cands.filter(r => r.id !== existingRace.id) : [];
+      for (const d of dupes) { await dbDelete('races', d.id); console.log('removed duplicate race', d.id, d.name); }
+      if (dupes.length) msg.insertAdjacentHTML('beforeend', '<div class="alert">🧹 Removed duplicate race: ' + dupes.map(d => esc(d.name)).join(', ') + ' (merged into ' + esc(trackName) + ')</div>'); } catch (e) { console.warn('dupe cleanup failed', e); }
     // Rebuild constructorPoints authoritatively from the FINAL driverPoints + each driver's
     // current team, rather than trusting the incrementally-accumulated constructorPoints object.
     // This guarantees the constructor total always matches what's actually in driverPoints for
