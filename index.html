@@ -5563,12 +5563,16 @@ window.sendManualNotification = async function() {
 // Sign-in lasts a month: the session is kept in localStorage AND a 30-day cookie (refreshed every time
 // the app opens), so a cleared localStorage or a fresh app launch doesn't force a new login.
 const _SESS_DAYS = 30;
-function _saveSession(u) {
+function _saveSession(u) { try { localStorage.setItem('imsHadSession', '1'); } catch (e) {}
   if (!u) return;
   try { localStorage.setItem('imsFantasyUser', JSON.stringify(u)); } catch (e) {}
   try { document.cookie = 'imsSess=' + encodeURIComponent(JSON.stringify(u)) + '; max-age=' + (_SESS_DAYS * 86400) + '; path=/; SameSite=Lax'; } catch (e) {}
 }
-function _clearSession() {
+// Why was I signed out? Each sign-out records a reason so a surprise logout can be traced next time.
+function _noteSignOut(why) { try { localStorage.setItem('imsLastSignOut', JSON.stringify({ why, at: Date.now() })); } catch (e) {} console.warn('[SIGN-OUT]', why); }
+function _clearSession(why) {
+  _noteSignOut(why || 'unknown');
+  try { localStorage.removeItem('imsHadSession'); } catch (e) {}
   try { localStorage.removeItem('imsFantasyUser'); } catch (e) {}
   try { document.cookie = 'imsSess=; max-age=0; path=/; SameSite=Lax'; } catch (e) {}
 }
@@ -5636,7 +5640,7 @@ function initAliveWatch() {
 function forceSignOutDeleted() {
   currentUser = null;
   window._myTeamDocId = null;
-  _clearSession();
+  _clearSession('account deleted — confirmed missing (alive check)');
   try { localStorage.removeItem('imsMyTeamDocId'); } catch(e){}
   try { document.getElementById('logout-btn').style.display = 'none'; } catch(e){}
   try { document.getElementById('settings-btn').style.display = 'none'; } catch(e){}
@@ -6989,7 +6993,7 @@ window.logoutUser = function() {
   customConfirm('Log out?', () => {
     currentUser = null;
     window._myTeamDocId = null;
-    _clearSession();
+    _clearSession('pressed Log out');
     try { localStorage.removeItem('imsMyTeamDocId'); } catch(e){}
     document.getElementById('logout-btn').style.display = 'none';
   try { document.getElementById('settings-btn').style.display = 'none'; } catch(e){}
@@ -7139,6 +7143,9 @@ async function init() {
   }
   const session = _readSession();
   try { window._myTeamDocId = localStorage.getItem('imsMyTeamDocId') || null; } catch(e){}
+  try { if (!session && localStorage.getItem('imsHadSession')) { _noteSignOut('saved login was missing when the app opened (device storage cleared)'); localStorage.removeItem('imsHadSession'); } } catch(e){}
+  // Signed out unexpectedly in the last day? Say why, so it can be reported.
+  try { const ls = JSON.parse(localStorage.getItem('imsLastSignOut') || 'null'); if (!session && ls && Date.now() - ls.at < 864e5 && ls.why !== 'pressed Log out' && !sessionStorage.getItem('imsSoShown')) { sessionStorage.setItem('imsSoShown', '1'); setTimeout(() => { if (typeof showToast === 'function') showToast('You were signed out: ' + ls.why, 'error'); }, 1500); } } catch(e){}
   if (session) {
     try {
       currentUser = JSON.parse(session);
@@ -7170,7 +7177,7 @@ async function init() {
         }
         if (!stillExists) {
           currentUser = null;
-          _clearSession();
+          _clearSession('account not found on app open (team doc 404)');
           try { document.getElementById('logout-btn').style.display = 'none'; } catch(e){}
           try { document.getElementById('settings-btn').style.display = 'none'; } catch(e){}
         }
@@ -20902,7 +20909,7 @@ window.resetLeague = function() {
     const seasonDoc = await dbGet('settings','seasonNumber').catch(()=>null);
     const currentSeason = seasonDoc ? (seasonDoc.value || 6) : 6;
     await dbSet('settings','seasonNumber',{value: currentSeason + 1});
-    currentUser=null; _clearSession();
+    currentUser=null; _clearSession('admin reset / wipe');
     renderAdminTeams();
     showPage('dashboard');
   });
@@ -24570,7 +24577,7 @@ window.settingsDeleteTeam = function() {
     }
     // Log out directly (no second confirm) and return to the login screen
     currentUser = null;
-    _clearSession();
+    _clearSession('deleted own account');
     try { document.getElementById('logout-btn').style.display = 'none'; } catch(e){}
     try { document.getElementById('settings-btn').style.display = 'none'; } catch(e){}
     closeSettingsModal();
