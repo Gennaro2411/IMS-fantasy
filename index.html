@@ -13571,7 +13571,7 @@ async function renderLeaderboard() {
       const chipBadges = (tcActive && !capName ? '<span style="font-size:.7rem;background:rgba(155,89,182,0.2);color:#ce93d8;border:1px solid #9b59b6;border-radius:4px;padding:1px 5px;margin-left:4px">🚀'+(tcCapName?' '+tcCapName:'')+'</span>' : '')
         + (gaActive ? '<span class="lb-cap fx ga" title="Guardian Angel — this driver\'s points are protected this round"><i>GA</i>'+esc(gaDriverName || 'Guardian Angel')+'<b>😇</b></span>' : '')
         + (wcActive ? '<span class="lb-cap fx wc" title="Wildcard — unlimited free transfers this round"><i>WC</i>Wildcard<b>🃏</b></span>' : '');
-      const trophies = (!isValueMode && raceTrophies[t.userId]) ? raceTrophies[t.userId].map(r =>
+      const trophies = false ? raceTrophies[t.userId].map(r => // round-win trophies live in the trophy cabinet only, not on the leaderboard
         '<span title="🏆 Highest score in '+esc(r.name)+' ('+r.pts+' pts)" style="font-size:.85rem;cursor:default">'+getRaceFlag(r.name)+'🏆</span>'
       ).join('') : '';
       return { capName, chipBadges, trophies };
