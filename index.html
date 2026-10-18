@@ -7372,11 +7372,15 @@ async function renderBriefingNudge() {
 async function renderBetOfWeek() {
   const box = document.getElementById('bet-of-week'); if (!box) return;
   try {
-    const [bets, teams] = await Promise.all([dbGetAll('bets').catch(() => []), dbGetAll('teams', { all: true }).catch(() => [])]);
+    const [bets, teams, races] = await Promise.all([dbGetAll('bets').catch(() => []), dbGetAll('teams', { all: true }).catch(() => []), dbGetAll('races').catch(() => [])]);
     const wk = Date.now() - 7 * 864e5;
+    // Only bets on the LATEST scored race — re-settling an older race (e.g. a verdict change) bumps settledAt and used to drag it back up here.
+    const _last = races.filter(r => r && r.driverPoints && Object.values(r.driverPoints).some(v => v > 0)).sort((a, b) => (b.raceNum || 0) - (a.raceNum || 0))[0];
+    const _lk = (n) => window.trackKey ? window.trackKey(n) : String(n || '').toLowerCase().trim();
+    const _onLast = (b) => !_last || (b.raceName && _lk(b.raceName) === _lk(_last.name));
     // Real players only: skip test accounts and bets with no matching team.
     const _real = new Set(teams.filter(t => t && t.userId && !t.testAccount).map(t => t.userId));
-    const best = bets.filter(b => b && _real.has(b.userId) && b.status === 'won' && (b.settledAt || 0) >= wk && (b.payout || 0) > 0)
+    const best = bets.filter(b => b && _real.has(b.userId) && b.status === 'won' && _onLast(b) && (_last || (b.settledAt || 0) >= wk) && (b.payout || 0) > 0)
       .sort((a, b) => (b.payout || 0) - (a.payout || 0) || (b.settledAt || 0) - (a.settledAt || 0))[0];
     if (!best) { box.style.display = 'none'; return; }
     const t = teams.find(x => x.userId === best.userId) || {}, name = t.playerName || t.teamName || 'A player';
