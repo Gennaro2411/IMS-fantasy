@@ -17427,7 +17427,7 @@ window.importRaceFromSheet = async function() {
   if (!existingRace) {
     const freeTransferUpdates = teams.map(async t => {
       const current = t.freeTransfers !== undefined ? t.freeTransfers : 1;
-      const hasNoTeam = !t.selections || Object.keys(t.selections).length === 0;
+      const hasNoTeam = !t.selections || !Object.values(t.selections).some(Boolean); // keys with empty picks still = no team
       if (hasNoTeam && current >= 8) return; // untouched fresh team — leave their 8 intact
       const newCount = Math.min(3, current + 1);
       await dbSet('teams', t.id, {...t, freeTransfers: newCount});
@@ -17496,6 +17496,7 @@ window.submitRaceResults = async function() {
   // Award 1 free transfer to every team (max 3 banked) and expire wildcard
   await Promise.all(teams.map(async t => {
     const current = t.freeTransfers !== undefined ? t.freeTransfers : 1;
+    const _noTeam = !t.selections || !Object.values(t.selections).some(Boolean);
     const newChips = {...(t.chips||{})};
     const wc = newChips.wildcard;
     if (wc) {
@@ -17503,7 +17504,7 @@ window.submitRaceResults = async function() {
       delete newChips.wildcard;
       newChips.wildcardUsed = true;
     }
-    await dbSet('teams', t.id, {...t, freeTransfers: Math.min(3, current + 1), chips: newChips});
+    await dbSet('teams', t.id, {...t, freeTransfers: (_noTeam && current >= 8) ? current : Math.min(3, current + 1), chips: newChips}); // fresh teams keep their starting 8
   }));
   document.getElementById('race-name-input').value='';
   document.getElementById('race-num-input').value='';
