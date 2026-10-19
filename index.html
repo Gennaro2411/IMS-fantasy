@@ -31607,7 +31607,10 @@ async function _tqdBody(pool, top) {
   const role = mine.role, opp = role === 'host' ? 'guest' : 'host', round = lob.round || 1, rk = lob.id + '_t' + round, qs = _tqdQs(lob);
   const P = (r) => ({ uid: lob[r + 'Uid'], name: lob[r + 'Name'] || 'Player', av: lob[r + 'Avatar'] || '' }), meP = P(role), opP = P(opp);
   const quit = lob.hostQuit ? 'host' : lob.guestQuit ? 'guest' : '', done = lob.status === 'playing' && (!!lob.done || !!quit);
-  const T = { host: _tqdTot(lob, 'host', qs), guest: _tqdTot(lob, 'guest', qs) };
+  // Scores only count once a question has been revealed — answering doesn't move the total (and can't give away the opponent's answer).
+  const _shownQ = done ? TQ_N : (lob.revQi === (lob.qi || 0) && lob.revAt ? (lob.qi || 0) + 1 : (lob.qi || 0));
+  const _tot = (ro) => (lob[ro + 'Ans'] || []).reduce((a, r, i) => a + (i < _shownQ && qs[i] ? _tqdPts(r, qs[i], i) : 0), 0);
+  const T = { host: _tot('host'), guest: _tot('guest') };
   const winner = done ? (quit ? (quit === 'host' ? 'guest' : 'host') : T.host === T.guest ? 'draw' : T.host > T.guest ? 'host' : 'guest') : '';
   window._tqdLive = { status: lob.status, done }; window._tqdRef = { code: lob.id, role };
   if (done && winner === role && !_wdLS('tqdCoin_' + rk)) { _wdLS('tqdCoin_' + rk, 1); _gameCoins('duel-tq', 5); setTimeout(() => { try { fireConfetti({ count: 220 }); } catch (e) {} }, 300); }
