@@ -31698,7 +31698,7 @@ const _cpLoadSt = () => { try { return JSON.parse(localStorage.getItem('imsCpDai
 const _cpSave = (st) => { try { localStorage.setItem('imsCpDaily', JSON.stringify(st)); } catch (e) {} };
 const _cpPracUsed = () => { return 0; /* Career Path practice is unlimited */ try { const o = JSON.parse(localStorage.getItem('imsCpPrac') || 'null'); return o && o.day === _wdDayKey() ? o.n : 0; } catch (e) { return 0; } };
 const _cpPracBump = () => { try { localStorage.setItem('imsCpPrac', JSON.stringify({ day: _wdDayKey(), n: _cpPracUsed() + 1 })); } catch (e) {} };
-const _cpDayNum = () => { const p = _wdDayKey().split('/'); return Math.max(0, Math.round((Date.UTC(+p[2], +p[1] - 1, +p[0]) - Date.UTC(2026, 9, 20)) / 864e5)); };
+const _cpDayNum = () => { const p = _wdDayKey().split('/'); return Math.max(1, Math.round((Date.UTC(+p[2], +p[1] - 1, +p[0]) - Date.UTC(2026, 9, 19)) / 864e5)); }; // 20 Oct 2026 = #1
 const _cpEligible = (pool) => pool.filter(p => (p.cp || []).length >= 3 && new Set(p.cp.map(x => _wdNorm(x[1]))).size >= 2);
 function _cpState(mode, pool) {
   const E = _cpEligible(pool); if (!E.length) return null;
