@@ -10792,24 +10792,14 @@ async function renderMyTeam() {
     const orderedR = races.filter(r => r.driverPoints && Object.keys(r.driverPoints).length && !r.excludeFromFantasy)
       .filter(r => (r.raceNum||0) >= (window.RESERVE_START_RACENUM || 0))
       .slice().sort((a,b) => (a.raceNum||0)-(b.raceNum||0) || (a.createdAt||0)-(b.createdAt||0));
-    let tokensSpent = 0;
-    orderedR.forEach(race => {
-      const snap = race.teamSnapshots && race.teamSnapshots[myTeam.id];
-      if (!snap) return;
-      const rsel = snap.selections || {};
-      DIVISIONS.forEach(div => {
-        const did = rsel[div]; if (!did) return;
-        if (driverRacedInDiv(race, did, div)) return;
-        const absent = (window._allDrivers||drivers).find(d => d.id === did);
-        if (!absent) return;
-        const res = window.findReserveForSlot(race, absent, div);
-        if (!res) return;
-        const counted = tokensSpent < total;
-        if (counted) tokensSpent++;
-        const resDrv = (window._allDrivers||drivers).find(d => d.id === res.reserveId);
-        allSwaps.push({ rn: race.raceNum || 0, race: raceName[race.id] || race.name, div, absent: absent, reserve: resDrv, reserveName: (resDrv && resDrv.name) || driverName[res.reserveId] || res.reserveName || '?', pts: res.pts, st: /DNF|DSQ|DNS/i.test(res.status || '') ? String(res.status).toUpperCase().match(/DNF|DSQ|DNS/)[0] : '', counted });
-      });
-    });
+    // Same source as scoring and the driver cards ("RESERVE IN …"): the reserve plan.
+    const _byR = (_resPlan && _resPlan.byRace) || {};
+    orderedR.forEach(race => { const _sv = race.teamSnapshots && race.teamSnapshots[myTeam.id] && race.teamSnapshots[myTeam.id].reserveSubs; const R = (_sv && Object.keys(_sv).length) ? _sv : _byR[race.id]; if (!R) return; // saved subs win, like the driver cards
+      DIVISIONS.forEach(div => { const x = R[div]; if (!x) return;
+        const absent = (window._allDrivers||drivers).find(d => d.id === x.absentId) || { id: x.absentId, name: driverName[x.absentId] || '?' };
+        const resDrv = (window._allDrivers||drivers).find(d => d.id === x.reserveId);
+        const stRaw = String((race.raceStatusByDivision && race.raceStatusByDivision[x.reserveId] && race.raceStatusByDivision[x.reserveId][div]) || '').toUpperCase();
+        allSwaps.push({ rn: race.raceNum || 0, race: raceName[race.id] || race.name, div, absent, reserve: resDrv, reserveName: (resDrv && resDrv.name) || driverName[x.reserveId] || x.reserveName || '?', pts: x.pts || 0, st: (stRaw.match(/DNF|DSQ|DNS/) || [''])[0], counted: true }); }); });
     // Tokens used = the reserve swaps actually found in the results (up to the round being viewed). The stored
     // token count could drift from the results (e.g. a deleted/merged race), leaving a 'used' token with no one on the bench.
     { const upTo = (_snapView && viewedRace) ? (viewedRace.raceNum || 0) : Infinity;
