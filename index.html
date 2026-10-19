@@ -31727,15 +31727,15 @@ async function _cpRecord(st) { const me = _wdMe(), id = _wdScoreId(me.uid), n = 
 async function _cpLeaderboardHtml() {
   const rows = (await _gmNoTest(await dbGetAll('wordleScores', { fresh: true }).catch(() => []))).filter(r => r && r.uid && (r.cpDays || 0) > 0), me = _wdMe().uid, day = _dailyKey();
   const avg = (r) => r.cpWins ? r.cpGuessSum / r.cpWins : 9;
-  rows.sort((a, b) => (b.cpWins / b.cpDays) - (a.cpWins / a.cpDays) || avg(a) - avg(b) || (b.cpDays - a.cpDays));
+  rows.sort((a, b) => (b.cpWins || 0) - (a.cpWins || 0) || avg(a) - avg(b) || (a.cpDays - b.cpDays));
   const mi = rows.findIndex(r => r.uid === me);
   const head = `<div class="ptb-row tqb-row ptb-head"><span>#</span><span>Player</span><span class="c">Today</span><span class="c">Solved</span><span class="c">Avg</span><span class="c">🔥</span></div>`;
   const line = (r, i) => { const k = (r.cpDayPlain === _wdDayKey() || r.cpDayPlain === _wdYesterdayKey()) ? (r.cpStreak || 0) : 0;
     return `<div class="ptb-row tqb-row${r.uid === me ? ' me' : ''}${i < 3 ? ' top' : ''}"><span class="pos">${['🥇', '🥈', '🥉'][i] || i + 1}</span><span class="nm">${esc(r.name || 'Player')}<small>${r.cpDays} played · ${r.cpFirst || 0} first-guess</small></span>
-      <span class="c">${r.cpDay === day ? (r.cpDayGuesses ? `<b>${r.cpDayGuesses}/${CP_MAX}</b>` : '<b style="color:#f87171">X</b>') : '<span class="text-muted">—</span>'}</span><span class="c best">${Math.round(r.cpWins / r.cpDays * 100)}%</span><span class="c">${r.cpWins ? avg(r).toFixed(1) : '—'}</span><span class="c" style="color:${k ? '#fb923c' : 'var(--muted)'};font-weight:${k ? 800 : 400}">${k}</span></div>`; };
-  return `<div class="wd-lb" style="margin-top:18px"><div class="wd-lb-h"><span>🏆 All-time leaderboard</span><small>Solve rate, then fewest guesses</small></div>
+      <span class="c">${r.cpDay === day ? (r.cpDayGuesses ? `<b>${r.cpDayGuesses}/${CP_MAX}</b>` : '<b style="color:#f87171">X</b>') : '<span class="text-muted">—</span>'}</span><span class="c best">${r.cpWins || 0}</span><span class="c">${r.cpWins ? avg(r).toFixed(1) : '—'}</span><span class="c" style="color:${k ? '#fb923c' : 'var(--muted)'};font-weight:${k ? 800 : 400}">${k}</span></div>`; };
+  return `<div class="wd-lb" style="margin-top:18px"><div class="wd-lb-h"><span>🏆 All-time leaderboard</span><small>Most solved, then fewest guesses</small></div>
     ${rows.length ? head + rows.slice(0, 15).map(line).join('') + (mi >= 15 ? '<div style="text-align:center;color:var(--muted)">⋯</div>' + line(rows[mi], mi) : '') : '<p class="text-muted" style="margin:6px 0 0">Nobody has played yet.</p>'}
-    <div class="hlb-key"><b>Today</b> guesses used · <b>Solved</b> share of days solved · <b>Avg</b> guesses when solved · 🔥 solve streak</div></div>`; }
+    <div class="hlb-key"><b>Today</b> guesses used · <b>Solved</b> career paths solved · <b>Avg</b> guesses when solved · 🔥 solve streak</div></div>`; }
 window.cpShare = function() { const mode = _cpGetMode(), st = _cpCur(); if (!st || !st.done) return;
   const sq = st.g.map(id => id === st.id ? '🟩' : '🟥').join('') + '⬛'.repeat(Math.max(0, CP_MAX - st.g.length));
   const txt = `IMS Career Path ${mode === 'daily' ? '#' + _cpDayNum() : '∞'} · ${st.won ? st.g.length + '/' + CP_MAX : 'X/' + CP_MAX}\n${sq}\nhttps://fantasy.ims-league.com`;
