@@ -10785,7 +10785,7 @@ async function renderMyTeam() {
     const _rsEnd = (_snapView && _pointsSnap && _pointsSnap.endStats && _pointsSnap.endStats.reserveTokensLeft != null) ? _pointsSnap.endStats.reserveTokensLeft : null;
     const _rs0 = _rsEnd != null ? null : (_snapView && _pointsSnap && _pointsSnap.stats && _pointsSnap.stats.reserveTokensLeft != null) ? _pointsSnap.stats.reserveTokensLeft : null;
     const _usedThere = _rs0 != null ? Object.keys((_pointsSnap && _pointsSnap.reserveSubs) || ((_resPlan.byRace || {})[viewedRace.id]) || {}).length : 0;
-    const left = _rsEnd != null ? _rsEnd : _rs0 != null ? Math.max(0, _rs0 - _usedThere) : _resPlan.tokensLeft, total = window.RESERVE_TOKENS_PER_SEASON;
+    let left = _rsEnd != null ? _rsEnd : _rs0 != null ? Math.max(0, _rs0 - _usedThere) : _resPlan.tokensLeft; const total = window.RESERVE_TOKENS_PER_SEASON;
     const raceName = {}; races.forEach(r => { raceName[r.id] = r.name; });
     const driverName = {}; drivers.forEach(d => { driverName[d.id] = d.name; });
     const allSwaps = [];
@@ -10807,9 +10807,13 @@ async function renderMyTeam() {
         const counted = tokensSpent < total;
         if (counted) tokensSpent++;
         const resDrv = (window._allDrivers||drivers).find(d => d.id === res.reserveId);
-        allSwaps.push({ race: raceName[race.id] || race.name, div, absent: absent, reserve: resDrv, reserveName: (resDrv && resDrv.name) || driverName[res.reserveId] || res.reserveName || '?', pts: res.pts, counted });
+        allSwaps.push({ rn: race.raceNum || 0, race: raceName[race.id] || race.name, div, absent: absent, reserve: resDrv, reserveName: (resDrv && resDrv.name) || driverName[res.reserveId] || res.reserveName || '?', pts: res.pts, counted });
       });
     });
+    // Tokens used = the reserve swaps actually found in the results (up to the round being viewed). The stored
+    // token count could drift from the results (e.g. a deleted/merged race), leaving a 'used' token with no one on the bench.
+    { const upTo = (_snapView && viewedRace) ? (viewedRace.raceNum || 0) : Infinity;
+      left = Math.max(0, total - allSwaps.filter(x => x.counted && x.rn <= upTo).length); }
     const subs = allSwaps.slice().reverse();
     const DIV_HUES_RES = { D0:'#ffc800', D1:'#e8002d', D2:'#9b6fd4', D3:'#27f4d2', D4:'#2ecc71', E3:'#2ecc71' };
     const pips = Array.from({length: total}, (_, i) => `<span style="width:12px;height:12px;border-radius:50%;display:inline-block;${i < left ? 'background:#27f4d2;box-shadow:0 0 7px rgba(39,244,210,0.7)' : 'background:var(--surface2);border:1px solid var(--border)'}"></span>`).join('');
@@ -10845,7 +10849,7 @@ async function renderMyTeam() {
     }).join('') : '<div style="font-size:.8rem;color:var(--muted);padding:10px;text-align:center;background:var(--surface2);border-radius:10px">No reserves have filled in for your team yet.<br><span style="font-size:.72rem">If one of your drivers misses their race, whoever drove their seat scores for you — costing one token.</span></div>';
     // The bench: one seat per token. Each reserve who has stepped in (and used a token) sits on it.
     const _usedN = Math.max(0, total - left);
-    const _sitters = allSwaps.filter(x => x.counted).slice(0, _usedN);
+    const _sitters = allSwaps.filter(x => x.counted && x.rn <= ((_snapView && viewedRace) ? (viewedRace.raceNum || 0) : Infinity)).slice(0, _usedN);
     const benchHtml = `<div class="rb-wrap" title="${_usedN} of ${total} reserve tokens used">
       <div class="rb-seats">${Array.from({length: total}, (_, i) => {
         const sw = _sitters[i];
