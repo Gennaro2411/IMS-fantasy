@@ -340,6 +340,8 @@
   #page-my-team .mt-hero-photo.on{opacity:.55}
   #page-my-team .mt-hero-photo-l{position:absolute;inset:0;background:center/cover no-repeat;opacity:0;transition:opacity 1.6s ease;transform:scale(1.04)}
   #page-my-team .mt-hero-photo-l.on{opacity:1;animation:mtKen 9s ease-out both}
+  #page-my-team .mt-hero-photo-l.mt-blur{filter:blur(22px) saturate(1.2) brightness(.8);transform:scale(1.2);animation:none}
+  #page-my-team .mt-hero-photo-l.mt-fit{left:50%;right:auto;background-size:cover;animation:none;transform:translateX(-50%);-webkit-mask-image:linear-gradient(90deg,transparent,#000 30%,#000 70%,transparent);mask-image:linear-gradient(90deg,transparent,#000 30%,#000 70%,transparent)}
   @keyframes mtKen{from{transform:scale(1.12)}to{transform:scale(1.02)}}
   #page-my-team .mt-hero-pts::after{content:'';position:absolute;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 45% 70% at 50% 52%,rgba(8,8,14,.78),rgba(8,8,14,.35) 60%,transparent 85%)}
   #page-my-team .mt-hero-pts .mt-lbl,#page-my-team .mt-hero-pts .mt-tile-sub{text-shadow:0 1px 3px #000,0 0 8px rgba(0,0,0,.9);color:#d6d6ea!important}
@@ -9483,7 +9485,7 @@ window._wikiPic = async function(title) {
 window._F1_FILES = {"Singapore_Grand_Prix": ["1_singapore_f1_night_race_2012_city_skyline.jpg", "1_singapore_f1_night_race_2012_city_skyline.jpg", "Aerial_view_of_Marina_Bay_and_Central_Business_District,_Singapore,_at_night_-_20121010.jpg", "Singapore_(SG),_Marina_Bay,_Night_View_--_2019_--_4682.jpg"], "Spanish_Grand_Prix": ["F1_Circuit_de_Catalunya_-_Tribuna.jpg", "2018_Spanish_Grand_Prix_Alonso_(12).jpg"], "United_States_Grand_Prix": ["Circuit_of_the_Americas,_Austin,_TX_(30066328424).jpg", "2021_US_GP,_Tsunoda.jpg", "2018_US_Grand_Prix_at_the_Circuit_of_the_Americas.jpg"], "Mexico_City_Grand_Prix": ["Vista_aérea_del_Autódromo_Hermanos_Rodríguez_02.jpg"], "Chinese_Grand_Prix": ["2026_Chinese_GP_-_Mercedes_-_George_Russell_-_Qualifying.jpg", "Lando_Norris,Chinese_GP_2024.jpg"], "Abu_Dhabi_Grand_Prix": ["Yas_Marina_circuit_by_night.jpg", "Yas_Marina_Circuit_+_Ferrari_World_-Abu_Dhabi.jpg"], "British_Grand_Prix": ["Romain_Grosjean,_Haas-Ferrari_VF-16,_2016_British_Grand_Prix,_Silverstone,_8th_July_(27687351553).jpg"]};
 // Your own photos in the repo (track-photos/) — these take priority as the F1 shot for that GP.
 window._PHOTO_POS = { 'track-photos/singapore-3.jpg': 'center 82%', 'track-photos/singapore-2.jpg': 'center 70%', 'track-photos/singapore-1.jpg': 'center 65%', 'track-photos/barcelona-1.jpg': 'center 60%', 'track-photos/cota-1.jpg': 'center 62%', 'track-photos/cota-2.jpg': 'center 45%' };
-window._LOCAL_F1 = { Singapore_Grand_Prix: ['track-photos/singapore-1.jpg','track-photos/singapore-2.jpg','track-photos/singapore-3.jpg'], Spanish_Grand_Prix: ['track-photos/barcelona-1.jpg'], United_States_Grand_Prix: ['track-photos/cota-1.jpg'] }; // cota-2 is too tall/zoomed for the wide banner
+window._LOCAL_F1 = { Singapore_Grand_Prix: ['track-photos/singapore-1.jpg','track-photos/singapore-2.jpg','track-photos/singapore-3.jpg'], Spanish_Grand_Prix: ['track-photos/barcelona-1.jpg'], United_States_Grand_Prix: ['track-photos/cota-1.jpg','track-photos/cota-2.jpg'] };
 window._f1Pics = async function(gpTitle) {
   // Hand-picked Wikimedia Commons photos of F1 cars at each Grand Prix (served via Special:FilePath).
   const own = window._LOCAL_F1[gpTitle] || [];
@@ -9515,7 +9517,16 @@ window._fillPlacePhotos = async function(root) {
   if (!url || !el.isConnected) return;
   const put = (u, retry) => {
     const im = new Image();
-    im.onload = () => { const d = document.createElement('div'); d.className = 'mt-hero-photo-l on'; d.style.backgroundImage = 'url("' + u + '")'; d.style.backgroundPosition = (window._PHOTO_POS && window._PHOTO_POS[u]) || 'center'; el.appendChild(d); el.classList.add('on'); };
+    im.onload = () => {
+      // Small photo on a wide banner (e.g. PC): stretching it to fill looks blurry and zoomed. Instead show a soft
+      // blurred copy filling the banner, with the photo itself at its natural proportions in the middle, edges faded.
+      const W = el.clientWidth || 0, H = el.clientHeight || 0, small = W && im.naturalWidth && (im.naturalWidth < W * 0.85 || (H && im.naturalWidth / im.naturalHeight * H < W * 0.85));
+      if (small) {
+        const b = document.createElement('div'); b.className = 'mt-hero-photo-l on mt-blur'; b.style.backgroundImage = 'url("' + u + '")'; el.appendChild(b);
+        const f = document.createElement('div'); f.className = 'mt-hero-photo-l on mt-fit'; f.style.backgroundImage = 'url("' + u + '")';
+        f.style.width = Math.round(Math.min(W * 0.6, Math.max(W * 0.34, (H || 160) * (im.naturalWidth / im.naturalHeight) * 1.8))) + 'px'; f.style.backgroundPosition = (window._PHOTO_POS && window._PHOTO_POS[u]) || 'center'; el.appendChild(f);
+      } else { const d = document.createElement('div'); d.className = 'mt-hero-photo-l on'; d.style.backgroundImage = 'url("' + u + '")'; d.style.backgroundPosition = (window._PHOTO_POS && window._PHOTO_POS[u]) || 'center'; el.appendChild(d); }
+      el.classList.add('on'); };
     // If a photo fails to load, fall back to one of the city photos so the box is never empty.
     im.onerror = async () => { if (!retry) return; const c = (await Promise.all(city.map(window._wikiPic))).filter(x => x && x !== u); if (c.length) put(c[Math.floor(Math.random() * c.length)], false); };
     im.src = u;
