@@ -12959,8 +12959,10 @@ window.findReserveForSlot = function(race, absentDriver, div) {
     // home division happens to be the same one.
     const cand = dmap[did];
     if (cand && cand.division === div && normTeam(cand.team) === teamName) return; // team's own regular
-    const pts = (race.driverPointsByDivision[did] && race.driverPointsByDivision[did][div] !== undefined)
+    let pts = (race.driverPointsByDivision[did] && race.driverPointsByDivision[did][div] !== undefined)
       ? race.driverPointsByDivision[did][div] : null;
+    // A reserve who scored 0 may have no points entry at all — they still raced if they have a finishing position / race status here.
+    if (pts === null && ((race.positionByDivision && race.positionByDivision[did] && race.positionByDivision[did][div] != null) || (race.raceStatusByDivision && race.raceStatusByDivision[did] && race.raceStatusByDivision[did][div] != null))) pts = 0;
     if (pts === null) return;                                              // must have actually raced this div (0 pts is fine — they still took the seat)
     // Rank: a real reserve / driver from another division beats a driver whose own seat is in this
     // division (that's usually the absent driver's teammate with a stale team name, not a stand-in).
