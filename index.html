@@ -2437,6 +2437,8 @@
     @media (max-width:640px){.tq-opts{grid-template-columns:1fr}}
     .tq-opt.sel{background:rgba(125,211,252,.18);border-color:#7dd3fc}.tqd-tag{font-style:normal;margin-left:auto;font-size:.6rem;font-weight:900;padding:2px 6px;border-radius:6px;background:#7dd3fc;color:#04121f}.tqd-tag.op{background:#fbbf24;color:#1a1300;margin-left:4px}.tq-opt .tqd-tag.me+.tqd-tag.op{margin-left:4px}
     .tqd-bar{height:4px;border-radius:2px;background:rgba(255,255,255,.08);margin-top:5px;overflow:hidden}.tqd-bar i{display:block;height:100%;background:linear-gradient(90deg,#38bdf8,#7dd3fc);transition:width .6s}
+    .tqd-gain{position:absolute;right:calc(100% + 8px);top:50%;transform:translateY(-50%);font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.3rem;color:#4ade80;text-shadow:0 0 12px rgba(74,222,128,.6);white-space:nowrap;animation:tqdGain 1.2s ease-out both}.tqd-gain.zero{color:#f87171;text-shadow:none}.pd-tot{position:relative}
+    @keyframes tqdGain{0%{opacity:0;transform:translate(10px,-50%) scale(.6)}25%{opacity:1;transform:translate(0,-50%) scale(1.25)}45%{transform:translate(0,-50%) scale(1)}100%{opacity:1;transform:translate(0,-50%)}}
     .ptb-row{display:grid;grid-template-columns:28px minmax(0,1fr) 48px 52px 34px 38px;gap:4px;align-items:center;padding:8px;font-size:.84rem;border-bottom:1px solid var(--border)}.ptb-head{font-size:.62rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
     .ptb-row .c{text-align:center}.ptb-row .pos{font-weight:700;color:var(--muted)}.ptb-row .nm{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ptb-row .nm small{display:block;font-weight:400;font-size:.68rem;color:var(--muted)}
     .ptb-row .best{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.1rem;color:#7dd3fc}.ptb-row.top .best{color:#fde047}.ptb-row .pz{color:#fde047;font-weight:700}.ptb-row.me{background:rgba(56,189,248,.12);border-radius:8px}
@@ -31600,8 +31602,9 @@ async function _tqdBody(pool, top) {
     const st2 = await _wdStatsFor([meP.uid, opP.uid]), h = _h2hVs(st2, meP.uid, opP.uid, 'h2hTq'), rec = (p) => { const x = st2[p.uid] || {}; return `<span><i>${x.tqW || 0}–${x.tqL || 0}</i>Duels W–L</span>`; };
     clearInterval(window._wdTick); window._wdTick = setInterval(() => { const c = document.getElementById('tqd-count'); if (!c) { clearInterval(window._wdTick); return; } const ms = lob.qStart - _now(); c.textContent = ms > 0 ? Math.ceil(ms / 1000) : 'GO!'; }, 200);
     return top + `<div id="tqd-duel" class="wd-face go" ${V}>${bigCard(meP, 'l', rec(meP))}<div class="wd-face-mid"><span class="wd-vs-big">VS</span><div class="wd-h2h"><b style="color:${h[0] > h[1] ? '#4ade80' : h[0] < h[1] ? '#f87171' : '#9ca3af'}">${h[0]}–${h[1]}</b><small>Head to head</small></div><div id="tqd-count" class="wd-count">${Math.ceil(faceLeft / 1000)}</div></div>${bigCard(opP, 'r', rec(opP))}</div>`; }
-  const mx = Math.max(1, T.host, T.guest);
-  const pod = (p, ro) => `<div class="pd-pod${done && winner === ro ? ' win' : ''}${ro === role ? ' me' : ''}">${_wdAv({ name: p.name, photo: p.av }, 46)}<div class="pd-pn"><b>${esc(p.name)}</b><small>${ro === role ? 'You' : 'Opponent'}${!done && (lob[ro + 'Ans'] || [])[qi] ? ' · ⚡ answered' : ''}</small><div class="tqd-bar"><i style="width:${Math.round(T[ro] / mx * 100)}%"></i></div></div><div class="pd-tot">${T[ro].toLocaleString()}</div></div>`;
+  const mx = Math.max(1, T.host, T.guest), _qi0 = lob.qi || 0, _rev0 = !done && lob.revQi === _qi0 && lob.revAt, _Q0 = qs[_qi0];
+  const _gain = (ro) => { if (!_rev0 || !_Q0) return ''; const g = _tqdPts((lob[ro + 'Ans'] || [])[_qi0], _Q0, _qi0); return `<span class="tqd-gain${g ? '' : ' zero'}">${g ? '+' + g : '+0'}</span>`; };
+  const pod = (p, ro) => `<div class="pd-pod${done && winner === ro ? ' win' : ''}${ro === role ? ' me' : ''}">${_wdAv({ name: p.name, photo: p.av }, 46)}<div class="pd-pn"><b>${esc(p.name)}</b><small>${ro === role ? 'You' : 'Opponent'}${!done && (lob[ro + 'Ans'] || [])[qi] ? ' · ⚡ answered' : ''}</small><div class="tqd-bar"><i style="width:${Math.round(T[ro] / mx * 100)}%"></i></div></div><div class="pd-tot">${_gain(ro)}${T[ro].toLocaleString()}</div></div>`;
   let html = top + `<div id="tqd-duel" ${V}><div class="pd-pods">${pod(meP, role)}<div class="pd-vs">VS</div>${pod(opP, opp)}</div>`;
   if (!done) { const Q = qs[qi]; if (!Q) return html + '</div>'; window._tqdQiShown = qi;
     const myRaw = (lob[role + 'Ans'] || [])[qi], opRaw = (lob[opp + 'Ans'] || [])[qi], rev = lob.revQi === qi && lob.revAt;
@@ -31612,7 +31615,7 @@ async function _tqdBody(pool, top) {
       <div class="tq-opts">${Q.opts.map((o, i) => { const cls = rev ? (i === Q.a ? ' ok' : (i === myPick ? ' bad' : ' dim')) : (i === myPick ? ' sel' : myRaw ? ' dim' : '');
         const tags = rev ? (i === myPick ? '<em class="tqd-tag me">YOU</em>' : '') + (i === opPick ? `<em class="tqd-tag op">${esc(String(opP.name).slice(0, 10))}</em>` : '') : '';
         return `<button class="tq-opt${cls}" ${rev || myRaw || left <= 0 ? 'disabled' : ''} onclick="tqdAnswer(${i})"><i>${'ABCD'[i]}</i><span>${esc(o)}</span>${tags}</button>`; }).join('')}</div>
-      ${rev ? `<div class="tq-why">${myPick === Q.a ? `✅ +${_tqdPts(myRaw, Q, qi)}` : '❌ +0'} · ${esc(opP.name)} ${opPick === Q.a ? '✅ +' + _tqdPts(opRaw, Q, qi) : '❌ +0'} <span>· ${esc(Q.why)}</span></div>` : ''}</div>`;
+      ${rev ? `<div class="tq-why">${myPick === Q.a ? '✅ Correct!' : '❌ Not quite.'} <span>${esc(Q.why)}</span></div>` : ''}</div>`;
     clearInterval(window._tqdCd);
     if (!rev) { if (!myRaw && qi === 0 && _now() - (lob.qStart || 0) < 1500) _ptStingOnce('tqd|' + lob.id + '|' + round);
       window._tqdCd = setInterval(() => { const ms = Math.max(0, (lob.qStart || 0) + TQD_T - _now()), c = document.getElementById('tqd-cd'), f = document.getElementById('tqd-fill'); if (!c) { clearInterval(window._tqdCd); return; }
