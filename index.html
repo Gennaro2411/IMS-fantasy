@@ -10795,7 +10795,8 @@ async function renderMyTeam() {
       .slice().sort((a,b) => (a.raceNum||0)-(b.raceNum||0) || (a.createdAt||0)-(b.createdAt||0));
     // Same source as scoring and the driver cards ("RESERVE IN …"): the reserve plan.
     const _byR = (_resPlan && _resPlan.byRace) || {};
-    orderedR.forEach(race => { const _sv = race.teamSnapshots && race.teamSnapshots[myTeam.id] && race.teamSnapshots[myTeam.id].reserveSubs; const R = (_sv && Object.keys(_sv).length) ? _sv : _byR[race.id]; if (!R) return; // saved subs win, like the driver cards
+    // Every scored round (not just ones after the reserve start cut-off) — a sub saved on the round is shown wherever it came from.
+    races.filter(r => r.driverPoints && Object.keys(r.driverPoints).length).slice().sort((a,b) => (a.raceNum||0)-(b.raceNum||0) || (a.createdAt||0)-(b.createdAt||0)).forEach(race => { const _sv = race.teamSnapshots && race.teamSnapshots[myTeam.id] && race.teamSnapshots[myTeam.id].reserveSubs; const R = (_sv && Object.keys(_sv).length) ? _sv : _byR[race.id]; if (!R) return; // saved subs win, like the driver cards
       DIVISIONS.forEach(div => { const x = R[div]; if (!x) return;
         const absent = (window._allDrivers||drivers).find(d => d.id === x.absentId) || { id: x.absentId, name: driverName[x.absentId] || '?' };
         const resDrv = (window._allDrivers||drivers).find(d => d.id === x.reserveId);
