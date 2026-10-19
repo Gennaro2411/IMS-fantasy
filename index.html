@@ -30565,7 +30565,7 @@ function _wdEndDuel(beacon) {
     else dbSet('wordleDuels', k.code, upd).catch(() => {});
   }
 }
-window._wdAutoLeave = () => { _wdEndDuel(false); if (typeof _cnEndDuel === 'function') _cnEndDuel(false); if (typeof _gdEnd === 'function') _gdEnd(false); };
+window._wdAutoLeave = () => { if (typeof _tqdLeave === 'function') _tqdLeave(true); if (typeof _pdLeave === 'function') _pdLeave(true); _wdEndDuel(false); if (typeof _cnEndDuel === 'function') _cnEndDuel(false); if (typeof _gdEnd === 'function') _gdEnd(false); };
 // ---- Anti-cheat: an attempt in progress can't be left without giving it up ----
 const _WD_MODE_NAME = { daily: 'Daily', inf: 'Infinite', duel: 'Duel', grid: 'Grid', gridduel: 'Grid duel' };
 function _wdActiveAttempt() {
@@ -30625,6 +30625,21 @@ document.addEventListener('visibilitychange', () => {
 });
 window.addEventListener('pagehide', () => _wdEndDuel(true));
 window.addEventListener('pagehide', () => _cnEndDuel(true));
+// Trivia + Pointless duels: leaving the page / switching app / closing the tab forfeits a live duel (keepalive write so it lands even as the page closes).
+function _gmDuelBeaconQuit(key, setKey, live) { const k = key(); if (!k || !k.code) return false; const s = live || {};
+  const url = 'https://firestore.googleapis.com/v1/projects/' + PROJECT_ID + '/databases/(default)/documents/wordleDuels/' + k.code + '?key=' + API_KEY;
+  try { if (s.status === 'waiting' && k.role === 'host') { fetch(url, { method: 'DELETE', keepalive: true }); setKey(null); return false; }
+    if (s.status === 'playing' && !s.done) { const f = objToFsFields({ [k.role + 'Left']: true, [k.role + 'Quit']: true, done: true });
+      fetch(url + '&' + Object.keys(f).map(x => 'updateMask.fieldPaths=' + x).join('&'), { method: 'PATCH', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields: f }) }); setKey(null); return true; } } catch (e) {}
+  return false; }
+const _gmQuitBoth = () => { let lost = '';
+  if (typeof _tqdKey === 'function') { clearInterval(window._tqdPoll); clearInterval(window._tqdCd); if (_gmDuelBeaconQuit(_tqdKey, _tqdSet, window._tqdLive)) lost = 'Trivia'; }
+  if (typeof _pdKey === 'function') { clearInterval(window._pdPoll); clearInterval(window._pdCd); if (_gmDuelBeaconQuit(_pdKey, _pdSet, window._pdLive)) lost = 'Pointless'; }
+  return lost; };
+window.addEventListener('pagehide', () => { _gmQuitBoth(); });
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') { const l = _gmQuitBoth(); if (l) window._gmTabLoss = l; return; }
+  if (window._gmTabLoss) { const l = window._gmTabLoss; window._gmTabLoss = 0; try { renderGames(); } catch (e) {} setTimeout(() => customAlert('🏳️ You left the page, so you forfeited the ' + l + ' duel.'), 300); } });
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') { if ((window._cnDuelLive || {}).status === 'playing' && _cnEndDuel(true)) window._cnTabLoss = 1; return; }
   if (window._cnTabLoss) { window._cnTabLoss = 0; renderGames(); setTimeout(() => customAlert('🏳️ You left the page, so you forfeited the Connections duel.'), 300); } });
