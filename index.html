@@ -2429,6 +2429,12 @@
     @media (max-width:640px){.pd-pod{padding:8px}.pd-pod img,.pd-pod .ia{display:none}.pd-tot{font-size:1.5rem;min-width:44px}.pd-rr{grid-template-columns:1fr 1fr;}.pd-rq{grid-column:1/-1}.pd-rh>div:first-child{display:none}}
     .pt-next{position:relative;display:inline-flex;flex-direction:column;align-items:center;margin-top:14px;padding:8px 22px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1)}.pt-next small{font-size:.6rem;letter-spacing:2px;color:var(--muted)}.pt-next b{font-family:'Barlow Condensed',sans-serif;font-size:1.6rem;letter-spacing:1px;font-variant-numeric:tabular-nums}
     .bo-bb{margin:8px 0 2px;padding:8px 10px;border-radius:10px;background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.35);font-size:.76rem;line-height:1.35}.bo-bb span{color:var(--muted)}.bo-bb.bad{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.45)}
+    .tq-opts{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}.tq-opt{display:flex;align-items:center;gap:10px;padding:14px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:#fff;font-weight:700;font-size:.95rem;text-align:left;cursor:pointer;transition:transform .1s,background .15s,border-color .15s}
+    .tq-opt i{font-style:normal;flex:none;width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:rgba(125,211,252,.15);color:#7dd3fc;font-size:.8rem;font-weight:900}.tq-opt span{min-width:0;overflow:hidden;text-overflow:ellipsis}
+    .tq-opt:hover:not([disabled]){background:rgba(125,211,252,.12);border-color:rgba(125,211,252,.5);transform:translateY(-2px)}.tq-opt[disabled]{cursor:default}
+    .tq-opt.ok{background:rgba(34,197,94,.2);border-color:#22c55e;animation:wdPop .4s both}.tq-opt.ok i{background:#22c55e;color:#04210f}.tq-opt.bad{background:rgba(239,68,68,.18);border-color:#ef4444}.tq-opt.bad i{background:#ef4444;color:#fff}.tq-opt.dim{opacity:.4}
+    .tq-why{position:relative;margin-top:14px;font-size:.84rem;color:#e5e7eb}.tq-why span{color:var(--muted)}.tqb-row{grid-template-columns:28px minmax(0,1fr) 48px 48px 34px 34px}
+    @media (max-width:640px){.tq-opts{grid-template-columns:1fr}}
     .ptb-row{display:grid;grid-template-columns:28px minmax(0,1fr) 48px 52px 34px 38px;gap:4px;align-items:center;padding:8px;font-size:.84rem;border-bottom:1px solid var(--border)}.ptb-head{font-size:.62rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
     .ptb-row .c{text-align:center}.ptb-row .pos{font-weight:700;color:var(--muted)}.ptb-row .nm{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ptb-row .nm small{display:block;font-weight:400;font-size:.68rem;color:var(--muted)}
     .ptb-row .best{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.1rem;color:#7dd3fc}.ptb-row.top .best{color:#fde047}.ptb-row .pz{color:#fde047;font-weight:700}.ptb-row.me{background:rgba(56,189,248,.12);border-radius:8px}
@@ -29939,6 +29945,7 @@ window.renderGames = async function() {
   if (window._games.view === 'hl') { clearInterval(window._wdDuelPoll); return renderHLGame(el); }
   if (window._games.view === 'cn') { clearInterval(window._wdDuelPoll); return renderConnGame(el); }
   if (window._games.view === 'pt') { clearInterval(window._wdDuelPoll); return renderPTGame(el); }
+  if (window._games.view === 'tq') { clearInterval(window._wdDuelPoll); return renderTQGame(el); }
   if (window._games.view !== 'wordle') {
     clearInterval(window._wdDuelPoll);
     { const lk = await dbGet('settings', 'gamesLock').catch(() => null); window._gamesLock = (lk && lk.value) || {}; }
@@ -29949,6 +29956,7 @@ window.renderGames = async function() {
       ${(() => { const hl = !!window._gamesLock.hl; return `<button class="gm-bubble${hl ? ' gm-locked' : ''}" onclick="openGame('hl')"><span class="gm-ico">${hl ? '🔒' : '⬆️'}</span><b>IMS HIGHER OR LOWER${hl ? ' <span class="gm-lock-tag">LOCKED</span>' : ''}</b><small>10 questions: two IMS drivers, one stat — starts, wins, podiums, poles, points or BOTTs. Higher or lower?</small></button>`; })()}
       ${(() => { const cl = !!window._gamesLock.cn; return `<button class="gm-bubble${cl ? ' gm-locked' : ''}" onclick="openGame('cn')"><span class="gm-ico">${cl ? '🔒' : '🧩'}</span><b>IMS CONNECTIONS${cl ? ' <span class="gm-lock-tag">LOCKED</span>' : ''}</b><small>16 IMS drivers, 4 hidden groups. Find the four drivers who share a team, nationality, title or stat — 4 mistakes and you're out.</small></button>`; })()}
       ${(() => { const pl = !!window._gamesLock.pt; return `<button class="gm-bubble${pl ? ' gm-locked' : ''}" onclick="openGame('pt')"><span class="gm-ico">${pl ? '🔒' : '🎯'}</span><b>IMS POINTLESS${pl ? ' <span class="gm-lock-tag">LOCKED</span>' : ''}</b><small>3 questions. Name the IMS drivers with the least appearances who fit — the fewer appearances, the fewer points. Lowest total wins.</small></button>`; })()}
+      ${(() => { const tl = !!window._gamesLock.tq; return `<button class="gm-bubble${tl ? ' gm-locked' : ''}" onclick="openGame('tq')"><span class="gm-ico">${tl ? '🔒' : '🧠'}</span><b>IMS TRIVIA${tl ? ' <span class="gm-lock-tag">LOCKED</span>' : ''}</b><small>10 quick questions on IMS history — wins, poles, teams, nationalities and track records. How well do you know the league?</small></button>`; })()}
       <div class="gm-bubble gm-soon"><span class="gm-ico">🔒</span><b>MORE SOON</b><small>New games on the way.</small></div></div>`;
     return;
   }
@@ -30263,7 +30271,7 @@ window.careerLookup = async function(name) {
 };
 
 // ---- Admin: lock / unlock games ----
-const GAMES_LIST = [['wordle', '🟩', 'IMS PaddockDle'], ['grid', '🔢', 'IMS PaddockDle Grid'], ['hl', '⬆️', 'IMS Higher or Lower'], ['cn', '🧩', 'IMS Connections'], ['pt', '🎯', 'IMS Pointless']];
+const GAMES_LIST = [['wordle', '🟩', 'IMS PaddockDle'], ['grid', '🔢', 'IMS PaddockDle Grid'], ['hl', '⬆️', 'IMS Higher or Lower'], ['cn', '🧩', 'IMS Connections'], ['pt', '🎯', 'IMS Pointless'], ['tq', '🧠', 'IMS Trivia']];
 window.renderAdminGames = async function() {
   const box = document.getElementById('admin-games-locks'); if (!box) return;
   const lk = await dbGet('settings', 'gamesLock').catch(() => null); const L = (lk && lk.value) || {};
@@ -30323,7 +30331,7 @@ async function _gameCoins(kind, amount) {
   if (typeof currentUser === 'undefined' || !currentUser || !currentUser.userId) return 0; // guests don't earn IM$
   try { const c = await _betLoadCoins(currentUser.userId); const now = Date.now(); const g = c.gameRewards || {};
     let give = 0;
-    if (/^(wd|gr|hl|cn|pt)-(daily|win|hidden)$/.test(kind)) { const day = _wdDayKey() + (_wdSalt() ? '#' + _wdSalt() : ''); if (g[kind] === day) return 0; g[kind] = day; give = amount; }
+    if (/^(wd|gr|hl|cn|pt|tq)-(daily|win|hidden)$/.test(kind)) { const day = _wdDayKey() + (_wdSalt() ? '#' + _wdSalt() : ''); if (g[kind] === day) return 0; g[kind] = day; give = amount; }
     else { const log = (g[kind] || []).filter(x => now - x.t < 864e5); const used = log.reduce((a, x) => a + x.a, 0); give = Math.max(0, Math.min(amount, 25 - used));
       if (!give) { g[kind] = log; return 0; } log.push({ t: now, a: give }); g[kind] = log; }
     c.balance = (c.balance || 0) + give; c.gameRewards = g; c.gameEarned = (c.gameEarned || 0) + give;
@@ -30331,7 +30339,7 @@ async function _gameCoins(kind, amount) {
   } catch (e) { return 0; }
 }
 function _coinPop(n, kind) {
-  const lbl = { 'cn-hidden': 'Found a hidden group!', 'duel-cn': 'Connections duel win', 'cn-daily': 'Daily Connections', 'cn-win': 'Connections solved!', 'wd-daily': 'Daily PaddockDle', 'gr-daily': 'Daily Grid', 'wd-win': 'Got the daily driver!', 'gr-win': 'Perfect 9/9 grid!', 'hl-daily': 'Daily Higher or Lower', 'pt-daily': 'Daily Pointless', 'pt-win': 'Pointless — 60 or under!', 'hl-win': '8/10 or better!', 'duel-hl': 'Higher or Lower duel win', 'duel-pt': 'Pointless duel win', 'duel-wd': 'PaddockDle duel win', 'duel-gr': 'Grid duel win' }[kind] || 'Games';
+  const lbl = { 'cn-hidden': 'Found a hidden group!', 'duel-cn': 'Connections duel win', 'cn-daily': 'Daily Connections', 'cn-win': 'Connections solved!', 'wd-daily': 'Daily PaddockDle', 'gr-daily': 'Daily Grid', 'wd-win': 'Got the daily driver!', 'gr-win': 'Perfect 9/9 grid!', 'hl-daily': 'Daily Higher or Lower', 'pt-daily': 'Daily Pointless', 'pt-win': 'Pointless — 60 or under!', 'tq-daily': 'Daily Trivia', 'tq-win': 'Trivia 8/10 or better!', 'hl-win': '8/10 or better!', 'duel-hl': 'Higher or Lower duel win', 'duel-pt': 'Pointless duel win', 'duel-wd': 'PaddockDle duel win', 'duel-gr': 'Grid duel win' }[kind] || 'Games';
   const el = document.createElement('div'); el.className = 'coin-pop'; const nOpen = document.querySelectorAll('.coin-pop').length; if (nOpen) el.style.top = (84 + nOpen * 78) + 'px';
   el.innerHTML = `<span class="imc" style="font-size:1.6rem"></span><div><b>+${n} IM$</b><small>${lbl}</small></div>`;
   document.body.appendChild(el); setTimeout(() => el.classList.add('out'), 2600); setTimeout(() => el.remove(), 3200);
@@ -31382,6 +31390,122 @@ async function _pdBody(pool, top) {
       <div class="wd-btns" style="justify-content:center;margin-top:14px">${lob[opp + 'Left'] ? `<span class="text-muted">${esc(opP.name)} left</span>` : `<button class="pt-go" style="width:auto;padding:12px 22px;margin:0" onclick="ptDuelRematch()" ${lob[role + 'Rematch'] ? 'disabled' : ''}>${lob[role + 'Rematch'] ? (lob[opp + 'Rematch'] ? 'Starting…' : 'Waiting for opponent…') : (lob[opp + 'Rematch'] ? '🔁 Accept rematch' : '🔁 Rematch')}</button>`}<button class="btn btn-secondary" onclick="ptDuelLeave()">Leave</button></div></div>`;
   }
   return html + '</div>';
+}
+// ===== GAMES: IMS TRIVIA =====
+// 10 multiple-choice questions generated from the league's own stats (career numbers, teams,
+// nationalities, debut seasons, track records). Daily (same for everyone) + 3 practice rounds a day.
+const TQ_N = 10, TQ_WIN = 8, TQ_PRAC_MAX = 3;
+const _tqGetMode = () => window._tqMode || 'daily';
+window.setTQMode = function(m) { window._tqMode = m; window._tqRev = null; renderGames(); };
+const _tqLoadSt = () => { try { return JSON.parse(localStorage.getItem('imsTqDaily') || 'null'); } catch (e) { return null; } };
+const _tqSave = (st) => { try { localStorage.setItem('imsTqDaily', JSON.stringify(st)); } catch (e) {} };
+const _tqPracUsed = () => { if (typeof adminLoggedIn !== 'undefined' && adminLoggedIn) return 0; try { const o = JSON.parse(localStorage.getItem('imsTqPrac') || 'null'); return o && o.day === _wdDayKey() ? o.n : 0; } catch (e) { return 0; } };
+const _tqPracBump = () => { try { localStorage.setItem('imsTqPrac', JSON.stringify({ day: _wdDayKey(), n: _tqPracUsed() + 1 })); } catch (e) {} };
+const _tqDayNum = () => { const p = _wdDayKey().split('/'); return Math.max(0, Math.round((Date.UTC(+p[2], +p[1] - 1, +p[0]) - Date.UTC(2026, 9, 19)) / 864e5)); };
+const _TQ_TRK = { catalunya: 'Barcelona', monza: 'Monza', spa: 'Spa', silverstone: 'Silverstone', suzuka: 'Suzuka', monaco: 'Monaco', baku: 'Baku', melbourne: 'Melbourne', shanghai: 'Shanghai', sakhir: 'Bahrain', jeddah: 'Jeddah', miami: 'Miami', montreal: 'Montreal', spielberg: 'Austria', hungaroring: 'Hungary', zandvoort: 'Zandvoort', imola: 'Imola', singapore: 'Singapore', austin: 'COTA', mexico: 'Mexico', interlagos: 'Interlagos', vegas: 'Las Vegas', losail: 'Qatar', yasmarina: 'Abu Dhabi', madrid: 'Madrid', portimao: 'Portimão' };
+// Build ONE question with a seeded random source. Each returns {q, opts:[...4 strings], a: index, why}.
+function _tqMake(pool, trk, rnd, kind) {
+  const pickN = (arr, n) => { const a = arr.slice(), o = []; while (a.length && o.length < n) o.push(a.splice(Math.floor(rnd() * a.length), 1)[0]); return o; };
+  const shuf = (a) => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const fin = (correct, wrong, q, why) => { const opts = shuf([correct, ...wrong]); return { q, opts, a: opts.indexOf(correct), why }; };
+  const STATS = [['w', 'race wins', '🥇'], ['pd', 'podiums', '🍾'], ['pl', 'pole positions', '⏱️'], ['st', 'IMS appearances', '🏁'], ['p', 'career points', '⭐'], ['b', 'BOTT titles', '🏗️']];
+  if (kind === 'most') { const [f, l, ic] = STATS[Math.floor(rnd() * STATS.length)];
+    const cand = pool.filter(p => (p[f] || 0) > 0); if (cand.length < 4) return null;
+    for (let t = 0; t < 20; t++) { const four = pickN(cand, 4), v = four.map(p => p[f] || 0), mx = Math.max(...v); if (v.filter(x => x === mx).length > 1) continue;
+      const best = four[v.indexOf(mx)]; return fin(best.name, four.filter(p => p !== best).map(p => p.name), `${ic} Who has the most <b>${l}</b>?`, four.map(p => `${p.name}: ${(p[f] || 0).toLocaleString()}`).join(' · ')); } return null; }
+  if (kind === 'count') { const [f, l, ic] = STATS[Math.floor(rnd() * 4)]; const cand = pool.filter(p => (p[f] || 0) >= 3); if (!cand.length) return null;
+    const d = cand[Math.floor(rnd() * cand.length)], v = d[f]; const step = Math.max(1, Math.round(v * 0.25)); const set = new Set([v]); let k = 1;
+    while (set.size < 4 && k < 20) { const c = v + (rnd() < .5 ? -1 : 1) * step * Math.ceil(k / 2); if (c >= 0) set.add(c); k++; }
+    const wrong = [...set].filter(x => x !== v).slice(0, 3); if (wrong.length < 3) return null;
+    return fin(String(v), wrong.map(String), `${ic} How many <b>${l}</b> does <b>${esc(d.name)}</b> have?`, `${d.name} has ${v.toLocaleString()} ${l}.`); }
+  if (kind === 'nat') { const nats = {}; pool.forEach(p => { if (p.nat) (nats[p.nat] = nats[p.nat] || []).push(p); }); const ks = Object.keys(nats); if (ks.length < 2) return null;
+    const n = ks[Math.floor(rnd() * ks.length)], right = nats[n][Math.floor(rnd() * nats[n].length)], others = pool.filter(p => p.nat && p.nat !== n); if (others.length < 3) return null;
+    return fin(right.name, pickN(others, 3).map(p => p.name), `🌍 Which of these drivers is <b>${esc(n)}</b> ${_wdFlag(n)}?`, `${right.name} is ${n}.`); }
+  if (kind === 'team') { const tms = {}; pool.forEach(p => Object.entries(p.th || {}).forEach(([k, nm]) => { (tms[k] = tms[k] || { nm, ps: [] }).ps.push(p); })); const ks = Object.keys(tms).filter(k => tms[k].ps.length >= 1); if (!ks.length) return null;
+    const k = ks[Math.floor(rnd() * ks.length)], right = tms[k].ps[Math.floor(rnd() * tms[k].ps.length)], others = pool.filter(p => !(p.th || {})[k]); if (others.length < 3) return null;
+    return fin(right.name, pickN(others, 3).map(p => p.name), `🏎️ Who has driven for <b>${esc(tms[k].nm)}</b>?`, `${right.name} has driven for ${tms[k].nm}.`); }
+  if (kind === 'debut') { const cand = pool.filter(p => p.fs); if (!cand.length) return null; const d = cand[Math.floor(rnd() * cand.length)], v = +d.fs;
+    const all = [...new Set(pool.map(p => +p.fs).filter(Boolean))]; const wrong = pickN(all.filter(x => x !== v), 3); if (wrong.length < 3) return null;
+    return fin('S' + v, wrong.map(x => 'S' + x), `📅 In which season did <b>${esc(d.name)}</b> make their IMS debut?`, `${d.name}'s first season was S${v}.`); }
+  if (kind === 'div') { const cand = pool.filter(p => Object.values(p.dh || {}).some(x => x > 0)); if (!cand.length) return null; const d = cand[Math.floor(rnd() * cand.length)];
+    const e = Object.entries(d.dh).filter(([k, v]) => /^D[0-4]$/.test(k) && v > 0).sort((a, b) => b[1] - a[1]); if (!e.length || (e[1] && e[1][1] === e[0][1])) return null;
+    const right = e[0][0], wrong = pickN(['D0', 'D1', 'D2', 'D3', 'D4'].filter(x => x !== right), 3);
+    return fin(right, wrong, `🏁 Which division has <b>${esc(d.name)}</b> raced in the most?`, `${d.name}: ` + e.map(([k, v]) => `${k} ${v}`).join(', ') + ' races.'); }
+  if (kind === 'trk' && trk) { const ks = Object.keys(trk).filter(k => _TQ_TRK[k] && trk[k].wins && !trk[k].wins.tied && trk[k].byDriverJson); if (!ks.length) return null;
+    const k = ks[Math.floor(rnd() * ks.length)], T = trk[k], m = ['wins', 'poles', 'podiums'][Math.floor(rnd() * 3)], top = T[m]; if (!top || top.tied || !top.name) return null;
+    let by = {}; try { by = JSON.parse(T.byDriverJson); } catch (e) {} const others = Object.keys(by).filter(n => n !== top.name && (by[n].appearances || 0) >= 1); if (others.length < 3) return null;
+    return fin(top.name, pickN(others, 3), `🗺️ Who has the most <b>${m}</b> at <b>${_TQ_TRK[k]}</b>?`, `${top.name} — ${top.n} ${m} at ${_TQ_TRK[k]}.`); }
+  return null;
+}
+function _tqMakeSet(pool, trk, rnd) { const K = ['most', 'most', 'count', 'nat', 'team', 'debut', 'div', 'trk', 'trk', 'most', 'count', 'team'], out = [], seen = new Set(); let g = 0;
+  while (out.length < TQ_N && g++ < 400) { const kind = out.length < K.length ? K[(out.length + g) % K.length] : K[Math.floor(rnd() * K.length)]; const q = _tqMake(pool, trk, rnd, kind); if (q && !seen.has(q.q)) { seen.add(q.q); out.push(q); } }
+  return out.length === TQ_N ? out : null; }
+function _tqState(mode, pool, trk) {
+  if (mode === 'inf') { if (!window._tqInf) { if (_tqPracUsed() >= TQ_PRAC_MAX) return 'limit'; const qs = _tqMakeSet(pool, trk, Math.random); if (qs) _tqPracBump(); window._tqInf = qs ? { qs, ans: [], done: false, t0: Date.now() } : null; } return window._tqInf; }
+  const key = _dailyKey(); let st = _tqLoadSt(); if (st && st.key === key) return st;
+  const qs = _tqMakeSet(pool, trk, _grRng(_wdHash('imstq' + key))); if (!qs) return null; st = { key, qs, ans: [], done: false, t0: 0 }; _tqSave(st); return st; }
+const _tqCur = () => _tqGetMode() === 'inf' ? window._tqInf : _tqLoadSt();
+window.tqAnswer = async function(i) {
+  if (window._tqLocked || window._tqRev) return; const st = _tqCur(); if (!st || st.done) return;
+  if (!st.t0) st.t0 = Date.now(); const qi = st.ans.length, ok = i === st.qs[qi].a; st.ans.push(ok);
+  if (st.ans.length >= TQ_N) { st.done = true; st.t1 = Date.now(); } if (_tqGetMode() === 'daily') _tqSave(st);
+  window._tqRev = { qi, pick: i }; try { ok ? _ptSnd.ding() : _ptSnd.wrong(); } catch (e) {}
+  renderGames();
+  if (st.done) { const sc = st.ans.filter(Boolean).length; if (sc >= TQ_WIN) setTimeout(() => { try { fireConfetti({ count: 180 }); _ptSnd.win(); } catch (e) {} }, 400); if (_tqGetMode() === 'daily') { await _tqRecord(st); window._tqLb = null; } }
+};
+window.tqNext = function() { window._tqRev = null; renderGames(); };
+window.tqAgain = function() { window._tqInf = null; window._tqRev = null; renderGames(); };
+async function _tqRecord(st) {
+  const me = _wdMe(), id = _wdScoreId(me.uid), sc = st.ans.filter(Boolean).length, tm = (st.t1 || Date.now()) - (st.t0 || Date.now());
+  try { dbInvalidate('wordleScores'); const cur = await dbGet('wordleScores', id).catch(() => null) || {}; if (cur.tqDay === st.key) return;
+    const streak = cur.tqDayPlain === _wdYesterdayKey() ? (cur.tqStreak || 0) + 1 : 1;
+    await dbSet('wordleScores', id, { uid: me.uid, name: me.name, points: cur.points || 0, tqDay: st.key, tqDayPlain: _wdDayKey(), tqStreak: streak, tqDayScore: sc, tqDayTime: tm, tqDays: (cur.tqDays || 0) + 1,
+      tqCorrect: (cur.tqCorrect || 0) + sc, tqTens: (cur.tqTens || 0) + (sc === TQ_N ? 1 : 0), tqBest: Math.max(cur.tqBest || 0, sc), ...(sc === TQ_N ? { tqBestTen: Math.min(cur.tqBestTen || 9e9, tm) } : {}) }); } catch (e) {}
+  await _gameCoins('tq-daily', 10); if (sc >= TQ_WIN) await _gameCoins('tq-win', 10);
+}
+async function _tqLeaderboardHtml() {
+  const rows = (await _gmNoTest(await dbGetAll('wordleScores', { fresh: true }).catch(() => []))).filter(r => r && r.uid && (r.tqDays || 0) > 0), me = _wdMe().uid;
+  rows.sort((a, b) => (b.tqCorrect / b.tqDays) - (a.tqCorrect / a.tqDays) || (b.tqTens || 0) - (a.tqTens || 0) || (a.tqBestTen || 9e9) - (b.tqBestTen || 9e9));
+  const mi = rows.findIndex(r => r.uid === me), day = _dailyKey(), sec = (ms) => ms ? (ms / 1000).toFixed(1) + 's' : '—';
+  const head = `<div class="ptb-row tqb-row ptb-head"><span>#</span><span>Player</span><span class="c">Today</span><span class="c">Avg</span><span class="c">💯</span><span class="c">🔥</span></div>`;
+  const line = (r, i) => { const k = r.tqDayPlain === _wdDayKey() || r.tqDayPlain === _wdYesterdayKey() ? (r.tqStreak || 0) : 0;
+    return `<div class="ptb-row tqb-row${r.uid === me ? ' me' : ''}${i < 3 ? ' top' : ''}"><span class="pos">${['🥇', '🥈', '🥉'][i] || i + 1}</span><span class="nm">${esc(r.name || 'Player')}<small>${r.tqDays} played · best 10/10 ${sec(r.tqBestTen)}</small></span>
+      <span class="c">${r.tqDay === day ? `<b>${r.tqDayScore}</b>` : '<span class="text-muted">—</span>'}</span><span class="c best">${(r.tqCorrect / r.tqDays).toFixed(1)}</span><span class="c pz">${r.tqTens || 0}</span><span class="c" style="color:${k ? '#fb923c' : 'var(--muted)'};font-weight:${k ? 800 : 400}">${k}</span></div>`; };
+  return `<div class="wd-lb" style="margin-top:18px"><div class="wd-lb-h"><span>🏆 All-time leaderboard</span><small>Average score, then perfect rounds</small></div>
+    ${rows.length ? head + rows.slice(0, 15).map(line).join('') + (mi >= 15 ? '<div style="text-align:center;color:var(--muted)">⋯</div>' + line(rows[mi], mi) : '') : '<p class="text-muted" style="margin:6px 0 0">Nobody has played yet.</p>'}
+    <div class="hlb-key"><b>Today</b> today's score · <b>Avg</b> average out of 10 · 💯 perfect rounds · 🔥 daily streak</div></div>`;
+}
+window.tqShare = function() { const mode = _tqGetMode(), st = _tqCur(); if (!st || !st.done) return; const sc = st.ans.filter(Boolean).length;
+  const txt = `IMS Trivia ${mode === 'daily' ? '#' + _tqDayNum() : '∞'} · ${sc}/${TQ_N}\n${st.ans.map(x => x ? '🟩' : '🟥').join('')}\nhttps://fantasy.ims-league.com`;
+  if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) navigator.share({ text: txt }).catch(() => {}); else if (navigator.clipboard) navigator.clipboard.writeText(txt).then(() => { if (typeof showToast === 'function') showToast('📋 Copied — paste it in Discord!', 'success'); }).catch(() => prompt('Copy your result:', txt)); else prompt('Copy your result:', txt); };
+async function renderTQGame(el) {
+  if (!window._tqPool || _now() - (window._tqPoolAt || 0) > 10 * 60e3) { const { gridPool } = await _wdLoad(); window._tqPool = gridPool.filter(p => (p.st || 0) > 0 && (!p.res || p.st >= 25)); window._tqPoolAt = _now();
+    const tr = await dbGet('settings', 'trackRecords').catch(() => null); window._tqTrk = (tr && tr.value) || null; }
+  const pool = window._tqPool, mode = _tqGetMode(); const locked = !!(window._gamesLock || {}).tq && !adminLoggedIn && !_gamesAccess(); window._tqLocked = locked;
+  const tabs = `<div class="wd-modes">${[['daily', '📅', 'DAILY'], ['inf', '∞', 'PRACTICE']].map(([m, i, l]) => `<button class="${mode === m ? 'on' : ''}" onclick="setTQMode('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>`;
+  const st0 = _tqState(mode, pool, window._tqTrk), lim = st0 === 'limit', st = lim ? null : st0, sc = st ? st.ans.filter(Boolean).length : 0;
+  let body = `<div class="wd-top"><button class="wd-back" onclick="openGame('hub')" title="Back to Games">←</button><div class="wd-brand"><img src="icons/icon-192.png?v=3" alt="IMS"><span>IMS <em>TRIVIA</em></span></div><div class="wd-meta">${mode === 'daily' ? `<span class="wd-pill">#${_tqDayNum()}</span>` : ''}<span class="wd-pill">✅ ${sc}/${st ? st.ans.length : 0}</span>${typeof _ptSndBtn === 'function' ? _ptSndBtn() : ''}</div></div>
+    ${(window._gamesLock || {}).tq ? `<div class="wd-lockbar">🔒 <b>Trivia is locked</b><span>${locked ? 'It\'ll open soon.' : 'Locked for players — you can still play.'}</span></div>` : ''}${tabs}`;
+  if (lim) body += `<div class="pt-arena"><div class="pt-qn">PRACTICE</div><div class="pt-qt">That's your <b>${TQ_PRAC_MAX} practice rounds</b> for today</div><div class="pt-hint">More at midnight (UK).</div></div>`;
+  else if (!st) body += '<div class="alert alert-warning">Not enough data yet — an admin needs to run Build PaddockDle Data From .db.</div>';
+  else if (!st.done || window._tqRev) {
+    const qi = window._tqRev ? window._tqRev.qi : st.ans.length, Q = st.qs[qi], rv = window._tqRev;
+    body += `<div class="hl-progress">${Array.from({ length: TQ_N }, (_, k) => `<span class="${k < st.ans.length ? (st.ans[k] ? 'ok' : 'bad') : k === qi ? 'cur' : ''}"></span>`).join('')}<b>Q${qi + 1}/${TQ_N}</b></div>
+      <div class="pt-arena tq-arena"><div class="pt-qn">QUESTION ${qi + 1}</div><div class="pt-qt">${Q.q}</div>
+      <div class="tq-opts">${Q.opts.map((o, i) => `<button class="tq-opt${rv ? (i === Q.a ? ' ok' : i === rv.pick ? ' bad' : ' dim') : ''}" ${rv || locked ? 'disabled' : ''} onclick="tqAnswer(${i})"><i>${'ABCD'[i]}</i><span>${esc(o)}</span></button>`).join('')}</div>
+      ${rv ? `<div class="tq-why">${rv.pick === Q.a ? '✅ Correct!' : '❌ Not quite.'} <span>${esc(Q.why)}</span></div><button class="pt-go" onclick="tqNext()">${st.done && qi === TQ_N - 1 ? 'SEE RESULT' : 'NEXT QUESTION →'}</button>` : ''}</div>`;
+  } else { const good = sc >= TQ_WIN;
+    body += `<div class="pt-arena pt-end${good ? ' good' : ''}"><div class="pt-qn">FINAL SCORE</div><div class="pt-big">${sc}<small style="font-size:2rem;opacity:.6">/${TQ_N}</small></div><div class="pt-hint">${st.ans.map(x => x ? '🟩' : '🟥').join('')}${st.t1 && st.t0 ? ' · ' + ((st.t1 - st.t0) / 1000).toFixed(1) + 's' : ''}</div>
+      <button class="pt-go" style="background:linear-gradient(135deg,#5865f2,#4752c4);color:#fff" onclick="tqShare()">📤 SHARE RESULT</button>
+      ${mode === 'inf' ? (_tqPracUsed() < TQ_PRAC_MAX ? `<button class="pt-go" onclick="tqAgain()">PLAY AGAIN · ${TQ_PRAC_MAX - _tqPracUsed()} left today</button>` : '<div class="pt-hint" style="margin-top:12px">That was your last practice round today.</div>') : `<div class="pt-next"><small>NEXT TRIVIA IN</small><b id="pt-timer">--:--:--</b></div>`}</div>`; }
+  if (mode === 'daily') body += (st && st.done || !window._tqLb) ? (window._tqLb = await _tqLeaderboardHtml()) : window._tqLb;
+  el.innerHTML = `<div class="wd-wrap">${body}<div class="wd-info"><h3>How to play</h3><p><b>${TQ_N} quick questions</b> about the IMS — career stats, teams, nationalities, debut seasons and track records, all from the league's real data. Pick one of four answers.</p>
+    <p><b>📅 Daily</b> — the same ${TQ_N} questions for everyone, once a day. <b>∞ Practice</b> — up to ${TQ_PRAC_MAX} rounds a day.</p>
+    <p style="margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(247,207,85,.08);border:1px solid rgba(247,207,85,.35);font-size:.84rem"><span class="imc"></span> <b>Earn IM$:</b> play the daily for <b>+10 IM$</b>, score <b>${TQ_WIN}/10 or better</b> for <b>another +10 IM$</b>. Log in to earn.</p></div></div>`;
+  if (document.getElementById('pt-timer')) { const until = _now() + _wdMsToMidnight(); clearInterval(window._wdTick);
+    const tk = () => { const t = document.getElementById('pt-timer'); if (!t) { clearInterval(window._wdTick); return; } const ms = until - _now(); if (ms <= 0) { clearInterval(window._wdTick); renderGames(); return; }
+      t.textContent = [Math.floor(ms / 36e5), Math.floor(ms / 6e4) % 60, Math.floor(ms / 1e3) % 60].map(x => String(x).padStart(2, '0')).join(':'); }; tk(); window._wdTick = setInterval(tk, 1000); }
+  if (st && !st.done && !window._tqRev && st.ans.length === 0) _ptStingOnce('tq|' + (st.key || 'inf') + '|' + st.qs[0].q);
 }
 // ===== GAMES: IMS PADDOCKDLE GRID =====
 // 3×3 grid: every cell needs a market driver who fits BOTH its row and column category. Each driver
