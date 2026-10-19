@@ -2311,10 +2311,10 @@
     .wd-search-ico{position:absolute;left:16px;top:50%;transform:translateY(-50%);opacity:.55;pointer-events:none}
     .wd-search input{width:100%;padding:14px 16px 14px 44px;border-radius:14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);color:#fff;font-size:1rem;outline:none;transition:border-color .15s,box-shadow .15s}
     .wd-search input:focus{border-color:rgba(46,204,113,.6);box-shadow:0 0 0 4px rgba(46,204,113,.12)}
-    #wd-sugg,#pt-sugg,#pd-sugg,#cp-sugg{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:50;background:rgba(22,22,32,0.98);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.1);border-radius:14px;max-height:320px;overflow-y:auto;box-shadow:0 18px 40px rgba(0,0,0,.55);padding:4px}
-    #wd-sugg:empty,#pt-sugg:empty,#pd-sugg:empty,#cp-sugg:empty{display:none}
-    #wd-sugg button,#pt-sugg button,#pd-sugg button,#cp-sugg button{display:flex;align-items:center;gap:12px;width:100%;padding:8px 10px;background:none;border:none;border-radius:10px;color:#fff;cursor:pointer;text-align:left;font-weight:700;font-size:.92rem}
-    #wd-sugg button:hover,#pt-sugg button:hover,#pd-sugg button:hover,#cp-sugg button:hover{background:rgba(46,204,113,0.12)}#wd-sugg img{width:30px;height:30px;border-radius:50%;object-fit:cover}
+    #wd-sugg,#pt-sugg,#pd-sugg,#cp-sugg,#cpd-sugg{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:50;background:rgba(22,22,32,0.98);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.1);border-radius:14px;max-height:320px;overflow-y:auto;box-shadow:0 18px 40px rgba(0,0,0,.55);padding:4px}
+    #wd-sugg:empty,#pt-sugg:empty,#pd-sugg:empty,#cp-sugg:empty,#cpd-sugg:empty{display:none}
+    #wd-sugg button,#pt-sugg button,#pd-sugg button,#cp-sugg button,#cpd-sugg button{display:flex;align-items:center;gap:12px;width:100%;padding:8px 10px;background:none;border:none;border-radius:10px;color:#fff;cursor:pointer;text-align:left;font-weight:700;font-size:.92rem}
+    #wd-sugg button:hover,#pt-sugg button:hover,#pd-sugg button:hover,#cp-sugg button:hover,#cpd-sugg button:hover{background:rgba(46,204,113,0.12)}#wd-sugg img{width:30px;height:30px;border-radius:50%;object-fit:cover}
     .wd-board{display:flex;flex-direction:column;gap:8px;overflow-x:auto;padding-bottom:4px}
     .wd-row{display:grid;grid-template-columns:1.5fr repeat(7,1fr);gap:8px;min-width:800px}
     .wd-head div{text-align:center;font-size:.62rem;font-weight:800;letter-spacing:2px;color:var(--muted);padding-bottom:2px}
@@ -29889,7 +29889,7 @@ async function renderConnGame(el) {
 }
 
 // ---- Render ----
-window.openGame = function(g) { if (g !== window._games.view && _wdGuardLeave(() => openGame(g))) return; if (g !== 'cn' && typeof _cnEndDuel === 'function') _cnEndDuel(false); if (g !== 'hl' && typeof _hdLeave === 'function') _hdLeave(true); if (g !== 'pt' && typeof _pdLeave === 'function') _pdLeave(true); if (g !== 'tq' && typeof _tqdLeave === 'function') _tqdLeave(true); if (g !== 'wordle') _wdEndDuel(false); if (g !== 'grid' && typeof _gdEnd === 'function') _gdEnd(false); window._grSel = null; window._games.view = g; renderGames(); };
+window.openGame = function(g) { if (g !== window._games.view && _wdGuardLeave(() => openGame(g))) return; if (g !== 'cn' && typeof _cnEndDuel === 'function') _cnEndDuel(false); if (g !== 'hl' && typeof _hdLeave === 'function') _hdLeave(true); if (g !== 'pt' && typeof _pdLeave === 'function') _pdLeave(true); if (g !== 'tq' && typeof _tqdLeave === 'function') _tqdLeave(true); if (g !== 'cp' && typeof _cpdLeave === 'function') _cpdLeave(true); if (g !== 'wordle') _wdEndDuel(false); if (g !== 'grid' && typeof _gdEnd === 'function') _gdEnd(false); window._grSel = null; window._games.view = g; renderGames(); };
 // ---- Modes: 'daily' (one shared driver per UK day), 'inf' (random, back to back), 'duel' (1v1 race) ----
 const _wdGetMode = () => { try { return localStorage.getItem('imsWordleMode') || 'daily'; } catch (e) { return 'daily'; } };
 window.setWordleMode = function(m) { if (m !== _wdGetMode() && _wdGuardLeave(() => setWordleMode(m))) return; if (m !== 'duel') _wdEndDuel(false); try { localStorage.setItem('imsWordleMode', m); } catch (e) {} clearInterval(window._wdDuelPoll); renderGames(); };
@@ -30361,7 +30361,7 @@ async function _gameCoins(kind, amount) {
   } catch (e) { return 0; }
 }
 function _coinPop(n, kind) {
-  const lbl = { 'cn-hidden': 'Found a hidden group!', 'duel-cn': 'Connections duel win', 'cn-daily': 'Daily Connections', 'cn-win': 'Connections solved!', 'wd-daily': 'Daily PaddockDle', 'gr-daily': 'Daily Grid', 'wd-win': 'Got the daily driver!', 'gr-win': 'Perfect 9/9 grid!', 'hl-daily': 'Daily Higher or Lower', 'pt-daily': 'Daily Pointless', 'pt-win': 'Pointless — 60 or under!', 'tq-daily': 'Daily Trivia', 'cp-daily': 'Daily Career Path', 'cp-win': 'Career Path in 3 or fewer!', 'tq-win': 'Trivia 8/10 or better!', 'hl-win': '8/10 or better!', 'duel-hl': 'Higher or Lower duel win', 'duel-pt': 'Pointless duel win', 'duel-tq': 'Trivia duel win', 'duel-wd': 'PaddockDle duel win', 'duel-gr': 'Grid duel win' }[kind] || 'Games';
+  const lbl = { 'cn-hidden': 'Found a hidden group!', 'duel-cn': 'Connections duel win', 'cn-daily': 'Daily Connections', 'cn-win': 'Connections solved!', 'wd-daily': 'Daily PaddockDle', 'gr-daily': 'Daily Grid', 'wd-win': 'Got the daily driver!', 'gr-win': 'Perfect 9/9 grid!', 'hl-daily': 'Daily Higher or Lower', 'pt-daily': 'Daily Pointless', 'pt-win': 'Pointless — 60 or under!', 'tq-daily': 'Daily Trivia', 'cp-daily': 'Daily Career Path', 'cp-win': 'Career Path in 3 or fewer!', 'tq-win': 'Trivia 8/10 or better!', 'hl-win': '8/10 or better!', 'duel-hl': 'Higher or Lower duel win', 'duel-pt': 'Pointless duel win', 'duel-tq': 'Trivia duel win', 'duel-cp': 'Career Path duel win', 'duel-wd': 'PaddockDle duel win', 'duel-gr': 'Grid duel win' }[kind] || 'Games';
   const el = document.createElement('div'); el.className = 'coin-pop'; const nOpen = document.querySelectorAll('.coin-pop').length; if (nOpen) el.style.top = (84 + nOpen * 78) + 'px';
   el.innerHTML = `<span class="imc" style="font-size:1.6rem"></span><div><b>+${n} IM$</b><small>${lbl}</small></div>`;
   document.body.appendChild(el); setTimeout(() => el.classList.add('out'), 2600); setTimeout(() => el.remove(), 3200);
@@ -30534,7 +30534,7 @@ async function _liveDuelsHtml(all, game, f) {
   const now = _now();
   const live = (all || []).filter(l => l && (game === 'wd' ? !l.game : l.game === game) && l.status === 'playing' && !l.done && l.hostUid && l.guestUid
     && now - (l.hostSeen || 0) < 30e3 && now - (l.guestSeen || 0) < 30e3
-    && !(game === 'wd' && (l.hostWonAt || l.guestWonAt)) && !(game === 'hl' && l.hostDone && l.guestDone) && !(game === 'pt' && l.done) && !(game === 'tq' && l.done) && !(game === 'grid' && l.winner) && !l.drawAgreed);
+    && !(game === 'wd' && (l.hostWonAt || l.guestWonAt)) && !(game === 'hl' && l.hostDone && l.guestDone) && !(game === 'pt' && l.done) && !(game === 'tq' && l.done) && !(game === 'cp' && l.done) && !(game === 'grid' && l.winner) && !l.drawAgreed);
   if (!live.length) return '';
   let stats = {};
   try { (await dbGetAll('wordleScores').catch(() => [])).forEach(d => { if (d && d.uid) stats[d.uid] = d; }); } catch(e) {}
@@ -30583,7 +30583,7 @@ function _wdEndDuel(beacon) {
     else dbSet('wordleDuels', k.code, upd).catch(() => {});
   }
 }
-window._wdAutoLeave = () => { if (typeof _tqdLeave === 'function') _tqdLeave(true); if (typeof _pdLeave === 'function') _pdLeave(true); _wdEndDuel(false); if (typeof _cnEndDuel === 'function') _cnEndDuel(false); if (typeof _gdEnd === 'function') _gdEnd(false); };
+window._wdAutoLeave = () => { if (typeof _cpdLeave === 'function') _cpdLeave(true); if (typeof _tqdLeave === 'function') _tqdLeave(true); if (typeof _pdLeave === 'function') _pdLeave(true); _wdEndDuel(false); if (typeof _cnEndDuel === 'function') _cnEndDuel(false); if (typeof _gdEnd === 'function') _gdEnd(false); };
 // ---- Anti-cheat: an attempt in progress can't be left without giving it up ----
 const _WD_MODE_NAME = { daily: 'Daily', inf: 'Infinite', duel: 'Duel', grid: 'Grid', gridduel: 'Grid duel' };
 function _wdActiveAttempt() {
@@ -30653,6 +30653,7 @@ function _gmDuelBeaconQuit(key, setKey, live) { const k = key(); if (!k || !k.co
 const _gmQuitBoth = () => { let lost = '';
   if (typeof _tqdKey === 'function') { clearInterval(window._tqdPoll); clearInterval(window._tqdCd); if (_gmDuelBeaconQuit(_tqdKey, _tqdSet, window._tqdLive)) lost = 'Trivia'; }
   if (typeof _pdKey === 'function') { clearInterval(window._pdPoll); clearInterval(window._pdCd); if (_gmDuelBeaconQuit(_pdKey, _pdSet, window._pdLive)) lost = 'Pointless'; }
+  if (typeof _cpdKey === 'function') { clearInterval(window._cpdPoll); clearInterval(window._cpdCd); if (_gmDuelBeaconQuit(_cpdKey, _cpdSet, window._cpdLive)) lost = 'Career Path'; }
   return lost; };
 window.addEventListener('pagehide', () => { _gmQuitBoth(); });
 document.addEventListener('visibilitychange', () => {
@@ -31694,7 +31695,7 @@ async function _tqdBody(pool, top) {
 // the next one (then their nationality and current division). 6 guesses.
 const CP_MAX = 6, CP_PRAC_MAX = 3;
 const _cpGetMode = () => window._cpMode || 'daily';
-window.setCPMode = function(m) { window._cpMode = m; renderGames(); };
+window.setCPMode = function(m) { if (m !== 'duel' && typeof _cpdLeave === 'function') _cpdLeave(true); window._cpMode = m; renderGames(); };
 const _cpLoadSt = () => { try { return JSON.parse(localStorage.getItem('imsCpDaily') || 'null'); } catch (e) { return null; } };
 const _cpSave = (st) => { try { localStorage.setItem('imsCpDaily', JSON.stringify(st)); } catch (e) {} };
 const _cpPracUsed = () => { return 0; /* Career Path practice is unlimited */ try { const o = JSON.parse(localStorage.getItem('imsCpPrac') || 'null'); return o && o.day === _wdDayKey() ? o.n : 0; } catch (e) { return 0; } };
@@ -31744,10 +31745,12 @@ window.cpShare = function() { const mode = _cpGetMode(), st = _cpCur(); if (!st 
 async function renderCPGame(el) {
   if (!window._cpPool || _now() - (window._cpPoolAt || 0) > 10 * 60e3) { const { gridPool } = await _wdLoad(); window._cpPool = gridPool.filter(p => (p.st || 0) > 0 && (!p.res || p.st >= 25)); window._cpPoolAt = _now(); }
   const pool = window._cpPool, mode = _cpGetMode(); const locked = !!(window._gamesLock || {}).cp && !adminLoggedIn && !_gamesAccess(); window._cpLocked = locked;
-  const tabs = `<div class="wd-modes">${[['daily', '📅', 'DAILY'], ['inf', '∞', 'PRACTICE']].map(([m, i, l]) => `<button class="${mode === m ? 'on' : ''}" onclick="setCPMode('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>`;
-  const st0 = _cpState(mode, pool), lim = st0 === 'limit', st = lim ? null : st0, D = st ? pool.find(p => p.id === st.id) : null;
+  const tabs = `<div class="wd-modes">${[['daily', '📅', 'DAILY'], ['inf', '∞', 'PRACTICE'], ['duel', '⚔️', 'DUEL']].map(([m, i, l]) => `<button class="${mode === m ? 'on' : ''}" onclick="setCPMode('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>`;
+  const st0 = mode === 'duel' ? null : _cpState(mode, pool), lim = st0 === 'limit', st = lim ? null : st0, D = st ? pool.find(p => p.id === st.id) : null;
   let body = `<div class="wd-top"><button class="wd-back" onclick="openGame('hub')" title="Back to Games">←</button><div class="wd-brand"><img src="icons/icon-192.png?v=3" alt="IMS"><span>CAREER <em>PATH</em></span></div><div class="wd-meta">${mode === 'daily' ? `<span class="wd-pill">#${_cpDayNum()}</span>` : ''}<span class="wd-pill">🎯 ${st ? st.g.length : 0}/${CP_MAX}</span>${typeof _ptSndBtn === 'function' ? _ptSndBtn() : ''}</div></div>
     ${(window._gamesLock || {}).cp ? `<div class="wd-lockbar">🔒 <b>Career Path is locked</b><span>${locked ? 'It\'ll open soon.' : 'Locked for players — you can still play.'}</span></div>` : ''}${tabs}`;
+  if (mode === 'duel') { el.innerHTML = `<div class="wd-wrap">${locked ? body + '<div class="wd-panel" style="text-align:center">Duels open when the game is unlocked.</div>' : await _cpdBody(pool, body)}</div>`; return; }
+  clearInterval(window._cpdPoll); clearInterval(window._cpdCd);
   if (lim) body += `<div class="pt-arena"><div class="pt-qn">PRACTICE</div><div class="pt-qt">That's your <b>${CP_PRAC_MAX} practice rounds</b> for today</div><div class="pt-hint">More at midnight (UK).</div></div>`;
   else if (!st || !D) body += '<div class="alert alert-warning">Not enough career data yet. Admin: load the .db in Admin → Import Race, then press <b>Build PaddockDle Data From .db</b> (it now records each driver\'s team every season) and reopen this game.</div>';
   else {
@@ -31767,12 +31770,148 @@ async function renderCPGame(el) {
         <div class="pt-hint">${CP_MAX - st.g.length} guess${CP_MAX - st.g.length === 1 ? '' : 'es'} left · each wrong guess reveals more</div>`}</div>`; }
   if (mode === 'daily') body += (st && st.done || !window._cpLb) ? (window._cpLb = await _cpLeaderboardHtml()) : window._cpLb;
   el.innerHTML = `<div class="wd-wrap">${body}<div class="wd-info"><h3>How to play</h3><p>You see an IMS driver's <b>first season</b> — the team they mainly drove for and their division. Guess who it is. <b>Every wrong guess reveals the next season</b>; once the whole path is shown you get their nationality, then their appearance count, then their last race. <b>${CP_MAX} guesses.</b></p>
-    <p><b>📅 Daily</b> — the same driver for everyone. <b>∞ Practice</b> — unlimited. Pool: drivers with 3+ IMS seasons.</p>
+    <p><b>📅 Daily</b> — the same driver for everyone. <b>∞ Practice</b> — unlimited. <b>⚔️ Duel</b> — race an opponent: the career reveals every 10 s, 2 guesses each, first to name the driver takes the round (fewer reveals = more points). Pool: drivers with 3+ IMS seasons.</p>
     <p style="margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(247,207,85,.08);border:1px solid rgba(247,207,85,.35);font-size:.84rem"><span class="imc"></span> <b>Earn IM$:</b> play the daily for <b>+10 IM$</b>, solve it in <b>3 guesses or fewer</b> for <b>another +10 IM$</b>. Log in to earn.</p></div></div>`;
   if (document.getElementById('pt-timer')) { const until = _now() + _wdMsToMidnight(); clearInterval(window._wdTick);
     const tk = () => { const t = document.getElementById('pt-timer'); if (!t) { clearInterval(window._wdTick); return; } const ms = until - _now(); if (ms <= 0) { clearInterval(window._wdTick); renderGames(); return; }
       t.textContent = [Math.floor(ms / 36e5), Math.floor(ms / 6e4) % 60, Math.floor(ms / 1e3) % 60].map(x => String(x).padStart(2, '0')).join(':'); }; tk(); window._wdTick = setInterval(tk, 1000); }
   const inp = document.getElementById('cp-input'); if (inp && !('ontouchstart' in window)) inp.focus();
+}
+// ===== CAREER PATH DUEL (race the reveal) =====
+// 5 drivers. Each round the career path reveals one season every 10 s (then nationality, appearances,
+// last race) for both players at once. 2 guesses each per round; the first correct guess takes the round:
+// 100 pts with 1 season showing, −20 per extra reveal (min 20). Guesses are stored 'id@ms'.
+const CPD_ROUNDS = 5, CPD_STEP = 10000, CPD_PAUSE = 4500, CPD_GUESSES = 2;
+const _cpdKey = () => { try { return JSON.parse(localStorage.getItem('imsCPDuel') || 'null'); } catch (e) { return null; } };
+const _cpdSet = (v) => { try { v ? localStorage.setItem('imsCPDuel', JSON.stringify(v)) : localStorage.removeItem('imsCPDuel'); } catch (e) {} };
+const _cpdG = (l, ro, r) => String(((l[ro + 'G'] || [])[r]) || '').split(',').filter(Boolean).map(x => { const [id, ms] = x.split('@'); return { id, ms: +ms || 0 }; });
+const _cpdTotal = (D) => (D ? (D.cp || []).length : 3) + 3; // reveals: every season + 3 hints
+const _cpdPtsAt = (ms) => Math.max(20, 100 - 20 * Math.floor(ms / CPD_STEP));
+// Round result: {over, win: 'host'|'guest'|'', pts, why}
+function _cpdRound(l, r, D) { const id = (l.ids || [])[r]; const H = _cpdG(l, 'host', r), G = _cpdG(l, 'guest', r);
+  const hk = H.find(x => x.id === id), gk = G.find(x => x.id === id);
+  if (hk || gk) { const w = hk && (!gk || hk.ms <= gk.ms) ? 'host' : 'guest', x = w === 'host' ? hk : gk; return { over: true, win: w, pts: _cpdPtsAt(x.ms) }; }
+  const maxT = _cpdTotal(D) * CPD_STEP; if ((H.length >= CPD_GUESSES && G.length >= CPD_GUESSES) || _now() > (l.rStart || 0) + maxT) return { over: true, win: '', pts: 0 };
+  return { over: false }; }
+const _cpdScore = (l, pool, upTo) => { const T = { host: 0, guest: 0 }; for (let r = 0; r < upTo; r++) { const D = pool.find(p => p.id === (l.ids || [])[r]), R = _cpdRound(l, r, D); if (R.win) T[R.win] += R.pts; } return T; };
+window.cpDuelCreate = async function(pub) { await _clockSync(); if (window._cpLocked) return; const me = _wdMe(), E = _cpEligible(window._cpPool || []); if (E.length < CPD_ROUNDS) return customAlert('Not enough career data yet.');
+  const ids = []; while (ids.length < CPD_ROUNDS) { const p = E[Math.floor(Math.random() * E.length)]; if (!ids.includes(p.id)) ids.push(p.id); }
+  let code = _wdCode(); for (let i = 0; i < 4 && await dbGet('wordleDuels', code).catch(() => null); i++) code = _wdCode();
+  await dbSet('wordleDuels', code, { game: 'cp', public: !!pub, status: 'waiting', createdAt: _now(), hostSeen: _now(), ids, round: 1, r: 0, rStart: 0, hostG: [], guestG: [],
+    hostUid: me.uid, hostName: me.name, hostAvatar: me.avatar || '', hostColor: _myDuelColour(), guestUid: '', guestName: '', guestAvatar: '' });
+  _cpdSet({ code, role: 'host' }); renderGames(); };
+window.cpDuelJoin = async function(code) { await _clockSync(); if (window._cpLocked) return; const msg = document.getElementById('cpd-msg'), say = (t) => { if (msg) msg.innerHTML = '<div class="alert alert-error">' + t + '</div>'; };
+  code = String(code || '').trim().toUpperCase(); if (!code) return say('Enter a lobby code.');
+  dbInvalidate('wordleDuels'); const l = await dbGet('wordleDuels', code).catch(() => null); if (!l || l.game !== 'cp') return say('No Career Path lobby with that code.');
+  const me = _wdMe(); if (l.hostUid === me.uid) { _cpdSet({ code, role: 'host' }); return renderGames(); }
+  if (l.status !== 'waiting' || (l.guestUid && l.guestUid !== me.uid)) return say('That duel has already started.');
+  if (_now() - (l.hostSeen || l.createdAt || 0) > 30e3) return say('That lobby has closed — the host left.');
+  const st = _now() + 5300; await dbSet('wordleDuels', code, { guestUid: me.uid, guestName: me.name, guestAvatar: me.avatar || '', guestColor: _myDuelColour(), status: 'playing', startedAt: st, r: 0, rStart: st });
+  _cpdSet({ code, role: 'guest' }); renderGames(); };
+function _cpdLeave(silent) { const k = _cpdKey(); if (!k) return; clearInterval(window._cpdPoll); clearInterval(window._cpdCd); _cpdSet(null); const s = window._cpdLive || {};
+  if (s.status === 'waiting' && k.role === 'host') dbDelete('wordleDuels', k.code).catch(() => {});
+  else if (s.status === 'playing' && !s.done) dbSet('wordleDuels', k.code, { [k.role + 'Left']: true, [k.role + 'Quit']: true, done: true }).catch(() => {});
+  else if (s.status === 'playing') dbSet('wordleDuels', k.code, { [k.role + 'Left']: true }).catch(() => {});
+  if (!silent) setTimeout(() => renderGames(), 150); }
+window.cpDuelLeave = () => { const s = window._cpdLive || {}; if (s.status === 'playing' && !s.done) return customConfirm('Leave the duel? You\'ll forfeit and your opponent wins.', () => _cpdLeave(false)); _cpdLeave(false); };
+window.cpDuelRematch = async function() { const r = window._cpdRef; if (r) { await dbSet('wordleDuels', r.code, { [r.role + 'Rematch']: true }); renderGames(); } };
+window.cpdSuggest = function(v) { const box = document.getElementById('cpd-sugg'); if (!box) return; const q = _wdNorm(v); if (!q) { box.innerHTML = ''; return; }
+  const used = new Set(window._cpdUsed || []); box.innerHTML = (window._cpPool || []).filter(p => _wdNorm(p.name).includes(q) && !used.has(p.id)).slice(0, 8).map(p => `<button onclick="cpdGuess('${esc(p.id)}')">${_wdAv(p, 26)}<span>${esc(p.name)}</span></button>`).join(''); };
+window.cpdPickFirst = function() { const f = document.querySelector('#cpd-sugg button'); if (f) f.click(); };
+window.cpdGuess = async function(id) { const ref = window._cpdRef; if (!ref || window._cpdBusy) return; window._cpdBusy = true;
+  try { dbInvalidate('wordleDuels'); const l = await dbGet('wordleDuels', ref.code).catch(() => null); if (!l || l.done) return; const r = l.r || 0, D = (window._cpPool || []).find(p => p.id === l.ids[r]);
+    if (_now() < (l.rStart || 0) || _cpdRound(l, r, D).over) return; const mine = _cpdG(l, ref.role, r); if (mine.length >= CPD_GUESSES) return;
+    const a = (l[ref.role + 'G'] || []).slice(); while (a.length < r) a.push(''); a[r] = [...mine.map(x => x.id + '@' + x.ms), id + '@' + Math.max(0, _now() - l.rStart)].join(',');
+    await dbSet('wordleDuels', ref.code, { [ref.role + 'G']: a }); try { id === l.ids[r] ? _ptSnd.pointless() : _ptSnd.wrong(); } catch (e) {} } finally { window._cpdBusy = false; renderGames(); } };
+async function _cpdAdvance(l, role, pool) { const r = l.r || 0, D = pool.find(p => p.id === l.ids[r]), R = _cpdRound(l, r, D); if (!R.over) return;
+  if (!(l.endR === r && l.endAt)) { await dbSet('wordleDuels', l.id, { endR: r, endAt: _now() }); return; }
+  if (_now() < l.endAt + CPD_PAUSE + (role === 'host' ? 0 : 1500)) return;
+  if (role !== 'host') { dbInvalidate('wordleDuels'); const f = await dbGet('wordleDuels', l.id).catch(() => null); if (!f || (f.r || 0) !== r || f.done) return; }
+  if (r + 1 >= CPD_ROUNDS) await dbSet('wordleDuels', l.id, { done: true }); else await dbSet('wordleDuels', l.id, { r: r + 1, rStart: _now() + 300, endR: -1, endAt: 0 }); }
+async function _cpdBody(pool, top) {
+  const me = _wdMe(), mine = _cpdKey(); let lob = null;
+  if (mine && mine.code) { dbInvalidate('wordleDuels'); lob = _duelPre(mine.code) || await dbGet('wordleDuels', mine.code).catch(() => null); if (!lob) _cpdSet(null); }
+  if (!lob) { clearInterval(window._cpdPoll); clearInterval(window._cpdCd);
+    const all = await dbGetAll('wordleDuels', { fresh: true }).catch(() => []), now = _now();
+    const open = all.filter(l => l && l.game === 'cp' && l.public && l.status === 'waiting' && now - (l.hostSeen || l.createdAt || 0) < 30e3 && l.hostUid !== me.uid).sort((a, b) => b.createdAt - a.createdAt);
+    window._cpdPoll = setInterval(() => { if (!document.getElementById('cpd-lobbies')) { clearInterval(window._cpdPoll); return; } if (!document.activeElement || document.activeElement.id !== 'cpd-join-code') renderGames(); }, 6000);
+    return top + `<div class="wd-duel-grid">
+      <div class="wd-panel"><h4>⚔️ Start a Career Path duel</h4><p>${CPD_ROUNDS} drivers. Their career reveals one season every 10 seconds for both of you. <b>${CPD_GUESSES} guesses</b> a round — first to name the driver takes it: <b>100 pts</b> with one season showing, 20 less for each extra reveal.</p>
+        <div class="wd-btns"><button class="btn btn-primary" onclick="cpDuelCreate(true)">🌍 Public lobby</button><button class="btn btn-secondary" onclick="cpDuelCreate(false)">🔒 Private lobby</button></div>
+        <h4 style="margin-top:18px">🔑 Join with a code</h4>
+        <div class="wd-btns"><input id="cpd-join-code" type="text" maxlength="5" placeholder="CODE" style="text-transform:uppercase;letter-spacing:4px;font-weight:800;max-width:140px" onkeydown="if(event.key==='Enter')cpDuelJoin(this.value)"><button class="btn btn-secondary" onclick="cpDuelJoin(document.getElementById('cpd-join-code').value)">Join</button></div>
+        <div id="cpd-msg" style="margin-top:8px"></div>${_duelPickerHtml()}</div>
+      <div class="wd-panel" id="cpd-lobbies"><h4>🌍 Open lobbies <small>${open.length}</small></h4>
+        ${open.length ? open.map(l => `<div class="wd-lob"><span style="display:inline-flex;align-items:center;gap:8px;min-width:0">${_wdAv({ name: l.hostName || 'Player', photo: l.hostAvatar || '' }, 30)}<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(l.hostName || 'Player')}</span></span><small>${Math.max(1, Math.round((now - l.createdAt) / 60e3))} min ago</small><button class="btn btn-primary btn-sm" onclick="cpDuelJoin('${esc(l.id)}')">Join</button></div>`).join('') : '<p class="text-muted" style="margin:6px 0 0">No open lobbies — start one and wait for someone to join.</p>'}</div></div>`
+      + await _liveDuelsHtml(all, 'cp', 'h2hCp') + await _h2hBoardHtml('h2hCp', 'Career Path H2H records'); }
+  const role = mine.role, opp = role === 'host' ? 'guest' : 'host', round = lob.round || 1, rk = lob.id + '_c' + round;
+  const P = (x) => ({ uid: lob[x + 'Uid'], name: lob[x + 'Name'] || 'Player', av: lob[x + 'Avatar'] || '' }), meP = P(role), opP = P(opp);
+  const quit = lob.hostQuit ? 'host' : lob.guestQuit ? 'guest' : '', done = lob.status === 'playing' && (!!lob.done || !!quit);
+  const r = lob.r || 0, D = pool.find(p => p.id === (lob.ids || [])[r]), R = done ? { over: true } : _cpdRound(lob, r, D), shownUpTo = done ? CPD_ROUNDS : r + (R.over && lob.endR === r && lob.endAt ? 1 : 0);
+  const T = _cpdScore(lob, pool, shownUpTo);
+  const winner = done ? (quit ? (quit === 'host' ? 'guest' : 'host') : T.host === T.guest ? 'draw' : T.host > T.guest ? 'host' : 'guest') : '';
+  window._cpdLive = { status: lob.status, done }; window._cpdRef = { code: lob.id, role };
+  if (done && winner === role && !_wdLS('cpdCoin_' + rk)) { _wdLS('cpdCoin_' + rk, 1); _gameCoins('duel-cp', 5); setTimeout(() => { try { fireConfetti({ count: 220 }); } catch (e) {} }, 300); }
+  if (done && winner && winner !== 'draw' && role === (quit ? winner : 'host') && (lob.recR || 0) !== round && !_wdLS('cpdRec_' + rk)) { _wdLS('cpdRec_' + rk, 1); _duelRecordBoth(lob, round, winner, quit, 'cpW', 'cpL', 'h2hCp'); }
+  if (done && role === 'host' && lob.hostRematch && lob.guestRematch && !lob[opp + 'Left']) { const E = _cpEligible(pool), ids = []; while (ids.length < CPD_ROUNDS && E.length >= CPD_ROUNDS) { const p = E[Math.floor(Math.random() * E.length)]; if (!ids.includes(p.id)) ids.push(p.id); }
+    if (ids.length === CPD_ROUNDS) { const st = _now() + 1500; await dbSet('wordleDuels', lob.id, { ids, round: round + 1, r: 0, rStart: st, startedAt: st, endR: -1, endAt: 0, hostG: [], guestG: [], done: false, hostQuit: false, guestQuit: false, hostRematch: false, guestRematch: false, hostLeft: false, guestLeft: false }); setTimeout(() => renderGames(), 200); } }
+  clearInterval(window._cpdPoll); window._cpdPollBusy = false;
+  window._cpdPoll = setInterval(async () => { if (!document.getElementById('cpd-duel')) { clearInterval(window._cpdPoll); return; } if (window._cpdPollBusy || window._cpdBusy) return;
+    window._cpdPollBusy = true; try { dbInvalidate('wordleDuels'); dbGet._lastFailed = false; const l2 = await dbGet('wordleDuels', lob.id).catch(() => undefined); if (l2) window._duelPrefetch = { id: lob.id, at: Date.now(), d: l2 };
+      if (l2 === undefined || dbGet.readFailed()) return; if (!l2) { _cpdSet(null); renderGames(); return; }
+      if (l2.status === 'waiting' && role === 'host' && _now() - (l2.hostSeen || 0) > 10e3) dbSet('wordleDuels', lob.id, { hostSeen: _now() }).catch(() => {});
+      else if (l2.status === 'playing' && !l2.done && _now() - (l2[role + 'Seen'] || 0) > 10e3) dbSet('wordleDuels', lob.id, { [role + 'Seen']: _now() }).catch(() => {});
+      if (l2.status === 'playing' && !l2.done && !l2.hostQuit && !l2.guestQuit && _now() >= (l2.rStart || 0)) await _cpdAdvance(l2, role, pool);
+      const sig = (x) => [x.status, x.round || 1, x.r || 0, x.endR, JSON.stringify(x.hostG || []), JSON.stringify(x.guestG || []), !!x.done, x.guestName || '', !!x.hostRematch, !!x.guestRematch, !!x.hostLeft, !!x.guestLeft, !!x.hostQuit, !!x.guestQuit].join('|');
+      if (sig(l2) !== sig(lob)) await renderGames(); } finally { window._cpdPollBusy = false; } }, 700);
+  const V = `style="${_duelVars(lob, role)}"`;
+  const bigCard = (p, side, st) => `<div class="wd-fc ${side}"><div class="wd-fc-av">${_wdAv({ name: p.name, photo: p.av }, 96)}</div><b>${esc(p.name)}</b><div class="wd-fc-st">${st}</div></div>`;
+  if (lob.status === 'waiting') return top + `<div id="cpd-duel" class="wd-face wait" ${V}>${bigCard(meP, 'l', '<span>Career Path duel</span>')}
+      <div class="wd-face-mid"><div class="wd-code">${esc(lob.id)}</div><small>${lob.public ? 'Public lobby' : 'Private — share this code'}</small></div>
+      <div class="wd-fc r empty"><div class="wd-fc-av"><span class="wd-spin big"></span></div><b>Waiting for opponent…</b><div class="wd-fc-st"><span>${lob.public ? 'Listed in public lobbies' : 'Send them the code'}</span></div></div></div>
+      <div style="text-align:center;margin-top:12px"><button class="btn btn-secondary" onclick="cpDuelLeave()">Cancel lobby</button></div>`;
+  const faceLeft = (lob.rStart || 0) - _now();
+  if (faceLeft > 0 && r === 0 && !(lob.hostG || []).length && !(lob.guestG || []).length) { setTimeout(() => { if (document.getElementById('cpd-duel')) renderGames(); }, faceLeft + 60);
+    const st2 = await _wdStatsFor([meP.uid, opP.uid]), h = _h2hVs(st2, meP.uid, opP.uid, 'h2hCp'), rec = (p) => { const x = st2[p.uid] || {}; return `<span><i>${x.cpW || 0}–${x.cpL || 0}</i>Duels W–L</span>`; };
+    clearInterval(window._wdTick); window._wdTick = setInterval(() => { const c = document.getElementById('cpd-count'); if (!c) { clearInterval(window._wdTick); return; } const ms = lob.rStart - _now(); c.textContent = ms > 0 ? Math.ceil(ms / 1000) : 'GO!'; }, 200);
+    return top + `<div id="cpd-duel" class="wd-face go" ${V}>${bigCard(meP, 'l', rec(meP))}<div class="wd-face-mid"><span class="wd-vs-big">VS</span><div class="wd-h2h"><b style="color:${h[0] > h[1] ? '#4ade80' : h[0] < h[1] ? '#f87171' : '#9ca3af'}">${h[0]}–${h[1]}</b><small>Head to head</small></div><div id="cpd-count" class="wd-count">${Math.ceil(faceLeft / 1000)}</div></div>${bigCard(opP, 'r', rec(opP))}</div>`; }
+  const mx = Math.max(1, T.host, T.guest), _rv = !done && R.over && lob.endR === r && lob.endAt;
+  const gain = (ro) => _rv ? `<span class="tqd-gain${R.win === ro ? '' : ' zero'}">${R.win === ro ? '+' + R.pts : '+0'}</span>` : '';
+  const pod = (p, ro) => `<div class="pd-pod${done && winner === ro ? ' win' : ''}${ro === role ? ' me' : ''}">${_wdAv({ name: p.name, photo: p.av }, 46)}<div class="pd-pn"><b>${esc(p.name)}</b><small>${ro === role ? 'You' : 'Opponent'}${!done ? ' · ' + (CPD_GUESSES - _cpdG(lob, ro, r).length) + ' guess' + (CPD_GUESSES - _cpdG(lob, ro, r).length === 1 ? '' : 'es') + ' left' : ''}</small><div class="tqd-bar"><i style="width:${Math.round(T[ro] / mx * 100)}%"></i></div></div><div class="pd-tot">${gain(ro)}${T[ro]}</div></div>`;
+  let html = top + `<div id="cpd-duel" ${V}><div class="pd-pods">${pod(meP, role)}<div class="pd-vs">VS</div>${pod(opP, opp)}</div>`;
+  if (!done && D) { const el = Math.max(0, _now() - (lob.rStart || 0)), steps = D.cp, nShow = R.over ? _cpdTotal(D) : Math.min(_cpdTotal(D), 1 + Math.floor(el / CPD_STEP));
+    const myG = _cpdG(lob, role, r), opG = _cpdG(lob, opp, r); window._cpdUsed = myG.map(x => x.id);
+    const card = (x, i) => { const on = i < nShow, lg = on && typeof getTeamLogo === 'function' ? getTeamLogo(x[1]) : '', col = on && typeof getTeamCardColour === 'function' ? getTeamCardColour(x[1]) : null;
+      return `<div class="cp-step${on ? ' on' : ''}" style="${col ? '--tc:' + col.accent : ''}"><div class="cp-s">S${x[0]}</div>${on ? `<div class="cp-logo">${lg ? `<img src="${esc(lg)}" alt="">` : '🏎️'}</div><b>${esc(x[1])}</b><small>${esc(x[2] || '')}</small>` : '<div class="cp-logo q">?</div><b>Hidden</b><small>&nbsp;</small>'}</div>`; };
+    const _lr = D.lr ? `🏁 Last race: <b>S${D.lr[0]} ${esc(D.lr[2] || 'R' + D.lr[1])}</b> · ${esc(D.lr[3] || '')} · ${D.lr[5] ? D.lr[5] : D.lr[4] ? 'P' + esc(D.lr[4]) : ''}` : '🏁 Last race unknown';
+    const hints = [D.nat ? `${_wdFlag(D.nat)} <b>${esc(D.nat)}</b>` : '🌍 Nationality unknown', `🔢 <b>${(D.st || 0).toLocaleString()}</b> IMS appearances`, _lr], extra = Math.max(0, nShow - steps.length);
+    const nextIn = R.over || nShow >= _cpdTotal(D) ? 0 : CPD_STEP - (el % CPD_STEP), worth = _cpdPtsAt(el);
+    html += `<div class="hl-progress">${Array.from({ length: CPD_ROUNDS }, (_, k) => { const RR = k < r || (k === r && _rv) ? _cpdRound(lob, k, pool.find(p => p.id === lob.ids[k])) : null; return `<span class="${RR ? (RR.win === role ? 'ok' : RR.win ? 'bad' : 'done') : k === r ? 'cur' : ''}"></span>`; }).join('')}<b>Driver ${r + 1}/${CPD_ROUNDS}</b></div>
+      <div class="pt-arena cp-arena"><div class="pt-qn">WHO HAD THIS CAREER?${!R.over ? ` · NOW WORTH <span style="color:#fde047">${worth}</span>` : ''}</div>
+      <div class="cp-path">${steps.map((x, i) => card(x, i) + (i < steps.length - 1 ? '<span class="cp-arr">›</span>' : '')).join('')}</div>
+      ${extra ? `<div class="cp-hints">${hints.slice(0, extra).map(h => `<span>${h}</span>`).join('')}</div>` : ''}
+      ${!R.over && nextIn ? `<div class="pd-cd"><span id="cpd-fill" style="width:${nextIn / CPD_STEP * 100}%"></span></div><div class="pd-cdn">next reveal in <b id="cpd-cd">${Math.ceil(nextIn / 1000)}</b>s</div>` : ''}
+      ${[...myG.map(g => ['You', g]), ...(R.over ? opG.map(g => [opP.name, g]) : [])].filter(([, g]) => g.id !== D.id).length ? `<div class="cp-wrong">${[...myG.map(g => ['You', g]), ...(R.over ? opG.map(g => [opP.name, g]) : [])].filter(([, g]) => g.id !== D.id).map(([who, g]) => { const p = pool.find(x => x.id === g.id); return `<span>✕ ${esc(who)}: ${esc(p ? p.name : '?')}</span>`; }).join('')}</div>` : ''}
+      ${R.over ? `<div class="cp-reveal${R.win === role ? ' win' : ''}">${_wdAv(D, 64)}<div><small>${R.win === role ? `You got it! +${R.pts}` : R.win ? `${esc(opP.name)} got it · +${R.pts}` : 'Nobody got it'}</small><b>${esc(D.name)}</b></div></div>`
+        : myG.length >= CPD_GUESSES ? `<div class="pt-hint" style="margin-top:14px">Out of guesses — waiting for ${esc(opP.name)}…</div>`
+        : `<div class="wd-search" style="margin-top:16px"><span class="wd-search-ico">🔍</span><input id="cpd-input" type="text" placeholder="Guess the IMS driver…" autocomplete="off" oninput="cpdSuggest(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();cpdPickFirst();}"><div id="cpd-sugg"></div></div>`}
+      </div><div style="text-align:center;margin-top:12px"><button class="pt-skip" onclick="cpDuelLeave()">🏳️ Forfeit duel</button></div>`;
+    clearInterval(window._cpdCd);
+    if (!R.over) { if (r === 0 && el < 1500) _ptStingOnce('cpd|' + lob.id + '|' + round);
+      window._cpdCd = setInterval(() => { const e2 = Math.max(0, _now() - (lob.rStart || 0)), n2 = Math.min(_cpdTotal(D), 1 + Math.floor(e2 / CPD_STEP)), left = CPD_STEP - (e2 % CPD_STEP);
+        const c = document.getElementById('cpd-cd'), f = document.getElementById('cpd-fill'); if (c) c.textContent = Math.ceil(left / 1000); if (f) f.style.width = (left / CPD_STEP * 100) + '%';
+        if (n2 !== nShow || e2 > _cpdTotal(D) * CPD_STEP) { clearInterval(window._cpdCd); const inp = document.getElementById('cpd-input'), v = inp ? inp.value : ''; renderGames().then(() => { const i2 = document.getElementById('cpd-input'); if (i2 && v) { i2.value = v; cpdSuggest(v); } }); } }, 250); }
+    else if (window._cpdRevK !== lob.id + r + round) { window._cpdRevK = lob.id + r + round; try { R.win === role ? _ptSnd.ding() : _ptSnd.wrong(); } catch (e) {} }
+    setTimeout(() => { const i = document.getElementById('cpd-input'); if (i && !('ontouchstart' in window) && document.activeElement !== i) i.focus(); }, 0);
+  } else if (done) { clearInterval(window._cpdCd);
+    if (window._cpdEndK !== rk) { window._cpdEndK = rk; setTimeout(() => { try { winner === role ? _ptSnd.win() : winner === 'draw' ? _ptSnd.ding() : _ptSnd.lose(); } catch (e) {} }, 300); }
+    const msg = quit ? (winner === role ? `${esc(opP.name)} left — you win!` : 'You left the duel.') : winner === 'draw' ? 'It\'s a draw!' : winner === role ? 'You win!' : `${esc(opP.name)} wins`;
+    const rows = (lob.ids || []).map((id, i) => { const Dd = pool.find(p => p.id === id), RR = _cpdRound(lob, i, Dd); return `<div class="pd-rr"><div class="pd-rq"><small>DRIVER ${i + 1}</small>${esc(Dd ? Dd.name : '?')}</div><div class="pd-rc"><b style="color:${RR.win === role ? '#4ade80' : '#f87171'}">${RR.win === role ? '+' + RR.pts : '—'}</b></div><div class="pd-rc"><b style="color:${RR.win === opp ? '#4ade80' : '#f87171'}">${RR.win === opp ? '+' + RR.pts : '—'}</b></div></div>`; }).join('');
+    html += `<div class="pt-arena pt-end${winner === role ? ' good' : ''}"><div class="pt-qn">${winner === role ? 'WINNER' : winner === 'draw' ? 'DRAW' : 'FULL TIME'}</div><div class="pt-qt">${msg}</div>
+      <div class="pd-final"><div><small>You</small><b>${T[role]}</b></div><div><small>${esc(opP.name)}</small><b>${T[opp]}</b></div></div>
+      <div class="pd-rr pd-rh"><div></div><div>You</div><div>${esc(opP.name)}</div></div>${rows}
+      <div class="wd-btns" style="justify-content:center;margin-top:14px">${lob[opp + 'Left'] ? `<span class="text-muted">${esc(opP.name)} left</span>` : `<button class="pt-go" style="width:auto;padding:12px 22px;margin:0" onclick="cpDuelRematch()" ${lob[role + 'Rematch'] ? 'disabled' : ''}>${lob[role + 'Rematch'] ? (lob[opp + 'Rematch'] ? 'Starting…' : 'Waiting for opponent…') : (lob[opp + 'Rematch'] ? '🔁 Accept rematch' : '🔁 Rematch')}</button>`}<button class="btn btn-secondary" onclick="cpDuelLeave()">Leave</button></div></div>`; }
+  return html + '</div>';
 }
 // ===== GAMES: IMS PADDOCKDLE GRID =====
 // 3×3 grid: every cell needs a market driver who fits BOTH its row and column category. Each driver
