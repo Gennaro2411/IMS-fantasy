@@ -31696,7 +31696,7 @@ const _cpGetMode = () => window._cpMode || 'daily';
 window.setCPMode = function(m) { window._cpMode = m; renderGames(); };
 const _cpLoadSt = () => { try { return JSON.parse(localStorage.getItem('imsCpDaily') || 'null'); } catch (e) { return null; } };
 const _cpSave = (st) => { try { localStorage.setItem('imsCpDaily', JSON.stringify(st)); } catch (e) {} };
-const _cpPracUsed = () => { if (typeof adminLoggedIn !== 'undefined' && adminLoggedIn) return 0; try { const o = JSON.parse(localStorage.getItem('imsCpPrac') || 'null'); return o && o.day === _wdDayKey() ? o.n : 0; } catch (e) { return 0; } };
+const _cpPracUsed = () => { return 0; /* Career Path practice is unlimited */ try { const o = JSON.parse(localStorage.getItem('imsCpPrac') || 'null'); return o && o.day === _wdDayKey() ? o.n : 0; } catch (e) { return 0; } };
 const _cpPracBump = () => { try { localStorage.setItem('imsCpPrac', JSON.stringify({ day: _wdDayKey(), n: _cpPracUsed() + 1 })); } catch (e) {} };
 const _cpDayNum = () => { const p = _wdDayKey().split('/'); return Math.max(0, Math.round((Date.UTC(+p[2], +p[1] - 1, +p[0]) - Date.UTC(2026, 9, 20)) / 864e5)); };
 const _cpEligible = (pool) => pool.filter(p => (p.cp || []).length >= 3 && new Set(p.cp.map(x => _wdNorm(x[1]))).size >= 2);
@@ -31761,12 +31761,12 @@ async function renderCPGame(el) {
       ${st.g.filter(g => g !== st.id).length ? `<div class="cp-wrong">${st.g.filter(g => g !== st.id).map(g => { const p = pool.find(x => x.id === g); return `<span>✕ ${esc(p ? p.name : '?')}</span>`; }).join('')}</div>` : ''}
       ${st.done ? `<div class="cp-reveal${st.won ? ' win' : ''}">${_wdAv(D, 72)}<div><small>${st.won ? `Got it in ${st.g.length}!` : 'The driver was'}</small><b>${esc(D.name)}</b></div></div>
         <button class="pt-go" style="background:linear-gradient(135deg,#5865f2,#4752c4);color:#fff" onclick="cpShare()">📤 SHARE RESULT</button>
-        ${mode === 'inf' ? (_cpPracUsed() < CP_PRAC_MAX ? `<button class="pt-go" onclick="cpAgain()">PLAY AGAIN · ${CP_PRAC_MAX - _cpPracUsed()} left today</button>` : '<div class="pt-hint" style="margin-top:12px">That was your last practice round today.</div>') : `<div class="pt-next"><small>NEXT CAREER PATH IN</small><b id="pt-timer">--:--:--</b></div>`}`
+        ${mode === 'inf' ? (_cpPracUsed() < CP_PRAC_MAX ? `<button class="pt-go" onclick="cpAgain()">PLAY AGAIN</button>` : '<div class="pt-hint" style="margin-top:12px">That was your last practice round today.</div>') : `<div class="pt-next"><small>NEXT CAREER PATH IN</small><b id="pt-timer">--:--:--</b></div>`}`
       : `<div class="wd-search" style="margin-top:16px"><span class="wd-search-ico">🔍</span><input id="cp-input" type="text" placeholder="Guess the IMS driver…" autocomplete="off" oninput="cpSuggest(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();cpPickFirst();}" ${locked ? 'disabled' : ''}><div id="cp-sugg"></div></div>
         <div class="pt-hint">${CP_MAX - st.g.length} guess${CP_MAX - st.g.length === 1 ? '' : 'es'} left · each wrong guess reveals more</div>`}</div>`; }
   if (mode === 'daily') body += (st && st.done || !window._cpLb) ? (window._cpLb = await _cpLeaderboardHtml()) : window._cpLb;
   el.innerHTML = `<div class="wd-wrap">${body}<div class="wd-info"><h3>How to play</h3><p>You see an IMS driver's <b>first season</b> — the team they mainly drove for and their division. Guess who it is. <b>Every wrong guess reveals the next season</b>; once the whole path is shown you get their nationality, then their appearance count, then their last race. <b>${CP_MAX} guesses.</b></p>
-    <p><b>📅 Daily</b> — the same driver for everyone. <b>∞ Practice</b> — up to ${CP_PRAC_MAX} a day. Pool: drivers with 3+ IMS seasons.</p>
+    <p><b>📅 Daily</b> — the same driver for everyone. <b>∞ Practice</b> — unlimited. Pool: drivers with 3+ IMS seasons.</p>
     <p style="margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(247,207,85,.08);border:1px solid rgba(247,207,85,.35);font-size:.84rem"><span class="imc"></span> <b>Earn IM$:</b> play the daily for <b>+10 IM$</b>, solve it in <b>3 guesses or fewer</b> for <b>another +10 IM$</b>. Log in to earn.</p></div></div>`;
   if (document.getElementById('pt-timer')) { const until = _now() + _wdMsToMidnight(); clearInterval(window._wdTick);
     const tk = () => { const t = document.getElementById('pt-timer'); if (!t) { clearInterval(window._wdTick); return; } const ms = until - _now(); if (ms <= 0) { clearInterval(window._wdTick); renderGames(); return; }
