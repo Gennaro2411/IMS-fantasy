@@ -2311,10 +2311,10 @@
     .wd-search-ico{position:absolute;left:16px;top:50%;transform:translateY(-50%);opacity:.55;pointer-events:none}
     .wd-search input{width:100%;padding:14px 16px 14px 44px;border-radius:14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);color:#fff;font-size:1rem;outline:none;transition:border-color .15s,box-shadow .15s}
     .wd-search input:focus{border-color:rgba(46,204,113,.6);box-shadow:0 0 0 4px rgba(46,204,113,.12)}
-    #wd-sugg,#pt-sugg,#pd-sugg{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:50;background:rgba(22,22,32,0.98);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.1);border-radius:14px;max-height:320px;overflow-y:auto;box-shadow:0 18px 40px rgba(0,0,0,.55);padding:4px}
-    #wd-sugg:empty,#pt-sugg:empty,#pd-sugg:empty{display:none}
-    #wd-sugg button,#pt-sugg button,#pd-sugg button{display:flex;align-items:center;gap:12px;width:100%;padding:8px 10px;background:none;border:none;border-radius:10px;color:#fff;cursor:pointer;text-align:left;font-weight:700;font-size:.92rem}
-    #wd-sugg button:hover,#pt-sugg button:hover,#pd-sugg button:hover{background:rgba(46,204,113,0.12)}#wd-sugg img{width:30px;height:30px;border-radius:50%;object-fit:cover}
+    #wd-sugg,#pt-sugg,#pd-sugg,#cp-sugg{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:50;background:rgba(22,22,32,0.98);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.1);border-radius:14px;max-height:320px;overflow-y:auto;box-shadow:0 18px 40px rgba(0,0,0,.55);padding:4px}
+    #wd-sugg:empty,#pt-sugg:empty,#pd-sugg:empty,#cp-sugg:empty{display:none}
+    #wd-sugg button,#pt-sugg button,#pd-sugg button,#cp-sugg button{display:flex;align-items:center;gap:12px;width:100%;padding:8px 10px;background:none;border:none;border-radius:10px;color:#fff;cursor:pointer;text-align:left;font-weight:700;font-size:.92rem}
+    #wd-sugg button:hover,#pt-sugg button:hover,#pd-sugg button:hover,#cp-sugg button:hover{background:rgba(46,204,113,0.12)}#wd-sugg img{width:30px;height:30px;border-radius:50%;object-fit:cover}
     .wd-board{display:flex;flex-direction:column;gap:8px;overflow-x:auto;padding-bottom:4px}
     .wd-row{display:grid;grid-template-columns:1.5fr repeat(7,1fr);gap:8px;min-width:800px}
     .wd-head div{text-align:center;font-size:.62rem;font-weight:800;letter-spacing:2px;color:var(--muted);padding-bottom:2px}
@@ -2439,6 +2439,15 @@
     .tqd-bar{height:4px;border-radius:2px;background:rgba(255,255,255,.08);margin-top:5px;overflow:hidden}.tqd-bar i{display:block;height:100%;background:linear-gradient(90deg,#38bdf8,#7dd3fc);transition:width .6s}
     .tqd-gain{position:absolute;right:calc(100% + 8px);top:50%;transform:translateY(-50%);font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.3rem;color:#4ade80;text-shadow:0 0 12px rgba(74,222,128,.6);white-space:nowrap;animation:tqdGain 1.2s ease-out both}.tqd-gain.zero{color:#f87171;text-shadow:none}.pd-tot{position:relative}
     @keyframes tqdGain{0%{opacity:0;transform:translate(10px,-50%) scale(.6)}25%{opacity:1;transform:translate(0,-50%) scale(1.25)}45%{transform:translate(0,-50%) scale(1)}100%{opacity:1;transform:translate(0,-50%)}}
+    .cp-path{position:relative;display:flex;align-items:stretch;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:16px}.cp-arr{align-self:center;color:var(--muted);font-size:1.4rem;font-weight:900}
+    .cp-step{--tc:#7dd3fc;width:118px;padding:10px 8px;border-radius:14px;background:rgba(255,255,255,.03);border:1px dashed rgba(255,255,255,.15);display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center}
+    .cp-step.on{background:linear-gradient(160deg,color-mix(in srgb,var(--tc) 22%,transparent),rgba(255,255,255,.02));border:1px solid color-mix(in srgb,var(--tc) 55%,transparent);animation:wdFlip .45s both}
+    .cp-s{font-size:.62rem;letter-spacing:1.5px;font-weight:800;color:var(--muted)}.cp-logo{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.25)}.cp-logo img{max-width:38px;max-height:30px;object-fit:contain}.cp-logo.q{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.5rem;color:var(--muted)}
+    .cp-step b{font-size:.82rem;line-height:1.15;overflow:hidden;text-overflow:ellipsis;max-width:100%}.cp-step small{font-size:.66rem;color:var(--muted)}
+    .cp-hints{position:relative;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px}.cp-hints span{padding:6px 12px;border-radius:999px;background:rgba(253,224,71,.1);border:1px solid rgba(253,224,71,.35);font-size:.82rem;animation:wdPop .4s both}
+    .cp-wrong{position:relative;display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:12px}.cp-wrong span{font-size:.74rem;color:#fca5a5;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);padding:3px 9px;border-radius:999px}
+    .cp-reveal{position:relative;display:flex;align-items:center;justify-content:center;gap:14px;margin-top:16px;padding:12px;border-radius:16px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);animation:wdPop .5s both}.cp-reveal.win{background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.45)}.cp-reveal small{display:block;color:var(--muted);font-size:.75rem}.cp-reveal b{font-family:'Barlow Condensed',sans-serif;font-size:1.8rem}
+    @media (max-width:640px){.cp-step{width:96px}.cp-arr{display:none}}
     .ptb-row{display:grid;grid-template-columns:28px minmax(0,1fr) 48px 52px 34px 38px;gap:4px;align-items:center;padding:8px;font-size:.84rem;border-bottom:1px solid var(--border)}.ptb-head{font-size:.62rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
     .ptb-row .c{text-align:center}.ptb-row .pos{font-weight:700;color:var(--muted)}.ptb-row .nm{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ptb-row .nm small{display:block;font-weight:400;font-size:.68rem;color:var(--muted)}
     .ptb-row .best{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.1rem;color:#7dd3fc}.ptb-row.top .best{color:#fde047}.ptb-row .pz{color:#fde047;font-weight:700}.ptb-row.me{background:rgba(56,189,248,.12);border-radius:8px}
@@ -29349,7 +29358,7 @@ window.buildWordleData = async function(btn) { window._dhSeen = new Set();
       // A team only counts as "driven for" with 3+ starts for it (worked out below); current team always counts.
       if (sn && tm && !/^A/i.test(String(dv || '').trim()) && !/^(n\/?a|none|-|tbd)$/i.test(String(tm).trim())) {
         const tk = sn + '|' + rn + '|' + String(dv || '').trim().toUpperCase() + '|' + _wdNorm(nm);
-        if (!thSeen.has(tk)) { thSeen.add(tk); s.tc = s.tc || {}; const t = s.tc[_wdNorm(tm)] = s.tc[_wdNorm(tm)] || { name: String(tm).trim(), n: 0 }; t.n++; if (sn < curS) { s.tc0 = s.tc0 || {}; s.tc0[_wdNorm(tm)] = (s.tc0[_wdNorm(tm)] || 0) + 1; } } }
+        if (!thSeen.has(tk)) { if (!/reserve/i.test(String(role || ''))) { s.cs = s.cs || {}; const C = s.cs[sn] = s.cs[sn] || {}; const ck = _wdNorm(tm); C[ck] = C[ck] || { name: String(tm).trim(), n: 0, d: {} }; C[ck].n++; const dd = String(dv || '').trim().toUpperCase().replace(/^(\d)$/, 'D$1'); C[ck].d[dd] = (C[ck].d[dd] || 0) + 1; } thSeen.add(tk); s.tc = s.tc || {}; const t = s.tc[_wdNorm(tm)] = s.tc[_wdNorm(tm)] || { name: String(tm).trim(), n: 0 }; t.n++; if (sn < curS) { s.tc0 = s.tc0 || {}; s.tc0[_wdNorm(tm)] = (s.tc0[_wdNorm(tm)] || 0) + 1; } } }
       // Every division raced in, any race (official or not), pre-season / academy excluded.
       { let dvh = String(dv || '').trim().toUpperCase(); if (/^\d$/.test(dvh)) dvh = 'D' + dvh; const hk = sn + '|' + rn + '|' + dvh + '|' + _wdNorm(nm);
         if (sn && sn < curS && /^[B-Z]\d+$/.test(dvh) && !(window._dhSeen = window._dhSeen || new Set()).has(hk)) { window._dhSeen.add(hk); s.dh = s.dh || {}; s.dh[dvh] = (s.dh[dvh] || 0) + 1; } }
@@ -29426,6 +29435,8 @@ window.buildWordleData = async function(btn) { window._dhSeen = new Set();
       const ck = 'S' + sn + ' ' + dv; if (!champ[ck] || v > champ[ck].pts) champ[ck] = { k, pts: v, tie: false }; else if (v === champ[ck].pts) champ[ck].tie = true; }));
     const champList = Object.entries(champ).sort((a, b) => { const [sa, da] = a[0].slice(1).split(' '), [sb, db] = b[0].slice(1).split(' '); return (+sa - +sb) || da.localeCompare(db); })
       .map(([ck, c]) => { const st = stats[c.k]; if (st) { st.ch = (st.ch || 0) + 1; (st.chs = st.chs || []).push(ck); } return { ck, name: st ? st.n : c.k, pts: Math.round(c.pts), tie: c.tie }; });
+    // Career path: each season's main full-time team (most starts) and division, in order → [[season, team, div], …].
+    Object.values(stats).forEach(s => { if (!s.cs) return; s.cp = Object.keys(s.cs).map(Number).sort((a, b) => a - b).map(sn => { const t = Object.values(s.cs[sn]).sort((a, b) => b.n - a.n)[0]; const dv = Object.entries(t.d).sort((a, b) => b[1] - a[1])[0]; return [sn, t.name, dv ? dv[0] : '']; }); delete s.cs; });
     Object.values(stats).forEach(s => { s.p = Math.round(s.p);
       s.th = {}; Object.entries(s.tc || {}).forEach(([k, t]) => { if (t.n >= 3) s.th[k] = t.name; }); }); // 3+ starts = drove for that team
     // Manual starts corrections (the .db has a stray extra row for these drivers).
@@ -29514,7 +29525,7 @@ async function _wdLoad() {
     return { id: d.id, name: d.name, res: !!d.isReserve, dv: d.division || d.lastDivision || d.prevDivision || '', team: d.isReserve ? 'Reserve' : (d.team || '—'), div: d.division || '', nat: _natFix(d.name, s.nat) || '', b: s.b || 0, // All-time table (matched on the market name) + this season's .db results — so a driver whose .db
     // alias differs from their market name still gets their real points/wins.
     p: WORDLE_BASE[_wdNorm(d.name)] ? bs[0] + Math.round(s.p8 || 0) : (s.p != null ? s.p : 0),
-    w: WORDLE_BASE[_wdNorm(d.name)] ? bs[1] + Math.max(s.w8 || 0, liveW[d.id] || 0) : (s.w != null ? s.w : 0) + Math.max(0, (liveW[d.id] || 0) - (s.w8 || 0)), st: (s.st0 || 0) + (liveSt[d.id] || 0), pd: (bs[2] || 0) + Math.max(s.pd8 || 0, livePd[d.id] || 0), pl: _poleFix(d.name, Math.max(s.pl || 0, s2.pl || 0) + Math.max(0, (livePl[d.id] || 0) - Math.max(s.pl8 || 0, s2.pl8 || 0))), th, thw, dh, dw, tn, fs: _wdFirstSeason(s, s2), ch: DRIVER_CHAMPS.filter(([, n]) => { const c = _wdNorm(n); return c === k || c === _wdNorm(d.name); }).length, photo: (typeof driverPhoto === 'function') ? driverPhoto(d) : '' };
+    w: WORDLE_BASE[_wdNorm(d.name)] ? bs[1] + Math.max(s.w8 || 0, liveW[d.id] || 0) : (s.w != null ? s.w : 0) + Math.max(0, (liveW[d.id] || 0) - (s.w8 || 0)), st: (s.st0 || 0) + (liveSt[d.id] || 0), pd: (bs[2] || 0) + Math.max(s.pd8 || 0, livePd[d.id] || 0), pl: _poleFix(d.name, Math.max(s.pl || 0, s2.pl || 0) + Math.max(0, (livePl[d.id] || 0) - Math.max(s.pl8 || 0, s2.pl8 || 0))), th, thw, dh, dw, tn, cp: (() => { const c = ((s.cp || []).length >= (s2.cp || []).length ? s.cp : s2.cp) || [], cs = Number(window._reserveSeason) || Number(window.currentSeason) || 8; const out = c.filter(x => x[0] < cs).map(x => x.slice()); if (!d.isReserve && d.team && !/^reserve$/i.test(d.team)) out.push([cs, d.team, d.division || '']); else { const cur = c.find(x => x[0] === cs); if (cur) out.push(cur.slice()); } return out; })(), fs: _wdFirstSeason(s, s2), ch: DRIVER_CHAMPS.filter(([, n]) => { const c = _wdNorm(n); return c === k || c === _wdNorm(d.name); }).length, photo: (typeof driverPhoto === 'function') ? driverPhoto(d) : '' };
   }).sort((a, b) => a.id < b.id ? -1 : 1);
   // Drivers who are only in the .db (not in the fantasy app) — same 25+ starts / champion / BOTT rule as reserves.
   { const curS = Number(window._reserveSeason) || 8, have = new Set();
@@ -29526,7 +29537,7 @@ async function _wdLoad() {
       let photo = ''; try { photo = (window._avatarByName && typeof _normName === 'function' && window._avatarByName[_normName(s.n)]) || ''; } catch (e) {}
       pool.push({ id: 'db:' + k, name: s.n, res: true, dbOnly: true, dv: ld, team: 'Reserve', div: '', nat: _natFix(s.n, s.nat || ''), b: s.b || 0,
         p: bs ? bs[0] + Math.round(s.p8 || 0) : Math.round(s.p || 0), w: bs ? bs[1] + (s.w8 || 0) : (s.w || 0), st: s.st0 || 0, pd: (bs ? bs[2] : 0) + (s.pd8 || 0),
-        th: Object.assign({}, s.th || {}), dh: Object.assign({}, s.dh || {}), dw: _ptDivWins(s.ws || []), tn: Object.fromEntries(Object.entries(s.tc || {}).map(([k, t]) => [k, t.n])), fs: _wdFirstSeason(s), pl: _poleFix(s.n, s.pl || 0), ch: DRIVER_CHAMPS.filter(([, n]) => _wdNorm(n) === k).length, photo }); }); }
+        th: Object.assign({}, s.th || {}), cp: (s.cp || []).map(x => x.slice()), dh: Object.assign({}, s.dh || {}), dw: _ptDivWins(s.ws || []), tn: Object.fromEntries(Object.entries(s.tc || {}).map(([k, t]) => [k, t.n])), fs: _wdFirstSeason(s), pl: _poleFix(s.n, s.pl || 0), ch: DRIVER_CHAMPS.filter(([, n]) => _wdNorm(n) === k).length, photo }); }); }
   // Admin stat overrides (settings/statOverrides, keyed by normalised name) — applied last so they win everywhere.
   { const so = await dbGet('settings', 'statOverrides').catch(() => null); window._statOv = (so && so.value) || {};
     pool.forEach(p => { p._orig = { p: p.p, w: p.w, pd: p.pd, pl: p.pl, st: p.st, b: p.b, ch: p.ch, nat: p.nat };
@@ -29952,6 +29963,7 @@ window.renderGames = async function() {
   if (window._games.view === 'cn') { clearInterval(window._wdDuelPoll); return renderConnGame(el); }
   if (window._games.view === 'pt') { clearInterval(window._wdDuelPoll); return renderPTGame(el); }
   if (window._games.view === 'tq') { clearInterval(window._wdDuelPoll); return renderTQGame(el); }
+  if (window._games.view === 'cp') { clearInterval(window._wdDuelPoll); return renderCPGame(el); }
   if (window._games.view !== 'wordle') {
     clearInterval(window._wdDuelPoll);
     { const lk = await dbGet('settings', 'gamesLock').catch(() => null); window._gamesLock = (lk && lk.value) || {}; }
@@ -29963,6 +29975,7 @@ window.renderGames = async function() {
       ${(() => { const cl = !!window._gamesLock.cn; return `<button class="gm-bubble${cl ? ' gm-locked' : ''}" onclick="openGame('cn')"><span class="gm-ico">${cl ? '🔒' : '🧩'}</span><b>IMS CONNECTIONS${cl ? ' <span class="gm-lock-tag">LOCKED</span>' : ''}</b><small>16 IMS drivers, 4 hidden groups. Find the four drivers who share a team, nationality, title or stat — 4 mistakes and you're out.</small></button>`; })()}
       ${(() => { const pl = !!window._gamesLock.pt; return `<button class="gm-bubble${pl ? ' gm-locked' : ''}" onclick="openGame('pt')"><span class="gm-ico">${pl ? '🔒' : '🎯'}</span><b>IMS POINTLESS${pl ? ' <span class="gm-lock-tag">LOCKED</span>' : ''}</b><small>3 questions. Name the IMS drivers with the least appearances who fit — the fewer appearances, the fewer points. Lowest total wins.</small></button>`; })()}
       ${(() => { const tl = !!window._gamesLock.tq; return `<button class="gm-bubble${tl ? ' gm-locked' : ''}" onclick="openGame('tq')"><span class="gm-ico">${tl ? '🔒' : '🧠'}</span><b>IMS TRIVIA${tl ? ' <span class="gm-lock-tag">LOCKED</span>' : ''}</b><small>10 quick questions on IMS history — wins, poles, teams, nationalities and track records. How well do you know the league?</small></button>`; })()}
+      ${(() => { const cl2 = !!window._gamesLock.cp; return `<button class="gm-bubble${cl2 ? ' gm-locked' : ''}" onclick="openGame('cp')"><span class="gm-ico">${cl2 ? '🔒' : '🛣️'}</span><b>IMS CAREER PATH${cl2 ? ' <span class="gm-lock-tag">LOCKED</span>' : ''}</b><small>A driver's team history, season by season. Guess who — every wrong guess reveals the next season.</small></button>`; })()}
       <div class="gm-bubble gm-soon"><span class="gm-ico">🔒</span><b>MORE SOON</b><small>New games on the way.</small></div></div>`;
     return;
   }
@@ -30277,7 +30290,7 @@ window.careerLookup = async function(name) {
 };
 
 // ---- Admin: lock / unlock games ----
-const GAMES_LIST = [['wordle', '🟩', 'IMS PaddockDle'], ['grid', '🔢', 'IMS PaddockDle Grid'], ['hl', '⬆️', 'IMS Higher or Lower'], ['cn', '🧩', 'IMS Connections'], ['pt', '🎯', 'IMS Pointless'], ['tq', '🧠', 'IMS Trivia']];
+const GAMES_LIST = [['wordle', '🟩', 'IMS PaddockDle'], ['grid', '🔢', 'IMS PaddockDle Grid'], ['hl', '⬆️', 'IMS Higher or Lower'], ['cn', '🧩', 'IMS Connections'], ['pt', '🎯', 'IMS Pointless'], ['tq', '🧠', 'IMS Trivia'], ['cp', '🛣️', 'IMS Career Path']];
 window.renderAdminGames = async function() {
   const box = document.getElementById('admin-games-locks'); if (!box) return;
   const lk = await dbGet('settings', 'gamesLock').catch(() => null); const L = (lk && lk.value) || {};
@@ -30337,7 +30350,7 @@ async function _gameCoins(kind, amount) {
   if (typeof currentUser === 'undefined' || !currentUser || !currentUser.userId) return 0; // guests don't earn IM$
   try { const c = await _betLoadCoins(currentUser.userId); const now = Date.now(); const g = c.gameRewards || {};
     let give = 0;
-    if (/^(wd|gr|hl|cn|pt|tq)-(daily|win|hidden)$/.test(kind)) { const day = _wdDayKey() + (_wdSalt() ? '#' + _wdSalt() : ''); if (g[kind] === day) return 0; g[kind] = day; give = amount; }
+    if (/^(wd|gr|hl|cn|pt|tq|cp)-(daily|win|hidden)$/.test(kind)) { const day = _wdDayKey() + (_wdSalt() ? '#' + _wdSalt() : ''); if (g[kind] === day) return 0; g[kind] = day; give = amount; }
     else { const log = (g[kind] || []).filter(x => now - x.t < 864e5); const used = log.reduce((a, x) => a + x.a, 0); give = Math.max(0, Math.min(amount, 25 - used));
       if (!give) { g[kind] = log; return 0; } log.push({ t: now, a: give }); g[kind] = log; }
     c.balance = (c.balance || 0) + give; c.gameRewards = g; c.gameEarned = (c.gameEarned || 0) + give;
@@ -30345,7 +30358,7 @@ async function _gameCoins(kind, amount) {
   } catch (e) { return 0; }
 }
 function _coinPop(n, kind) {
-  const lbl = { 'cn-hidden': 'Found a hidden group!', 'duel-cn': 'Connections duel win', 'cn-daily': 'Daily Connections', 'cn-win': 'Connections solved!', 'wd-daily': 'Daily PaddockDle', 'gr-daily': 'Daily Grid', 'wd-win': 'Got the daily driver!', 'gr-win': 'Perfect 9/9 grid!', 'hl-daily': 'Daily Higher or Lower', 'pt-daily': 'Daily Pointless', 'pt-win': 'Pointless — 60 or under!', 'tq-daily': 'Daily Trivia', 'tq-win': 'Trivia 8/10 or better!', 'hl-win': '8/10 or better!', 'duel-hl': 'Higher or Lower duel win', 'duel-pt': 'Pointless duel win', 'duel-tq': 'Trivia duel win', 'duel-wd': 'PaddockDle duel win', 'duel-gr': 'Grid duel win' }[kind] || 'Games';
+  const lbl = { 'cn-hidden': 'Found a hidden group!', 'duel-cn': 'Connections duel win', 'cn-daily': 'Daily Connections', 'cn-win': 'Connections solved!', 'wd-daily': 'Daily PaddockDle', 'gr-daily': 'Daily Grid', 'wd-win': 'Got the daily driver!', 'gr-win': 'Perfect 9/9 grid!', 'hl-daily': 'Daily Higher or Lower', 'pt-daily': 'Daily Pointless', 'pt-win': 'Pointless — 60 or under!', 'tq-daily': 'Daily Trivia', 'cp-daily': 'Daily Career Path', 'cp-win': 'Career Path in 3 or fewer!', 'tq-win': 'Trivia 8/10 or better!', 'hl-win': '8/10 or better!', 'duel-hl': 'Higher or Lower duel win', 'duel-pt': 'Pointless duel win', 'duel-tq': 'Trivia duel win', 'duel-wd': 'PaddockDle duel win', 'duel-gr': 'Grid duel win' }[kind] || 'Games';
   const el = document.createElement('div'); el.className = 'coin-pop'; const nOpen = document.querySelectorAll('.coin-pop').length; if (nOpen) el.style.top = (84 + nOpen * 78) + 'px';
   el.innerHTML = `<span class="imc" style="font-size:1.6rem"></span><div><b>+${n} IM$</b><small>${lbl}</small></div>`;
   document.body.appendChild(el); setTimeout(() => el.classList.add('out'), 2600); setTimeout(() => el.remove(), 3200);
@@ -31672,6 +31685,90 @@ async function _tqdBody(pool, top) {
       <div class="pd-rr pd-rh"><div></div><div>You</div><div>${esc(opP.name)}</div></div>${rows}
       <div class="wd-btns" style="justify-content:center;margin-top:14px">${lob[opp + 'Left'] ? `<span class="text-muted">${esc(opP.name)} left</span>` : `<button class="pt-go" style="width:auto;padding:12px 22px;margin:0" onclick="tqDuelRematch()" ${lob[role + 'Rematch'] ? 'disabled' : ''}>${lob[role + 'Rematch'] ? (lob[opp + 'Rematch'] ? 'Starting…' : 'Waiting for opponent…') : (lob[opp + 'Rematch'] ? '🔁 Accept rematch' : '🔁 Rematch')}</button>`}<button class="btn btn-secondary" onclick="tqDuelLeave()">Leave</button></div></div>`; }
   return html + '</div>';
+}
+// ===== GAMES: IMS CAREER PATH =====
+// A driver's team history, season by season. Start with their first season; every wrong guess reveals
+// the next one (then their nationality and current division). 6 guesses.
+const CP_MAX = 6, CP_PRAC_MAX = 3;
+const _cpGetMode = () => window._cpMode || 'daily';
+window.setCPMode = function(m) { window._cpMode = m; renderGames(); };
+const _cpLoadSt = () => { try { return JSON.parse(localStorage.getItem('imsCpDaily') || 'null'); } catch (e) { return null; } };
+const _cpSave = (st) => { try { localStorage.setItem('imsCpDaily', JSON.stringify(st)); } catch (e) {} };
+const _cpPracUsed = () => { if (typeof adminLoggedIn !== 'undefined' && adminLoggedIn) return 0; try { const o = JSON.parse(localStorage.getItem('imsCpPrac') || 'null'); return o && o.day === _wdDayKey() ? o.n : 0; } catch (e) { return 0; } };
+const _cpPracBump = () => { try { localStorage.setItem('imsCpPrac', JSON.stringify({ day: _wdDayKey(), n: _cpPracUsed() + 1 })); } catch (e) {} };
+const _cpDayNum = () => { const p = _wdDayKey().split('/'); return Math.max(0, Math.round((Date.UTC(+p[2], +p[1] - 1, +p[0]) - Date.UTC(2026, 9, 20)) / 864e5)); };
+const _cpEligible = (pool) => pool.filter(p => (p.cp || []).length >= 3 && new Set(p.cp.map(x => _wdNorm(x[1]))).size >= 2);
+function _cpState(mode, pool) {
+  const E = _cpEligible(pool); if (!E.length) return null;
+  if (mode === 'inf') { if (!window._cpInf) { if (_cpPracUsed() >= CP_PRAC_MAX) return 'limit'; _cpPracBump(); window._cpInf = { id: E[Math.floor(Math.random() * E.length)].id, g: [], done: false, won: false }; } return window._cpInf; }
+  const key = _dailyKey(); let st = _cpLoadSt(); if (st && st.key === key) return st;
+  const ids = E.map(p => p.id).sort(), id = ids[Math.floor(_grRng(_wdHash('imscp' + key))() * ids.length)];
+  st = { key, id, g: [], done: false, won: false }; _cpSave(st); return st; }
+const _cpCur = () => _cpGetMode() === 'inf' ? window._cpInf : _cpLoadSt();
+window.cpSuggest = function(v) { const box = document.getElementById('cp-sugg'); if (!box) return; const q = _wdNorm(v); if (!q) { box.innerHTML = ''; return; }
+  const st = _cpCur(), used = new Set((st && st.g) || []);
+  box.innerHTML = (window._cpPool || []).filter(p => _wdNorm(p.name).includes(q) && !used.has(p.id)).slice(0, 8).map(p => `<button onclick="cpGuess('${esc(p.id)}')">${_wdAv(p, 26)}<span>${esc(p.name)}</span></button>`).join(''); };
+window.cpPickFirst = function() { const f = document.querySelector('#cp-sugg button'); if (f) f.click(); };
+window.cpGuess = async function(id) { if (window._cpLocked) return; const st = _cpCur(); if (!st || st.done) return;
+  st.g.push(id); const ok = id === st.id; if (ok) { st.done = true; st.won = true; } else if (st.g.length >= CP_MAX) st.done = true;
+  if (_cpGetMode() === 'daily') _cpSave(st);
+  try { ok ? _ptSnd.pointless() : _ptSnd.wrong(); } catch (e) {}
+  renderGames();
+  if (st.done) { if (st.won) setTimeout(() => { try { fireConfetti({ count: 180 }); } catch (e) {} }, 250); if (_cpGetMode() === 'daily') { await _cpRecord(st); window._cpLb = null; } } };
+window.cpAgain = function() { window._cpInf = null; renderGames(); };
+async function _cpRecord(st) { const me = _wdMe(), id = _wdScoreId(me.uid), n = st.g.length;
+  try { dbInvalidate('wordleScores'); const cur = await dbGet('wordleScores', id).catch(() => null) || {}; if (cur.cpDay === st.key) return;
+    const streak = st.won ? (cur.cpDayPlain === _wdYesterdayKey() && cur.cpLastWon ? (cur.cpStreak || 0) + 1 : 1) : 0;
+    await dbSet('wordleScores', id, { uid: me.uid, name: me.name, points: cur.points || 0, cpDay: st.key, cpDayPlain: _wdDayKey(), cpLastWon: !!st.won, cpStreak: streak, cpDayGuesses: st.won ? n : 0,
+      cpDays: (cur.cpDays || 0) + 1, cpWins: (cur.cpWins || 0) + (st.won ? 1 : 0), cpGuessSum: (cur.cpGuessSum || 0) + (st.won ? n : 0), cpFirst: (cur.cpFirst || 0) + (st.won && n === 1 ? 1 : 0) }); } catch (e) {}
+  await _gameCoins('cp-daily', 10); if (st.won && n <= 3) await _gameCoins('cp-win', 10); }
+async function _cpLeaderboardHtml() {
+  const rows = (await _gmNoTest(await dbGetAll('wordleScores', { fresh: true }).catch(() => []))).filter(r => r && r.uid && (r.cpDays || 0) > 0), me = _wdMe().uid, day = _dailyKey();
+  const avg = (r) => r.cpWins ? r.cpGuessSum / r.cpWins : 9;
+  rows.sort((a, b) => (b.cpWins / b.cpDays) - (a.cpWins / a.cpDays) || avg(a) - avg(b) || (b.cpDays - a.cpDays));
+  const mi = rows.findIndex(r => r.uid === me);
+  const head = `<div class="ptb-row tqb-row ptb-head"><span>#</span><span>Player</span><span class="c">Today</span><span class="c">Solved</span><span class="c">Avg</span><span class="c">🔥</span></div>`;
+  const line = (r, i) => { const k = (r.cpDayPlain === _wdDayKey() || r.cpDayPlain === _wdYesterdayKey()) ? (r.cpStreak || 0) : 0;
+    return `<div class="ptb-row tqb-row${r.uid === me ? ' me' : ''}${i < 3 ? ' top' : ''}"><span class="pos">${['🥇', '🥈', '🥉'][i] || i + 1}</span><span class="nm">${esc(r.name || 'Player')}<small>${r.cpDays} played · ${r.cpFirst || 0} first-guess</small></span>
+      <span class="c">${r.cpDay === day ? (r.cpDayGuesses ? `<b>${r.cpDayGuesses}/${CP_MAX}</b>` : '<b style="color:#f87171">X</b>') : '<span class="text-muted">—</span>'}</span><span class="c best">${Math.round(r.cpWins / r.cpDays * 100)}%</span><span class="c">${r.cpWins ? avg(r).toFixed(1) : '—'}</span><span class="c" style="color:${k ? '#fb923c' : 'var(--muted)'};font-weight:${k ? 800 : 400}">${k}</span></div>`; };
+  return `<div class="wd-lb" style="margin-top:18px"><div class="wd-lb-h"><span>🏆 All-time leaderboard</span><small>Solve rate, then fewest guesses</small></div>
+    ${rows.length ? head + rows.slice(0, 15).map(line).join('') + (mi >= 15 ? '<div style="text-align:center;color:var(--muted)">⋯</div>' + line(rows[mi], mi) : '') : '<p class="text-muted" style="margin:6px 0 0">Nobody has played yet.</p>'}
+    <div class="hlb-key"><b>Today</b> guesses used · <b>Solved</b> share of days solved · <b>Avg</b> guesses when solved · 🔥 solve streak</div></div>`; }
+window.cpShare = function() { const mode = _cpGetMode(), st = _cpCur(); if (!st || !st.done) return;
+  const sq = st.g.map(id => id === st.id ? '🟩' : '🟥').join('') + '⬛'.repeat(Math.max(0, CP_MAX - st.g.length));
+  const txt = `IMS Career Path ${mode === 'daily' ? '#' + _cpDayNum() : '∞'} · ${st.won ? st.g.length + '/' + CP_MAX : 'X/' + CP_MAX}\n${sq}\nhttps://fantasy.ims-league.com`;
+  if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) navigator.share({ text: txt }).catch(() => {}); else if (navigator.clipboard) navigator.clipboard.writeText(txt).then(() => { if (typeof showToast === 'function') showToast('📋 Copied — paste it in Discord!', 'success'); }).catch(() => prompt('Copy your result:', txt)); else prompt('Copy your result:', txt); };
+async function renderCPGame(el) {
+  if (!window._cpPool || _now() - (window._cpPoolAt || 0) > 10 * 60e3) { const { gridPool } = await _wdLoad(); window._cpPool = gridPool.filter(p => (p.st || 0) > 0 && (!p.res || p.st >= 25)); window._cpPoolAt = _now(); }
+  const pool = window._cpPool, mode = _cpGetMode(); const locked = !!(window._gamesLock || {}).cp && !adminLoggedIn && !_gamesAccess(); window._cpLocked = locked;
+  const tabs = `<div class="wd-modes">${[['daily', '📅', 'DAILY'], ['inf', '∞', 'PRACTICE']].map(([m, i, l]) => `<button class="${mode === m ? 'on' : ''}" onclick="setCPMode('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>`;
+  const st0 = _cpState(mode, pool), lim = st0 === 'limit', st = lim ? null : st0, D = st ? pool.find(p => p.id === st.id) : null;
+  let body = `<div class="wd-top"><button class="wd-back" onclick="openGame('hub')" title="Back to Games">←</button><div class="wd-brand"><img src="icons/icon-192.png?v=3" alt="IMS"><span>CAREER <em>PATH</em></span></div><div class="wd-meta">${mode === 'daily' ? `<span class="wd-pill">#${_cpDayNum()}</span>` : ''}<span class="wd-pill">🎯 ${st ? st.g.length : 0}/${CP_MAX}</span>${typeof _ptSndBtn === 'function' ? _ptSndBtn() : ''}</div></div>
+    ${(window._gamesLock || {}).cp ? `<div class="wd-lockbar">🔒 <b>Career Path is locked</b><span>${locked ? 'It\'ll open soon.' : 'Locked for players — you can still play.'}</span></div>` : ''}${tabs}`;
+  if (lim) body += `<div class="pt-arena"><div class="pt-qn">PRACTICE</div><div class="pt-qt">That's your <b>${CP_PRAC_MAX} practice rounds</b> for today</div><div class="pt-hint">More at midnight (UK).</div></div>`;
+  else if (!st || !D) body += '<div class="alert alert-warning">Not enough career data yet — an admin needs to run Build PaddockDle Data From .db (it now records each driver\'s team every season).</div>';
+  else {
+    const steps = D.cp, wrong = st.g.filter(g => g !== st.id).length, shown = st.done ? steps.length : Math.min(steps.length, 1 + wrong), extra = st.done ? 2 : Math.max(0, 1 + wrong - steps.length);
+    const card = (x, i) => { const on = i < shown, lg = on && typeof getTeamLogo === 'function' ? getTeamLogo(x[1]) : '', col = on && typeof getTeamCardColour === 'function' ? getTeamCardColour(x[1]) : null;
+      return `<div class="cp-step${on ? ' on' : ''}" style="${col ? '--tc:' + col.accent : ''};animation-delay:${on && i === shown - 1 && !st.done ? 0 : 0}s"><div class="cp-s">S${x[0]}</div>${on ? `<div class="cp-logo">${lg ? `<img src="${esc(lg)}" alt="">` : '🏎️'}</div><b>${esc(x[1])}</b><small>${esc(x[2] || '')}</small>` : '<div class="cp-logo q">?</div><b>Hidden</b><small>wrong guess reveals</small>'}</div>`; };
+    const hints = [D.nat ? `${_wdFlag(D.nat)} <b>${esc(D.nat)}</b>` : null, `🏁 <b>${(D.st || 0).toLocaleString()}</b> IMS appearances`].filter(Boolean);
+    body += `<div class="pt-arena cp-arena"><div class="pt-qn">WHO HAD THIS CAREER?</div>
+      <div class="cp-path">${steps.map((x, i) => card(x, i) + (i < steps.length - 1 ? '<span class="cp-arr">›</span>' : '')).join('')}</div>
+      ${extra ? `<div class="cp-hints">${hints.slice(0, extra).map(h => `<span>${h}</span>`).join('')}</div>` : ''}
+      ${st.g.filter(g => g !== st.id).length ? `<div class="cp-wrong">${st.g.filter(g => g !== st.id).map(g => { const p = pool.find(x => x.id === g); return `<span>✕ ${esc(p ? p.name : '?')}</span>`; }).join('')}</div>` : ''}
+      ${st.done ? `<div class="cp-reveal${st.won ? ' win' : ''}">${_wdAv(D, 72)}<div><small>${st.won ? `Got it in ${st.g.length}!` : 'The driver was'}</small><b>${esc(D.name)}</b></div></div>
+        <button class="pt-go" style="background:linear-gradient(135deg,#5865f2,#4752c4);color:#fff" onclick="cpShare()">📤 SHARE RESULT</button>
+        ${mode === 'inf' ? (_cpPracUsed() < CP_PRAC_MAX ? `<button class="pt-go" onclick="cpAgain()">PLAY AGAIN · ${CP_PRAC_MAX - _cpPracUsed()} left today</button>` : '<div class="pt-hint" style="margin-top:12px">That was your last practice round today.</div>') : `<div class="pt-next"><small>NEXT CAREER PATH IN</small><b id="pt-timer">--:--:--</b></div>`}`
+      : `<div class="wd-search" style="margin-top:16px"><span class="wd-search-ico">🔍</span><input id="cp-input" type="text" placeholder="Guess the IMS driver…" autocomplete="off" oninput="cpSuggest(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();cpPickFirst();}" ${locked ? 'disabled' : ''}><div id="cp-sugg"></div></div>
+        <div class="pt-hint">${CP_MAX - st.g.length} guess${CP_MAX - st.g.length === 1 ? '' : 'es'} left · each wrong guess reveals more</div>`}</div>`; }
+  if (mode === 'daily') body += (st && st.done || !window._cpLb) ? (window._cpLb = await _cpLeaderboardHtml()) : window._cpLb;
+  el.innerHTML = `<div class="wd-wrap">${body}<div class="wd-info"><h3>How to play</h3><p>You see an IMS driver's <b>first season</b> — the team they mainly drove for and their division. Guess who it is. <b>Every wrong guess reveals the next season</b>; once the whole path is shown you get their nationality, then their appearance count. <b>${CP_MAX} guesses.</b></p>
+    <p><b>📅 Daily</b> — the same driver for everyone. <b>∞ Practice</b> — up to ${CP_PRAC_MAX} a day. Pool: drivers with 3+ IMS seasons.</p>
+    <p style="margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(247,207,85,.08);border:1px solid rgba(247,207,85,.35);font-size:.84rem"><span class="imc"></span> <b>Earn IM$:</b> play the daily for <b>+10 IM$</b>, solve it in <b>3 guesses or fewer</b> for <b>another +10 IM$</b>. Log in to earn.</p></div></div>`;
+  if (document.getElementById('pt-timer')) { const until = _now() + _wdMsToMidnight(); clearInterval(window._wdTick);
+    const tk = () => { const t = document.getElementById('pt-timer'); if (!t) { clearInterval(window._wdTick); return; } const ms = until - _now(); if (ms <= 0) { clearInterval(window._wdTick); renderGames(); return; }
+      t.textContent = [Math.floor(ms / 36e5), Math.floor(ms / 6e4) % 60, Math.floor(ms / 1e3) % 60].map(x => String(x).padStart(2, '0')).join(':'); }; tk(); window._wdTick = setInterval(tk, 1000); }
+  const inp = document.getElementById('cp-input'); if (inp && !('ontouchstart' in window)) inp.focus();
 }
 // ===== GAMES: IMS PADDOCKDLE GRID =====
 // 3×3 grid: every cell needs a market driver who fits BOTH its row and column category. Each driver
