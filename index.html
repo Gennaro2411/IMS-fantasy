@@ -31392,7 +31392,7 @@ async function _pdBody(pool, top) {
       <div class="pd-cd${left < 8e3 ? ' low' : ''}"><span id="pd-cd-fill" style="width:${left / lim * 100}%"></span></div><div class="pd-cdn"><b id="pd-cd">${Math.ceil(left / 1000)}</b>s · ${fin ? (myTurn ? (t[opp] ? `<b style="color:#4ade80">${esc(opP.name)} has locked in</b> · your answers` : 'pick your 3 answers') : `locked in · waiting for ${esc(opP.name)}…`) : myTurn ? 'your turn' : esc(opP.name) + ' is answering…'}</div>
       ${myTurn ? (fin ? `<div id="pd-picks" class="pd-picks"></div>` : '') + `<div class="wd-search" style="margin-top:12px"><span class="wd-search-ico">🔍</span><input id="pd-input" type="text" placeholder="${fin ? 'Add an answer…' : 'Name an IMS driver…'}" autocomplete="off" oninput="pdSuggest(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();pdPickFirst();}"><div id="pd-sugg" class="pd-sugg"></div></div>
         ${fin ? '<button class="pt-go" onclick="pdLockIn()">LOCK IN</button>' : `<button class="pt-skip" onclick="pdPick('')">Pass · 100 pts</button>`}` : `<div class="pd-wait"><span class="wd-spin"></span></div>`}
-      ${rev}</div>`;
+      ${rev}</div><div style="text-align:center;margin-top:12px"><button class="pt-skip" onclick="ptDuelLeave()">🏳️ Forfeit duel</button></div>`;
     if (fin ? !t.host && !t.guest : (lob[_pdFirst(t.r) + 'Ans'] || []).length <= t.r) _ptStingOnce(lob.id + '|' + round + '|r' + t.r); // new round, nobody has answered yet
     _pdTimer(lob, role, t);
     setTimeout(() => { _pdPicksPaint(); _ptAnim(); const i = document.getElementById('pd-input'); if (i && !('ontouchstart' in window)) i.focus(); }, 0);
@@ -31647,7 +31647,7 @@ async function _tqdBody(pool, top) {
       <div class="tq-opts">${Q.opts.map((o, i) => { const cls = rev ? (i === Q.a ? ' ok' : (i === myPick ? ' bad' : ' dim')) : (i === myPick ? ' sel' : myRaw ? ' dim' : '');
         const tags = rev ? (i === myPick ? '<em class="tqd-tag me">YOU</em>' : '') + (i === opPick ? `<em class="tqd-tag op">${esc(String(opP.name).slice(0, 10))}</em>` : '') : '';
         return `<button class="tq-opt${cls}" ${rev || myRaw || left <= 0 ? 'disabled' : ''} onclick="tqdAnswer(${i})"><i>${'ABCD'[i]}</i><span>${esc(o)}</span>${tags}</button>`; }).join('')}</div>
-      ${rev ? `<div class="tq-why">${myPick === Q.a ? '✅ Correct!' : '❌ Not quite.'} <span>${esc(Q.why)}</span></div>` : ''}</div>`;
+      ${rev ? `<div class="tq-why">${myPick === Q.a ? '✅ Correct!' : '❌ Not quite.'} <span>${esc(Q.why)}</span></div>` : ''}</div><div style="text-align:center;margin-top:12px"><button class="pt-skip" onclick="tqDuelLeave()">🏳️ Forfeit duel</button></div>`;
     clearInterval(window._tqdCd);
     if (!rev && left <= 0) { /* time's up — the poll reveals it */ }
     else if (!rev) { if (!myRaw && qi === 0 && _now() - (lob.qStart || 0) < 1500) _ptStingOnce('tqd|' + lob.id + '|' + round);
