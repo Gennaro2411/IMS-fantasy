@@ -31428,9 +31428,11 @@ function _tqMake(pool, trk, rnd, kind) {
   const shuf = (a) => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const fin = (correct, wrong, q, why) => { const opts = shuf([correct, ...wrong]); return { q, opts, a: opts.indexOf(correct), why }; };
   const STATS = [['w', 'race wins', '🥇'], ['pd', 'podiums', '🍾'], ['pl', 'pole positions', '⏱️'], ['st', 'IMS appearances', '🏁'], ['p', 'career points', '⭐'], ['b', 'BOTT titles', '🏗️']];
-  if (kind === 'most') { const [f, l, ic] = STATS[Math.floor(rnd() * STATS.length)];
+  // A rank "window": four drivers of similar standing, so it isn't always the league's all-time leader.
+  const winPick = (cand, f) => { const srt = cand.slice().sort((x, y) => (y[f] || 0) - (x[f] || 0)), W = Math.min(srt.length, 9), st = Math.floor(rnd() * Math.max(1, srt.length - W + 1)); return pickN(srt.slice(st, st + W), 4); };
+  if (kind === 'most') { const [f, l, ic] = STATS.filter(x => x[0] !== 'b')[Math.floor(rnd() * 5)];
     const cand = pool.filter(p => (p[f] || 0) > 0); if (cand.length < 4) return null;
-    for (let t = 0; t < 20; t++) { const four = pickN(cand, 4), v = four.map(p => p[f] || 0), mx = Math.max(...v); if (v.filter(x => x === mx).length > 1) continue;
+    for (let t = 0; t < 20; t++) { const four = winPick(cand, f), v = four.map(p => p[f] || 0), mx = Math.max(...v); if (v.filter(x => x === mx).length > 1) continue;
       const best = four[v.indexOf(mx)]; return fin(best.name, four.filter(p => p !== best).map(p => p.name), `${ic} Who has the most <b>${l}</b>?`, four.map(p => `${p.name}: ${(p[f] || 0).toLocaleString()}`).join(' · ')); } return null; }
   if (kind === 'count') { const [f, l, ic] = STATS[Math.floor(rnd() * 4)]; const cand = pool.filter(p => (p[f] || 0) >= 3); if (!cand.length) return null;
     const d = cand[Math.floor(rnd() * cand.length)], v = d[f]; const step = Math.max(1, Math.round(v * 0.25)); const set = new Set([v]); let k = 1;
@@ -31450,14 +31452,29 @@ function _tqMake(pool, trk, rnd, kind) {
     const e = Object.entries(d.dh).filter(([k, v]) => /^D[0-4]$/.test(k) && v > 0).sort((a, b) => b[1] - a[1]); if (!e.length || (e[1] && e[1][1] === e[0][1])) return null;
     const right = e[0][0], wrong = pickN(['D0', 'D1', 'D2', 'D3', 'D4'].filter(x => x !== right), 3);
     return fin(right, wrong, `🏁 Which division has <b>${esc(d.name)}</b> raced in the most?`, `${d.name}: ` + e.map(([k, v]) => `${k} ${v}`).join(', ') + ' races.'); }
+  if (kind === 'dv') { const D = ['D0', 'D1', 'D2', 'D3', 'D4'][Math.floor(rnd() * 5)], dh = (p) => (p.dh || {})[D] || 0, dw = (p) => (p.dw || {})[D] || 0, t = Math.floor(rnd() * 5);
+    if (t === 0) { const cand = pool.filter(p => dh(p) > 0); if (cand.length < 4) return null; for (let k = 0; k < 20; k++) { const four = winPick(cand.map(p => Object.assign({}, p, { _v: dh(p) })), '_v'), v = four.map(p => p._v), mx = Math.max(...v); if (v.filter(x => x === mx).length > 1) continue;
+      const b = four[v.indexOf(mx)]; return fin(b.name, four.filter(p => p !== b).map(p => p.name), `🏁 Who has raced the most in <b>${D}</b>?`, four.map(p => `${p.name}: ${p._v}`).join(' · ') + ` ${D} races`); } return null; }
+    if (t === 1) { const cand = pool.filter(p => dw(p) > 0); if (cand.length < 4) return null; for (let k = 0; k < 20; k++) { const four = winPick(cand.map(p => Object.assign({}, p, { _v: dw(p) })), '_v'), v = four.map(p => p._v), mx = Math.max(...v); if (v.filter(x => x === mx).length > 1) continue;
+      const b = four[v.indexOf(mx)]; return fin(b.name, four.filter(p => p !== b).map(p => p.name), `🥇 Who has the most <b>${D} wins</b>?`, four.map(p => `${p.name}: ${p._v}`).join(' · ') + ` ${D} wins`); } return null; }
+    if (t === 2) { const yes = pool.filter(p => !p.res && p.div === D), no = pool.filter(p => !p.res && p.div && p.div !== D); if (!yes.length || no.length < 3) return null; const r = yes[Math.floor(rnd() * yes.length)];
+      return fin(r.name, pickN(no, 3).map(p => p.name), `🏎️ Which of these drivers is <b>currently racing in ${D}</b>?`, `${r.name} races in ${D} this season.`); }
+    if (t === 3) { const yes = pool.filter(p => dw(p) > 0), no = pool.filter(p => dh(p) > 0 && !dw(p)); if (!yes.length || no.length < 3) return null; const r = yes[Math.floor(rnd() * yes.length)];
+      return fin(r.name, pickN(no, 3).map(p => p.name), `🏆 Which of these drivers has <b>won a race in ${D}</b>?`, `${r.name} has ${dw(r)} ${D} win${dw(r) > 1 ? 's' : ''}; the others raced there without winning.`); }
+    { const cand = pool.filter(p => dh(p) >= 3); if (!cand.length) return null; const d = cand[Math.floor(rnd() * cand.length)], v = dh(d), step = Math.max(1, Math.round(v * 0.3)), set = new Set([v]); let k = 1;
+      while (set.size < 4 && k < 20) { const c = v + (rnd() < .5 ? -1 : 1) * step * Math.ceil(k / 2); if (c > 0) set.add(c); k++; } const wrong = [...set].filter(x => x !== v).slice(0, 3); if (wrong.length < 3) return null;
+      return fin(String(v), wrong.map(String), `🔢 How many <b>${D}</b> races has <b>${esc(d.name)}</b> done?`, `${d.name} has raced ${v} times in ${D}.`); } }
   if (kind === 'trk' && trk) { const ks = Object.keys(trk).filter(k => _TQ_TRK[k] && trk[k].wins && !trk[k].wins.tied && trk[k].byDriverJson); if (!ks.length) return null;
     const k = ks[Math.floor(rnd() * ks.length)], T = trk[k], m = ['wins', 'poles', 'podiums'][Math.floor(rnd() * 3)], top = T[m]; if (!top || top.tied || !top.name) return null;
     let by = {}; try { by = JSON.parse(T.byDriverJson); } catch (e) {} const others = Object.keys(by).filter(n => n !== top.name && (by[n].appearances || 0) >= 1); if (others.length < 3) return null;
     return fin(top.name, pickN(others, 3), `🗺️ Who has the most <b>${m}</b> at <b>${_TQ_TRK[k]}</b>?`, `${top.name} — ${top.n} ${m} at ${_TQ_TRK[k]}.`); }
   return null;
 }
-function _tqMakeSet(pool, trk, rnd) { const K = ['most', 'most', 'count', 'nat', 'team', 'debut', 'div', 'trk', 'trk', 'most', 'count', 'team'], out = [], seen = new Set(); let g = 0;
-  while (out.length < TQ_N && g++ < 400) { const kind = out.length < K.length ? K[(out.length + g) % K.length] : K[Math.floor(rnd() * K.length)]; const q = _tqMake(pool, trk, rnd, kind); if (q && !seen.has(q.q)) { seen.add(q.q); out.push(q); } }
+function _tqMakeSet(pool, trk, rnd) { const K = ['most', 'count', 'nat', 'team', 'debut', 'div', 'trk', 'dv', 'dv', 'dv'], cap = { most: 2, count: 2, nat: 1, team: 2, debut: 1, div: 1, trk: 2, dv: 3 }, used = {}, out = [], seen = new Set(); let g = 0, last = '';
+  // Each question type has a cap per round and never appears twice in a row; the same subject (e.g. "most race wins") isn't asked twice.
+  while (out.length < TQ_N && g++ < 600) { const kind = K[Math.floor(rnd() * K.length)]; if ((used[kind] || 0) >= cap[kind] || kind === last) continue;
+    const q = _tqMake(pool, trk, rnd, kind); if (!q) continue; const subj = q.q.replace(/<b>[^<]*<\/b>\s*(does|has|done)?/g, (m, x, i) => m).replace(/[^a-z]/gi, '').slice(0, 40);
+    if (seen.has(q.q) || seen.has(kind + ':' + (q.q.match(/<b>([^<]*)<\/b>/) || [])[1])) continue; seen.add(q.q); seen.add(kind + ':' + (q.q.match(/<b>([^<]*)<\/b>/) || [])[1]); used[kind] = (used[kind] || 0) + 1; last = kind; out.push(q); }
   return out.length === TQ_N ? out : null; }
 function _tqState(mode, pool, trk) {
   if (mode === 'inf') { if (!window._tqInf) { if (_tqPracUsed() >= TQ_PRAC_MAX) return 'limit'; const qs = _tqMakeSet(pool, trk, Math.random); if (qs) _tqPracBump(); window._tqInf = qs ? { qs, ans: [], done: false, t0: Date.now() } : null; } return window._tqInf; }
