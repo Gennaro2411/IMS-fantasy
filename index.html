@@ -2435,6 +2435,8 @@
     .tq-opt.ok{background:rgba(34,197,94,.2);border-color:#22c55e;animation:wdPop .4s both}.tq-opt.ok i{background:#22c55e;color:#04210f}.tq-opt.bad{background:rgba(239,68,68,.18);border-color:#ef4444}.tq-opt.bad i{background:#ef4444;color:#fff}.tq-opt.dim{opacity:.4}
     .tq-why{position:relative;margin-top:14px;font-size:.84rem;color:#e5e7eb}.tq-why span{color:var(--muted)}.tqb-row{grid-template-columns:28px minmax(0,1fr) 48px 48px 34px 34px}
     @media (max-width:640px){.tq-opts{grid-template-columns:1fr}}
+    .tq-opt.sel{background:rgba(125,211,252,.18);border-color:#7dd3fc}.tqd-tag{font-style:normal;margin-left:auto;font-size:.6rem;font-weight:900;padding:2px 6px;border-radius:6px;background:#7dd3fc;color:#04121f}.tqd-tag.op{background:#fbbf24;color:#1a1300;margin-left:4px}.tq-opt .tqd-tag.me+.tqd-tag.op{margin-left:4px}
+    .tqd-bar{height:4px;border-radius:2px;background:rgba(255,255,255,.08);margin-top:5px;overflow:hidden}.tqd-bar i{display:block;height:100%;background:linear-gradient(90deg,#38bdf8,#7dd3fc);transition:width .6s}
     .ptb-row{display:grid;grid-template-columns:28px minmax(0,1fr) 48px 52px 34px 38px;gap:4px;align-items:center;padding:8px;font-size:.84rem;border-bottom:1px solid var(--border)}.ptb-head{font-size:.62rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
     .ptb-row .c{text-align:center}.ptb-row .pos{font-weight:700;color:var(--muted)}.ptb-row .nm{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ptb-row .nm small{display:block;font-weight:400;font-size:.68rem;color:var(--muted)}
     .ptb-row .best{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.1rem;color:#7dd3fc}.ptb-row.top .best{color:#fde047}.ptb-row .pz{color:#fde047;font-weight:700}.ptb-row.me{background:rgba(56,189,248,.12);border-radius:8px}
@@ -29869,7 +29871,7 @@ async function renderConnGame(el) {
 }
 
 // ---- Render ----
-window.openGame = function(g) { if (g !== window._games.view && _wdGuardLeave(() => openGame(g))) return; if (g !== 'cn' && typeof _cnEndDuel === 'function') _cnEndDuel(false); if (g !== 'hl' && typeof _hdLeave === 'function') _hdLeave(true); if (g !== 'pt' && typeof _pdLeave === 'function') _pdLeave(true); if (g !== 'wordle') _wdEndDuel(false); if (g !== 'grid' && typeof _gdEnd === 'function') _gdEnd(false); window._grSel = null; window._games.view = g; renderGames(); };
+window.openGame = function(g) { if (g !== window._games.view && _wdGuardLeave(() => openGame(g))) return; if (g !== 'cn' && typeof _cnEndDuel === 'function') _cnEndDuel(false); if (g !== 'hl' && typeof _hdLeave === 'function') _hdLeave(true); if (g !== 'pt' && typeof _pdLeave === 'function') _pdLeave(true); if (g !== 'tq' && typeof _tqdLeave === 'function') _tqdLeave(true); if (g !== 'wordle') _wdEndDuel(false); if (g !== 'grid' && typeof _gdEnd === 'function') _gdEnd(false); window._grSel = null; window._games.view = g; renderGames(); };
 // ---- Modes: 'daily' (one shared driver per UK day), 'inf' (random, back to back), 'duel' (1v1 race) ----
 const _wdGetMode = () => { try { return localStorage.getItem('imsWordleMode') || 'daily'; } catch (e) { return 'daily'; } };
 window.setWordleMode = function(m) { if (m !== _wdGetMode() && _wdGuardLeave(() => setWordleMode(m))) return; if (m !== 'duel') _wdEndDuel(false); try { localStorage.setItem('imsWordleMode', m); } catch (e) {} clearInterval(window._wdDuelPoll); renderGames(); };
@@ -30339,7 +30341,7 @@ async function _gameCoins(kind, amount) {
   } catch (e) { return 0; }
 }
 function _coinPop(n, kind) {
-  const lbl = { 'cn-hidden': 'Found a hidden group!', 'duel-cn': 'Connections duel win', 'cn-daily': 'Daily Connections', 'cn-win': 'Connections solved!', 'wd-daily': 'Daily PaddockDle', 'gr-daily': 'Daily Grid', 'wd-win': 'Got the daily driver!', 'gr-win': 'Perfect 9/9 grid!', 'hl-daily': 'Daily Higher or Lower', 'pt-daily': 'Daily Pointless', 'pt-win': 'Pointless — 60 or under!', 'tq-daily': 'Daily Trivia', 'tq-win': 'Trivia 8/10 or better!', 'hl-win': '8/10 or better!', 'duel-hl': 'Higher or Lower duel win', 'duel-pt': 'Pointless duel win', 'duel-wd': 'PaddockDle duel win', 'duel-gr': 'Grid duel win' }[kind] || 'Games';
+  const lbl = { 'cn-hidden': 'Found a hidden group!', 'duel-cn': 'Connections duel win', 'cn-daily': 'Daily Connections', 'cn-win': 'Connections solved!', 'wd-daily': 'Daily PaddockDle', 'gr-daily': 'Daily Grid', 'wd-win': 'Got the daily driver!', 'gr-win': 'Perfect 9/9 grid!', 'hl-daily': 'Daily Higher or Lower', 'pt-daily': 'Daily Pointless', 'pt-win': 'Pointless — 60 or under!', 'tq-daily': 'Daily Trivia', 'tq-win': 'Trivia 8/10 or better!', 'hl-win': '8/10 or better!', 'duel-hl': 'Higher or Lower duel win', 'duel-pt': 'Pointless duel win', 'duel-tq': 'Trivia duel win', 'duel-wd': 'PaddockDle duel win', 'duel-gr': 'Grid duel win' }[kind] || 'Games';
   const el = document.createElement('div'); el.className = 'coin-pop'; const nOpen = document.querySelectorAll('.coin-pop').length; if (nOpen) el.style.top = (84 + nOpen * 78) + 'px';
   el.innerHTML = `<span class="imc" style="font-size:1.6rem"></span><div><b>+${n} IM$</b><small>${lbl}</small></div>`;
   document.body.appendChild(el); setTimeout(() => el.classList.add('out'), 2600); setTimeout(() => el.remove(), 3200);
@@ -30512,7 +30514,7 @@ async function _liveDuelsHtml(all, game, f) {
   const now = _now();
   const live = (all || []).filter(l => l && (game === 'wd' ? !l.game : l.game === game) && l.status === 'playing' && !l.done && l.hostUid && l.guestUid
     && now - (l.hostSeen || 0) < 30e3 && now - (l.guestSeen || 0) < 30e3
-    && !(game === 'wd' && (l.hostWonAt || l.guestWonAt)) && !(game === 'hl' && l.hostDone && l.guestDone) && !(game === 'pt' && l.done) && !(game === 'grid' && l.winner) && !l.drawAgreed);
+    && !(game === 'wd' && (l.hostWonAt || l.guestWonAt)) && !(game === 'hl' && l.hostDone && l.guestDone) && !(game === 'pt' && l.done) && !(game === 'tq' && l.done) && !(game === 'grid' && l.winner) && !l.drawAgreed);
   if (!live.length) return '';
   let stats = {};
   try { (await dbGetAll('wordleScores').catch(() => [])).forEach(d => { if (d && d.uid) stats[d.uid] = d; }); } catch(e) {}
@@ -31396,7 +31398,7 @@ async function _pdBody(pool, top) {
 // nationalities, debut seasons, track records). Daily (same for everyone) + 3 practice rounds a day.
 const TQ_N = 10, TQ_WIN = 8, TQ_PRAC_MAX = 3;
 const _tqGetMode = () => window._tqMode || 'daily';
-window.setTQMode = function(m) { window._tqMode = m; window._tqRev = null; renderGames(); };
+window.setTQMode = function(m) { if (m !== 'duel' && typeof _tqdLeave === 'function') _tqdLeave(true); window._tqMode = m; window._tqRev = null; renderGames(); };
 const _tqLoadSt = () => { try { return JSON.parse(localStorage.getItem('imsTqDaily') || 'null'); } catch (e) { return null; } };
 const _tqSave = (st) => { try { localStorage.setItem('imsTqDaily', JSON.stringify(st)); } catch (e) {} };
 const _tqPracUsed = () => { if (typeof adminLoggedIn !== 'undefined' && adminLoggedIn) return 0; try { const o = JSON.parse(localStorage.getItem('imsTqPrac') || 'null'); return o && o.day === _wdDayKey() ? o.n : 0; } catch (e) { return 0; } };
@@ -31482,10 +31484,12 @@ async function renderTQGame(el) {
   if (!window._tqPool || _now() - (window._tqPoolAt || 0) > 10 * 60e3) { const { gridPool } = await _wdLoad(); window._tqPool = gridPool.filter(p => (p.st || 0) > 0 && (!p.res || p.st >= 25)); window._tqPoolAt = _now();
     const tr = await dbGet('settings', 'trackRecords').catch(() => null); window._tqTrk = (tr && tr.value) || null; }
   const pool = window._tqPool, mode = _tqGetMode(); const locked = !!(window._gamesLock || {}).tq && !adminLoggedIn && !_gamesAccess(); window._tqLocked = locked;
-  const tabs = `<div class="wd-modes">${[['daily', '📅', 'DAILY'], ['inf', '∞', 'PRACTICE']].map(([m, i, l]) => `<button class="${mode === m ? 'on' : ''}" onclick="setTQMode('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>`;
-  const st0 = _tqState(mode, pool, window._tqTrk), lim = st0 === 'limit', st = lim ? null : st0, sc = st ? st.ans.filter(Boolean).length : 0;
+  const tabs = `<div class="wd-modes">${[['daily', '📅', 'DAILY'], ['inf', '∞', 'PRACTICE'], ['duel', '⚔️', 'DUEL']].map(([m, i, l]) => `<button class="${mode === m ? 'on' : ''}" onclick="setTQMode('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>`;
+  const st0 = mode === 'duel' ? null : _tqState(mode, pool, window._tqTrk), lim = st0 === 'limit', st = lim ? null : st0, sc = st ? st.ans.filter(Boolean).length : 0;
   let body = `<div class="wd-top"><button class="wd-back" onclick="openGame('hub')" title="Back to Games">←</button><div class="wd-brand"><img src="icons/icon-192.png?v=3" alt="IMS"><span>IMS <em>TRIVIA</em></span></div><div class="wd-meta">${mode === 'daily' ? `<span class="wd-pill">#${_tqDayNum()}</span>` : ''}<span class="wd-pill">✅ ${sc}/${st ? st.ans.length : 0}</span>${typeof _ptSndBtn === 'function' ? _ptSndBtn() : ''}</div></div>
     ${(window._gamesLock || {}).tq ? `<div class="wd-lockbar">🔒 <b>Trivia is locked</b><span>${locked ? 'It\'ll open soon.' : 'Locked for players — you can still play.'}</span></div>` : ''}${tabs}`;
+  if (mode === 'duel') { el.innerHTML = `<div class="wd-wrap">${locked ? body + '<div class="wd-panel" style="text-align:center">Duels open when the game is unlocked.</div>' : await _tqdBody(pool, body)}</div>`; return; }
+  clearInterval(window._tqdPoll); clearInterval(window._tqdCd);
   if (lim) body += `<div class="pt-arena"><div class="pt-qn">PRACTICE</div><div class="pt-qt">That's your <b>${TQ_PRAC_MAX} practice rounds</b> for today</div><div class="pt-hint">More at midnight (UK).</div></div>`;
   else if (!st) body += '<div class="alert alert-warning">Not enough data yet — an admin needs to run Build PaddockDle Data From .db.</div>';
   else if (!st.done || window._tqRev) {
@@ -31500,12 +31504,132 @@ async function renderTQGame(el) {
       ${mode === 'inf' ? (_tqPracUsed() < TQ_PRAC_MAX ? `<button class="pt-go" onclick="tqAgain()">PLAY AGAIN · ${TQ_PRAC_MAX - _tqPracUsed()} left today</button>` : '<div class="pt-hint" style="margin-top:12px">That was your last practice round today.</div>') : `<div class="pt-next"><small>NEXT TRIVIA IN</small><b id="pt-timer">--:--:--</b></div>`}</div>`; }
   if (mode === 'daily') body += (st && st.done || !window._tqLb) ? (window._tqLb = await _tqLeaderboardHtml()) : window._tqLb;
   el.innerHTML = `<div class="wd-wrap">${body}<div class="wd-info"><h3>How to play</h3><p><b>${TQ_N} quick questions</b> about the IMS — career stats, teams, nationalities, debut seasons and track records, all from the league's real data. Pick one of four answers.</p>
-    <p><b>📅 Daily</b> — the same ${TQ_N} questions for everyone, once a day. <b>∞ Practice</b> — up to ${TQ_PRAC_MAX} rounds a day.</p>
+    <p><b>📅 Daily</b> — the same ${TQ_N} questions for everyone, once a day. <b>∞ Practice</b> — up to ${TQ_PRAC_MAX} rounds a day. <b>⚔️ Duel</b> — same questions at the same time, 15 s each; right answers score 500 + up to 500 for speed, last question double. Win for <b>+5 IM$</b>.</p>
     <p style="margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(247,207,85,.08);border:1px solid rgba(247,207,85,.35);font-size:.84rem"><span class="imc"></span> <b>Earn IM$:</b> play the daily for <b>+10 IM$</b>, score <b>${TQ_WIN}/10 or better</b> for <b>another +10 IM$</b>. Log in to earn.</p></div></div>`;
   if (document.getElementById('pt-timer')) { const until = _now() + _wdMsToMidnight(); clearInterval(window._wdTick);
     const tk = () => { const t = document.getElementById('pt-timer'); if (!t) { clearInterval(window._wdTick); return; } const ms = until - _now(); if (ms <= 0) { clearInterval(window._wdTick); renderGames(); return; }
       t.textContent = [Math.floor(ms / 36e5), Math.floor(ms / 6e4) % 60, Math.floor(ms / 1e3) % 60].map(x => String(x).padStart(2, '0')).join(':'); }; tk(); window._wdTick = setInterval(tk, 1000); }
   if (st && !st.done && !window._tqRev && st.ans.length === 0) _ptStingOnce('tq|' + (st.key || 'inf') + '|' + st.qs[0].q);
+}
+// ===== TRIVIA DUEL (Kahoot-style) =====
+// Both players get the same 10 questions at the same moment. 15 s each. Correct = 500 + up to 500 for
+// speed; wrong / no answer = 0. Last question is worth double. Answers are 'pick|ms' strings.
+const TQD_T = 15000, TQD_REV = 4500;
+const _tqdKey = () => { try { return JSON.parse(localStorage.getItem('imsTQDuel') || 'null'); } catch (e) { return null; } };
+const _tqdSet = (v) => { try { v ? localStorage.setItem('imsTQDuel', JSON.stringify(v)) : localStorage.removeItem('imsTQDuel'); } catch (e) {} };
+const _tqdPts = (raw, Q, qi) => { if (!raw) return 0; const [p, ms] = String(raw).split('|').map(Number); if (p !== Q.a) return 0; return Math.round((500 + 500 * Math.max(0, 1 - (ms || 0) / TQD_T)) * (qi === TQ_N - 1 ? 2 : 1)); };
+const _tqdTot = (l, ro, qs) => (l[ro + 'Ans'] || []).reduce((a, r, i) => a + (qs[i] ? _tqdPts(r, qs[i], i) : 0), 0);
+const _tqdQs = (l) => { try { return JSON.parse(l.qsJson || '[]'); } catch (e) { return []; } };
+window.tqDuelCreate = async function(pub) {
+  await _clockSync(); if (window._tqLocked) return; const me = _wdMe(), qs = _tqMakeSet(window._tqPool || [], window._tqTrk, Math.random); if (!qs) return;
+  let code = _wdCode(); for (let i = 0; i < 4 && await dbGet('wordleDuels', code).catch(() => null); i++) code = _wdCode();
+  await dbSet('wordleDuels', code, { game: 'tq', public: !!pub, status: 'waiting', createdAt: _now(), hostSeen: _now(), qsJson: JSON.stringify(qs), round: 1, qi: 0, qStart: 0, hostAns: [], guestAns: [],
+    hostUid: me.uid, hostName: me.name, hostAvatar: me.avatar || '', hostColor: _myDuelColour(), guestUid: '', guestName: '', guestAvatar: '' });
+  _tqdSet({ code, role: 'host' }); renderGames(); };
+window.tqDuelJoin = async function(code) {
+  await _clockSync(); if (window._tqLocked) return; const msg = document.getElementById('tqd-msg'), say = (t) => { if (msg) msg.innerHTML = '<div class="alert alert-error">' + t + '</div>'; };
+  code = String(code || '').trim().toUpperCase(); if (!code) return say('Enter a lobby code.');
+  dbInvalidate('wordleDuels'); const l = await dbGet('wordleDuels', code).catch(() => null); if (!l || l.game !== 'tq') return say('No Trivia lobby with that code.');
+  const me = _wdMe(); if (l.hostUid === me.uid) { _tqdSet({ code, role: 'host' }); return renderGames(); }
+  if (l.status !== 'waiting' || (l.guestUid && l.guestUid !== me.uid)) return say('That duel has already started.');
+  if (_now() - (l.hostSeen || l.createdAt || 0) > 30e3) return say('That lobby has closed — the host left.');
+  const st = _now() + 5300; await dbSet('wordleDuels', code, { guestUid: me.uid, guestName: me.name, guestAvatar: me.avatar || '', guestColor: _myDuelColour(), status: 'playing', startedAt: st, qi: 0, qStart: st });
+  _tqdSet({ code, role: 'guest' }); renderGames(); };
+function _tqdLeave(silent) { const k = _tqdKey(); if (!k) return; clearInterval(window._tqdPoll); clearInterval(window._tqdCd); _tqdSet(null); const s = window._tqdLive || {};
+  if (s.status === 'waiting' && k.role === 'host') dbDelete('wordleDuels', k.code).catch(() => {});
+  else if (s.status === 'playing' && !s.done) dbSet('wordleDuels', k.code, { [k.role + 'Left']: true, [k.role + 'Quit']: true, done: true }).catch(() => {});
+  else if (s.status === 'playing') dbSet('wordleDuels', k.code, { [k.role + 'Left']: true }).catch(() => {});
+  if (!silent) setTimeout(() => renderGames(), 150); }
+window.tqDuelLeave = () => { const s = window._tqdLive || {}; if (s.status === 'playing' && !s.done) return customConfirm('Leave the duel? You\'ll forfeit and your opponent wins.', () => _tqdLeave(false)); _tqdLeave(false); };
+window.tqDuelRematch = async function() { const r = window._tqdRef; if (r) { await dbSet('wordleDuels', r.code, { [r.role + 'Rematch']: true }); renderGames(); } };
+window.tqdAnswer = async function(pick) { const r = window._tqdRef; if (!r || window._tqdBusy) return; window._tqdBusy = true;
+  try { dbInvalidate('wordleDuels'); const l = await dbGet('wordleDuels', r.code).catch(() => null); if (!l || l.done) return; const qi = l.qi || 0, a = (l[r.role + 'Ans'] || []).slice();
+    if (a[qi] || _now() < (l.qStart || 0) || _now() > (l.qStart || 0) + TQD_T) return; while (a.length < qi) a.push(''); a[qi] = pick + '|' + Math.max(0, _now() - l.qStart);
+    await dbSet('wordleDuels', r.code, { [r.role + 'Ans']: a }); try { _ptSnd.tick(false); } catch (e) {} } finally { window._tqdBusy = false; renderGames(); } };
+// Moves the duel on: after both answer (or time's up) + the reveal pause → next question. Either player may do it (host first, guest as backup).
+async function _tqdAdvance(l, role) { const qi = l.qi || 0, both = (l.hostAns || [])[qi] && (l.guestAns || [])[qi];
+  const endQ = both ? Math.min(_now(), (l.qStart || 0) + TQD_T) : (l.qStart || 0) + TQD_T; const revealAt = l.revAt && l.revQi === qi ? l.revAt : null;
+  if (!revealAt) { if (both || _now() > (l.qStart || 0) + TQD_T) await dbSet('wordleDuels', l.id, { revAt: _now(), revQi: qi }); return; }
+  if (_now() < revealAt + TQD_REV + (role === 'host' ? 0 : 1500)) return;
+  if (role !== 'host') { dbInvalidate('wordleDuels'); const f = await dbGet('wordleDuels', l.id).catch(() => null); if (!f || (f.qi || 0) !== qi || f.done) return; } // host already moved on
+  if (qi + 1 >= TQ_N) await dbSet('wordleDuels', l.id, { done: true, revAt: revealAt, revQi: qi });
+  else await dbSet('wordleDuels', l.id, { qi: qi + 1, qStart: _now() + 300, revAt: 0, revQi: -1 }); }
+async function _tqdBody(pool, top) {
+  const me = _wdMe(), mine = _tqdKey(); let lob = null;
+  if (mine && mine.code) { dbInvalidate('wordleDuels'); lob = _duelPre(mine.code) || await dbGet('wordleDuels', mine.code).catch(() => null); if (!lob) _tqdSet(null); }
+  if (!lob) { clearInterval(window._tqdPoll); clearInterval(window._tqdCd);
+    const all = await dbGetAll('wordleDuels', { fresh: true }).catch(() => []), now = _now();
+    const open = all.filter(l => l && l.game === 'tq' && l.public && l.status === 'waiting' && now - (l.hostSeen || l.createdAt || 0) < 30e3 && l.hostUid !== me.uid).sort((a, b) => b.createdAt - a.createdAt);
+    window._tqdPoll = setInterval(() => { if (!document.getElementById('tqd-lobbies')) { clearInterval(window._tqdPoll); return; } if (!document.activeElement || document.activeElement.id !== 'tqd-join-code') renderGames(); }, 6000);
+    return top + `<div class="wd-duel-grid">
+      <div class="wd-panel"><h4>⚔️ Start a Trivia duel</h4><p>Same ${TQ_N} questions at the same time, 15 seconds each. Right answers score <b>500 + up to 500 for speed</b> — the last question counts <b>double</b>. Most points wins.</p>
+        <div class="wd-btns"><button class="btn btn-primary" onclick="tqDuelCreate(true)">🌍 Public lobby</button><button class="btn btn-secondary" onclick="tqDuelCreate(false)">🔒 Private lobby</button></div>
+        <h4 style="margin-top:18px">🔑 Join with a code</h4>
+        <div class="wd-btns"><input id="tqd-join-code" type="text" maxlength="5" placeholder="CODE" style="text-transform:uppercase;letter-spacing:4px;font-weight:800;max-width:140px" onkeydown="if(event.key==='Enter')tqDuelJoin(this.value)"><button class="btn btn-secondary" onclick="tqDuelJoin(document.getElementById('tqd-join-code').value)">Join</button></div>
+        <div id="tqd-msg" style="margin-top:8px"></div>${_duelPickerHtml()}</div>
+      <div class="wd-panel" id="tqd-lobbies"><h4>🌍 Open lobbies <small>${open.length}</small></h4>
+        ${open.length ? open.map(l => `<div class="wd-lob"><span style="display:inline-flex;align-items:center;gap:8px;min-width:0">${_wdAv({ name: l.hostName || 'Player', photo: l.hostAvatar || '' }, 30)}<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(l.hostName || 'Player')}</span></span><small>${Math.max(1, Math.round((now - l.createdAt) / 60e3))} min ago</small><button class="btn btn-primary btn-sm" onclick="tqDuelJoin('${esc(l.id)}')">Join</button></div>`).join('') : '<p class="text-muted" style="margin:6px 0 0">No open lobbies — start one and wait for someone to join.</p>'}</div></div>`
+      + await _liveDuelsHtml(all, 'tq', 'h2hTq') + await _h2hBoardHtml('h2hTq', 'Trivia H2H records'); }
+  const role = mine.role, opp = role === 'host' ? 'guest' : 'host', round = lob.round || 1, rk = lob.id + '_t' + round, qs = _tqdQs(lob);
+  const P = (r) => ({ uid: lob[r + 'Uid'], name: lob[r + 'Name'] || 'Player', av: lob[r + 'Avatar'] || '' }), meP = P(role), opP = P(opp);
+  const quit = lob.hostQuit ? 'host' : lob.guestQuit ? 'guest' : '', done = lob.status === 'playing' && (!!lob.done || !!quit);
+  const T = { host: _tqdTot(lob, 'host', qs), guest: _tqdTot(lob, 'guest', qs) };
+  const winner = done ? (quit ? (quit === 'host' ? 'guest' : 'host') : T.host === T.guest ? 'draw' : T.host > T.guest ? 'host' : 'guest') : '';
+  window._tqdLive = { status: lob.status, done }; window._tqdRef = { code: lob.id, role };
+  if (done && winner === role && !_wdLS('tqdCoin_' + rk)) { _wdLS('tqdCoin_' + rk, 1); _gameCoins('duel-tq', 5); setTimeout(() => { try { fireConfetti({ count: 220 }); } catch (e) {} }, 300); }
+  if (done && winner && winner !== 'draw' && role === (quit ? winner : 'host') && (lob.recR || 0) !== round && !_wdLS('tqdRec_' + rk)) { _wdLS('tqdRec_' + rk, 1); _duelRecordBoth(lob, round, winner, quit, 'tqW', 'tqL', 'h2hTq'); }
+  if (done && role === 'host' && lob.hostRematch && lob.guestRematch && !lob[opp + 'Left']) { const nq = _tqMakeSet(pool, window._tqTrk, Math.random);
+    if (nq) { const st = _now() + 1500; await dbSet('wordleDuels', lob.id, { qsJson: JSON.stringify(nq), round: round + 1, qi: 0, qStart: st, startedAt: st, revAt: 0, revQi: -1, hostAns: [], guestAns: [], done: false, hostQuit: false, guestQuit: false, hostRematch: false, guestRematch: false, hostLeft: false, guestLeft: false }); setTimeout(() => renderGames(), 200); } }
+  clearInterval(window._tqdPoll); window._tqdPollBusy = false;
+  window._tqdPoll = setInterval(async () => { if (!document.getElementById('tqd-duel')) { clearInterval(window._tqdPoll); return; } if (window._tqdPollBusy || window._tqdBusy) return;
+    window._tqdPollBusy = true; try { dbInvalidate('wordleDuels'); dbGet._lastFailed = false; const l2 = await dbGet('wordleDuels', lob.id).catch(() => undefined); if (l2) window._duelPrefetch = { id: lob.id, at: Date.now(), d: l2 };
+      if (l2 === undefined || dbGet.readFailed()) return; if (!l2) { _tqdSet(null); renderGames(); return; }
+      if (l2.status === 'waiting' && role === 'host' && _now() - (l2.hostSeen || 0) > 10e3) dbSet('wordleDuels', lob.id, { hostSeen: _now() }).catch(() => {});
+      else if (l2.status === 'playing' && !l2.done && _now() - (l2[role + 'Seen'] || 0) > 10e3) dbSet('wordleDuels', lob.id, { [role + 'Seen']: _now() }).catch(() => {});
+      if (l2.status === 'playing' && !l2.done && !l2.hostQuit && !l2.guestQuit && _now() >= (l2.qStart || 0)) await _tqdAdvance(l2, role);
+      const sig = (x) => [x.status, x.round || 1, x.qi || 0, x.revQi, JSON.stringify(x.hostAns || []), JSON.stringify(x.guestAns || []), !!x.done, x.guestName || '', !!x.hostRematch, !!x.guestRematch, !!x.hostLeft, !!x.guestLeft, !!x.hostQuit, !!x.guestQuit].join('|');
+      if (sig(l2) !== sig(lob) || (window._tqdQiShown !== (l2.qi || 0) && _now() >= (l2.qStart || 0))) await renderGames(); } finally { window._tqdPollBusy = false; } }, 700);
+  const V = `style="${_duelVars(lob, role)}"`;
+  const bigCard = (p, side, st) => `<div class="wd-fc ${side}"><div class="wd-fc-av">${_wdAv({ name: p.name, photo: p.av }, 96)}</div><b>${esc(p.name)}</b><div class="wd-fc-st">${st}</div></div>`;
+  if (lob.status === 'waiting') return top + `<div id="tqd-duel" class="wd-face wait" ${V}>${bigCard(meP, 'l', '<span>Trivia duel</span>')}
+      <div class="wd-face-mid"><div class="wd-code">${esc(lob.id)}</div><small>${lob.public ? 'Public lobby' : 'Private — share this code'}</small></div>
+      <div class="wd-fc r empty"><div class="wd-fc-av"><span class="wd-spin big"></span></div><b>Waiting for opponent…</b><div class="wd-fc-st"><span>${lob.public ? 'Listed in public lobbies' : 'Send them the code'}</span></div></div></div>
+      <div style="text-align:center;margin-top:12px"><button class="btn btn-secondary" onclick="tqDuelLeave()">Cancel lobby</button></div>`;
+  const qi = lob.qi || 0, faceLeft = (lob.qStart || 0) - _now();
+  if (faceLeft > 0 && qi === 0 && !(lob.hostAns || []).length && !(lob.guestAns || []).length) { setTimeout(() => { if (document.getElementById('tqd-duel')) renderGames(); }, faceLeft + 60);
+    const st2 = await _wdStatsFor([meP.uid, opP.uid]), h = _h2hVs(st2, meP.uid, opP.uid, 'h2hTq'), rec = (p) => { const x = st2[p.uid] || {}; return `<span><i>${x.tqW || 0}–${x.tqL || 0}</i>Duels W–L</span>`; };
+    clearInterval(window._wdTick); window._wdTick = setInterval(() => { const c = document.getElementById('tqd-count'); if (!c) { clearInterval(window._wdTick); return; } const ms = lob.qStart - _now(); c.textContent = ms > 0 ? Math.ceil(ms / 1000) : 'GO!'; }, 200);
+    return top + `<div id="tqd-duel" class="wd-face go" ${V}>${bigCard(meP, 'l', rec(meP))}<div class="wd-face-mid"><span class="wd-vs-big">VS</span><div class="wd-h2h"><b style="color:${h[0] > h[1] ? '#4ade80' : h[0] < h[1] ? '#f87171' : '#9ca3af'}">${h[0]}–${h[1]}</b><small>Head to head</small></div><div id="tqd-count" class="wd-count">${Math.ceil(faceLeft / 1000)}</div></div>${bigCard(opP, 'r', rec(opP))}</div>`; }
+  const mx = Math.max(1, T.host, T.guest);
+  const pod = (p, ro) => `<div class="pd-pod${done && winner === ro ? ' win' : ''}${ro === role ? ' me' : ''}">${_wdAv({ name: p.name, photo: p.av }, 46)}<div class="pd-pn"><b>${esc(p.name)}</b><small>${ro === role ? 'You' : 'Opponent'}${!done && (lob[ro + 'Ans'] || [])[qi] ? ' · ⚡ answered' : ''}</small><div class="tqd-bar"><i style="width:${Math.round(T[ro] / mx * 100)}%"></i></div></div><div class="pd-tot">${T[ro].toLocaleString()}</div></div>`;
+  let html = top + `<div id="tqd-duel" ${V}><div class="pd-pods">${pod(meP, role)}<div class="pd-vs">VS</div>${pod(opP, opp)}</div>`;
+  if (!done) { const Q = qs[qi]; if (!Q) return html + '</div>'; window._tqdQiShown = qi;
+    const myRaw = (lob[role + 'Ans'] || [])[qi], opRaw = (lob[opp + 'Ans'] || [])[qi], rev = lob.revQi === qi && lob.revAt;
+    const myPick = myRaw ? +String(myRaw).split('|')[0] : -1, opPick = opRaw ? +String(opRaw).split('|')[0] : -1, left = Math.max(0, (lob.qStart || 0) + TQD_T - _now());
+    html += `<div class="hl-progress">${Array.from({ length: TQ_N }, (_, k) => { const r = (lob[role + 'Ans'] || [])[k]; return `<span class="${k < qi || (k === qi && rev) ? (r && qs[k] && +String(r).split('|')[0] === qs[k].a ? 'ok' : 'bad') : k === qi ? 'cur' : ''}"></span>`; }).join('')}<b>Q${qi + 1}/${TQ_N}${qi === TQ_N - 1 ? ' · ×2' : ''}</b></div>
+      <div class="pt-arena tq-arena"><div class="pt-qn">QUESTION ${qi + 1}${qi === TQ_N - 1 ? ' · DOUBLE POINTS' : ''}</div><div class="pt-qt">${Q.q}</div>
+      ${rev ? '' : `<div class="pd-cd${left < 5e3 ? ' low' : ''}"><span id="tqd-fill" style="width:${left / TQD_T * 100}%"></span></div><div class="pd-cdn"><b id="tqd-cd">${Math.ceil(left / 1000)}</b>s${myRaw ? ' · locked in' + (opRaw ? '' : ' — waiting for ' + esc(opP.name)) : ''}</div>`}
+      <div class="tq-opts">${Q.opts.map((o, i) => { const cls = rev ? (i === Q.a ? ' ok' : (i === myPick ? ' bad' : ' dim')) : (i === myPick ? ' sel' : myRaw ? ' dim' : '');
+        const tags = rev ? (i === myPick ? '<em class="tqd-tag me">YOU</em>' : '') + (i === opPick ? `<em class="tqd-tag op">${esc(String(opP.name).slice(0, 10))}</em>` : '') : '';
+        return `<button class="tq-opt${cls}" ${rev || myRaw || left <= 0 ? 'disabled' : ''} onclick="tqdAnswer(${i})"><i>${'ABCD'[i]}</i><span>${esc(o)}</span>${tags}</button>`; }).join('')}</div>
+      ${rev ? `<div class="tq-why">${myPick === Q.a ? `✅ +${_tqdPts(myRaw, Q, qi)}` : '❌ +0'} · ${esc(opP.name)} ${opPick === Q.a ? '✅ +' + _tqdPts(opRaw, Q, qi) : '❌ +0'} <span>· ${esc(Q.why)}</span></div>` : ''}</div>`;
+    clearInterval(window._tqdCd);
+    if (!rev) { if (!myRaw && qi === 0 && _now() - (lob.qStart || 0) < 1500) _ptStingOnce('tqd|' + lob.id + '|' + round);
+      window._tqdCd = setInterval(() => { const ms = Math.max(0, (lob.qStart || 0) + TQD_T - _now()), c = document.getElementById('tqd-cd'), f = document.getElementById('tqd-fill'); if (!c) { clearInterval(window._tqdCd); return; }
+        c.textContent = Math.ceil(ms / 1000); if (f) { f.style.width = (ms / TQD_T * 100) + '%'; f.parentNode.classList.toggle('low', ms < 5e3); }
+        const sec = Math.ceil(ms / 1000); if (sec !== window._tqdSec) { window._tqdSec = sec; if (!myRaw && sec > 0 && sec <= 3) try { _ptSnd.tick(true); } catch (e) {} }
+        if (ms <= 0) { clearInterval(window._tqdCd); renderGames(); } }, 200); }
+    else if (window._tqdRevK !== lob.id + qi + round) { window._tqdRevK = lob.id + qi + round; try { myPick === Q.a ? _ptSnd.ding() : _ptSnd.wrong(); } catch (e) {} }
+  } else { clearInterval(window._tqdCd);
+    if (window._tqdEndK !== rk) { window._tqdEndK = rk; setTimeout(() => { try { winner === role ? _ptSnd.win() : winner === 'draw' ? _ptSnd.ding() : _ptSnd.lose(); } catch (e) {} }, 300); }
+    const msg = quit ? (winner === role ? `${esc(opP.name)} left — you win!` : 'You left the duel.') : winner === 'draw' ? 'It\'s a draw!' : winner === role ? 'You win!' : `${esc(opP.name)} wins`;
+    const rows = qs.map((Q, i) => { const a = (lob[role + 'Ans'] || [])[i], b = (lob[opp + 'Ans'] || [])[i], pa = _tqdPts(a, Q, i), pb = _tqdPts(b, Q, i);
+      return `<div class="pd-rr"><div class="pd-rq"><small>Q${i + 1}${i === TQ_N - 1 ? ' · ×2' : ''}</small>${Q.q}</div><div class="pd-rc"><b style="color:${pa ? '#4ade80' : '#f87171'}">${pa ? '+' + pa : '✕'}</b></div><div class="pd-rc"><b style="color:${pb ? '#4ade80' : '#f87171'}">${pb ? '+' + pb : '✕'}</b></div></div>`; }).join('');
+    html += `<div class="pt-arena pt-end${winner === role ? ' good' : ''}"><div class="pt-qn">${winner === role ? 'WINNER' : winner === 'draw' ? 'DRAW' : 'FULL TIME'}</div><div class="pt-qt">${msg}</div>
+      <div class="pd-final"><div><small>You</small><b>${T[role].toLocaleString()}</b></div><div><small>${esc(opP.name)}</small><b>${T[opp].toLocaleString()}</b></div></div>
+      <div class="pd-rr pd-rh"><div></div><div>You</div><div>${esc(opP.name)}</div></div>${rows}
+      <div class="wd-btns" style="justify-content:center;margin-top:14px">${lob[opp + 'Left'] ? `<span class="text-muted">${esc(opP.name)} left</span>` : `<button class="pt-go" style="width:auto;padding:12px 22px;margin:0" onclick="tqDuelRematch()" ${lob[role + 'Rematch'] ? 'disabled' : ''}>${lob[role + 'Rematch'] ? (lob[opp + 'Rematch'] ? 'Starting…' : 'Waiting for opponent…') : (lob[opp + 'Rematch'] ? '🔁 Accept rematch' : '🔁 Rematch')}</button>`}<button class="btn btn-secondary" onclick="tqDuelLeave()">Leave</button></div></div>`; }
+  return html + '</div>';
 }
 // ===== GAMES: IMS PADDOCKDLE GRID =====
 // 3×3 grid: every cell needs a market driver who fits BOTH its row and column category. Each driver
