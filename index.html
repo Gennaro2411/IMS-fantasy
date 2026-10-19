@@ -31622,7 +31622,7 @@ async function _tqdBody(pool, top) {
       else if (l2.status === 'playing' && !l2.done && _now() - (l2[role + 'Seen'] || 0) > 10e3) dbSet('wordleDuels', lob.id, { [role + 'Seen']: _now() }).catch(() => {});
       if (l2.status === 'playing' && !l2.done && !l2.hostQuit && !l2.guestQuit && _now() >= (l2.qStart || 0)) await _tqdAdvance(l2, role);
       const sig = (x) => [x.status, x.round || 1, x.qi || 0, x.revQi, JSON.stringify(x.hostAns || []), JSON.stringify(x.guestAns || []), !!x.done, x.guestName || '', !!x.hostRematch, !!x.guestRematch, !!x.hostLeft, !!x.guestLeft, !!x.hostQuit, !!x.guestQuit].join('|');
-      if (sig(l2) !== sig(lob) || (window._tqdQiShown !== (l2.qi || 0) && _now() >= (l2.qStart || 0))) await renderGames(); } finally { window._tqdPollBusy = false; } }, 700);
+      if (sig(l2) !== sig(lob) || (!l2.done && !l2.hostQuit && !l2.guestQuit && window._tqdQiShown !== (l2.qi || 0) && _now() >= (l2.qStart || 0))) await renderGames(); /* end screen: only re-render when something changes */ } finally { window._tqdPollBusy = false; } }, 700);
   const V = `style="${_duelVars(lob, role)}"`;
   const bigCard = (p, side, st) => `<div class="wd-fc ${side}"><div class="wd-fc-av">${_wdAv({ name: p.name, photo: p.av }, 96)}</div><b>${esc(p.name)}</b><div class="wd-fc-st">${st}</div></div>`;
   if (lob.status === 'waiting') return top + `<div id="tqd-duel" class="wd-face wait" ${V}>${bigCard(meP, 'l', '<span>Trivia duel</span>')}
