@@ -25600,7 +25600,9 @@ window.customConfirm = function(msg, onYes, yesLabel, onNo) {
   const noBtn=document.getElementById('confirm-no-btn');
   document.getElementById('confirm-msg').textContent=msg;
   if (noBtn) { noBtn.style.display=''; noBtn.onclick=()=>{ o.style.display='none'; yesBtn.textContent='Yes, Delete'; if (typeof onNo==='function') onNo(); }; }
-  yesBtn.textContent = yesLabel || 'Yes, Delete';
+  // Default button text matches what's being confirmed (it used to always say "Yes, Delete").
+  const _m = String(msg || '').toLowerCase();
+  yesBtn.textContent = yesLabel || (/\bdelete|remove|wipe\b/.test(_m) ? 'Yes, Delete' : /forfeit|leave|quit/.test(_m) ? 'Yes, leave' : /give up/.test(_m) ? 'Yes, give up' : /skip/.test(_m) ? 'Yes, skip' : /reset/.test(_m) ? 'Yes, reset' : 'Yes');
   yesBtn.onclick=()=>{ o.style.display='none'; yesBtn.textContent='Yes, Delete'; onYes(); };
   o.style.display='flex';
 };
