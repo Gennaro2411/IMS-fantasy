@@ -9510,13 +9510,15 @@ window._fillPlacePhotos = async function(root) {
   // Every photo — your own shots, the F1 shots and the city photos — has the same chance.
   if (!url) {
     const pool = (gp ? await window._f1Pics(gp) : []).concat((await Promise.all(city.map(window._wikiPic))).filter(Boolean)); // your photos + F1/aerial shots of the track + local photos
-    if (pool.length) url = pool[Math.floor(Math.random() * pool.length)];
+    window._placePool = pool; if (pool.length) url = pool[Math.floor(Math.random() * pool.length)];
   }
   if (url) window._placePick[all[k]] = url;
   if (!url || !el.isConnected) return;
   const put = (u, retry) => {
     const im = new Image();
     im.onload = () => {
+      // A tall (portrait) photo can't fill a wide PC banner — you'd only see a dim slice. Swap to a landscape one there.
+      { const W0 = el.clientWidth || 0, H0 = el.clientHeight || 1; if (retry && W0 / H0 > 2.2 && im.naturalWidth / im.naturalHeight < 1.1) { const alt = (window._placePool || []).filter(x => x !== u && !(window._tallPics || new Set()).has(x)); (window._tallPics = window._tallPics || new Set()).add(u); if (alt.length) { const nu = alt[Math.floor(Math.random() * alt.length)]; window._placePick[all[k]] = nu; put(nu, true); return; } } }
       // Small photo on a wide banner (e.g. PC): stretching it to fill looks blurry and zoomed. Instead show a soft
       // blurred copy filling the banner, with the photo itself at its natural proportions in the middle, edges faded.
       const W = el.clientWidth || 0, H = el.clientHeight || 0, small = W && im.naturalWidth && (im.naturalWidth < W * 0.85 || (H && im.naturalWidth / im.naturalHeight * H < W * 0.85));
