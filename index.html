@@ -17717,6 +17717,8 @@ async function computeAndCacheTrackRecords() {
         AND col_n IS NOT NULL AND col_n != ''
     `);
     if (res.length) rows = res[0].values.map(v => ({ season:v[0], track:v[1], round:v[2], driver:v[3], div:v[4], finish:parseInt(v[5],10), fpts:parseFloat(v[6])||0, quali:v[7], flap:v[8] }));
+    // Pre-season test rounds (season "P7" etc.) and academy divisions aren't league races — they were adding phantom starts/podiums.
+    rows = rows.filter(r => !/^P/i.test(String(r.season || '').trim()) && !/^A/i.test(String(r.div || '').trim()));
   } catch(e) { console.log('track record query failed', e); return; }
   if (!rows.length) return;
 
