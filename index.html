@@ -9508,9 +9508,7 @@ window._fillPlacePhotos = async function(root) {
   let url = window._placePick[all[k]] || '';
   // Every photo — your own shots, the F1 shots and the city photos — has the same chance.
   if (!url) {
-    // Tracks with your own photos (track-photos/) use only those — no city shots.
-    const _own = gp ? (window._LOCAL_F1[gp] || []) : [];
-    const pool = _own.length ? _own.slice() : (gp ? await window._f1Pics(gp) : []).concat((await Promise.all(city.map(window._wikiPic))).filter(Boolean));
+    const pool = (gp ? await window._f1Pics(gp) : []).concat((await Promise.all(city.map(window._wikiPic))).filter(Boolean)); // your photos + F1/aerial shots of the track + local photos
     if (pool.length) url = pool[Math.floor(Math.random() * pool.length)];
   }
   if (url) window._placePick[all[k]] = url;
