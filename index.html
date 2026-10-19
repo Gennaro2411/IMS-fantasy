@@ -10592,7 +10592,8 @@ async function renderMyTeam() {
         const _rd = drivers.find(d => d.id === _sub.reserveId);
         const _rdGlobal = (window._allDrivers||[]).find(d=>d.id===_sub.reserveId);
         const _rdName = (_rd && _rd.name) || (_rdGlobal && _rdGlobal.name);
-        _reserveIn = { id: _sub.reserveId, name: _rdName || _sub.reserveName || 'Reserve', photo: _rd ? driverPhoto(_rd) : '', pts: _sub.pts };
+        const _rst = String((pointsRace && pointsRace.raceStatusByDivision && pointsRace.raceStatusByDivision[_sub.reserveId] && pointsRace.raceStatusByDivision[_sub.reserveId][div]) || '').toUpperCase();
+        _reserveIn = { id: _sub.reserveId, name: _rdName || _sub.reserveName || 'Reserve', photo: _rd ? driverPhoto(_rd) : '', pts: _sub.pts, st: (_rst.match(/DNF|DSQ|DNS/) || [''])[0] || ((pointsRace && pointsRace.dnfByDriver && pointsRace.dnfByDriver[_sub.reserveId] > 0) ? 'DNF' : '') };
       }
     } catch(e) {}
     const dpts = pointsRaceScored && wasFielded ? (pointsRace.driverPoints[dId]||0) : null;
@@ -10699,7 +10700,7 @@ async function renderMyTeam() {
     html += '</div>';
     if (teamLogo) html += '<img src="'+teamLogo+'" style="height:12px;object-fit:contain;margin-bottom:3px;display:block" onerror="this.style.display=\'none\'">';
     html += '<div style="font-weight:700;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2">'+esc(driver.name)+'</div>';
-    if (_reserveIn) html += '<div '+(_reserveIn.id?'onclick="event.stopPropagation();openDriverModal(\''+_reserveIn.id+'\')" style="margin-top:3px;cursor:pointer"':'style="margin-top:3px"')+'><span style="display:inline-flex;align-items:center;gap:3px;font-size:.54rem;font-weight:800;letter-spacing:.5px;color:#0a1a1a;background:linear-gradient(135deg,#27f4d2,#1ec8ac);border-radius:4px;padding:1px 6px;box-shadow:0 0 8px rgba(39,244,210,0.5)">🔄 RESERVE IN</span> <span style="font-size:.6rem;color:#27f4d2;font-weight:700">'+esc(_reserveIn.name)+'</span></div>';
+    if (_reserveIn) html += '<div '+(_reserveIn.id?'onclick="event.stopPropagation();openDriverModal(\''+_reserveIn.id+'\')" style="margin-top:3px;cursor:pointer"':'style="margin-top:3px"')+'><span style="display:inline-flex;align-items:center;gap:3px;font-size:.54rem;font-weight:800;letter-spacing:.5px;color:#0a1a1a;background:linear-gradient(135deg,#27f4d2,#1ec8ac);border-radius:4px;padding:1px 6px;box-shadow:0 0 8px rgba(39,244,210,0.5)">🔄 RESERVE IN</span> <span style="font-size:.6rem;color:#27f4d2;font-weight:700">'+esc(_reserveIn.name)+'</span>'+(_reserveIn.st?' <span style="font-size:.54rem;font-weight:800;color:#f87171;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.45);border-radius:4px;padding:0 5px">'+_reserveIn.st+'</span>':'')+'</div>';
     if (!_pastView && (driver.raceBanRacesLeft>0 || driver.raceBanned)) html += '<div style="margin-top:2px"><span title="This driver has a race ban" style="display:inline-block;font-size:.54rem;font-weight:800;letter-spacing:.5px;color:#fff;background:#ff5470;border-radius:4px;padding:1px 6px">🚫 RACE BAN'+(driver.raceBanRacesLeft>0?' · '+driver.raceBanRacesLeft+' RACE'+(driver.raceBanRacesLeft>1?'S':''):'')+'</span></div>';
     html += '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px"><span class="mt-tag sm">$'+price.toFixed(1)+'M</span>'+(priceChangeStr||'')+'</div>';
     html += '</div>';
@@ -10799,7 +10800,7 @@ async function renderMyTeam() {
         const absent = (window._allDrivers||drivers).find(d => d.id === x.absentId) || { id: x.absentId, name: driverName[x.absentId] || '?' };
         const resDrv = (window._allDrivers||drivers).find(d => d.id === x.reserveId);
         const stRaw = String((race.raceStatusByDivision && race.raceStatusByDivision[x.reserveId] && race.raceStatusByDivision[x.reserveId][div]) || '').toUpperCase();
-        allSwaps.push({ rn: race.raceNum || 0, race: raceName[race.id] || race.name, div, absent, reserve: resDrv, reserveName: (resDrv && resDrv.name) || driverName[x.reserveId] || x.reserveName || '?', pts: x.pts || 0, st: (stRaw.match(/DNF|DSQ|DNS/) || [''])[0], counted: true }); }); });
+        allSwaps.push({ rn: race.raceNum || 0, race: raceName[race.id] || race.name, div, absent, reserve: resDrv, reserveName: (resDrv && resDrv.name) || driverName[x.reserveId] || x.reserveName || '?', pts: x.pts || 0, st: (stRaw.match(/DNF|DSQ|DNS/) || [''])[0] || ((race.dnfByDriver && race.dnfByDriver[x.reserveId] > 0) ? 'DNF' : ''), counted: true }); }); });
     // Tokens used = the reserve swaps actually found in the results (up to the round being viewed). The stored
     // token count could drift from the results (e.g. a deleted/merged race), leaving a 'used' token with no one on the bench.
     { const upTo = (_snapView && viewedRace) ? (viewedRace.raceNum || 0) : Infinity;
