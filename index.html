@@ -31617,11 +31617,13 @@ async function _tqdBody(pool, top) {
         return `<button class="tq-opt${cls}" ${rev || myRaw || left <= 0 ? 'disabled' : ''} onclick="tqdAnswer(${i})"><i>${'ABCD'[i]}</i><span>${esc(o)}</span>${tags}</button>`; }).join('')}</div>
       ${rev ? `<div class="tq-why">${myPick === Q.a ? '✅ Correct!' : '❌ Not quite.'} <span>${esc(Q.why)}</span></div>` : ''}</div>`;
     clearInterval(window._tqdCd);
-    if (!rev) { if (!myRaw && qi === 0 && _now() - (lob.qStart || 0) < 1500) _ptStingOnce('tqd|' + lob.id + '|' + round);
+    if (!rev && left <= 0) { /* time's up — the poll reveals it */ }
+    else if (!rev) { if (!myRaw && qi === 0 && _now() - (lob.qStart || 0) < 1500) _ptStingOnce('tqd|' + lob.id + '|' + round);
       window._tqdCd = setInterval(() => { const ms = Math.max(0, (lob.qStart || 0) + TQD_T - _now()), c = document.getElementById('tqd-cd'), f = document.getElementById('tqd-fill'); if (!c) { clearInterval(window._tqdCd); return; }
         c.textContent = Math.ceil(ms / 1000); if (f) { f.style.width = (ms / TQD_T * 100) + '%'; f.parentNode.classList.toggle('low', ms < 5e3); }
         const sec = Math.ceil(ms / 1000); if (sec !== window._tqdSec) { window._tqdSec = sec; if (!myRaw && sec > 0 && sec <= 3) try { _ptSnd.tick(true); } catch (e) {} }
-        if (ms <= 0) { clearInterval(window._tqdCd); renderGames(); } }, 200); }
+        if (ms <= 0) { clearInterval(window._tqdCd); const tk = lob.id + '|' + round + '|' + qi; if (window._tqdTO === tk) return; window._tqdTO = tk; // time's up: reveal once (no re-render loop)
+          (async () => { try { dbInvalidate('wordleDuels'); const l3 = await dbGet('wordleDuels', lob.id).catch(() => null); if (l3 && !l3.done && (l3.qi || 0) === qi) await _tqdAdvance(l3, role); } catch (e) {} renderGames(); })(); } }, 200); }
     else if (window._tqdRevK !== lob.id + qi + round) { window._tqdRevK = lob.id + qi + round; try { myPick === Q.a ? _ptSnd.ding() : _ptSnd.wrong(); } catch (e) {} }
   } else { clearInterval(window._tqdCd);
     if (window._tqdEndK !== rk) { window._tqdEndK = rk; setTimeout(() => { try { winner === role ? _ptSnd.win() : winner === 'draw' ? _ptSnd.ding() : _ptSnd.lose(); } catch (e) {} }, 300); }
