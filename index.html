@@ -31770,7 +31770,7 @@ async function renderCPGame(el) {
         <div class="pt-hint">${CP_MAX - st.g.length} guess${CP_MAX - st.g.length === 1 ? '' : 'es'} left · each wrong guess reveals more</div>`}</div>`; }
   if (mode === 'daily') body += (st && st.done || !window._cpLb) ? (window._cpLb = await _cpLeaderboardHtml()) : window._cpLb;
   el.innerHTML = `<div class="wd-wrap">${body}<div class="wd-info"><h3>How to play</h3><p>You see an IMS driver's <b>first season</b> — the team they mainly drove for and their division. Guess who it is. <b>Every wrong guess reveals the next season</b>; once the whole path is shown you get their nationality, then their appearance count, then their last race. <b>${CP_MAX} guesses.</b></p>
-    <p><b>📅 Daily</b> — the same driver for everyone. <b>∞ Practice</b> — unlimited. <b>⚔️ Duel</b> — race an opponent: the career reveals every 10 s, 2 guesses each, first to name the driver takes the round (fewer reveals = more points). Pool: drivers with 3+ IMS seasons.</p>
+    <p><b>📅 Daily</b> — the same driver for everyone. <b>∞ Practice</b> — unlimited. <b>⚔️ Duel</b> — race an opponent: the career reveals every 10 s, 3 guesses each, first to name the driver takes the round (fewer reveals = more points). Pool: drivers with 3+ IMS seasons.</p>
     <p style="margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(247,207,85,.08);border:1px solid rgba(247,207,85,.35);font-size:.84rem"><span class="imc"></span> <b>Earn IM$:</b> play the daily for <b>+10 IM$</b>, solve it in <b>3 guesses or fewer</b> for <b>another +10 IM$</b>. Log in to earn.</p></div></div>`;
   if (document.getElementById('pt-timer')) { const until = _now() + _wdMsToMidnight(); clearInterval(window._wdTick);
     const tk = () => { const t = document.getElementById('pt-timer'); if (!t) { clearInterval(window._wdTick); return; } const ms = until - _now(); if (ms <= 0) { clearInterval(window._wdTick); renderGames(); return; }
@@ -31779,9 +31779,9 @@ async function renderCPGame(el) {
 }
 // ===== CAREER PATH DUEL (race the reveal) =====
 // 5 drivers. Each round the career path reveals one season every 10 s (then nationality, appearances,
-// last race) for both players at once. 2 guesses each per round; the first correct guess takes the round:
+// last race) for both players at once. 3 guesses each per round; the first correct guess takes the round:
 // 100 pts with 1 season showing, −20 per extra reveal (min 20). Guesses are stored 'id@ms'.
-const CPD_ROUNDS = 5, CPD_STEP = 10000, CPD_PAUSE = 4500, CPD_GUESSES = 2;
+const CPD_ROUNDS = 5, CPD_STEP = 10000, CPD_PAUSE = 4500, CPD_GUESSES = 3;
 const _cpdKey = () => { try { return JSON.parse(localStorage.getItem('imsCPDuel') || 'null'); } catch (e) { return null; } };
 const _cpdSet = (v) => { try { v ? localStorage.setItem('imsCPDuel', JSON.stringify(v)) : localStorage.removeItem('imsCPDuel'); } catch (e) {} };
 const _cpdG = (l, ro, r) => String(((l[ro + 'G'] || [])[r]) || '').split(',').filter(Boolean).map(x => { const [id, ms] = x.split('@'); return { id, ms: +ms || 0 }; });
