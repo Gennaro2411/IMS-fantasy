@@ -5276,17 +5276,23 @@ async function stampLiveWeekend(schedule) {
     if (!justLocked) return;
     const existing = await dbGet('settings','liveRaceWeekend').catch(() => null);
     const ex = existing && existing.value;
-    if (ex && ex.name && ex.name.toLowerCase().trim() === justLocked.name.toLowerCase().trim()) return; // already stamped (possibly ended)
-    await dbSet('settings','liveRaceWeekend',{ value: { name: justLocked.name, raceNum: justLocked.raceNum || 0, lockTime: justLocked.lockTime, id: justLocked.id || null } });
+    // Live race weekend → the round that just locked (e.g. COTA, round 3). Never re-stamped once set, so ending a weekend manually sticks.
+    if (!(ex && ex.name && ex.name.toLowerCase().trim() === justLocked.name.toLowerCase().trim()))
+      await dbSet('settings','liveRaceWeekend',{ value: { name: justLocked.name, raceNum: justLocked.raceNum || 0, lockTime: justLocked.lockTime, id: justLocked.id || null } });
+    // Lock snapshot runs ONCE per lock (tracked separately) — it used to be skipped whenever the live weekend was already stamped.
+    const _lk = justLocked.name + '|' + justLocked.lockTime, _ls = await dbGet('settings', 'lockSnap').catch(() => null);
+    if (_ls && _ls.value === _lk) return;
     // The market has just closed, so freeze every team's CURRENT squad onto this round's race doc.
     // Use force:true so any stale/earlier snapshot is overwritten with what each team actually has at
     // lock — otherwise points (and reserves) score against an out-of-date lineup.
     try {
       const allRaces = await dbGetAll('races').catch(()=>[]);
-      const raceDoc = allRaces.find(r => (r.name||'').toLowerCase().trim() === justLocked.name.toLowerCase().trim())
-                   || allRaces.find(r => justLocked.raceNum && r.raceNum === justLocked.raceNum);
+      // This round's race doc: unscored, same name (or same round number) — never an old scored race of the same name.
+      const _uns = (r) => !(r.driverPoints && Object.values(r.driverPoints).some(v => v > 0));
+      const raceDoc = allRaces.find(r => _uns(r) && (r.name||'').toLowerCase().trim() === justLocked.name.toLowerCase().trim())
+                   || allRaces.find(r => _uns(r) && justLocked.raceNum && r.raceNum === justLocked.raceNum);
       const _rd = raceDoc || await window.ensureRaceDoc(justLocked.name, justLocked.raceNum);
-      if (_rd) await snapshotTeamsForRace(_rd.id, true);
+      if (_rd) { await snapshotTeamsForRace(_rd.id, true); await dbSet('settings', 'lockSnap', { value: _lk, at: Date.now() }); console.log('[LOCK] snapshot taken for ' + _rd.name); }
     } catch(e) { console.log('lock snapshot skipped:', e); }
   } catch(e) { console.log('live weekend stamp failed (non-fatal):', e); }
 }
