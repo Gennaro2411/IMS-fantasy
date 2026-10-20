@@ -12093,37 +12093,45 @@ async function renderTrackHistory(upcoming, allRaces, archives, drivers) {
     wins:'#ffc800', poles:'#9b6fd4', fls:'#27f4d2', podiums:'#ff8fab', app:'#4dabf7', pts:'#69db7c'
   };
   const _thNorm = n => String(n||'').replace(/^\[[^\]]*\]\s*/, '').trim().toLowerCase();
+  const _thN2 = n => (typeof _normName === 'function' ? _normName(_thNorm(n)) : _thNorm(n));
   const _thAv = (name, col) => {
-    const first = String(name||'').split(/\s*[,&\/]\s*/)[0];
-    const d = (drivers||[]).find(x => _thNorm(x.name) === _thNorm(first));
-    const ph = d && typeof driverPhoto === 'function' ? driverPhoto(d) : '';
-    const ini = _thNorm(first).slice(0,2).toUpperCase() || '?';
-    return `<div class="th-av" style="--c:${col}">${ph ? `<img src="${esc(ph)}" alt="" onerror="this.outerHTML='<span>${ini}</span>'">` : `<span>${ini}</span>`}</div>`;
+    const k = _thN2(name);
+    const d = (drivers||[]).find(x => _thN2(x.name) === k || _thN2(x.name).startsWith(k) || (k && k.startsWith(_thN2(x.name)) && _thN2(x.name).length > 3));
+    let ph = d && typeof driverPhoto === 'function' ? driverPhoto(d) : '';
+    if (!ph && window._avatarByName) ph = window._avatarByName[k] || '';
+    const ini = _thNorm(name).replace(/[^a-z0-9]/g,'').slice(0,2).toUpperCase() || '?';
+    return `<div class="th-av" style="--c:${col}" title="${esc(name)}">${ph ? `<img src="${esc(ph)}" alt="" onerror="this.outerHTML='<span>${ini}</span>'">` : `<span>${ini}</span>`}</div>`;
   };
-  const statTile = (icon, label, rec, col, unit) => `
-    <div class="th-tile" style="--c:${col}">
+  const statTile = (icon, label, rec, col, unit) => {
+    if (!rec) return `<div class="th-tile" style="--c:${col}"><div class="th-lab"><span>${icon}</span>${label}</div><div class="th-n" style="color:var(--muted)">—</div></div>`;
+    const names = String(rec.name||'').split(/\s*,\s*|\s+&\s+/).filter(Boolean);
+    return `<div class="th-tile" style="--c:${col}">
       <div class="th-glow"></div>
-      <div class="th-lab"><span>${icon}</span>${label}</div>
-      ${rec ? `<div class="th-row">${_thAv(rec.name, col)}<div class="th-who"><div class="th-n">${rec.n}<small>${unit||''}</small></div><div class="th-nm">${esc(rec.name)}${rec.tied?' <i>TIED</i>':''}</div></div></div>`
-            : `<div class="th-n" style="color:var(--muted)">—</div>`}
+      <div class="th-lab"><span>${icon}</span>${label}<b class="th-n">${rec.n}<small>${unit||''}</small></b></div>
+      ${names.length > 1 ? `<div class="th-tie">TIED · ${names.length}</div>` : ''}
+      <div class="th-list">${names.map(nm => `<div class="th-row">${_thAv(nm, col)}<div class="th-nm">${esc(nm)}</div></div>`).join('')}</div>
     </div>`;
+  };
   const thCss = `<style>
-    .th-tile{position:relative;overflow:hidden;border-radius:16px;padding:12px;background:linear-gradient(160deg,color-mix(in srgb,var(--c) 16%,transparent),rgba(255,255,255,.02) 70%);border:1px solid color-mix(in srgb,var(--c) 35%,transparent);backdrop-filter:blur(6px);transition:transform .2s,box-shadow .2s}
-    .th-tile:hover{transform:translateY(-3px);box-shadow:0 10px 24px -10px var(--c)}
-    .th-glow{position:absolute;top:-40px;right:-40px;width:110px;height:110px;border-radius:50%;background:var(--c);opacity:.18;filter:blur(30px);pointer-events:none}
-    .th-lab{position:relative;font-size:.56rem;font-weight:800;letter-spacing:1.4px;color:var(--c);margin-bottom:10px;display:flex;gap:6px;align-items:center}
-    .th-row{position:relative;display:flex;align-items:center;gap:10px}
-    .th-av{flex:none;width:46px;height:46px;border-radius:50%;padding:2px;background:conic-gradient(from 200deg,var(--c),transparent 70%,var(--c));box-shadow:0 0 14px -2px var(--c)}
-    .th-av img,.th-av span{width:100%;height:100%;border-radius:50%;object-fit:cover;display:flex;align-items:center;justify-content:center;background:#15151d;font-weight:900;font-size:.8rem;color:#fff}
-    .th-who{min-width:0}
-    .th-n{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.7rem;line-height:.95;color:#fff}
-    .th-n small{font-size:.6rem;color:var(--muted);margin-left:3px;font-weight:700}
-    .th-nm{font-size:.74rem;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .th-nm i{font-style:normal;font-size:.52rem;color:var(--c);font-weight:800}
+    .th-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    @media(max-width:560px){.th-grid{grid-template-columns:repeat(2,1fr)}}
+    .th-tile{position:relative;overflow:hidden;border-radius:12px;padding:9px 10px;background:linear-gradient(160deg,color-mix(in srgb,var(--c) 16%,transparent),rgba(255,255,255,.02) 70%);border:1px solid color-mix(in srgb,var(--c) 35%,transparent);transition:transform .2s,box-shadow .2s}
+    .th-tile:hover{transform:translateY(-2px);box-shadow:0 8px 20px -10px var(--c)}
+    .th-glow{position:absolute;top:-40px;right:-40px;width:100px;height:100px;border-radius:50%;background:var(--c);opacity:.16;filter:blur(28px);pointer-events:none}
+    .th-lab{position:relative;font-size:.54rem;font-weight:800;letter-spacing:1.2px;color:var(--c);margin-bottom:6px;display:flex;gap:5px;align-items:center}
+    .th-lab .th-n{margin-left:auto}
+    .th-tie{position:relative;font-size:.5rem;font-weight:800;letter-spacing:1px;color:var(--c);opacity:.8;margin:-3px 0 4px}
+    .th-list{position:relative;display:flex;flex-direction:column;gap:4px}
+    .th-row{display:flex;align-items:center;gap:7px;min-width:0}
+    .th-av{flex:none;width:26px;height:26px;border-radius:50%;padding:1.5px;background:conic-gradient(from 200deg,var(--c),transparent 70%,var(--c));box-shadow:0 0 10px -3px var(--c)}
+    .th-av img,.th-av span{width:100%;height:100%;border-radius:50%;object-fit:cover;display:flex;align-items:center;justify-content:center;background:#15151d;font-weight:900;font-size:.55rem;color:#fff}
+    .th-n{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.3rem;line-height:1;color:#fff;letter-spacing:0}
+    .th-n small{font-size:.55rem;color:var(--muted);margin-left:2px;font-weight:700}
+    .th-nm{font-size:.72rem;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
   </style>`;
   const chip = (txt, gold) => `<span style="font-size:.62rem;font-weight:800;letter-spacing:.3px;background:${gold?'rgba(255,200,0,0.14)':'rgba(255,255,255,0.05)'};border:1px solid ${gold?'rgba(255,200,0,0.45)':'var(--border)'};color:${gold?'var(--gold)':'var(--text)'};border-radius:20px;padding:4px 11px">${txt}</span>`;
   const factChips = `
-    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:9px">
       ${rec && rec.firstSeason ? chip('📅 Since S'+rec.firstSeason) : (facts && facts.opened ? chip('📅 Since '+facts.opened) : '')}
       ${facts && facts.len ? chip('📏 '+facts.len+' km') : ''}
       ${facts && facts.corners ? chip('🌀 '+facts.corners+' corners') : ''}
@@ -12134,21 +12142,21 @@ async function renderTrackHistory(upcoming, allRaces, archives, drivers) {
 
   el.innerHTML = thCss + `
     <div class="card" style="position:relative;overflow:hidden;padding:0;border:1px solid rgba(39,244,210,0.3);background:radial-gradient(120% 80% at 100% 0%,rgba(123,79,191,.16),transparent 60%),var(--surface)">
-      <div style="position:relative;padding:18px 18px 16px;background:linear-gradient(135deg, rgba(39,244,210,0.14), rgba(123,79,191,0.10) 60%, var(--surface) 100%)">
+      <div style="position:relative;padding:14px 16px 12px;background:linear-gradient(135deg, rgba(39,244,210,0.14), rgba(123,79,191,0.10) 60%, var(--surface) 100%)">
         ${outline ? `<div style="position:absolute;top:50%;right:-30px;transform:translateY(-50%);width:240px;height:240px;background-image:url('${outline}');background-repeat:no-repeat;background-position:center;background-size:contain;opacity:0.22;filter:brightness(0) invert(1) drop-shadow(0 0 8px #27f4d2);pointer-events:none"></div>` : ''}
         <div style="position:relative">
           <div style="font-size:.58rem;font-weight:800;letter-spacing:2.5px;color:#27f4d2;margin-bottom:4px">📖 TRACK HISTORY</div>
           <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.7rem;line-height:1;margin-bottom:2px">${esc(facts ? facts.full : upcoming.name)}</div>
-          <div style="font-size:.8rem;color:var(--muted);margin-bottom:12px">${facts && facts.country ? esc(facts.country) : esc(upcoming.name)}</div>
+          <div style="font-size:.8rem;color:var(--muted);margin-bottom:8px">${facts && facts.country ? esc(facts.country) : esc(upcoming.name)}</div>
           ${factChips}
           ${facts ? `<p style="font-size:.85rem;line-height:1.5;margin:0">${esc(facts.blurb)}</p>` : ''}
         </div>
       </div>
-      <div style="padding:14px 18px 18px">
-        ${facts && facts.fact ? `<div style="font-size:.78rem;color:var(--text);background:var(--surface2);border-left:3px solid #27f4d2;border-radius:0 8px 8px 0;padding:9px 12px;margin-bottom:16px">💡 ${esc(facts.fact)}</div>` : ''}
+      <div style="padding:10px 16px 14px">
+        ${facts && facts.fact ? `<div style="font-size:.78rem;color:var(--text);background:var(--surface2);border-left:3px solid #27f4d2;border-radius:0 8px 8px 0;padding:7px 11px;margin-bottom:10px">💡 ${esc(facts.fact)}</div>` : ''}
         ${editionCount ? `
-          <div style="font-size:.58rem;font-weight:800;letter-spacing:2px;color:var(--muted);margin-bottom:10px">🏆 ALL-TIME IMS RECORDS HERE</div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px">
+          <div style="font-size:.58rem;font-weight:800;letter-spacing:2px;color:var(--muted);margin-bottom:7px">🏆 ALL-TIME IMS RECORDS HERE</div>
+          <div class="th-grid">
             ${statTile('🥇','MOST WINS', mostWins, tileColors.wins)}
             ${statTile('🍾','MOST PODIUMS', mostPod, tileColors.podiums)}
             ${statTile('⏱','MOST POLES', mostPoles, tileColors.poles)}
