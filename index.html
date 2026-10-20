@@ -5292,7 +5292,8 @@ async function stampLiveWeekend(schedule) {
       const raceDoc = allRaces.find(r => _uns(r) && (r.name||'').toLowerCase().trim() === justLocked.name.toLowerCase().trim())
                    || allRaces.find(r => _uns(r) && justLocked.raceNum && r.raceNum === justLocked.raceNum);
       const _rd = raceDoc || await window.ensureRaceDoc(justLocked.name, justLocked.raceNum);
-      if (_rd) { await snapshotTeamsForRace(_rd.id, true); await dbSet('settings', 'lockSnap', { value: _lk, at: Date.now() }); console.log('[LOCK] snapshot taken for ' + _rd.name); }
+      if (_rd) { try { await ensureCaptainsForRace(_rd.id, justLocked.raceNum || _rd.raceNum || 0, _rd.name); } catch (e) { console.log('lock captain fill failed', e); } // missing captains: carry last round's, else best scorer — BEFORE the snapshot so it's saved
+        await snapshotTeamsForRace(_rd.id, true); await dbSet('settings', 'lockSnap', { value: _lk, at: Date.now() }); console.log('[LOCK] snapshot taken for ' + _rd.name); }
     } catch(e) { console.log('lock snapshot skipped:', e); }
   } catch(e) { console.log('live weekend stamp failed (non-fatal):', e); }
 }
