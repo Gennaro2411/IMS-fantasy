@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16.png?v=3">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3">
 <link rel="shortcut icon" href="icons/favicon.ico?v=3">
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500;600&family=Titillium+Web:wght@400;600;700;900&family=Orbitron:wght@500;600;700;800;900&family=Saira:wght@700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500;600&family=Titillium+Web:wght@400;600;700;900&family=Orbitron:wght@500;600;700;800;900&family=Saira:wght@700;800&family=UnifrakturMaguntia&family=Playfair+Display:ital,wght@0,700;0,900;1,400&display=swap" rel="stylesheet">
 <style>
   :root {
     --red:#E8002D;--red-dark:#b50022;--gold:#FFD700;
@@ -1889,6 +1889,16 @@
     #page-predictions .nw-hl{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.35rem;line-height:1.1;margin:0;padding:12px 14px 6px;color:#fff}
     #page-predictions .nw-body{padding:0 14px 14px;font-size:.84rem;line-height:1.6;color:#d6d6ea}
     @media (max-width:560px){#page-predictions .nw-grid{grid-template-columns:1fr}#page-predictions .nw-av{width:72px;height:72px}#page-predictions .nw-hl{font-size:1.2rem}}
+    #page-predictions .nw-cap{float:left;font-family:'Playfair Display',Georgia,serif;font-weight:900;font-size:3.4rem;line-height:2.9rem;height:2.9rem;margin:.18rem .5rem 0 0;color:#b48cf0}
+    #page-predictions .brf-pv-lead::first-letter{all:unset}
+    #page-predictions .nw-lead{font-family:Georgia,'Times New Roman',serif;font-style:italic;font-weight:400;font-size:1.05rem;line-height:1.6;border-left:none;padding-left:0;overflow:hidden;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,.12)}
+    #page-predictions .nw-by{font-size:.68rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin:2px 0 10px}
+    #page-predictions .nw-mast{font-family:'UnifrakturMaguntia','Old English Text MT',Georgia,serif!important;letter-spacing:1px!important;font-size:2.1rem!important;-webkit-text-fill-color:#f3ecdc;border-top:3px double rgba(255,255,255,.25);border-bottom:3px double rgba(255,255,255,.25)!important;padding:4px 0!important;text-align:center}
+    #page-predictions .nw-hl{font-family:'Playfair Display',Georgia,'Times New Roman',serif!important;font-weight:700!important;font-size:1.3rem!important;letter-spacing:-.2px}
+    #page-predictions .nw-body{font-family:Georgia,'Times New Roman',serif;font-size:.86rem!important;line-height:1.65!important;text-align:justify;hyphens:auto}
+    #page-predictions .nw-kick{font-family:Georgia,serif;font-variant:small-caps;letter-spacing:2px!important}
+    #page-predictions .nw-logo{background:rgba(255,255,255,.06)!important}#page-predictions .nw-logo img{object-fit:contain!important;padding:14px}
+    #page-predictions .nw-f.r .nw-logo img{transform:none!important}
     #page-predictions .brf-pv-rumour{margin-top:12px;font-size:.82rem;font-style:italic;color:var(--muted);display:flex;gap:8px}
     #page-predictions .brf-pv-call{display:flex;align-items:flex-start;gap:10px;margin-top:14px;padding:12px 14px;border-radius:14px;background:linear-gradient(100deg,rgba(255,200,0,0.12),rgba(255,167,81,0.04) 70%);border:1px solid rgba(255,200,0,0.3);font-size:.9rem;line-height:1.55}
     #page-predictions .brf-pv-call-ic{font-size:1.1rem;line-height:1.3}
@@ -12183,7 +12193,7 @@ async function renderAiRacePreview() {
       if (k && k.startsWith('aiPreview_') && !k.startsWith(buildKey)) sessionStorage.removeItem(k);
     }
   } catch(e) {}
-  const cacheKey = buildKey + upcoming.id + '|nw1';
+  const cacheKey = buildKey + upcoming.id + '|nw2';
   const cached = window._forcePreviewRegen ? null : sessionStorage.getItem(cacheKey);
   window._forcePreviewRegen = false;
   if (cached) {
@@ -12654,15 +12664,27 @@ ${isUpcoming
     const outro = pick(outros);
     // Editorial layout: lead intro, one card per division in its colour, then the prediction callout.
     const _pvHues = { D0:'#ffc800', D1:'#e8002d', D2:'#9b6fd4', D3:'#27f4d2', D4:'#2ecc71', E3:'#2ecc71' };
+    // BOTT title race article: championship leader vs P2 (constructors).
+    let _bott = null; try { const _cons = await dbGetAll('constructors').catch(() => []);
+      const _tot = _cons.map(c => ({ c, pts: (c.seedPoints || 0) + completedRaces.reduce((a, rr) => a + ((rr.constructorPoints && rr.constructorPoints[c.id]) || 0), 0), last: actualLastRace && actualLastRace.constructorPoints ? (actualLastRace.constructorPoints[c.id] || 0) : null })).sort((a, b) => b.pts - a.pts);
+      if (_tot.length >= 2) { const L = _tot[0], S = _tot[1], g = Math.round(L.pts - S.pts), hot = _tot.slice().sort((a, b) => (b.last || 0) - (a.last || 0))[0];
+        const hl = isOpener ? `${L.c.name} and ${S.c.name} line up for the BOTT title fight` : g <= 15 ? pick([`BOTT on a knife-edge: ${S.c.name} just ${g} pts behind ${L.c.name}`, `${S.c.name} closing in on ${L.c.name} in the BOTT race`]) : g <= 60 ? pick([`${L.c.name} lead the BOTT race — can ${S.c.name} bite back?`, `${g} points: the gap ${S.c.name} must close on ${L.c.name}`]) : pick([`${L.c.name} in command of the BOTT — ${g} clear`, `Runaway leaders: ${L.c.name} ${g} pts ahead in the BOTT`]);
+        const txt = isOpener ? `The constructors' title starts here. Every point each team's drivers score across the divisions counts towards the BOTT.` : `<strong>${esc(L.c.name)}</strong> sit top of the BOTT standings on <strong>${Math.round(L.pts)}</strong> points, with <strong>${esc(S.c.name)}</strong> ${g ? g + ' behind' : 'level'}.` + (hot && hot.last ? ` <strong>${esc(hot.c.name)}</strong> were the big scorers last time out with <strong>${Math.round(hot.last)}</strong> — ` + (hot === L ? 'the leaders keep stretching away.' : 'a repeat at ' + esc(upcoming.name) + ' would shake up the order.') : '') + (_tot[2] ? ` <strong>${esc(_tot[2].c.name)}</strong> (${Math.round(_tot[2].pts)}) lurk in third.` : '');
+        _bott = { L, S, g, hl, txt }; } } catch (e) {}
+    const _cFace = (x, side) => { const lg = x.c.logo || (typeof getTeamLogo === 'function' ? getTeamLogo(x.c.name) : ''), col = typeof getTeamCardColour === 'function' ? getTeamCardColour(x.c.name) : null;
+      return `<div class="nw-f ${side}" style="--tc:${(col && col.accent) || '#b48cf0'}"><div class="nw-av nw-logo">${lg ? `<img src="${esc(lg)}" alt="">` : '🏎️'}</div><b>${esc(x.c.name)}</b><em>${Math.round(x.pts)} pts${x.last != null ? ` · last ${Math.round(x.last)}` : ''}</em></div>`; };
     const _dObj = (x) => x && (drivers.find(d => d.id === x.id) || null);
     const _face = (x, side, hue) => { if (!x) return `<div class="nw-f ${side} tbc"><div class="nw-av">?</div><b>TBC</b></div>`; const d = _dObj(x), ph = d && typeof driverPhoto === 'function' ? driverPhoto(d) : '', tm = d && d.team && !/^reserve$/i.test(d.team) ? d.team : '', lg = tm && typeof getTeamLogo === 'function' ? getTeamLogo(tm) : '', col = tm && typeof getTeamCardColour === 'function' ? getTeamCardColour(tm) : null;
       const ini = String(x.name || '?').replace(/^\[[^\]]*\]\s*/, '').slice(0, 2).toUpperCase();
       return `<div class="nw-f ${side}" style="--tc:${(col && col.accent) || hue}"><div class="nw-av">${ph ? `<img src="${esc(ph)}" alt="" onerror="this.outerHTML='${ini}'">` : ini}</div><b>${esc(x.name)}</b><small>${lg ? `<img src="${esc(lg)}" alt="">` : ''}${esc(tm || 'Reserve')}</small><em>${Math.round(x.seasonTotal || 0)} pts${x.lastRacePts != null ? ` · last ${Math.round(x.lastRacePts)}` : ''}</em></div>`; };
-    const fullText = `<p class="brf-pv-lead">${intro}</p>
+    const _introCap = String(intro).replace(/^(\s*)(\S)/, '$1<span class="nw-cap">$2</span>');
+    const fullText = `<div class="nw-by">By the Paddock Post desk · ${Math.max(2, Math.round((divParagraphs.length * 70 + 60) / 200))} min read</div><p class="brf-pv-lead nw-lead">${_introCap}</p>
       <div class="nw-grid">${divParagraphs.map(p => { const h = _pvHues[p.div] || '#9b6fd4', D = p.duel || {};
         return `<article class="nw-art" style="--h:${h}"><div class="nw-kick"><span class="nw-div">${p.div}</span>HEAD TO HEAD</div>
           <div class="nw-vs">${_face(D.a, 'l', h)}<div class="nw-mid"><span>VS</span>${D.b ? `<small>${D.gap ? D.gap + ' pts apart' : 'level'}</small>` : ''}</div>${_face(D.b, 'r', h)}</div>
-          <h3 class="nw-hl">${esc(D.hl || p.div + ' preview')}</h3><div class="nw-body">${p.text}</div></article>`; }).join('')}</div>
+          <h3 class="nw-hl">${esc(D.hl || p.div + ' preview')}</h3><div class="nw-body">${p.text}</div></article>`; }).join('')}${_bott ? `<article class="nw-art nw-bott" style="--h:#f7cf55"><div class="nw-kick"><span class="nw-div">BOTT</span>TITLE RACE</div>
+          <div class="nw-vs">${_cFace(_bott.L, 'l')}<div class="nw-mid"><span>VS</span><small>${_bott.g ? _bott.g + ' pts apart' : 'level'}</small></div>${_cFace(_bott.S, 'r')}</div>
+          <h3 class="nw-hl">${esc(_bott.hl)}</h3><div class="nw-body">${_bott.txt}</div></article>` : ''}</div>
       ${rumourLine}
       <div class="brf-pv-call"><span class="brf-pv-call-ic">🔮</span><span>${outro}</span></div>`;
 
