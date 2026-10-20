@@ -1870,6 +1870,25 @@
     #page-predictions .brf-pv-div::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--h)}
     #page-predictions .brf-pv-div-l{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.25rem;line-height:1;color:var(--h);margin-bottom:6px}
     #page-predictions .brf-pv-div-t{font-size:.84rem;line-height:1.6;color:#dcdcef}
+    #page-predictions .nw-mast{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.6rem;letter-spacing:3px;line-height:1;background:linear-gradient(90deg,#fff,#d6c4ff);-webkit-background-clip:text;background-clip:text;color:transparent;border-bottom:2px solid rgba(255,255,255,.12);padding-bottom:4px;margin-bottom:4px}
+    #page-predictions .brf-pv-lead::first-letter{float:left;font-family:'Barlow Condensed',sans-serif;font-size:3.1rem;line-height:.85;font-weight:900;margin:4px 8px 0 0;color:#b48cf0}
+    #page-predictions .nw-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
+    #page-predictions .nw-art{position:relative;border-radius:16px;overflow:hidden;background:var(--surface2);border:1px solid color-mix(in srgb,var(--h) 30%,transparent);box-shadow:0 10px 28px rgba(0,0,0,.25)}
+    #page-predictions .nw-kick{display:flex;align-items:center;gap:8px;padding:9px 12px;font-size:.66rem;letter-spacing:2.5px;font-weight:800;color:var(--muted);border-bottom:1px solid rgba(255,255,255,.06)}
+    #page-predictions .nw-div{font-family:'Barlow Condensed',sans-serif;font-size:.95rem;letter-spacing:1px;color:#0b0b12;background:var(--h);padding:1px 8px;border-radius:6px}
+    #page-predictions .nw-vs{position:relative;display:grid;grid-template-columns:1fr auto 1fr;align-items:end;padding:14px 10px 12px;background:radial-gradient(60% 120% at 0% 100%,color-mix(in srgb,var(--h) 22%,transparent),transparent 70%),radial-gradient(60% 120% at 100% 100%,color-mix(in srgb,var(--h) 14%,transparent),transparent 70%),linear-gradient(180deg,rgba(0,0,0,.25),transparent)}
+    #page-predictions .nw-f{display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;min-width:0}
+    #page-predictions .nw-av{width:86px;height:86px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.6rem;color:#fff;background:var(--surface3);border:3px solid var(--tc);box-shadow:0 0 22px color-mix(in srgb,var(--tc) 55%,transparent)}
+    #page-predictions .nw-av img{width:100%;height:100%;object-fit:cover;object-position:top center}
+    #page-predictions .nw-f.l .nw-av{transform:rotate(-4deg)}#page-predictions .nw-f.r .nw-av{transform:rotate(4deg)}#page-predictions .nw-f.r .nw-av img{transform:scaleX(-1)}
+    #page-predictions .nw-f b{font-family:'Barlow Condensed',sans-serif;font-size:1.15rem;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:4px}
+    #page-predictions .nw-f small{display:flex;align-items:center;gap:4px;font-size:.7rem;color:var(--muted)}#page-predictions .nw-f small img{height:12px;width:18px;object-fit:contain}
+    #page-predictions .nw-f em{font-style:normal;font-size:.72rem;font-weight:800;color:var(--tc)}
+    #page-predictions .nw-f.tbc{opacity:.5}
+    #page-predictions .nw-mid{display:flex;flex-direction:column;align-items:center;padding:0 6px 30px}#page-predictions .nw-mid span{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;font-size:2rem;line-height:1;color:var(--h);text-shadow:0 0 18px color-mix(in srgb,var(--h) 60%,transparent)}#page-predictions .nw-mid small{font-size:.62rem;color:var(--muted);white-space:nowrap;margin-top:2px}
+    #page-predictions .nw-hl{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.35rem;line-height:1.1;margin:0;padding:12px 14px 6px;color:#fff}
+    #page-predictions .nw-body{padding:0 14px 14px;font-size:.84rem;line-height:1.6;color:#d6d6ea}
+    @media (max-width:560px){#page-predictions .nw-grid{grid-template-columns:1fr}#page-predictions .nw-av{width:72px;height:72px}#page-predictions .nw-hl{font-size:1.2rem}}
     #page-predictions .brf-pv-rumour{margin-top:12px;font-size:.82rem;font-style:italic;color:var(--muted);display:flex;gap:8px}
     #page-predictions .brf-pv-call{display:flex;align-items:flex-start;gap:10px;margin-top:14px;padding:12px 14px;border-radius:14px;background:linear-gradient(100deg,rgba(255,200,0,0.12),rgba(255,167,81,0.04) 70%);border:1px solid rgba(255,200,0,0.3);font-size:.9rem;line-height:1.55}
     #page-predictions .brf-pv-call-ic{font-size:1.1rem;line-height:1.3}
@@ -12164,7 +12183,7 @@ async function renderAiRacePreview() {
       if (k && k.startsWith('aiPreview_') && !k.startsWith(buildKey)) sessionStorage.removeItem(k);
     }
   } catch(e) {}
-  const cacheKey = buildKey + upcoming.id;
+  const cacheKey = buildKey + upcoming.id + '|nw1';
   const cached = window._forcePreviewRegen ? null : sessionStorage.getItem(cacheKey);
   window._forcePreviewRegen = false;
   if (cached) {
@@ -12576,7 +12595,15 @@ ${isUpcoming
 
       const _mainSentences = sentences.slice(0, 4).join(' ');
       const _absence = absenceNotes.length ? ' ' + absenceNotes.join(' ') : '';
-      divParagraphs.push({ div, text: `${_mainSentences}${_absence}` });
+      // Face-off: the top two AVAILABLE drivers in the division (leader vs challenger).
+      const _av = divDrivers.filter(d => !d.unavailable), _A = _av[0] || leader, _B = _av[1] || second || null;
+      const _gap = _B ? Math.round((_A.seasonTotal || 0) - (_B.seasonTotal || 0)) : 0;
+      const _hl = !_B ? `${_A.name} sets the pace` : isOpener ? pick([`${_A.name} vs ${_B.name}: first blood at ${upcoming.name}`, `Season opener showdown: ${_A.name} takes on ${_B.name}`])
+        : _gap === 0 ? pick([`Dead level: ${_A.name} and ${_B.name} can't be split`, `Nothing between them — ${_A.name} vs ${_B.name}`])
+        : _gap <= 10 ? pick([`${_B.name} smells blood — just ${_gap} pts behind ${_A.name}`, `${_gap} points. That's all that separates ${_A.name} and ${_B.name}`, `Pressure mounts on ${_A.name} as ${_B.name} closes in`])
+        : _gap <= 30 ? pick([`Can ${_B.name} close the ${_gap}-point gap to ${_A.name}?`, `${_A.name} holds the upper hand — ${_B.name} needs a big one`])
+        : pick([`${_A.name} runs away with it — ${_gap} clear of ${_B.name}`, `Is anyone stopping ${_A.name}? ${_B.name} is ${_gap} adrift`]);
+      divParagraphs.push({ div, text: `${_mainSentences}${_absence}`, duel: { a: _A, b: _B, gap: _gap, hl: _hl } });
     });
 
     // Intro — varies by season phase
@@ -12627,15 +12654,22 @@ ${isUpcoming
     const outro = pick(outros);
     // Editorial layout: lead intro, one card per division in its colour, then the prediction callout.
     const _pvHues = { D0:'#ffc800', D1:'#e8002d', D2:'#9b6fd4', D3:'#27f4d2', D4:'#2ecc71', E3:'#2ecc71' };
+    const _dObj = (x) => x && (drivers.find(d => d.id === x.id) || null);
+    const _face = (x, side, hue) => { if (!x) return `<div class="nw-f ${side} tbc"><div class="nw-av">?</div><b>TBC</b></div>`; const d = _dObj(x), ph = d && typeof driverPhoto === 'function' ? driverPhoto(d) : '', tm = d && d.team && !/^reserve$/i.test(d.team) ? d.team : '', lg = tm && typeof getTeamLogo === 'function' ? getTeamLogo(tm) : '', col = tm && typeof getTeamCardColour === 'function' ? getTeamCardColour(tm) : null;
+      const ini = String(x.name || '?').replace(/^\[[^\]]*\]\s*/, '').slice(0, 2).toUpperCase();
+      return `<div class="nw-f ${side}" style="--tc:${(col && col.accent) || hue}"><div class="nw-av">${ph ? `<img src="${esc(ph)}" alt="" onerror="this.outerHTML='${ini}'">` : ini}</div><b>${esc(x.name)}</b><small>${lg ? `<img src="${esc(lg)}" alt="">` : ''}${esc(tm || 'Reserve')}</small><em>${Math.round(x.seasonTotal || 0)} pts${x.lastRacePts != null ? ` · last ${Math.round(x.lastRacePts)}` : ''}</em></div>`; };
     const fullText = `<p class="brf-pv-lead">${intro}</p>
-      <div class="brf-pv-grid">${divParagraphs.map(p => `<div class="brf-pv-div" style="--h:${_pvHues[p.div]||'#9b6fd4'}"><div class="brf-pv-div-l">${p.div}</div><div class="brf-pv-div-t">${p.text}</div></div>`).join('')}</div>
+      <div class="nw-grid">${divParagraphs.map(p => { const h = _pvHues[p.div] || '#9b6fd4', D = p.duel || {};
+        return `<article class="nw-art" style="--h:${h}"><div class="nw-kick"><span class="nw-div">${p.div}</span>HEAD TO HEAD</div>
+          <div class="nw-vs">${_face(D.a, 'l', h)}<div class="nw-mid"><span>VS</span>${D.b ? `<small>${D.gap ? D.gap + ' pts apart' : 'level'}</small>` : ''}</div>${_face(D.b, 'r', h)}</div>
+          <h3 class="nw-hl">${esc(D.hl || p.div + ' preview')}</h3><div class="nw-body">${p.text}</div></article>`; }).join('')}</div>
       ${rumourLine}
       <div class="brf-pv-call"><span class="brf-pv-call-ic">🔮</span><span>${outro}</span></div>`;
 
     const html = `<div class="card brf-pv">
       <div class="brf-h" style="margin-bottom:12px">
         <span class="brf-h-ic" style="--c:#b48cf0">🎙️</span>
-        <div style="flex:1;min-width:0"><div class="brf-h-t">Race preview</div><div class="brf-h-s">${getRaceFlag(upcoming.name)} ${esc(upcoming.name)} · Round ${upcoming.raceNum} · Season ${currentSeason}</div></div>
+        <div style="flex:1;min-width:0"><div class="nw-mast">THE PADDOCK POST</div><div class="brf-h-s">${getRaceFlag(upcoming.name)} ${esc(upcoming.name)} · Round ${upcoming.raceNum} · Season ${currentSeason} · ${new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</div></div>
         <button onclick="regenerateRacePreview(this)" title="Regenerate" class="brf-pv-regen">🔄</button>
       </div>
       <div style="font-size:.88rem;line-height:1.7;color:var(--text)">${fullText}</div>
