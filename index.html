@@ -28223,7 +28223,7 @@ window.renderBets = async function() {
   const _stk0 = Math.min(window._betStake || 50, coins.balance);
   const slipHtml = _legs.length ? `<div class="bo-slip">
       <div class="bo-slip-h"><span>Bet slip · <b style="color:#fff">${_foldName(_legs.length)}</b> <i class="bo-slip-n">${_legs.length}</i></span><button onclick="betClearSlip()" title="Clear slip">✕</button></div>
-      <div class="bo-legs">${_legs.map(l => `<div class="bo-leg${_clash.has(l.key) ? ' clash' : ''}"><div><b>${esc(l.label)}</b><small>${esc(l.div)}${_clash.has(l.key) ? ' · ⚠ can\'t combine with another pick' : ''}</small></div><span>${fmtOdds(l.odds)}</span><button onclick="betRemoveLeg('${l.key}')" title="Remove">✕</button></div>`).join('')}</div>
+      <div class="bo-legs">${_legs.map(l => `<div class="bo-leg${_clash.has(l.key) ? ' clash' : ''}"><div><b>${esc(l.label)}</b><small>${esc(l.div)}${_clash.has(l.key) ? (legs => { const c = _betCanon(l); return c && legs.some(o => o !== l && _betCanon(o) === c) ? ' · ⚠ same outcome as another pick' : ' · ⚠ can\'t combine with another pick'; })(_legs) : ''}</small></div><span>${fmtOdds(l.odds)}</span><button onclick="betRemoveLeg('${l.key}')" title="Remove">✕</button></div>`).join('')}</div>
       ${_bbNote}<div class="bo-slip-o">${_legs.length > 1 ? 'Combined odds' : 'Odds'} <b>${fmtOdds(_combOdds)}</b> · <span style="font-size:.7rem">${_legs.length > 1 ? 'every pick must come in' : 'locked in when you place'}</span></div>
       ${_haveFree ? `<div class="bo-free" style="display:block"><div style="margin-bottom:6px">🎁 <b>Use a free bet</b> <span style="font-size:.72rem;opacity:.75">(you keep the winnings, not the stake)</span></div><div style="display:flex;gap:6px;flex-wrap:wrap">${['odds', 'acca'].map(k => { const why = _betFreeWhyNot(k, _legs, _combOdds), on = window._betUseFree === k;
           return `<button class="btn btn-sm ${on ? 'btn-primary' : 'btn-secondary'}" style="flex:1;min-width:140px${why ? ';opacity:.5' : ''}" ${why ? 'disabled title="' + why + '"' : ''} onclick="window._betUseFree=${on ? 'false' : `'${k}'`};renderBets()">${BET_FREE_OPTS[k].stake} <i class="imc"></i> ${k === 'odds' ? 'odds 2.5+' : '3+ leg acca, odds 5+'}${why ? `<br><small>${why}</small>` : ''}</button>`; }).join('')}</div></div>` : ''}
@@ -28873,8 +28873,20 @@ function _bbPrice0(legs) {
   const odds = Math.max(1.01, Math.round(raw / factor * 100) / 100);
   return { odds: impossible ? 0 : odds, raw: Math.round(raw * 100) / 100, factor, groups, impossible };
 }
+// Same outcome written two ways (bookies grey the second one out): e.g. BOTT "leader tops the round" = "Williams top constructor",
+// "leader outscores P2" = that BOTT head-to-head, "giant killer" = the H2H the other way round.
+function _betCanon(l) { const s = l.sel || [];
+  if (l.div === 'BOTT') {
+    if (l.market === 'win') return 'top:' + s[0];
+    if (l.market === 'h2h' && s.length === 2) return 'beat:' + s[0] + ':' + s[1];
+    if (l.market === 'yn') { const p = String(s[0] || '').split(':'), y = s[1] === 'yes';
+      if (p[0] === 'ldw' && y) return 'top:' + p[1];
+      if (p[0] === 'ldx') return y ? 'beat:' + p[1] + ':' + p[2] : 'beat:' + p[2] + ':' + p[1];
+      if (p[0] === 'gk') return y ? 'beat:' + p[2] + ':' + p[1] : 'beat:' + p[1] + ':' + p[2]; } }
+  return null; }
 function _betLegClashes(legs) {
   const bad = new Set();
+  { const seen = {}; legs.forEach(l => { const c = _betCanon(l); if (!c) return; if (seen[c]) { bad.add(seen[c].key); bad.add(l.key); } else seen[c] = l; }); }
   for (let i = 0; i < legs.length; i++) for (let j = i + 1; j < legs.length; j++) {
     const a = legs[i], b = legs[j]; if (a.div !== b.div) continue;
     const clash = (a.market === 'win' && b.market === 'win') || (a.market === 'pole' && b.market === 'pole') || (a.market === 'wmar' && b.market === 'wmar') || (a.market === 'pgap' && b.market === 'pgap') || ((a.market === 'ou' || a.market === 'cou' || a.market === 'yn') && a.market === b.market && a.sel[0] === b.sel[0])
