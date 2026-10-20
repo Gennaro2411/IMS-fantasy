@@ -9543,14 +9543,18 @@ window._fillPlacePhotos = async function(root) {
     const im = new Image();
     im.onload = () => {
       // A tall (portrait) photo can't fill a wide PC banner — you'd only see a dim slice. Swap to a landscape one there.
-      { const W0 = el.clientWidth || 0, H0 = el.clientHeight || 1; if (retry && W0 / H0 > 2.2 && (im.naturalWidth / im.naturalHeight < 1.1 || /cota-2\.jpg/.test(u))) { /* tall photos, and ones that only work cropped tight (phone banner), skip wide PC banners */ const alt = (window._placePool || []).filter(x => x !== u && !(window._tallPics || new Set()).has(x)); (window._tallPics = window._tallPics || new Set()).add(u); if (alt.length) { const nu = alt[Math.floor(Math.random() * alt.length)]; window._placePick[all[k]] = nu; put(nu, true); return; } } }
+      { const W0 = el.clientWidth || 0, H0 = el.clientHeight || 1; if (retry && W0 / H0 > 2.2 && im.naturalWidth / im.naturalHeight < 1.1) { /* tall photos skip wide PC banners */ const alt = (window._placePool || []).filter(x => x !== u && !(window._tallPics || new Set()).has(x)); (window._tallPics = window._tallPics || new Set()).add(u); if (alt.length) { const nu = alt[Math.floor(Math.random() * alt.length)]; window._placePick[all[k]] = nu; put(nu, true); return; } } }
       // Small photo on a wide banner (e.g. PC): stretching it to fill looks blurry and zoomed. Instead show a soft
       // blurred copy filling the banner, with the photo itself at its natural proportions in the middle, edges faded.
       const W = el.clientWidth || 0, H = el.clientHeight || 0, small = W && im.naturalWidth && (im.naturalWidth < W * 0.85 || (H && im.naturalWidth / im.naturalHeight * H < W * 0.85));
       if (small) {
         const b = document.createElement('div'); b.className = 'mt-hero-photo-l on mt-blur'; b.style.backgroundImage = 'url("' + u + '")'; el.appendChild(b);
         const f = document.createElement('div'); f.className = 'mt-hero-photo-l on mt-fit'; f.style.backgroundImage = 'url("' + u + '")';
-        f.style.width = Math.round(Math.min(W * 0.85, Math.max(W * 0.55, (H || 160) * (im.naturalWidth / im.naturalHeight) * 2.6))) + 'px'; f.style.backgroundPosition = (window._PHOTO_POS && window._PHOTO_POS[u]) || 'center'; el.appendChild(f);
+        if (/cota-2\.jpg/.test(u)) { // show the WHOLE photo (car + flag) at full banner height, blur around it
+          f.style.width = Math.round((H || 160) * (im.naturalWidth / im.naturalHeight) * 1.15) + 'px'; f.style.backgroundSize = 'cover'; f.style.backgroundPosition = 'center 70%';
+          f.style.webkitMaskImage = f.style.maskImage = 'linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)'; }
+        else { f.style.width = Math.round(Math.min(W * 0.85, Math.max(W * 0.55, (H || 160) * (im.naturalWidth / im.naturalHeight) * 2.6))) + 'px'; f.style.backgroundPosition = (window._PHOTO_POS && window._PHOTO_POS[u]) || 'center'; }
+        el.appendChild(f);
       } else { const d = document.createElement('div'); d.className = 'mt-hero-photo-l on'; d.style.backgroundImage = 'url("' + u + '")'; d.style.backgroundPosition = (window._PHOTO_POS && window._PHOTO_POS[u]) || 'center'; el.appendChild(d); }
       el.classList.add('on'); };
     // If a photo fails to load, fall back to one of the city photos so the box is never empty.
