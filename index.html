@@ -25131,7 +25131,10 @@ window.racePoleFlPills = function(race, driverName, driverId, driverDiv) {
   const isFL = !!flVal && _nn(flVal) === nm;
   // Race win: top points scorer in the driver's own division that race
   let isWin = false;
-  if (driverId && driverDiv && race.driverPointsByDivision) {
+  const _rfm = driverDiv && race.raceFinByDiv && race.raceFinByDiv[driverDiv];
+  const _rfv = _rfm ? (_rfm[nm] || _rfm[_nn(String(driverName).replace(/^\[[^\]]*\]\s*/, ''))]) : null;
+  if (_rfm) isWin = Number(_rfv) === 1; // official classification from the .db
+  else if (driverId && driverDiv && race.driverPointsByDivision) {
     let bestId = null, bestPts = -1;
     Object.entries(race.driverPointsByDivision).forEach(([id, byDiv]) => {
       const p = byDiv ? byDiv[driverDiv] : undefined;
