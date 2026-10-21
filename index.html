@@ -19578,6 +19578,7 @@ window.openDriverModal = async function(driverId) {
       document.querySelectorAll('.psum-tab').forEach(b => { const on = b.dataset.div === which; b.style.background = on ? (b.dataset.hue || '#5A5EC9') : 'var(--surface2)'; b.style.color = on ? '#fff' : 'var(--muted)'; b.style.borderColor = on ? (b.dataset.hue || '#5A5EC9') : 'var(--border)'; });
       const ps = (pastSeasons || []).find(x => Number(x.season) === Number(vs)), rl = document.getElementById('dm-content-s' + vs);
       if (ps && rl) rl.innerHTML = raceListHtml(ps.races, which === 'all' ? null : which);
+      window._setResultsTitle(vs, which);
       return;
     }
     const stats = which === 'all' ? window._profileSummary.all : window._profileSummary.byDiv[which];
@@ -19593,6 +19594,7 @@ window.openDriverModal = async function(driverId) {
     // Filter the current-season race list to match the selected division (All = every division).
     const rl = document.getElementById('dm-content-s' + currentSeason);
     if (rl) rl.innerHTML = raceListHtml(completedRaces, which === 'all' ? null : which);
+    if (window._setResultsTitle) window._setResultsTitle(currentSeason, which);
     // Form guide follows the selected division too.
     const fg = document.getElementById('dm-form-guide');
     if (fg && window._buildDriverFormHtml) fg.innerHTML = window._buildDriverFormHtml(which === 'all' ? null : which);
@@ -19758,7 +19760,7 @@ window.openDriverModal = async function(driverId) {
     })()}
     </div>
     <div style="padding:16px 20px">
-      <div id="dm-results-title" style="font-weight:800;font-size:.8rem;margin-bottom:10px;color:var(--muted);letter-spacing:1.5px">SEASON ${currentSeason} RESULTS</div>
+      <div id="dm-results-title" style="font-weight:800;font-size:.8rem;margin-bottom:10px;color:var(--muted);letter-spacing:1.5px">SEASON ${currentSeason}${_defaultView !== 'all' && divsRaced.length >= 2 ? ' ' + _defaultView : ''} RESULTS</div>
       <div id="dm-content-s${currentSeason}">${raceListHtml(completedRaces, _defaultView === 'all' ? null : _defaultView)}</div>
       ${pastSeasons.map(s => `<div id="dm-content-s${s.season}" style="display:none">${raceListHtml(s.races)}</div>`).join('')}
     </div>`;
@@ -20047,9 +20049,10 @@ window._dmRecolour = function(to) {
   swap(); if (inner) { inner.style.setProperty('--team-scroll', to.acc); inner.style.setProperty('--team-scroll-2', to.acc); }
   window._dmColNow = { ...to };
 };
+window._setResultsTitle = function(season, div) { const rt = document.getElementById('dm-results-title'); if (rt) rt.textContent = 'SEASON ' + season + (div && div !== 'all' ? ' ' + div : '') + ' RESULTS'; };
 window.switchModalTab = function(tab) {
   const modal = document.getElementById('driver-modal-content');
-  { const rt = document.getElementById('dm-results-title'); if (rt) rt.textContent = 'SEASON ' + String(tab).replace(/^s/, '') + ' RESULTS'; }
+  window._setResultsTitle(String(tab).replace(/^s/, ''), null);
   if (modal) {
     modal.querySelectorAll('[id]').forEach(el => {
       if (el.id.startsWith('dm-content-')) el.style.display = 'none';
