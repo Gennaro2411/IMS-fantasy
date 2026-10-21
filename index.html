@@ -19174,6 +19174,10 @@ window.openDriverModal = async function(driverId) {
         const qChip = qPos
           ? `<span class="dm-qchip${qPos === 1 ? ' pole' : ''}" title="Qualified P${qPos}">Q${qPos}</span>${(finPos && !st) ? `<span class="dm-qarrow" style="color:${qPos > finPos ? '#4ade80' : qPos < finPos ? '#ff8f6b' : 'var(--muted)'}">${qPos > finPos ? '▲' + (qPos - finPos) : qPos < finPos ? '▼' + (finPos - qPos) : '→'}</span>` : ''}`
           : '';
+        // Sprint result (any season incl. archived S6 sprint weekends) — matched by name from sprintByDiv.
+        const _spR = (() => { const arr = window._spRowsOf ? window._spRowsOf(race, div) : null; if (!arr) return null; const k = _nq(String(driver.name || '').replace(/^\[[^\]]*\]\s*/, ''));
+          return arr.find(x => _nq(String(x.name || '').replace(/^\[[^\]]*\]\s*/, '')) === k) || null; })();
+        const spChip = _spR ? `<span title="Sprint: ${_spR.status ? esc(_spR.status) : 'finished P' + _spR.pos}${_spR.grid ? ' from P' + _spR.grid : ''}" style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:.8rem;border-radius:6px;padding:2px 6px;color:#ffa751;border:1px solid rgba(255,167,81,.5);background:rgba(255,167,81,.1)">⚡${_spR.status ? esc(_spR.status) : 'S' + _spR.pos}</span>` : '';
         // Team they drove for in THIS race (saved per division on the race), else their current team.
         const rTeam = (race.driverTeamByDivision && race.driverTeamByDivision[driver.id] && race.driverTeamByDivision[driver.id][div])
           || (race.teamByDivName && race.teamByDivName[div] && race.teamByDivName[div][_nq(driver.name)]) || driver.team || '';
@@ -19185,7 +19189,7 @@ window.openDriverModal = async function(driverId) {
             <div class="dmr-name"><span>${esc(race.name)}</span>${racePoleFlPills(race, driver.name, driver.id, div)}</div>
             <div class="dmr-meta"><span class="dmr-rd">R${race.raceNum}</span>${div ? `<span class="dmr-div" title="Scored in ${esc(div)}">${esc(div)}</span>` : ''}${rTeam ? `<span class="dmr-team" title="${esc(rTeam)}">${rLogo ? `<img src="${esc(rLogo)}" alt="">` : ''}<em>${esc(rTeam)}</em></span>` : ''}</div>
           </div>
-          <div class="dmr-right">${qChip}${posChip}<div class="dmr-pts">${ptsHtml}</div></div>
+          <div class="dmr-right">${spChip}${qChip}${posChip}<div class="dmr-pts">${ptsHtml}</div></div>
         </div>`);
       });
     });
