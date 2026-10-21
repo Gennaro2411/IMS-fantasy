@@ -19612,9 +19612,9 @@ window.openDriverModal = async function(driverId) {
         .dm-sp:hover{opacity:1;transform:translateY(-1px)}
         .dm-sp.active{opacity:1;background:linear-gradient(135deg,color-mix(in srgb,var(--a) 38%,transparent),color-mix(in srgb,var(--a) 10%,transparent));border-color:var(--a);box-shadow:0 4px 16px -6px var(--a),inset 0 0 0 1px color-mix(in srgb,var(--a) 50%,transparent)}
         .dm-sp img{width:22px;height:22px;object-fit:contain}
-        .dm-sp span{display:flex;flex-direction:column;align-items:flex-start;line-height:1.05}
-        .dm-sp b{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.05rem;letter-spacing:.5px}
-        .dm-sp small{font-size:.6rem;font-weight:700;color:var(--muted);white-space:nowrap}
+        .dm-sp>span{display:flex;flex-direction:column;align-items:flex-start;line-height:1.1;gap:1px}
+        .dm-sp b{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.05rem;letter-spacing:.5px;line-height:1}
+        .dm-sp small{display:block;font-size:.6rem;font-weight:700;color:var(--muted);white-space:nowrap}
         .dm-sp.active small{color:#fff;opacity:.85}
       </style><div class="dm-sbar">${pill(currentSeason, curPts, driver.team && !/^reserve$/i.test(driver.team) ? driver.team : '', true)}${pastSeasons.map(se => { const _ss = window._profileSeasonSummaries && window._profileSeasonSummaries[se.season]; const _tp = (_ss && typeof _ss.totalPts === 'number') ? _ss.totalPts : se.totalPts; return pill(se.season, _tp, (tb[se.season] || {}).team || '', false); }).join('')}</div>`;
     })() : ''}
