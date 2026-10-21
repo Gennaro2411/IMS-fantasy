@@ -25050,7 +25050,13 @@ window.racePoleFlPills = function(race, driverName, driverId, driverDiv) {
   // know the driver's division (legacy callers).
   const poleVal = race.poleByDiv ? (driverDiv ? race.poleByDiv[driverDiv] : Object.values(race.poleByDiv).find(v => _nn(v) === nm)) : null;
   const flVal = race.fastestLapByDiv ? (driverDiv ? race.fastestLapByDiv[driverDiv] : Object.values(race.fastestLapByDiv).find(v => _nn(v) === nm)) : null;
-  const isPole = !!poleVal && _nn(poleVal) === nm;
+  let isPole = !!poleVal && _nn(poleVal) === nm;
+  // No pole record (archived seasons): starting P1 on the grid sheet counts as pole.
+  if (!isPole && !(race.poleByDiv && driverDiv && race.poleByDiv[driverDiv]) && race.raceGridByDiv) {
+    const nt = _nn(String(driverName).replace(/^\[[^\]]*\]\s*/, ''));
+    const gs = driverDiv ? [race.raceGridByDiv[driverDiv]] : Object.values(race.raceGridByDiv);
+    isPole = gs.some(g => g && (Number(g[nm]) === 1 || Number(g[nt]) === 1));
+  }
   const isFL = !!flVal && _nn(flVal) === nm;
   // Race win: top points scorer in the driver's own division that race
   let isWin = false;
