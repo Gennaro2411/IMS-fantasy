@@ -19048,7 +19048,7 @@ window.openDriverModal = async function(driverId) {
   const isReserve = isReserveDriver(driver);
   const teamLogo = getTeamLogo(driver.team);
   const teamColour = getTeamCardColour(driver.team);
-  const dmAccent = isReserve ? RESERVE_PURPLE : (teamColour ? teamColour.accent : '#666677');
+  const dmAccent = isReserve ? RESERVE_PURPLE : (teamColour ? teamColour.accent : '#666677'); window._dmAccent = dmAccent;
   const headerBg = isReserve
     ? `linear-gradient(160deg, rgba(123,79,191,0.28), var(--surface) 85%)`
     : (teamColour ? `linear-gradient(160deg, ${teamColour.bg.replace('0.08','0.28')}, var(--surface) 85%)` : 'var(--surface2)');
@@ -20029,25 +20029,37 @@ window.switchModalTab = function(tab) {
 // Renders a saved end-of-season driver summary (from the archive) in the same style as the live one.
 window.renderArchivedSummary = function(s, season) {
   if (!s) return '';
-  const stat = (v, label) => `<div style="background:var(--surface2);border-radius:8px;padding:9px 10px;text-align:center">
+  const A = window._dmAccent || '#666677';
+  const gl = `<div class="dm-grid-layer" style="--acc:${A}"></div>`;
+  const bx = `class="dm-grid" style="background:linear-gradient(150deg, color-mix(in srgb, ${A} 14%, var(--surface2)), var(--surface2) 75%);border:1px solid ${A}33;border-radius:8px;`;
+  const stat = (v, label) => `<div ${bx}padding:9px 10px;text-align:center">${gl}
     <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.5rem;line-height:1;color:var(--text)">${v}</div>
     <div style="font-size:.58rem;font-weight:700;letter-spacing:.5px;color:var(--muted);margin-top:3px;text-transform:uppercase">${label}</div>
   </div>`;
-  const acc = (emoji, n, label, col) => `<div style="flex:1;text-align:center;background:var(--surface2);border-radius:8px;padding:8px 4px">
-    <div style="font-size:1.05rem">${emoji}</div><div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.35rem;color:${col};line-height:1">${n||0}</div>
-    <div style="font-size:.5rem;font-weight:700;letter-spacing:.5px;color:var(--muted);text-transform:uppercase">${label}</div></div>`;
+  const poles = (window._profilePoleCount || {})[season] != null ? window._profilePoleCount[season] : (s.poles || 0);
+  const cab = [
+    { n: s.wins || 0, emoji: '🏆', name: 'Race Win', plural: 'Race Wins', col: '#ffd24a', glow: 'rgba(255,210,74,0.5)' },
+    { n: s.podiums || 0, emoji: '🥈', name: 'Podium', plural: 'Podiums', col: '#cfd8e3', glow: 'rgba(207,216,227,0.4)' },
+    { n: poles, emoji: '🎯', name: 'Pole', plural: 'Poles', col: '#ff7ac0', glow: 'rgba(255,122,192,0.4)' },
+    { n: s.fls || 0, emoji: '⚡', name: 'Fastest Lap', plural: 'Fastest Laps', col: '#a855f7', glow: 'rgba(168,85,247,0.4)' },
+  ];
+  const shelf = cab.map(c => { const dim = c.n === 0;
+    return `<div style="flex:1;min-width:64px;text-align:center;background:${dim ? 'var(--surface2)' : 'linear-gradient(180deg, ' + c.col + '22, var(--surface2) 70%)'};border:1px solid ${dim ? 'var(--border)' : c.col + '66'};border-radius:10px;padding:12px 6px 9px;position:relative;${dim ? 'opacity:0.45' : 'box-shadow:0 0 14px ' + c.glow}">
+      <div style="font-size:1.7rem;line-height:1;filter:${dim ? 'grayscale(1)' : 'none'}">${c.emoji}</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.5rem;line-height:1.1;color:${dim ? 'var(--muted)' : c.col};margin-top:4px">${c.n}</div>
+      <div style="font-size:.54rem;font-weight:700;letter-spacing:.5px;color:var(--muted);text-transform:uppercase;margin-top:1px">${c.n === 1 ? c.name : c.plural}</div></div>`; }).join('');
+  const big = (lbl, val, sub, col) => `<div ${bx}padding:12px">${gl}<div style="font-size:.7rem;color:var(--muted);margin-bottom:2px">${lbl}</div><div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.4rem${col ? ';color:' + col : ''}">${val}</div>${sub ? `<div style="font-size:.68rem;color:var(--muted)">${sub}</div>` : ''}</div>`;
   return `<div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
-      ${stat(s.raceCount||0,'Races')}${stat((s.avgPts||0).toFixed ? s.avgPts.toFixed(1) : s.avgPts,'Avg / race')}${stat((s.scoringRate||0)+'%','Scoring %')}
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
+      ${stat(s.raceCount || 0, 'Races')}${stat((s.avgPts || 0).toFixed ? s.avgPts.toFixed(1) : s.avgPts, 'Avg / race')}${stat((s.scoringRate || 0) + '%', 'Scoring %')}
     </div>
-    <div style="display:flex;gap:8px;margin-bottom:10px">
-      ${acc('🏆',s.wins,'Wins','#ffd24a')}${acc('🥈',s.podiums,'Podiums','#cfd8e3')}${acc('🎯',((window._profilePoleCount||{})[season] != null ? window._profilePoleCount[season] : (s.poles||0)),'Poles','#ff7ac0')}${acc('⏱',s.fls,'Fastest','#a78bfa')}
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      <div style="background:var(--surface2);border-radius:8px;padding:12px"><div style="font-size:.7rem;color:var(--muted);margin-bottom:2px">S${season} Points</div><div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.4rem">${s.totalPts||0} Pts</div></div>
-      <div style="background:var(--surface2);border-radius:8px;padding:12px"><div style="font-size:.7rem;color:var(--muted);margin-bottom:2px">Best Race</div><div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.4rem">${s.bestScore||0} Pts${s.bestRaceName?`<span style="font-size:.75rem;color:var(--muted);font-weight:400;display:block">(${esc(s.bestRaceName)})</span>`:''}</div></div>
-      ${s.elo!=null?`<div style="background:var(--surface2);border-radius:8px;padding:12px"><div style="font-size:.7rem;color:var(--muted);margin-bottom:2px">ELO (season end)</div><div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.4rem">${s.elo}</div>${s.eloBaseline?`<div style="font-size:.68rem;color:var(--muted)">baseline ${s.eloBaseline}</div>`:''}</div>`:''}
-      ${s.dominance!=null?`<div style="background:var(--surface2);border-radius:8px;padding:12px"><div style="font-size:.7rem;color:var(--muted);margin-bottom:2px">Dominance</div><div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.4rem;color:#2ecc71">${s.dominance}</div>${s.dominanceRace?`<div style="font-size:.68rem;color:var(--muted)">${esc(s.dominanceRace)}</div>`:''}</div>`:''}
+    <div style="display:flex;gap:8px">${shelf}</div>
+    <div style="height:6px;margin-top:7px;border-radius:0 0 4px 4px;background:linear-gradient(180deg,#5a3d24,#3a2716);box-shadow:inset 0 2px 3px rgba(0,0,0,0.4)"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px">
+      ${big('S' + season + ' Points', (s.totalPts || 0) + ' Pts')}
+      ${big('Best Race Score', (s.bestScore || 0) + ' Pts', s.bestRaceName ? '(' + esc(s.bestRaceName) + ')' : '')}
+      ${s.elo != null ? big('ELO (season end)', s.elo, s.eloBaseline ? 'baseline ' + s.eloBaseline : '') : ''}
+      ${s.dominance != null ? big('Dominance', s.dominance, s.dominanceRace ? esc(s.dominanceRace) : '', (s.dominance >= 0 ? '#2ecc71' : 'var(--red)')) : ''}
     </div>
     ${window._archSparkline ? window._archSparkline('PRICE TREND', (s.priceGraph||[]).map(p=>p.price), '#27f4d2', v => '$'+v.toFixed(1)+'M') : ''}
     ${window._archSparkline ? window._archSparkline('DOMINANCE', (s.domGraph||[]).map(p=>p.dom), '#2ecc71', v => v.toFixed(1)) : ''}
