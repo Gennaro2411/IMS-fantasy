@@ -14959,16 +14959,16 @@ function _sprintFromDb(season, track) {
   const out = {};
   if (!_imsDb) return out;
   track = _dbTrackName(season, track);
-  const res = _imsDb.exec(`SELECT COALESCE(NULLIF(TRIM(col_f), ''), col_e), col_g, col_c, col_p, col_o, col_k, col_l FROM inputs_rows
+  const res = _imsDb.exec(`SELECT COALESCE(NULLIF(TRIM(col_f), ''), col_e), col_g, col_c, col_p, col_o, col_k, col_l, col_e FROM inputs_rows
     WHERE col_a='${String(season).replace(/'/g, "''")}' AND col_ad='${String(track).replace(/'/g, "''")}' AND col_p IS NOT NULL AND TRIM(col_p) != ''`);
   if (!res.length) return out;
-  for (const [drvName, team, rowDivRaw, spPos, spGrid, spTime, spFl] of res[0].values) {
+  for (const [drvName, team, rowDivRaw, spPos, spGrid, spTime, spFl, igName] of res[0].values) {
     const rowDiv = _normDbDiv(rowDivRaw);
     const name = (drvName || '').trim(); if (!name || !rowDiv) continue;
     const posNum = parseInt(spPos);
     const tStr = String(spTime || '').trim().toUpperCase();
     const status = /DNF|DNS|DSQ/.test(tStr) ? tStr.match(/DNF|DNS|DSQ/)[0] : (isNaN(posNum) ? String(spPos).trim().toUpperCase() : null);
-    (out[rowDiv] = out[rowDiv] || []).push({ name, team: (team || '').trim(), pos: isNaN(posNum) ? null : posNum, grid: parseInt(spGrid) || null,
+    (out[rowDiv] = out[rowDiv] || []).push({ name, alias: String(igName || '').trim(), team: (team || '').trim(), pos: isNaN(posNum) ? null : posNum, grid: parseInt(spGrid) || null,
       time: spTime != null ? String(spTime) : '', fl: spFl != null ? String(spFl) : '', status });
   }
   Object.values(out).forEach(arr => arr.sort((a, b) => (a.pos == null) - (b.pos == null) || (a.pos || 0) - (b.pos || 0)));
@@ -19276,7 +19276,7 @@ window.openDriverModal = async function(driverId) {
           : '';
         // Sprint result (any season incl. archived S6 sprint weekends) — matched by name from sprintByDiv.
         const _spR = (() => { const arr = window._spRowsOf ? window._spRowsOf(race, div) : null; if (!arr) return null; const k = _nq(String(driver.name || '').replace(/^\[[^\]]*\]\s*/, ''));
-          return arr.find(x => _nq(String(x.name || '').replace(/^\[[^\]]*\]\s*/, '')) === k) || null; })();
+          return arr.find(x => window._nmIs({ name: x.name, canon: x.alias }, driver) || _nq(String(x.name || '').replace(/^\[[^\]]*\]\s*/, '')) === k) || null; })();
         const spChip = '';
         // Imported points on a sprint weekend are race + sprint combined: split them (sprint = 10-9-…-1 for P1–P10).
         const spPts = (_spR && _spR.pos && _spR.pos <= 10 && !_spR.status) ? 11 - _spR.pos : 0;
