@@ -771,7 +771,10 @@
   .rr-hb{font-size:.62rem;font-weight:700;color:var(--muted);background:rgba(255,255,255,0.05);border-radius:999px;padding:3px 8px;white-space:nowrap}
   .rr-hb b{color:#fff;font-weight:800}
   .rr-cols,.rr-row{display:grid;grid-template-columns:34px minmax(0,1fr) 40px 36px 38px;align-items:center;column-gap:8px;padding:0 14px 0 11px}
-  .rr-gap{margin-left:auto;flex:none;font-style:normal;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:.72rem;color:var(--muted);letter-spacing:.3px}.rr-gap.ld{color:var(--gold)}
+  .rr-tm .rr-cols,.rr-tm .rr-row{grid-template-columns:34px minmax(0,1fr) 66px 40px 36px 38px}
+  .rr-gap{text-align:right;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:.86rem;color:var(--text);letter-spacing:.2px;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .rr-gap.ld{color:var(--gold);font-size:.7rem;font-weight:800;letter-spacing:1px}.rr-gap.pen{color:#ff8f6b;font-size:.7rem;font-weight:800;letter-spacing:1px}
+  @media (max-width:420px){ .rr-tm .rr-cols,.rr-tm .rr-row{grid-template-columns:26px minmax(0,1fr) 54px 30px 30px 30px} .rr-gap{font-size:.76rem} }
   .rr-cols{height:28px;font-size:.56rem;font-weight:800;letter-spacing:1.4px;color:var(--muted);border-bottom:1px solid rgba(255,255,255,0.06)}
   .rr-cols span:nth-child(n+3){text-align:right}
   .rr-cols span:first-child{text-align:center}
@@ -19091,6 +19094,19 @@ window.openDriverModal = async function(driverId) {
           const mine = {}; Object.entries(r.ptsByDivName).forEach(([d, m]) => { const v = m && [k1, k2, k3].map(k => k && m[k]).find(x => x != null); if (v != null) mine[d] = v; });
           if (Object.keys(mine).length) { c.driverPoints = { ...(c.driverPoints || {}), [driverId]: Object.values(mine).reduce((x, y) => x + y, 0) }; c.driverPointsByDivision = { ...(c.driverPointsByDivision || {}), [driverId]: mine }; hit = true; }
         }
+        // Drop phantom 0-pt entries: archived races list every rostered driver at 0 in their roster
+        // division even when they didn't race it. If the .db sheet for that division doesn't have them, it's not real.
+        { const sheet = (d) => { const a1 = r.raceFinByDiv && r.raceFinByDiv[d], a2 = r.raceGridByDiv && r.raceGridByDiv[d], a3 = r.ptsByDivName && r.ptsByDivName[d]; return [a1, a2, a3]; };
+          const hasSheets = !!(r.raceFinByDiv || r.raceGridByDiv || r.ptsByDivName);
+          const k1 = String(driver.name || '').toLowerCase().replace(/[^a-z0-9]/g, ''), k2 = String(driver.name || '').replace(/^\[[^\]]*\]\s*/, '').toLowerCase().replace(/[^a-z0-9]/g, ''), k3 = String(driver.imsAlias || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+          const listed = (d) => sheet(d).some(m => m && [k1, k2, k3].some(k => k && m[k] != null));
+          const byD = (c.driverPointsByDivision || {})[driverId];
+          if (hasSheets && byD) { const keep = Object.fromEntries(Object.entries(byD).filter(([d, v]) => typeof v === 'number' && (v > 0 || listed(d))));
+            if (Object.keys(keep).length !== Object.keys(byD).length) { hit = true;
+              c.driverPointsByDivision = { ...c.driverPointsByDivision }; if (Object.keys(keep).length) c.driverPointsByDivision[driverId] = keep; else delete c.driverPointsByDivision[driverId];
+              if (!Object.keys(keep).length && c.driverPoints && !(c.driverPoints[driverId] > 0)) { c.driverPoints = { ...c.driverPoints }; delete c.driverPoints[driverId]; } } }
+          else if (hasSheets && !byD && c.driverPoints && c.driverPoints[driverId] === 0 && !Object.keys(r.raceFinByDiv || r.raceGridByDiv || {}).some(listed)) { c.driverPoints = { ...c.driverPoints }; delete c.driverPoints[driverId]; hit = true; }
+        }
         if (hit) changed = true; return hit ? c : r;
       });
       let ds = a.driverSummaries;
@@ -19185,6 +19201,12 @@ window.openDriverModal = async function(driverId) {
           const match = entries.find(e => window._nmIs(e, driver));
           if (match) out.push({ div: dv, pts: match.pts || 0 });
         }
+      }
+      // Drop 0-pt rows in a division whose .db sheet doesn't list this driver (roster placeholders).
+      if (race.raceFinByDiv || race.raceGridByDiv || race.ptsByDivName) {
+        const ks = [driver.name, String(driver.name || '').replace(/^\[[^\]]*\]\s*/, ''), driver.imsAlias].map(x => String(x || '').toLowerCase().replace(/[^a-z0-9]/g, '')).filter(Boolean);
+        const listed = (d) => [race.raceFinByDiv, race.raceGridByDiv, race.ptsByDivName].some(M => M && M[d] && ks.some(k => M[d][k] != null));
+        return out.filter(o => o.pts > 0 || listed(o.div));
       }
       return out;
     };
@@ -25388,7 +25410,8 @@ window.showRaceResults = function(raceId, season) {
       flHolder ? `<span class="rr-hb">⏱ <b>${esc(race.fastestLapByDiv[div])}</b></span>` : ''
     ].join('');
     const _raceLabel = _spRows ? 'Race' : _sprintWk ? 'Race + ⚡ Sprint pts' : 'Race';
-    html += `<div class="rr-card">` + _hdr(_raceLabel, '#7b7fe8', _raceBadges, 'PTS');
+    const _hasTimes = !!(race.raceTimeByDiv && race.raceTimeByDiv[div]);
+    html += `<div class="rr-card${_hasTimes ? ' rr-tm' : ''}">` + (_hasTimes ? _hdr(_raceLabel, '#7b7fe8', _raceBadges, 'PTS').replace('<span>DRIVER</span>', '<span>DRIVER</span><span>GAP</span>') : _hdr(_raceLabel, '#7b7fe8', _raceBadges, 'PTS'));
     divDriversShown.forEach((item, i) => {
       const rowStatusForMedal = statusOf(item);
       const rowStatus = item.driver ? statusInDiv(item.driver.id, div) : null;
@@ -25412,13 +25435,13 @@ window.showRaceResults = function(raceId, season) {
       let gapTxt = '';
       if (!out && _myT) { const lap = String(_myT).match(/(\d+)\s*Lap/i);
         if (lap) gapTxt = '+' + lap[1] + ' Lap' + (lap[1] === '1' ? '' : 's');
-        else if (i === 0) gapTxt = 'Leader';
+        else if (i === 0) gapTxt = 'LEADER';
         else { const a = _sec(_myT), b = _sec(_ldT); if (a != null && b != null) { const d = a - b; gapTxt = d >= 0 ? '+' + d.toFixed(3) + 's' : 'PEN'; } } }
       const chips = (isPole ? _chip('POLE', 'pole') : '') + (isFL ? _chip('FL', 'fl') : '') + (rowStatus ? _chip(esc(rowStatus), 'out') : '') + (item.isReserve ? _chip('RES', 'res') : '');
       html += `<div class="rr-row${i < 3 && !out ? ' pod' : ''}${out ? ' is-out' : ''}" style="--team:${acc}">
         ${_posCell(i + 1, out)}
-        <div class="rr-drv">${_avatar(item.driver, i === 0 && !out)}<div class="rr-nm"><b style="display:flex;align-items:baseline;gap:6px"><span style="overflow:hidden;text-overflow:ellipsis">${esc(item.name)}</span>${gapTxt ? `<em class="rr-gap${i === 0 ? ' ld' : ''}">${gapTxt}</em>` : ''}</b><small>${logo ? `<img src="${esc(logo)}" alt="">` : ''}${team ? esc(team) : ''}${chips}</small></div></div>
-        <span class="rr-grid">${g ? 'P' + g : '–'}</span>${_gainCell(gained)}
+        <div class="rr-drv">${_avatar(item.driver, i === 0 && !out)}<div class="rr-nm"><b>${esc(item.name)}</b><small>${logo ? `<img src="${esc(logo)}" alt="">` : ''}${team ? esc(team) : ''}${chips}</small></div></div>
+        ${_hasTimes ? `<span class="rr-gap${i === 0 && !out ? ' ld' : ''}${gapTxt === 'PEN' ? ' pen' : ''}">${gapTxt || (out ? '' : '–')}</span>` : ''}<span class="rr-grid">${g ? 'P' + g : '–'}</span>${_gainCell(gained)}
         <span class="rr-pts">${item.pts}</span>
       </div>`;
     });
