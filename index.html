@@ -19081,7 +19081,10 @@ window.openDriverModal = async function(driverId) {
         rbn.forEach(([, en]) => Array.isArray(en) && en.forEach(e => { if (e && e.driverId && e.driverId !== driverId && window._nmIs({ name: e.name, canon: e.canon }, driver)) alt.add(e.driverId); }));
         const c = { ...r }; let hit = false;
         ['driverPoints', 'driverPointsByDivision', 'positionByDivision', 'raceStatusByDivision', 'driverTeamByDivision', 'raceStatusByDriver', 'dnfByDriver'].forEach(f => {
-          if (!r[f]) return; alt.forEach(id => { if (r[f][id] !== undefined && r[f][driverId] === undefined) { c[f] = { ...(c[f] === r[f] ? r[f] : c[f]), [driverId]: r[f][id] }; hit = true; } });
+          if (!r[f]) return; alt.forEach(id => { let v = r[f][id]; if (v == null || (c[f] && c[f][driverId] != null)) return;
+            if (f === 'driverPoints' && typeof v !== 'number') return;
+            if (f === 'driverPointsByDivision') { if (typeof v !== 'object') return; v = Object.fromEntries(Object.entries(v).filter(([, x]) => typeof x === 'number' && isFinite(x))); if (!Object.keys(v).length) return; }
+            c[f] = { ...(c[f] || {}), [driverId]: v }; hit = true; });
         });
         if (r.ptsByDivName && !(c.driverPoints && c.driverPoints[driverId] !== undefined)) {
           const k1 = String(driver.name || '').toLowerCase().replace(/[^a-z0-9]/g, ''), k2 = String(driver.name || '').replace(/^\[[^\]]*\]\s*/, '').toLowerCase().replace(/[^a-z0-9]/g, ''), k3 = String(driver.imsAlias || '').toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -19171,7 +19174,7 @@ window.openDriverModal = async function(driverId) {
       const out = [];
       if (race.driverPointsByDivision && race.driverPointsByDivision[driverId]) {
         Object.entries(race.driverPointsByDivision[driverId]).forEach(([dv, p]) => {
-          if (p !== undefined) out.push({ div: dv, pts: p });
+          if (typeof p === 'number' && isFinite(p)) out.push({ div: dv, pts: p });
         });
       }
       if (!out.length && race.raceResultsByName) {
