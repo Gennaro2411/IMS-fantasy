@@ -15000,6 +15000,19 @@ function _raceFinFromDb(season, track) {
   }
   return out;
 }
+// Fastest lap holder per division (quickest col J) for one season + track.
+function _raceFlFromDb(season, track) {
+  const out = {}; if (!_imsDb) return out;
+  track = _dbTrackName(season, track);
+  const res = _imsDb.exec(`SELECT col_e, col_c, col_j FROM inputs_rows
+    WHERE col_a='${String(season).replace(/'/g, "''")}' AND col_ad='${String(track).replace(/'/g, "''")}' AND col_j IS NOT NULL AND col_j != ''`);
+  if (!res.length) return out;
+  const parse = (x) => { const t = String(x).trim(); if (!t) return null; let v = 0; for (const q of t.split(':')) v = v * 60 + parseFloat(q); return isFinite(v) && v > 0 ? v : null; };
+  const best = {};
+  for (const [nm, dv, fl] of res[0].values) { const d = _normDbDiv(dv), t = parse(fl); if (!d || !nm || t == null) continue; if (!best[d] || t < best[d].t) best[d] = { t, n: String(nm).trim() }; }
+  Object.entries(best).forEach(([d, b]) => { out[d] = b.n; });
+  return out;
+}
 function _raceGridFromDb(season, track) {
   const out = {};
   if (!_imsDb) return out;
@@ -15040,6 +15053,7 @@ window.backfillSprintsFromDb = async function(btn) {
         const sp = _sprintFromDb(a.season, r.name); if (Object.keys(sp).length) { r.sprintByDiv = _spPack(sp); touched = true; found.push('S' + a.season + ' ' + r.name + ' (sprint)'); }
         const gr = _raceGridFromDb(a.season, r.name); if (Object.keys(gr).length) { r.raceGridByDiv = gr; touched = true; gridCount++; }
         const fn = _raceFinFromDb(a.season, r.name); if (Object.keys(fn).length) { r.raceFinByDiv = fn; touched = true; }
+        const fl = _raceFlFromDb(a.season, r.name); if (Object.keys(fl).length) { r.fastestLapByDiv = { ...fl, ...(r.fastestLapByDiv || {}) }; touched = true; }
         const tb = _teamsFromDb(a.season, r.name); if (Object.keys(tb).length) { r.teamByDivName = tb; touched = true; teamCount++; }
       });
       if (touched) {
@@ -19488,6 +19502,30 @@ window.openDriverModal = async function(driverId) {
     const _sets = [...((typeof pastSeasons !== 'undefined' && pastSeasons) || []).map(x => [x.season, x.races]), [currentSeason, (typeof completedRaces !== 'undefined' ? completedRaces : [])]];
     _sets.forEach(([se, rs]) => { window._profilePoleCount[Number(se)] = (rs || []).filter(_isPole).length; });
   } catch(e) {}
+  // Wins / podiums / fastest laps per past season, rebuilt from the race docs (finish positions by id or
+  // by name, FL by name) — so archived seasons like S6 show them even if the saved summary didn't.
+  window._profileArchCounts = {}; window._profileArchFallback = {};
+  try {
+    const _nk = (x) => String(x || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const _nk2 = (x) => _nk(String(x || '').replace(/^\[[^\]]*\]\s*/, ''));
+    const meA = _nk(driver.name), meB = _nk2(driver.name);
+    const isMe = (n) => n && (_nk(n) === meA || _nk2(n) === meB);
+    ((typeof pastSeasons !== 'undefined' && pastSeasons) || []).forEach(ps => {
+      let wins = 0, pods = 0, fls = 0, have = false;
+      (ps.races || []).forEach(r => {
+        const pos = [];
+        const byId = r.positionByDivision && r.positionByDivision[driverId];
+        if (byId) Object.values(byId).forEach(v => { if (+v > 0) pos.push(+v); });
+        if (!pos.length && r.raceFinByDiv) Object.values(r.raceFinByDiv).forEach(m => { const v = m && (m[meA] || m[meB]); if (+v > 0) pos.push(+v); });
+        if (r.positionByDivision || r.raceFinByDiv) have = true;
+        pos.forEach(v => { if (v === 1) wins++; if (v <= 3) pods++; });
+        if (r.fastestLapByDiv) { have = true; Object.values(r.fastestLapByDiv).forEach(n => { if (isMe(n)) fls++; }); }
+      });
+      if (have) window._profileArchCounts[Number(ps.season)] = { wins, podiums: pods, fls };
+      const rc = (ps.races || []).length; window._profileArchFallback = window._profileArchFallback || {};
+      window._profileArchFallback[Number(ps.season)] = { raceCount: rc, totalPts: ps.totalPts, avgPts: rc ? ps.totalPts / rc : 0, scoringRate: rc ? Math.round(100 * ps.races.filter(r => (pointsFor(r) || 0) > 0).length / rc) : 0, bestScore: ps.bestScore, bestRaceName: ps.bestRaceName, wins, podiums: pods, fls };
+    });
+  } catch (e) {}
   window._profileSeasonSummaries = {};
   (allArchives || []).forEach(a => {
     const sn = a.season; const ds = a.driverSummaries && a.driverSummaries[driverId];
@@ -20017,7 +20055,7 @@ window.switchModalTab = function(tab) {
         }
         if (tabs) tabs.style.display = '';
       } else {
-        const s = window._profileSeasonSummaries && window._profileSeasonSummaries[seasonNum];
+        const s = (window._profileSeasonSummaries && window._profileSeasonSummaries[seasonNum]) || (window._profileArchFallback && window._profileArchFallback[seasonNum]);
         if (tabs) tabs.style.display = 'none'; // no live division toggle for archived seasons
         if (s) swap.innerHTML = window.renderArchivedSummary ? window.renderArchivedSummary(s, seasonNum) : '';
         else swap.innerHTML = '<div style="padding:14px;color:var(--muted);font-size:.8rem;text-align:center">No saved summary for this season.</div>';
@@ -20037,6 +20075,8 @@ window.renderArchivedSummary = function(s, season) {
     <div style="font-size:.58rem;font-weight:700;letter-spacing:.5px;color:var(--muted);margin-top:3px;text-transform:uppercase">${label}</div>
   </div>`;
   const poles = (window._profilePoleCount || {})[season] != null ? window._profilePoleCount[season] : (s.poles || 0);
+  const ac = (window._profileArchCounts || {})[season] || {};
+  s = { ...s, wins: Math.max(s.wins || 0, ac.wins || 0), podiums: Math.max(s.podiums || 0, ac.podiums || 0), fls: Math.max(s.fls || 0, ac.fls || 0) };
   const cab = [
     { n: s.wins || 0, emoji: '🏆', name: 'Race Win', plural: 'Race Wins', col: '#ffd24a', glow: 'rgba(255,210,74,0.5)' },
     { n: s.podiums || 0, emoji: '🥈', name: 'Podium', plural: 'Podiums', col: '#cfd8e3', glow: 'rgba(207,216,227,0.4)' },
