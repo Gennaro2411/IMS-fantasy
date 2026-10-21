@@ -19231,7 +19231,11 @@ window.openDriverModal = async function(driverId) {
         const st = statusForDiv(race, div);
         const hue = DIV_HUES[div] || 'var(--muted)';
         // Finishing position for this division (if we have it and it wasn't a DNF/DSQ/DNS).
-        const finPos = window._postVerdictPos(race, driver.id, div) || (race.positionByDivision && race.positionByDivision[driver.id] && race.positionByDivision[driver.id][div]) || (race.raceFinByDiv && race.raceFinByDiv[div] && race.raceFinByDiv[div][String(driver.name || '').toLowerCase().replace(/[^a-z0-9]/g, '')]) || null;
+        const _rfm = race.raceFinByDiv && race.raceFinByDiv[div], _rfk = (x) => String(x || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        const _rf = _rfm ? (_rfm[_rfk(driver.name)] || _rfm[_rfk(String(driver.name || '').replace(/^\[[^\]]*\]\s*/, ''))] || _rfm[_rfk(driver.imsAlias)]) : null;
+        // Official classification from the .db wins (archived races only hold part of the field, so a
+        // points-ranked position there is meaningless); otherwise the live post-verdict order.
+        const finPos = _rf || window._postVerdictPos(race, driver.id, div) || (race.positionByDivision && race.positionByDivision[driver.id] && race.positionByDivision[driver.id][div]) || null;
         const divBadge = div
           ? `<span style="font-size:.6rem;font-weight:800;color:${hue};border:1px solid ${hue}88;background:${hue}1a;border-radius:3px;padding:0 4px;vertical-align:middle" title="Scored in ${esc(div)}">${esc(div)}</span>`
           : '';
