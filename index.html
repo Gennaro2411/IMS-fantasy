@@ -771,6 +771,7 @@
   .rr-hb{font-size:.62rem;font-weight:700;color:var(--muted);background:rgba(255,255,255,0.05);border-radius:999px;padding:3px 8px;white-space:nowrap}
   .rr-hb b{color:#fff;font-weight:800}
   .rr-cols,.rr-row{display:grid;grid-template-columns:34px minmax(0,1fr) 40px 36px 38px;align-items:center;column-gap:8px;padding:0 14px 0 11px}
+  .rr-gap{margin-left:auto;flex:none;font-style:normal;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:.72rem;color:var(--muted);letter-spacing:.3px}.rr-gap.ld{color:var(--gold)}
   .rr-cols{height:28px;font-size:.56rem;font-weight:800;letter-spacing:1.4px;color:var(--muted);border-bottom:1px solid rgba(255,255,255,0.06)}
   .rr-cols span:nth-child(n+3){text-align:right}
   .rr-cols span:first-child{text-align:center}
@@ -15013,6 +15014,17 @@ function _raceFlFromDb(season, track) {
   Object.entries(best).forEach(([d, b]) => { out[d] = b.n; });
   return out;
 }
+// Race time (col I: "00:47:43.413", "1 Lap(s)", "DNF") per division by name — for gap-to-leader.
+function _raceTimeFromDb(season, track) {
+  const out = {}; if (!_imsDb) return out;
+  track = _dbTrackName(season, track);
+  const res = _imsDb.exec(`SELECT col_e, col_c, col_i, col_f FROM inputs_rows
+    WHERE col_a='${String(season).replace(/'/g, "''")}' AND col_ad='${String(track).replace(/'/g, "''")}' AND col_i IS NOT NULL AND TRIM(col_i) != ''`);
+  if (!res.length) return out;
+  for (const [nm, dv, t, canon] of res[0].values) { const d = _normDbDiv(dv); if (!d || /^A/.test(d)) continue;
+    [nm, canon].forEach(n => { const k = String(n || '').toLowerCase().replace(/[^a-z0-9]/g, ''); if (k) (out[d] = out[d] || {})[k] = String(t).trim(); }); }
+  return out;
+}
 function _raceGridFromDb(season, track) {
   const out = {};
   if (!_imsDb) return out;
@@ -15052,6 +15064,7 @@ window.backfillSprintsFromDb = async function(btn) {
         const sp = _sprintFromDb(a.season, r.name); if (Object.keys(sp).length) { r.sprintByDiv = _spPack(sp); touched = true; found.push('S' + a.season + ' ' + r.name + ' (sprint)'); }
         const gr = _raceGridFromDb(a.season, r.name); if (Object.keys(gr).length) { r.raceGridByDiv = gr; touched = true; gridCount++; }
         const fn = _raceFinFromDb(a.season, r.name); if (Object.keys(fn).length) { r.raceFinByDiv = fn; touched = true; }
+        const tm = _raceTimeFromDb(a.season, r.name); if (Object.keys(tm).length) { r.raceTimeByDiv = tm; touched = true; }
         { const q = _imsDb.exec(`SELECT col_e, col_f, col_c, col_as FROM inputs_rows WHERE col_a='${String(a.season).replace(/'/g, "''")}' AND col_ad='${String(_dbTrackName(a.season, r.name)).replace(/'/g, "''")}'`);
           const pb = {}; (q.length ? q[0].values : []).forEach(([e, f, dv, pts]) => { const d = _normDbDiv(dv); if (!d || /^A/.test(d)) return; const v = parseFloat(String(pts == null ? '' : pts).replace(',', '.')); if (!isFinite(v)) return;
             [e, f].forEach(n => { const k = String(n || '').toLowerCase().replace(/[^a-z0-9]/g, ''); if (k) (pb[d] = pb[d] || {})[k] = v; }); });
@@ -15087,6 +15100,7 @@ window.backfillSprintsFromDb = async function(btn) {
       if (Object.keys(sp).length) { upd.sprintByDiv = _spPack(sp); found.push('S' + curS + ' ' + r.name + ' (sprint)'); }
       if (Object.keys(gr).length) { upd.raceGridByDiv = gr; gridCount++; }
       { const fn = _raceFinFromDb(curS, r.name); if (Object.keys(fn).length) upd.raceFinByDiv = fn; }
+      { const tm = _raceTimeFromDb(curS, r.name); if (Object.keys(tm).length) upd.raceTimeByDiv = tm; }
       const tb = _teamsFromDb(curS, r.name); if (Object.keys(tb).length) { upd.teamByDivName = tb; teamCount++; }
       if (Object.keys(upd).length) { try { await dbSet('races', r.id, { ...r, ...upd }); } catch(e) { failed.push(r.name + ': ' + (e.message || e)); } }
     }
@@ -15786,6 +15800,7 @@ window.importDbRound = async function(roundNo, trackName) {
     // Race grid start (col_m) per division, keyed by normalised driver name — for "from P4 ▲3".
     let raceGridByDivComputed = {};
     try { raceGridByDivComputed = _raceGridFromDb(getImportSeason(), dbTrack); } catch(e) { console.log('grid extraction failed (non-fatal):', e); }
+    let raceTimeByDivComputed = {}; try { raceTimeByDivComputed = _raceTimeFromDb(getImportSeason(), dbTrack); } catch(e) {}
 
     // DNFs recorded on the race doc for display ("DNF" instead of 0 pts) — merged across
     // batches, each batch overwriting only the drivers it contains
@@ -15825,6 +15840,7 @@ window.importDbRound = async function(roundNo, trackName) {
       qualiMsByDiv: { ...((existingRace && existingRace.qualiMsByDiv) || {}), ...qualiMsByDivComputed },
       sprintByDiv: _spPack({ ...((existingRace && existingRace.sprintByDiv) || {}), ...sprintByDivComputed }),
       raceGridByDiv: { ...((existingRace && existingRace.raceGridByDiv) || {}), ...raceGridByDivComputed },
+      raceTimeByDiv: { ...((existingRace && existingRace.raceTimeByDiv) || {}), ...raceTimeByDivComputed },
       winTimeByDiv: { ...((existingRace && existingRace.winTimeByDiv) || {}), ...Object.fromEntries(Object.entries(raceStatsComputed).map(([d, x]) => [d, x.win])) },
       raceStatsByDiv: { ...((existingRace && existingRace.raceStatsByDiv) || {}), ...Object.fromEntries(Object.entries(raceStatsComputed).map(([d, x]) => [d, Object.fromEntries(Object.entries({ dnf: x.dnf, pw: x.pw, o3: x.o3, o10: x.o10, fw: x.fw, gs: x.gs, d3: x.d3, sw: x.sw, wgrid: x.wgrid, gain: x.gain, fin: x.fin, flt: x.flt }).filter(([, v]) => v != null))])) },
       winMarginByDiv: { ...((existingRace && existingRace.winMarginByDiv) || {}), ...Object.fromEntries(Object.entries(raceStatsComputed).filter(([, x]) => x.mar != null).map(([d, x]) => [d, x.mar])) },
@@ -25378,10 +25394,20 @@ window.showRaceResults = function(raceId, season) {
       const fin = (item.dId && _pd[item.dId] && _pd[item.dId][div]) || (item.driver && _pd[item.driver.id] && _pd[item.driver.id][div]) || null;
       // +/- uses the position shown in this table (post-verdict order), not the stored pre-verdict finish.
       const gained = (g && !out) ? g - (i + 1) : null;
+      // Gap to the race leader from the stored race times (col I).
+      const _tmap = race.raceTimeByDiv && race.raceTimeByDiv[div];
+      const _tOf = (it) => { if (!_tmap || !it) return null; return _tmap[_nnr(it.name)] || _tmap[_nnr(String(it.name || '').replace(/^\[[^\]]*\]\s*/, ''))] || (it.driver && _tmap[_nnr(it.driver.name)]) || null; };
+      const _sec = (t) => { if (!t || !/^[0-9:.,]+$/.test(t)) return null; let v = 0; for (const q of t.replace(',', '.').split(':')) v = v * 60 + parseFloat(q); return isFinite(v) ? v : null; };
+      const _myT = _tOf(item), _ldT = _tOf(divDriversShown[0]);
+      let gapTxt = '';
+      if (!out && _myT) { const lap = String(_myT).match(/(\d+)\s*Lap/i);
+        if (lap) gapTxt = '+' + lap[1] + ' Lap' + (lap[1] === '1' ? '' : 's');
+        else if (i === 0) gapTxt = 'Leader';
+        else { const a = _sec(_myT), b = _sec(_ldT); if (a != null && b != null) { const d = a - b; gapTxt = d >= 0 ? '+' + d.toFixed(3) + 's' : 'PEN'; } } }
       const chips = (isPole ? _chip('POLE', 'pole') : '') + (isFL ? _chip('FL', 'fl') : '') + (rowStatus ? _chip(esc(rowStatus), 'out') : '') + (item.isReserve ? _chip('RES', 'res') : '');
       html += `<div class="rr-row${i < 3 && !out ? ' pod' : ''}${out ? ' is-out' : ''}" style="--team:${acc}">
         ${_posCell(i + 1, out)}
-        <div class="rr-drv">${_avatar(item.driver, i === 0 && !out)}<div class="rr-nm"><b>${esc(item.name)}</b><small>${logo ? `<img src="${esc(logo)}" alt="">` : ''}${team ? esc(team) : ''}${chips}</small></div></div>
+        <div class="rr-drv">${_avatar(item.driver, i === 0 && !out)}<div class="rr-nm"><b style="display:flex;align-items:baseline;gap:6px"><span style="overflow:hidden;text-overflow:ellipsis">${esc(item.name)}</span>${gapTxt ? `<em class="rr-gap${i === 0 ? ' ld' : ''}">${gapTxt}</em>` : ''}</b><small>${logo ? `<img src="${esc(logo)}" alt="">` : ''}${team ? esc(team) : ''}${chips}</small></div></div>
         <span class="rr-grid">${g ? 'P' + g : '–'}</span>${_gainCell(gained)}
         <span class="rr-pts">${item.pts}</span>
       </div>`;
