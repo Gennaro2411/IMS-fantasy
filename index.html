@@ -19527,6 +19527,37 @@ window.openDriverModal = async function(driverId) {
       window._profileArchFallback[Number(ps.season)] = { raceCount: rc, totalPts: ps.totalPts, avgPts: rc ? ps.totalPts / rc : 0, scoringRate: rc ? Math.round(100 * ps.races.filter(r => (pointsFor(r) || 0) > 0).length / rc) : 0, bestScore: ps.bestScore, bestRaceName: ps.bestRaceName, wins, podiums: pods, fls };
     });
   } catch (e) {}
+  // Per-division stats for each archived season (so the All / D0 / D1 toggle works on past seasons).
+  window._profileArchDiv = {};
+  try {
+    const _k1 = (x) => String(x || '').toLowerCase().replace(/[^a-z0-9]/g, ''), _k2 = (x) => _k1(String(x || '').replace(/^\[[^\]]*\]\s*/, ''));
+    const A1 = _k1(driver.name), A2 = _k2(driver.name), me = (n) => n && (_k1(n) === A1 || _k2(n) === A2);
+    const inMap = (m) => m && (m[A1] != null ? m[A1] : m[A2]);
+    ((typeof pastSeasons !== 'undefined' && pastSeasons) || []).forEach(ps => {
+      const by = {};
+      (ps.races || []).forEach(r => {
+        const pid = r.driverPointsByDivision && r.driverPointsByDivision[driverId];
+        const divs = new Set(pid ? Object.keys(pid).filter(k => pid[k] !== undefined) : []);
+        [r.raceFinByDiv, r.raceGridByDiv].forEach(m => m && Object.keys(m).forEach(d => { if (inMap(m[d]) != null) divs.add(d); }));
+        if (!divs.size) { const d = divWithPointsFor(r); if (d) divs.add(d); }
+        const rbn = r.raceResultsByName ? (Array.isArray(r.raceResultsByName) ? r.raceResultsByName : Object.entries(r.raceResultsByName)) : [];
+        divs.forEach(d => {
+          let pts = pid && pid[d] !== undefined ? Number(pid[d]) : undefined;
+          if (pts === undefined) { const g = rbn.find(([dv]) => dv === d); const e = g && Array.isArray(g[1]) ? g[1].find(x => me(x.name)) : null; if (e) pts = Number(e.pts) || 0; }
+          if (pts === undefined && divs.size === 1) pts = Number(pointsFor(r)) || 0;
+          if (pts === undefined) return;
+          const o = by[d] = by[d] || { raceCount: 0, sc: 0, totalPts: 0, bestScore: 0, bestRaceName: '', wins: 0, podiums: 0, poles: 0, fls: 0 };
+          o.raceCount++; o.totalPts += pts; if (pts > 0) o.sc++; if (pts > o.bestScore) { o.bestScore = pts; o.bestRaceName = r.name; }
+          const fp = (r.positionByDivision && r.positionByDivision[driverId] && r.positionByDivision[driverId][d]) || inMap(r.raceFinByDiv && r.raceFinByDiv[d]);
+          if (+fp === 1) o.wins++; if (+fp >= 1 && +fp <= 3) o.podiums++;
+          if (window._drvPoleHit(r, driver, d)) o.poles++;
+          if (r.fastestLapByDiv && me(r.fastestLapByDiv[d])) o.fls++;
+        });
+      });
+      Object.values(by).forEach(o => { o.avgPts = o.raceCount ? o.totalPts / o.raceCount : 0; o.scoringRate = o.raceCount ? Math.round(100 * o.sc / o.raceCount) : 0; o._div = true; });
+      window._profileArchDiv[Number(ps.season)] = by;
+    });
+  } catch (e) { console.warn('arch div stats', e); }
   window._profileSeasonSummaries = {};
   (allArchives || []).forEach(a => {
     const sn = a.season; const ds = a.driverSummaries && a.driverSummaries[driverId];
@@ -19538,6 +19569,17 @@ window.openDriverModal = async function(driverId) {
   window.switchProfileSummaryDiv = function(which, btn) {
     const wrap = document.getElementById('profile-summary-swap');
     if (!wrap) return;
+    const vs = window._profileViewSeason;
+    if (vs != null && Number(vs) !== Number(currentSeason)) {
+      const base = (window._profileSeasonSummaries && window._profileSeasonSummaries[vs]) || (window._profileArchFallback && window._profileArchFallback[vs]);
+      const st = which === 'all' ? base : ((window._profileArchDiv || {})[vs] || {})[which];
+      if (!st) return;
+      wrap.innerHTML = window.renderArchivedSummary(st, vs);
+      document.querySelectorAll('.psum-tab').forEach(b => { const on = b.dataset.div === which; b.style.background = on ? (b.dataset.hue || '#5A5EC9') : 'var(--surface2)'; b.style.color = on ? '#fff' : 'var(--muted)'; b.style.borderColor = on ? (b.dataset.hue || '#5A5EC9') : 'var(--border)'; });
+      const ps = (pastSeasons || []).find(x => Number(x.season) === Number(vs)), rl = document.getElementById('dm-content-s' + vs);
+      if (ps && rl) rl.innerHTML = raceListHtml(ps.races, which === 'all' ? null : which);
+      return;
+    }
     const stats = which === 'all' ? window._profileSummary.all : window._profileSummary.byDiv[which];
     if (!stats) return;
     wrap.innerHTML = window._profileSummaryRender(stats, which === 'all' ? null : which);
@@ -19559,14 +19601,12 @@ window.openDriverModal = async function(driverId) {
   // Default the summary to the driver's CURRENT division tab (so opening Gennaro's profile shows
   // his D1 stats), falling back to All if their current division isn't among those raced.
   const _defaultView = (driver.division && divsRaced.includes(driver.division)) ? driver.division : 'all';
-  const summaryTabs = divsRaced.length >= 2
-    ? `<div id="profile-summary-tabs" style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
-        ${[{k:'all',label:'All',hue:'#5A5EC9'}].concat(divsRaced.map(dv => ({k:dv,label:dv,hue:DIV_HUES_SUM[dv]||'#5A5EC9'}))).map((t) => {
-          const on = t.k === _defaultView;
-          return `<button class="psum-tab" data-div="${t.k}" data-hue="${t.hue}" onclick="switchProfileSummaryDiv('${t.k}', this)" style="cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:.8rem;letter-spacing:1px;padding:4px 12px;border-radius:6px;border:1px solid ${on?t.hue:'var(--border)'};background:${on?t.hue:'var(--surface2)'};color:${on?'#fff':'var(--muted)'}">${t.label}</button>`;
-        }).join('')}
-      </div>`
-    : '';
+  window._psumTabsInner = (divs, def) => [{k:'all',label:'All',hue:'#5A5EC9'}].concat(divs.map(dv => ({k:dv,label:dv,hue:DIV_HUES_SUM[dv]||'#5A5EC9'}))).map((t) => {
+      const on = t.k === def;
+      return `<button class="psum-tab" data-div="${t.k}" data-hue="${t.hue}" onclick="switchProfileSummaryDiv('${t.k}', this)" style="cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:.8rem;letter-spacing:1px;padding:4px 12px;border-radius:6px;border:1px solid ${on?t.hue:'var(--border)'};background:${on?t.hue:'var(--surface2)'};color:${on?'#fff':'var(--muted)'}">${t.label}</button>`;
+    }).join('');
+  const summaryTabs = `<div id="profile-summary-tabs" style="display:${divsRaced.length >= 2 ? 'flex' : 'none'};gap:6px;margin-bottom:10px;flex-wrap:wrap">${divsRaced.length >= 2 ? window._psumTabsInner(divsRaced, _defaultView) : ''}</div>`;
+  window._psumCurDivs = divsRaced; window._psumCurDef = _defaultView;
 
   let html = `
     <div class="dm-grid" style="position:relative;background:${headerBg};padding:0;border-radius:16px 16px 0 0;overflow:hidden">
@@ -20046,6 +20086,7 @@ window.switchModalTab = function(tab) {
       const seasonNum = parseInt(String(tab).replace(/^s/,''));
       if (hdr) hdr.textContent = 'SEASON ' + seasonNum + ' SUMMARY';
       const isCurrent = seasonNum === window._profileCurrentSeason;
+      window._profileViewSeason = seasonNum;
       // The live price chart, price forecast and "record at track" strengths only apply to the CURRENT
       // season — hide them on a past-season tab (its own frozen graphs live in the summary instead).
       const liveOnly = document.getElementById('dm-live-only');
@@ -20070,10 +20111,10 @@ window.switchModalTab = function(tab) {
         if (window._profileSummary && window._profileSummaryRender) {
           swap.innerHTML = window._profileSummaryRender(window._profileSummary.all, null);
         }
-        if (tabs) tabs.style.display = '';
+        if (tabs) { const cd = window._psumCurDivs || []; tabs.innerHTML = cd.length >= 2 && window._psumTabsInner ? window._psumTabsInner(cd, 'all') : ''; tabs.style.display = cd.length >= 2 ? 'flex' : 'none'; }
       } else {
         const s = (window._profileSeasonSummaries && window._profileSeasonSummaries[seasonNum]) || (window._profileArchFallback && window._profileArchFallback[seasonNum]);
-        if (tabs) tabs.style.display = 'none'; // no live division toggle for archived seasons
+        if (tabs) { const ad = Object.keys((window._profileArchDiv || {})[seasonNum] || {}).sort(); tabs.innerHTML = ad.length >= 2 && window._psumTabsInner ? window._psumTabsInner(ad, 'all') : ''; tabs.style.display = ad.length >= 2 ? 'flex' : 'none'; }
         if (s) swap.innerHTML = window.renderArchivedSummary ? window.renderArchivedSummary(s, seasonNum) : '';
         else swap.innerHTML = '<div style="padding:14px;color:var(--muted);font-size:.8rem;text-align:center">No saved summary for this season.</div>';
       }
@@ -20092,8 +20133,8 @@ window.renderArchivedSummary = function(s, season) {
     <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.5rem;line-height:1;color:var(--text)">${v}</div>
     <div style="font-size:.58rem;font-weight:700;letter-spacing:.5px;color:var(--muted);margin-top:3px;text-transform:uppercase">${label}</div>
   </div>`;
-  const poles = (window._profilePoleCount || {})[season] != null ? window._profilePoleCount[season] : (s.poles || 0);
-  const ac = (window._profileArchCounts || {})[season] || {};
+  const poles = !s._div && (window._profilePoleCount || {})[season] != null ? window._profilePoleCount[season] : (s.poles || 0);
+  const ac = s._div ? {} : ((window._profileArchCounts || {})[season] || {});
   s = { ...s, wins: Math.max(s.wins || 0, ac.wins || 0), podiums: Math.max(s.podiums || 0, ac.podiums || 0), fls: Math.max(s.fls || 0, ac.fls || 0) };
   const cab = [
     { n: s.wins || 0, emoji: '🏆', name: 'Race Win', plural: 'Race Wins', col: '#ffd24a', glow: 'rgba(255,210,74,0.5)' },
