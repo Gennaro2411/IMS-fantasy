@@ -20068,7 +20068,8 @@ window.switchModalTab = function(tab) {
 // Renders a saved end-of-season driver summary (from the archive) in the same style as the live one.
 window.renderArchivedSummary = function(s, season) {
   if (!s) return '';
-  const A = window._dmAccent || '#666677';
+  const _st = (window._profileTeamBySeason || {})[season], _stc = _st && _st.team && typeof getTeamCardColour === 'function' ? getTeamCardColour(_st.team) : null;
+  const A = (_stc && _stc.accent) || window._dmAccent || '#666677';
   const gl = `<div class="dm-grid-layer" style="--acc:${A}"></div>`;
   const bx = `class="dm-grid" style="background:linear-gradient(150deg, color-mix(in srgb, ${A} 14%, var(--surface2)), var(--surface2) 75%);border:1px solid ${A}33;border-radius:8px;`;
   const stat = (v, label) => `<div ${bx}padding:9px 10px;text-align:center">${gl}
