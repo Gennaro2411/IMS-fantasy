@@ -14983,6 +14983,23 @@ function _teamsFromDb(season, track) {
   }
   return out;
 }
+// Finishing position per division by name (col N), skipping DNF/DNS/DSQ — for archived seasons whose
+// race docs never got positionByDivision.
+function _raceFinFromDb(season, track) {
+  const out = {};
+  if (!_imsDb) return out;
+  track = _dbTrackName(season, track);
+  const res = _imsDb.exec(`SELECT col_e, col_c, col_n, col_i FROM inputs_rows
+    WHERE col_a='${String(season).replace(/'/g, "''")}' AND col_ad='${String(track).replace(/'/g, "''")}' AND col_n IS NOT NULL AND col_n != ''`);
+  if (!res.length) return out;
+  for (const [drvName, rowDivRaw, pos, rt] of res[0].values) {
+    if (/^(DNF|DNS|DSQ)$/i.test(String(rt || '').trim())) continue;
+    const rowDiv = _normDbDiv(rowDivRaw), p = parseInt(pos); if (!drvName || !rowDiv || !(p > 0)) continue;
+    const k = String(drvName).toLowerCase().replace(/[^a-z0-9]/g, ''); if (!k) continue;
+    (out[rowDiv] = out[rowDiv] || {})[k] = p;
+  }
+  return out;
+}
 function _raceGridFromDb(season, track) {
   const out = {};
   if (!_imsDb) return out;
@@ -15022,6 +15039,7 @@ window.backfillSprintsFromDb = async function(btn) {
         if (_isSprintWeekend(r)) { const dg = _sprintDiag(a.season, r.name); diag.push('S' + a.season + ' ' + r.name + ': ' + (dg && dg.length ? (dg[0].track !== r.name ? '(.db: ' + dg[0].track + ') ' : '') + dg.map(x => `${x.dv} ${x.p}/${x.n}`).join(', ') : 'NO ROWS in .db for this track name')); }
         const sp = _sprintFromDb(a.season, r.name); if (Object.keys(sp).length) { r.sprintByDiv = _spPack(sp); touched = true; found.push('S' + a.season + ' ' + r.name + ' (sprint)'); }
         const gr = _raceGridFromDb(a.season, r.name); if (Object.keys(gr).length) { r.raceGridByDiv = gr; touched = true; gridCount++; }
+        const fn = _raceFinFromDb(a.season, r.name); if (Object.keys(fn).length) { r.raceFinByDiv = fn; touched = true; }
         const tb = _teamsFromDb(a.season, r.name); if (Object.keys(tb).length) { r.teamByDivName = tb; touched = true; teamCount++; }
       });
       if (touched) {
@@ -15042,6 +15060,7 @@ window.backfillSprintsFromDb = async function(btn) {
       const upd = {};
       if (Object.keys(sp).length) { upd.sprintByDiv = _spPack(sp); found.push('S' + curS + ' ' + r.name + ' (sprint)'); }
       if (Object.keys(gr).length) { upd.raceGridByDiv = gr; gridCount++; }
+      { const fn = _raceFinFromDb(curS, r.name); if (Object.keys(fn).length) upd.raceFinByDiv = fn; }
       const tb = _teamsFromDb(curS, r.name); if (Object.keys(tb).length) { upd.teamByDivName = tb; teamCount++; }
       if (Object.keys(upd).length) { try { await dbSet('races', r.id, { ...r, ...upd }); } catch(e) { failed.push(r.name + ': ' + (e.message || e)); } }
     }
@@ -19138,7 +19157,7 @@ window.openDriverModal = async function(driverId) {
         const st = statusForDiv(race, div);
         const hue = DIV_HUES[div] || 'var(--muted)';
         // Finishing position for this division (if we have it and it wasn't a DNF/DSQ/DNS).
-        const finPos = window._postVerdictPos(race, driver.id, div) || (race.positionByDivision && race.positionByDivision[driver.id] && race.positionByDivision[driver.id][div]) || null;
+        const finPos = window._postVerdictPos(race, driver.id, div) || (race.positionByDivision && race.positionByDivision[driver.id] && race.positionByDivision[driver.id][div]) || (race.raceFinByDiv && race.raceFinByDiv[div] && race.raceFinByDiv[div][String(driver.name || '').toLowerCase().replace(/[^a-z0-9]/g, '')]) || null;
         const divBadge = div
           ? `<span style="font-size:.6rem;font-weight:800;color:${hue};border:1px solid ${hue}88;background:${hue}1a;border-radius:3px;padding:0 4px;vertical-align:middle" title="Scored in ${esc(div)}">${esc(div)}</span>`
           : '';
