@@ -18835,10 +18835,7 @@ window.openConstructorModal = async function(constrId) {
       </div>`;
     })()}
     <div style="padding:16px 20px">
-      ${hasPast ? `<div class="seg" style="margin-bottom:12px;flex-wrap:wrap">
-        <button id="dm-tab-s${currentSeason}" class="seg-btn active" onclick="switchModalTab('s${currentSeason}')">S${currentSeason} · ${totalPts}pts</button>
-        ${pastSeasons.map(s => `<button id="dm-tab-s${s.season}" class="seg-btn" onclick="switchModalTab('s${s.season}')">S${s.season} · ${s.totalPts}pts</button>`).join('')}
-      </div>` : `<div style="font-weight:700;font-size:.85rem;margin-bottom:10px;color:var(--muted);letter-spacing:1px">RACE RESULTS</div>`}
+      <div style="font-weight:700;font-size:.85rem;margin-bottom:10px;color:var(--muted);letter-spacing:1px">RACE RESULTS</div>
       <div id="dm-content-s${currentSeason}">${raceListHtml(completedRaces, constrId)}</div>
       ${pastSeasons.map(s => `<div id="dm-content-s${s.season}" style="display:none">${raceListHtml(s.races, constrId)}</div>`).join('')}
     </div>`;
@@ -19603,6 +19600,24 @@ window.openDriverModal = async function(driverId) {
       </div>
       </div>
     </div>
+    ${hasPast ? (() => {
+      const tb = window._profileTeamBySeason || {};
+      const pill = (se, pts, team, on) => { const c = team && typeof getTeamCardColour === 'function' ? getTeamCardColour(team) : null, A = (c && c.accent) || dmAccent, lg = team && typeof getTeamLogo === 'function' ? getTeamLogo(team) : '';
+        return `<button id="dm-tab-s${se}" class="dm-sp${on ? ' active' : ''}" style="--a:${A}" onclick="switchModalTab('s${se}')">${lg ? `<img src="${esc(lg)}" alt="">` : ''}<span><b>S${se}</b><small>${team ? esc(team) + ' · ' : ''}${pts} pts</small></span></button>`; };
+      const curPts = `<span id="dm-season-pts">${(window._profileSummary && window._profileSummary.all || {totalPts:totalPts}).totalPts}</span>`;
+      return `<style>
+        .dm-sbar{display:flex;gap:8px;overflow-x:auto;padding:12px 20px 4px;scrollbar-width:none}.dm-sbar::-webkit-scrollbar{display:none}
+        .dm-sp{flex:none;display:flex;align-items:center;gap:8px;padding:7px 12px 7px 8px;border-radius:12px;cursor:pointer;color:var(--text);font:inherit;
+          background:linear-gradient(135deg,color-mix(in srgb,var(--a) 10%,transparent),rgba(255,255,255,.02));border:1px solid color-mix(in srgb,var(--a) 30%,transparent);opacity:.7;transition:all .18s}
+        .dm-sp:hover{opacity:1;transform:translateY(-1px)}
+        .dm-sp.active{opacity:1;background:linear-gradient(135deg,color-mix(in srgb,var(--a) 38%,transparent),color-mix(in srgb,var(--a) 10%,transparent));border-color:var(--a);box-shadow:0 4px 16px -6px var(--a),inset 0 0 0 1px color-mix(in srgb,var(--a) 50%,transparent)}
+        .dm-sp img{width:22px;height:22px;object-fit:contain}
+        .dm-sp span{display:flex;flex-direction:column;align-items:flex-start;line-height:1.05}
+        .dm-sp b{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.05rem;letter-spacing:.5px}
+        .dm-sp small{font-size:.6rem;font-weight:700;color:var(--muted);white-space:nowrap}
+        .dm-sp.active small{color:#fff;opacity:.85}
+      </style><div class="dm-sbar">${pill(currentSeason, curPts, driver.team && !/^reserve$/i.test(driver.team) ? driver.team : '', true)}${pastSeasons.map(se => { const _ss = window._profileSeasonSummaries && window._profileSeasonSummaries[se.season]; const _tp = (_ss && typeof _ss.totalPts === 'number') ? _ss.totalPts : se.totalPts; return pill(se.season, _tp, (tb[se.season] || {}).team || '', false); }).join('')}</div>`;
+    })() : ''}
     <div style="padding:14px 20px;border-bottom:1px solid var(--border)">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <div id="profile-summary-header" style="font-size:.6rem;font-weight:800;letter-spacing:2px;color:var(--muted)">SEASON ${currentSeason} SUMMARY</div>
