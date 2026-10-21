@@ -24971,6 +24971,9 @@ window._drvPoleHit = function(r, driver, onlyDiv) {
   const byDiv = r.driverPointsByDivision && r.driverPointsByDivision[driver.id];
   let divs = byDiv ? Object.keys(byDiv).filter(k => byDiv[k] !== undefined) : [];
   if (!divs.length && r.driverPoints && r.driverPoints[driver.id] !== undefined && driver.division) divs = [driver.division];
+  // Archived seasons (no per-division points, or the driver's division has since changed): use any
+  // division whose grid / finish sheet lists them by name.
+  { const seen = new Set(divs); [r.raceGridByDiv, r.raceFinByDiv].forEach(m => m && Object.keys(m).forEach(d => { const x = m[d]; if (x && (x[a] != null || x[b] != null) && !seen.has(d)) { seen.add(d); divs.push(d); } })); }
   if (onlyDiv) divs = divs.filter(d => d === onlyDiv);
   return divs.some(d => { const pv = r.poleByDiv && r.poleByDiv[d]; if (pv && (nn(pv) === a || nt(pv) === b)) return true;
     const g = r.raceGridByDiv && r.raceGridByDiv[d]; return !!g && (Number(g[a]) === 1 || Number(g[b]) === 1); });
