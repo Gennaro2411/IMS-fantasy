@@ -15054,6 +15054,10 @@ window.backfillSprintsFromDb = async function(btn) {
         const sp = _sprintFromDb(a.season, r.name); if (Object.keys(sp).length) { r.sprintByDiv = _spPack(sp); touched = true; found.push('S' + a.season + ' ' + r.name + ' (sprint)'); }
         const gr = _raceGridFromDb(a.season, r.name); if (Object.keys(gr).length) { r.raceGridByDiv = gr; touched = true; gridCount++; }
         const fn = _raceFinFromDb(a.season, r.name); if (Object.keys(fn).length) { r.raceFinByDiv = fn; touched = true; }
+        if (r.raceGridByDiv) { const pb = { ...(r.poleByDiv || {}) }; let ch = false; Object.entries(r.raceGridByDiv).forEach(([d, g]) => { if (pb[d]) return; const k = Object.keys(g || {}).find(x => Number(g[x]) === 1); if (!k) return;
+          const res = _imsDb.exec(`SELECT col_e FROM inputs_rows WHERE col_a='${String(a.season).replace(/'/g, "''")}' AND col_ad='${String(_dbTrackName(a.season, r.name)).replace(/'/g, "''")}' AND col_m='1'`);
+          const nm = res.length ? res[0].values.map(v => String(v[0]).trim()).find(n => n.toLowerCase().replace(/[^a-z0-9]/g, '') === k) : null; if (nm) { pb[d] = nm; ch = true; } });
+          if (ch) { r.poleByDiv = pb; touched = true; } }
         const fl = _raceFlFromDb(a.season, r.name); if (Object.keys(fl).length) { r.fastestLapByDiv = { ...fl, ...(r.fastestLapByDiv || {}) }; touched = true; }
         const tb = _teamsFromDb(a.season, r.name); if (Object.keys(tb).length) { r.teamByDivName = tb; touched = true; teamCount++; }
       });
@@ -25265,6 +25269,12 @@ window.showRaceResults = function(raceId, season) {
   divsToShow.forEach(div => {
     const divDrivers = byDiv[div];
     const _nnr = (s) => (s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+    // No pole record (archived seasons): whoever started P1 on the grid sheet takes pole.
+    if (!(race.poleByDiv && race.poleByDiv[div]) && race.raceGridByDiv && race.raceGridByDiv[div]) {
+      const g = race.raceGridByDiv[div], k = Object.keys(g).find(x => Number(g[x]) === 1);
+      const it = k && (divDrivers || []).find(x => _nnr(x.name) === k || _nnr(String(x.name || '').replace(/^\[[^\]]*\]\s*/, '')) === k);
+      if (it) race.poleByDiv = { ...(race.poleByDiv || {}), [div]: it.name };
+    }
     const flHolder = (race.fastestLapByDiv && race.fastestLapByDiv[div]) ? _nnr(race.fastestLapByDiv[div]) : null;
     const poleHolder = (race.poleByDiv && race.poleByDiv[div]) ? _nnr(race.poleByDiv[div]) : null;
     const headerBadges = [
