@@ -27756,7 +27756,7 @@ window.showTickerBet = function(id) {
     <div style="padding:16px 18px">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">${av}<div style="flex:1"><b>${esc(t.playerName || t.teamName || 'Someone')}</b><div style="font-size:.85rem">🎯 ${esc(b.label)} · ${esc(b.raceName || '')}</div></div><button onclick="document.getElementById('tk-bet-modal').remove()" style="width:30px;height:30px;border-radius:50%;border:1px solid rgba(123,127,232,.5);background:rgba(90,94,201,.15);color:#c3c5ff;cursor:pointer">✕</button></div>
     <div style="display:flex;flex-direction:column;gap:5px">${legs}</div>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px solid rgba(123,127,232,.25)"><span>${b.stake} ${C} @ <b style="color:#a0a4ff">${fmtOdds(b.effOdds || b.odds)}</b> overall</span>${st}</div></div></div>`;
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px solid rgba(123,127,232,.25)"><span>${b.stake} ${C} @ <b style="color:#a0a4ff">${fmtOdds(b.effOdds || b.odds)}</b> overall</span>${st}</div>${(() => { const up = window._betCtx && window._betCtx.upcoming; return b.status === 'open' && up && b.raceName === up.name ? `<button class="btn btn-primary" style="width:100%;margin-top:14px" onclick="betCopy('${esc(b.id)}')">📋 Copy this bet to my slip</button>` : ''; })()}</div></div>`;
   document.body.appendChild(m);
 };
 function _betStartTicker() {
@@ -29021,6 +29021,30 @@ window.betTriAdd = function() {
   const o = window.betTriUpdate(); if (!o) { if (typeof showToast === 'function') showToast('Pick 3 different drivers.', 'error'); return; }
   const ids = window._triSel.ids, nm = (id) => ((window._betTriField || []).find(d => d.id === id) || {}).name || '?';
   betPick('tri', ids.join(','), o, window._betDiv + ' tricast: ' + ids.map(nm).join(' – '));
+};
+// Copy someone's acca (or single) onto your own slip, re-priced at today's odds where we can.
+window.betCopy = function(id) {
+  const b = (window._betAllBets || []).find(x => x.id === id); if (!b) return;
+  const up = window._betCtx && window._betCtx.upcoming;
+  if (!up || b.raceName !== up.name) { if (typeof showToast === 'function') showToast('That bet is for a different round.', 'error'); return; }
+  const src = (b.legs && b.legs.length) ? b.legs : [{ div: b.div, market: b.market, sel: b.sel, odds: b.odds, label: b.label }];
+  const out = (window._betOutIds) || new Set();
+  let skipped = 0;
+  const legs = src.filter(l => { if (l.void || (l.sel || []).some(x => out.has(x))) { skipped++; return false; } return true; }).map(l => {
+    let now = null; const tmp = { ...l, raceName: b.raceName, status: 'open', legs: null };
+    try { now = window._betLive ? window._betLive(tmp, true) : null; } catch (e) {}
+    try { if (now == null && window._betOuLive) now = window._betOuLive(tmp, true); } catch (e) {}
+    try { if (now == null && l.div === window._betDiv && window._betAutoOdds) { const au = window._betAutoOdds(l.market, l.sel); if (au) now = window._betCashOdds ? window._betCashOdds(l.market, l.sel, au) : au; } } catch (e) {}
+    const odds = now && now > 1 ? Math.round(now * 100) / 100 : l.odds;
+    return { key: l.key || (l.div + '|' + l.market + '|' + (l.sel || []).join(',')), div: l.div, market: l.market, sel: (l.sel || []).slice(), odds, label: l.label };
+  }).slice(0, 10);
+  if (!legs.length) { if (typeof showToast === 'function') showToast('None of those picks can be backed any more.', 'error'); return; }
+  window._betLegs = legs; window._betUseFree = false;
+  document.getElementById('tk-bet-modal')?.remove();
+  if (typeof showPage === 'function' && !document.getElementById('page-bets')?.classList.contains('active')) { try { showPage('page-bets'); } catch (e) {} }
+  renderBets();
+  setTimeout(() => { const el = document.getElementById('bo-stake') || document.querySelector('#page-bets .bo-slip'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 300);
+  if (typeof showToast === 'function') showToast('📋 Copied ' + legs.length + ' pick' + (legs.length > 1 ? 's' : '') + ' to your slip' + (skipped ? ' (' + skipped + ' dropped — driver out)' : '') + '. Odds are today\'s prices.', 'success');
 };
 window.betRemoveLeg = function(key) { window._betLegs = (window._betLegs || []).filter(l => l.key !== key); renderBets(); };
 window.betClearSlip = function() { window._betLegs = []; renderBets(); };
