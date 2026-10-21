@@ -14983,16 +14983,17 @@ function _teamsFromDb(season, track) {
   }
   return out;
 }
-// Finishing position per division by name (col N), skipping DNF/DNS/DSQ — for archived seasons whose
+// Finishing position per division by name (col AO post-penalty, else col N), skipping DNF/DNS/DSQ — for archived seasons whose
 // race docs never got positionByDivision.
 function _raceFinFromDb(season, track) {
   const out = {};
   if (!_imsDb) return out;
   track = _dbTrackName(season, track);
-  const res = _imsDb.exec(`SELECT col_e, col_c, col_n, col_i FROM inputs_rows
+  const res = _imsDb.exec(`SELECT col_e, col_c, col_n, col_i, col_ao FROM inputs_rows
     WHERE col_a='${String(season).replace(/'/g, "''")}' AND col_ad='${String(track).replace(/'/g, "''")}' AND col_n IS NOT NULL AND col_n != ''`);
   if (!res.length) return out;
-  for (const [drvName, rowDivRaw, pos, rt] of res[0].values) {
+  for (const [drvName, rowDivRaw, rawPos, rt, finalPos] of res[0].values) {
+    const pos = (parseInt(finalPos) > 0) ? finalPos : rawPos; // col AO = final classification after penalties; col N = on-the-road
     if (/^(DNF|DNS|DSQ)$/i.test(String(rt || '').trim())) continue;
     const rowDiv = _normDbDiv(rowDivRaw), p = parseInt(pos); if (!drvName || !rowDiv || !(p > 0)) continue;
     const k = String(drvName).toLowerCase().replace(/[^a-z0-9]/g, ''); if (!k) continue;
