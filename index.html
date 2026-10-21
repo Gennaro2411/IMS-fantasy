@@ -15058,6 +15058,11 @@ window.backfillSprintsFromDb = async function(btn) {
           if (ch) { r.poleByDiv = pb; touched = true; } }
         const fl = _raceFlFromDb(a.season, r.name); if (Object.keys(fl).length) { r.fastestLapByDiv = { ...fl, ...(r.fastestLapByDiv || {}) }; touched = true; }
         const tb = _teamsFromDb(a.season, r.name); if (Object.keys(tb).length) { r.teamByDivName = tb; touched = true; teamCount++; }
+        if (r.raceResultsByName && !Array.isArray(r.raceResultsByName)) { try {
+          const cm = {}; const q = _imsDb.exec(`SELECT col_e, col_f FROM inputs_rows WHERE col_a='${String(a.season).replace(/'/g, "''")}' AND col_f IS NOT NULL AND TRIM(col_f) != ''`);
+          (q.length ? q[0].values : []).forEach(([e, f]) => { const k = String(e || '').toLowerCase().replace(/[^a-z0-9]/g, ''); if (k) cm[k] = String(f).trim(); });
+          Object.values(r.raceResultsByName).forEach(arr => Array.isArray(arr) && arr.forEach(x => { const c = x && cm[String(x.name || '').toLowerCase().replace(/[^a-z0-9]/g, '')]; if (c && c !== x.name && x.canon !== c) { x.canon = c; touched = true; } }));
+        } catch (e) {} }
       });
       if (touched) {
         // Strip anything Firestore refuses inside arrays (empty map keys, undefined, NaN) before saving.
@@ -18967,11 +18972,11 @@ window.openDriverModal = async function(driverId) {
       for (const [div, entries] of divGroups) {
         if (!Array.isArray(entries)) continue;
         if (div !== driver.division) continue;
-        if (entries.find(e => (e.name||'').toLowerCase().trim() === nameNorm)) return div;
+        if (entries.find(e => window._nmIs(e, driver))) return div;
       }
       for (const [div, entries] of divGroups) {
         if (!Array.isArray(entries)) continue;
-        if (entries.find(e => (e.name||'').toLowerCase().trim() === nameNorm)) return div;
+        if (entries.find(e => window._nmIs(e, driver))) return div;
       }
     }
     return driver.division;
@@ -18988,7 +18993,9 @@ window.openDriverModal = async function(driverId) {
     // through to the overall total.
     if (r.driverPointsByDivision && Object.keys(r.driverPointsByDivision).length) {
       const mine = r.driverPointsByDivision[driverId];
-      if (!mine || mine[scoredDiv] === undefined) return undefined;
+      // ...unless their name is on the results sheet (archived races keyed by an old driver id).
+      const _byName = r.raceResultsByName && (Array.isArray(r.raceResultsByName) ? r.raceResultsByName : Object.entries(r.raceResultsByName)).some(([, en]) => Array.isArray(en) && en.some(e => window._nmIs(e, driver)));
+      if ((!mine || mine[scoredDiv] === undefined) && !_byName) return undefined;
     }
     if (r.driverPoints && r.driverPoints[driverId] !== undefined) return r.driverPoints[driverId];
     if (r.raceResultsByName) {
@@ -18997,12 +19004,12 @@ window.openDriverModal = async function(driverId) {
       for (const [div, entries] of divGroups) {
         if (!Array.isArray(entries)) continue;
         if (div !== scoredDiv) continue;
-        const match = entries.find(e => (e.name||'').toLowerCase().trim() === nameNorm);
+        const match = entries.find(e => window._nmIs(e, driver));
         if (match) return match.pts || 0;
       }
       for (const [, entries] of divGroups) {
         if (!Array.isArray(entries)) continue;
-        const match = entries.find(e => (e.name||'').toLowerCase().trim() === nameNorm);
+        const match = entries.find(e => window._nmIs(e, driver));
         if (match) return match.pts || 0;
       }
     }
@@ -19125,7 +19132,7 @@ window.openDriverModal = async function(driverId) {
         const divGroups = Array.isArray(race.raceResultsByName) ? race.raceResultsByName : Object.entries(race.raceResultsByName);
         for (const [dv, entries] of divGroups) {
           if (!Array.isArray(entries)) continue;
-          const match = entries.find(e => (e.name||'').toLowerCase().trim() === nameNorm);
+          const match = entries.find(e => window._nmIs(e, driver));
           if (match) out.push({ div: dv, pts: match.pts || 0 });
         }
       }
@@ -19900,13 +19907,13 @@ window.refreshEtPanel = async function(trigger) {
         for (const [div, entries] of divGroups) {
           if (!Array.isArray(entries)) continue;
           if (div !== driver.division) continue;
-          const match = entries.find(function(e) { return (e.name||'').toLowerCase().trim() === nameNorm; });
+          const match = entries.find(function(e) { return window._nmIs(e, driver); });
           if (match) return match.pts || 0;
         }
         // Fall back to any division match if none found in their own division
         for (const [, entries] of divGroups) {
           if (!Array.isArray(entries)) continue;
-          const match = entries.find(function(e) { return (e.name||'').toLowerCase().trim() === nameNorm; });
+          const match = entries.find(function(e) { return window._nmIs(e, driver); });
           if (match) return match.pts || 0;
         }
       }
@@ -25041,6 +25048,14 @@ window._drvPoleHit = function(r, driver, onlyDiv) {
   return divs.some(d => { const pv = r.poleByDiv && r.poleByDiv[d]; if (pv && (nn(pv) === a || nt(pv) === b)) return true;
     const g = r.raceGridByDiv && r.raceGridByDiv[d]; return !!g && (Number(g[a]) === 1 || Number(g[b]) === 1); });
 };
+// Loose name match for archived result entries: alnum-only, tag-stripped, the league name the .db
+// backfill stamped on the entry (canon), and the driver's IMS alias.
+window._nmIs = function(e, driver) {
+  if (!e || !driver) return false;
+  const n1 = (x) => String(x || '').toLowerCase().replace(/[^a-z0-9]/g, ''), n2 = (x) => n1(String(x || '').replace(/^\[[^\]]*\]\s*/, ''));
+  const mine = new Set([n1(driver.name), n2(driver.name), n1(driver.imsAlias), n2(driver.imsAlias)].filter(Boolean));
+  return [e.name, e.canon].some(x => x && (mine.has(n1(x)) || mine.has(n2(x)))) || (e.driverId && e.driverId === driver.id);
+};
 window.racePoleFlPills = function(race, driverName, driverId, driverDiv) {
   if (!race || !driverName) return '';
   // Normalize names (strip punctuation/spaces) so a rename like "Higosh" → "Higosh!" still matches
@@ -25324,7 +25339,8 @@ window.showRaceResults = function(raceId, season) {
       const isFL = !!(flHolder && _nnr(item.name) === flHolder);
       const isPole = !!(poleHolder && _nnr(item.name) === poleHolder);
       const _tbd = race.driverTeamByDivision || {};
-      const team = (item.dId && _tbd[item.dId] && _tbd[item.dId][div]) || (item.driver && _tbd[item.driver.id] && _tbd[item.driver.id][div]) || (item.driver ? item.driver.team : null);
+      const _tn = race.teamByDivName && race.teamByDivName[div], _tk = (x) => String(x || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const team = (item.dId && _tbd[item.dId] && _tbd[item.dId][div]) || (item.driver && _tbd[item.driver.id] && _tbd[item.driver.id][div]) || (_tn && (_tn[_tk(item.name)] || (item.driver && _tn[_tk(item.driver.name)]))) || (item.driver ? item.driver.team : null);
       const logo = team ? getTeamLogo(team) : '';
       const acc = team ? ((getTeamCardColour(team) || {}).accent || '#444') : '#444';
       const g = _gridOf(item.name);
