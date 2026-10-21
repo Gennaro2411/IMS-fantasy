@@ -18835,7 +18835,10 @@ window.openConstructorModal = async function(constrId) {
       </div>`;
     })()}
     <div style="padding:16px 20px">
-      <div style="font-weight:700;font-size:.85rem;margin-bottom:10px;color:var(--muted);letter-spacing:1px">RACE RESULTS</div>
+      ${hasPast ? `<div class="seg" style="margin-bottom:12px;flex-wrap:wrap">
+        <button id="dm-tab-s${currentSeason}" class="seg-btn active" onclick="switchModalTab('s${currentSeason}')">S${currentSeason} · ${totalPts}pts</button>
+        ${pastSeasons.map(s => `<button id="dm-tab-s${s.season}" class="seg-btn" onclick="switchModalTab('s${s.season}')">S${s.season} · ${s.totalPts}pts</button>`).join('')}
+      </div>` : `<div style="font-weight:700;font-size:.85rem;margin-bottom:10px;color:var(--muted);letter-spacing:1px">RACE RESULTS</div>`}
       <div id="dm-content-s${currentSeason}">${raceListHtml(completedRaces, constrId)}</div>
       ${pastSeasons.map(s => `<div id="dm-content-s${s.season}" style="display:none">${raceListHtml(s.races, constrId)}</div>`).join('')}
     </div>`;
@@ -19715,10 +19718,7 @@ window.openDriverModal = async function(driverId) {
     })()}
     </div>
     <div style="padding:16px 20px">
-      ${hasPast ? `<div class="seg" style="margin-bottom:12px;flex-wrap:wrap">
-        <button id="dm-tab-s${currentSeason}" class="seg-btn active" onclick="switchModalTab('s${currentSeason}')">S${currentSeason} · <span id="dm-season-pts">${(window._profileSummary && window._profileSummary.all || {totalPts:totalPts}).totalPts}</span>pts</button>
-        ${pastSeasons.map(s => { const _ss = window._profileSeasonSummaries && window._profileSeasonSummaries[s.season]; const _tp = (_ss && typeof _ss.totalPts === 'number') ? _ss.totalPts : s.totalPts; return `<button id="dm-tab-s${s.season}" class="seg-btn" onclick="switchModalTab('s${s.season}')">S${s.season} · ${_tp}pts</button>`; }).join('')}
-      </div>` : `<div style="font-weight:700;font-size:.85rem;margin-bottom:10px;color:var(--muted);letter-spacing:1px">RACE RESULTS</div>`}
+      <div id="dm-results-title" style="font-weight:800;font-size:.8rem;margin-bottom:10px;color:var(--muted);letter-spacing:1.5px">SEASON ${currentSeason} RESULTS</div>
       <div id="dm-content-s${currentSeason}">${raceListHtml(completedRaces, _defaultView === 'all' ? null : _defaultView)}</div>
       ${pastSeasons.map(s => `<div id="dm-content-s${s.season}" style="display:none">${raceListHtml(s.races)}</div>`).join('')}
     </div>`;
@@ -20009,6 +20009,7 @@ window._dmRecolour = function(to) {
 };
 window.switchModalTab = function(tab) {
   const modal = document.getElementById('driver-modal-content');
+  { const rt = document.getElementById('dm-results-title'); if (rt) rt.textContent = 'SEASON ' + String(tab).replace(/^s/, '') + ' RESULTS'; }
   if (modal) {
     modal.querySelectorAll('[id]').forEach(el => {
       if (el.id.startsWith('dm-content-')) el.style.display = 'none';
