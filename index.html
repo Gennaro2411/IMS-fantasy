@@ -19161,7 +19161,7 @@ window.openDriverModal = async function(driverId) {
         const divBadge = div
           ? `<span style="font-size:.6rem;font-weight:800;color:${hue};border:1px solid ${hue}88;background:${hue}1a;border-radius:3px;padding:0 4px;vertical-align:middle" title="Scored in ${esc(div)}">${esc(div)}</span>`
           : '';
-        const ptsHtml = st && !pts
+        let ptsHtml = st && !pts
           ? `<span style="color:${st==='DSQ'?'#fff':statusCol(st)};letter-spacing:1.5px;${st==='DSQ'?'background:#111;border:1px solid #555;border-radius:4px;padding:1px 7px;font-size:.85rem':''}">${st}</span>`
           : `${pts} pts${st ? ' ' + statusPill(st) : ''}`;
         // Finishing-position chip shown to the LEFT of the points, colour-graded for the podium.
@@ -19178,6 +19178,9 @@ window.openDriverModal = async function(driverId) {
         const _spR = (() => { const arr = window._spRowsOf ? window._spRowsOf(race, div) : null; if (!arr) return null; const k = _nq(String(driver.name || '').replace(/^\[[^\]]*\]\s*/, ''));
           return arr.find(x => _nq(String(x.name || '').replace(/^\[[^\]]*\]\s*/, '')) === k) || null; })();
         const spChip = '';
+        // Imported points on a sprint weekend are race + sprint combined: split them (sprint = 10-9-…-1 for P1–P10).
+        const spPts = (_spR && _spR.pos && _spR.pos <= 10 && !_spR.status) ? 11 - _spR.pos : 0;
+        if (_spR && !(st && !pts)) { const rp = Math.max(0, (Number(pts) || 0) - spPts); ptsHtml = `${rp} pts${st ? ' ' + statusPill(st) : ''}`; }
         // Team they drove for in THIS race (saved per division on the race), else their current team.
         const rTeam = (race.driverTeamByDivision && race.driverTeamByDivision[driver.id] && race.driverTeamByDivision[driver.id][div])
           || (race.teamByDivName && race.teamByDivName[div] && race.teamByDivName[div][_nq(driver.name)]) || driver.team || '';
@@ -19195,7 +19198,7 @@ window.openDriverModal = async function(driverId) {
           const medal = sp === 1 ? 'background:linear-gradient(135deg,#ffe259,#ffa751);color:#111' : sp === 2 ? 'background:#cfd8e3;color:#111' : sp === 3 ? 'background:#cd7f32;color:#111' : 'background:rgba(255,255,255,0.06);color:var(--muted);border:1px solid var(--border)';
           const sQ = sg ? `<span class="dm-qchip${sg === 1 ? ' pole' : ''}" title="Started the sprint P${sg}">Q${sg}</span>${sp && !sst ? `<span class="dm-qarrow" style="color:${sg > sp ? '#4ade80' : sg < sp ? '#ff8f6b' : 'var(--muted)'}">${sg > sp ? '▲' + (sg - sp) : sg < sp ? '▼' + (sp - sg) : '→'}</span>` : ''}` : '';
           const sP = sp && !sst ? `<span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:.9rem;min-width:34px;text-align:center;border-radius:6px;padding:2px 7px;${medal}" title="Sprint finish P${sp}">P${sp}</span>` : '';
-          const sTag = sst ? `<span style="color:${statusCol(sst)};letter-spacing:1.5px">${esc(sst)}</span>` : `<span style="font-size:.62rem;color:var(--muted);font-weight:700" title="Sprint points are included in the race total above">in race pts</span>`;
+          const sTag = sst ? `<span style="color:${statusCol(sst)};letter-spacing:1.5px">${esc(sst)}</span>` : `${spPts} pts`;
           rows.push(`<div class="dmr dmr-sprint" style="--ra:#ffa751;--rh:${hue}">
           <div class="dmr-flag">${getRaceFlag(race.name)}</div>
           <div class="dmr-main">
