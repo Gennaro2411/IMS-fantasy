@@ -15052,6 +15052,10 @@ window.backfillSprintsFromDb = async function(btn) {
         const sp = _sprintFromDb(a.season, r.name); if (Object.keys(sp).length) { r.sprintByDiv = _spPack(sp); touched = true; found.push('S' + a.season + ' ' + r.name + ' (sprint)'); }
         const gr = _raceGridFromDb(a.season, r.name); if (Object.keys(gr).length) { r.raceGridByDiv = gr; touched = true; gridCount++; }
         const fn = _raceFinFromDb(a.season, r.name); if (Object.keys(fn).length) { r.raceFinByDiv = fn; touched = true; }
+        { const q = _imsDb.exec(`SELECT col_e, col_f, col_c, col_as FROM inputs_rows WHERE col_a='${String(a.season).replace(/'/g, "''")}' AND col_ad='${String(_dbTrackName(a.season, r.name)).replace(/'/g, "''")}'`);
+          const pb = {}; (q.length ? q[0].values : []).forEach(([e, f, dv, pts]) => { const d = _normDbDiv(dv); if (!d || /^A/.test(d)) return; const v = parseFloat(String(pts == null ? '' : pts).replace(',', '.')); if (!isFinite(v)) return;
+            [e, f].forEach(n => { const k = String(n || '').toLowerCase().replace(/[^a-z0-9]/g, ''); if (k) (pb[d] = pb[d] || {})[k] = v; }); });
+          if (Object.keys(pb).length) { r.ptsByDivName = pb; touched = true; } }
         if (r.raceGridByDiv) { const pb = { ...(r.poleByDiv || {}) }; let ch = false; Object.entries(r.raceGridByDiv).forEach(([d, g]) => { if (pb[d]) return; const k = Object.keys(g || {}).find(x => Number(g[x]) === 1); if (!k) return;
           const res = _imsDb.exec(`SELECT COALESCE(NULLIF(TRIM(col_f), ''), col_e), col_e FROM inputs_rows WHERE col_a='${String(a.season).replace(/'/g, "''")}' AND col_ad='${String(_dbTrackName(a.season, r.name)).replace(/'/g, "''")}' AND col_m='1'`);
           const nm = res.length ? (res[0].values.find(v => [v[0], v[1]].some(n => String(n || '').toLowerCase().replace(/[^a-z0-9]/g, '') === k)) || [])[0] : null; if (nm) { pb[d] = nm; ch = true; } });
@@ -19048,6 +19052,33 @@ window.openDriverModal = async function(driverId) {
   if (!allArchives.find(a => a.season === 6) && currentSeason >= 7 && races.length > 0) {
     allArchives.push({ season: 6, races: races });
   }
+  // Archived races may file this driver under an OLD driver id (a recreated / merged doc) or an in-game
+  // name like "[NXS] John Marco". Find those ids by name and fold their results onto this driver so the
+  // whole season shows up on the profile.
+  try {
+    for (let ai = 0; ai < allArchives.length; ai++) {
+      const a = allArchives[ai]; let changed = false;
+      const rs = (a.races || []).map(r => {
+        const alt = new Set();
+        Object.entries(r.driverNames || {}).forEach(([id, nm]) => { if (id !== driverId && window._nmIs({ name: nm }, driver)) alt.add(id); });
+        const rbn = r.raceResultsByName ? (Array.isArray(r.raceResultsByName) ? r.raceResultsByName : Object.entries(r.raceResultsByName)) : [];
+        rbn.forEach(([, en]) => Array.isArray(en) && en.forEach(e => { if (e && e.driverId && e.driverId !== driverId && window._nmIs({ name: e.name, canon: e.canon }, driver)) alt.add(e.driverId); }));
+        const c = { ...r }; let hit = false;
+        ['driverPoints', 'driverPointsByDivision', 'positionByDivision', 'raceStatusByDivision', 'driverTeamByDivision', 'raceStatusByDriver', 'dnfByDriver'].forEach(f => {
+          if (!r[f]) return; alt.forEach(id => { if (r[f][id] !== undefined && r[f][driverId] === undefined) { c[f] = { ...(c[f] === r[f] ? r[f] : c[f]), [driverId]: r[f][id] }; hit = true; } });
+        });
+        if (r.ptsByDivName && !(c.driverPoints && c.driverPoints[driverId] !== undefined)) {
+          const k1 = String(driver.name || '').toLowerCase().replace(/[^a-z0-9]/g, ''), k2 = String(driver.name || '').replace(/^\[[^\]]*\]\s*/, '').toLowerCase().replace(/[^a-z0-9]/g, ''), k3 = String(driver.imsAlias || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+          const mine = {}; Object.entries(r.ptsByDivName).forEach(([d, m]) => { const v = m && [k1, k2, k3].map(k => k && m[k]).find(x => x != null); if (v != null) mine[d] = v; });
+          if (Object.keys(mine).length) { c.driverPoints = { ...(c.driverPoints || {}), [driverId]: Object.values(mine).reduce((x, y) => x + y, 0) }; c.driverPointsByDivision = { ...(c.driverPointsByDivision || {}), [driverId]: mine }; hit = true; }
+        }
+        if (hit) changed = true; return hit ? c : r;
+      });
+      let ds = a.driverSummaries;
+      if (ds && !ds[driverId]) { const k = Object.keys(ds).find(id => { const x = ds[id]; return x && window._nmIs({ name: x.name || x.driverName }, driver); }); if (k) { ds = { ...ds, [driverId]: ds[k] }; changed = true; } }
+      if (changed) allArchives[ai] = { ...a, races: rs, driverSummaries: ds };
+    }
+  } catch (e) { console.warn('archive alias fold', e); }
 
   const pastSeasons = allArchives.map(archive => {
     const ar = (archive.races || []).filter(hasResultFor)
