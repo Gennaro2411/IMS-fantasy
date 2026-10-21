@@ -14955,7 +14955,7 @@ function _sprintFromDb(season, track) {
   const out = {};
   if (!_imsDb) return out;
   track = _dbTrackName(season, track);
-  const res = _imsDb.exec(`SELECT col_e, col_g, col_c, col_p, col_o, col_k, col_l FROM inputs_rows
+  const res = _imsDb.exec(`SELECT COALESCE(NULLIF(TRIM(col_f), ''), col_e), col_g, col_c, col_p, col_o, col_k, col_l FROM inputs_rows
     WHERE col_a='${String(season).replace(/'/g, "''")}' AND col_ad='${String(track).replace(/'/g, "''")}' AND col_p IS NOT NULL AND TRIM(col_p) != ''`);
   if (!res.length) return out;
   for (const [drvName, team, rowDivRaw, spPos, spGrid, spTime, spFl] of res[0].values) {
@@ -14974,12 +14974,12 @@ function _sprintFromDb(season, track) {
 function _teamsFromDb(season, track) {
   const out = {}; if (!_imsDb) return out;
   track = _dbTrackName(season, track);
-  const res = _imsDb.exec(`SELECT col_e, col_c, col_g FROM inputs_rows
+  const res = _imsDb.exec(`SELECT col_e, col_c, col_g, col_f FROM inputs_rows
     WHERE col_a='${String(season).replace(/'/g, "''")}' AND col_ad='${String(track).replace(/'/g, "''")}' AND col_g IS NOT NULL AND TRIM(col_g) != ''`);
   if (!res.length) return out;
-  for (const [nm, dv, tm] of res[0].values) {
-    const d = _normDbDiv(dv), k = String(nm || '').toLowerCase().replace(/[^a-z0-9]/g, ''), t = String(tm).trim();
-    if (!d || !k || !t || /^A/.test(d)) continue; (out[d] = out[d] || {})[k] = t;
+  for (const [nm, dv, tm, canon] of res[0].values) {
+    const d = _normDbDiv(dv), t = String(tm).trim(); if (!d || !t || /^A/.test(d)) continue;
+    [nm, canon].forEach(n => { const k = String(n || '').toLowerCase().replace(/[^a-z0-9]/g, ''); if (k) (out[d] = out[d] || {})[k] = t; });
   }
   return out;
 }
@@ -14989,15 +14989,14 @@ function _raceFinFromDb(season, track) {
   const out = {};
   if (!_imsDb) return out;
   track = _dbTrackName(season, track);
-  const res = _imsDb.exec(`SELECT col_e, col_c, col_n, col_i, col_ao FROM inputs_rows
+  const res = _imsDb.exec(`SELECT col_e, col_c, col_n, col_i, col_ao, col_f FROM inputs_rows
     WHERE col_a='${String(season).replace(/'/g, "''")}' AND col_ad='${String(track).replace(/'/g, "''")}' AND col_n IS NOT NULL AND col_n != ''`);
   if (!res.length) return out;
-  for (const [drvName, rowDivRaw, rawPos, rt, finalPos] of res[0].values) {
+  for (const [drvName, rowDivRaw, rawPos, rt, finalPos, canon] of res[0].values) {
     const pos = (parseInt(finalPos) > 0) ? finalPos : rawPos; // col AO = final classification after penalties; col N = on-the-road
     if (/^(DNF|DNS|DSQ)$/i.test(String(rt || '').trim())) continue;
     const rowDiv = _normDbDiv(rowDivRaw), p = parseInt(pos); if (!drvName || !rowDiv || !(p > 0)) continue;
-    const k = String(drvName).toLowerCase().replace(/[^a-z0-9]/g, ''); if (!k) continue;
-    (out[rowDiv] = out[rowDiv] || {})[k] = p;
+    [drvName, canon].forEach(n => { const k = String(n || '').toLowerCase().replace(/[^a-z0-9]/g, ''); if (k) (out[rowDiv] = out[rowDiv] || {})[k] = p; });
   }
   return out;
 }
@@ -15005,7 +15004,7 @@ function _raceFinFromDb(season, track) {
 function _raceFlFromDb(season, track) {
   const out = {}; if (!_imsDb) return out;
   track = _dbTrackName(season, track);
-  const res = _imsDb.exec(`SELECT col_e, col_c, col_j FROM inputs_rows
+  const res = _imsDb.exec(`SELECT COALESCE(NULLIF(TRIM(col_f), ''), col_e), col_c, col_j FROM inputs_rows
     WHERE col_a='${String(season).replace(/'/g, "''")}' AND col_ad='${String(track).replace(/'/g, "''")}' AND col_j IS NOT NULL AND col_j != ''`);
   if (!res.length) return out;
   const parse = (x) => { const t = String(x).trim(); if (!t) return null; let v = 0; for (const q of t.split(':')) v = v * 60 + parseFloat(q); return isFinite(v) && v > 0 ? v : null; };
@@ -15018,15 +15017,14 @@ function _raceGridFromDb(season, track) {
   const out = {};
   if (!_imsDb) return out;
   track = _dbTrackName(season, track);
-  const res = _imsDb.exec(`SELECT col_e, col_c, col_m FROM inputs_rows
+  const res = _imsDb.exec(`SELECT col_e, col_c, col_m, col_f FROM inputs_rows
     WHERE col_a='${String(season).replace(/'/g, "''")}' AND col_ad='${String(track).replace(/'/g, "''")}' AND col_m IS NOT NULL AND col_m != ''`);
   if (!res.length) return out;
-  for (const [drvName, rowDivRaw, grid] of res[0].values) {
+  for (const [drvName, rowDivRaw, grid, canon] of res[0].values) {
     const rowDiv = _normDbDiv(rowDivRaw);
     const g = parseInt(grid); if (!drvName || !rowDiv || isNaN(g)) continue;
-    const k = String(drvName).toLowerCase().replace(/[^a-z0-9]/g, '');
-    if (!k) continue; // Firestore rejects empty map keys
-    (out[rowDiv] = out[rowDiv] || {})[k] = g;
+    // Key by the in-game name (col E) AND the league name (col F) — e.g. "[NXS] John Marco" is John_Marco7.
+    [drvName, canon].forEach(n => { const k = String(n || '').toLowerCase().replace(/[^a-z0-9]/g, ''); if (k) (out[rowDiv] = out[rowDiv] || {})[k] = g; });
   }
   return out;
 }
@@ -15055,8 +15053,8 @@ window.backfillSprintsFromDb = async function(btn) {
         const gr = _raceGridFromDb(a.season, r.name); if (Object.keys(gr).length) { r.raceGridByDiv = gr; touched = true; gridCount++; }
         const fn = _raceFinFromDb(a.season, r.name); if (Object.keys(fn).length) { r.raceFinByDiv = fn; touched = true; }
         if (r.raceGridByDiv) { const pb = { ...(r.poleByDiv || {}) }; let ch = false; Object.entries(r.raceGridByDiv).forEach(([d, g]) => { if (pb[d]) return; const k = Object.keys(g || {}).find(x => Number(g[x]) === 1); if (!k) return;
-          const res = _imsDb.exec(`SELECT col_e FROM inputs_rows WHERE col_a='${String(a.season).replace(/'/g, "''")}' AND col_ad='${String(_dbTrackName(a.season, r.name)).replace(/'/g, "''")}' AND col_m='1'`);
-          const nm = res.length ? res[0].values.map(v => String(v[0]).trim()).find(n => n.toLowerCase().replace(/[^a-z0-9]/g, '') === k) : null; if (nm) { pb[d] = nm; ch = true; } });
+          const res = _imsDb.exec(`SELECT COALESCE(NULLIF(TRIM(col_f), ''), col_e), col_e FROM inputs_rows WHERE col_a='${String(a.season).replace(/'/g, "''")}' AND col_ad='${String(_dbTrackName(a.season, r.name)).replace(/'/g, "''")}' AND col_m='1'`);
+          const nm = res.length ? (res[0].values.find(v => [v[0], v[1]].some(n => String(n || '').toLowerCase().replace(/[^a-z0-9]/g, '') === k)) || [])[0] : null; if (nm) { pb[d] = nm; ch = true; } });
           if (ch) { r.poleByDiv = pb; touched = true; } }
         const fl = _raceFlFromDb(a.season, r.name); if (Object.keys(fl).length) { r.fastestLapByDiv = { ...fl, ...(r.fastestLapByDiv || {}) }; touched = true; }
         const tb = _teamsFromDb(a.season, r.name); if (Object.keys(tb).length) { r.teamByDivName = tb; touched = true; teamCount++; }
