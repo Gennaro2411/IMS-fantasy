@@ -10396,7 +10396,8 @@ async function renderMyTeam() {
           + '<div class="mt-lbl">'+(pointsRace?'Points · '+(function(){ try { const _rs = races.filter(r => !r.excludeFromFantasy).slice().sort((a,b)=>(a.raceNum||0)-(b.raceNum||0)); const _ix = _rs.findIndex(r => r.id === pointsRace.id); return _ix >= 0 ? 'Round '+(_ix+1)+' · ' : ''; } catch(e) { return ''; } })()+esc(pointsRace.name):'Points')+'</div>'
           + '<div id="total-pts-display" data-countup="'+(latestPts!==null?latestPts:0)+'">'+(latestPts!==null?latestPts:'—')+'</div>'
           + '<div class="mt-tile-sub">'+(pointsRace?(pointsRaceScored?'This round':'Not scored yet'):'No races yet')+'</div>'
-          + (pointsRace && pointsRace.verdictsAt && window._raceVerdictPill ? '<div style="margin-top:6px">'+window._raceVerdictPill(pointsRace)+'</div>' : '')
+          + (pointsRace && pointsRaceScored && window._raceVerdictPill ? (pointsRace.verdictsAt ? '<div style="margin-top:6px">'+window._raceVerdictPill(pointsRace)+'</div>'
+              : ((window._verdictLatest(races) || {}).id === pointsRace.id ? '<div style="margin-top:6px"><span title="Provisional — points may change once the steward verdicts are in" style="display:inline-flex;align-items:center;gap:5px;font-size:.6rem;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#ffb74d;background:rgba(255,183,77,.12);border:1px solid rgba(255,183,77,.45);border-radius:999px;padding:1px 8px">⏳ Before verdicts · '+esc(pointsRace.name)+'</span></div>' : '')) : '')
           + '</div>'
           + (() => {
               let _col = false; try { _col = localStorage.getItem('ims_mt_stats_collapsed') === '1'; } catch(e) {}
@@ -28905,13 +28906,17 @@ window._raceVerdictPill = function(race, big) {
   return `<span title="Points and positions were updated after steward verdicts${dv ? ' in ' + dv : ''} (${when}). Your team points, standings and bets use the updated results." style="display:inline-flex;align-items:center;gap:5px;font-size:${big ? '.7rem' : '.6rem'};font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#c9cbff;background:rgba(160,164,255,.14);border:1px solid rgba(160,164,255,.45);border-radius:999px;padding:${big ? '3px 10px' : '1px 8px'};vertical-align:middle;white-space:nowrap">⚖️ After verdicts · ${esc(race.name || '')}</span>`;
 };
 // Banner for standings pages: the most recent race whose results changed after verdicts (last 10 days).
+window._verdictLatest = function(races) {
+  return (races || []).filter(x => x && !x.excludeFromFantasy && x.driverPoints && Object.values(x.driverPoints).some(v => v > 0)).sort((a, b) => (b.raceNum || 0) - (a.raceNum || 0))[0] || null;
+};
 window._verdictBanner = function(races) {
-  const r = (races || []).filter(x => x && x.verdictsAt && Date.now() - x.verdictsAt < 10 * 864e5).sort((a, b) => b.verdictsAt - a.verdictsAt)[0];
-  if (!r) return '';
-  const when = new Date(r.verdictsAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-  return `<div style="display:flex;align-items:center;gap:10px;margin:0 0 12px;padding:9px 14px;border-radius:12px;background:linear-gradient(90deg,rgba(160,164,255,.16),rgba(160,164,255,.03));border:1px solid rgba(160,164,255,.4)">
-    <span style="font-size:1.2rem">⚖️</span><div style="flex:1;min-width:0"><div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;letter-spacing:1.2px;font-size:.95rem;color:#c9cbff;text-transform:uppercase">After verdicts · ${getRaceFlag ? getRaceFlag(r.name) + ' ' : ''}${esc(r.name)}</div>
-    <div style="font-size:.7rem;color:var(--muted)">Standings include the steward verdicts${(r.verdictDivs || []).length ? ' in ' + esc(r.verdictDivs.join(', ')) : ''} · updated ${when}</div></div></div>`;
+  // Always about the LATEST imported round: provisional until a re-import brings the verdicts in.
+  const r = window._verdictLatest(races); if (!r) return '';
+  const after = !!r.verdictsAt, c = after ? '160,164,255' : '255,183,77';
+  const when = after ? new Date(r.verdictsAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+  return `<div style="display:flex;align-items:center;gap:10px;margin:0 0 12px;padding:9px 14px;border-radius:12px;background:linear-gradient(90deg,rgba(${c},.16),rgba(${c},.03));border:1px solid rgba(${c},.4)">
+    <span style="font-size:1.2rem">${after ? '⚖️' : '⏳'}</span><div style="flex:1;min-width:0"><div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;letter-spacing:1.2px;font-size:.95rem;color:rgb(${c});text-transform:uppercase">${after ? 'After' : 'Before'} verdicts · ${typeof getRaceFlag === 'function' ? getRaceFlag(r.name) + ' ' : ''}${esc(r.name)}</div>
+    <div style="font-size:.7rem;color:var(--muted)">${after ? 'Standings include the steward verdicts' + ((r.verdictDivs || []).length ? ' in ' + esc(r.verdictDivs.join(', ')) : '') + ' · updated ' + when : 'Provisional — points may change once the steward verdicts are in'}</div></div></div>`;
 };
 window._verdictBadge = function(b) {
   if (!b || !b.resettled) return '';
