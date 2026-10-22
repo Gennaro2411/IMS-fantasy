@@ -15356,13 +15356,13 @@ window.importDbRound = async function(roundNo, trackName) {
 
   try {
     const res = _imsDb.exec(`
-      SELECT col_e as driver, col_g as team, col_c as race_div, col_n as finish_pos,
+      SELECT col_e as driver, col_g as team, col_c as race_div, COALESCE(NULLIF(TRIM(col_ao), ''), col_n) as finish_pos, /* col AO = official classification after steward verdicts */
              col_as as fantasy_pts, elo_post_race, elo_change, rowid as row_order,
              col_i as race_time, bott_points_effective, COALESCE(seasonal_license_before, col_bb) as licence
       FROM inputs_rows 
       WHERE col_a='${IMPORT_SEASON}' AND col_ad='${dbTrack.replace(/'/g, "''")}'
         AND col_c IN (${IMPORT_DIVS.map(d=>`'${d}'`).join(',')})
-      ORDER BY CAST(col_n as INTEGER)
+      ORDER BY CAST(COALESCE(NULLIF(TRIM(col_ao), ''), col_n) as INTEGER)
     `);
 
     if (!res.length || !res[0].values.length) { msg.innerHTML = '<div class="alert alert-error">No data found for '+esc(trackName)+'.</div>'; return; }
@@ -17752,7 +17752,7 @@ window.backfillPositionsFromDb = async function(btn) {
   try {
     const season = getImportSeason();
     const res = _imsDb.exec(`
-      SELECT col_e as driver, col_ad as track, col_c as race_div, col_n as pos, col_i as race_time
+      SELECT col_e as driver, col_ad as track, col_c as race_div, COALESCE(NULLIF(TRIM(col_ao), ''), col_n) as pos, col_i as race_time
       FROM inputs_rows
       WHERE col_a='${season}' AND col_ad IS NOT NULL AND col_ad != '' AND col_c IN (${importDivCsv(season)})
     `);
