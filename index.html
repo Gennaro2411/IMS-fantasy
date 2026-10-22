@@ -13825,7 +13825,7 @@ async function renderLeaderboard() {
         </div>`;
       }
     } catch(e) {}
-    document.getElementById('leaderboard-content').innerHTML = awardsCard + metricToggle + meStrip + (_lbHiddenNoCap ? '<div style="font-size:.78rem;color:var(--muted);text-align:center;margin:0 0 10px">Everyone is on 0 points so far — showing the ' + ranked.length + ' team' + (ranked.length !== 1 ? 's' : '') + ' with a captain picked (' + _lbHiddenNoCap + ' without one hidden until points come in).</div>' : '') + podiumHtml + '<div class="lbr-list">' + top10 + '</div>'
+    document.getElementById('leaderboard-content').innerHTML = (window._verdictBanner ? window._verdictBanner(races) : '') + awardsCard + metricToggle + meStrip + (_lbHiddenNoCap ? '<div style="font-size:.78rem;color:var(--muted);text-align:center;margin:0 0 10px">Everyone is on 0 points so far — showing the ' + ranked.length + ' team' + (ranked.length !== 1 ? 's' : '') + ' with a captain picked (' + _lbHiddenNoCap + ' without one hidden until points come in).</div>' : '') + podiumHtml + '<div class="lbr-list">' + top10 + '</div>'
       + (rest ? '<div id="lb-rest" class="lbr-list" style="display:none;margin-top:6px">'+rest+'</div>'
                +'<div style="text-align:center;margin-top:12px">'
                +'<button class="btn btn-secondary" id="lb-show-rest-btn" onclick="toggleLbRest()">Show the rest ('+(ranked.length-10)+')</button>'
@@ -24597,7 +24597,7 @@ async function renderResults() {
         window._bottClinchInfo = { racesLeft: _cal.size ? _remaining : Math.max(0, _at - _scoredNm.size), totalKnown: (_at > 0 || _cal.size > _scoredNm.size) };
       } catch(e) { window._bottClinchInfo = { racesLeft: 0, totalKnown: false }; }
       window._rxLatestName = ((completedRaces || [])[0] || {}).name || ''; // latest circuit drawn behind the standings headers
-      html += buildBottStandings(constrRanked);
+      html += (window._verdictBanner ? window._verdictBanner(window._lbAllRaces && window._lbAllRaces.length ? window._lbAllRaces : completedRaces) : '') + buildBottStandings(constrRanked);
     }
 
     // ===== DRIVER CHAMPIONSHIP STANDINGS — per division =====
@@ -28902,7 +28902,16 @@ window._raceVerdictPill = function(race, big) {
   if (!race || !race.verdictsAt) return '';
   const when = new Date(race.verdictsAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
   const dv = (race.verdictDivs || []).join(', ');
-  return `<span title="Points and positions were updated after steward verdicts${dv ? ' in ' + dv : ''} (${when}). Your team points, standings and bets use the updated results." style="display:inline-flex;align-items:center;gap:5px;font-size:${big ? '.7rem' : '.6rem'};font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#c9cbff;background:rgba(160,164,255,.14);border:1px solid rgba(160,164,255,.45);border-radius:999px;padding:${big ? '3px 10px' : '1px 8px'};vertical-align:middle;white-space:nowrap">⚖️ After verdicts${dv ? ' · ' + esc(dv) : ''}</span>`;
+  return `<span title="Points and positions were updated after steward verdicts${dv ? ' in ' + dv : ''} (${when}). Your team points, standings and bets use the updated results." style="display:inline-flex;align-items:center;gap:5px;font-size:${big ? '.7rem' : '.6rem'};font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#c9cbff;background:rgba(160,164,255,.14);border:1px solid rgba(160,164,255,.45);border-radius:999px;padding:${big ? '3px 10px' : '1px 8px'};vertical-align:middle;white-space:nowrap">⚖️ After verdicts · ${esc(race.name || '')}</span>`;
+};
+// Banner for standings pages: the most recent race whose results changed after verdicts (last 10 days).
+window._verdictBanner = function(races) {
+  const r = (races || []).filter(x => x && x.verdictsAt && Date.now() - x.verdictsAt < 10 * 864e5).sort((a, b) => b.verdictsAt - a.verdictsAt)[0];
+  if (!r) return '';
+  const when = new Date(r.verdictsAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  return `<div style="display:flex;align-items:center;gap:10px;margin:0 0 12px;padding:9px 14px;border-radius:12px;background:linear-gradient(90deg,rgba(160,164,255,.16),rgba(160,164,255,.03));border:1px solid rgba(160,164,255,.4)">
+    <span style="font-size:1.2rem">⚖️</span><div style="flex:1;min-width:0"><div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;letter-spacing:1.2px;font-size:.95rem;color:#c9cbff;text-transform:uppercase">After verdicts · ${getRaceFlag ? getRaceFlag(r.name) + ' ' : ''}${esc(r.name)}</div>
+    <div style="font-size:.7rem;color:var(--muted)">Standings include the steward verdicts${(r.verdictDivs || []).length ? ' in ' + esc(r.verdictDivs.join(', ')) : ''} · updated ${when}</div></div></div>`;
 };
 window._verdictBadge = function(b) {
   if (!b || !b.resettled) return '';
