@@ -1713,11 +1713,11 @@
     #page-my-team #total-pts-display{font-size:3rem;line-height:1.02}
     @media (max-width:520px){ #page-my-team #total-pts-display{font-size:2.4rem} }
     @media (max-width:520px){ #page-my-team .mt-tiles{grid-template-columns:1fr 1fr} #page-my-team .mt-tile:last-child:nth-child(odd){grid-column:1/-1} }
-    #page-my-team .mt-form-link{display:flex;align-items:center;gap:12px;width:100%;margin:2px 0;padding:10px 14px;border-radius:14px;cursor:pointer;text-align:left;color:var(--text);font:inherit;background:linear-gradient(120deg,rgba(46,230,182,.14),rgba(46,230,182,.03) 70%);border:1px solid rgba(46,230,182,.35);transition:transform .15s,box-shadow .15s}
-    #page-my-team .mt-form-link:hover{transform:translateY(-1px);box-shadow:0 6px 18px -8px #2ee6b6}
-    #page-my-team .mt-fl-ic{font-size:1.3rem;width:34px;height:34px;border-radius:10px;background:rgba(46,230,182,.18);display:flex;align-items:center;justify-content:center;flex:none}
+    #page-my-team .mt-form-link{display:flex;align-items:center;gap:12px;width:100%;margin:2px 0;padding:10px 14px;border-radius:14px;cursor:pointer;text-align:left;color:var(--text);font:inherit;--c:#2ee6b6;background:linear-gradient(120deg,color-mix(in srgb,var(--c) 14%,transparent),color-mix(in srgb,var(--c) 3%,transparent) 70%);border:1px solid color-mix(in srgb,var(--c) 35%,transparent);transition:transform .15s,box-shadow .15s}
+    #page-my-team .mt-form-link:hover{transform:translateY(-1px);box-shadow:0 6px 18px -8px var(--c)}
+    #page-my-team .mt-fl-ic{font-size:1.3rem;width:34px;height:34px;border-radius:10px;background:color-mix(in srgb,var(--c) 18%,transparent);display:flex;align-items:center;justify-content:center;flex:none}
     #page-my-team .mt-fl-tx{display:flex;flex-direction:column;min-width:0;flex:1}#page-my-team .mt-fl-tx b{font-size:.9rem}#page-my-team .mt-fl-tx small{font-size:.7rem;color:var(--muted)}
-    #page-my-team .mt-fl-go{font-size:1.5rem;color:#2ee6b6;line-height:1}
+    #page-my-team .mt-fl-go{font-size:1.5rem;color:var(--c);line-height:1}
     #page-my-team .set-cap-btn{transition:background .15s ease,color .15s ease,border-color .15s ease}
     #page-my-team .set-cap-btn:not(.is-cap):hover{background:rgba(255,200,0,0.10)!important;border-color:rgba(255,200,0,0.45)!important;color:var(--gold)!important}
   </style>
@@ -7303,15 +7303,17 @@ window.searchFold = function(s) {
     .toLowerCase().replace(/[^a-z0-9]/g, '');
 };
 // My Team → jump to the Driver form report on the Predictions page and open it.
-window.openFormReport = function() {
-  // The briefing re-renders once its data loads, so keep the report open and pinned to the top of the
-  // screen until the same element has stayed put for a few checks.
-  window._wantFormReport = true; showPage('predictions'); let n = 0, last = null, still = 0;
+// My Team → jump to a Briefing section (form report / reserves stepping in), open it and pin it to the top.
+// The briefing re-renders once its data loads, so keep going until the same element has stayed put.
+window.openBriefSection = function(cls, emptyMsg) {
+  window._wantBrf = cls; showPage('predictions'); let n = 0, last = null, still = 0;
   const go = (d) => { d.open = true; const y = d.getBoundingClientRect().top + window.scrollY - 70; window.scrollTo({ top: Math.max(0, y), behavior: last === d ? 'auto' : 'smooth' }); };
-  const t = setInterval(() => { const d = document.querySelector('#page-predictions details.brf-form');
-    if (d) { go(d); still = d === last ? still + 1 : 0; last = d; if (still >= 6) { clearInterval(t); setTimeout(() => { window._wantFormReport = false; }, 1500); } }
-    else if (++n > 60) { clearInterval(t); window._wantFormReport = false; if (typeof showToast === 'function') showToast('Form report shows when the next race is set and you have a team.', 'info'); } }, 200);
+  const t = setInterval(() => { const d = document.querySelector('#page-predictions details.' + cls);
+    if (d) { go(d); still = d === last ? still + 1 : 0; last = d; if (still >= 6) { clearInterval(t); setTimeout(() => { window._wantBrf = null; }, 1500); } }
+    else if (++n > 60) { clearInterval(t); window._wantBrf = null; if (typeof showToast === 'function') showToast(emptyMsg, 'info'); } }, 200);
 };
+window.openFormReport = () => openBriefSection('brf-fr', 'Form report shows when the next race is set and you have a team.');
+window.openReservesIn = () => openBriefSection('brf-res', 'No reserves stepping in yet — check-ins for this round aren\'t in.');
 window.showPage = function(page) {
   if (!window._seasonDefs && typeof dbGet === 'function') dbGet('settings','seasonDefinitions').then(d => { if (d && d.value) window._seasonDefs = d.value; }).catch(()=>{});
   if (page === 'my-team') { window._wcWant = true; window._placePick = {}; }
@@ -10956,6 +10958,7 @@ async function renderMyTeam() {
         ${subsHtml}
       </div>
     </div>`;
+    if (!_snapView) html += `<button class="mt-form-link" style="--c:#27f4d2;margin:-4px 0 16px" onclick="openReservesIn()"><span class="mt-fl-ic">🔄</span><span class="mt-fl-tx"><b>Reserves stepping in</b><small>Who's sitting out this round and the reserves covering</small></span><span class="mt-fl-go">›</span></button>`;
   } catch(e) { console.warn('reserve card failed', e); }
 
   html += '<div class="card"><div class="card-title"><div class="dot"></div>Race History</div>';
@@ -11869,7 +11872,7 @@ async function renderBriefingExtras() {
           </div>`;
         }).join('') + '</div>' + (unassigned.length ? `<div style="margin-top:8px;font-size:.72rem;color:var(--muted)">Reserves checked in: ${unassigned.map(r => `<b style="color:#27f4d2">${esc(r.name)}</b>`).join(', ')}</div>` : '') + '</div>';
       }).join('');
-      if (rows) attendanceHtml += `<details class="brf-form" style="margin-top:28px"><summary style="list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px">${_secHead('🔄', 'Reserves stepping in', 'Tap to open: who\'s sitting out and the reserves covering', '#27f4d2')}<span class="brf-form-chev" style="margin-left:auto;font-size:.8rem;color:var(--muted);transition:transform .2s">▼</span></summary><div style="margin-top:12px">${rows}</div></details>`;
+      if (rows) attendanceHtml += `<details class="brf-form brf-res"${window._wantBrf === 'brf-res' ? ' open' : ''} style="margin-top:28px"><summary style="list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px">${_secHead('🔄', 'Reserves stepping in', 'Tap to open: who\'s sitting out and the reserves covering', '#27f4d2')}<span class="brf-form-chev" style="margin-left:auto;font-size:.8rem;color:var(--muted);transition:transform .2s">▼</span></summary><div style="margin-top:12px">${rows}</div></details>`;
     } catch(e) { console.warn('reserves stepping in failed', e); }
   }
 
@@ -12048,7 +12051,7 @@ async function renderBriefingExtras() {
           </div>
         </div>`;
       }).join('');
-      if (rowsF) checklistHtml += `<details class="brf-form"${window._wantFormReport ? ' open' : ''} style="margin-top:28px"><summary style="list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px">${_secHead('📈', 'Driver form report', 'Tap to open: how each of your drivers is doing vs their price', '#2ee6b6')}<span class="brf-form-chev" style="margin-left:auto;font-size:.8rem;color:var(--muted);transition:transform .2s">▼</span></summary><div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">${rowsF}</div></details>`;
+      if (rowsF) checklistHtml += `<details class="brf-form brf-fr"${window._wantBrf === 'brf-fr' ? ' open' : ''} style="margin-top:28px"><summary style="list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px">${_secHead('📈', 'Driver form report', 'Tap to open: how each of your drivers is doing vs their price', '#2ee6b6')}<span class="brf-form-chev" style="margin-left:auto;font-size:.8rem;color:var(--muted);transition:transform .2s">▼</span></summary><div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">${rowsF}</div></details>`;
     } catch(e) { console.warn('driver form failed', e); }
   }
 
