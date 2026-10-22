@@ -29336,7 +29336,10 @@ window.betStakeInput = function() {
   const i = document.getElementById('bo-stake'), r = document.getElementById('bo-ret');
   const legs = window._betLegs || []; if (!i || !r || !legs.length) return;
   window._betStake = parseInt(i.value) || 0;
-  r.textContent = Math.round(window._betStake * legs.reduce((a, l) => a * l.odds, 1));
+  // Same price the slip shows: bet-builder price for linked multi-leg slips, plain product otherwise.
+  let odds = legs.reduce((a, l) => a * l.odds, 1);
+  if (legs.length > 1) { try { const bb = _bbPrice(legs); if (bb && !bb.impossible && bb.odds) odds = bb.odds; } catch (e) {} }
+  r.textContent = Math.round(window._betStake * odds);
 };
 window.betPlace = async function() {
   const legs = (window._betLegs || []).slice(), ctx = window._betCtx || {};
