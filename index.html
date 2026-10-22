@@ -7305,15 +7305,15 @@ window.searchFold = function(s) {
 // My Team → jump to the Driver form report on the Predictions page and open it.
 // My Team → jump to a Briefing section (form report / reserves stepping in), open it and pin it to the top.
 // The briefing re-renders once its data loads, so keep going until the same element has stayed put.
-window.openBriefSection = function(cls, emptyMsg) {
+window.openBriefSection = function(cls, emptyMsg, scrollSel) {
   window._wantBrf = cls; showPage('predictions'); let n = 0, last = null, still = 0;
-  const go = (d) => { d.open = true; const y = d.getBoundingClientRect().top + window.scrollY - 70; window.scrollTo({ top: Math.max(0, y), behavior: last === d ? 'auto' : 'smooth' }); };
-  const t = setInterval(() => { const d = document.querySelector('#page-predictions details.' + cls);
+  const go = (d) => { d.open = true; const tgt = (scrollSel && document.querySelector(scrollSel)) || d; const y = tgt.getBoundingClientRect().top + window.scrollY - 70; window.scrollTo({ top: Math.max(0, y), behavior: last === d ? 'auto' : 'smooth' }); };
+  const t = setInterval(() => { const d = document.querySelector('#page-predictions details.' + cls) || (scrollSel && n > 15 ? document.querySelector(scrollSel) : null);
     if (d) { go(d); still = d === last ? still + 1 : 0; last = d; if (still >= 6) { clearInterval(t); setTimeout(() => { window._wantBrf = null; }, 1500); } }
     else if (++n > 60) { clearInterval(t); window._wantBrf = null; if (typeof showToast === 'function') showToast(emptyMsg, 'info'); } }, 200);
 };
 window.openFormReport = () => openBriefSection('brf-fr', 'Form report shows when the next race is set and you have a team.');
-window.openReservesIn = () => openBriefSection('brf-res', 'No reserves stepping in yet — check-ins for this round aren\'t in.');
+window.openReservesIn = () => openBriefSection('brf-res', 'No reserves stepping in yet — check-ins for this round aren\'t in.', '#brf-avail');
 window.showPage = function(page) {
   if (!window._seasonDefs && typeof dbGet === 'function') dbGet('settings','seasonDefinitions').then(d => { if (d && d.value) window._seasonDefs = d.value; }).catch(()=>{});
   if (page === 'my-team') { window._wcWant = true; window._placePick = {}; }
@@ -12059,7 +12059,7 @@ async function renderBriefingExtras() {
     ${countdownHtml?`<div>${countdownHtml.replace('margin-bottom:14px','')}</div>`:''}
     ${fixturesHtml?`<div class="brf-sec">${fixturesHtml}</div>`:''}
     ${checklistHtml?`<div class="brf-sec">${checklistHtml}</div>`:''}
-    ${attendanceHtml?`<div class="brf-sec">${attendanceHtml}</div>`:''}
+    ${attendanceHtml?`<div class="brf-sec" id="brf-avail">${attendanceHtml}</div>`:''}
   </div>`;
 
   if (nextSession) {
