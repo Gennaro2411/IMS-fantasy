@@ -27954,13 +27954,25 @@ async function _betSettleMine(userId, races, coins) {
   let changed = false;
   for (const b of mine) {
     if (b.adminOverride || b.status === 'cashed' || b.voidReason === 'checked-out') continue;
+    // A refund is final. Undo any bet a later results update flipped away from a refund.
+    if (b.resettled && b.prevStatus === 'void' && b.status !== 'void' && !b.refundRestored) {
+      const back = (b.free ? 0 : (b.stake || 0)) - (Number(b.payout) || 0);
+      coins.balance += back;
+      if (b.status === 'won') { coins.betsWon = Math.max(0, (coins.betsWon || 0) - 1); coins.won = Math.max(0, (coins.won || 0) - (Number(b.payout) || 0)); }
+      (coins.notices = coins.notices || []).push({ id: 'n' + Date.now() + Math.random().toString(36).slice(2, 6), at: Date.now(), seen: false, betId: b.id, label: b.label, raceName: b.raceName || '',
+        from: b.status === 'void' ? 'refunded' : b.status, to: 'refunded', delta: back, reason: 'This bet was refunded, and refunds are final — a later results update changed it, so it has been put back to refunded.' });
+      coins.notices = coins.notices.slice(-20);
+      const upd = { ...b, status: 'void', payout: b.free ? 0 : b.stake, refundRestored: true, prevStatus: b.status, settledAt: Date.now() };
+      await dbSet('bets', b.id, upd).catch(() => {}); Object.assign(b, upd); changed = true; continue;
+    }
+    if (b.status === 'void' && b.settledAt) continue; // refunds are final: never re-settle a refunded bet
     if (b.market === 'acca') {
       // Accumulator: every leg must win. A lost leg loses it straight away; a refunded leg (checked
       // out / DNS / not racing) drops out and the odds shrink to the remaining legs; all refunded →
       // stake back. Waits until every other leg has a result.
       let legsChanged = false;
       (b.legs || []).forEach(l => { if (!l.void && b.status === 'open' && window._betOutIds && window._betOutRace === b.raceName && l.div !== 'BOTT' && (l.sel || []).some(id => window._betOutIds.has(id))) { l.void = true; legsChanged = true; } });
-      const ls = (b.legs || []).map(l => l.void ? 'void' : _betOutcome({ ...l, raceName: b.raceName, _resettle: b.status !== 'open' }, races));
+      const ls = (b.legs || []).map(l => (l.void || (l.result === 'void' && b.status !== 'open')) ? 'void' : _betOutcome({ ...l, raceName: b.raceName, _resettle: b.status !== 'open' }, races)); // a refunded leg stays refunded
       if ((b.legs || []).some(l => l.div === 'BOTT')) console.log('[BET ACCA]', b.id, b.label, b.raceName, 'status', b.status, 'legs', (b.legs || []).map((l, i) => l.label + ' => ' + ls[i] + ' (stored ' + l.result + ')').join(' | '), 'races named so:', races.filter(r => (r.name || '').toLowerCase().trim() === (b.raceName || '').toLowerCase().trim()).map(r => r.id + ' divsIn=' + _raceAllDivsIn(r) + ' hasCP=' + !!r.constructorPoints).join(', '));
       let st = null, pay = 0, eff = null;
       if (ls.includes('lost')) { st = 'lost'; }
