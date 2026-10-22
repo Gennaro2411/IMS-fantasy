@@ -29235,7 +29235,11 @@ function _bbPrice0(legs) {
     const _sd = dv + '|' + G.map(g => g.l.key).sort().join('~'), r = ctx.bott ? _bbRunB(ctx, G.map(g => g.f), BB_SIMS, _sd) : _bbRun(ctx, G.map(g => g.f), BB_SIMS, _sd, _bbBeta(ctx));
     if (r.joint === 0) { impossible = true; groups.push({ div: dv, legs: G.map(g => g.l), factor: 0 }); return; }
     const N = BB_SIMS, pj = r.joint / N, pi = r.hit.reduce((a, h) => a * Math.max(h, 0.5) / N, 1);
-    let fct = Math.max(1, pj / pi); if (fct < 1.03) fct = 1; // ignore simulation noise on unrelated picks // only ever shortens odds (linked picks); unrelated or opposing picks stay multiplied
+    let fct = Math.max(1, pj / pi); if (fct < 1.03) fct = 1;
+    // Never price the combo shorter than its longest leg: P(A and B) can't beat P(A), so the
+    // linked price is at least the biggest single price in the group (+ a little for the other legs).
+    { const os = G.map(g => Number(g.l.odds) || 1), prod = os.reduce((a, o) => a * o, 1), mx = Math.max(...os);
+      const floorOdds = mx * Math.max(1.05, Math.pow(prod / mx, 0.35)); fct = Math.min(fct, Math.max(1, prod / floorOdds)); } // ignore simulation noise on unrelated picks // only ever shortens odds (linked picks); unrelated or opposing picks stay multiplied
     factor *= fct; groups.push({ div: dv, legs: G.map(g => g.l), factor: fct }); });
   const odds = Math.max(1.01, Math.round(raw / factor * 100) / 100);
   return { odds: impossible ? 0 : odds, raw: Math.round(raw * 100) / 100, factor, groups, impossible };
