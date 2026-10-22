@@ -2956,13 +2956,19 @@
       </div>
       <div class="card"><div id="admin-bet-odds"></div></div>
       <div class="card">
+        <div class="card-title"><div class="dot"></div>🔁 Changed after verdicts</div>
+        <p class="text-muted" style="margin-bottom:10px">Bets that had already settled and flipped when the race results were updated (steward penalties, corrected classification).</p>
+        <div class="form-group" style="margin-bottom:8px"><label>Race</label><select id="bc-race" onchange="renderAdminBetChanges()" style="max-width:200px"><option value="">All races</option></select></div>
+        <div id="bc-list"></div>
+      </div>
+      <div class="card">
         <div class="card-title"><div class="dot"></div>⚖️ Bet verdicts</div>
         <button class="btn btn-secondary btn-sm" style="margin-bottom:10px" onclick="(async b=>{b.disabled=true;b.textContent='Settling…';const n=await window._betSettleAll();b.textContent='✔ '+n+' settled';b.disabled=false;renderAdminBetVerdicts()})(this)">🎲 Settle everyone's bets now</button>
         <p class="text-muted" style="margin-bottom:12px">Fix any bet that settled wrong (or settle one by hand). Changing a verdict adjusts that player's coins by the difference and sends them a pop-up explaining the change the next time they open the app.</p>
         <div class="form-row" style="gap:10px;flex-wrap:wrap;align-items:flex-end">
           <div class="form-group"><label>Player / bet search</label><input type="text" id="bv-q" placeholder="name or driver…" oninput="renderAdminBetVerdicts()" style="max-width:200px"></div>
           <div class="form-group"><label>Race</label><select id="bv-race" onchange="renderAdminBetVerdicts()" style="max-width:180px"><option value="">All races</option></select></div>
-          <div class="form-group"><label>Status</label><select id="bv-status" onchange="renderAdminBetVerdicts()" style="max-width:140px"><option value="">All bets ever</option><option value="changed">🔁 Changed after results update</option><option value="decided">Decided</option><option value="open">Not decided yet</option><option value="won">Won</option><option value="lost">Lost</option><option value="void">Refunded</option><option value="cashed">Cashed out</option></select></div>
+          <div class="form-group"><label>Status</label><select id="bv-status" onchange="renderAdminBetVerdicts()" style="max-width:140px"><option value="">All bets ever</option><option value="decided">Decided</option><option value="open">Not decided yet</option><option value="won">Won</option><option value="lost">Lost</option><option value="void">Refunded</option><option value="cashed">Cashed out</option></select></div>
           <div class="form-group" style="flex:1;min-width:180px"><label>Reason shown to the player (optional)</label><input type="text" id="bv-reason" placeholder="e.g. Results were corrected after a penalty"></div>
         </div>
         <div id="bv-list" style="margin-top:10px"></div>
@@ -28862,7 +28868,29 @@ window._betBgSettle = async function() {
 };
 // ===== Admin: bet verdict overrides =====
 const _betCredit = (b, status) => status === 'won' ? Math.round(b.stake * b.odds) : status === 'void' ? b.stake : 0;
+window.renderAdminBetChanges = async function() {
+  const box = document.getElementById('bc-list'); if (!box) return;
+  const [bets, teams] = await Promise.all([dbGetAll('bets').catch(() => []), dbGetAll('teams').catch(() => [])]);
+  const tb = {}; teams.forEach(t => { if (t.userId) tb[t.userId] = t; });
+  const ch = bets.filter(b => b.resettled);
+  const sel = document.getElementById('bc-race');
+  if (sel && sel.options.length <= 1) [...new Set(ch.map(b => b.raceName).filter(Boolean))].forEach(r => { const o = document.createElement('option'); o.value = r; o.textContent = r; sel.appendChild(o); });
+  const rf = (sel || {}).value || '';
+  const list = ch.filter(b => !rf || b.raceName === rf).sort((a, b) => (b.settledAt || 0) - (a.settledAt || 0));
+  if (!list.length) { box.innerHTML = '<p class="text-muted" style="font-size:.8rem">No bets have changed after a results update' + (rf ? ' for ' + esc(rf) : '') + '.</p>'; return; }
+  const col = { won: '#4ade80', lost: '#ff5470', void: '#9aa0b8', cashed: '#60a5fa', open: '#7b7fe8' }, nm = (x) => x === 'void' ? 'REFUNDED' : String(x || '?').toUpperCase();
+  const pay = (b, st) => st === 'won' ? Math.round((b.stake || 0) * (b.effOdds || b.odds || 0)) : st === 'void' ? (b.free ? 0 : (b.stake || 0)) : 0;
+  const toWon = list.filter(b => b.status === 'won').length, toLost = list.filter(b => b.status === 'lost').length, toVoid = list.filter(b => b.status === 'void').length;
+  const net = list.reduce((t, b) => t + (b.prevStatus ? pay(b, b.status) - pay(b, b.prevStatus) : 0), 0);
+  const chip = (n, l, c) => `<span style="font-size:.72rem;font-weight:800;border:1px solid ${c}66;background:${c}1a;color:${c};border-radius:8px;padding:3px 9px">${n} ${l}</span>`;
+  box.innerHTML = `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">${chip(list.length, 'changed', '#a0a4ff')}${chip(toWon, '→ won', col.won)}${chip(toLost, '→ lost', col.lost)}${toVoid ? chip(toVoid, '→ refunded', col.void) : ''}${chip((net >= 0 ? '+' : '−') + Math.abs(net).toLocaleString(), 'IM$ net to players', net >= 0 ? col.won : col.lost)}</div>`
+    + list.map(b => { const t = tb[b.userId] || {}, d = b.prevStatus ? pay(b, b.status) - pay(b, b.prevStatus) : null;
+      return `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 4px;border-bottom:1px solid var(--border)">
+        <div style="flex:1;min-width:200px"><b style="font-size:.85rem">${esc(b.label || '')}</b><div style="font-size:.7rem;color:var(--muted)">${esc(t.playerName || t.teamName || b.userId)} · ${esc(b.raceName || '')} ${esc(b.div || '')} · ${b.stake} <i class="imc"></i> @ ${Number(b.effOdds || b.odds || 0).toFixed(2)}${b.settledAt ? ' · changed ' + new Date(b.settledAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}</div></div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:.95rem;letter-spacing:.5px">${b.prevStatus ? `<span style="color:${col[b.prevStatus] || '#999'}">${nm(b.prevStatus)}</span> → ` : ''}<span style="color:${col[b.status] || '#999'}">${nm(b.status)}</span>${d != null ? ` <span style="font-size:.8rem;color:${d >= 0 ? col.won : col.lost}">${d >= 0 ? '+' : '−'}${Math.abs(d)}</span>` : ''}</div></div>`; }).join('');
+};
 window.renderAdminBetVerdicts = async function() {
+  try { renderAdminBetChanges(); } catch (e) {}
   const box = document.getElementById('bv-list'); if (!box) return;
   const [bets, teams] = await Promise.all([dbGetAll('bets').catch(() => []), dbGetAll('teams').catch(() => [])]);
   const tb = {}; teams.forEach(t => { if (t.userId) tb[t.userId] = t; });
