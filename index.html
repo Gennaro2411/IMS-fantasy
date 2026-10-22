@@ -15889,6 +15889,11 @@ window.importDbRound = async function(roundNo, trackName) {
         const divs = new Set();
         Object.entries(oP).forEach(([id, by]) => Object.entries(by || {}).forEach(([dv, v]) => { const n = (mergedDriverPointsByDivision[id] || {})[dv]; if (n !== undefined && Number(n) !== Number(v)) divs.add(dv); }));
         Object.entries(oF).forEach(([id, by]) => Object.entries(by || {}).forEach(([dv, v]) => { const n = (mergedPositionByDivision[id] || {})[dv]; if (n !== undefined && Number(n) !== Number(v)) divs.add(dv); }));
+        // Re-importing a division that was already published counts as bringing the verdicts in,
+        // even when nothing moved (no penalties) — that's the admin saying "these are final".
+        const newDivs = new Set(); Object.values(driverPointsByDivision).forEach(by => Object.keys(by || {}).forEach(d => newDivs.add(d)));
+        const pubDivs = new Set(); Object.values(oP).forEach(by => Object.keys(by || {}).forEach(d => pubDivs.add(d)));
+        newDivs.forEach(d => { if (pubDivs.has(d)) divs.add(d); });
         if (!divs.size) return {};
         return { verdictsAt: Date.now(), verdictDivs: [...new Set([...((existingRace && existingRace.verdictDivs) || []), ...divs])].sort() };
       } catch (e) { return {}; } })(),
