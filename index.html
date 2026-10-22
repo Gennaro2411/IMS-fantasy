@@ -29318,6 +29318,9 @@ window.betCopy = function(id) {
   }).slice(0, 10);
   if (!legs.length) { if (typeof showToast === 'function') showToast('None of those picks can be backed any more.', 'error'); return; }
   window._betLegs = legs; window._betUseFree = false;
+  // Open the division the picks are in, so its bet-builder model is loaded and linked picks are priced together.
+  { const cnt = {}; legs.forEach(l => { if (l.div && l.div !== 'BOTT') cnt[l.div] = (cnt[l.div] || 0) + 1; }); const top = Object.entries(cnt).sort((a, b) => b[1] - a[1])[0];
+    if (top) window._betDiv = top[0]; else if (legs.some(l => l.div === 'BOTT')) window._betDiv = 'BOTT'; }
   document.getElementById('tk-bet-modal')?.remove();
   if (typeof showPage === 'function' && !document.getElementById('page-bets')?.classList.contains('active')) { try { showPage('page-bets'); } catch (e) {} }
   renderBets();
