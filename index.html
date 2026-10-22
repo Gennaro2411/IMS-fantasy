@@ -7304,10 +7304,13 @@ window.searchFold = function(s) {
 };
 // My Team → jump to the Driver form report on the Predictions page and open it.
 window.openFormReport = function() {
-  showPage('predictions'); let n = 0;
+  // The briefing re-renders once its data loads, so keep the report open and pinned to the top of the
+  // screen until the same element has stayed put for a few checks.
+  window._wantFormReport = true; showPage('predictions'); let n = 0, last = null, still = 0;
+  const go = (d) => { d.open = true; const y = d.getBoundingClientRect().top + window.scrollY - 70; window.scrollTo({ top: Math.max(0, y), behavior: last === d ? 'auto' : 'smooth' }); };
   const t = setInterval(() => { const d = document.querySelector('#page-predictions details.brf-form');
-    if (d) { clearInterval(t); d.open = true; setTimeout(() => d.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60); }
-    else if (++n > 50) { clearInterval(t); if (typeof showToast === 'function') showToast('Form report shows when the next race is set and you have a team.', 'info'); } }, 150);
+    if (d) { go(d); still = d === last ? still + 1 : 0; last = d; if (still >= 6) { clearInterval(t); setTimeout(() => { window._wantFormReport = false; }, 1500); } }
+    else if (++n > 60) { clearInterval(t); window._wantFormReport = false; if (typeof showToast === 'function') showToast('Form report shows when the next race is set and you have a team.', 'info'); } }, 200);
 };
 window.showPage = function(page) {
   if (!window._seasonDefs && typeof dbGet === 'function') dbGet('settings','seasonDefinitions').then(d => { if (d && d.value) window._seasonDefs = d.value; }).catch(()=>{});
@@ -12045,7 +12048,7 @@ async function renderBriefingExtras() {
           </div>
         </div>`;
       }).join('');
-      if (rowsF) checklistHtml += `<details class="brf-form" style="margin-top:28px"><summary style="list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px">${_secHead('📈', 'Driver form report', 'Tap to open: how each of your drivers is doing vs their price', '#2ee6b6')}<span class="brf-form-chev" style="margin-left:auto;font-size:.8rem;color:var(--muted);transition:transform .2s">▼</span></summary><div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">${rowsF}</div></details>`;
+      if (rowsF) checklistHtml += `<details class="brf-form"${window._wantFormReport ? ' open' : ''} style="margin-top:28px"><summary style="list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px">${_secHead('📈', 'Driver form report', 'Tap to open: how each of your drivers is doing vs their price', '#2ee6b6')}<span class="brf-form-chev" style="margin-left:auto;font-size:.8rem;color:var(--muted);transition:transform .2s">▼</span></summary><div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">${rowsF}</div></details>`;
     } catch(e) { console.warn('driver form failed', e); }
   }
 
