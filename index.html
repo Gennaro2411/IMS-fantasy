@@ -27767,7 +27767,7 @@ window.adminUserBets = function(uid) {
   const st = bs.reduce((a, b) => a + (b.free ? 0 : (b.stake || 0)), 0);
   box.innerHTML = `<div style="padding:4px 16px 10px 50px;background:rgba(0,0,0,0.18)"><div class="text-muted" style="font-size:.68rem;padding:6px 0">🔒 ADMIN · ${esc(race || 'all races')} · ${bs.length} bet${bs.length !== 1 ? 's' : ''} · ${st.toLocaleString()} staked</div>
     ${bs.length ? bs.map(b => `<div style="display:flex;gap:10px;align-items:center;padding:5px 0;border-top:1px solid rgba(255,255,255,0.06);font-size:.78rem">
-      <span style="flex:1;min-width:0">${b.market === 'acca' ? '🎯 ' : ''}${esc(b.label || '')}${b.free ? ' <small style="color:#a0a4ff">free</small>' : ''}<br><small class="text-muted">${esc(b.div || '')} · ${b.stake} @ ${(Number(b.odds) || 0).toFixed(2)}</small></span>
+      <span style="flex:1;min-width:0">${b.market === 'acca' ? '🎯 ' : ''}${esc(b.label || '')}${b.free ? ' <small style="color:#a0a4ff">free</small>' : ''}<br><small class="text-muted">${esc(b.div || '')} · ${b.stake} @ ${(Number(b.odds) || 0).toFixed(2)}</small>${window._accaLegsHtml ? window._accaLegsHtml(b) : ''}</span>
       <b style="color:${col[b.status] || '#fff'};white-space:nowrap;text-transform:uppercase;font-size:.68rem">${b.status}${b.status === 'won' || b.status === 'cashed' ? ' +' + b.payout : b.status === 'open' ? ' → ' + Math.round(b.stake * b.odds) : ''}</b></div>`).join('') : '<div class="text-muted" style="font-size:.75rem;padding:4px 0">No bets on this race.</div>'}</div>`;
   box.style.display = 'block';
 };
@@ -28880,6 +28880,12 @@ window._betBgSettle = async function() {
 };
 // ===== Admin: bet verdict overrides =====
 const _betCredit = (b, status) => status === 'won' ? Math.round(b.stake * b.odds) : status === 'void' ? b.stake : 0;
+// Every pick of an accumulator, with its result and odds — used in every admin bet list.
+window._accaLegsHtml = function(b) {
+  if (!b || b.market !== 'acca' || !(b.legs || []).length) return '';
+  return `<div style="display:flex;flex-direction:column;gap:3px;margin-top:6px;padding:6px 8px;border-left:2px solid #7b7fe866;background:rgba(123,127,232,.06);border-radius:0 8px 8px 0;font-size:.74rem">${b.legs.map(l => { const r = l.void ? 'void' : l.result;
+    return `<div style="display:flex;gap:6px;align-items:baseline;${r === 'void' ? 'opacity:.55;text-decoration:line-through' : ''}"><span>${r === 'won' ? '✅' : r === 'lost' ? '❌' : r === 'void' ? '↩️' : '⏳'}</span><span style="flex:1;min-width:0">${esc(l.label || '')}</span><b style="color:var(--gold);font-weight:800">${Number(l.odds || 0).toFixed(2)}</b></div>`; }).join('')}</div>`;
+};
 window.renderAdminBetChanges = async function() {
   const box = document.getElementById('bc-list'); if (!box) return;
   const [bets, teams] = await Promise.all([dbGetAll('bets').catch(() => []), dbGetAll('teams').catch(() => [])]);
@@ -28898,7 +28904,7 @@ window.renderAdminBetChanges = async function() {
   box.innerHTML = `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">${chip(list.length, 'changed', '#a0a4ff')}${chip(toWon, '→ won', col.won)}${chip(toLost, '→ lost', col.lost)}${toVoid ? chip(toVoid, '→ refunded', col.void) : ''}${chip((net >= 0 ? '+' : '−') + Math.abs(net).toLocaleString(), 'IM$ net to players', net >= 0 ? col.won : col.lost)}</div>`
     + list.map(b => { const t = tb[b.userId] || {}, d = b.prevStatus ? pay(b, b.status) - pay(b, b.prevStatus) : null;
       return `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 4px;border-bottom:1px solid var(--border)">
-        <div style="flex:1;min-width:200px"><b style="font-size:.85rem">${esc(b.label || '')}</b><div style="font-size:.7rem;color:var(--muted)">${esc(t.playerName || t.teamName || b.userId)} · ${esc(b.raceName || '')} ${esc(b.div || '')} · ${b.stake} <i class="imc"></i> @ ${Number(b.effOdds || b.odds || 0).toFixed(2)}${b.settledAt ? ' · changed ' + new Date(b.settledAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}</div></div>
+        <div style="flex:1;min-width:200px"><b style="font-size:.85rem">${b.market === 'acca' ? '🎯 ' : ''}${esc(b.label || '')}</b><div style="font-size:.7rem;color:var(--muted)">${esc(t.playerName || t.teamName || b.userId)} · ${esc(b.raceName || '')} ${esc(b.div || '')} · ${b.stake} <i class="imc"></i> @ ${Number(b.effOdds || b.odds || 0).toFixed(2)}${b.settledAt ? ' · changed ' + new Date(b.settledAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}</div>${window._accaLegsHtml(b)}</div>
         <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:.95rem;letter-spacing:.5px">${b.prevStatus ? `<span style="color:${col[b.prevStatus] || '#999'}">${nm(b.prevStatus)}</span> → ` : ''}<span style="color:${col[b.status] || '#999'}">${nm(b.status)}</span>${d != null ? ` <span style="font-size:.8rem;color:${d >= 0 ? col.won : col.lost}">${d >= 0 ? '+' : '−'}${Math.abs(d)}</span>` : ''}</div></div>`; }).join('');
 };
 window.renderAdminBetVerdicts = async function() {
