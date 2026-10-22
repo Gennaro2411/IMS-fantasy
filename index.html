@@ -1713,10 +1713,16 @@
     #page-my-team #total-pts-display{font-size:3rem;line-height:1.02}
     @media (max-width:520px){ #page-my-team #total-pts-display{font-size:2.4rem} }
     @media (max-width:520px){ #page-my-team .mt-tiles{grid-template-columns:1fr 1fr} #page-my-team .mt-tile:last-child:nth-child(odd){grid-column:1/-1} }
+    #page-my-team .mt-form-link{display:flex;align-items:center;gap:12px;width:100%;margin:0 0 12px;padding:10px 14px;border-radius:14px;cursor:pointer;text-align:left;color:var(--text);font:inherit;background:linear-gradient(120deg,rgba(46,230,182,.14),rgba(46,230,182,.03) 70%);border:1px solid rgba(46,230,182,.35);transition:transform .15s,box-shadow .15s}
+    #page-my-team .mt-form-link:hover{transform:translateY(-1px);box-shadow:0 6px 18px -8px #2ee6b6}
+    #page-my-team .mt-fl-ic{font-size:1.3rem;width:34px;height:34px;border-radius:10px;background:rgba(46,230,182,.18);display:flex;align-items:center;justify-content:center;flex:none}
+    #page-my-team .mt-fl-tx{display:flex;flex-direction:column;min-width:0;flex:1}#page-my-team .mt-fl-tx b{font-size:.9rem}#page-my-team .mt-fl-tx small{font-size:.7rem;color:var(--muted)}
+    #page-my-team .mt-fl-go{font-size:1.5rem;color:#2ee6b6;line-height:1}
     #page-my-team .set-cap-btn{transition:background .15s ease,color .15s ease,border-color .15s ease}
     #page-my-team .set-cap-btn:not(.is-cap):hover{background:rgba(255,200,0,0.10)!important;border-color:rgba(255,200,0,0.45)!important;color:var(--gold)!important}
   </style>
   <button class="page-refresh-btn" onclick="refreshCurrentPage(this)" title="Refresh">⟳</button>
+  <button class="mt-form-link" onclick="openFormReport()"><span class="mt-fl-ic">📈</span><span class="mt-fl-tx"><b>Driver form report</b><small>How each of your drivers is doing vs their price</small></span><span class="mt-fl-go">›</span></button>
   <div id="my-team-content"></div>
 </div>
 
@@ -7296,6 +7302,13 @@ window.searchFold = function(s) {
   return String(s || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
     .replace(/[øØ]/g, 'o').replace(/[æÆ]/g, 'ae').replace(/ß/g, 'ss').replace(/[đĐ]/g, 'd').replace(/[łŁ]/g, 'l').replace(/[þÞ]/g, 'th')
     .toLowerCase().replace(/[^a-z0-9]/g, '');
+};
+// My Team → jump to the Driver form report on the Predictions page and open it.
+window.openFormReport = function() {
+  showPage('predictions'); let n = 0;
+  const t = setInterval(() => { const d = document.querySelector('#page-predictions details.brf-form');
+    if (d) { clearInterval(t); d.open = true; setTimeout(() => d.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60); }
+    else if (++n > 50) { clearInterval(t); if (typeof showToast === 'function') showToast('Form report shows when the next race is set and you have a team.', 'info'); } }, 150);
 };
 window.showPage = function(page) {
   if (!window._seasonDefs && typeof dbGet === 'function') dbGet('settings','seasonDefinitions').then(d => { if (d && d.value) window._seasonDefs = d.value; }).catch(()=>{});
