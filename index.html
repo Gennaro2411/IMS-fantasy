@@ -10629,8 +10629,6 @@ async function renderMyTeam() {
       😇 Guardian Angel active — <button class="btn btn-sm" style="background:#27ae60;color:#fff;font-size:.75rem" onclick="pickGuardianAngelDriver('${myTeam.id}','${latest.id}')">Pick your bonus driver</button>
     </div>`;
   }
-  // Shortcut to the Driver form report — under the constructor (and the Guardian Angel, when one's in play).
-  if (!_snapView) html += `<div style="grid-column:1/-1"><button class="mt-form-link" onclick="openFormReport()"><span class="mt-fl-ic">📈</span><span class="mt-fl-tx"><b>Driver form report</b><small>How each of your drivers is doing vs their price</small></span><span class="mt-fl-go">›</span></button></div>`;
 
   function renderDriverCard(div) {
     const dId = sel[div];
@@ -10863,6 +10861,8 @@ async function renderMyTeam() {
     html += '</div></div>';
   }
 
+  // Shortcut to the Driver form report — under the constructor (and the Guardian Angel, when one's in play).
+  if (!_snapView) html += `<div style="margin-top:12px"><button class="mt-form-link" onclick="openFormReport()"><span class="mt-fl-ic">📈</span><span class="mt-fl-tx"><b>Driver form report</b><small>How each of your drivers is doing vs their price</small></span><span class="mt-fl-go">›</span></button></div>`;
   html += '</div></div>'; // close inner padding wrapper + the team card
 
   // ===== RESERVE DRIVERS CARD (sits right below the constructor / team card) =====
