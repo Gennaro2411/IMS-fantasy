@@ -9230,7 +9230,7 @@ window.submitTeam = async function() {
   if (missing.length) { showAlert('submit-team-msg','Pick a driver for: '+missing.join(', '),'error'); return; }
   if (!selections['CONSTRUCTOR']) { showAlert('submit-team-msg','Pick a constructor.','error'); return; }
 
-  const teams = await dbGetAll('teams');
+  const teams = await dbGetAll('teams', { fresh: true }); // fresh: never save over a just-awarded free transfer with a cached copy
   const existing = teams.find(t => t.userId===currentUser.userId);
   const myBudget = existing ? (existing.budget !== undefined ? existing.budget : STARTING_BUDGET) : STARTING_BUDGET;
   const latestRaceForChip = (await dbGetAll('races')).sort((a,b)=>(b.raceNum||0)-(a.raceNum||0))[0];
@@ -17736,7 +17736,8 @@ window.submitRaceResults = async function() {
     await dbSet('teams', t.id, {...t, chips: newChips});
   }));
   // Award 1 free transfer to every team (max 3 banked) and expire wildcard
-  await Promise.all(teams.map(async t => {
+  await Promise.all(teams.map(async t0 => {
+    const t = (await dbGet('teams', t0.id).catch(() => null)) || t0; // fresh copy (the Guardian Angel pass above may have just written it)
     const current = t.freeTransfers !== undefined ? t.freeTransfers : 1;
     const _noTeam = !t.selections || !Object.values(t.selections).some(Boolean);
     const newChips = {...(t.chips||{})};
