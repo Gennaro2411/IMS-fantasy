@@ -15013,7 +15013,7 @@ function _raceFlFromDb(season, track) {
   if (!res.length) return out;
   const parse = (x) => { const t = String(x).trim(); if (!t) return null; let v = 0; for (const q of t.split(':')) v = v * 60 + parseFloat(q); return isFinite(v) && v > 0 ? v : null; };
   const best = {};
-  for (const [nm, dv, fl] of res[0].values) { const d = _normDbDiv(dv), t = parse(fl); if (!d || !nm || t == null) continue; if (!best[d] || t < best[d].t) best[d] = { t, n: String(nm).trim() }; }
+  for (const [nm, dv, fl] of res[0].values) { const d = _normDbDiv(dv), t = parse(fl); if (!d || /^A/i.test(d) || !nm || t == null) continue; if (!best[d] || t < best[d].t) best[d] = { t, n: String(nm).trim() }; }
   Object.entries(best).forEach(([d, b]) => { out[d] = b.n; });
   return out;
 }
@@ -19328,7 +19328,7 @@ window.openDriverModal = async function(driverId) {
     // A driver's poles/FLs can come from any division they raced (e.g. they took poles in D2 before
     // moving to D1), so scan every division in the map for their name — not just their current one.
     if (window._drvPoleHit(r, driver)) { poleCount++; poleRaces.push(r.name); }
-    if (r.fastestLapByDiv && nmNorm && Object.values(r.fastestLapByDiv).some(nm => _normNm(nm) === nmNorm)) { flCount++; flRaces.push(r.name); }
+    if (r.fastestLapByDiv && nmNorm && Object.entries(r.fastestLapByDiv).some(([dv, nm]) => !/^A/i.test(dv) && _normNm(nm) === nmNorm)) { flCount++; flRaces.push(r.name); }
   });
   completedRaces.forEach(r => {
     const p = pointsFor(r) || 0;
@@ -19422,7 +19422,7 @@ window.openDriverModal = async function(driverId) {
       if (dv) {
         if (r.fastestLapByDiv && _normNm(r.fastestLapByDiv[dv]) === nmNorm && nmNorm) fls++;
       } else {
-        if (r.fastestLapByDiv && nmNorm && Object.values(r.fastestLapByDiv).some(nm => _normNm(nm) === nmNorm)) fls++;
+        if (r.fastestLapByDiv && nmNorm && Object.entries(r.fastestLapByDiv).some(([dv, nm]) => !/^A/i.test(dv) && _normNm(nm) === nmNorm)) fls++;
       }
     });
     return {
@@ -19602,10 +19602,10 @@ window.openDriverModal = async function(driverId) {
         const pos = [];
         const byId = r.positionByDivision && r.positionByDivision[driverId];
         if (byId) Object.values(byId).forEach(v => { if (+v > 0) pos.push(+v); });
-        if (!pos.length && r.raceFinByDiv) Object.values(r.raceFinByDiv).forEach(m => { const v = m && (m[meA] || m[meB]); if (+v > 0) pos.push(+v); });
+        if (!pos.length && r.raceFinByDiv) Object.entries(r.raceFinByDiv).filter(([dv]) => !/^A/i.test(dv)).map(([, m]) => m).forEach(m => { const v = m && (m[meA] || m[meB]); if (+v > 0) pos.push(+v); });
         if (r.positionByDivision || r.raceFinByDiv) have = true;
         pos.forEach(v => { if (v === 1) wins++; if (v <= 3) pods++; });
-        if (r.fastestLapByDiv) { have = true; Object.values(r.fastestLapByDiv).forEach(n => { if (isMe(n)) fls++; }); }
+        if (r.fastestLapByDiv) { have = true; Object.entries(r.fastestLapByDiv).forEach(([dv, n]) => { if (!/^A/i.test(dv) && isMe(n)) fls++; }); }
       });
       if (have) window._profileArchCounts[Number(ps.season)] = { wins, podiums: pods, fls };
       const rc = (ps.races || []).length; window._profileArchFallback = window._profileArchFallback || {};
@@ -19623,7 +19623,7 @@ window.openDriverModal = async function(driverId) {
       (ps.races || []).forEach(r => {
         const pid = r.driverPointsByDivision && r.driverPointsByDivision[driverId];
         const divs = new Set(pid ? Object.keys(pid).filter(k => pid[k] !== undefined) : []);
-        [r.raceFinByDiv, r.raceGridByDiv].forEach(m => m && Object.keys(m).forEach(d => { if (inMap(m[d]) != null) divs.add(d); }));
+        [r.raceFinByDiv, r.raceGridByDiv].forEach(m => m && Object.keys(m).forEach(d => { if (!/^A/i.test(d) && inMap(m[d]) != null) divs.add(d); }));
         if (!divs.size) { const d = divWithPointsFor(r); if (d) divs.add(d); }
         const rbn = r.raceResultsByName ? (Array.isArray(r.raceResultsByName) ? r.raceResultsByName : Object.entries(r.raceResultsByName)) : [];
         divs.forEach(d => {
@@ -25119,7 +25119,9 @@ window._drvPoleHit = function(r, driver, onlyDiv) {
   if (!divs.length && r.driverPoints && r.driverPoints[driver.id] !== undefined && driver.division) divs = [driver.division];
   // Archived seasons (no per-division points, or the driver's division has since changed): use any
   // division whose grid / finish sheet lists them by name.
-  { const seen = new Set(divs); [r.raceGridByDiv, r.raceFinByDiv].forEach(m => m && Object.keys(m).forEach(d => { const x = m[d]; if (x && (x[a] != null || x[b] != null) && !seen.has(d)) { seen.add(d); divs.push(d); } })); }
+  // Only when the race has no per-division points for them, and never academy (A*) divisions.
+  if (!divs.length) { const seen = new Set(divs); [r.raceGridByDiv, r.raceFinByDiv].forEach(m => m && Object.keys(m).forEach(d => { if (/^A/i.test(d)) return; const x = m[d]; if (x && (x[a] != null || x[b] != null) && !seen.has(d)) { seen.add(d); divs.push(d); } })); }
+  divs = divs.filter(d => !/^A/i.test(d));
   if (onlyDiv) divs = divs.filter(d => d === onlyDiv);
   return divs.some(d => { const pv = r.poleByDiv && r.poleByDiv[d]; if (pv && (nn(pv) === a || nt(pv) === b)) return true;
     const g = r.raceGridByDiv && r.raceGridByDiv[d]; return !!g && (Number(g[a]) === 1 || Number(g[b]) === 1); });
