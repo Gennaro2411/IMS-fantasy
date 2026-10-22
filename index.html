@@ -2962,7 +2962,7 @@
         <div class="form-row" style="gap:10px;flex-wrap:wrap;align-items:flex-end">
           <div class="form-group"><label>Player / bet search</label><input type="text" id="bv-q" placeholder="name or driver…" oninput="renderAdminBetVerdicts()" style="max-width:200px"></div>
           <div class="form-group"><label>Race</label><select id="bv-race" onchange="renderAdminBetVerdicts()" style="max-width:180px"><option value="">All races</option></select></div>
-          <div class="form-group"><label>Status</label><select id="bv-status" onchange="renderAdminBetVerdicts()" style="max-width:140px"><option value="">All bets ever</option><option value="decided">Decided</option><option value="open">Not decided yet</option><option value="won">Won</option><option value="lost">Lost</option><option value="void">Refunded</option><option value="cashed">Cashed out</option></select></div>
+          <div class="form-group"><label>Status</label><select id="bv-status" onchange="renderAdminBetVerdicts()" style="max-width:140px"><option value="">All bets ever</option><option value="changed">🔁 Changed after results update</option><option value="decided">Decided</option><option value="open">Not decided yet</option><option value="won">Won</option><option value="lost">Lost</option><option value="void">Refunded</option><option value="cashed">Cashed out</option></select></div>
           <div class="form-group" style="flex:1;min-width:180px"><label>Reason shown to the player (optional)</label><input type="text" id="bv-reason" placeholder="e.g. Results were corrected after a penalty"></div>
         </div>
         <div id="bv-list" style="margin-top:10px"></div>
@@ -27985,7 +27985,7 @@ async function _betSettleMine(userId, races, coins) {
           from: nm(b.status), to: nm(st), delta, reason: 'The race results were updated after your accumulator was settled.' });
         coins.notices = coins.notices.slice(-20);
       }
-      const upd = { ...b, legs: (b.legs || []).map((l, i) => ({ ...l, result: ls[i] })), status: st, payout: pay, effOdds: eff, settledAt: Date.now(), ...(b.status !== 'open' ? { resettled: true } : {}) };
+      const upd = { ...b, legs: (b.legs || []).map((l, i) => ({ ...l, result: ls[i] })), status: st, payout: pay, effOdds: eff, settledAt: Date.now(), ...(b.status !== 'open' ? { resettled: true, prevStatus: b.status } : {}) };
       await dbSet('bets', b.id, upd).catch(() => {});
       Object.assign(b, upd);
       if (b.status === 'open' || oldPay === 0 && delta === pay) (window._betJustSettled = window._betJustSettled || []).push(b);
@@ -28870,9 +28870,9 @@ window.renderAdminBetVerdicts = async function() {
   if (rSel && rSel.options.length <= 1) [...new Set(bets.map(b => b.raceName).filter(Boolean))].forEach(r => { const o = document.createElement('option'); o.value = r; o.textContent = r; rSel.appendChild(o); });
   const q = ((document.getElementById('bv-q') || {}).value || '').toLowerCase().trim();
   const rf = (rSel || {}).value || '', sf = ((document.getElementById('bv-status') || {}).value) || '';
-  const _stOk = (b) => !sf || (sf === 'decided' ? b.status !== 'open' : b.status === sf);
+  const _stOk = (b) => !sf || (sf === 'changed' ? !!b.resettled : sf === 'decided' ? b.status !== 'open' : b.status === sf);
   const all = bets.filter(b => (!rf || b.raceName === rf) && _stOk(b) && (!q || ((tb[b.userId] || {}).playerName || '').toLowerCase().includes(q) || ((tb[b.userId] || {}).teamName || '').toLowerCase().includes(q) || (b.label || '').toLowerCase().includes(q)))
-    .sort((a, b) => (b.placedAt || 0) - (a.placedAt || 0));
+    .sort((a, b) => sf === 'changed' ? (b.settledAt || 0) - (a.settledAt || 0) : (b.placedAt || 0) - (a.placedAt || 0));
   const lim = window._bvLimit || 100, list = all.slice(0, lim);
   const nOpen = bets.filter(b => b.status === 'open').length;
   window._bvCache = {}; list.forEach(b => { window._bvCache[b.id] = b; });
@@ -28881,7 +28881,8 @@ window.renderAdminBetVerdicts = async function() {
   box.innerHTML = list.length ? list.map(b => { const t = tb[b.userId] || {};
     return `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 4px;border-bottom:1px solid var(--border)">
       <span style="width:8px;height:8px;border-radius:50%;background:${col[b.status] || '#666'};flex-shrink:0"></span>
-      <div style="flex:1;min-width:200px"><b style="font-size:.85rem">${esc(b.label)}</b><div style="font-size:.7rem;color:var(--muted)">${esc(t.playerName || t.teamName || b.userId)} · ${esc(b.raceName || '')} ${esc(b.div || '')} · ${b.stake} <i class="imc" title="IM$"></i> @ ${Number(b.odds).toFixed(2)} · <b style="color:${col[b.status]}">${b.status === 'void' ? 'refunded' : b.status === 'open' ? 'not decided yet' : b.status === 'cashed' ? 'cashed out' : b.status}</b>${b.placedAt ? ' · placed ' + new Date(b.placedAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}${b.adminOverride ? ' · ✎ edited' : ''}</div>${b.market === 'acca' ? `<div style="display:flex;flex-direction:column;gap:2px;margin-top:5px;font-size:.74rem">${(b.legs || []).map(l => { const r = l.void ? 'void' : l.result; return `<div style="${r === 'void' ? 'opacity:.55;text-decoration:line-through' : ''}">${r === 'won' ? '✅' : r === 'lost' ? '❌' : r === 'void' ? '↩️' : '⏳'} ${esc(l.label || '')} <b style="color:var(--gold)">${Number(l.odds).toFixed(2)}</b></div>`; }).join('')}</div>` : ''}</div>
+      <div style="flex:1;min-width:200px"><b style="font-size:.85rem">${esc(b.label)}</b>${b.resettled ? (() => { const nm = (x) => x === 'void' ? 'refunded' : x || '?'; const pc = (x) => col[x] || '#9aa0b8';
+        return ` <span title="Re-settled after the race results changed${b.settledAt ? ' · ' + new Date(b.settledAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}" style="font-size:.66rem;font-weight:800;border:1px solid #a0a4ff66;background:#a0a4ff1a;border-radius:6px;padding:1px 6px;margin-left:4px">🔁 ${b.prevStatus ? `<span style="color:${pc(b.prevStatus)}">${nm(b.prevStatus).toUpperCase()}</span> → ` : ''}<span style="color:${pc(b.status)}">${nm(b.status).toUpperCase()}</span></span>`; })() : ''}<div style="font-size:.7rem;color:var(--muted)">${esc(t.playerName || t.teamName || b.userId)} · ${esc(b.raceName || '')} ${esc(b.div || '')} · ${b.stake} <i class="imc" title="IM$"></i> @ ${Number(b.odds).toFixed(2)} · <b style="color:${col[b.status]}">${b.status === 'void' ? 'refunded' : b.status === 'open' ? 'not decided yet' : b.status === 'cashed' ? 'cashed out' : b.status}</b>${b.placedAt ? ' · placed ' + new Date(b.placedAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}${b.adminOverride ? ' · ✎ edited' : ''}</div>${b.market === 'acca' ? `<div style="display:flex;flex-direction:column;gap:2px;margin-top:5px;font-size:.74rem">${(b.legs || []).map(l => { const r = l.void ? 'void' : l.result; return `<div style="${r === 'void' ? 'opacity:.55;text-decoration:line-through' : ''}">${r === 'won' ? '✅' : r === 'lost' ? '❌' : r === 'void' ? '↩️' : '⏳'} ${esc(l.label || '')} <b style="color:var(--gold)">${Number(l.odds).toFixed(2)}</b></div>`; }).join('')}</div>` : ''}</div>
       <div style="display:flex;gap:4px">${btn(b, 'won', '✅ Won')}${btn(b, 'lost', '❌ Lost')}${btn(b, 'void', '↩️ Refund')}</div></div>`; }).join('')
     : '<div class="text-muted">No bets match.</div>';
   box.innerHTML = `<div style="font-size:.78rem;color:var(--muted);margin-bottom:6px">${bets.length} bets ever · <b style="color:#7b7fe8">${nOpen} not decided yet</b> · ${bets.length - nOpen} decided · showing ${list.length} of ${all.length} matching</div>` + box.innerHTML
