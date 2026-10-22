@@ -1713,7 +1713,7 @@
     #page-my-team #total-pts-display{font-size:3rem;line-height:1.02}
     @media (max-width:520px){ #page-my-team #total-pts-display{font-size:2.4rem} }
     @media (max-width:520px){ #page-my-team .mt-tiles{grid-template-columns:1fr 1fr} #page-my-team .mt-tile:last-child:nth-child(odd){grid-column:1/-1} }
-    #page-my-team .mt-form-link{display:flex;align-items:center;gap:12px;width:100%;margin:0 0 12px;padding:10px 14px;border-radius:14px;cursor:pointer;text-align:left;color:var(--text);font:inherit;background:linear-gradient(120deg,rgba(46,230,182,.14),rgba(46,230,182,.03) 70%);border:1px solid rgba(46,230,182,.35);transition:transform .15s,box-shadow .15s}
+    #page-my-team .mt-form-link{display:flex;align-items:center;gap:12px;width:100%;margin:2px 0;padding:10px 14px;border-radius:14px;cursor:pointer;text-align:left;color:var(--text);font:inherit;background:linear-gradient(120deg,rgba(46,230,182,.14),rgba(46,230,182,.03) 70%);border:1px solid rgba(46,230,182,.35);transition:transform .15s,box-shadow .15s}
     #page-my-team .mt-form-link:hover{transform:translateY(-1px);box-shadow:0 6px 18px -8px #2ee6b6}
     #page-my-team .mt-fl-ic{font-size:1.3rem;width:34px;height:34px;border-radius:10px;background:rgba(46,230,182,.18);display:flex;align-items:center;justify-content:center;flex:none}
     #page-my-team .mt-fl-tx{display:flex;flex-direction:column;min-width:0;flex:1}#page-my-team .mt-fl-tx b{font-size:.9rem}#page-my-team .mt-fl-tx small{font-size:.7rem;color:var(--muted)}
@@ -1722,7 +1722,6 @@
     #page-my-team .set-cap-btn:not(.is-cap):hover{background:rgba(255,200,0,0.10)!important;border-color:rgba(255,200,0,0.45)!important;color:var(--gold)!important}
   </style>
   <button class="page-refresh-btn" onclick="refreshCurrentPage(this)" title="Refresh">⟳</button>
-  <button class="mt-form-link" onclick="openFormReport()"><span class="mt-fl-ic">📈</span><span class="mt-fl-tx"><b>Driver form report</b><small>How each of your drivers is doing vs their price</small></span><span class="mt-fl-go">›</span></button>
   <div id="my-team-content"></div>
 </div>
 
@@ -10630,6 +10629,8 @@ async function renderMyTeam() {
       😇 Guardian Angel active — <button class="btn btn-sm" style="background:#27ae60;color:#fff;font-size:.75rem" onclick="pickGuardianAngelDriver('${myTeam.id}','${latest.id}')">Pick your bonus driver</button>
     </div>`;
   }
+  // Shortcut to the Driver form report — under the constructor (and the Guardian Angel, when one's in play).
+  if (!_snapView) html += `<div style="grid-column:1/-1"><button class="mt-form-link" onclick="openFormReport()"><span class="mt-fl-ic">📈</span><span class="mt-fl-tx"><b>Driver form report</b><small>How each of your drivers is doing vs their price</small></span><span class="mt-fl-go">›</span></button></div>`;
 
   function renderDriverCard(div) {
     const dId = sel[div];
