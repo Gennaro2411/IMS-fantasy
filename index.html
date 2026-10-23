@@ -29363,7 +29363,13 @@ function _bbPrice0(legs) {
   const byDiv = {}; legs.forEach(l => { const f = _bbEvalFn(l); if (f && window._bbCtx && window._bbCtx[l.div]) (byDiv[l.div] = byDiv[l.div] || []).push({ l, f }); });
   Object.entries(byDiv).forEach(([dv, G]) => { if (G.length < 2) return; const ctx = window._bbCtx[dv];
     const _sd = dv + '|' + G.map(g => g.l.key).sort().join('~'), r = ctx.bott ? _bbRunB(ctx, G.map(g => g.f), BB_SIMS, _sd) : _bbRun(ctx, G.map(g => g.f), BB_SIMS, _sd, _bbBeta(ctx));
-    if (r.joint === 0) { impossible = true; groups.push({ div: dv, legs: G.map(g => g.l), factor: 0 }); return; }
+    if (r.joint === 0) {
+      // Never hit together in the sims. Only call it impossible when, if the picks were unrelated, we'd
+      // have expected to see it plenty of times — otherwise it's just a long shot the sims didn't reach.
+      const expInd = BB_SIMS * r.hit.reduce((a, h) => a * (h / BB_SIMS), 1);
+      if (expInd >= 5) { impossible = true; groups.push({ div: dv, legs: G.map(g => g.l), factor: 0 }); return; }
+      groups.push({ div: dv, legs: G.map(g => g.l), factor: 1 }); return;
+    }
     const N = BB_SIMS, pj = r.joint / N, pi = r.hit.reduce((a, h) => a * Math.max(h, 0.5) / N, 1);
     let fct = Math.max(1, pj / pi); if (fct < 1.03) fct = 1;
     // Never price the combo shorter than its longest leg: P(A and B) can't beat P(A), so the
