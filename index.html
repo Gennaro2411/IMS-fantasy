@@ -7962,21 +7962,18 @@ async function renderDashboard() {
           <p>IMS Fantasy is not a side game; it is a second title fight running on top of the first.</p>
           <div class="hh-pills">${['💰 $100M team build', '🏁 Five divisions', '📊 ELO-driven prices', '👑 Captains', '🃏 Chips and transfers'].map(x => `<span>${x}</span>`).join('')}</div>
     <style>
-      .hm-dc{position:relative;display:flex;align-items:center;gap:14px;margin:16px auto 0;max-width:620px;text-align:left;padding:14px 18px;border-radius:16px;text-decoration:none;color:#fff;overflow:hidden;
-        background:linear-gradient(120deg,#5865F2 0%,#4752c4 45%,#2b2f77 100%);border:1px solid rgba(255,255,255,.18);box-shadow:0 10px 30px -12px rgba(88,101,242,.75);transition:transform .2s,box-shadow .2s}
-      .hm-dc:hover{transform:translateY(-2px);box-shadow:0 16px 36px -12px rgba(88,101,242,.95)}
-      .hm-dc::before{content:'';position:absolute;inset:0;background:radial-gradient(60% 120% at 100% 0%,rgba(255,255,255,.18),transparent 60%);pointer-events:none}
-      .hm-dc::after{content:'';position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.22),transparent);transform:skewX(-20deg);animation:hmDcShine 4.5s ease-in-out infinite}
-      @keyframes hmDcShine{0%,60%{left:-60%}100%{left:130%}}
-      .hm-dc-ic{flex:none;width:48px;height:48px;border-radius:14px;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;box-shadow:inset 0 0 0 1px rgba(255,255,255,.2)}
-      .hm-dc-ic svg{width:28px;height:28px;fill:#fff}
-      .hm-dc-tx{flex:1;min-width:0;position:relative}
-      .hm-dc-tx b{display:block;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.35rem;letter-spacing:1.5px;line-height:1.05;text-transform:uppercase}
-      .hm-dc-tx small{display:flex;align-items:center;gap:6px;font-size:.74rem;color:rgba(255,255,255,.82);margin-top:3px;flex-wrap:wrap}
-      #hm-discord-on{display:inline-flex;align-items:center;gap:5px;font-weight:700;color:#fff}
-      #hm-discord-on i{width:7px;height:7px;border-radius:50%;background:#3ba55d;box-shadow:0 0 0 3px rgba(59,165,93,.3)}
-      .hm-dc-go{position:relative;flex:none;font-family:'Barlow Condensed',sans-serif;font-weight:900;letter-spacing:1.5px;font-size:.85rem;background:#fff;color:#4752c4;border-radius:999px;padding:8px 16px;box-shadow:0 4px 12px rgba(0,0,0,.25)}
-      @media(max-width:520px){.hm-dc{padding:12px 14px;gap:11px}.hm-dc-ic{width:40px;height:40px}.hm-dc-tx b{font-size:1.1rem}.hm-dc-go{padding:7px 12px;font-size:.75rem}}
+      .hm-dc{position:relative;display:inline-flex;align-items:center;gap:12px;margin:18px auto 0;padding:8px 8px 8px 10px;border-radius:999px;text-decoration:none;color:#f1eefc;
+        background:linear-gradient(160deg,rgba(255,255,255,.08),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.14);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 0 0 0 rgba(88,101,242,0);transition:transform .2s,border-color .2s,box-shadow .2s}
+      .hm-dc:hover{transform:translateY(-1px);border-color:rgba(124,134,255,.6);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 8px 26px -10px rgba(88,101,242,.8)}
+      .hm-dc-ic{flex:none;width:34px;height:34px;border-radius:50%;background:#5865F2;display:flex;align-items:center;justify-content:center;box-shadow:0 0 14px rgba(88,101,242,.6)}
+      .hm-dc-ic svg{width:19px;height:19px;fill:#fff}
+      .hm-dc-tx{display:flex;flex-direction:column;align-items:flex-start;line-height:1.1;text-align:left}
+      .hm-dc-tx b{font:800 .95rem/1 'Barlow Condensed',sans-serif;letter-spacing:1.2px;text-transform:uppercase}
+      .hm-dc-tx small{display:flex;align-items:center;gap:6px;font-size:.66rem;color:var(--muted);margin-top:3px}
+      #hm-discord-on{display:inline-flex;align-items:center;gap:5px;font-weight:700;color:#cfd2ff}
+      #hm-discord-on i{width:6px;height:6px;border-radius:50%;background:#3ba55d;box-shadow:0 0 0 3px rgba(59,165,93,.25)}
+      .hm-dc-go{flex:none;font:900 .8rem/1 'Barlow Condensed',sans-serif;letter-spacing:1.5px;color:#111;background:linear-gradient(135deg,#ffe259,#ffa751);border-radius:999px;padding:9px 16px;box-shadow:0 3px 12px rgba(255,190,60,.35)}
+      @media(max-width:520px){.hm-dc{gap:9px}.hm-dc-ic{width:30px;height:30px}.hm-dc-tx b{font-size:.85rem}.hm-dc-go{padding:8px 12px;font-size:.72rem}}
     </style>
     <a id="hm-discord" class="hm-dc" href="https://discord.com/channels/${IMS_GUILD_ID}" target="_blank" rel="noopener">
       <span class="hm-dc-ic"><svg viewBox="0 0 127.14 96.36" aria-hidden="true"><path d="M107.7 8.07A105.15 105.15 0 0 0 81.47 0a72.06 72.06 0 0 0-3.36 6.83 97.68 97.68 0 0 0-29.11 0A72.37 72.37 0 0 0 45.64 0a105.89 105.89 0 0 0-26.25 8.09C2.79 32.65-1.71 56.6.54 80.21a105.73 105.73 0 0 0 32.17 16.15 77.7 77.7 0 0 0 6.89-11.11 68.42 68.42 0 0 1-10.85-5.18c.91-.66 1.8-1.34 2.66-2a75.57 75.57 0 0 0 64.32 0c.87.71 1.76 1.39 2.66 2a68.68 68.68 0 0 1-10.87 5.19 77 77 0 0 0 6.89 11.1 105.25 105.25 0 0 0 32.19-16.14c2.64-27.38-4.51-51.11-18.9-72.15ZM42.45 65.69C36.18 65.69 31 60 31 53s5-12.74 11.43-12.74S54 46 53.89 53s-5.05 12.69-11.44 12.69Zm42.24 0C78.41 65.69 73.25 60 73.25 53s5-12.74 11.44-12.74S96.23 46 96.12 53s-5.04 12.69-11.43 12.69Z"/></svg></span>
