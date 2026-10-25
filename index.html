@@ -22729,10 +22729,14 @@ async function renderMarket() {
     const _plainQGap = (field) => {
       const nn = (x) => String(x || '').replace(/^\[[^\]]*\]\s*/, '').toLowerCase().replace(/[^a-z0-9]/g, '');
       const L = {}; field.forEach(d => { L[d.id] = qp.byDriver[nn(d.name)] || []; });
-      const bst = {}, cnt = {}; field.forEach(d => L[d.id].forEach(x => { const k = x.t + '|' + x.s; cnt[k] = (cnt[k] || 0) + 1; if (!bst[k] || x.ms < bst[k]) bst[k] = x.ms; }));
+      // Robust to bad data: a session's benchmark ignores impossible laps (>4% quicker than the session's
+      // median — wrong layout / mis-typed time), and laps 10%+ off the benchmark (a different layout, wet
+      // run or junk entry) don't count towards a driver's average.
+      const byK = {}; field.forEach(d => L[d.id].forEach(x => { if (x && x.ms > 0) (byK[x.t + '|' + x.s] = byK[x.t + '|' + x.s] || []).push(x.ms); }));
+      const bst = {}, cnt = {}; Object.entries(byK).forEach(([k, a]) => { const sr = a.slice().sort((p, q) => p - q), med = sr[Math.floor(sr.length / 2)]; const ok = sr.filter(v => v >= med * 0.96); bst[k] = ok[0] || med; cnt[k] = a.length; });
       const raw = {};
-      field.forEach(d => { const U = L[d.id].filter(x => cnt[x.t + '|' + x.s] >= 2); if (U.length < 3) return;
-        raw[d.id] = U.reduce((a, x) => a + ((x.ms / bst[x.t + '|' + x.s]) - 1) * 100, 0) / U.length; });
+      field.forEach(d => { const U = L[d.id].map(x => ({ x, g: ((x.ms / bst[x.t + '|' + x.s]) - 1) * 100 })).filter(o => cnt[o.x.t + '|' + o.x.s] >= 2 && o.g >= 0 && o.g < 10); if (U.length < 3) return;
+        raw[d.id] = U.reduce((a, o) => a + o.g, 0) / U.length; });
       const vals = Object.values(raw); const top = vals.length ? Math.min(...vals) : 0;
       const out = {}; Object.keys(raw).forEach(id => { out[id] = raw[id] - top; }); return out;
     };
