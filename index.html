@@ -15922,14 +15922,16 @@ window.importDbRound = async function(roundNo, trackName) {
       winTimeByDiv: { ...((existingRace && existingRace.winTimeByDiv) || {}), ...Object.fromEntries(Object.entries(raceStatsComputed).map(([d, x]) => [d, x.win])) },
       raceStatsByDiv: { ...((existingRace && existingRace.raceStatsByDiv) || {}), ...Object.fromEntries(Object.entries(raceStatsComputed).map(([d, x]) => [d, Object.fromEntries(Object.entries({ dnf: x.dnf, pw: x.pw, o3: x.o3, o10: x.o10, fw: x.fw, gs: x.gs, d3: x.d3, sw: x.sw, wgrid: x.wgrid, gain: x.gain, fin: x.fin, flt: x.flt }).filter(([, v]) => v != null))])) },
       winMarginByDiv: { ...((existingRace && existingRace.winMarginByDiv) || {}), ...Object.fromEntries(Object.entries(raceStatsComputed).filter(([, x]) => x.mar != null).map(([d, x]) => [d, x.mar])) },
-      // Re-import that changed results already published (steward verdicts): flag it so the app can say so.
+      // Verdicts: the weekend's last division (E3; D4 before S8) was already imported, so this import is
+      // the post-race verdicts going in — flag the round "After verdicts". Earlier imports adding divisions
+      // over the weekend never trigger it.
       ...(() => { try {
-        const oP = (existingRace && existingRace.driverPointsByDivision) || {}, oF = (existingRace && existingRace.positionByDivision) || {};
-        const divs = new Set();
-        Object.entries(oP).forEach(([id, by]) => Object.entries(by || {}).forEach(([dv, v]) => { const n = (mergedDriverPointsByDivision[id] || {})[dv]; if (n !== undefined && Number(n) !== Number(v)) divs.add(dv); }));
-        Object.entries(oF).forEach(([id, by]) => Object.entries(by || {}).forEach(([dv, v]) => { const n = (mergedPositionByDivision[id] || {})[dv]; if (n !== undefined && Number(n) !== Number(v)) divs.add(dv); }));
-        if (!divs.size) return {};
-        return { verdictsAt: Date.now(), verdictDivs: [...new Set([...((existingRace && existingRace.verdictDivs) || []), ...divs])].sort() };
+        const oP = (existingRace && existingRace.driverPointsByDivision) || {};
+        const had = new Set(); Object.values(oP).forEach(by => Object.keys(by || {}).forEach(d => had.add(d)));
+        const lastDiv = had.has('E3') ? 'E3' : had.has('D4') ? 'D4' : null;
+        if (!lastDiv) return {};
+        const divs = new Set(); Object.values(driverPointsByDivision).forEach(by => Object.keys(by || {}).forEach(d => divs.add(d)));
+        return { verdictsAt: Date.now(), verdictDivs: [...divs].filter(d => !/^A/i.test(d)).sort() };
       } catch (e) { return {}; } })(),
       createdAt: existingRace ? existingRace.createdAt : Date.now(),
       updatedAt: Date.now(),
