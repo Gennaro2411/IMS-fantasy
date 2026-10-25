@@ -15928,11 +15928,6 @@ window.importDbRound = async function(roundNo, trackName) {
         const divs = new Set();
         Object.entries(oP).forEach(([id, by]) => Object.entries(by || {}).forEach(([dv, v]) => { const n = (mergedDriverPointsByDivision[id] || {})[dv]; if (n !== undefined && Number(n) !== Number(v)) divs.add(dv); }));
         Object.entries(oF).forEach(([id, by]) => Object.entries(by || {}).forEach(([dv, v]) => { const n = (mergedPositionByDivision[id] || {})[dv]; if (n !== undefined && Number(n) !== Number(v)) divs.add(dv); }));
-        // Re-importing a division that was already published counts as bringing the verdicts in,
-        // even when nothing moved (no penalties) — that's the admin saying "these are final".
-        const newDivs = new Set(); Object.values(driverPointsByDivision).forEach(by => Object.keys(by || {}).forEach(d => newDivs.add(d)));
-        const pubDivs = new Set(); Object.values(oP).forEach(by => Object.keys(by || {}).forEach(d => pubDivs.add(d)));
-        newDivs.forEach(d => { if (pubDivs.has(d)) divs.add(d); });
         if (!divs.size) return {};
         return { verdictsAt: Date.now(), verdictDivs: [...new Set([...((existingRace && existingRace.verdictDivs) || []), ...divs])].sort() };
       } catch (e) { return {}; } })(),
@@ -18108,6 +18103,7 @@ async function renderPastRacesList() {
       +'<button class="btn btn-sm" style="background:rgba(123,79,191,0.15);color:#9b6fd4;border:1px solid rgba(123,79,191,0.4)" onclick="randomiseExistingRace(\''+r.id+'\',\''+esc(r.name)+'\')">🎲 Randomise</button>'
       +'<button class="btn btn-secondary btn-sm" onclick="renameRace(\''+r.id+'\',\''+r.name.replace(/'/g,"\\'")+'\')" >✏ Rename</button>'
       +'<button class="btn btn-secondary btn-sm" onclick="editRace(\''+r.id+'\')">Edit Points</button>'
+      +'<button class="btn btn-sm" style="background:rgba(160,164,255,0.12);color:#c9cbff;border:1px solid rgba(160,164,255,0.45)" title="Switch the Before / After verdicts banner for this round" onclick="toggleRaceVerdicts(\''+r.id+'\')">'+(r.verdictsAt ? '⚖️ After verdicts ✓ (undo)' : '⏳ Mark after verdicts')+'</button>'
       +'</div>'
       +'</div>';
   }).join('');
@@ -28981,6 +28977,13 @@ window._accaEffOdds = function(b, keep) {
   if (!legs.length) return 1;
   const raw = legs.reduce((a, l) => a * (Number(l.odds) || 1), 1);
   return Math.round(Math.min(raw, Number(b.odds) || raw) * 100) / 100;
+};
+window.toggleRaceVerdicts = async function(id) {
+  const r = await dbGet('races', id); if (!r) return;
+  const on = !r.verdictsAt;
+  await dbSet('races', id, on ? { ...r, verdictsAt: Date.now() } : { ...r, verdictsAt: null, verdictDivs: [] });
+  if (typeof showToast === 'function') showToast((on ? '⚖️ ' + r.name + ' marked After verdicts' : '⏳ ' + r.name + ' back to Before verdicts'), 'success');
+  if (typeof renderPastRacesList === 'function') renderPastRacesList();
 };
 window._verdictBadge = function(b) {
   if (!b || !b.resettled) return '';
