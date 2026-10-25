@@ -2878,6 +2878,7 @@
           <button class="btn btn-secondary" onclick="adminGrantChip('wildcard')">🃏 Remove / reset Wildcard</button>
           <button class="btn btn-secondary" onclick="adminGrantChip('guardianAngel')">😇 Remove / reset Guardian Angel</button>
           <button class="btn btn-secondary" onclick="adminGrantFreeTransfer()">🔄 Grant Free Transfer</button>
+          <button class="btn btn-secondary" style="border-color:#4ade80;color:#4ade80" onclick="adminAwardFreeTransfersAll(this)">➕ +1 free transfer to EVERY team</button>
           <button class="btn btn-secondary" onclick="adminResetPlayerPassword()">🔑 Reset Password</button>
           <button class="btn" style="background:#2a0a0a;color:var(--red);border:1px solid var(--red)" onclick="adminResetChips()">✕ Reset All Chips</button>
         </div>
@@ -15948,6 +15949,11 @@ window.importDbRound = async function(roundNo, trackName) {
       pricingFinalized: alreadyPricedForThisRace || batchIncludesD4 || raceAlreadyHasD4
     });
 
+    // New round → +1 free transfer for every team (max 3 banked). Once per race (ftAwarded flag), so
+    // importing more divisions / verdicts later never awards it twice. This .db import is how races
+    // are created now, and it never awarded transfers — which is why nobody's were refilling.
+    if (!existingRace || (!existingRace.ftAwarded && !(existingRace.driverPoints && Object.keys(existingRace.driverPoints).length))) { try { await window.awardFreeTransfers(); await dbSet('races', raceId, { ...(await dbGet('races', raceId)), ftAwarded: Date.now() }); } catch (e) { console.warn('free transfer award failed', e); } }
+
     // Give every team a captain for this race (carry forward, or auto-assign if they've never set one)
     await ensureCaptainsForRace(raceId, parseInt(roundNo), trackName);
 
@@ -28995,6 +29001,22 @@ window._accaEffOdds = function(b, keep) {
   return Math.round(Math.min(raw, Number(b.odds) || raw) * 100) / 100;
 };
 // Admin: every transfer a team has made this season (market buys/sells + Edit Team swaps), newest first.
+// +1 free transfer to every team (max 3). Fresh read per team; brand-new teams keep their starting 8.
+window.awardFreeTransfers = async function() {
+  const teams = await dbGetAll('teams', { fresh: true }); let n = 0;
+  for (const t0 of teams) { const t = (await dbGet('teams', t0.id).catch(() => null)) || t0;
+    const cur = t.freeTransfers !== undefined ? t.freeTransfers : 1, noTeam = !t.selections || !Object.values(t.selections).some(Boolean);
+    if (noTeam && cur >= 8) continue; const nx = Math.min(3, cur + 1); if (nx === cur) continue;
+    await dbSet('teams', t.id, { ...t, freeTransfers: nx }); n++; }
+  return n;
+};
+window.adminAwardFreeTransfersAll = function(btn) {
+  customConfirm('Give every team +1 free transfer (max 3 banked)? Use this once for each round that was missed.', async () => {
+    if (btn) { btn.disabled = true; btn.textContent = 'Awarding…'; }
+    const n = await window.awardFreeTransfers();
+    if (btn) { btn.disabled = false; btn.textContent = '✔ ' + n + ' teams topped up'; }
+  }, 'Give +1 to everyone');
+};
 window.adminTeamTransfers = async function(teamId, userId) {
   const box = document.getElementById('adm-team-xfers'); if (!box) return;
   if (box.style.display === 'block') { box.style.display = 'none'; return; }
