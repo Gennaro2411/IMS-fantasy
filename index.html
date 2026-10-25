@@ -9430,9 +9430,10 @@ window.submitTeam = async function() {
     try { const _os = existing.selections || {}, _dn = (id, c) => c ? ((window._constrById || {})[id] || ((typeof constrs !== 'undefined' && constrs) || []).find(x => x.id === id) || {}).name : ((window._driverById || {})[id] || ((typeof drivers !== 'undefined' && drivers) || []).find(x => x.id === id) || {}).name;
       const _all = await Promise.all([dbGetAll('drivers'), dbGetAll('constructors')]); const _nm = (id, c) => ((c ? _all[1] : _all[0]).find(x => x.id === id) || {}).name || _dn(id, c) || '—';
       const pm = window._driverPriceMap || {}, cm = window._constrPriceMap || {};
-      for (const div of [...DIVISIONS, 'CONSTRUCTOR']) { const o = _os[div], n = selections[div]; if (!n || n === o) continue; const c = div === 'CONSTRUCTOR';
+      let _ftLeft = currentFree;
+      for (const div of [...DIVISIONS, 'CONSTRUCTOR']) { const o = _os[div], n = selections[div]; if (!n || n === o) continue; const c = div === 'CONSTRUCTOR'; if (!wcActive) _ftLeft = Math.max(0, _ftLeft - 1);
         await dbAdd('transfers', { teamId: existing.id, userId: existing.userId, div, type: c ? 'constructor' : 'driver', oldId: o || '', oldName: o ? _nm(o, c) : '—', newId: n, newName: _nm(n, c),
-          cost: Math.round((((c ? cm : pm)[n] || 0) - (o ? ((c ? cm : pm)[o] || 0) : 0)) * 10) / 10, timestamp: Date.now(), via: wcActive ? 'wildcard' : 'edit-team' }); } } catch (e) { console.warn('transfer log', e); }
+          cost: Math.round((((c ? cm : pm)[n] || 0) - (o ? ((c ? cm : pm)[o] || 0) : 0)) * 10) / 10, timestamp: Date.now(), via: wcActive ? 'wildcard' : 'edit-team', ftAfter: _ftLeft }); } } catch (e) { console.warn('transfer log', e); }
   } else {
     // No team document matches this session. Either a brand-new player, or an account that
     // was DELETED while this browser stayed logged in. The difference: a genuine new player
@@ -11555,7 +11556,7 @@ window.sellDriver = async function(driverId, div, teamId, price) {
       div, type: 'driver',
       oldId: driverId, oldName: name,
       newId: '', newName: '—',
-      cost: -price, timestamp: Date.now()
+      cost: -price, timestamp: Date.now(), ftAfter: team.freeTransfers !== undefined ? team.freeTransfers : null
     });
     renderMyTeam();
   }, 'Sell Driver');
@@ -23394,7 +23395,7 @@ window.confirmTransfer = async function(oldDriverId, newDriverId, div, teamId, c
       div, type,
       oldId: oldDriverId, oldName: oldName || '—',
       newId: newDriverId, newName: newName || '—',
-      cost: totalCost, timestamp: Date.now()
+      cost: totalCost, timestamp: Date.now(), ftAfter: newFreeTransfers, ...(wcActiveNow ? { via: 'wildcard' } : {})
     });
     currentUser.selections = newSel;
     _saveSession(currentUser);
@@ -29010,6 +29011,7 @@ window.adminTeamTransfers = async function(teamId, userId) {
       <span style="flex:none;width:96px;color:var(--muted);font-size:.7rem">${new Date(t.timestamp).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
       <span style="flex:none;font-size:.62rem;font-weight:800;border:1px solid var(--border);border-radius:4px;padding:0 5px">${esc(t.div === 'CONSTRUCTOR' ? 'CON' : (t.div || ''))}</span>
       <span style="flex:1;min-width:0"><span style="color:#ff8f6b">▼ ${esc(t.oldName || '—')}</span> → <span style="color:#4ade80">▲ ${esc(t.newName || '—')}</span>${t.via === 'wildcard' ? ' <small style="color:#ffb74d">🃏 wildcard</small>' : ''}</span>
+      <span style="flex:none;min-width:62px;text-align:right;font-size:.68rem;color:${t.ftAfter == null ? 'var(--muted)' : t.ftAfter > 0 ? '#4ade80' : '#ff8f6b'}" title="Free transfers left after this transfer">${t.ftAfter == null ? '—' : t.via === 'wildcard' ? '🃏 ' + t.ftAfter + ' FT' : t.ftAfter + ' FT left'}</span>
       <b style="flex:none;font-family:'Barlow Condensed',sans-serif">${cost(Number(t.cost) || 0)}</b></div>`).join('') : '<div class="text-muted" style="font-size:.78rem">No transfers logged this season.</div>'}
   </div>`;
 };
