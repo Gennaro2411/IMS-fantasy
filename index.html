@@ -12096,6 +12096,7 @@ async function renderBriefingExtras() {
           else if (_newbie && h.length < 3) notes.push(`New this season: only ${h.length} race${h.length === 1 ? '' : 's'} to go on, so treat this verdict lightly.`);
         } catch (e) {}
         if (!isDriverCheckedIn(d)) adv += ` Not checked in yet: if they check out, you'll need a reserve or a swap before lock.`;
+        if (!window._hideDom && d.lastDominance != null && d.lastDominance >= 80 && d.lastDominance < 100) notes.push(`⚠️ <b style="color:#ffb74d">Dominance ${Number(d.lastDominance).toFixed(1)} — ${Math.ceil(100 - d.lastDominance)} off 100.</b> Drivers this close often manage their dominance to avoid moving up, so their scores and price could trend down.`);
         const stat = (k, v) => `<div style="flex:1 1 56px;text-align:center;padding:6px 4px;border-radius:8px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.08)"><div style="font-size:.6rem;font-weight:700;color:#b8bdd6;text-transform:uppercase;letter-spacing:.05em">${k}</div><div style="font-weight:800;font-size:.95rem;color:#fff">${v}</div></div>`;
         const spark = h.slice(-6).map(v => `<span title="${v}" style="display:inline-block;width:6px;margin-right:2px;border-radius:2px;background:${col};height:${Math.max(3, Math.min(22, v / Math.max(1, ...h) * 22))}px"></span>`).join('');
         const _tc = (typeof getTeamCardColour === 'function' && getTeamCardColour(d.team)) || null;
