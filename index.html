@@ -9426,6 +9426,13 @@ window.submitTeam = async function() {
 
   if (existing) {
     await dbSet('teams', existing.id, {...existing, ...data});
+    // Log each swap made on Edit Team, the same way market transfers are logged.
+    try { const _os = existing.selections || {}, _dn = (id, c) => c ? ((window._constrById || {})[id] || ((typeof constrs !== 'undefined' && constrs) || []).find(x => x.id === id) || {}).name : ((window._driverById || {})[id] || ((typeof drivers !== 'undefined' && drivers) || []).find(x => x.id === id) || {}).name;
+      const _all = await Promise.all([dbGetAll('drivers'), dbGetAll('constructors')]); const _nm = (id, c) => ((c ? _all[1] : _all[0]).find(x => x.id === id) || {}).name || _dn(id, c) || '—';
+      const pm = window._driverPriceMap || {}, cm = window._constrPriceMap || {};
+      for (const div of [...DIVISIONS, 'CONSTRUCTOR']) { const o = _os[div], n = selections[div]; if (!n || n === o) continue; const c = div === 'CONSTRUCTOR';
+        await dbAdd('transfers', { teamId: existing.id, userId: existing.userId, div, type: c ? 'constructor' : 'driver', oldId: o || '', oldName: o ? _nm(o, c) : '—', newId: n, newName: _nm(n, c),
+          cost: Math.round((((c ? cm : pm)[n] || 0) - (o ? ((c ? cm : pm)[o] || 0) : 0)) * 10) / 10, timestamp: Date.now(), via: wcActive ? 'wildcard' : 'edit-team' }); } } catch (e) { console.warn('transfer log', e); }
   } else {
     // No team document matches this session. Either a brand-new player, or an account that
     // was DELETED while this browser stayed logged in. The difference: a genuine new player
@@ -9871,6 +9878,8 @@ async function renderMyTeam() {
       <span style="font-size:.8rem;font-weight:800;letter-spacing:1px;color:#8f93e0">👁 ADMIN VIEW</span>
       <span style="font-size:.8rem;color:var(--muted)">Viewing</span>
       <select onchange="window._adminViewAsUserId=this.value;renderMyTeam()" style="max-width:220px">${opts}</select>
+      ${myTeam ? `<button class="btn btn-secondary btn-sm" style="margin-left:auto" onclick="adminTeamTransfers('${myTeam.id}','${myTeam.userId || ''}')">📜 Transfers this season</button>` : ''}
+      <div id="adm-team-xfers" style="width:100%;display:none"></div>
     </div>`;
   }
   // Show the welcome to anyone who hasn't picked a squad yet — whether their team document
@@ -28983,6 +28992,26 @@ window._accaEffOdds = function(b, keep) {
   if (!legs.length) return 1;
   const raw = legs.reduce((a, l) => a * (Number(l.odds) || 1), 1);
   return Math.round(Math.min(raw, Number(b.odds) || raw) * 100) / 100;
+};
+// Admin: every transfer a team has made this season (market buys/sells + Edit Team swaps), newest first.
+window.adminTeamTransfers = async function(teamId, userId) {
+  const box = document.getElementById('adm-team-xfers'); if (!box) return;
+  if (box.style.display === 'block') { box.style.display = 'none'; return; }
+  box.style.display = 'block'; box.innerHTML = '<div class="text-muted" style="font-size:.78rem;padding:8px 0">Loading…</div>';
+  const [all, races] = await Promise.all([dbGetAll('transfers', { fresh: true }).catch(() => []), dbGetAll('races').catch(() => [])]);
+  // Season start: a month before the first race of this season was created.
+  const firstAt = Math.min(...races.map(r => r.createdAt || Infinity)); const since = isFinite(firstAt) ? firstAt - 30 * 864e5 : 0;
+  const list = all.filter(t => (t.teamId === teamId || (userId && t.userId === userId)) && (t.timestamp || 0) >= since).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+  const roundOf = (ts) => { const r = races.filter(x => (x.createdAt || 0) <= ts).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))[0]; return r ? 'before ' + (races.filter(x => (x.raceNum || 0) === (r.raceNum || 0) + 1)[0] || {}).name || '' : ''; };
+  const cost = (c) => c > 0 ? '<span style="color:var(--red)">−' + formatM(c) + '</span>' : c < 0 ? '<span style="color:#4ade80">+' + formatM(-c) + '</span>' : '<span style="color:var(--muted)">$0</span>';
+  box.innerHTML = `<div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(143,147,224,.3)">
+    <div style="font-size:.7rem;font-weight:800;letter-spacing:1px;color:#8f93e0;margin-bottom:6px">${list.length} TRANSFER${list.length === 1 ? '' : 'S'} THIS SEASON</div>
+    ${list.length ? list.map(t => `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:.8rem">
+      <span style="flex:none;width:96px;color:var(--muted);font-size:.7rem">${new Date(t.timestamp).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+      <span style="flex:none;font-size:.62rem;font-weight:800;border:1px solid var(--border);border-radius:4px;padding:0 5px">${esc(t.div === 'CONSTRUCTOR' ? 'CON' : (t.div || ''))}</span>
+      <span style="flex:1;min-width:0"><span style="color:#ff8f6b">▼ ${esc(t.oldName || '—')}</span> → <span style="color:#4ade80">▲ ${esc(t.newName || '—')}</span>${t.via === 'wildcard' ? ' <small style="color:#ffb74d">🃏 wildcard</small>' : ''}</span>
+      <b style="flex:none;font-family:'Barlow Condensed',sans-serif">${cost(Number(t.cost) || 0)}</b></div>`).join('') : '<div class="text-muted" style="font-size:.78rem">No transfers logged this season.</div>'}
+  </div>`;
 };
 window.toggleRaceVerdicts = async function(id) {
   const r = await dbGet('races', id); if (!r) return;
