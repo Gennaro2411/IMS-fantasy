@@ -27721,6 +27721,15 @@ window.betBoostTitleEdit = async function() {
   renderBets();
 };
 // Add a pick from ANOTHER division to the slip (e.g. from an all-division boost card) without leaving this tab.
+window.betPickAllIn = function(key) {
+  const all = (window._boostAll || {})[key] || []; const have = new Set((window._betLegs || []).map(l => l.key));
+  const todo = all.filter(([dv, m, sc]) => !have.has(dv + '|' + m + ':' + sc.split(',').join('-')));
+  if (!todo.length) { if (typeof showToast === 'function') showToast('Already on your slip.', 'info'); return; }
+  if ((window._betLegs || []).length + todo.length > 10) { if (typeof showToast === 'function') showToast('Max 10 picks on one slip.', 'error'); return; }
+  const prev = window._betDiv, _r = window.renderBets; window.renderBets = () => {};
+  try { todo.forEach(([dv, m, sc, o, l]) => { window._betDiv = dv; betPick(m, sc, o, l); }); } finally { window.renderBets = _r; window._betDiv = prev; }
+  renderBets(); if (typeof showToast === 'function') showToast('🚀 Added ' + todo.length + ' boosted picks to your slip', 'success');
+};
 window.betPickIn = function(dv, market, selCsv, odds, label) {
   const prev = window._betDiv; window._betDiv = dv;
   const _r = window.renderBets; window.renderBets = () => {}; // betPick re-renders; do it once, back on the current tab
@@ -28872,7 +28881,10 @@ window.renderBets = async function() {
                 <span style="font-size:.78rem;color:var(--muted)">${esc(lnTxt)}</span>${w ? `<s style="font-size:.74rem;color:var(--muted)">${fmtOdds(w.was)}</s>` : ''}
                 <span style="margin-left:auto;display:flex;gap:6px;align-items:center">${(() => { if (!w) return `<button class="btn btn-primary btn-sm" onclick="betDiv('${esc(sel)}')">🚀 +${pct}% · go to ${esc(sel)} →</button>`;
                   const base = plain(f.label).replace(/\s*\d+(?:[.:]\d+)*\s*$/, ''), lbl = sel + ' ' + base + (f.market === 'ou' ? ' ' + w.line : '');
-                  return sel === div ? oddsBtn(f.market, w.sel, lbl, w.odds) : `<button class="bo-odd boosted" ${open ? '' : 'disabled'} onclick="betPickIn('${esc(sel)}','${f.market}','${w.sel.join(',')}',${w.odds},'${esc(lbl).replace(/'/g, "\\'")}')">🚀 ${fmtOdds(w.odds)}</button>`; })()}
+                  const all = dvs.map(x => { const wx = _wideFor(f, x); if (!wx) return null; return [x, f.market, wx.sel.join(','), wx.odds, x + ' ' + base + (f.market === 'ou' ? ' ' + wx.line : '')]; }).filter(Boolean);
+                  (window._boostAll = window._boostAll || {})[key] = all;
+                  const allBtn = all.length > 1 && open ? `<button class="btn btn-secondary btn-sm" style="padding:4px 9px" onclick="betPickAllIn('${key}')" title="Add this boost in every division to your slip">＋ All ${all.length}</button>` : '';
+                  return allBtn + (sel === div ? oddsBtn(f.market, w.sel, lbl, w.odds) : `<button class="bo-odd boosted" ${open ? '' : 'disabled'} onclick="betPickIn('${esc(sel)}','${f.market}','${w.sel.join(',')}',${w.odds},'${esc(lbl).replace(/'/g, "\\'")}')">🚀 ${fmtOdds(w.odds)}</button>`); })()}
                 ${adminLoggedIn ? `<button class="btn btn-secondary btn-sm" style="padding:3px 8px" onclick="betBoostExcl(${bi},'${esc(sel)}')" title="Remove the boost in ${esc(sel)}">✕ ${esc(sel)}</button><button class="btn btn-secondary btn-sm" style="padding:3px 8px" onclick="betClearBoost(${bi})" title="Remove this boost everywhere">✕ all</button>` : ''}</span></div>`; })()}</div>`; }
         if (!multi) { const BOOST = f, bi = g.items[0].bi;
           return `<div class="bo-boost"><div class="bo-boost-l"><div class="bo-kicker">🚀 Boosted odds · ${esc(BOOST.div)}</div>${headHtml}<b>${esc(BOOST.label)}</b>
