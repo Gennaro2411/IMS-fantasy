@@ -27733,7 +27733,8 @@ window.betBoostSave = async function() {
   const cur = window._betBoostList(await dbGet('settings', 'betBoost').catch(() => null), d.raceName);
   const same = (b) => b.div === d.div && b.market === d.market && (b.sel || []).join('-') === d.sel.join('-');
   const rest = cur.filter(b => !same(b));
-  if (rest.length >= BET_MAX_BOOSTS) { document.getElementById('bst-err').textContent = 'Max ' + BET_MAX_BOOSTS + ' boosts per round — remove one first.'; return; }
+  const _gk = (b) => b.market + '|' + (b.market === 'ou' ? (b.sel || []).slice(0, 2) : (b.sel || [])).join('-'), _groups = new Set(rest.map(_gk));
+  if (!_groups.has(_gk(d)) && _groups.size >= BET_MAX_BOOSTS) { document.getElementById('bst-err').textContent = 'Max ' + BET_MAX_BOOSTS + ' different boosts per round (the same bet across divisions counts once) — remove one first.'; return; }
   const list = [...rest, { raceName: d.raceName, div: d.div, market: d.market, sel: d.sel, label: d.label, was: d.was, odds: Math.round(n * 100) / 100, setAt: Date.now(), head: ((document.getElementById('bst-head') || {}).value || '').trim().slice(0, 60) }];
   const _ttl = ((document.getElementById('bst-title') || {}).value || '').trim().slice(0, 60);
   window._betBoostTitle = _ttl;
@@ -28813,10 +28814,24 @@ window.renderBets = async function() {
     <div id="bet-of-week" style="display:none;margin:0 0 12px"></div><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="" style="display:none" onload="renderBetOfWeek()" onerror="renderBetOfWeek()">
     <div class="bo-disclaimer">Just for fun. IM$ are pretend money, with no value; they can't be bought, sold or cashed out.</div>
     ${BOOSTS.length && window._betBoostTitle ? `<div style="display:flex;align-items:center;gap:8px;margin:2px 0 8px"><span style="font-size:1.1rem">🚀</span><span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.35rem;line-height:1.05;text-transform:uppercase;letter-spacing:.5px;background:linear-gradient(90deg,#ffe259,#ffa751);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">${esc(window._betBoostTitle)}</span></div>` : ''}
-    ${BOOSTS.length ? `<div class="bo-boosts">${BOOSTS.map((BOOST, bi) => `<div class="bo-boost"><div class="bo-boost-l"><div class="bo-kicker">🚀 Boosted odds · ${esc(BOOST.div)}</div>${BOOST.head ? `<div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;font-size:1.05rem;letter-spacing:.3px;line-height:1.1;margin:2px 0 3px;background:linear-gradient(90deg,#ffe259,#ffa751);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">${esc(BOOST.head)}</div>` : ''}<b>${esc(BOOST.label)}</b>
+    ${BOOSTS.length ? (() => {
+      // The same boost across several divisions (e.g. DNFs in the race) shows as ONE card with a price per division.
+      const grp = []; const gk = (b) => b.market + '|' + (b.market === 'ou' ? (b.sel || []).slice(0, 2) : (b.sel || [])).join('-'); // over/under lines can differ per division
+      BOOSTS.forEach((b, bi) => { const k = gk(b); let g = grp.find(x => x.k === k); if (!g) { g = { k, items: [] }; grp.push(g); } g.items.push({ b, bi }); });
+      const plain = (lbl) => String(lbl || '').replace(/\s*[(]?\b(?:D\d|E\d)\b[)]?\s*/g, ' ').replace(/\s+:/g, ':').replace(/\s{2,}/g, ' ').trim();
+      return `<div class="bo-boosts">${grp.map(g => { const f = g.items[0].b, multi = g.items.length > 1, head = (g.items.find(x => x.b.head) || {}).b;
+        const headHtml = head ? `<div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;font-size:1.05rem;letter-spacing:.3px;line-height:1.1;margin:2px 0 3px;background:linear-gradient(90deg,#ffe259,#ffa751);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">${esc(head.head)}</div>` : '';
+        if (!multi) { const BOOST = f, bi = g.items[0].bi;
+          return `<div class="bo-boost"><div class="bo-boost-l"><div class="bo-kicker">🚀 Boosted odds · ${esc(BOOST.div)}</div>${headHtml}<b>${esc(BOOST.label)}</b>
         <div class="bo-boost-o"><s>${fmtOdds(BOOST.was)}</s> → <em>${fmtOdds(BOOST.odds)}</em></div></div>
         <div class="bo-boost-r">${BOOST.div === div ? oddsBtn(BOOST.market, BOOST.sel, BOOST.label, BOOST.odds) : `<button class="btn btn-primary btn-sm" onclick="betDiv('${esc(BOOST.div)}')">Go to ${esc(BOOST.div)} →</button>`}
-        ${adminLoggedIn ? `<button class="btn btn-secondary btn-sm" onclick="betClearBoost(${bi})" title="Remove boost">✕</button>` : ''}</div></div>`).join('')}</div>` : ''}
+        ${adminLoggedIn ? `<button class="btn btn-secondary btn-sm" onclick="betClearBoost(${bi})" title="Remove boost">✕</button>` : ''}</div></div>`; }
+        const its = g.items.slice().sort((a, b) => String(a.b.div).localeCompare(String(b.b.div)));
+        return `<div class="bo-boost" style="flex-wrap:wrap"><div class="bo-boost-l" style="flex:1 1 100%"><div class="bo-kicker">🚀 Boosted odds · every division</div>${headHtml}<b>${esc(f.market === 'ou' ? plain(f.label).replace(/\s*\d+(?:\.\d+)?\s*$/, '').replace(/\s+(over|under)\s+\d+(?:\.\d+)?/i, ' $1') : plain(f.label))}</b></div>
+          <div style="flex:1 1 100%;display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${its.map(({ b, bi }) => `<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid ${b.div === div ? 'rgba(255,200,0,.5)' : 'rgba(255,255,255,.1)'}">
+            <b style="font-family:'Barlow Condensed',sans-serif;font-size:.85rem">${esc(b.div)}</b>${b.market === 'ou' && b.sel[2] != null ? `<small style="font-size:.66rem;color:var(--muted)">${esc(String(b.sel[1]).charAt(0).toUpperCase())} ${esc(String(b.sel[2]))}</small>` : ''}<s style="font-size:.7rem;color:var(--muted)">${fmtOdds(b.was)}</s>
+            ${b.div === div ? oddsBtn(b.market, b.sel, b.label, b.odds) : `<button class="btn btn-secondary btn-sm" style="padding:3px 8px" onclick="betDiv('${esc(b.div)}')">${fmtOdds(b.odds)} →</button>`}
+            ${adminLoggedIn ? `<button class="btn btn-secondary btn-sm" style="padding:2px 6px" onclick="betClearBoost(${bi})" title="Remove this division's boost">✕</button>` : ''}</div>`).join('')}</div></div>`; }).join('')}</div>`; })() : ''}
     ${adminLoggedIn && upcoming ? `<div style="margin:-4px 0 10px;text-align:right"><button class="btn btn-sm btn-secondary" style="margin-right:6px" onclick="betBoostTitleEdit()">✏️ Boosts headline</button><button class="btn btn-sm ${window._betBoostMode ? 'btn-primary' : 'btn-secondary'}" onclick="betBoostMode()">${window._betBoostMode ? '🚀 Boost mode ON — tap any price to boost it (tap here to cancel)' : '🚀 Set boosted odds'}</button></div>` : ''}
     <div class="bo-grid">
       <div>
