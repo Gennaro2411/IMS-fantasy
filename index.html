@@ -27721,6 +27721,11 @@ window.betBoostTitleEdit = async function() {
   renderBets();
 };
 // Add a pick from ANOTHER division to the slip (e.g. from an all-division boost card) without leaving this tab.
+window.boostSelDiv = function(btn) {
+  const key = btn.dataset.bkey, dv = btn.dataset.dv; (window._boostSelDiv = window._boostSelDiv || {})[key] = dv;
+  document.querySelectorAll('.bsel-pill').forEach(b => { if (b.dataset.bkey !== key) return; const on = b.dataset.dv === dv; b.style.background = on ? 'linear-gradient(135deg,#ffe259,#ffa751)' : 'transparent'; b.style.color = on ? '#111' : 'var(--muted)'; });
+  document.querySelectorAll('.bsel-row').forEach(r => { if (r.dataset.bkey === key) r.style.display = r.dataset.dv === dv ? 'flex' : 'none'; });
+};
 window.betPickAllIn = function(key) {
   const all = (window._boostAll || {})[key] || []; const have = new Set((window._betLegs || []).map(l => l.key));
   const todo = all.filter(([dv, m, sc]) => !have.has(dv + '|' + m + ':' + sc.split(',').join('-')));
@@ -28874,28 +28879,32 @@ window.renderBets = async function() {
         if (f.allDivs) { const bi = g.items[0].bi, pct = Math.round(((f.mult || 1) - 1) * 100), dvs = divs.filter(x => x !== 'BOTT' && !(f.excl || []).includes(x));
           return `<div class="bo-boost" style="flex-wrap:wrap"><div class="bo-boost-l" style="flex:1 1 100%"><div class="bo-kicker">🚀 Boosted odds · every division</div>${headHtml}<b>${esc(plain(f.label).replace(/\s*\d+(?:\.\d+)?\s*$/, ''))}</b></div>
             ${(() => { const key = f.market + '|' + (f.sel || []).slice(0, 2).join('-'); window._boostSelDiv = window._boostSelDiv || {};
-              const sel = dvs.includes(window._boostSelDiv[key]) ? window._boostSelDiv[key] : (dvs.includes(div) ? div : dvs[0]);
-              const w = _wideFor(f, sel), sd = String(f.sel[1] || ''), lnTxt = w && w.line != null ? sd.charAt(0).toUpperCase() + sd.slice(1) + ' ' + w.line : (f.market === 'yn' ? sd.toUpperCase() : '');
+              const sel0 = dvs.includes(window._boostSelDiv[key]) ? window._boostSelDiv[key] : (dvs.includes(div) ? div : dvs[0]);
+              const sd = String(f.sel[1] || ''), base = plain(f.label).replace(/\s*\d+(?:[.:]\d+)*\s*$/, '');
+              const all = dvs.map(x => { const wx = _wideFor(f, x); if (!wx) return null; return [x, f.market, wx.sel.join(','), wx.odds, x + ' ' + base + (f.market === 'ou' ? ' ' + wx.line : '')]; }).filter(Boolean);
+              (window._boostAll = window._boostAll || {})[key] = all;
+              const allBtn = all.length > 1 && open ? `<button class="btn btn-secondary btn-sm" style="padding:4px 9px" onclick="betPickAllIn('${key}')" title="Add this boost in every division to your slip">＋ All ${all.length}</button>` : '';
+              // Every division's row is rendered up front; the pills just show/hide them — no page re-render, no bounce.
+              const row = (x) => { const w = _wideFor(f, x), lnTxt = w && w.line != null ? sd.charAt(0).toUpperCase() + sd.slice(1) + ' ' + w.line : (f.market === 'yn' ? sd.toUpperCase() : ''), lbl = w ? x + ' ' + base + (f.market === 'ou' ? ' ' + w.line : '') : '';
+                const btn = !w ? `<button class="btn btn-primary btn-sm" onclick="betDiv('${esc(x)}')">🚀 +${pct}% · go to ${esc(x)} →</button>`
+                  : x === div ? oddsBtn(f.market, w.sel, lbl, w.odds) : `<button class="bo-odd boosted" ${open ? '' : 'disabled'} onclick="betPickIn('${esc(x)}','${f.market}','${w.sel.join(',')}',${w.odds},'${esc(lbl).replace(/'/g, "\\'")}')">🚀 ${fmtOdds(w.odds)}</button>`;
+                return `<div class="bsel-row" data-bkey="${esc(key)}" data-dv="${esc(x)}" style="display:${x === sel0 ? 'flex' : 'none'};flex:1;align-items:center;gap:8px;flex-wrap:wrap;min-width:0">
+                  <span style="font-size:.78rem;color:var(--muted)">${esc(lnTxt)}</span>${w ? `<s style="font-size:.74rem;color:var(--muted)">${fmtOdds(w.was)}</s>` : ''}
+                  <span style="margin-left:auto;display:flex;gap:6px;align-items:center">${allBtn}${btn}
+                  ${adminLoggedIn ? `<button class="btn btn-secondary btn-sm" style="padding:3px 8px" onclick="betBoostExcl(${bi},'${esc(x)}')" title="Remove the boost in ${esc(x)}">✕ ${esc(x)}</button><button class="btn btn-secondary btn-sm" style="padding:3px 8px" onclick="betClearBoost(${bi})" title="Remove this boost everywhere">✕ all</button>` : ''}</span></div>`; };
               return `<div style="flex:1 1 100%;display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:8px">
-                <div style="display:flex;gap:3px;padding:3px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1)">${dvs.map(x => `<button onclick="window._boostSelDiv['${key}']='${esc(x)}';renderBets()" style="border:0;cursor:pointer;font:800 .74rem/1 'Barlow Condensed',sans-serif;letter-spacing:.8px;padding:5px 9px;border-radius:999px;${x === sel ? 'background:linear-gradient(135deg,#ffe259,#ffa751);color:#111' : 'background:transparent;color:var(--muted)'}">${esc(x)}</button>`).join('')}</div>
-                <span style="font-size:.78rem;color:var(--muted)">${esc(lnTxt)}</span>${w ? `<s style="font-size:.74rem;color:var(--muted)">${fmtOdds(w.was)}</s>` : ''}
-                <span style="margin-left:auto;display:flex;gap:6px;align-items:center">${(() => { if (!w) return `<button class="btn btn-primary btn-sm" onclick="betDiv('${esc(sel)}')">🚀 +${pct}% · go to ${esc(sel)} →</button>`;
-                  const base = plain(f.label).replace(/\s*\d+(?:[.:]\d+)*\s*$/, ''), lbl = sel + ' ' + base + (f.market === 'ou' ? ' ' + w.line : '');
-                  const all = dvs.map(x => { const wx = _wideFor(f, x); if (!wx) return null; return [x, f.market, wx.sel.join(','), wx.odds, x + ' ' + base + (f.market === 'ou' ? ' ' + wx.line : '')]; }).filter(Boolean);
-                  (window._boostAll = window._boostAll || {})[key] = all;
-                  const allBtn = all.length > 1 && open ? `<button class="btn btn-secondary btn-sm" style="padding:4px 9px" onclick="betPickAllIn('${key}')" title="Add this boost in every division to your slip">＋ All ${all.length}</button>` : '';
-                  return allBtn + (sel === div ? oddsBtn(f.market, w.sel, lbl, w.odds) : `<button class="bo-odd boosted" ${open ? '' : 'disabled'} onclick="betPickIn('${esc(sel)}','${f.market}','${w.sel.join(',')}',${w.odds},'${esc(lbl).replace(/'/g, "\\'")}')">🚀 ${fmtOdds(w.odds)}</button>`); })()}
-                ${adminLoggedIn ? `<button class="btn btn-secondary btn-sm" style="padding:3px 8px" onclick="betBoostExcl(${bi},'${esc(sel)}')" title="Remove the boost in ${esc(sel)}">✕ ${esc(sel)}</button><button class="btn btn-secondary btn-sm" style="padding:3px 8px" onclick="betClearBoost(${bi})" title="Remove this boost everywhere">✕ all</button>` : ''}</span></div>`; })()}</div>`; }
+                <div style="display:flex;gap:3px;padding:3px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1)">${dvs.map(x => `<button class="bsel-pill" data-bkey="${esc(key)}" data-dv="${esc(x)}" onclick="boostSelDiv(this)" style="border:0;cursor:pointer;font:800 .74rem/1 'Barlow Condensed',sans-serif;letter-spacing:.8px;padding:5px 9px;border-radius:999px;${x === sel0 ? 'background:linear-gradient(135deg,#ffe259,#ffa751);color:#111' : 'background:transparent;color:var(--muted)'}">${esc(x)}</button>`).join('')}</div>
+                ${dvs.map(row).join('')}</div>`; })()}</div>`; }
         if (!multi) { const BOOST = f, bi = g.items[0].bi;
           return `<div class="bo-boost"><div class="bo-boost-l"><div class="bo-kicker">🚀 Boosted odds · ${esc(BOOST.div)}</div>${headHtml}<b>${esc(BOOST.label)}</b>
         <div class="bo-boost-o"><s>${fmtOdds(BOOST.was)}</s> → <em>${fmtOdds(BOOST.odds)}</em></div></div>
-        <div class="bo-boost-r">${BOOST.div === div ? oddsBtn(BOOST.market, BOOST.sel, BOOST.label, BOOST.odds) : `<button class="btn btn-primary btn-sm" onclick="betDiv('${esc(BOOST.div)}')">Go to ${esc(BOOST.div)} →</button>`}
+        <div class="bo-boost-r">${BOOST.div === div ? oddsBtn(BOOST.market, BOOST.sel, BOOST.label, BOOST.odds) : `<button class="bo-odd boosted" ${open ? '' : 'disabled'} onclick="betPickIn('${esc(BOOST.div)}','${BOOST.market}','${(BOOST.sel || []).join(',')}',${BOOST.odds},'${esc(BOOST.label).replace(/'/g, "\\'")}')">🚀 ${fmtOdds(BOOST.odds)}</button>`}
         ${adminLoggedIn ? `<button class="btn btn-secondary btn-sm" onclick="betClearBoost(${bi})" title="Remove boost">✕</button>` : ''}</div></div>`; }
         const its = g.items.slice().sort((a, b) => String(a.b.div).localeCompare(String(b.b.div)));
         return `<div class="bo-boost" style="flex-wrap:wrap"><div class="bo-boost-l" style="flex:1 1 100%"><div class="bo-kicker">🚀 Boosted odds · every division</div>${headHtml}<b>${esc(f.market === 'ou' ? plain(f.label).replace(/\s*\d+(?:\.\d+)?\s*$/, '').replace(/\s+(over|under)\s+\d+(?:\.\d+)?/i, ' $1') : plain(f.label))}</b></div>
           <div style="flex:1 1 100%;display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${its.map(({ b, bi }) => `<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid ${b.div === div ? 'rgba(255,200,0,.5)' : 'rgba(255,255,255,.1)'}">
             <b style="font-family:'Barlow Condensed',sans-serif;font-size:.85rem">${esc(b.div)}</b>${b.market === 'ou' && b.sel[2] != null ? `<small style="font-size:.66rem;color:var(--muted)">${esc(String(b.sel[1]).charAt(0).toUpperCase())} ${esc(String(b.sel[2]))}</small>` : ''}<s style="font-size:.7rem;color:var(--muted)">${fmtOdds(b.was)}</s>
-            ${b.div === div ? oddsBtn(b.market, b.sel, b.label, b.odds) : `<button class="btn btn-secondary btn-sm" style="padding:3px 8px" onclick="betDiv('${esc(b.div)}')">${fmtOdds(b.odds)} →</button>`}
+            ${b.div === div ? oddsBtn(b.market, b.sel, b.label, b.odds) : `<button class="bo-odd boosted" ${open ? '' : 'disabled'} onclick="betPickIn('${esc(b.div)}','${b.market}','${(b.sel || []).join(',')}',${b.odds},'${esc(b.label).replace(/'/g, "\\'")}')">🚀 ${fmtOdds(b.odds)}</button>`}
             ${adminLoggedIn ? `<button class="btn btn-secondary btn-sm" style="padding:2px 6px" onclick="betClearBoost(${bi})" title="Remove this division's boost">✕</button>` : ''}</div>`).join('')}</div></div>`; }).join('')}</div>`; })() : ''}
     ${adminLoggedIn && upcoming ? `<div style="margin:-4px 0 10px;text-align:right"><button class="btn btn-sm btn-secondary" style="margin-right:6px" onclick="betBoostTitleEdit()">✏️ Boosts headline</button><button class="btn btn-sm ${window._betBoostMode ? 'btn-primary' : 'btn-secondary'}" onclick="betBoostMode()">${window._betBoostMode ? '🚀 Boost mode ON — tap any price to boost it (tap here to cancel)' : '🚀 Set boosted odds'}</button></div>` : ''}
     <div class="bo-grid">
