@@ -7286,6 +7286,7 @@ async function init() {
     try {
       currentUser = JSON.parse(session);
       _saveSession(currentUser); // refresh the month-long sign-in every time the app opens
+      try { const ov = document.getElementById('login-overlay'); if (ov) ov.style.display = 'none'; } catch (e) {} // in case anything showed it while start-up was slow
       document.getElementById('logout-btn').style.display = '';
   try { document.getElementById('settings-btn').style.display = ''; } catch(e){}
     } catch(e) {}
@@ -30032,7 +30033,11 @@ init();
 <script>
 if ('serviceWorker' in navigator) {
   setTimeout(() => {
-    if (typeof currentUser === 'undefined' || (!currentUser && document.getElementById('login-overlay') && document.getElementById('login-overlay').style.display !== 'flex')) {
+    // Safety net for a hung start-up. Never show the login screen to someone who HAS a saved login —
+    // on a slow first load of the day (cold database, service-worker update) start-up can take longer
+    // than 5 s, and this used to pop the login screen over a perfectly good session.
+    const _hasSess = (() => { try { return typeof _readSession === 'function' && !!_readSession(); } catch (e) { return false; } })();
+    if (!_hasSess && (typeof currentUser === 'undefined' || (!currentUser && document.getElementById('login-overlay') && document.getElementById('login-overlay').style.display !== 'flex'))) {
       if (typeof showLoginOverlay === 'function') showLoginOverlay();
     }
   }, 5000);
