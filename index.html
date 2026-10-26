@@ -6138,6 +6138,12 @@ window.addEventListener('focus', () => window._handoffCheck());
 setInterval(() => { const ov = document.getElementById('login-overlay'); if (!currentUser && ov && ov.style.display === 'flex') window._handoffCheck(); }, 4000);
 
 function completeLogin(team, isNew = false) {
+  // Had to sign in again although they never pressed Log out and were here recently → the saved login
+  // vanished from this device (browser data cleared / evicted). Log it for the admin sign-out report.
+  try { if (!isNew && team && team.lastSeenAt && Date.now() - team.lastSeenAt < 30 * 864e5 && team.lastSeenAt > (team.loggedOutAt || 0)) {
+    const ua = navigator.userAgent || '', days = Math.round((Date.now() - team.lastSeenAt) / 864e5 * 10) / 10;
+    dbAdd('signoutReports', { userId: team.userId || '', name: team.playerName || team.teamName || '', why: 'had to sign in again — saved login was gone from this device (last here ' + (days < 1 ? 'today' : days + ' days ago') + ')', reportedAt: Date.now(), ua: ua.slice(0, 240),
+      standalone: !!(window.matchMedia && matchMedia('(display-mode: standalone)').matches) || !!navigator.standalone, inApp: /FBAN|FBAV|Instagram|Discord|Snapchat|TikTok|Line\/|Twitter|; wv\)/i.test(ua) }).catch(() => {}); } } catch (e) {}
   // The welcome tour is for NEW players only — an existing account (made more than 2 days ago) never sees it again,
   // even if this device's storage was wiped.
   window._tourExisting = !isNew && (!(team && team.createdAt) || Date.now() - team.createdAt > 2 * 86400000);
@@ -7116,6 +7122,7 @@ window.settingsChangePw = async function() {
 };
 window.logoutUser = function() {
   customConfirm('Log out?', () => {
+    try { const _id = window._myTeamDocId || localStorage.getItem('imsMyTeamDocId'); if (_id) dbSet('teams', _id, { loggedOutAt: Date.now() }).catch(() => {}); } catch (e) {}
     currentUser = null;
     window._myTeamDocId = null;
     _clearSession('pressed Log out');
@@ -7312,6 +7319,7 @@ async function init() {
   }
   try { window._adminFlagOk(); window._adminAutoCheck(); } catch (e) {} // accounts granted admin skip the password
   setTimeout(() => { try { _reportSignOut(); } catch (e) {} }, 4000);
+  setTimeout(() => { try { const day = new Date().toDateString(), id = window._myTeamDocId; if (currentUser && id && localStorage.getItem('imsSeenDay') !== day) { localStorage.setItem('imsSeenDay', day); dbSet('teams', id, { lastSeenAt: Date.now() }).catch(() => {}); } } catch (e) {} }, 6000);
   // Re-check periodically so a tab left open after an admin deletes the account signs itself
   // out, rather than lingering in a ghost state until the next manual refresh
   if (!window._accountAliveTimer) {
