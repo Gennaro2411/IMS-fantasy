@@ -28395,7 +28395,7 @@ window.renderBets = async function() {
   const _regSave = () => { clearTimeout(window._betRegT); window._betRegT = setTimeout(() => { try { const r = window._betReg, ks = Object.keys(r); if (ks.length > 4000) ks.slice(0, ks.length - 4000).forEach(k => delete r[k]); localStorage.setItem('imsBetReg', JSON.stringify(r)); } catch (e) {} }, 400); };
   const _regPut = (market, sel, auto) => { if (!upcoming || auto == null) return; const key = sel.join('-'), rk = upcoming.name + '|' + div + '|' + market + '|' + key; let R;
     const B = _findBoost(market, sel), o = OVR[ovKey(market, sel)];
-    if (B) R = { fixed: _boostPrice(B, auto), boost: true, base: auto }; else if (typeof o === 'number' && o >= 1.01) R = { fixed: o };
+    if (B) R = { fixed: _boostPrice(B, auto) }; else if (typeof o === 'number' && o >= 1.01) R = { fixed: o };
     else if (market === 'qh2h') { const f = _qPa(sel[0], sel[1]); R = f == null ? { fixed: auto } : { auto, fair: f, opp: sel.slice().reverse().join('-') }; }
     else if (market === 'h2h') R = { auto, fair: 1 / (1 + Math.pow(10, ((field.find(d => d.id === sel[1]) || {}).elo - (field.find(d => d.id === sel[0]) || {}).elo) / 400)), opp: sel.slice().reverse().join('-') };
     else if (market === 'ou' || market === 'cou' || market === 'yn') { const OR = (window._betOuReg || {})[market + ':' + key]; if (!OR) return; const os = sel.slice(); os[1] = ({ over: 'under', under: 'over', yes: 'no', no: 'yes' })[sel[1]] || sel[1]; R = { auto, fair: OR.p, opp: os.join('-') }; }
@@ -29372,10 +29372,6 @@ window._betCashValue = function(b) {
   // themselves and cash out). Odds shortened by other people's money → cash-out goes UP; odds
   // drifted → it goes DOWN. Value = stake × (odds taken ÷ current odds) × 0.95, capped at 95% of
   // the full potential return. Off-screen division → stake minus 5%.
-  // A boost added AFTER this bet was placed must not cut its cash-out: value it off the normal (un-boosted) price.
-  { let reg = window._betReg; if (!reg) { try { reg = JSON.parse(localStorage.getItem('imsBetReg') || '{}'); } catch (e) { reg = {}; } }
-    const R = reg[b.raceName + '|' + b.div + '|' + b.market + '|' + (b.sel || []).join('-')];
-    if (R && R.boost && R.base && Number(b.odds) < R.fixed - 0.005) { const raw = b.stake * (b.odds / R.base); return Math.max(1, Math.floor(Math.min(raw * 0.95, b.stake * b.odds * 0.95))); } }
   let now = window._betLive(b, true); if (now == null) now = window._betOuLive(b, true);
   if (now == null && b.div === window._betDivNow && typeof window._betCashOdds === 'function') {
     const auto = window._betAutoOdds(b.market, b.sel);
