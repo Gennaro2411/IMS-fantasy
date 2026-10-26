@@ -28774,7 +28774,7 @@ window.renderBets = async function() {
   const _clash = _betLegClashes(_legs);
   const _bb = _legs.length > 1 ? _bbPrice(_legs) : null;
   const _combOdds = _bb && !_bb.impossible ? _bb.odds : Math.round(_legs.reduce((a, l) => a * l.odds, 1) * 100) / 100;
-  const _bbNote = _bb && _bb.impossible ? `<div class="bo-bb bad">⛔ These picks can't all happen in the same race — remove one.</div>` : _bb && _bb.factor > 1.02 ? `<div class="bo-bb">🧩 <b>Bet builder price</b> — linked picks in ${_bb.groups.filter(g => g.factor > 1.02).map(g => esc(g.div)).join(', ')} priced together <span>(${fmtOdds(_bb.raw)} if they were unrelated)</span></div>` : '';
+  const _bbNote = (_bb && _bb.capped && !_bb.impossible ? `<div class="bo-bb">🧢 <b>Max odds reached</b> — multis are capped at ${fmtOdds(BET_MAX_MULTI)}.</div>` : '') + (_bb && _bb.impossible ? `<div class="bo-bb bad">⛔ These picks can't all happen in the same race — remove one.</div>` : _bb && _bb.factor > 1.02 ? `<div class="bo-bb">🧩 <b>Bet builder price</b> — linked picks in ${_bb.groups.filter(g => g.factor > 1.02).map(g => esc(g.div)).join(', ')} priced together <span>(${fmtOdds(_bb.raw)} if they were unrelated)</span></div>` : '');
   const _stk0 = Math.min(window._betStake || 50, coins.balance);
   const slipHtml = _legs.length ? `<div class="bo-slip">
       <div class="bo-slip-h"><span>Bet slip · <b style="color:#fff">${_foldName(_legs.length)}</b> <i class="bo-slip-n">${_legs.length}</i></span><button onclick="betClearSlip()" title="Clear slip">✕</button></div>
@@ -29470,6 +29470,7 @@ window.betDiv = function(d) { window._betDiv = d; renderBets(); };
 // That ratio (the correlation factor) shrinks the combined odds. Picks in different divisions, and
 // markets the simulation can't model (DNFs, gaps, margins…), are still multiplied as normal.
 const BB_SIMS = 20000;
+const BET_MAX_MULTI = 1000000;
 function _bbEvalFn(l) {
   const m = l.market, s = l.sel || [];
   if (l.div === 'BOTT') { // S = { sc: {teamId: points}, rank: {teamId: 1..n}, max }
@@ -29550,8 +29551,9 @@ function _bbPrice0(legs) {
     { const os = G.map(g => Number(g.l.odds) || 1), prod = os.reduce((a, o) => a * o, 1), mx = Math.max(...os);
       const floorOdds = mx * Math.max(1.05, Math.pow(prod / mx, 0.35)); fct = Math.min(fct, Math.max(1, prod / floorOdds)); } // ignore simulation noise on unrelated picks // only ever shortens odds (linked picks); unrelated or opposing picks stay multiplied
     factor *= fct; groups.push({ div: dv, legs: G.map(g => g.l), factor: fct }); });
-  const odds = Math.max(1.01, Math.round(raw / factor * 100) / 100);
-  return { odds: impossible ? 0 : odds, raw: Math.round(raw * 100) / 100, factor, groups, impossible };
+  // Bookie-style maximum price on a multi: odds above 1,000,000 are capped (also keeps payouts storable).
+  const odds = Math.min(BET_MAX_MULTI, Math.max(1.01, Math.round(raw / factor * 100) / 100));
+  return { capped: raw / factor > BET_MAX_MULTI, odds: impossible ? 0 : odds, raw: Math.round(raw * 100) / 100, factor, groups, impossible };
 }
 // Same outcome written two ways (bookies grey the second one out): e.g. BOTT "leader tops the round" = "Williams top constructor",
 // "leader outscores P2" = that BOTT head-to-head, "giant killer" = the H2H the other way round.
@@ -29576,6 +29578,13 @@ function _betLegClashes(legs) {
         const t = a.market === 'tri' ? a : b, o = a.market === 'tri' ? b : a; if (['spw', 'spp', 'pole', 'qh2h', 'pgap'].includes(o.market)) return false; // sprint & qualifying markets don't touch the race result
         return (o.sel || []).some(x => t.sel.includes(String(x).replace(/^(fpos|ddnf):/, ''))); })())
       || (a.market === 'spoon' && b.market === 'spoon')
+      // Same driver can't DNF and also finish last / win / podium / top 5 (wooden spoon = last CLASSIFIED finisher).
+      || (() => { const dnfOf = (l) => l.market === 'yn' && /^ddnf:/.test(String(l.sel[0])) && l.sel[1] === 'yes' ? String(l.sel[0]).slice(5) : null;
+          const fin = (l) => ['spoon', 'win', 'pod', 'top5'].includes(l.market) ? String(l.sel[0]) : null;
+          const da = dnfOf(a), db = dnfOf(b), fa = fin(a), fb = fin(b);
+          return (da && fb && da === fb) || (db && fa && db === fa); })()
+      // Last place and a win / podium / top 5 for the same driver can't both happen.
+      || (a.sel[0] === b.sel[0] && ((a.market === 'spoon' && ['win', 'pod', 'top5'].includes(b.market)) || (b.market === 'spoon' && ['win', 'pod', 'top5'].includes(a.market))))
       || (a.market === 'spw' && b.market === 'spw') || (['spw', 'spp'].includes(a.market) && ['spw', 'spp'].includes(b.market) && a.market !== b.market && a.sel[0] === b.sel[0])
       || (['win', 'pod', 'top5'].includes(a.market) && ['win', 'pod', 'top5'].includes(b.market) && a.market !== b.market && a.sel[0] === b.sel[0]);
     if (clash) { bad.add(a.key); bad.add(b.key); }
