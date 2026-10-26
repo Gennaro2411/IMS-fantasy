@@ -27720,6 +27720,13 @@ window.betBoostTitleEdit = async function() {
   if (typeof showToast === 'function') showToast(v.title ? '🚀 Headline set' : 'Headline removed', 'success');
   renderBets();
 };
+// Add a pick from ANOTHER division to the slip (e.g. from an all-division boost card) without leaving this tab.
+window.betPickIn = function(dv, market, selCsv, odds, label) {
+  const prev = window._betDiv; window._betDiv = dv;
+  const _r = window.renderBets; window.renderBets = () => {}; // betPick re-renders; do it once, back on the current tab
+  try { betPick(market, selCsv, odds, label); } finally { window.renderBets = _r; window._betDiv = prev; }
+  renderBets();
+};
 window.betBoostExcl = async function(i, dv) {
   const up = window._betCtx && window._betCtx.upcoming; const doc = await dbGet('settings', 'betBoost').catch(() => null);
   const list = window._betBoostList(doc, up ? up.name : (doc && doc.value && doc.value.raceName)); const b = list[i]; if (!b || !b.allDivs) return;
@@ -28581,7 +28588,7 @@ window.renderBets = async function() {
     if (B.market === 'ou') { let o = null;
       if (['dnf', 'gain', 'fin'].includes(st)) o = _ouFrom(_rsS.filter(x => sd(x) && x[st] != null).map(x => ({ v: x[st], w: x.t === _upK ? 3 : 1 })), 1);
       else if (st === 'wtime') { let t = _rsS.filter(x => x.win && x.t === _upK && sd(x)).map(x => ({ v: x.win, w: 1 })); if (t.length < 3) t = _rsS.filter(x => x.win && x.t === _upK).map(x => ({ v: x.win, w: sd(x) ? 2 : 1 })); o = _ouFrom(t, 100); }
-      if (!o) return null; line = st === 'wtime' && typeof _fmtT === 'function' ? _fmtT(o.line) : String(o.line); p = side === 'over' ? o.po : 1 - o.po;
+      if (!o) return null; var raw = o.line; line = st === 'wtime' && typeof _fmtT === 'function' ? _fmtT(o.line) : String(o.line); p = side === 'over' ? o.po : 1 - o.po;
     } else if (B.market === 'yn') {
       const rate = (pts) => { if (pts.length < 3) return null; const W = pts.reduce((a, x) => a + x.w, 0), Y = pts.reduce((a, x) => a + (x.y ? x.w : 0), 0); return (Y + 1) / (W + 2); };
       const T = ['o3', 'o10'].includes(st) ? (x) => (sd(x) ? 2 : 1) * (x.t === _upK ? 3 : 1) : (x) => sd(x) ? 2 : 1;
@@ -28589,7 +28596,8 @@ window.renderBets = async function() {
       if (py == null) return null; p = side === 'yes' ? py : 1 - py;
     }
     if (p == null) return null; const auto = _betOdds(p);
-    return { line, was: auto, odds: Math.max(1.01, Math.round(auto * (B.mult || 1) * 100) / 100) };
+    const sel = B.market === 'ou' ? [st, side, String(raw)] : B.sel.slice();
+    return { line, sel, was: auto, odds: Math.max(1.01, Math.round(auto * (B.mult || 1) * 100) / 100) };
   } catch (e) { return null; } };
   // Bet builder: remember this division's field + pole chances so same-race picks on a slip can be priced together.
   if (!isC && field.length >= 2) { window._bbCtx = window._bbCtx || {}; const _pwR = (_yn.find(x => x[0] === 'pw') || [])[2];
@@ -28862,7 +28870,9 @@ window.renderBets = async function() {
               return `<div style="flex:1 1 100%;display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:8px">
                 <div style="display:flex;gap:3px;padding:3px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1)">${dvs.map(x => `<button onclick="window._boostSelDiv['${key}']='${esc(x)}';renderBets()" style="border:0;cursor:pointer;font:800 .74rem/1 'Barlow Condensed',sans-serif;letter-spacing:.8px;padding:5px 9px;border-radius:999px;${x === sel ? 'background:linear-gradient(135deg,#ffe259,#ffa751);color:#111' : 'background:transparent;color:var(--muted)'}">${esc(x)}</button>`).join('')}</div>
                 <span style="font-size:.78rem;color:var(--muted)">${esc(lnTxt)}</span>${w ? `<s style="font-size:.74rem;color:var(--muted)">${fmtOdds(w.was)}</s>` : ''}
-                <span style="margin-left:auto;display:flex;gap:6px;align-items:center">${sel === div ? `<b style="color:var(--gold);font-family:'Barlow Condensed',sans-serif;font-size:1.05rem">🚀 ${w ? fmtOdds(w.odds) : '+' + pct + '%'}</b><small style="font-size:.66rem;color:var(--muted)">bet below ↓</small>` : `<button class="btn btn-primary btn-sm" onclick="betDiv('${esc(sel)}')">🚀 ${w ? fmtOdds(w.odds) : '+' + pct + '%'} · go to ${esc(sel)} →</button>`}
+                <span style="margin-left:auto;display:flex;gap:6px;align-items:center">${(() => { if (!w) return `<button class="btn btn-primary btn-sm" onclick="betDiv('${esc(sel)}')">🚀 +${pct}% · go to ${esc(sel)} →</button>`;
+                  const base = plain(f.label).replace(/\s*\d+(?:[.:]\d+)*\s*$/, ''), lbl = sel + ' ' + base + (f.market === 'ou' ? ' ' + w.line : '');
+                  return sel === div ? oddsBtn(f.market, w.sel, lbl, w.odds) : `<button class="bo-odd boosted" ${open ? '' : 'disabled'} onclick="betPickIn('${esc(sel)}','${f.market}','${w.sel.join(',')}',${w.odds},'${esc(lbl).replace(/'/g, "\\'")}')">🚀 ${fmtOdds(w.odds)}</button>`; })()}
                 ${adminLoggedIn ? `<button class="btn btn-secondary btn-sm" style="padding:3px 8px" onclick="betBoostExcl(${bi},'${esc(sel)}')" title="Remove the boost in ${esc(sel)}">✕ ${esc(sel)}</button><button class="btn btn-secondary btn-sm" style="padding:3px 8px" onclick="betClearBoost(${bi})" title="Remove this boost everywhere">✕ all</button>` : ''}</span></div>`; })()}</div>`; }
         if (!multi) { const BOOST = f, bi = g.items[0].bi;
           return `<div class="bo-boost"><div class="bo-boost-l"><div class="bo-kicker">🚀 Boosted odds · ${esc(BOOST.div)}</div>${headHtml}<b>${esc(BOOST.label)}</b>
