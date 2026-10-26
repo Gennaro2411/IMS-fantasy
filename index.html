@@ -27720,6 +27720,12 @@ window.betBoostTitleEdit = async function() {
   if (typeof showToast === 'function') showToast(v.title ? '🚀 Headline set' : 'Headline removed', 'success');
   renderBets();
 };
+window.betBoostExcl = async function(i, dv) {
+  const up = window._betCtx && window._betCtx.upcoming; const doc = await dbGet('settings', 'betBoost').catch(() => null);
+  const list = window._betBoostList(doc, up ? up.name : (doc && doc.value && doc.value.raceName)); const b = list[i]; if (!b || !b.allDivs) return;
+  b.excl = [...new Set([...(b.excl || []), dv])];
+  await dbSet('settings', 'betBoost', { value: { raceName: list[0].raceName, list, title: (doc && doc.value && doc.value.title) || '' } }); renderBets();
+};
 window.betBoostClose = function() { const el = document.getElementById('bst-modal'); if (!el) return; el.classList.remove('in'); setTimeout(() => el.remove(), 180); };
 window.betBoostMul = function(m) { const d = window._boostDraft; if (!d) return; const i = document.getElementById('bst-val'); i.value = (Math.round(d.was * m * 100) / 100).toFixed(2);
   document.querySelectorAll('#bst-modal .bst-q button').forEach(b => b.classList.toggle('on', Number(b.dataset.m) === m)); betBoostPrev(); };
@@ -27735,7 +27741,14 @@ window.betBoostSave = async function() {
   const rest = cur.filter(b => !same(b));
   const _gk = (b) => b.market + '|' + (b.market === 'ou' ? (b.sel || []).slice(0, 2) : (b.sel || [])).join('-'), _groups = new Set(rest.map(_gk));
   if (!_groups.has(_gk(d)) && _groups.size >= BET_MAX_BOOSTS) { document.getElementById('bst-err').textContent = 'Max ' + BET_MAX_BOOSTS + ' different boosts per round (the same bet across divisions counts once) — remove one first.'; return; }
-  const list = [...rest, { raceName: d.raceName, div: d.div, market: d.market, sel: d.sel, label: d.label, was: d.was, odds: Math.round(n * 100) / 100, setAt: Date.now(), head: ((document.getElementById('bst-head') || {}).value || '').trim().slice(0, 60) }];
+  const _head = ((document.getElementById('bst-head') || {}).value || '').trim().slice(0, 60);
+  // Race-wide markets (over/unders like DNFs in the race, and yes/no specials that aren't about one driver) get
+  // boosted in EVERY division at the same multiplier; individual divisions can be removed afterwards.
+  const _wide = d.div !== 'BOTT' && (d.market === 'ou' || (d.market === 'yn' && !/:/.test(String(d.sel[0]))));
+  const _rest2 = _wide ? rest.filter(b => !(b.market === d.market && (b.sel || [])[0] === d.sel[0] && (b.sel || [])[1] === d.sel[1])) : rest;
+  const list = [..._rest2, _wide
+    ? { raceName: d.raceName, div: 'ALL', allDivs: true, excl: [], originDiv: d.div, market: d.market, sel: d.sel, label: d.label, was: d.was, odds: Math.round(n * 100) / 100, mult: Math.round(n / d.was * 1000) / 1000, setAt: Date.now(), head: _head }
+    : { raceName: d.raceName, div: d.div, market: d.market, sel: d.sel, label: d.label, was: d.was, odds: Math.round(n * 100) / 100, setAt: Date.now(), head: _head }];
   const _ttl = ((document.getElementById('bst-title') || {}).value || '').trim().slice(0, 60);
   window._betBoostTitle = _ttl;
   await dbSet('settings', 'betBoost', { value: { raceName: d.raceName, list, title: _ttl } });
@@ -28346,7 +28359,9 @@ window.renderBets = async function() {
   const BOOSTS = upcoming ? window._betBoostList(_boostDoc, upcoming.name) : []; window._betBoostsNow = BOOSTS;
   window._betBoostTitle = (_boostDoc && _boostDoc.value && _boostDoc.value.title) || '';
   window._betBoost = BOOSTS;
-  const _findBoost = (market, sel) => BOOSTS.find(B => B.div === div && B.market === market && (B.sel || []).join('-') === sel.join('-'));
+  const _findBoost = (market, sel) => BOOSTS.find(B => B.div === div && B.market === market && (B.sel || []).join('-') === sel.join('-'))
+    || BOOSTS.find(B => B.allDivs && div !== 'BOTT' && !(B.excl || []).includes(div) && B.market === market && (B.sel || [])[0] === sel[0] && (B.sel || [])[1] === sel[1]);
+  const _boostPrice = (B, auto) => B.allDivs ? Math.max(1.01, Math.round((Number(auto) || 1) * (B.mult || 1) * 100) / 100) : B.odds;
   const _isBoost = (market, sel) => !!_findBoost(market, sel);
   // Over/under & yes/no: remember each side's model price + probability so the live price and cash-out can use them.
   if (!window._betOuReg) { try { window._betOuReg = JSON.parse(localStorage.getItem('imsBetOuReg') || '{}') || {}; } catch (e) { window._betOuReg = {}; } }
@@ -28359,7 +28374,7 @@ window.renderBets = async function() {
   const _regSave = () => { clearTimeout(window._betRegT); window._betRegT = setTimeout(() => { try { const r = window._betReg, ks = Object.keys(r); if (ks.length > 4000) ks.slice(0, ks.length - 4000).forEach(k => delete r[k]); localStorage.setItem('imsBetReg', JSON.stringify(r)); } catch (e) {} }, 400); };
   const _regPut = (market, sel, auto) => { if (!upcoming || auto == null) return; const key = sel.join('-'), rk = upcoming.name + '|' + div + '|' + market + '|' + key; let R;
     const B = _findBoost(market, sel), o = OVR[ovKey(market, sel)];
-    if (B) R = { fixed: B.odds }; else if (typeof o === 'number' && o >= 1.01) R = { fixed: o };
+    if (B) R = { fixed: _boostPrice(B, auto) }; else if (typeof o === 'number' && o >= 1.01) R = { fixed: o };
     else if (market === 'qh2h') { const f = _qPa(sel[0], sel[1]); R = f == null ? { fixed: auto } : { auto, fair: f, opp: sel.slice().reverse().join('-') }; }
     else if (market === 'h2h') R = { auto, fair: 1 / (1 + Math.pow(10, ((field.find(d => d.id === sel[1]) || {}).elo - (field.find(d => d.id === sel[0]) || {}).elo) / 400)), opp: sel.slice().reverse().join('-') };
     else if (market === 'ou' || market === 'cou' || market === 'yn') { const OR = (window._betOuReg || {})[market + ':' + key]; if (!OR) return; const os = sel.slice(); os[1] = ({ over: 'under', under: 'over', yes: 'no', no: 'yes' })[sel[1]] || sel[1]; R = { auto, fair: OR.p, opp: os.join('-') }; }
@@ -28369,7 +28384,7 @@ window.renderBets = async function() {
     const old = window._betReg[rk]; if (!old || JSON.stringify(old) !== JSON.stringify(R)) { window._betReg[rk] = R; _regSave(); } };
   const finalOdds = (market, sel, auto) => { try { _regPut(market, sel, auto); } catch (e) {} return _finalRaw(market, sel, auto); };
   const _finalRaw = (market, sel, auto) => {
-    { const B = _findBoost(market, sel); if (B) return B.odds; }
+    { const B = _findBoost(market, sel); if (B) return _boostPrice(B, auto); }
     const o = OVR[ovKey(market, sel)]; if (typeof o === 'number' && o >= 1.01) return o;
     const key = sel.join('-');
     if (market === 'qh2h') {
@@ -28821,6 +28836,12 @@ window.renderBets = async function() {
       const plain = (lbl) => String(lbl || '').replace(/\s*[(]?\b(?:D\d|E\d)\b[)]?\s*/g, ' ').replace(/\s+:/g, ':').replace(/\s{2,}/g, ' ').trim();
       return `<div class="bo-boosts">${grp.map(g => { const f = g.items[0].b, multi = g.items.length > 1, head = (g.items.find(x => x.b.head) || {}).b;
         const headHtml = head ? `<div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;font-size:1.05rem;letter-spacing:.3px;line-height:1.1;margin:2px 0 3px;background:linear-gradient(90deg,#ffe259,#ffa751);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">${esc(head.head)}</div>` : '';
+        if (f.allDivs) { const bi = g.items[0].bi, pct = Math.round(((f.mult || 1) - 1) * 100), dvs = divs.filter(x => x !== 'BOTT' && !(f.excl || []).includes(x));
+          return `<div class="bo-boost" style="flex-wrap:wrap"><div class="bo-boost-l" style="flex:1 1 100%"><div class="bo-kicker">🚀 Boosted odds · every division · +${pct}%</div>${headHtml}<b>${esc(plain(f.label).replace(/\s*\d+(?:\.\d+)?\s*$/, ''))}</b></div>
+            <div style="flex:1 1 100%;display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${dvs.map(x => `<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid ${x === div ? 'rgba(255,200,0,.5)' : 'rgba(255,255,255,.1)'}">
+              <b style="font-family:'Barlow Condensed',sans-serif;font-size:.85rem">${esc(x)}</b>${x === div ? `<small style="font-size:.66rem;color:var(--gold)">🚀 boosted below ↓</small>` : `<button class="btn btn-secondary btn-sm" style="padding:3px 8px" onclick="betDiv('${esc(x)}')">+${pct}% →</button>`}
+              ${adminLoggedIn ? `<button class="btn btn-secondary btn-sm" style="padding:2px 6px" onclick="betBoostExcl(${bi},'${esc(x)}')" title="Remove the boost in ${esc(x)}">✕</button>` : ''}</div>`).join('')}
+              ${adminLoggedIn ? `<button class="btn btn-secondary btn-sm" style="padding:3px 8px" onclick="betClearBoost(${bi})" title="Remove this boost everywhere">✕ all</button>` : ''}</div></div>`; }
         if (!multi) { const BOOST = f, bi = g.items[0].bi;
           return `<div class="bo-boost"><div class="bo-boost-l"><div class="bo-kicker">🚀 Boosted odds · ${esc(BOOST.div)}</div>${headHtml}<b>${esc(BOOST.label)}</b>
         <div class="bo-boost-o"><s>${fmtOdds(BOOST.was)}</s> → <em>${fmtOdds(BOOST.odds)}</em></div></div>
@@ -29276,7 +29297,7 @@ window._betOuLive = function(b, exclMe) {
   let reg = window._betOuReg; if (!reg) { try { reg = JSON.parse(localStorage.getItem('imsBetOuReg') || '{}'); } catch (e) { reg = {}; } }
   const key = (b.sel || []).join('-'), R = reg[b.market + ':' + key]; if (!R) return null;
   // Boosted picks keep their fixed boosted price — never value them off the normal line (that would turn a boost into free cash-out profit).
-  if ((window._betBoostsNow || []).some(B => B.div === b.div && B.market === b.market && (B.sel || []).join('-') === key)) return null;
+  if ((window._betBoostsNow || []).some(B => (B.div === b.div && B.market === b.market && (B.sel || []).join('-') === key) || (B.allDivs && !(B.excl || []).includes(b.div) && B.market === b.market && (B.sel || [])[0] === (b.sel || [])[0] && (B.sel || [])[1] === (b.sel || [])[1]))) return null;
   if (b.odds > R.auto * 1.31) return null; // taken above anything the market could reach = a boost price
   const opp = (b.sel || []).slice(); opp[1] = ({ over: 'under', under: 'over', yes: 'no', no: 'yes' })[opp[1]] || opp[1]; const oKey = opp.join('-');
   const me = currentUser && currentUser.userId;
