@@ -5675,6 +5675,9 @@ function _idbSess(op, val) {
   } catch (e) { res(null); } });
 }
 // Why was I signed out? Each sign-out records a reason so a surprise logout can be traced next time.
+// Rough per-device key (browser + OS string), so "last seen" can be tracked per device — a login on a
+// second device must not look like this device losing its saved login.
+function _devKey() { const u = navigator.userAgent || ''; let h = 0; for (let i = 0; i < u.length; i++) h = (h * 31 + u.charCodeAt(i)) | 0; return 'd' + (h >>> 0).toString(36); }
 // Once someone is signed in again, send the reason for their last unexpected sign-out (and the device)
 // to the admin log, so "I keep getting logged out" can be traced.
 async function _reportSignOut() {
@@ -5691,7 +5694,7 @@ window.renderSignOutReports = async function() {
   const rows = (await dbGetAll('signoutReports', { fresh: true }).catch(() => [])).sort((a, b) => (b.reportedAt || 0) - (a.reportedAt || 0)).slice(0, 60);
   const dev = (u) => /iPhone|iPad/.test(u) ? 'iPhone/iPad' : /Android/.test(u) ? 'Android' : /Mac/.test(u) ? 'Mac' : /Windows/.test(u) ? 'Windows' : 'Other';
   const br = (u) => /Discord/i.test(u) ? 'Discord in-app' : /Instagram|FBAN|FBAV/.test(u) ? 'Social in-app' : /CriOS|Chrome/.test(u) ? 'Chrome' : /FxiOS|Firefox/.test(u) ? 'Firefox' : /Safari/.test(u) ? 'Safari' : 'Browser';
-  box.innerHTML = rows.length ? rows.map(r => `<div style="display:flex;gap:10px;flex-wrap:wrap;padding:7px 0;border-bottom:1px solid var(--border);font-size:.78rem"><b style="min-width:120px">${esc(r.name || r.userId || '?')}</b><span style="flex:1;min-width:200px">${esc(r.why || '')}</span><span style="color:var(--muted)">${dev(r.ua || '')} · ${br(r.ua || '')}${r.standalone ? ' · home-screen app' : ''}${r.inApp ? ' · ⚠️ in-app browser' : ''}</span><span style="color:var(--muted)">${new Date(r.reportedAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span></div>`).join('') : '<div class="text-muted" style="font-size:.8rem">No sign-out reports yet.</div>';
+  box.innerHTML = rows.length ? rows.map(r => `<div style="display:flex;gap:10px;flex-wrap:wrap;padding:7px 0;border-bottom:1px solid var(--border);font-size:.78rem"><b style="min-width:120px">${esc(r.name || r.userId || '?')}</b><span style="flex:1;min-width:200px">${esc(r.why || '')}</span><span style="color:var(--muted)">${dev(r.ua || '')} · ${br(r.ua || '')}${r.standalone ? ' · home-screen app' : ''}${r.inApp ? ' · ⚠️ in-app browser' : ''}${r.site ? ' · ' + esc(r.site) : ''}</span><span style="color:var(--muted)">${new Date(r.reportedAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span></div>`).join('') : '<div class="text-muted" style="font-size:.8rem">No sign-out reports yet.</div>';
 };
 function _noteSignOut(why) { try { localStorage.setItem('imsLastSignOut', JSON.stringify({ why, at: Date.now() })); } catch (e) {} console.warn('[SIGN-OUT]', why); }
 function _clearSession(why) {
@@ -6140,9 +6143,9 @@ setInterval(() => { const ov = document.getElementById('login-overlay'); if (!cu
 function completeLogin(team, isNew = false) {
   // Had to sign in again although they never pressed Log out and were here recently → the saved login
   // vanished from this device (browser data cleared / evicted). Log it for the admin sign-out report.
-  try { if (!isNew && team && team.lastSeenAt && Date.now() - team.lastSeenAt < 30 * 864e5 && team.lastSeenAt > (team.loggedOutAt || 0)) {
-    const ua = navigator.userAgent || '', days = Math.round((Date.now() - team.lastSeenAt) / 864e5 * 10) / 10;
-    dbAdd('signoutReports', { userId: team.userId || '', name: team.playerName || team.teamName || '', why: 'had to sign in again — saved login was gone from this device (last here ' + (days < 1 ? 'today' : days + ' days ago') + ')', reportedAt: Date.now(), ua: ua.slice(0, 240),
+  try { const _seen = team && team.seenBy && team.seenBy[_devKey()]; if (!isNew && _seen && Date.now() - _seen < 30 * 864e5 && _seen > (team.loggedOutAt || 0)) {
+    const ua = navigator.userAgent || '', days = Math.round((Date.now() - _seen) / 864e5 * 10) / 10;
+    dbAdd('signoutReports', { userId: team.userId || '', name: team.playerName || team.teamName || '', why: 'had to sign in again — saved login was gone from this device (this device last here ' + (days < 1 ? 'today' : days + ' days ago') + ')', reportedAt: Date.now(), ua: ua.slice(0, 240), site: location.host,
       standalone: !!(window.matchMedia && matchMedia('(display-mode: standalone)').matches) || !!navigator.standalone, inApp: /FBAN|FBAV|Instagram|Discord|Snapchat|TikTok|Line\/|Twitter|; wv\)/i.test(ua) }).catch(() => {}); } } catch (e) {}
   // The welcome tour is for NEW players only — an existing account (made more than 2 days ago) never sees it again,
   // even if this device's storage was wiped.
@@ -7319,7 +7322,7 @@ async function init() {
   }
   try { window._adminFlagOk(); window._adminAutoCheck(); } catch (e) {} // accounts granted admin skip the password
   setTimeout(() => { try { _reportSignOut(); } catch (e) {} }, 4000);
-  setTimeout(() => { try { const day = new Date().toDateString(), id = window._myTeamDocId; if (currentUser && id && localStorage.getItem('imsSeenDay') !== day) { localStorage.setItem('imsSeenDay', day); dbSet('teams', id, { lastSeenAt: Date.now() }).catch(() => {}); } } catch (e) {} }, 6000);
+  setTimeout(() => { try { const day = new Date().toDateString(), id = window._myTeamDocId; if (currentUser && id && localStorage.getItem('imsSeenDay') !== day) { localStorage.setItem('imsSeenDay', day); dbGet('teams', id).then(t => { if (!t) return; const sb = Object.assign({}, t.seenBy || {}); sb[_devKey()] = Date.now(); return dbSet('teams', id, { lastSeenAt: Date.now(), seenBy: sb }); }).catch(() => {}); } } catch (e) {} }, 6000);
   // Re-check periodically so a tab left open after an admin deletes the account signs itself
   // out, rather than lingering in a ghost state until the next manual refresh
   if (!window._accountAliveTimer) {
