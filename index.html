@@ -19414,8 +19414,17 @@ window.openDriverModal = async function(driverId) {
         const _rf = _rfm ? (_rfm[_rfk(driver.name)] || _rfm[_rfk(String(driver.name || '').replace(/^\[[^\]]*\]\s*/, ''))] || _rfm[_rfk(driver.imsAlias)]) : null;
         // Official classification from the .db wins (archived races only hold part of the field, so a
         // points-ranked position there is meaningless); otherwise the live post-verdict order.
-        const _hasLive = !!(race.driverPointsByDivision && race.driverPointsByDivision[driver.id] && race.driverPointsByDivision[driver.id][div] !== undefined && race.positionByDivision && Object.keys(race.positionByDivision).length > 5);
-        const finPos = (_hasLive ? (window._postVerdictPos(race, driver.id, div) || (race.positionByDivision[driver.id] && race.positionByDivision[driver.id][div])) : null) || _rf || window._postVerdictPos(race, driver.id, div) || (race.positionByDivision && race.positionByDivision[driver.id] && race.positionByDivision[driver.id][div]) || null;
+        // Same order as the Results page: points in this division (after verdicts). Resolve the race's id for
+        // this driver by name when the profile's id isn't on it (reserve copies / re-created records).
+        const _bdv = race.driverPointsByDivision || {};
+        let _rid = (_bdv[driver.id] && _bdv[driver.id][div] !== undefined) ? driver.id : null;
+        if (!_rid) { const ok = (n) => window._nmIs({ name: n }, driver);
+          _rid = Object.keys(race.driverNames || {}).find(id => _bdv[id] && _bdv[id][div] !== undefined && ok(race.driverNames[id])) || null;
+          if (!_rid && race.raceResultsByName) { const g = (Array.isArray(race.raceResultsByName) ? race.raceResultsByName : Object.entries(race.raceResultsByName)).find(([dv]) => dv === div); const e = g && Array.isArray(g[1]) ? g[1].find(x => window._nmIs(x, driver)) : null; if (e && e.driverId && _bdv[e.driverId]) _rid = e.driverId; } }
+        const _divHasLive = Object.values(_bdv).some(by => by && by[div] !== undefined);
+        const _isArch = !(typeof completedRaces !== 'undefined' && (completedRaces || []).some(x => x === race || (x.id && x.id === race.id)));
+        // Archived seasons only hold part of each field, so their official .db classification wins there.
+        const finPos = (_isArch && _rf) || (_rid ? window._postVerdictPos(race, _rid, div) : null) || (!_divHasLive ? _rf : null) || null;
         const divBadge = div
           ? `<span style="font-size:.6rem;font-weight:800;color:${hue};border:1px solid ${hue}88;background:${hue}1a;border-radius:3px;padding:0 4px;vertical-align:middle" title="Scored in ${esc(div)}">${esc(div)}</span>`
           : '';
