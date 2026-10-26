@@ -7733,10 +7733,12 @@ async function renderDashboard() {
   const divTimings = [
     { div: 'D1', dayOffset: 0, hour: 13, minute: 30 }, // Saturday 13:30
     { div: 'D0', dayOffset: 0, hour: 16, minute:  0 }, // Saturday 16:00
-    { div: 'D3', dayOffset: 1, hour:  4, minute: 30 }, // Sunday 04:30
-    { div: 'D2', dayOffset: 1, hour:  9, minute: 30 }, // Sunday 09:30
-    { div: 'D4', dayOffset: 1, hour: 11, minute: 30 }, // Sunday 11:30 (S7)
-    { div: 'E3', dayOffset: 1, hour: 11, minute: 30 }, // Sunday 11:30 (S8+, takes D4's slot)
+    // Sunday divisions are fixed in UTC (they don't move with UK clock changes): 04:30 / 09:30 / 11:30
+    // UK in summer (BST), 03:30 / 08:30 / 10:30 UK in winter (GMT).
+    { div: 'D3', dayOffset: 1, hour:  3, minute: 30, utc: true },
+    { div: 'D2', dayOffset: 1, hour:  8, minute: 30, utc: true },
+    { div: 'D4', dayOffset: 1, hour: 10, minute: 30, utc: true }, // S7
+    { div: 'E3', dayOffset: 1, hour: 10, minute: 30, utc: true }, // S8+, takes D4's slot
   ];
 
   const userTZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -7789,7 +7791,7 @@ async function renderDashboard() {
   // session highlighted and finished ones dimmed as the weekend progresses.
   const DIV_HUES = { D0:'#ffc800', D1:'#e8002d', D2:'#9b6fd4', D3:'#27f4d2', D4:'#2ecc71', E3:'#2ecc71' };
   const _activeTimingDivs = (typeof divisionsForSeason === 'function') ? divisionsForSeason(seasonNumber) : ['D0','D1','D2','D3','E3'];
-  const timingObjs = divTimings.filter(t => _activeTimingDivs.includes(t.div)).map(t => ({ ...t, local: convertLondonToLocal(t.dayOffset, t.hour, t.minute) }));
+  const timingObjs = divTimings.filter(t => _activeTimingDivs.includes(t.div)).map(t => ({ ...t, local: t.utc ? window._utcSlot(satStr, t.dayOffset, t.hour, t.minute) : convertLondonToLocal(t.dayOffset, t.hour, t.minute) }));
   const nowMs = Date.now();
   // Is there actually a race THIS week? The session tiles map onto the current wall-clock week, so
   // without a scheduled race they'd still light up "NEXT UP"/"DONE" for a week with no racing. Only
@@ -11655,10 +11657,12 @@ function briefingSessionTimes(anchorMs) {
   const divTimings = [
     { div: 'D1', dayOffset: 0, hour: 13, minute: 30 }, // Saturday 13:30
     { div: 'D0', dayOffset: 0, hour: 16, minute:  0 }, // Saturday 16:00
-    { div: 'D3', dayOffset: 1, hour:  4, minute: 30 }, // Sunday 04:30
-    { div: 'D2', dayOffset: 1, hour:  9, minute: 30 }, // Sunday 09:30
-    { div: 'D4', dayOffset: 1, hour: 11, minute: 30 }, // Sunday 11:30 (S7)
-    { div: 'E3', dayOffset: 1, hour: 11, minute: 30 }, // Sunday 11:30 (S8+, takes D4's slot)
+    // Sunday divisions are fixed in UTC (they don't move with UK clock changes): 04:30 / 09:30 / 11:30
+    // UK in summer (BST), 03:30 / 08:30 / 10:30 UK in winter (GMT).
+    { div: 'D3', dayOffset: 1, hour:  3, minute: 30, utc: true },
+    { div: 'D2', dayOffset: 1, hour:  8, minute: 30, utc: true },
+    { div: 'D4', dayOffset: 1, hour: 10, minute: 30, utc: true }, // S7
+    { div: 'E3', dayOffset: 1, hour: 10, minute: 30, utc: true }, // S8+, takes D4's slot
   ];
   const userTZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
   // Anchor the race weekend to the Saturday of the week containing the anchor time (the schedule's
@@ -11697,7 +11701,7 @@ function briefingSessionTimes(anchorMs) {
     };
   };
   const _activeTimingDivs2 = (typeof divisionsForSeason === 'function') ? divisionsForSeason(window.currentSeason) : ['D0','D1','D2','D3','E3'];
-  return divTimings.filter(t => _activeTimingDivs2.includes(t.div)).map(t => ({ ...t, local: toLocal(t.dayOffset, t.hour, t.minute) }));
+  return divTimings.filter(t => _activeTimingDivs2.includes(t.div)).map(t => ({ ...t, local: t.utc ? window._utcSlot(satStr, t.dayOffset, t.hour, t.minute) : toLocal(t.dayOffset, t.hour, t.minute) }));
 }
 
 let _briefingCountdownTimer = null;
@@ -29085,6 +29089,13 @@ window.adminTeamTransfers = async function(teamId, userId) {
       <span style="flex:none;min-width:62px;text-align:right;font-size:.68rem;color:${t.ftAfter == null ? 'var(--muted)' : t.ftAfter > 0 ? '#4ade80' : '#ff8f6b'}" title="Free transfers left after this transfer">${t.ftAfter == null ? '—' : t.via === 'wildcard' ? '🃏 ' + t.ftAfter + ' FT' : t.ftAfter + ' FT left'}</span>
       <b style="flex:none;font-family:'Barlow Condensed',sans-serif">${cost(Number(t.cost) || 0)}</b></div>`).join('') : '<div class="text-muted" style="font-size:.78rem">No transfers logged this season.</div>'}
   </div>`;
+};
+// A race slot fixed in UTC, on the race weekend's Saturday + dayOffset, shown in the viewer's timezone.
+window._utcSlot = function(satStr, dayOffset, hour, minute) {
+  const [y, m, d] = satStr.split('-').map(Number), when = new Date(Date.UTC(y, m - 1, d + dayOffset, hour, minute));
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const dayName = when.toLocaleString('en-US', { weekday: 'short', timeZone: tz }), timeStr = when.toLocaleString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: tz });
+  return { label: dayName + ' ' + timeStr, day: dayName.toUpperCase(), time: timeStr, when };
 };
 window.toggleRaceVerdicts = async function(id) {
   const r = await dbGet('races', id); if (!r) return;
