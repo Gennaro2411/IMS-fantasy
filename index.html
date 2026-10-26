@@ -7735,9 +7735,9 @@ async function renderDashboard() {
 
   // Division timings — source times in Europe/London (your timezone)
   const divTimings = [
-    { div: 'D1', dayOffset: 0, hour: 13, minute: 30 }, // Saturday 13:30
-    { div: 'D0', dayOffset: 0, hour: 16, minute:  0 }, // Saturday 16:00
-    // Sunday divisions are fixed in UTC (they don't move with UK clock changes): 04:30 / 09:30 / 11:30
+    { div: 'D1', dayOffset: 0, hour: 12, minute: 30, utc: true }, // UTC: Sat 13:30 UK in summer (BST), 12:30 in winter (GMT)
+    { div: 'D0', dayOffset: 0, hour: 15, minute:  0, utc: true }, // UTC: Sat 16:00 UK in summer, 15:00 in winter
+    // Every division is fixed in UTC (they don't move with UK clock changes): 04:30 / 09:30 / 11:30
     // UK in summer (BST), 03:30 / 08:30 / 10:30 UK in winter (GMT).
     { div: 'D3', dayOffset: 1, hour:  3, minute: 30, utc: true },
     { div: 'D2', dayOffset: 1, hour:  8, minute: 30, utc: true },
@@ -11659,9 +11659,9 @@ window.TRACK_FACTS = {
 // Briefing page can show fixtures + a live countdown without depending on the dashboard render.
 function briefingSessionTimes(anchorMs) {
   const divTimings = [
-    { div: 'D1', dayOffset: 0, hour: 13, minute: 30 }, // Saturday 13:30
-    { div: 'D0', dayOffset: 0, hour: 16, minute:  0 }, // Saturday 16:00
-    // Sunday divisions are fixed in UTC (they don't move with UK clock changes): 04:30 / 09:30 / 11:30
+    { div: 'D1', dayOffset: 0, hour: 12, minute: 30, utc: true }, // UTC: Sat 13:30 UK in summer (BST), 12:30 in winter (GMT)
+    { div: 'D0', dayOffset: 0, hour: 15, minute:  0, utc: true }, // UTC: Sat 16:00 UK in summer, 15:00 in winter
+    // Every division is fixed in UTC (they don't move with UK clock changes): 04:30 / 09:30 / 11:30
     // UK in summer (BST), 03:30 / 08:30 / 10:30 UK in winter (GMT).
     { div: 'D3', dayOffset: 1, hour:  3, minute: 30, utc: true },
     { div: 'D2', dayOffset: 1, hour:  8, minute: 30, utc: true },
