@@ -28803,7 +28803,8 @@ window.renderBets = async function() {
   const _hf = window._betHistFilter || 'all';
   const _settled = myBets.filter(b => b.status !== 'open');
   const _won = myBets.filter(b => b.status === 'won'), _lost = myBets.filter(b => b.status === 'lost');
-  const _net = myBets.reduce((a, b) => a + ((b.status === 'won' || b.status === 'cashed') ? (b.payout - b.stake) : b.status === 'lost' ? -b.stake : 0), 0);
+  // Free bets: a win is all profit, a loss costs nothing (same rule as the leaderboard's profit / loss).
+  const _net = myBets.reduce((a, b) => a + (b.status === 'open' ? 0 : (Number(b.payout) || 0) - (b.free ? 0 : (Number(b.stake) || 0))), 0);
   const _decided = _won.length + _lost.length;
   const histStats = `<div class="bo-hstats"><div><b>${myBets.length}</b><small>Bets</small></div><div><b>${_won.length}</b><small>Won</small></div><div><b>${_decided ? Math.round(_won.length / _decided * 100) + '%' : '–'}</b><small>Hit rate</small></div><div><b style="color:${_net >= 0 ? '#4ade80' : '#ff5470'}">${_net >= 0 ? '+' : ''}${_net}</b><small>Net <i class="imc" title="IM$"></i></small></div></div>`;
   const _cnt = { all: myBets.length, open: myBets.length - _settled.length, won: _won.length, lost: _lost.length, void: myBets.filter(b => b.status === 'void').length, cashed: myBets.filter(b => b.status === 'cashed').length };
