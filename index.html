@@ -28116,9 +28116,9 @@ function _betOutcome(b, races) {
 }
 const BET_FREE_STAKE = 150, BET_FREE_STREAK = 3, BET_MIN_STAKE = 10;
 // Free bet choices once the streak hits 3: 150 IM$ on anything at odds over 2.5, or 300 IM$ on a 3+ leg acca.
-const BET_FREE_OPTS = { odds: { stake: 150, label: '150 on any bet at odds over 2.5' }, acca: { stake: 300, label: '300 on a 3+ leg acca at odds over 5.0' } };
+const BET_FREE_OPTS = { odds: { stake: 150, label: '150 on any bet at odds over 2.5' }, acca: { stake: 300, label: '300 on a 3+ leg acca at odds over 5.0 (each pick 1.20+)' } };
 const _betFreeStake = () => (BET_FREE_OPTS[window._betUseFree] || {}).stake || 0;
-const _betFreeWhyNot = (kind, legs, odds) => kind === 'odds' ? (odds > 2.5 ? '' : 'needs odds over 2.5') : kind === 'acca' ? (legs.length < 3 ? 'needs 3+ picks' : odds > 5 ? '' : 'needs odds over 5.0') : 'pick an option';
+const _betFreeWhyNot = (kind, legs, odds) => kind === 'odds' ? (odds > 2.5 ? '' : 'needs odds over 2.5') : kind === 'acca' ? (legs.length < 3 ? 'needs 3+ picks' : legs.some(l => (Number(l.odds) || 0) < 1.2) ? 'needs every pick at odds of 1.20 or more' : odds > 5 ? '' : 'needs odds over 5.0') : 'pick an option';
 const _betPay = (b, st) => b.free ? (st === 'won' ? Math.round(b.stake * b.odds) - b.stake : 0) : st === 'won' ? Math.round(b.stake * b.odds) : st === 'void' ? b.stake : 0; // always the ODDS PLACED AT
 
 // Settle this player's open bets, AND re-check bets already settled: if the results were changed
@@ -28835,7 +28835,7 @@ window.renderBets = async function() {
   const _haveFree = !!upcoming && ((coins.freeBetGifts || 0) > 0 || (_streak >= BET_FREE_STREAK && coins.freeBetUsed !== upcoming.name));
   window._betFreeOk = _haveFree; if (!_haveFree) window._betUseFree = false;
   try { const g = coins.freeBetGifts || 0, k = 'ims_gift_seen_' + currentUser.userId, seen = +(localStorage.getItem(k) || 0);
-    if (g > seen && typeof customAlert === 'function') setTimeout(() => customAlert(`🎁 You've been gifted a free bet!\n\nPick one when you place a bet:\n• 150 IM$ on any bet at odds over 2.5\n• 300 IM$ on a 3+ leg acca at odds over 5.0\n\nYou keep the winnings.${upcoming ? '' : ' Betting opens when the next race is added.'}`), 400);
+    if (g > seen && typeof customAlert === 'function') setTimeout(() => customAlert(`🎁 You've been gifted a free bet!\n\nPick one when you place a bet:\n• 150 IM$ on any bet at odds over 2.5\n• 300 IM$ on a 3+ leg acca at odds over 5.0 (each pick 1.20+)\n\nYou keep the winnings.${upcoming ? '' : ' Betting opens when the next race is added.'}`), 400);
     localStorage.setItem(k, String(g)); } catch (e) {}
   const canRefill = coins.balance < 100 && openStake === 0 && upcoming && coins.refillRace !== upcoming.name;
   const slip = window._betSlip;
