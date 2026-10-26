@@ -3008,6 +3008,12 @@
     </div>
     <div id="admin-tab-settings" class="section">
       <div class="card">
+        <div class="card-title"><div class="dot"></div>🚪 Sign-out reports</div>
+        <p class="text-muted" style="margin-bottom:10px">When someone is signed out without pressing Log out, the reason and their device are sent here the next time they sign in.</p>
+        <button class="btn btn-secondary btn-sm" style="margin-bottom:8px" onclick="renderSignOutReports()">Load reports</button>
+        <div id="signout-reports"></div>
+      </div>
+      <div class="card">
         <div class="card-title"><div class="dot"></div>🏁 Current Season</div>
         <p class="text-muted" style="margin-bottom:12px">This drives which season is treated as "current" throughout the app — past-season tabs on driver profiles, BOTT standings, and results all key off this. Set it to match whichever season is actually live right now.</p>
         <div class="form-group"><label>Season Number</label><input type="number" id="current-season-input" min="1" placeholder="7"></div>
@@ -5655,14 +5661,45 @@ function _saveSession(u) { try { localStorage.setItem('imsHadSession', '1'); } c
   if (!u) return;
   try { localStorage.setItem('imsFantasyUser', JSON.stringify(u)); } catch (e) {}
   try { document.cookie = 'imsSess=' + encodeURIComponent(JSON.stringify(u)) + '; max-age=' + (_SESS_DAYS * 86400) + '; path=/; SameSite=Lax'; } catch (e) {}
+  _idbSess('put', JSON.stringify(u)); // third copy: survives some browsers' cookie/localStorage clean-ups
+  try { if (navigator.storage && navigator.storage.persist && !window._persistAsked) { window._persistAsked = true; navigator.storage.persist().catch(() => {}); } } catch (e) {} // ask the browser not to evict our storage
+}
+// Tiny IndexedDB key/value used only as a backup copy of the login.
+function _idbSess(op, val) {
+  return new Promise(res => { try {
+    const rq = indexedDB.open('imsKV', 1); rq.onupgradeneeded = () => { try { rq.result.createObjectStore('kv'); } catch (e) {} };
+    rq.onerror = () => res(null);
+    rq.onsuccess = () => { try { const tx = rq.result.transaction('kv', op === 'get' ? 'readonly' : 'readwrite'), st = tx.objectStore('kv');
+      const r = op === 'get' ? st.get('sess') : op === 'del' ? st.delete('sess') : st.put(val, 'sess');
+      r.onsuccess = () => res(op === 'get' ? (r.result || null) : true); r.onerror = () => res(null); } catch (e) { res(null); } };
+  } catch (e) { res(null); } });
 }
 // Why was I signed out? Each sign-out records a reason so a surprise logout can be traced next time.
+// Once someone is signed in again, send the reason for their last unexpected sign-out (and the device)
+// to the admin log, so "I keep getting logged out" can be traced.
+async function _reportSignOut() {
+  if (!currentUser) return; let ls = null; try { ls = JSON.parse(localStorage.getItem('imsLastSignOut') || 'null'); } catch (e) {}
+  const restored = window._sessRestoredFrom; if (!restored && !(ls && !ls.reported && ls.why !== 'pressed Log out' && Date.now() - ls.at < 7 * 864e5)) return;
+  const ua = navigator.userAgent || '', standalone = !!(window.matchMedia && matchMedia('(display-mode: standalone)').matches) || !!navigator.standalone;
+  const inApp = /FBAN|FBAV|Instagram|Discord|Snapchat|TikTok|Line\/|Twitter|; wv\)/i.test(ua);
+  try { await dbAdd('signoutReports', { userId: currentUser.userId || '', name: currentUser.name || currentUser.teamName || '', why: restored ? 'login rescued from ' + restored : (ls && ls.why) || 'unknown', signedOutAt: ls ? ls.at : null, reportedAt: Date.now(), ua: ua.slice(0, 240), standalone, inApp }); } catch (e) {}
+  if (ls) { ls.reported = true; try { localStorage.setItem('imsLastSignOut', JSON.stringify(ls)); } catch (e) {} }
+  window._sessRestoredFrom = null;
+}
+window.renderSignOutReports = async function() {
+  const box = document.getElementById('signout-reports'); if (!box) return;
+  const rows = (await dbGetAll('signoutReports', { fresh: true }).catch(() => [])).sort((a, b) => (b.reportedAt || 0) - (a.reportedAt || 0)).slice(0, 60);
+  const dev = (u) => /iPhone|iPad/.test(u) ? 'iPhone/iPad' : /Android/.test(u) ? 'Android' : /Mac/.test(u) ? 'Mac' : /Windows/.test(u) ? 'Windows' : 'Other';
+  const br = (u) => /Discord/i.test(u) ? 'Discord in-app' : /Instagram|FBAN|FBAV/.test(u) ? 'Social in-app' : /CriOS|Chrome/.test(u) ? 'Chrome' : /FxiOS|Firefox/.test(u) ? 'Firefox' : /Safari/.test(u) ? 'Safari' : 'Browser';
+  box.innerHTML = rows.length ? rows.map(r => `<div style="display:flex;gap:10px;flex-wrap:wrap;padding:7px 0;border-bottom:1px solid var(--border);font-size:.78rem"><b style="min-width:120px">${esc(r.name || r.userId || '?')}</b><span style="flex:1;min-width:200px">${esc(r.why || '')}</span><span style="color:var(--muted)">${dev(r.ua || '')} · ${br(r.ua || '')}${r.standalone ? ' · home-screen app' : ''}${r.inApp ? ' · ⚠️ in-app browser' : ''}</span><span style="color:var(--muted)">${new Date(r.reportedAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span></div>`).join('') : '<div class="text-muted" style="font-size:.8rem">No sign-out reports yet.</div>';
+};
 function _noteSignOut(why) { try { localStorage.setItem('imsLastSignOut', JSON.stringify({ why, at: Date.now() })); } catch (e) {} console.warn('[SIGN-OUT]', why); }
 function _clearSession(why) {
   _noteSignOut(why || 'unknown');
   try { localStorage.removeItem('imsHadSession'); } catch (e) {}
   try { localStorage.removeItem('imsFantasyUser'); } catch (e) {}
   try { document.cookie = 'imsSess=; max-age=0; path=/; SameSite=Lax'; } catch (e) {}
+  _idbSess('del');
 }
 function _readSession() {
   try { const v = localStorage.getItem('imsFantasyUser'); if (v) return v; } catch (e) {}
@@ -7229,7 +7266,8 @@ async function init() {
   } catch(e) {
     console.error('Firebase connection failed:', e);
   }
-  const session = _readSession();
+  let session = _readSession();
+  if (!session) { const bk = await _idbSess('get'); if (bk) { session = bk; window._sessRestoredFrom = 'backup (device storage had been cleared)'; } }
   try { window._myTeamDocId = localStorage.getItem('imsMyTeamDocId') || null; } catch(e){}
   try { if (!session && localStorage.getItem('imsHadSession')) { _noteSignOut('saved login was missing when the app opened (device storage cleared)'); localStorage.removeItem('imsHadSession'); } } catch(e){}
   // Signed out unexpectedly in the last day? Say why, so it can be reported.
@@ -7273,6 +7311,7 @@ async function init() {
     } catch(e) { /* offline / fetch failed — leave session as-is rather than lock them out */ }
   }
   try { window._adminFlagOk(); window._adminAutoCheck(); } catch (e) {} // accounts granted admin skip the password
+  setTimeout(() => { try { _reportSignOut(); } catch (e) {} }, 4000);
   // Re-check periodically so a tab left open after an admin deletes the account signs itself
   // out, rather than lingering in a ghost state until the next manual refresh
   if (!window._accountAliveTimer) {
