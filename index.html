@@ -25385,7 +25385,7 @@ window.importVerdictsFromDb = async function(btn, quiet) {
       FROM fia_awarded_penalties WHERE status = 'active' ORDER BY created_at_ts`);
     const list = (res.length ? res[0].values : []).map(([u, se, rn, dv, did, al, tp, pp, qb, rb, lb, j, at, inc]) => ({
       u: String(u || ''), s: Number(se) || 0, r: Number(rn) || 0, d: String(dv || '').toUpperCase(), id: did ? String(did) : '', a: String(al || ''),
-      t: tp == null || tp === '' || !isFinite(parseFloat(tp)) ? null : parseFloat(tp), pp: pp == null || !isFinite(parseFloat(pp)) ? null : parseFloat(pp), qb: Number(qb) || 0, rb: Number(rb) || 0, lb: lb ? 1 : 0,
+      dq: /dsq|disq/i.test(String(tp || '')) ? 1 : 0, t: tp == null || tp === '' || !isFinite(parseFloat(tp)) ? null : parseFloat(tp), pp: pp == null || !isFinite(parseFloat(pp)) ? null : parseFloat(pp), qb: Number(qb) || 0, rb: Number(rb) || 0, lb: lb ? 1 : 0,
       j: String(j || '').slice(0, 1500), at: Number(at) || 0, inc: inc ? String(inc) : '' }));
     // Race bans this season → driver.raceBanRacesLeft (once per penalty), so the ✕ and pick-blocking just work.
     const curS = Number(window.currentSeason || window._reserveSeason) || 0;
@@ -25401,7 +25401,7 @@ window.importVerdictsFromDb = async function(btn, quiet) {
     }
     await dbSet('settings', 'fiaVerdicts', { value: { at: Date.now(), list, bansApplied: [...applied] } });
     window._fiaV = list; window._adminDriverCache = null;
-    if (!quiet) customAlert(`⚖️ Imported ${list.length} steward verdicts (${list.filter(x => x.t != null).length} with time penalties).` + (bans ? `\n⛔ ${bans} new race ban${bans > 1 ? 's' : ''} applied.` : ''));
+    if (!quiet) customAlert(`⚖️ Imported ${list.length} steward verdicts (${list.filter(x => x.t != null).length} time penalties, ${list.filter(x => x.dq).length} DSQs, ${list.filter(x => x.rb > 0).length} race bans).` + (bans ? `\n⛔ ${bans} new race ban${bans > 1 ? 's' : ''} applied.` : ''));
   } catch (e) { console.error(e); if (!quiet) customAlert('Verdict import failed: ' + (e.message || e)); }
   finally { if (btn) { btn.disabled = false; btn.textContent = orig; } }
 };
@@ -25415,11 +25415,12 @@ window.openVerdicts = async function(raceId) {
   for (let n = 0; n < 40 && !window._resultsData; n++) await new Promise(r => setTimeout(r, 150));
   try { await window._fiaLoad(); window.showRaceResults(raceId); } catch (e) { return; }
   setTimeout(() => { const d = document.getElementById('fia-verdicts'); if (d) { d.open = true; const y = d.getBoundingClientRect().top + window.scrollY - 70; window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' }); }
-    else if (typeof showToast === 'function') showToast('No time-penalty verdicts recorded for this round.', 'info'); }, 120);
+    else if (typeof showToast === 'function') showToast('No time penalties, DSQs or race bans recorded for this round.', 'info'); }, 120);
 };
 window._fiaFor = (season, round, div) => (window._fiaV || []).filter(p => p.s === Number(season) && p.r === Number(round) && (!div || p.d === div));
 window._fiaVerdictsHtml = function(season, round) {
-  const L = window._fiaFor(season, round).filter(p => p.t != null); if (!L.length) return '';
+  // Time penalties, disqualifications and race bans.
+  const L = window._fiaFor(season, round).filter(p => p.t != null || p.dq || p.rb > 0); if (!L.length) return '';
   const by = {}; L.forEach(p => { (by[p.d] = by[p.d] || []).push(p); });
   const DH = { D0: '#ffc800', D1: '#e8002d', D2: '#9b6fd4', D3: '#27f4d2', D4: '#2ecc71', E3: '#2ecc71' };
   const drv = ((window._resultsData || {}).drivers) || window._allDrivers || [];
@@ -25433,12 +25434,12 @@ window._fiaVerdictsHtml = function(season, round) {
         ${ph ? `<img src="${esc(ph)}" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;background:#15151d" onerror="this.outerHTML='<span style=&quot;display:flex;width:100%;height:100%;border-radius:50%;align-items:center;justify-content:center;background:#15151d;font-weight:900;font-size:.8rem&quot;>${ini}</span>'">` : `<span style="display:flex;width:100%;height:100%;border-radius:50%;align-items:center;justify-content:center;background:#15151d;font-weight:900;font-size:.8rem">${ini}</span>`}</div>
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b style="font-size:.95rem">${esc(d ? d.name : p.a)}</b>${tm ? `<span style="display:inline-flex;align-items:center;gap:4px;font-size:.68rem;color:var(--muted)">${lg ? `<img src="${esc(lg)}" alt="" style="height:12px">` : ''}${esc(tm)}</span>` : ''}${p.inc ? `<span style="margin-left:auto;font-size:.6rem;font-weight:700;color:var(--muted);letter-spacing:.5px">#${esc(p.inc)}</span>` : ''}</div>
-        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:5px">${chip('⏱ +' + p.t + 's', '#ff8f6b')}${p.pp ? chip(p.pp + ' penalty pt' + (p.pp > 1 ? 's' : ''), '#facc15') : ''}${p.qb ? chip('⛔ ' + p.qb + ' quali ban', '#fb923c') : ''}${p.rb ? chip('✕ ' + p.rb + ' race ban', '#ff3b4e') : ''}</div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:5px">${p.dq ? chip('🏴 DISQUALIFIED', '#ffffff') : ''}${p.t != null ? chip(p.t < 0 ? '⏱ −' + Math.abs(p.t) + 's (reduced)' : '⏱ +' + p.t + 's', p.t < 0 ? '#4ade80' : '#ff8f6b') : ''}${p.pp ? chip(p.pp + ' penalty pt' + (p.pp > 1 ? 's' : ''), '#facc15') : ''}${p.qb ? chip('⛔ ' + p.qb + ' quali ban', '#fb923c') : ''}${p.rb ? chip('✕ ' + p.rb + ' race ban', '#ff3b4e') : ''}</div>
         ${p.j ? `<div style="position:relative;font-size:.8rem;line-height:1.55;color:#e6e7f2;margin-top:8px;padding:8px 10px 8px 14px;border-radius:10px;background:rgba(0,0,0,.25);white-space:pre-line"><span style="position:absolute;left:5px;top:2px;font-size:1.1rem;color:${ring};opacity:.7">“</span>${esc(p.j.replace(/\*\*/g, ''))}</div>` : ''}
       </div></div>`; };
   return `<details id="fia-verdicts" style="margin:12px 0 4px;border-radius:16px;border:1px solid rgba(160,164,255,.35);background:radial-gradient(120% 120% at 0% 0%,rgba(160,164,255,.12),transparent 55%),var(--surface2);overflow:hidden">
     <summary style="cursor:pointer;list-style:none;display:flex;align-items:center;gap:10px;padding:12px 16px;flex-wrap:wrap"><span style="width:34px;height:34px;border-radius:10px;background:rgba(160,164,255,.18);display:flex;align-items:center;justify-content:center;font-size:1.1rem">⚖️</span>
-      <div style="display:flex;flex-direction:column"><b style="font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;letter-spacing:1.5px;line-height:1">STEWARD VERDICTS</b><small style="font-size:.7rem;color:var(--muted)">${L.length} time penalt${L.length === 1 ? 'y' : 'ies'} · ${Object.keys(by).sort().join(' · ')}</small></div>
+      <div style="display:flex;flex-direction:column"><b style="font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;letter-spacing:1.5px;line-height:1">STEWARD VERDICTS</b><small style="font-size:.7rem;color:var(--muted)">${[L.filter(p => p.t != null).length ? L.filter(p => p.t != null).length + ' time penalt' + (L.filter(p => p.t != null).length === 1 ? 'y' : 'ies') : '', L.filter(p => p.dq).length ? L.filter(p => p.dq).length + ' DSQ' : '', L.filter(p => p.rb > 0).length ? L.filter(p => p.rb > 0).length + ' race ban' + (L.filter(p => p.rb > 0).length > 1 ? 's' : '') : ''].filter(Boolean).join(' · ')} · ${Object.keys(by).sort().join(' · ')}</small></div>
       <span style="margin-left:auto;font-size:.72rem;font-weight:700;color:#c9cbff">Read ▾</span></summary>
     <div style="display:flex;flex-direction:column;gap:14px;padding:0 14px 14px">${Object.keys(by).sort().map(dv => `<div>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:.9rem;letter-spacing:1px;color:${DH[dv] || '#a0a4ff'}">${esc(dv)}</span><span style="flex:1;height:1px;background:linear-gradient(90deg,${DH[dv] || '#a0a4ff'}66,transparent)"></span></div>
