@@ -3719,7 +3719,26 @@ window._adminFlagOk = function() {
     if (acc && window._adminKeys().includes(acc)) { adminLoggedIn = true; revealAdminEntry(); return true; } } catch (e) {}
   return false;
 };
+window._bottAdjOnce = async function() {
+  try {
+    if (localStorage.getItem('imsMigGregplBott') === '1') return;
+    const flag = await dbGet('settings', 'migGregplBott').catch(() => null); if (flag && flag.value) { localStorage.setItem('imsMigGregplBott', '1'); return; }
+    const [races, drivers, constrs] = await Promise.all([dbGetAll('races', { fresh: true }), dbGetAll('drivers'), dbGetAll('constructors')]);
+    const k = (x) => String(x || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const am = constrs.find(c => /aston/i.test(c.name || '')); if (!am) return;
+    const ids = new Set(drivers.filter(d => k(d.name).includes('gregpl')).map(d => d.id));
+    races.forEach(r => Object.entries(r.driverNames || {}).forEach(([id, n]) => { if (k(n).includes('gregpl')) ids.add(id); }));
+    const hit = races.filter(r => !(r.bottAdj && r.bottAdj[am.id]) && [...ids].some(id => Object.entries((r.driverPointsByDivision || {})[id] || {}).some(([dv, v]) => Number(v) === 31 && /aston/i.test(((r.driverTeamByDivision || {})[id] || {})[dv] || 'aston martin'))))
+      .sort((a, b) => (b.raceNum || 0) - (a.raceNum || 0))[0];
+    if (!hit) return;
+    const cp = { ...(hit.constructorPoints || {}) }; cp[am.id] = Math.max(0, (cp[am.id] || 0) - 31);
+    await dbSet('races', hit.id, { constructorPoints: cp, bottAdj: { ...(hit.bottAdj || {}), [am.id]: -31 }, bottAdjNote: 'Gregpl: BOTT contribution (31) scrapped — raced in too low a division. Driver and fantasy points kept.' });
+    await dbSet('settings', 'migGregplBott', { value: { at: Date.now(), race: hit.name } }); localStorage.setItem('imsMigGregplBott', '1');
+    if (typeof showToast === 'function') showToast('⚖️ Aston Martin −31 BOTT (Gregpl) applied to ' + hit.name, 'success');
+  } catch (e) { console.warn('gregpl bott', e); }
+};
 window._adminAutoCheck = async function() {
+  try { if (window.adminLoggedIn || (typeof adminLoggedIn !== 'undefined' && adminLoggedIn)) setTimeout(() => window._bottAdjOnce(), 3000); } catch (e) {}
   try {
     const keys = window._adminKeys();
     if (adminLoggedIn || window._adminNoAuto || !keys.length || !PROJECT_ID) return false;
@@ -7383,6 +7402,7 @@ window.openBriefSection = function(cls, emptyMsg, scrollSel) {
 window.openFormReport = () => openBriefSection('brf-fr', 'Form report shows when the next race is set and you have a team.');
 window.openReservesIn = () => openBriefSection('brf-res', 'No reserves stepping in yet — check-ins for this round aren\'t in.', '#brf-avail');
 window.showPage = function(page) {
+  if (page === 'admin' && typeof window._bottAdjOnce === 'function') setTimeout(() => window._bottAdjOnce(), 1500);
   if (!window._seasonDefs && typeof dbGet === 'function') dbGet('settings','seasonDefinitions').then(d => { if (d && d.value) window._seasonDefs = d.value; }).catch(()=>{});
   if (page === 'my-team') { window._wcWant = true; window._placePick = {}; }
   // Mid-way through an IMS PaddockDle game? Leaving counts as giving up (stops people looking answers up).
@@ -15715,6 +15735,8 @@ window.importDbRound = async function(roundNo, trackName) {
       const _eff = parseFloat(String(bottEff == null ? '' : bottEff).replace(',', '.'));
       const _bonus = Math.max((_d0 && _lic && _lic !== 'L0') ? 5 : 0, isFinite(_eff) ? Math.round(_eff) - fantasyPts : 0);
       if (_bonus > 0 && dId) { (bottBonusByDivision[dId] = bottBonusByDivision[dId] || {})[DIVISIONS.includes(raceDiv) ? raceDiv : 'D0'] = _bonus; }
+      // BOTT scrapped / reduced by the stewards: the team loses the difference; the driver keeps their own points.
+      if (dId && isFinite(_eff) && Math.round(_eff) < fantasyPts) { (bottBonusByDivision[dId] = bottBonusByDivision[dId] || {})[DIVISIONS.includes(raceDiv) ? raceDiv : 'D0'] = Math.max(0, Math.round(_eff)) - fantasyPts; }
       // BOTT scrapped / reduced by the stewards (e.g. a driver racing in too low a division): the .db's
       // bott_points_effective is lower than their own points → the team only gets the effective figure.
       // The driver's own points and fantasy points are untouched.
@@ -15849,7 +15871,7 @@ window.importDbRound = async function(roundNo, trackName) {
     Object.entries(mergedDriverPointsByDivision).forEach(([dId, byDiv]) => {
       const teamsForThisDriver = mergedDriverTeamByDivision[dId] || {};
       Object.entries(byDiv).forEach(([div, pts0]) => {
-        const pts = (pts0 || 0) + (((mergedBottBonus[dId] || {})[div]) || 0);
+        const pts = Math.max(0, (pts0 || 0) + (((mergedBottBonus[dId] || {})[div]) || 0)); // bonus can be negative (BOTT scrapped)
         if (pts <= 0) return;
         // Prefer the race-specific team for this exact division; fall back to the driver's
         // current team only if we genuinely have no historical record of who they raced for
@@ -15976,7 +15998,7 @@ window.importDbRound = async function(roundNo, trackName) {
       driverPointsByDivision: mergedDriverPointsByDivision,
       driverTeamByDivision: mergedDriverTeamByDivision,
       driverNames,
-      constructorPoints: mergedConstructorPoints,
+      constructorPoints: (() => { const adj = (existingRace && existingRace.bottAdj) || {}; const out = { ...mergedConstructorPoints }; Object.entries(adj).forEach(([c, v]) => { out[c] = Math.max(0, (out[c] || 0) + (Number(v) || 0)); }); return out; })(), // admin BOTT adjustments (race.bottAdj) are kept on re-import
       bottBonusByDivision: mergedBottBonus,
       dnfByDriver: mergedDnfByDriver,
       raceStatusByDriver: mergedStatusByDriver,
