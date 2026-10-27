@@ -31686,6 +31686,15 @@ window._qsSave = async function(rk) {
 };
 // Shootout prizes skip the normal games cap: 500 IM$ for the closest guess, 5000 IM$ for spot on.
 async function _qsCredit(uid, n) { try { const c = await _betLoadCoins(uid); c.balance = (c.balance || 0) + n; c.gameEarned = (c.gameEarned || 0) + n; await dbSet('coins', uid, c); _coinPop(n, 'qs-win'); } catch (e) {} }
+window._qsDailySave = async function() {
+  const me = _wdMe(); if (!me.uid) return showToast('Log in to play the daily.', 'error');
+  const P = window._qsDayPick; if (!P) return; const v = _qsParse((document.getElementById('qs-day-in') || {}).value);
+  if (v == null || !isFinite(v) || v < 30000 || v > 240000) return showToast('Use m:ss.sss, e.g. 1:23.456', 'error');
+  const d = await dbGet('qualiGuesses', me.uid).catch(() => null) || {}; if (d.daily && d.daily.day === _wdDayKey()) return showToast('Already played today.', 'error');
+  await dbSet('qualiGuesses', me.uid, { name: me.name, avatar: me.avatar || '', daily: { day: _wdDayKey(), g: v, k: P.k } }); window._qsAll = null;
+  _gameCoins('qs-daily', 10).then(() => { if (Math.abs(v - P.pole) <= 100) _gameCoins('qs-win', 10); });
+  renderGames();
+};
 window._qsSetMode = function(m) { window._qsMode = m; renderGames(); };
 async function renderQSGame(el) {
   { const lk = await dbGet('settings', 'gamesLock').catch(() => null); window._gamesLock = (lk && lk.value) || {}; }
@@ -31711,7 +31720,32 @@ async function renderQSGame(el) {
   const lockBanner = (window._gamesLock || {}).qs ? `<div class="wd-lockbar">🔒 <b>Quali Shootout is locked</b><span>${locked ? 'It\'ll open soon — have a look around.' : 'Locked for players — you can still play.'}</span></div>` : '';
   const av = (u, sz) => u.avatar ? `<img src="${esc(u.avatar)}" style="width:${sz}px;height:${sz}px;border-radius:50%;object-fit:cover;flex-shrink:0">` : (typeof initialsAvatar === 'function' ? initialsAvatar(u.name || '?', sz, 'border-radius:50%;flex-shrink:0') : '');
   let body = '';
-  if (mode === 'now') {
+  if (mode === 'day') {
+    // Today's pole: one past pole from any season (same for everyone), picked by date.
+    const pool = []; [[Number(window.currentSeason || window._reserveSeason) || 0, races], ...arcs.map(a => [Number(a.season), a.races || []])].forEach(([se, rs]) => rs.forEach(r => divs.concat('D4').forEach(dv => { const pole = _qsPole(r, dv); if (pole != null && !(dv === 'D4' && divs.includes('E3') && se >= 8)) pool.push({ k: se + '|' + r.name + '|' + dv, se, r, dv: dv === 'D4' && se >= 8 ? 'E3' : dv, pole }); })));
+    const seen = new Set(); const P0 = pool.filter(x => !seen.has(x.k) && seen.add(x.k)).sort((a, b) => a.k.localeCompare(b.k));
+    let h = 11; for (const ch of 'qs' + _wdDayKey()) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+    const P = P0.length ? P0[h % P0.length] : null; window._qsDayPick = P;
+    const dd = mine.daily && mine.daily.day === _wdDayKey() ? mine.daily : null;
+    if (!P) body = '<div class="card" style="text-align:center;padding:26px">No past pole times on record yet.</div>';
+    else { const err = dd ? Math.abs(dd.g - P.pole) : null, col = HUE[P.dv] || HUE[P.dv === 'D4' ? 'E3' : P.dv] || '#a0a4ff';
+      const today = all.filter(u => u.daily && u.daily.day === _wdDayKey() && u.daily.k === P.k).map(u => ({ u, err: Math.abs(u.daily.g - P.pole), g: u.daily.g })).sort((a, b) => a.err - b.err);
+      body = `<div class="text-muted" style="font-size:.82rem;margin:0 0 12px;text-align:center">One real IMS pole a day. <b style="color:#ffd84d">+10 IM$</b> for playing, <b style="color:#ffd84d">+10 IM$</b> more if you're within a tenth.</div>
+        <div class="card" style="padding:20px 18px;text-align:center;border-color:${col}66;background:linear-gradient(160deg,${col}1c,var(--surface) 60%)">
+          <div style="font-size:.7rem;font-weight:800;letter-spacing:2px;color:${col}">SEASON ${P.se} · ${esc(P.dv)}${P.r.raceNum ? ' · ROUND ' + P.r.raceNum : ''}</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.9rem;letter-spacing:1.5px;margin:4px 0 2px">${typeof getRaceFlag === 'function' ? getRaceFlag(P.r.name) : ''} ${esc(P.r.name)}</div>
+          <div class="text-muted" style="font-size:.82rem">What was the pole time?</div>
+          ${dd ? `<div style="margin-top:14px;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:2.6rem;letter-spacing:2px">${_qsFmt(P.pole)}</div>
+              <div style="font-size:.85rem">${(P.r.poleByDiv || {})[P.dv] || (P.r.poleByDiv || {}).D4 ? '🏁 ' + esc((P.r.poleByDiv || {})[P.dv] || (P.r.poleByDiv || {}).D4) : ''}</div>
+              <div style="margin-top:10px;font-size:.95rem">You said <b>${_qsFmt(dd.g)}</b> · <b style="color:${err <= 100 ? '#4ade80' : '#f87171'}">${err === 0 ? '🎯 SPOT ON' : (dd.g > P.pole ? '+' : '−') + (err / 1000).toFixed(3) + 's'}</b>${err <= 100 ? ' · within a tenth!' : ''}</div>
+              <div class="wd-timer" style="margin-top:12px"><b id="qs-day-timer">--:--:--</b><small>NEXT POLE</small></div>`
+            : `<input id="qs-day-in" inputmode="decimal" placeholder="1:23.456" ${locked ? 'disabled' : ''} style="width:100%;max-width:280px;margin:14px auto 10px;display:block;padding:14px;border-radius:14px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.15);color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:2rem;letter-spacing:2px;text-align:center">
+              ${locked ? '' : '<button class="btn btn-primary" onclick="_qsDailySave()">⏱️ Lock it in</button>'}`}</div>
+        ${dd && today.length ? `<div class="wd-lb"><div class="wd-lb-h"><span>TODAY'S CLOSEST</span><small>${today.length} played</small></div>${today.slice(0, 15).map((y, i) => `<div style="display:flex;align-items:center;gap:10px;padding:7px 4px;border-top:1px solid rgba(255,255,255,.06);${y.u.id === me.uid ? 'background:rgba(160,164,255,.1);border-radius:8px' : ''}"><b style="width:24px;text-align:center">${i + 1}</b>${av(y.u, 26)}<b style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(y.u.name || 'Player')}</b><small class="text-muted">${_qsFmt(y.g)}</small><b style="min-width:64px;text-align:right;color:${y.err <= 100 ? '#4ade80' : '#fff'}">±${(y.err / 1000).toFixed(3)}</b></div>`).join('')}</div>` : ''}`;
+      if (dd) { const until = Date.now() + _wdMsToMidnight(); clearInterval(window._wdTick); const tick = () => { const t = document.getElementById('qs-day-timer'); if (!t) { clearInterval(window._wdTick); return; } const ms = until - Date.now(); if (ms <= 0) { clearInterval(window._wdTick); renderGames(); return; }
+        t.textContent = [Math.floor(ms / 36e5), Math.floor(ms / 6e4) % 60, Math.floor(ms / 1e3) % 60].map(n => String(n).padStart(2, '0')).join(':'); }; setTimeout(() => { tick(); window._wdTick = setInterval(tick, 1000); }, 0); }
+    }
+  } else if (mode === 'now') {
     if (!up) body = `<div class="card" style="text-align:center;padding:26px"><div style="font-size:2rem">⏱️</div><b>No upcoming round on the schedule.</b></div>`;
     else {
       const rk = _qsKey(up.name), myG = (mine.g || {})[rk] || {};
@@ -31750,9 +31784,9 @@ async function renderQSGame(el) {
   }
   el.innerHTML = `<div class="wd-wrap"><div class="wd-top"><button class="wd-back" onclick="openGame('hub')" title="Back to Games">←</button>
       <div class="wd-brand"><span style="font-size:1.9rem;-webkit-text-fill-color:initial">⏱️</span><span>SHOOTOUT</span></div><div class="wd-meta"></div></div>${lockBanner}
-    <div class="wd-modes">${[['now', '⏱️', 'THIS ROUND'], ['res', '📋', 'RESULTS'], ['lb', '🏆', 'RANKINGS']].map(([m, i, l]) => `<button class="${mode === m ? 'on' : ''}" onclick="_qsSetMode('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>
+    <div class="wd-modes">${[['now', '⏱️', 'THIS ROUND'], ['day', '📅', 'DAILY'], ['res', '📋', 'RESULTS'], ['lb', '🏆', 'RANKINGS']].map(([m, i, l]) => `<button class="${mode === m ? 'on' : ''}" onclick="_qsSetMode('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>
     ${body}
-    <div class="wd-info"><h3>How it works</h3><ul><li>Before the round locks, guess the <b>pole time</b> in each division you fancy — to the thousandth (e.g. <i>1:23.456</i>).</li><li>When quali times are imported, the <b>closest guess</b> in each division wins <b>+500 IM$</b> (ties all win). Get it <b>spot on to the thousandth</b> and you win <b>+5,000 IM$</b>. Guess every division for more chances.</li><li>Past pole times at the same circuit are shown to help you.</li></ul></div></div>`;
+    <div class="wd-info"><h3>How it works</h3><ul><li>Before the round locks, guess the <b>pole time</b> in each division you fancy — to the thousandth (e.g. <i>1:23.456</i>).</li><li>When quali times are imported, the <b>closest guess</b> in each division wins <b>+500 IM$</b> (ties all win). Get it <b>spot on to the thousandth</b> and you win <b>+5,000 IM$</b>. Guess every division for more chances.</li><li>Past pole times at the same circuit are shown to help you.</li><li><i>Daily</i>: guess one real IMS pole from the past each day — <b>+10 IM$</b> for playing, <b>+10 IM$</b> more if you're within 0.100s.</li></ul></div></div>`;
 }
 
 // ---- Admin: lock / unlock games ----
@@ -31816,7 +31850,7 @@ async function _gameCoins(kind, amount) {
   if (typeof currentUser === 'undefined' || !currentUser || !currentUser.userId) return 0; // guests don't earn IM$
   try { const c = await _betLoadCoins(currentUser.userId); const now = Date.now(); const g = c.gameRewards || {};
     let give = 0;
-    if (/^(wd|gr|hl|cn|pt|tq|cp|st)-(daily|win|hidden)$/.test(kind)) { const day = _wdDayKey() + (_wdSalt() ? '#' + _wdSalt() : ''); if (g[kind] === day) return 0; g[kind] = day; give = amount; }
+    if (/^(wd|gr|hl|cn|pt|tq|cp|st|qs)-(daily|win|hidden)$/.test(kind)) { const day = _wdDayKey() + (_wdSalt() ? '#' + _wdSalt() : ''); if (g[kind] === day) return 0; g[kind] = day; give = amount; }
     else { const log = (g[kind] || []).filter(x => now - x.t < 864e5); const used = log.reduce((a, x) => a + x.a, 0); give = Math.max(0, Math.min(amount, 25 - used));
       if (!give) { g[kind] = log; return 0; } log.push({ t: now, a: give }); g[kind] = log; }
     c.balance = (c.balance || 0) + give; c.gameRewards = g; c.gameEarned = (c.gameEarned || 0) + give;
@@ -31824,7 +31858,7 @@ async function _gameCoins(kind, amount) {
   } catch (e) { return 0; }
 }
 function _coinPop(n, kind) {
-  const lbl = { 'cn-hidden': 'Found a hidden group!', 'st-live': 'Called it like the stewards!', 'qs-win': 'Quali Shootout win!', 'st-daily': 'Daily Steward ruling', 'st-win': 'Matched the stewards!', 'duel-cn': 'Connections duel win', 'cn-daily': 'Daily Connections', 'cn-win': 'Connections solved!', 'wd-daily': 'Daily PaddockDle', 'gr-daily': 'Daily Grid', 'wd-win': 'Got the daily driver!', 'gr-win': 'Perfect 9/9 grid!', 'hl-daily': 'Daily Higher or Lower', 'pt-daily': 'Daily Pointless', 'pt-win': 'Pointless — 60 or under!', 'tq-daily': 'Daily Trivia', 'cp-daily': 'Daily Career Path', 'cp-win': 'Career Path in 3 or fewer!', 'tq-win': 'Trivia 8/10 or better!', 'hl-win': '8/10 or better!', 'duel-hl': 'Higher or Lower duel win', 'duel-pt': 'Pointless duel win', 'duel-tq': 'Trivia duel win', 'duel-cp': 'Career Path duel win', 'duel-wd': 'PaddockDle duel win', 'duel-gr': 'Grid duel win' }[kind] || 'Games';
+  const lbl = { 'cn-hidden': 'Found a hidden group!', 'st-live': 'Called it like the stewards!', 'qs-win': 'Quali Shootout win!', 'qs-daily': 'Daily Shootout', 'st-daily': 'Daily Steward ruling', 'st-win': 'Matched the stewards!', 'duel-cn': 'Connections duel win', 'cn-daily': 'Daily Connections', 'cn-win': 'Connections solved!', 'wd-daily': 'Daily PaddockDle', 'gr-daily': 'Daily Grid', 'wd-win': 'Got the daily driver!', 'gr-win': 'Perfect 9/9 grid!', 'hl-daily': 'Daily Higher or Lower', 'pt-daily': 'Daily Pointless', 'pt-win': 'Pointless — 60 or under!', 'tq-daily': 'Daily Trivia', 'cp-daily': 'Daily Career Path', 'cp-win': 'Career Path in 3 or fewer!', 'tq-win': 'Trivia 8/10 or better!', 'hl-win': '8/10 or better!', 'duel-hl': 'Higher or Lower duel win', 'duel-pt': 'Pointless duel win', 'duel-tq': 'Trivia duel win', 'duel-cp': 'Career Path duel win', 'duel-wd': 'PaddockDle duel win', 'duel-gr': 'Grid duel win' }[kind] || 'Games';
   const el = document.createElement('div'); el.className = 'coin-pop'; const nOpen = document.querySelectorAll('.coin-pop').length; if (nOpen) el.style.top = (84 + nOpen * 78) + 'px';
   el.innerHTML = `<span class="imc" style="font-size:1.6rem"></span><div><b>+${n} IM$</b><small>${lbl}</small></div>`;
   document.body.appendChild(el); setTimeout(() => el.classList.add('out'), 2600); setTimeout(() => el.remove(), 3200);
