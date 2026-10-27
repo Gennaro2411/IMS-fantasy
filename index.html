@@ -25741,7 +25741,8 @@ window.showRaceResults = function(raceId, season) {
         else if (i === 0) gapTxt = 'LEADER';
         else { const a0 = _sec(_myT), b0 = _sec(_ldT), a = a0 != null ? a0 + _myPen : null, b = b0 != null ? b0 + _ldPen : null; if (a != null && b != null) { const d = a - b; gapTxt = d >= 0 ? '+' + d.toFixed(3) + 's' + (_myPen ? '|P' + _myPen : '') : 'PEN';
           // Crossed the line ahead of someone classified above them → they took a time penalty (race times are before penalties).
-          if (d >= 0 && !_myPen && divDriversShown.slice(0, i).some(o => { const t = _sec(_tOf(o)); return t != null && t + _penOf(o) > a + 0.0005; })) gapTxt += '|PEN'; } } }
+          // Unmatched in-game/steward penalty: classified behind someone slower on the road → show the gap as at least that driver's, so the column stays in order.
+          if (d >= 0 && !_myPen) { const mx = Math.max(-1, ...divDriversShown.slice(0, i).map(o => { const t = _sec(_tOf(o)); return t != null && !/Lap/i.test(String(_tOf(o))) ? t + _penOf(o) : -1; })); if (mx > a + 0.0005) gapTxt = '>+' + (mx - b).toFixed(3) + 's|PEN'; } } } }
       const chips = (isPole ? _chip('POLE', 'pole') : '') + (isFL ? _chip('FL', 'fl') : '') + (rowStatus ? _chip(esc(rowStatus), 'out') : '') + (item.isReserve ? _chip('RES', 'res') : '');
       html += `<div class="rr-row${i < 3 && !out ? ' pod' : ''}${out ? ' is-out' : ''}" style="--team:${acc}">
         ${_posCell(i + 1, out)}
