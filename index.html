@@ -29120,7 +29120,7 @@ window.renderBets = async function() {
             ['sprint', '⚡', 'Sprint', !!(upcoming && upcoming.isSprint && field.length)],
             ['fpos', '📍', 'Finish position', Object.keys(_fpos).length > 0],
             ['dnf', '💥', 'Driver to DNF', Object.keys(_dnfR).length > 0],
-            ['pen', '⚖️', 'Driver to get a time penalty', Object.keys(_penR).length > 0],
+            ['pen', '⚖️', 'Time penalty', Object.keys(_penR).length > 0],
             ['tri', '🎰', 'Tricast', field.length >= 3]].filter(x => x[3]);
           return B.length ? `<div class="bo-secbar" style="--h:${hue}">${B.map(([k, i, l]) => `<button class="${window._betSec === k ? 'on' : ''}" data-k="${k}" onclick="betSec('${k}')"><span>${i}</span>${l}</button>`).join('')}</div>` : ''; })()}
         <div class="bo-sec" data-sec="h2h"${_secHid('h2h')}>
