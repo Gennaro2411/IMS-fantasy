@@ -3790,7 +3790,7 @@ function fsUrl(col, docId) {
 function toFsValue(val) {
   if (val === null || val === undefined) return {nullValue:null};
   if (typeof val === 'boolean') return {booleanValue:val};
-  if (typeof val === 'number') return Number.isInteger(val) ? {integerValue:String(val)} : {doubleValue:val};
+  if (typeof val === 'number') { if (!isFinite(val)) return {nullValue:null}; return Number.isInteger(val) && Math.abs(val) <= Number.MAX_SAFE_INTEGER ? {integerValue:String(val)} : {doubleValue:val}; } // NaN/Infinity can't be stored ("type unset")
   if (typeof val === 'string') return {stringValue:val};
   if (Array.isArray(val)) return {arrayValue:{values:val.map(toFsValue)}};
   if (typeof val === 'object') {
@@ -25385,7 +25385,7 @@ window.importVerdictsFromDb = async function(btn, quiet) {
       FROM fia_awarded_penalties WHERE status = 'active' ORDER BY created_at_ts`);
     const list = (res.length ? res[0].values : []).map(([u, se, rn, dv, did, al, tp, pp, qb, rb, lb, j, at, inc]) => ({
       u: String(u || ''), s: Number(se) || 0, r: Number(rn) || 0, d: String(dv || '').toUpperCase(), id: did ? String(did) : '', a: String(al || ''),
-      t: tp == null || tp === '' ? null : Number(tp), pp: pp == null ? null : Number(pp), qb: Number(qb) || 0, rb: Number(rb) || 0, lb: lb ? 1 : 0,
+      t: tp == null || tp === '' || !isFinite(parseFloat(tp)) ? null : parseFloat(tp), pp: pp == null || !isFinite(parseFloat(pp)) ? null : parseFloat(pp), qb: Number(qb) || 0, rb: Number(rb) || 0, lb: lb ? 1 : 0,
       j: String(j || '').slice(0, 1500), at: Number(at) || 0, inc: inc ? String(inc) : '' }));
     // Race bans this season → driver.raceBanRacesLeft (once per penalty), so the ✕ and pick-blocking just work.
     const curS = Number(window.currentSeason || window._reserveSeason) || 0;
