@@ -31557,7 +31557,7 @@ window._stPracNext = function() { window._stPr = null; window._stPrCur = null; r
 function _stCrowd(all, x) { return x.drv.map((_, i) => { const n = [0, 0]; all.forEach(u => { const v = u.g && u.g[x.k], c = v && v.c && v.c[i]; if (c != null && n[c] != null) n[c]++; }); return n; }); }
 // st: { pick (locked choices or null), reveal (show stewards' answer), crowd, mode }
 const _stCtx = (rc, rap, quali) => { const p = [];
-  if (rap) p.push(`<span title="Penalty points this season before this round">⚠️ <b>${rap.pp}</b> pen pts going in</span>`, `<span title="Incidents they've been found guilty in (all time, not counting this one)">🔨 <b>${rap.g}</b> total guilty</span>`);
+  if (rap) p.push(`<span title="Penalty points this season before this round">⚠️ <b>${rap.pp}</b> pen pts going in</span>`);
   if (rc) { const f = rc.f == null ? '?' : typeof rc.f === 'number' ? 'P' + rc.f : rc.f, g = rc.g ? 'P' + rc.g : '?', d = typeof rc.f === 'number' && rc.g ? rc.g - rc.f : null;
     p.push(quali ? `<span>🏎 Qualified <b>${g}</b></span>` : `<span>🏎 Started <b>${g}</b> → finished <b>${f}</b>${d ? ` <b style="color:${d > 0 ? '#4ade80' : '#f87171'}">${d > 0 ? '▲' : '▼'}${Math.abs(d)}</b>` : ''}</span>`); }
   return p.length ? `<div style="display:flex;gap:12px;flex-wrap:wrap;font-size:.74rem;color:var(--muted);margin:-2px 0 8px">${p.join('')}</div>` : ''; };
