@@ -31470,7 +31470,19 @@ const _stScore = (pick, ans) => (pick || []).reduce((a, c, i) => a + (c == null 
 const _stMode = (v) => v.m || (v.live ? 'live' : 'arch');
 async function _stMine() { const me = _wdMe(); if (!me.uid) return { v: {} }; try { dbInvalidate('stewardVotes'); } catch (e) {} const d = await dbGet('stewardVotes', me.uid).catch(() => null); const o = d || {}; o.v = o.v || {}; return o; }
 function _stAv(n, sz) { const a = (window._avatarByName || {})[_normName(n)]; return a ? `<img src="${esc(a)}" style="width:${sz}px;height:${sz}px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">` : `<span style="width:${sz}px;height:${sz}px;border-radius:50%;background:rgba(160,164,255,.25);display:inline-flex;align-items:center;justify-content:center;font-size:${sz * .4}px;font-weight:800;flex-shrink:0">${esc((n || '?')[0].toUpperCase())}</span>`; }
-const _stInvolved = (x) => { const id = typeof currentUser !== 'undefined' && currentUser && currentUser.discordId; return !!(id && x.ids.includes(String(id))); };
+// Involved = your Discord id OR your name matches the reporter or any driver named in the incident.
+const _stInvolved = (x) => { const M = window._stMeIds || { ids: [], names: [] };
+  return M.ids.some(id => x.ids.includes(id)) || [x.rep, ...x.drv].some(a => { const k = _normName(a); return k && M.names.includes(k); }); };
+async function _stMeLoad() {
+  if (typeof currentUser === 'undefined' || !currentUser || !currentUser.userId) { window._stMeIds = { ids: [], names: [] }; return; }
+  if (window._stMeIds && window._stMeIds.uid === currentUser.userId) return;
+  const teams = await dbGetAll('teams', { all: true }).catch(() => []), t = teams.find(x => x.userId === currentUser.userId) || {};
+  const drivers = await dbGetAll('drivers').catch(() => []);
+  const ids = [currentUser.discordId, t.discordId].filter(Boolean).map(String);
+  const names = [currentUser.name, t.playerName, t.discordUsername, t.discordName, t.imsAlias].filter(Boolean).map(_normName).filter(Boolean);
+  drivers.forEach(d => { if ((d.discordId && ids.includes(String(d.discordId))) || names.includes(_normName(d.name))) { if (d.discordId) ids.push(String(d.discordId)); [d.name, d.imsAlias].filter(Boolean).forEach(n => names.push(_normName(n))); } });
+  window._stMeIds = { uid: currentUser.userId, ids: [...new Set(ids)], names: [...new Set(names)] };
+}
 const _stDayPick = (inc) => { const pool = inc.filter(x => !x.open).sort((a, b) => a.k.localeCompare(b.k)); if (!pool.length) return null; let h = 7; for (const ch of 'st' + _wdDayKey()) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return pool[h % pool.length]; };
 window._stPick = function(k, i, c) { const d = window._stDraft[k] = window._stDraft[k] || {}; d[i] = d[i] === c ? null : c; renderGames(); };
 window._stSubmit = async function(k, mode) {
@@ -31520,6 +31532,7 @@ async function renderSTGame(el) {
   window._stDraft = window._stDraft || {};
   { const lk = await dbGet('settings', 'gamesLock').catch(() => null); window._gamesLock = (lk && lk.value) || {}; }
   const locked = !!(window._gamesLock || {}).st && !adminLoggedIn && !_gamesAccess();
+  await _stMeLoad();
   const inc = await _stLoad(), mine = await _stMine(), me = _wdMe();
   if (!window._stVotesAll || Date.now() - window._stVotesAll.at > 30e3) window._stVotesAll = { at: Date.now(), list: await dbGetAll('stewardVotes', { fresh: true }).catch(() => []) };
   const all = window._stVotesAll.list, mode = window._stMode || 'daily';
