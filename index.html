@@ -25636,7 +25636,9 @@ window.showRaceResults = function(raceId, season) {
   Object.keys(byDiv).forEach(div => { byDiv[div].sort((a,b) => {
     const sa = statusOrder[statusOf(a, div)] || 0, sb = statusOrder[statusOf(b, div)] || 0;
     if (sa !== sb) return sa - sb;
-    return b.pts - a.pts;
+    // Official finishing position first (fantasy points ≠ finishing order); points as fallback.
+    const pd = race.positionByDivision || {}, fp = (it) => { const v = (it.dId && pd[it.dId] && pd[it.dId][div]) || (it.driver && pd[it.driver.id] && pd[it.driver.id][div]); return v ? Number(v) : 999; };
+    return fp(a) - fp(b) || b.pts - a.pts;
   }); });
   // For current season races only show new divisions, for archived show whatever's in data
   const isCurrentSeason = !seasonArchives || !seasonArchives.some(a => (a.races||[]).find(r => r.id === raceId));
