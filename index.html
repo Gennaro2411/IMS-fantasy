@@ -25638,7 +25638,10 @@ window.showRaceResults = function(raceId, season) {
     if (sa !== sb) return sa - sb;
     // Official finishing position first (fantasy points ≠ finishing order); points as fallback.
     const pd = race.positionByDivision || {}, fp = (it) => { const v = (it.dId && pd[it.dId] && pd[it.dId][div]) || (it.driver && pd[it.driver.id] && pd[it.driver.id][div]); return v ? Number(v) : 999; };
-    return fp(a) - fp(b) || b.pts - a.pts;
+    // No stored position → fall back to race time (laps-down after), never fantasy points first.
+    const tm = (race.raceTimeByDiv || {})[div] || {}, nk = (s) => String(s || '').replace(/^\[[^\]]*\]\s*/, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const ts = (it) => { const t = String(tm[nk(it.name)] || (it.driver && tm[nk(it.driver.name)]) || ''); const l = t.match(/(\d+)\s*Lap/i); if (l) return 1e6 + Number(l[1]); if (!/^[0-9:.,]+$/.test(t)) return 9e6; let v = 0; for (const q of t.replace(',', '.').split(':')) v = v * 60 + parseFloat(q); return isFinite(v) ? v : 9e6; };
+    return fp(a) - fp(b) || ts(a) - ts(b) || b.pts - a.pts;
   }); });
   // For current season races only show new divisions, for archived show whatever's in data
   const isCurrentSeason = !seasonArchives || !seasonArchives.some(a => (a.races||[]).find(r => r.id === raceId));
