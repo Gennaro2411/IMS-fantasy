@@ -15715,8 +15715,12 @@ window.importDbRound = async function(roundNo, trackName) {
       const _eff = parseFloat(String(bottEff == null ? '' : bottEff).replace(',', '.'));
       const _bonus = Math.max((_d0 && _lic && _lic !== 'L0') ? 5 : 0, isFinite(_eff) ? Math.round(_eff) - fantasyPts : 0);
       if (_bonus > 0 && dId) { (bottBonusByDivision[dId] = bottBonusByDivision[dId] || {})[DIVISIONS.includes(raceDiv) ? raceDiv : 'D0'] = _bonus; }
-      if (cId && fantasyPts > 0) {
-        constructorPoints[cId] = (constructorPoints[cId] || 0) + fantasyPts;
+      // BOTT scrapped / reduced by the stewards (e.g. a driver racing in too low a division): the .db's
+      // bott_points_effective is lower than their own points → the team only gets the effective figure.
+      // The driver's own points and fantasy points are untouched.
+      const _bottPts = (isFinite(_eff) && Math.round(_eff) < fantasyPts) ? Math.max(0, Math.round(_eff)) : fantasyPts;
+      if (cId && _bottPts > 0) {
+        constructorPoints[cId] = (constructorPoints[cId] || 0) + _bottPts;
       }
     });
 
