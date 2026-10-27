@@ -31686,11 +31686,25 @@ window._qsSave = async function(rk) {
 };
 // Shootout prizes skip the normal games cap: 500 IM$ for the closest guess, 5000 IM$ for spot on.
 async function _qsCredit(uid, n) { try { const c = await _betLoadCoins(uid); c.balance = (c.balance || 0) + n; c.gameEarned = (c.gameEarned || 0) + n; await dbSet('coins', uid, c); _coinPop(n, 'qs-win'); } catch (e) {} }
+// Anti-cheat: once today's pole is on screen, leaving it (other tab, other window, another page in the app, reload) loses the round.
+window._qsForfeit = async function(why) {
+  const A = window._qsArmed; if (!A || A.day !== _wdDayKey()) return; window._qsArmed = null; try { localStorage.removeItem('qsArmed'); } catch (e) {}
+  const me = _wdMe(); if (!me.uid) return; const d = await dbGet('qualiGuesses', me.uid).catch(() => null) || {}; if (d.daily && d.daily.day === _wdDayKey()) return;
+  const dh = Object.assign({}, d.dh || {}); dh[_wdDayKey()] = { f: 1, t: Date.now() };
+  await dbSet('qualiGuesses', me.uid, { name: me.name, avatar: me.avatar || '', daily: { day: _wdDayKey(), k: A.k, f: 1, why: why || 'left' }, dh }); window._qsAll = null;
+  showToast('⛔ You left the page — today\'s Quali Shootout round is lost.', 'error');
+  if (window._games && window._games.view === 'qs' && document.getElementById('games-content')) renderGames();
+};
+if (!window._qsListen) { window._qsListen = 1;
+  document.addEventListener('visibilitychange', () => { if (document.hidden && window._qsArmed) window._qsForfeit('tab'); });
+  window.addEventListener('blur', () => { if (window._qsArmed) window._qsForfeit('blur'); });
+  window.addEventListener('pagehide', () => { if (window._qsArmed) window._qsForfeit('left'); }); }
 window._qsDailySave = async function() {
   const me = _wdMe(); if (!me.uid) return showToast('Log in to play the daily.', 'error');
   const P = window._qsDayPick; if (!P) return; const v = _qsParse((document.getElementById('qs-day-in') || {}).value);
   if (v == null || !isFinite(v) || v < 30000 || v > 240000) return showToast('Use m:ss.sss, e.g. 1:23.456', 'error');
   const d = await dbGet('qualiGuesses', me.uid).catch(() => null) || {}; if (d.daily && d.daily.day === _wdDayKey()) return showToast('Already played today.', 'error');
+  window._qsArmed = null; try { localStorage.removeItem('qsArmed'); } catch (e) {}
   const dh = Object.assign({}, d.dh || {}); dh[_wdDayKey()] = { e: Math.abs(v - P.pole), t: Date.now() }; // daily history → stats
   await dbSet('qualiGuesses', me.uid, { name: me.name, avatar: me.avatar || '', daily: { day: _wdDayKey(), g: v, k: P.k }, dh }); window._qsAll = null;
   _gameCoins('qs-daily', 10).then(() => { if (Math.abs(v - P.pole) <= 100) _gameCoins('qs-win', 10); });
@@ -31701,6 +31715,9 @@ async function renderQSGame(el) {
   { const lk = await dbGet('settings', 'gamesLock').catch(() => null); window._gamesLock = (lk && lk.value) || {}; }
   const locked = !!(window._gamesLock || {}).qs && !adminLoggedIn && !_gamesAccess();
   const me = _wdMe(), mode = window._qsMode || 'now';
+  // Any re-render while today's pole is armed (switching tab in the game, leaving Games, reloading) = left the page.
+  { let prev = window._qsArmed; if (!prev) { try { prev = JSON.parse(localStorage.getItem('qsArmed') || 'null'); } catch (e) {} }
+    if (prev && prev.day === _wdDayKey()) { window._qsArmed = prev; await window._qsForfeit('left'); if (document.getElementById('games-content') && window._games.view === 'qs') {} return; } }
   const [races, schedule, arcs, lockDoc] = await Promise.all([dbGetAll('races').catch(() => []), dbGetAll('schedule').catch(() => []), dbGetAll('seasonArchives').catch(() => []), dbGet('settings', 'teamsLocked').catch(() => null)]);
   if (!window._qsAll || Date.now() - window._qsAll.at > 30e3) window._qsAll = { at: Date.now(), list: await dbGetAll('qualiGuesses', { fresh: true }).catch(() => []) };
   const all = window._qsAll.list, mine = (all.find(u => u.id === me.uid) || {});
@@ -31727,16 +31744,19 @@ async function renderQSGame(el) {
     const seen = new Set(); const P0 = pool.filter(x => !seen.has(x.k) && seen.add(x.k)).sort((a, b) => a.k.localeCompare(b.k));
     let h = 11; for (const ch of 'qs' + _wdDayKey()) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
     const P = P0.length ? P0[h % P0.length] : null; window._qsDayPick = P;
-    const dd = mine.daily && mine.daily.day === _wdDayKey() ? mine.daily : null;
+    let dd = mine.daily && mine.daily.day === _wdDayKey() ? mine.daily : null;
+
     if (!P) body = '<div class="card" style="text-align:center;padding:26px">No past pole times on record yet.</div>';
-    else { const err = dd ? Math.abs(dd.g - P.pole) : null, col = HUE[P.dv] || HUE[P.dv === 'D4' ? 'E3' : P.dv] || '#a0a4ff';
-      const today = all.filter(u => u.daily && u.daily.day === _wdDayKey() && u.daily.k === P.k).map(u => ({ u, err: Math.abs(u.daily.g - P.pole), g: u.daily.g })).sort((a, b) => a.err - b.err);
-      body = `<div class="text-muted" style="font-size:.82rem;margin:0 0 12px;text-align:center">One real IMS pole a day. <b style="color:#ffd84d">+10 IM$</b> for playing, <b style="color:#ffd84d">+10 IM$</b> more if you're within a tenth.</div>
+    else { if (!dd && me.uid && !locked) { window._qsArmed = { day: _wdDayKey(), k: P.k }; try { localStorage.setItem('qsArmed', JSON.stringify(window._qsArmed)); } catch (e) {} }
+      const err = dd && !dd.f ? Math.abs(dd.g - P.pole) : null, col = HUE[P.dv] || HUE[P.dv === 'D4' ? 'E3' : P.dv] || '#a0a4ff';
+      const today = all.filter(u => u.daily && !u.daily.f && u.daily.day === _wdDayKey() && u.daily.k === P.k).map(u => ({ u, err: Math.abs(u.daily.g - P.pole), g: u.daily.g })).sort((a, b) => a.err - b.err);
+      body = `<div class="text-muted" style="font-size:.82rem;margin:0 0 12px;text-align:center">⚠️ <b style="color:#fca5a5">Don't leave this page</b> — switching tab or app before locking in loses today's round. One real IMS pole a day. <b style="color:#ffd84d">+10 IM$</b> for playing, <b style="color:#ffd84d">+10 IM$</b> more if you're within a tenth.</div>
         <div class="card" style="padding:20px 18px;text-align:center;border-color:${col}66;background:linear-gradient(160deg,${col}1c,var(--surface) 60%)">
           <div style="font-size:.7rem;font-weight:800;letter-spacing:2px;color:${col}">SEASON ${P.se} · ${esc(P.dv)}${P.r.raceNum ? ' · ROUND ' + P.r.raceNum : ''}</div>
           <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.9rem;letter-spacing:1.5px;margin:4px 0 2px">${typeof getRaceFlag === 'function' ? getRaceFlag(P.r.name) : ''} ${esc(P.r.name)}</div>
           <div class="text-muted" style="font-size:.82rem">What was the pole time?</div>
-          ${dd ? `<div style="margin-top:14px;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:2.6rem;letter-spacing:2px">${_qsFmt(P.pole)}</div>
+          ${dd && dd.f ? `<div style="margin-top:14px;padding:12px;border-radius:12px;background:rgba(239,68,68,.12);border:1px solid rgba(248,113,113,.45)"><b>⛔ ROUND LOST</b><div class="text-muted" style="font-size:.82rem;margin-top:4px">You left the page before locking in a guess. Pole was <b style="color:#fff">${_qsFmt(P.pole)}</b>.</div></div><div class="wd-timer" style="margin-top:12px"><b id="qs-day-timer">--:--:--</b><small>NEXT POLE</small></div>`
+          : dd ? `<div style="margin-top:14px;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:2.6rem;letter-spacing:2px">${_qsFmt(P.pole)}</div>
               <div style="font-size:.85rem">${(P.r.poleByDiv || {})[P.dv] || (P.r.poleByDiv || {}).D4 ? '🏁 ' + esc((P.r.poleByDiv || {})[P.dv] || (P.r.poleByDiv || {}).D4) : ''}</div>
               <div style="margin-top:10px;font-size:.95rem">You said <b>${_qsFmt(dd.g)}</b> · <b style="color:${err <= 100 ? '#4ade80' : '#f87171'}">${err === 0 ? '🎯 SPOT ON' : (dd.g > P.pole ? '+' : '−') + (err / 1000).toFixed(3) + 's'}</b>${err <= 100 ? ' · within a tenth!' : ''}</div>
               <div class="wd-timer" style="margin-top:12px"><b id="qs-day-timer">--:--:--</b><small>NEXT POLE</small></div>`
@@ -31746,16 +31766,17 @@ async function renderQSGame(el) {
       // All-time daily leaderboard: tenths, played, avg miss, best miss, current streak.
       const dayMs = 864e5, pd = (k) => { const [d, m, y] = String(k).split('/').map(Number); return Date.UTC(y, m - 1, d); };
       const todayT = pd(_wdDayKey());
-      const L = all.filter(u => u.dh && Object.keys(u.dh).length).map(u => { const E = Object.entries(u.dh).map(([k, v]) => ({ t: pd(k), e: Number(v.e) })).filter(x => isFinite(x.t) && isFinite(x.e));
-        const days = new Set(E.map(x => x.t)); let st = 0, c = days.has(todayT) ? todayT : todayT - dayMs; while (days.has(c)) { st++; c -= dayMs; }
-        return { u, n: E.length, tn: E.filter(x => x.e <= 100).length, avg: E.reduce((a, x) => a + x.e, 0) / E.length, best: Math.min(...E.map(x => x.e)), st }; })
-        .sort((a, b) => b.tn - a.tn || a.avg - b.avg || b.n - a.n);
+      const L = all.filter(u => u.dh && Object.keys(u.dh).length).map(u => { const A0 = Object.entries(u.dh).map(([k, v]) => ({ t: pd(k), e: v.f ? null : Number(v.e) })).filter(x => isFinite(x.t)), E = A0.filter(x => x.e != null && isFinite(x.e));
+        if (!E.length) return { u, n: A0.length, tn: 0, so: 0, avg: Infinity, best: Infinity, st: 0 };
+        const days = new Set(A0.map(x => x.t)); let st = 0, c = days.has(todayT) ? todayT : todayT - dayMs; while (days.has(c)) { st++; c -= dayMs; }
+        return { u, n: A0.length, so: E.filter(x => x.e === 0).length, tn: E.filter(x => x.e <= 100).length, avg: E.reduce((a, x) => a + x.e, 0) / E.length, best: Math.min(...E.map(x => x.e)), st }; })
+        .sort((a, b) => b.so - a.so || b.tn - a.tn || a.avg - b.avg || b.n - a.n);
       const myL = L.find(r => r.u.id === me.uid);
-      body += `${myL ? `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-top:16px">${[['PLAYED', myL.n], ['WITHIN A TENTH', myL.tn], ['AVG MISS', '±' + (myL.avg / 1000).toFixed(3) + 's'], ['BEST', myL.best === 0 ? '🎯 0.000' : '±' + (myL.best / 1000).toFixed(3) + 's'], ['STREAK', '🔥 ' + myL.st]].map(([l, v]) => `<div style="padding:10px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);text-align:center"><div style="font-size:.58rem;font-weight:800;letter-spacing:1.5px;color:var(--muted)">${l}</div><div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.35rem">${v}</div></div>`).join('')}</div>` : ''}
-        <div class="wd-lb"><div class="wd-lb-h"><span>🏆 DAILY LEADERBOARD</span><small>Ranked by tenths hit, then average miss</small></div>
-        ${L.length ? `<div style="display:flex;gap:10px;padding:0 4px 6px;font-size:.58rem;font-weight:800;letter-spacing:1px;color:var(--muted)"><span style="width:24px"></span><span style="flex:1">PLAYER</span><span style="width:46px;text-align:center">PLAYED</span><span style="width:46px;text-align:center">🔥</span><span style="width:70px;text-align:right">AVG</span><span style="width:70px;text-align:right">BEST</span><span style="width:40px;text-align:right">≤0.1</span></div>`
+      body += `${myL ? `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-top:16px">${[['PLAYED', myL.n], ['🎯 SPOT ON', myL.so], ['WITHIN A TENTH', myL.tn], ['AVG MISS', isFinite(myL.avg) ? '±' + (myL.avg / 1000).toFixed(3) + 's' : '–'], ['BEST', myL.best === 0 ? '🎯 0.000' : isFinite(myL.best) ? '±' + (myL.best / 1000).toFixed(3) + 's' : '–'], ['STREAK', '🔥 ' + myL.st]].map(([l, v]) => `<div style="padding:10px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);text-align:center"><div style="font-size:.58rem;font-weight:800;letter-spacing:1.5px;color:var(--muted)">${l}</div><div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.35rem">${v}</div></div>`).join('')}</div>` : ''}
+        <div class="wd-lb"><div class="wd-lb-h"><span>🏆 DAILY LEADERBOARD</span><small>Ranked by spot-ons, tenths hit, then average miss</small></div>
+        ${L.length ? `<div style="display:flex;gap:10px;padding:0 4px 6px;font-size:.58rem;font-weight:800;letter-spacing:1px;color:var(--muted)"><span style="width:24px"></span><span style="flex:1">PLAYER</span><span style="width:46px;text-align:center">PLAYED</span><span style="width:46px;text-align:center">🔥</span><span style="width:70px;text-align:right">AVG</span><span style="width:70px;text-align:right">BEST</span><span style="width:40px;text-align:right">≤0.1</span><span style="width:34px;text-align:right">🎯</span></div>`
           + L.slice(0, 50).map((r, i) => `<div style="display:flex;align-items:center;gap:10px;padding:7px 4px;border-top:1px solid rgba(255,255,255,.06);font-size:.82rem;${r.u.id === me.uid ? 'background:rgba(160,164,255,.1);border-radius:8px' : ''}"><b style="width:24px;text-align:center">${i + 1}</b><span style="flex:1;min-width:0;display:flex;align-items:center;gap:8px">${av(r.u, 24)}<b style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.u.name || 'Player')}</b></span>
-            <span style="width:46px;text-align:center">${r.n}</span><span style="width:46px;text-align:center">${r.st || '–'}</span><span style="width:70px;text-align:right">±${(r.avg / 1000).toFixed(3)}</span><span style="width:70px;text-align:right">${r.best === 0 ? '🎯' : '±' + (r.best / 1000).toFixed(3)}</span><b style="width:40px;text-align:right;color:#4ade80">${r.tn}</b></div>`).join('')
+            <span style="width:46px;text-align:center">${r.n}</span><span style="width:46px;text-align:center">${r.st || '–'}</span><span style="width:70px;text-align:right">${isFinite(r.avg) ? '±' + (r.avg / 1000).toFixed(3) : '–'}</span><span style="width:70px;text-align:right">${r.best === 0 ? '🎯' : isFinite(r.best) ? '±' + (r.best / 1000).toFixed(3) : '–'}</span><b style="width:40px;text-align:right;color:#4ade80">${r.tn}</b><b style="width:34px;text-align:right;color:#facc15">${r.so}</b></div>`).join('')
           : '<p class="text-muted" style="margin:0">No one has played the daily yet — be the first.</p>'}</div>`;
       if (dd) { const until = Date.now() + _wdMsToMidnight(); clearInterval(window._wdTick); const tick = () => { const t = document.getElementById('qs-day-timer'); if (!t) { clearInterval(window._wdTick); return; } const ms = until - Date.now(); if (ms <= 0) { clearInterval(window._wdTick); renderGames(); return; }
         t.textContent = [Math.floor(ms / 36e5), Math.floor(ms / 6e4) % 60, Math.floor(ms / 1e3) % 60].map(n => String(n).padStart(2, '0')).join(':'); }; setTimeout(() => { tick(); window._wdTick = setInterval(tick, 1000); }, 0); }
