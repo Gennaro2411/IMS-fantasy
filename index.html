@@ -2595,6 +2595,14 @@
     .gr-cell.gd-win{box-shadow:0 0 0 3px #ffd24a,0 0 22px rgba(255,210,74,.5);animation:wdPop .5s both}
     .gd-myturn{border-color:rgba(255,107,61,0.5)}.gd-last{font-size:.78rem!important;margin-top:10px!important;padding-top:8px;border-top:1px solid rgba(255,255,255,0.08)}
     @media (max-width:640px){.gd-p b{font-size:.9rem}.gd-turn{font-size:.7rem;padding:3px 8px}.gr-cell.gd-host span,.gr-cell.gd-guest span{font-size:.55rem}}
+    .st-chat{position:relative;display:flex;flex-direction:column;gap:12px;margin:14px 0 12px}
+    .st-chat:has(.st-fia)::before{content:'';position:absolute;left:18px;top:42px;bottom:42px;width:2px;background:linear-gradient(rgba(255,255,255,.18),rgba(160,164,255,.6))}
+    .st-msg{position:relative;display:flex;gap:10px;align-items:flex-start}.st-msg>img,.st-msg>span{position:relative;z-index:1;box-shadow:0 0 0 3px var(--surface)}
+    .st-bub{flex:1;min-width:0;padding:10px 14px;border-radius:4px 16px 16px 16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}
+    .st-who{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:4px}.st-who b{font-size:.9rem}.st-who span{font-size:.7rem;color:var(--muted)}
+    .st-txt{font-size:.88rem;line-height:1.55;white-space:pre-line;word-break:break-word}
+    .st-fia .st-bub{background:linear-gradient(160deg,rgba(160,164,255,.14),rgba(160,164,255,.04));border-color:rgba(160,164,255,.4);animation:wdHintIn .35s both}
+    .st-fia-av{width:38px;height:38px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.15rem;background:linear-gradient(160deg,#a0a4ff,#3b3f9e)}
     .wd-modes{display:flex;gap:6px;justify-content:center;margin:-4px auto 18px;padding:5px;border-radius:16px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);width:max-content;max-width:100%}
     .wd-modes button{display:flex;align-items:center;gap:7px;padding:9px 18px;border-radius:12px;border:none;background:transparent;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:.95rem;letter-spacing:1.5px;cursor:pointer;transition:all .15s}
     .wd-modes button:hover{color:#fff;background:rgba(255,255,255,0.05)}
@@ -31499,7 +31507,14 @@ const _stBonus = (v, x) => (v && v.b ? v.b.reduce((a, b, i) => a + (b != null &&
 const _stScore = (pick, ans) => (pick || []).reduce((a, c, i) => a + (c != null && c === ans[i] ? 1 : 0), 0);
 const _stMode = (v) => v.m || (v.live ? 'live' : 'arch');
 async function _stMine() { const me = _wdMe(); if (!me.uid) return { g: {} }; try { dbInvalidate('stewardVotes'); } catch (e) {} const d = await dbGet('stewardVotes', me.uid).catch(() => null); const o = d || {}; o.g = o.g || {}; return o; }
-function _stAv(n, sz) { const a = (window._avatarByName || {})[_normName(n)]; return a ? `<img src="${esc(a)}" style="width:${sz}px;height:${sz}px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">` : `<span style="width:${sz}px;height:${sz}px;border-radius:50%;background:rgba(160,164,255,.25);display:inline-flex;align-items:center;justify-content:center;font-size:${sz * .4}px;font-weight:800;flex-shrink:0">${esc((n || '?')[0].toUpperCase())}</span>`; }
+async function _stPhotosLoad() {
+  if (window._stPhoto) return; const m = {};
+  try { const teams = await dbGetAll('teams').catch(() => []); if (typeof buildAvatarIndex === 'function') buildAvatarIndex(teams);
+    const drivers = await dbGetAll('drivers').catch(() => []);
+    drivers.forEach(d => { const ph = typeof driverPhoto === 'function' ? driverPhoto(d) : ''; if (!ph) return; [d.name, d.imsAlias].filter(Boolean).forEach(n => { const k = _normName(n); if (k && !m[k]) m[k] = ph; }); }); } catch (e) {}
+  window._stPhoto = m;
+}
+function _stAv(n, sz) { const a = (window._stPhoto || {})[_normName(n)] || (window._avatarByName || {})[_normName(n)]; if (!a && typeof initialsAvatar === 'function') { try { return initialsAvatar(n || '?', sz, 'border-radius:50%;flex-shrink:0'); } catch (e) {} } return a ? `<img src="${esc(a)}" style="width:${sz}px;height:${sz}px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">` : `<span style="width:${sz}px;height:${sz}px;border-radius:50%;background:rgba(160,164,255,.25);display:inline-flex;align-items:center;justify-content:center;font-size:${sz * .4}px;font-weight:800;flex-shrink:0">${esc((n || '?')[0].toUpperCase())}</span>`; }
 // Involved = your Discord id OR your name matches the reporter or any driver named in the incident.
 const _stInvolved = (x) => { const M = window._stMeIds || { ids: [], names: [] };
   return M.ids.some(id => x.ids.includes(id)) || [x.rep, ...x.drv].some(a => { const k = _normName(a); return k && M.names.includes(k); }); };
@@ -31550,8 +31565,13 @@ function _stCardHtml(x, st, all) {
       ${(() => { const q = /quali/i.test(x.sess), l = Number(x.lap), tag = (t, c) => `<span style="padding:2px 8px;border-radius:6px;background:rgba(${c},.18);border:1px solid rgba(${c},.55);color:rgb(${c})">${t}</span>`;
         return (q ? tag('⏱ QUALI', '96,165,250') : tag('🏁 RACE', '226,232,240')) + (l === 1 ? tag('LAP 1', '251,146,60') : x.lap && !q ? tag('LAP ' + esc(x.lap), '160,164,255') : ''); })()}
       ${x.open ? '<span style="margin-left:auto;color:#facc15">🟡 UNDER INVESTIGATION</span>' : ''}${sc != null && st.mode !== 'prac' ? `<span style="margin-left:auto;color:${sc ? '#4ade80' : '#f87171'}">+${sc} PT${sc === 1 ? '' : 'S'}</span>` : ''}</div>
-    <div style="display:flex;gap:10px;margin:12px 0 14px;align-items:flex-start">${_stAv(x.rep, 34)}<div style="flex:1;min-width:0"><div style="font-size:.7rem;color:var(--muted);font-weight:700">REPORTED BY <b style="color:#fff">${esc(x.rep || 'Unknown')}</b></div>${x.rrc ? `<div style="margin-top:4px">${_stCtx(x.rrc, null, /quali/i.test(x.sess)).replace('margin:-2px 0 8px', 'margin:0')}</div>` : ''}
-      <div style="margin-top:6px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.04);border-left:3px solid ${col};font-size:.88rem;line-height:1.5;white-space:pre-line;word-break:break-word">“${esc(x.desc.replace(/\*\*/g, ''))}”</div></div></div>
+    <div class="st-chat">
+      <div class="st-msg">${_stAv(x.rep, 38)}<div class="st-bub"><div class="st-who"><b>${esc(x.rep || 'Unknown')}</b><span>reported an incident</span></div>
+        ${x.rrc ? _stCtx(x.rrc, null, /quali/i.test(x.sess)).replace('margin:-2px 0 8px', 'margin:0 0 6px') : ''}
+        <div class="st-txt">${esc(x.desc.replace(/\*\*/g, ''))}</div></div></div>
+      ${st.reveal ? `<div class="st-msg st-fia"><span class="st-fia-av">⚖️</span><div class="st-bub"><div class="st-who"><b>FIA Stewards</b><span>replied · ${tg.map(i => esc(x.drv[i]) + ': ' + (ans[i] ? '🔨 GUILTY' + ((x.od || [])[i] ? ' (' + esc(x.od[i]) + ')' : '') : '🕊️ NOT GUILTY')).join(' · ')}</span></div>
+        <div class="st-txt">${x.why ? esc(x.why.replace(/\*\*/g, '')) : '<i style="color:var(--muted)">No written reasoning was published for this one.</i>'}</div></div></div>` : ''}
+    </div>
     ${tg.map(i => { const a = x.drv[i], my = done ? st.pick[i] : draft[i], tot = crowd ? crowd[i].reduce((p, q) => p + q, 0) : 0;
       return `<div style="padding:10px 0;border-top:1px solid rgba(255,255,255,.06)"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">${_stAv(a, 26)}<span style="font-size:.7rem;color:var(--muted);font-weight:800">IS THIS DRIVER GUILTY?</span><b>${esc(a)}</b>
         ${st.reveal ? `<span style="margin-left:auto;font-size:.72rem;font-weight:800;color:${ans[i] ? '#f87171' : '#4ade80'}">STEWARDS: ${ans[i] ? '🔨 GUILTY' + ((x.od || [])[i] ? ' · ' + esc(x.od[i]) : '') : '🕊️ NOT GUILTY'}</span>` : ''}</div>
@@ -31577,7 +31597,6 @@ function _stCardHtml(x, st, all) {
       return `<div style="margin-top:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap"><a href="${G}1476258411783127258" target="_blank" rel="noopener" style="${btn}">🎥 Transcript in #fia-transcripts</a>
         <button onclick="navigator.clipboard&&navigator.clipboard.writeText('${tn}').then(()=>showToast('Copied ${tn} — paste it in Discord search','success'))" style="${btn};background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.15)">📋 ${tn}</button>
         <small class="text-muted" style="flex-basis:100%">Look for the <b>${tn}</b> archive thread.</small></div>`; })()}
-    ${st.reveal && x.why ? `<div style="margin-top:12px;padding:12px 14px;border-radius:12px;background:rgba(160,164,255,.08);border:1px solid rgba(160,164,255,.3)"><div style="font-size:.66rem;font-weight:800;letter-spacing:1.5px;color:#a0a4ff;margin-bottom:6px">⚖️ STEWARDS' REASONING</div><div style="font-size:.86rem;line-height:1.55;white-space:pre-line;word-break:break-word">${esc(x.why.replace(/\*\*/g, ''))}</div></div>` : ''}
     ${inv ? '<div style="margin-top:10px;font-size:.78rem;color:#facc15">🙅 You were involved in this incident, so you can\'t rule on it.</div>'
       : done ? (st.reveal ? '' : '<div style="margin-top:10px;font-size:.78rem;color:var(--muted)">✅ Verdict locked in. Scored when the stewards rule.</div>')
       : `<div style="margin-top:12px"><button class="btn btn-primary" onclick="_stSubmit('${x.k}','${st.mode}')">⚖️ ${st.mode === 'prac' ? 'Reveal verdict' : 'Submit verdict'}</button></div>`}
@@ -31587,7 +31606,7 @@ async function renderSTGame(el) {
   window._stDraft = window._stDraft || {};
   { const lk = await dbGet('settings', 'gamesLock').catch(() => null); window._gamesLock = (lk && lk.value) || {}; }
   const locked = !!(window._gamesLock || {}).st && !adminLoggedIn && !_gamesAccess();
-  await _stMeLoad();
+  await _stMeLoad(); await _stPhotosLoad();
   const inc = await _stLoad(), mine = await _stMine(), me = _wdMe();
   if (!window._stVotesAll || Date.now() - window._stVotesAll.at > 30e3) window._stVotesAll = { at: Date.now(), list: await dbGetAll('stewardVotes', { fresh: true }).catch(() => []) };
   const all = window._stVotesAll.list, mode = window._stMode || 'daily';
