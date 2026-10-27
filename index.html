@@ -28834,11 +28834,9 @@ window.renderBets = async function() {
   const _secHid = (k) => (window._betSec === k) ? '' : ' style="display:none"'; // driver divisions: one section open at a time
   const oddsBtn = (market, sel, label, odds) => {
     const key = market + ':' + sel.join('-');
-    // No bets under 1.05 (nothing to win, and the price is usually just the model's floor). For two-sided
-    // yes/no and over/under markets, if EITHER side is under 1.05 the whole market is suspended.
-    { let sus = !(Number(odds) >= BET_MIN_ODDS);
-      if (!sus && (market === 'yn' || market === 'ou' || market === 'cou')) { const R = (window._betOuReg || {})[key]; if (R && typeof R.p === 'number') sus = _betOdds(1 - R.p) < BET_MIN_ODDS || _betOdds(R.p) < BET_MIN_ODDS; }
-      if (sus && !(adminLoggedIn && window._betBoostMode)) return `<button class="bo-odd" disabled title="Suspended — one side is too short to price">—</button>`; }
+    // No bets under 1.05 (nothing to win, and the price is usually just the model's floor). Only the short side
+    // is taken off — the other side (e.g. a long-shot YES) stays on.
+    if (!(Number(odds) >= BET_MIN_ODDS) && !(adminLoggedIn && window._betBoostMode)) return `<button class="bo-odd" disabled title="Too short to price (under ${BET_MIN_ODDS.toFixed(2)})">—</button>`;
     const on = (window._betLegs || []).some(l => l.key === div + '|' + key);
     window._betCurOdds[key] = odds;
     const mineOpen = myBets.some(b => b.status === 'open' && upcoming && b.raceName === upcoming.name && b.div === div && b.market === market && (b.sel || []).join('-') === sel.join('-'));
