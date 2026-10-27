@@ -25411,11 +25411,18 @@ window.openVerdictsByName = async function(name) {
   const r = rs.filter(x => String(x.name || '').toLowerCase().trim() === k).sort((a, b) => (b.raceNum || 0) - (a.raceNum || 0))[0]; if (r) openVerdicts(r.id);
 };
 window.openVerdicts = async function(raceId) {
-  showPage('results');
-  for (let n = 0; n < 40 && !window._resultsData; n++) await new Promise(r => setTimeout(r, 150));
-  try { await window._fiaLoad(); window.showRaceResults(raceId); } catch (e) { return; }
-  setTimeout(() => { const d = document.getElementById('fia-verdicts'); if (d) { d.open = true; const y = d.getBoundingClientRect().top + window.scrollY - 70; window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' }); }
-    else if (typeof showToast === 'function') showToast('No time penalties, DSQs or race bans recorded for this round.', 'info'); }, 120);
+  // Wait for the Results page's own render to finish first — otherwise it lands after ours and replaces
+  // the race view with the race list (which is why the link used to drop you at the top of Results).
+  window._resultsData = null; showPage('results');
+  for (let n = 0; n < 60 && !window._resultsData; n++) await new Promise(r => setTimeout(r, 150));
+  await new Promise(r => setTimeout(r, 250));
+  try { await window._fiaLoad(true); window._fiaOpen = true; window.showRaceResults(raceId); } catch (e) { console.warn('openVerdicts', e); return; } finally { window._fiaOpen = false; }
+  // The results page re-renders as it loads — keep the open card pinned in view until it settles.
+  let n = 0, last = null, still = 0;
+  const t = setInterval(() => { const d = document.getElementById('fia-verdicts');
+    if (!d) { if (++n > 15) { clearInterval(t); if (typeof showToast === 'function') showToast('No time penalties, DSQs or race bans recorded for this round.', 'info'); } return; }
+    d.open = true; const y = d.getBoundingClientRect().top + window.scrollY - 70; window.scrollTo({ top: Math.max(0, y), behavior: last === d ? 'auto' : 'smooth' });
+    still = d === last ? still + 1 : 0; last = d; if (still >= 4) clearInterval(t); }, 200);
 };
 window._fiaFor = (season, round, div) => (window._fiaV || []).filter(p => p.s === Number(season) && p.r === Number(round) && (!div || p.d === div));
 window._fiaVerdictsHtml = function(season, round) {
@@ -25437,7 +25444,7 @@ window._fiaVerdictsHtml = function(season, round) {
         <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:5px">${p.dq ? chip('🏴 DISQUALIFIED', '#ffffff') : ''}${p.t != null ? chip(p.t < 0 ? '⏱ −' + Math.abs(p.t) + 's (reduced)' : '⏱ +' + p.t + 's', p.t < 0 ? '#4ade80' : '#ff8f6b') : ''}${p.pp ? chip(p.pp + ' penalty pt' + (p.pp > 1 ? 's' : ''), '#facc15') : ''}${p.qb ? chip('⛔ ' + p.qb + ' quali ban', '#fb923c') : ''}${p.rb ? chip('✕ ' + p.rb + ' race ban', '#ff3b4e') : ''}</div>
         ${p.j ? `<div style="position:relative;font-size:.8rem;line-height:1.55;color:#e6e7f2;margin-top:8px;padding:8px 10px 8px 14px;border-radius:10px;background:rgba(0,0,0,.25);white-space:pre-line"><span style="position:absolute;left:5px;top:2px;font-size:1.1rem;color:${ring};opacity:.7">“</span>${esc(p.j.replace(/\*\*/g, ''))}</div>` : ''}
       </div></div>`; };
-  return `<details id="fia-verdicts" style="margin:12px 0 4px;border-radius:16px;border:1px solid rgba(160,164,255,.35);background:radial-gradient(120% 120% at 0% 0%,rgba(160,164,255,.12),transparent 55%),var(--surface2);overflow:hidden">
+  return `<details id="fia-verdicts"${window._fiaOpen ? ' open' : ''} style="margin:12px 0 4px;border-radius:16px;border:1px solid rgba(160,164,255,.35);background:radial-gradient(120% 120% at 0% 0%,rgba(160,164,255,.12),transparent 55%),var(--surface2);overflow:hidden">
     <summary style="cursor:pointer;list-style:none;display:flex;align-items:center;gap:10px;padding:12px 16px;flex-wrap:wrap"><span style="width:34px;height:34px;border-radius:10px;background:rgba(160,164,255,.18);display:flex;align-items:center;justify-content:center;font-size:1.1rem">⚖️</span>
       <div style="display:flex;flex-direction:column"><b style="font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;letter-spacing:1.5px;line-height:1">STEWARD VERDICTS</b><small style="font-size:.7rem;color:var(--muted)">${[L.filter(p => p.t != null).length ? L.filter(p => p.t != null).length + ' time penalt' + (L.filter(p => p.t != null).length === 1 ? 'y' : 'ies') : '', L.filter(p => p.dq).length ? L.filter(p => p.dq).length + ' DSQ' : '', L.filter(p => p.rb > 0).length ? L.filter(p => p.rb > 0).length + ' race ban' + (L.filter(p => p.rb > 0).length > 1 ? 's' : '') : ''].filter(Boolean).join(' · ')} · ${Object.keys(by).sort().join(' · ')}</small></div>
       <span style="margin-left:auto;font-size:.72rem;font-weight:700;color:#c9cbff">Read ▾</span></summary>
