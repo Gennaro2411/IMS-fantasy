@@ -5292,7 +5292,8 @@ function getLiveRace(liveDoc, roundComplete, lastUnlockTime) {
 // Won't overwrite a snapshot that's already there unless force is set.
 async function snapshotTeamsForRace(raceId, force) {
   try {
-    const [race, teams, _sDrv, _sCon, _sRaces] = await Promise.all([dbGet('races', raceId), dbGetAll('teams'), dbGetAll('drivers').catch(() => []), dbGetAll('constructors').catch(() => []), dbGetAll('races').catch(() => [])]);
+    const [race, teams, _sDrv, _sCon, _sRaces] = await Promise.all([dbGet('races', raceId), dbGetAll('teams', { all: true }), // test accounts get snapshotted too (hidden elsewhere, but their owner needs their history)
+ dbGetAll('drivers').catch(() => []), dbGetAll('constructors').catch(() => []), dbGetAll('races').catch(() => [])]);
     if (!race) return false;
     // Team state AT LOCK (S8+): value, budget, banked transfers, season total so far and reserve
     // tokens left — so looking back at a round shows the numbers as they were then.
