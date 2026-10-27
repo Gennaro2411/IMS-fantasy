@@ -31438,6 +31438,18 @@ window._stImportIncidents = async function() {
   if (typeof _imsDb === 'undefined' || !_imsDb) return;
   const pen = {}; // key → alias → max category
   const det = {}; // key → alias → what they actually got (shown on the reveal)
+  const szr = {}; // key → alias → size code for the bonus: 0 points only, 1 quali ban, 2 ≤5s, 3 10s, 4 15s+, 5 DSQ/race ban
+  const nk = (n) => String(n || '').toLowerCase().replace(/\[[^\]]*\]/g, '').replace(/[^a-z0-9]/g, '');
+  // Rap sheet: every active penalty (incl. round-0 carry-over points) per driver.
+  const rap = {}; try { const a = _imsDb.exec(`SELECT season, round_no, division, incident_id, driver_alias, time_penalty_seconds, penalty_points, quali_ban_count, race_ban_count FROM fia_awarded_penalties WHERE status = 'active'`);
+    (a.length ? a[0].values : []).forEach(([se, rn, dv, inc, al, tp, pp, qb, rb]) => { (rap[nk(al)] = rap[nk(al)] || []).push({ s: Number(se) || 0, r: Number(rn) || 0, inc: inc ? `${se}-${rn}-${String(dv || '').toUpperCase()}-${inc}` : '', pp: Number(pp) || 0,
+      g: String(tp).toUpperCase() === 'DSQ' || Number(tp) > 0 || Number(pp) > 0 || Number(qb) > 0 || Number(rb) > 0 }); }); } catch (e) {}
+  const rapOf = (al, se, rn) => { const L = rap[nk(al)] || [], before = (p) => p.s < se || (p.s === se && p.r < rn);
+    return { pp: L.filter(p => p.s === se && (p.r < rn || p.r === 0)).reduce((a, p) => a + p.pp, 0), g: new Set(L.filter(p => p.inc && p.g && before(p)).map(p => p.inc)).size }; };
+  // Race context: grid + finish for everyone in that round/division.
+  const res = {}; try { const q = _imsDb.exec(`SELECT col_a, col_b, col_c, col_e, col_m, col_ao, col_n, col_i FROM inputs_rows`);
+    (q.length ? q[0].values : []).forEach(([se, rn, dv, nm, g, ao, n, tm]) => { const f = /DNF|DNS|DSQ/i.test(String(tm || '')) ? String(tm).toUpperCase().match(/DNF|DNS|DSQ/)[0] : (Number(n) || Number(ao) || null);
+      res[`${se}-${rn}-${String(dv || '').toUpperCase()}-${nk(nm)}`] = { g: Number(g) || null, f }; }); } catch (e) {}
   const pr = _imsDb.exec(`SELECT season, round_no, division, incident_id, driver_alias, time_penalty_seconds, penalty_points, race_ban_count, quali_ban_count FROM fia_awarded_penalties WHERE status = 'active' AND incident_id IS NOT NULL AND incident_id != ''`);
   (pr.length ? pr[0].values : []).forEach(([se, rn, dv, inc, al, tp, pp, rb, qb]) => {
     const k = `${se}-${rn}-${String(dv || '').toUpperCase()}-${inc}`, t = Number(tp);
@@ -31445,6 +31457,8 @@ window._stImportIncidents = async function() {
     const m = pen[k] = pen[k] || {}; m[al] = Math.max(m[al] || 0, c);
     const D = (det[k] = det[k] || {})[al] = det[k][al] || [];
     if (String(tp).toUpperCase() === 'DSQ') D.push('DSQ'); else if (isFinite(t) && t > 0) D.push('+' + t + 's'); else if (isFinite(t) && t < 0) D.push(t + 's back');
+    const R = (szr[k] = szr[k] || {}), rk = (String(tp).toUpperCase() === 'DSQ' || Number(rb) > 0) ? 5 : (isFinite(t) && t > 10) ? 4 : (isFinite(t) && t > 5) ? 3 : (isFinite(t) && t > 0) ? 2 : Number(qb) > 0 ? 1 : Number(pp) > 0 ? 0 : -1;
+    if (rk >= 0) R[al] = Math.max(R[al] == null ? -1 : R[al], rk);
     if (Number(qb) > 0) D.push(qb + ' quali ban' + (qb > 1 ? 's' : '')); if (Number(rb) > 0) D.push(rb + ' race ban' + (rb > 1 ? 's' : '')); if (Number(pp) > 0) D.push(pp + ' penalty pt' + (pp > 1 ? 's' : ''));
   });
   const why = {}; // stewards' written reasoning per incident
@@ -31458,7 +31472,8 @@ window._stImportIncidents = async function() {
     const d = String(dv || '').toUpperCase(), k = `${se}-${rn}-${d}-${inc}`, o = pen[k] || {};
     const drv = [...new Set([...J(rals), ...Object.keys(o)])].filter(Boolean).slice(0, 6);
     return { k, s: Number(se) || 0, r: Number(rn) || 0, d, sess: String(sess || ''), lap: lap == null ? '' : String(lap), rep: String(ral || ''), desc: String(desc || '').slice(0, 900), st: String(st || ''),
-      ids: [...new Set([String(rid || ''), ...J(rids)])].filter(Boolean), drv, o: drv.map(a => o[a] != null ? o[a] : null), od: drv.map(a => ((det[k] || {})[a] || []).join(' · ')), hasPen: Object.keys(o).length > 0, at: Number(at) || 0, why: why[k] || '', ch: String(chId || ''), th: thr[k] || '' };
+      ids: [...new Set([String(rid || ''), ...J(rids)])].filter(Boolean), drv, o: drv.map(a => o[a] != null ? o[a] : null), od: drv.map(a => ((det[k] || {})[a] || []).join(' · ')), sz: drv.map(a => (szr[k] || {})[a] != null ? szr[k][a] : null),
+      rap: drv.map(a => rapOf(a, Number(se) || 0, Number(rn) || 0)), rc: drv.map(a => res[`${se}-${rn}-${d}-${nk(a)}`] || null), rrc: res[`${se}-${rn}-${d}-${nk(ral)}`] || null, hasPen: Object.keys(o).length > 0, at: Number(at) || 0, why: why[k] || '', ch: String(chId || ''), th: thr[k] || '' };
   }).filter(x => x.r > 0 && x.drv.length && x.desc.replace(/\s+/g, ' ').trim().length >= 25 && !(x.st === 'Closed' && !x.hasPen));
   await dbSet('settings', 'stewardIncidents', { value: { at: Date.now(), list } });
   window._stInc = null;
@@ -31478,6 +31493,9 @@ const _stTg = (x) => { const r = _normName(x.rep), t = x.drv.map((a, i) => i).fi
 // Only incidents that ended in a time penalty / DSQ (or are still open) are playable.
 const _stOk = (x) => true;
 const ST_GNG = [[1, 'GUILTY', '🔨', '248,113,113'], [0, 'NOT GUILTY', '🕊️', '74,222,128']];
+const ST_SZ = [[2, '≤5s'], [3, '10s'], [4, '15s+'], [1, 'Quali ban'], [5, 'DSQ / ban'], [0, 'Points only']];
+// Bonus: +1 for the right penalty size, only when you called GUILTY and they were guilty.
+const _stBonus = (v, x) => (v && v.b ? v.b.reduce((a, b, i) => a + (b != null && v.c[i] === 1 && _stAns(x)[i] === 1 && x.sz && x.sz[i] === b ? 1 : 0), 0) : 0);
 const _stScore = (pick, ans) => (pick || []).reduce((a, c, i) => a + (c != null && c === ans[i] ? 1 : 0), 0);
 const _stMode = (v) => v.m || (v.live ? 'live' : 'arch');
 async function _stMine() { const me = _wdMe(); if (!me.uid) return { g: {} }; try { dbInvalidate('stewardVotes'); } catch (e) {} const d = await dbGet('stewardVotes', me.uid).catch(() => null); const o = d || {}; o.g = o.g || {}; return o; }
@@ -31497,16 +31515,17 @@ async function _stMeLoad() {
 }
 const _stDayPick = (inc) => { const pool = inc.filter(x => !x.open && _stOk(x)).sort((a, b) => a.k.localeCompare(b.k)); if (!pool.length) return null; let h = 7; for (const ch of 'st' + _wdDayKey()) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return pool[h % pool.length]; };
 window._stPick = function(k, i, c) { const d = window._stDraft[k] = window._stDraft[k] || {}; d[i] = d[i] === c ? null : c; renderGames(); };
+window._stPickB = function(k, i, c) { const d = window._stDraft[k] = window._stDraft[k] || {}; d['b' + i] = d['b' + i] === c ? null : c; renderGames(); };
 window._stSubmit = async function(k, mode) {
   const x = (window._stInc || []).find(y => y.k === k); if (!x) return;
   const d = window._stDraft[k] || {}, tg = _stTg(x);
   if (tg.some(i => d[i] == null)) return showToast(tg.length > 1 ? 'Rule on each reported driver.' : 'Guilty or not guilty?', 'error');
-  const c = x.drv.map((_, i) => tg.includes(i) ? d[i] : null);
-  if (mode === 'prac') { window._stPr = { k, c }; delete window._stDraft[k]; return renderGames(); }
+  const c = x.drv.map((_, i) => tg.includes(i) ? d[i] : null), b = x.drv.map((_, i) => tg.includes(i) && d[i] === 1 && d['b' + i] != null ? d['b' + i] : null);
+  if (mode === 'prac') { window._stPr = { k, c, b }; delete window._stDraft[k]; return renderGames(); }
   const me = _wdMe(); if (!me.uid) return showToast('Log in to play — or try Practice.', 'error');
   if (_stInvolved(x)) return showToast('You were involved in this one — no voting on your own incident!', 'error');
   const mine = await _stMine(); if (mine.g[k]) return showToast('Already ruled on this one.', 'error');
-  mine.g[k] = { c, m: mode === 'live' && x.open ? 'live' : 'daily', t: Date.now() };
+  mine.g[k] = { c, b, m: mode === 'live' && x.open ? 'live' : 'daily', t: Date.now() };
   await dbSet('stewardVotes', me.uid, { name: me.name, avatar: me.avatar || '', g: mine.g });
   window._stVotesAll = null; delete window._stDraft[k];
   if (mode === 'daily') { const a = _stAns(x); _gameCoins('st-daily', 10).then(() => { if (tg.every(i => c[i] === a[i])) _gameCoins('st-win', 10); }); }
@@ -31516,24 +31535,40 @@ window._stSetMode = function(m) { window._stMode = m; renderGames(); };
 window._stPracNext = function() { window._stPr = null; window._stPrCur = null; renderGames(); };
 function _stCrowd(all, x) { return x.drv.map((_, i) => { const n = [0, 0]; all.forEach(u => { const v = u.g && u.g[x.k], c = v && v.c && v.c[i]; if (c != null && n[c] != null) n[c]++; }); return n; }); }
 // st: { pick (locked choices or null), reveal (show stewards' answer), crowd, mode }
+const _stCtx = (rc, rap, quali) => { const p = [];
+  if (rap) p.push(`<span title="Penalty points this season before this round">⚠️ <b>${rap.pp}</b> pen pts going in</span>`, `<span title="Earlier incidents they were found guilty in">🔨 <b>${rap.g}</b> past guilty</span>`);
+  if (rc) { const f = rc.f == null ? '?' : typeof rc.f === 'number' ? 'P' + rc.f : rc.f, g = rc.g ? 'P' + rc.g : '?', d = typeof rc.f === 'number' && rc.g ? rc.g - rc.f : null;
+    p.push(quali ? `<span>🏎 Qualified <b>${g}</b></span>` : `<span>🏎 Started <b>${g}</b> → finished <b>${f}</b>${d ? ` <b style="color:${d > 0 ? '#4ade80' : '#f87171'}">${d > 0 ? '▲' : '▼'}${Math.abs(d)}</b>` : ''}</span>`); }
+  return p.length ? `<div style="display:flex;gap:12px;flex-wrap:wrap;font-size:.74rem;color:var(--muted);margin:-2px 0 8px">${p.join('')}</div>` : ''; };
 function _stCardHtml(x, st, all) {
   const draft = window._stDraft[x.k] || {}, ans = _stAns(x), tg = _stTg(x), crowd = st.crowd ? _stCrowd(all, x) : null, inv = st.mode !== 'prac' && _stInvolved(x), done = !!st.pick;
   const DH = { D0: '#ffc800', D1: '#e8002d', D2: '#9b6fd4', D3: '#27f4d2', D4: '#2ecc71', E3: '#2ecc71' }, col = DH[x.d] || '#a0a4ff';
-  const sc = done && st.reveal ? _stScore(st.pick, ans) : null;
+  const sc = done && st.reveal ? _stScore(st.pick, ans) + _stBonus({ c: st.pick, b: st.b }, x) : null;
   return `<div class="card" style="padding:16px 18px;margin-bottom:14px;border-color:${col}55;background:linear-gradient(160deg,${col}14,var(--surface) 55%)">
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.7rem;font-weight:800;letter-spacing:1px">
-      <span style="color:${col}">${esc(x.d)}</span><span class="text-muted">S${x.s} · R${x.r}${x.track ? ' · ' + esc(x.track) : ''} · ${esc(x.sess || 'Race')}${x.lap ? ' · Lap ' + esc(x.lap) : ''}</span>
+      <span style="color:${col}">${esc(x.d)}</span><span class="text-muted">S${x.s} · R${x.r}${x.track ? ' · ' + esc(x.track) : ''}</span>
+      ${(() => { const q = /quali/i.test(x.sess), l = Number(x.lap), tag = (t, c) => `<span style="padding:2px 8px;border-radius:6px;background:rgba(${c},.18);border:1px solid rgba(${c},.55);color:rgb(${c})">${t}</span>`;
+        return (q ? tag('⏱ QUALI', '96,165,250') : tag('🏁 RACE', '226,232,240')) + (l === 1 ? tag('LAP 1', '251,146,60') : x.lap && !q ? tag('LAP ' + esc(x.lap), '160,164,255') : ''); })()}
       ${x.open ? '<span style="margin-left:auto;color:#facc15">🟡 UNDER INVESTIGATION</span>' : ''}${sc != null && st.mode !== 'prac' ? `<span style="margin-left:auto;color:${sc ? '#4ade80' : '#f87171'}">+${sc} PT${sc === 1 ? '' : 'S'}</span>` : ''}</div>
-    <div style="display:flex;gap:10px;margin:12px 0 14px;align-items:flex-start">${_stAv(x.rep, 34)}<div style="flex:1;min-width:0"><div style="font-size:.7rem;color:var(--muted);font-weight:700">REPORTED BY <b style="color:#fff">${esc(x.rep || 'Unknown')}</b></div>
+    <div style="display:flex;gap:10px;margin:12px 0 14px;align-items:flex-start">${_stAv(x.rep, 34)}<div style="flex:1;min-width:0"><div style="font-size:.7rem;color:var(--muted);font-weight:700">REPORTED BY <b style="color:#fff">${esc(x.rep || 'Unknown')}</b></div>${x.rrc ? `<div style="margin-top:4px">${_stCtx(x.rrc, null, /quali/i.test(x.sess)).replace('margin:-2px 0 8px', 'margin:0')}</div>` : ''}
       <div style="margin-top:6px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.04);border-left:3px solid ${col};font-size:.88rem;line-height:1.5;white-space:pre-line;word-break:break-word">“${esc(x.desc.replace(/\*\*/g, ''))}”</div></div></div>
     ${tg.map(i => { const a = x.drv[i], my = done ? st.pick[i] : draft[i], tot = crowd ? crowd[i].reduce((p, q) => p + q, 0) : 0;
       return `<div style="padding:10px 0;border-top:1px solid rgba(255,255,255,.06)"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">${_stAv(a, 26)}<span style="font-size:.7rem;color:var(--muted);font-weight:800">IS THIS DRIVER GUILTY?</span><b>${esc(a)}</b>
         ${st.reveal ? `<span style="margin-left:auto;font-size:.72rem;font-weight:800;color:${ans[i] ? '#f87171' : '#4ade80'}">STEWARDS: ${ans[i] ? '🔨 GUILTY' + ((x.od || [])[i] ? ' · ' + esc(x.od[i]) : '') : '🕊️ NOT GUILTY'}</span>` : ''}</div>
+        ${_stCtx((x.rc || [])[i], (x.rap || [])[i], /quali/i.test(x.sess))}
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${ST_GNG.map(([c, l, ic, rgb]) => {
           const isAns = st.reveal && ans[i] === c, isMine = my === c, pct = tot ? Math.round(crowd[i][c] / tot * 100) : null, wrong = isMine && st.reveal && !isAns;
           const bg = isMine ? `rgba(${rgb},.25)` : 'rgba(255,255,255,.03)', bd = isAns ? 'rgba(255,255,255,.9)' : isMine ? `rgba(${rgb},.8)` : 'rgba(255,255,255,.1)';
           return `<button ${done || inv ? 'disabled' : `onclick="_stPick('${x.k}',${i},${c})"`} style="position:relative;overflow:hidden;padding:14px 8px;border-radius:12px;border:${isAns ? 2 : 1}px solid ${bd};background:${bg};color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:900;letter-spacing:1.5px;font-size:1.1rem;cursor:${done || inv ? 'default' : 'pointer'};text-align:center">
-            ${pct != null ? `<span style="position:absolute;left:0;bottom:0;height:4px;width:${pct}%;background:rgb(${rgb})"></span>` : ''}${ic} ${l}${isMine && st.reveal ? (wrong ? ' ✗' : ' ✓') : ''}${pct != null ? `<small style="display:block;font-family:inherit;font-size:.7rem;font-weight:700;color:var(--muted);letter-spacing:.5px;margin-top:2px">${pct}% of ${tot}</small>` : ''}</button>`; }).join('')}</div></div>`; }).join('')}
+            ${pct != null ? `<span style="position:absolute;left:0;bottom:0;height:4px;width:${pct}%;background:rgb(${rgb})"></span>` : ''}${ic} ${l}${isMine && st.reveal ? (wrong ? ' ✗' : ' ✓') : ''}${pct != null ? `<small style="display:block;font-family:inherit;font-size:.7rem;font-weight:700;color:var(--muted);letter-spacing:.5px;margin-top:2px">${pct}% of ${tot}</small>` : ''}</button>`; }).join('')}</div>
+        ${(() => { const bp = done ? (st.b || [])[i] : draft['b' + i]; if (my !== 1 || (done && bp == null && !st.reveal)) return '';
+          if (done && bp == null) return '';
+          const ok = st.reveal && ans[i] === 1 && x.sz && x.sz[i] != null;
+          return `<div style="margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(250,204,21,.06);border:1px dashed rgba(250,204,21,.4)">
+            <div style="font-size:.66rem;font-weight:800;letter-spacing:1.5px;color:#facc15;margin-bottom:8px">⭐ BONUS · HOW MUCH DID THEY GET? <span style="color:var(--muted);font-weight:700;letter-spacing:.5px">+1 PT · optional</span></div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(78px,1fr));gap:6px">${ST_SZ.map(([c, l]) => { const isA = ok && x.sz[i] === c, isM = bp === c, wr = isM && st.reveal && !isA;
+              return `<button ${done || inv ? 'disabled' : `onclick="_stPickB('${x.k}',${i},${c})"`} style="padding:7px 4px;border-radius:9px;font-weight:800;font-size:.74rem;color:#fff;cursor:${done || inv ? 'default' : 'pointer'};border:${isA ? 2 : 1}px solid ${isA ? 'rgba(74,222,128,.85)' : wr ? 'rgba(248,113,113,.6)' : isM ? 'rgba(250,204,21,.8)' : 'rgba(255,255,255,.1)'};background:${isA ? 'rgba(74,222,128,.18)' : wr ? 'rgba(248,113,113,.15)' : isM ? 'rgba(250,204,21,.18)' : 'rgba(255,255,255,.03)'}">${l}${isM && st.reveal ? (wr ? ' ✗' : ' ✓') : ''}</button>`; }).join('')}</div></div>`; })()}
+      </div>`; }).join('')}
     ${(() => { if (!(x.open || st.reveal)) return ''; const G = 'https://discord.com/channels/935925682079408178/', btn = 'display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:10px;background:rgba(88,101,242,.18);border:1px solid rgba(88,101,242,.55);color:#fff;font-weight:800;font-size:.8rem;text-decoration:none;cursor:pointer';
       if (x.th) return `<div style="margin-top:12px"><a href="${G + esc(x.th)}" target="_blank" rel="noopener" style="${btn}">🎥 Watch clips & transcript</a></div>`;
       if (x.open && x.ch && x.ch !== '0') return `<div style="margin-top:12px"><a href="${G + esc(x.ch)}" target="_blank" rel="noopener" style="${btn}">🎥 Open incident channel</a></div>`;
@@ -31567,7 +31602,7 @@ async function renderSTGame(el) {
   if (mode === 'daily') {
     const x = _stDayPick(inc), v = x && mine.g[x.k];
     body = x ? `<div class="text-muted" style="font-size:.82rem;margin:0 0 12px;text-align:center">One real incident a day, the same for everyone. <b style="color:#ffd84d">+10 IM$</b> for ruling, <b style="color:#ffd84d">+10 IM$</b> more if you call it right.</div>`
-      + _stCardHtml(x, { pick: v ? v.c : null, reveal: !!v, crowd: !!v, mode: 'daily' }, all)
+      + _stCardHtml(x, { pick: v ? v.c : null, b: v ? v.b : null, reveal: !!v, crowd: !!v, mode: 'daily' }, all)
       + (v ? `<div class="wd-end"><div><b>${_stScore(v.c, _stAns(x)) === _stTg(x).length ? '⚖️ SPOT ON — YOU THINK LIKE A STEWARD' : 'VERDICT IN'}</b><div class="wd-end-sub">Bars show how everyone else ruled today.</div></div><div class="wd-timer"><b id="st-timer">--:--:--</b><small>NEXT INCIDENT</small></div></div>` : '')
       : `<div class="card" style="text-align:center;padding:26px">No incidents imported yet.</div>`;
     if (v) { const until = Date.now() + _wdMsToMidnight(); clearInterval(window._wdTick);
@@ -31576,17 +31611,17 @@ async function renderSTGame(el) {
       setTimeout(() => { tick(); window._wdTick = setInterval(tick, 1000); }, 0); }
   } else if (mode === 'live') {
     body = (open.length ? `<div class="text-muted" style="font-size:.82rem;margin:0 0 12px;text-align:center">${open.length} incident${open.length > 1 ? 's' : ''} waiting on the stewards. Guilty or not guilty? Call it before they do — <b style="color:#ffd84d">+2 IM$</b> per correct call.</div>`
-        + open.sort((a, b) => a.d.localeCompare(b.d) || a.k.localeCompare(b.k)).map(x => _stCardHtml(x, { pick: mine.g[x.k] ? mine.g[x.k].c : null, reveal: false, crowd: false, mode: 'live' }, all)).join('')
+        + open.sort((a, b) => a.d.localeCompare(b.d) || a.k.localeCompare(b.k)).map(x => _stCardHtml(x, { pick: mine.g[x.k] ? mine.g[x.k].c : null, b: mine.g[x.k] ? mine.g[x.k].b : null, reveal: false, crowd: false, mode: 'live' }, all)).join('')
       : `<div class="card" style="text-align:center;padding:26px"><div style="font-size:2rem">⚖️</div><b>No incidents under investigation right now.</b><div class="text-muted" style="font-size:.85rem;margin-top:6px">New ones appear after each round, before the verdicts are out. Try the Daily or Practice meanwhile.</div></div>`)
-      + (liveDone.length ? `<div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;letter-spacing:1.5px;font-size:1.1rem;margin:22px 0 10px">🧾 YOUR RULED CALLS</div>` + liveDone.slice(0, 15).map(x => _stCardHtml(x, { pick: mine.g[x.k].c, reveal: true, crowd: true, mode: 'live' }, all)).join('') : '');
+      + (liveDone.length ? `<div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;letter-spacing:1.5px;font-size:1.1rem;margin:22px 0 10px">🧾 YOUR RULED CALLS</div>` + liveDone.slice(0, 15).map(x => _stCardHtml(x, { pick: mine.g[x.k].c, b: mine.g[x.k].b, reveal: true, crowd: true, mode: 'live' }, all)).join('') : '');
   } else if (mode === 'prac') {
     const pr = window._stPr && settled.find(x => x.k === window._stPr.k);
     let x = pr || (window._stPrCur && settled.find(y => y.k === window._stPrCur));
     if (!x && settled.length) { x = settled[Math.floor(Math.random() * settled.length)]; window._stPrCur = x.k; }
     body = `<div class="text-muted" style="font-size:.82rem;margin:0 0 12px;text-align:center">Random settled incidents from S7 & S8. Nothing's saved and nothing's scored — just practice.</div>`
-      + (x ? _stCardHtml(x, { pick: pr ? window._stPr.c : null, reveal: !!pr, crowd: !!pr, mode: 'prac' }, all) + `<div style="text-align:center"><button class="btn ${pr ? 'btn-primary' : 'btn-secondary'}" onclick="_stPracNext()">${pr ? 'Next incident →' : 'Skip →'}</button></div>` : '<div class="card" style="text-align:center;padding:26px">No incidents imported yet.</div>');
+      + (x ? _stCardHtml(x, { pick: pr ? window._stPr.c : null, b: pr ? window._stPr.b : null, reveal: !!pr, crowd: !!pr, mode: 'prac' }, all) + `<div style="text-align:center"><button class="btn ${pr ? 'btn-primary' : 'btn-secondary'}" onclick="_stPracNext()">${pr ? 'Next incident →' : 'Skip →'}</button></div>` : '<div class="card" style="text-align:center;padding:26px">No incidents imported yet.</div>');
   } else {
-    const rows = all.map(u => { let lp = 0, dp = 0, n = 0, ex = 0, tot = 0; Object.entries(u.g || {}).forEach(([k, v]) => { const x = inc.find(y => y.k === k); if (!x || x.open || !v.c) return; const a = _stAns(x), sc = _stScore(v.c, a); _stMode(v) === 'live' ? lp += sc : dp += sc; n++; v.c.forEach((c, i) => { if (c == null) return; tot++; if (c === a[i]) ex++; }); });
+    const rows = all.map(u => { let lp = 0, dp = 0, n = 0, ex = 0, tot = 0; Object.entries(u.g || {}).forEach(([k, v]) => { const x = inc.find(y => y.k === k); if (!x || x.open || !v.c) return; const a = _stAns(x), sc = _stScore(v.c, a) + _stBonus(v, x); _stMode(v) === 'live' ? lp += sc : dp += sc; n++; v.c.forEach((c, i) => { if (c == null) return; tot++; if (c === a[i]) ex++; }); });
       return { id: u.id, name: u.name || 'Player', av: u.avatar, lp, dp, n, acc: tot ? Math.round(ex / tot * 100) : 0 }; }).filter(r => r.n).sort((a, b) => (b.lp + b.dp) - (a.lp + a.dp) || b.acc - a.acc);
     body = rows.length ? `<div class="wd-lb"><div class="wd-lb-h"><span>🏆 STEWARD RANKINGS</span><small>Daily + Live · 1 pt per correct call</small></div>
       ${rows.slice(0, 50).map((r, i) => `<div style="display:flex;align-items:center;gap:10px;padding:8px 4px;border-top:1px solid rgba(255,255,255,.06);${r.id === me.uid ? 'background:rgba(160,164,255,.1);border-radius:8px' : ''}">
@@ -31599,7 +31634,7 @@ async function renderSTGame(el) {
     <div class="wd-modes">${[['daily', '📅', 'DAILY'], ['live', '🟡', 'LIVE'], ['prac', '🎯', 'PRACTICE'], ['lb', '🏆', 'RANKINGS']].map(([m, i, l]) => `<button class="${mode === m ? 'on' : ''}" onclick="_stSetMode('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>
     ${locked && mode !== 'lb' ? body.replace(/onclick="_st(Pick|Submit)[^"]*"/g, 'disabled') : body}
     <div class="wd-info"><h3>How it works</h3><p>Every card is a real incident report from the IMS stewards' channel, written by the driver who reported it — so read it with a pinch of salt. Guilty or not guilty?</p>
-      <ul><li>Read the report, then decide: was the reported driver punished? 🔨 Guilty = any penalty (time penalty, DSQ, quali/race ban or penalty points). 🕊️ Not guilty = no further action.</li><li><i>Daily</i>: one settled incident a day, the same for everyone — see the real verdict and how everyone else ruled.</li><li><i>Live</i>: incidents still under investigation. Rule before the stewards do; scored when the verdicts come out.</li><li><i>Practice</i>: endless random incidents — not saved, not scored.</li><li>1 point per correct call. You can't rule on an incident you were involved in.</li></ul></div></div>`;
+      <ul><li>Read the report, then decide: was the reported driver punished? 🔨 Guilty = any penalty (time penalty, DSQ, quali/race ban or penalty points). 🕊️ Not guilty = no further action.</li><li><i>Daily</i>: one settled incident a day, the same for everyone — see the real verdict and how everyone else ruled.</li><li><i>Live</i>: incidents still under investigation. Rule before the stewards do; scored when the verdicts come out.</li><li><i>Practice</i>: endless random incidents — not saved, not scored.</li><li>1 point per correct call. Called <b>Guilty</b>? Guess how much they got for a <b>+1 bonus</b>.</li><li>Each card shows the accused's penalty points going in, past guilty incidents, and where they started and finished. You can't rule on an incident you were involved in.</li></ul></div></div>`;
 }
 
 // ---- Admin: lock / unlock games ----
