@@ -31453,12 +31453,14 @@ window._stImportIncidents = async function() {
   const rap = {}; try { const a = _imsDb.exec(`SELECT season, round_no, division, incident_id, driver_alias, time_penalty_seconds, penalty_points, quali_ban_count, race_ban_count FROM fia_awarded_penalties WHERE status = 'active'`);
     (a.length ? a[0].values : []).forEach(([se, rn, dv, inc, al, tp, pp, qb, rb]) => { (rap[nk(al)] = rap[nk(al)] || []).push({ s: Number(se) || 0, r: Number(rn) || 0, inc: inc ? `${se}-${rn}-${String(dv || '').toUpperCase()}-${inc}` : '', pp: Number(pp) || 0,
       g: String(tp).toUpperCase() === 'DSQ' || Number(tp) > 0 || Number(pp) > 0 || Number(qb) > 0 || Number(rb) > 0 }); }); } catch (e) {}
-  const rapOf = (al, se, rn) => { const L = rap[nk(al)] || [], before = (p) => p.s < se || (p.s === se && p.r < rn);
-    return { pp: L.filter(p => p.s === se && (p.r < rn || p.r === 0)).reduce((a, p) => a + p.pp, 0), g: new Set(L.filter(p => p.inc && p.g && before(p)).map(p => p.inc)).size }; };
+  const rapOf = (al, se, rn, self) => { const L = rap[nk(al)] || [], before = (p) => p.s < se || (p.s === se && p.r < rn);
+    return { pp: L.filter(p => p.s === se && (p.r < rn || p.r === 0)).reduce((a, p) => a + p.pp, 0), g: new Set(L.filter(p => p.inc && p.g && p.inc !== self).map(p => p.inc)).size }; }; // all-time guilty count, minus this incident (no spoilers)
   // Race context: grid + finish for everyone in that round/division.
   const res = {}; try { const q = _imsDb.exec(`SELECT col_a, col_b, col_c, col_e, col_m, col_ao, col_n, col_i FROM inputs_rows`);
     (q.length ? q[0].values : []).forEach(([se, rn, dv, nm, g, ao, n, tm]) => { const f = /DNF|DNS|DSQ/i.test(String(tm || '')) ? String(tm).toUpperCase().match(/DNF|DNS|DSQ/)[0] : (Number(n) || Number(ao) || null);
       res[`${se}-${rn}-${String(dv || '').toUpperCase()}-${nk(nm)}`] = { g: Number(g) || null, f }; }); } catch (e) {}
+  const nk0 = (n) => String(n || '').toLowerCase().replace(/\[[^\]]*\]/g, '').replace(/[^a-z0-9]/g, '');
+  const idOf = {}; try { const q = _imsDb.exec(`SELECT driver_alias, driver_discord_id FROM fia_awarded_penalties WHERE driver_discord_id IS NOT NULL AND driver_discord_id != ''`); (q.length ? q[0].values : []).forEach(([a, i]) => { idOf[nk0(a)] = String(i); }); } catch (e) {}
   const pr = _imsDb.exec(`SELECT season, round_no, division, incident_id, driver_alias, time_penalty_seconds, penalty_points, race_ban_count, quali_ban_count FROM fia_awarded_penalties WHERE status = 'active' AND incident_id IS NOT NULL AND incident_id != ''`);
   (pr.length ? pr[0].values : []).forEach(([se, rn, dv, inc, al, tp, pp, rb, qb]) => {
     const k = `${se}-${rn}-${String(dv || '').toUpperCase()}-${inc}`, t = Number(tp);
@@ -31479,10 +31481,11 @@ window._stImportIncidents = async function() {
   const J = (x) => { try { const v = JSON.parse(x || '[]'); return Array.isArray(v) ? v.map(String) : []; } catch (e) { return []; } };
   const list = (r.length ? r[0].values : []).map(([chId, se, rn, dv, inc, sess, lap, rid, ral, desc, st, rids, rals, at]) => {
     const d = String(dv || '').toUpperCase(), k = `${se}-${rn}-${d}-${inc}`, o = pen[k] || {};
-    const drv = [...new Set([...J(rals), ...Object.keys(o)])].filter(Boolean).slice(0, 6);
+    const drv = [...new Set([...J(rals), ...Object.keys(o)])].filter(Boolean).slice(0, 6), ra = J(rals), ri = J(rids);
+    ra.forEach((a, i) => { if (ri[i] && !idOf[nk0(a)]) idOf[nk0(a)] = ri[i]; }); if (rid && ral && !idOf[nk0(ral)]) idOf[nk0(ral)] = String(rid);
     return { k, s: Number(se) || 0, r: Number(rn) || 0, d, sess: String(sess || ''), lap: lap == null ? '' : String(lap), rep: String(ral || ''), desc: String(desc || '').slice(0, 900), st: String(st || ''),
-      ids: [...new Set([String(rid || ''), ...J(rids)])].filter(Boolean), drv, o: drv.map(a => o[a] != null ? o[a] : null), od: drv.map(a => ((det[k] || {})[a] || []).join(' · ')), sz: drv.map(a => (szr[k] || {})[a] != null ? szr[k][a] : null),
-      rap: drv.map(a => rapOf(a, Number(se) || 0, Number(rn) || 0)), rc: drv.map(a => res[`${se}-${rn}-${d}-${nk(a)}`] || null), rrc: res[`${se}-${rn}-${d}-${nk(ral)}`] || null, hasPen: Object.keys(o).length > 0, at: Number(at) || 0, why: why[k] || '', ch: String(chId || ''), th: thr[k] || '' };
+      ids: [...new Set([String(rid || ''), ...J(rids)])].filter(Boolean), drv, o: drv.map(a => o[a] != null ? o[a] : null), od: drv.map(a => ((det[k] || {})[a] || []).join(' · ')), sz: drv.map(a => (szr[k] || {})[a] != null ? szr[k][a] : null), did: drv.map(a => idOf[nk0(a)] || ''), rid: String(rid || ''),
+      rap: drv.map(a => rapOf(a, Number(se) || 0, Number(rn) || 0, k)), rc: drv.map(a => res[`${se}-${rn}-${d}-${nk(a)}`] || null), rrc: res[`${se}-${rn}-${d}-${nk(ral)}`] || null, hasPen: Object.keys(o).length > 0, at: Number(at) || 0, why: why[k] || '', ch: String(chId || ''), th: thr[k] || '' };
   }).filter(x => x.r > 0 && x.drv.length && x.desc.replace(/\s+/g, ' ').trim().length >= 25 && !(x.st === 'Closed' && !x.hasPen));
   await dbSet('settings', 'stewardIncidents', { value: { at: Date.now(), list } });
   window._stInc = null;
@@ -31515,7 +31518,9 @@ async function _stPhotosLoad() {
     drivers.forEach(d => { const ph = typeof driverPhoto === 'function' ? driverPhoto(d) : ''; if (!ph) return; [d.name, d.imsAlias].filter(Boolean).forEach(n => { const k = _normName(n); if (k && !m[k]) m[k] = ph; }); }); } catch (e) {}
   window._stPhoto = m;
 }
-function _stAv(n, sz) { const a = (window._stPhoto || {})[_normName(n)] || (window._avatarByName || {})[_normName(n)]; if (!a && typeof initialsAvatar === 'function') { try { return initialsAvatar(n || '?', sz, 'border-radius:50%;flex-shrink:0'); } catch (e) {} } return a ? `<img src="${esc(a)}" style="width:${sz}px;height:${sz}px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">` : `<span style="width:${sz}px;height:${sz}px;border-radius:50%;background:rgba(160,164,255,.25);display:inline-flex;align-items:center;justify-content:center;font-size:${sz * .4}px;font-weight:800;flex-shrink:0">${esc((n || '?')[0].toUpperCase())}</span>`; }
+function _stAv(n, sz, id) { const a = (id ? 'main-driver-avatars/driver-avatars/' + id + '.png' : '') || (window._stPhoto || {})[_normName(n)] || (window._avatarByName || {})[_normName(n)];
+  const b = (window._stPhoto || {})[_normName(n)] || (window._avatarByName || {})[_normName(n)] || '';
+  try { return initialsAvatar(n || '?', sz, 'border-radius:50%;flex-shrink:0', null, a || b); } catch (e) { return ''; } }
 // Involved = your Discord id OR your name matches the reporter or any driver named in the incident.
 const _stInvolved = (x) => { const M = window._stMeIds || { ids: [], names: [] };
   return M.ids.some(id => x.ids.includes(id)) || [x.rep, ...x.drv].some(a => { const k = _normName(a); return k && M.names.includes(k); }); };
@@ -31552,7 +31557,7 @@ window._stPracNext = function() { window._stPr = null; window._stPrCur = null; r
 function _stCrowd(all, x) { return x.drv.map((_, i) => { const n = [0, 0]; all.forEach(u => { const v = u.g && u.g[x.k], c = v && v.c && v.c[i]; if (c != null && n[c] != null) n[c]++; }); return n; }); }
 // st: { pick (locked choices or null), reveal (show stewards' answer), crowd, mode }
 const _stCtx = (rc, rap, quali) => { const p = [];
-  if (rap) p.push(`<span title="Penalty points this season before this round">⚠️ <b>${rap.pp}</b> pen pts going in</span>`, `<span title="Earlier incidents they were found guilty in">🔨 <b>${rap.g}</b> past guilty</span>`);
+  if (rap) p.push(`<span title="Penalty points this season before this round">⚠️ <b>${rap.pp}</b> pen pts going in</span>`, `<span title="Incidents they've been found guilty in (all time, not counting this one)">🔨 <b>${rap.g}</b> total guilty</span>`);
   if (rc) { const f = rc.f == null ? '?' : typeof rc.f === 'number' ? 'P' + rc.f : rc.f, g = rc.g ? 'P' + rc.g : '?', d = typeof rc.f === 'number' && rc.g ? rc.g - rc.f : null;
     p.push(quali ? `<span>🏎 Qualified <b>${g}</b></span>` : `<span>🏎 Started <b>${g}</b> → finished <b>${f}</b>${d ? ` <b style="color:${d > 0 ? '#4ade80' : '#f87171'}">${d > 0 ? '▲' : '▼'}${Math.abs(d)}</b>` : ''}</span>`); }
   return p.length ? `<div style="display:flex;gap:12px;flex-wrap:wrap;font-size:.74rem;color:var(--muted);margin:-2px 0 8px">${p.join('')}</div>` : ''; };
@@ -31567,14 +31572,14 @@ function _stCardHtml(x, st, all) {
         return (q ? tag('⏱ QUALI', '96,165,250') : tag('🏁 RACE', '226,232,240')) + (l === 1 ? tag('LAP 1', '251,146,60') : x.lap && !q ? tag('LAP ' + esc(x.lap), '160,164,255') : ''); })()}
       ${x.open ? '<span style="margin-left:auto;color:#facc15">🟡 UNDER INVESTIGATION</span>' : ''}${sc != null && st.mode !== 'prac' ? `<span style="margin-left:auto;color:${sc ? '#4ade80' : '#f87171'}">+${sc} PT${sc === 1 ? '' : 'S'}</span>` : ''}</div>
     <div class="st-chat">
-      <div class="st-msg">${_stAv(x.rep, 38)}<div class="st-bub"><div class="st-who"><b>${esc(x.rep || 'Unknown')}</b><span>reported</span>${tg.map(i => `<span class="st-acc">${_stAv(x.drv[i], 22)}<b>${esc(x.drv[i])}</b></span>`).join('')}</div>
+      <div class="st-msg">${_stAv(x.rep, 38, x.rid)}<div class="st-bub"><div class="st-who"><b>${esc(x.rep || 'Unknown')}</b><span>reported</span>${tg.map(i => `<span class="st-acc">${_stAv(x.drv[i], 22, (x.did || [])[i])}<b>${esc(x.drv[i])}</b></span>`).join('')}</div>
         ${x.rrc ? _stCtx(x.rrc, null, /quali/i.test(x.sess)).replace('margin:-2px 0 8px', 'margin:0 0 6px') : ''}
         <div class="st-txt">${esc(x.desc.replace(/\*\*/g, ''))}</div></div></div>
       ${st.reveal ? `<div class="st-msg st-fia"><span class="st-fia-av">⚖️</span><div class="st-bub"><div class="st-who"><b>FIA Stewards</b><span>replied · ${tg.map(i => esc(x.drv[i]) + ': ' + (ans[i] ? '🔨 GUILTY' + ((x.od || [])[i] ? ' (' + esc(x.od[i]) + ')' : '') : '🕊️ NOT GUILTY')).join(' · ')}</span></div>
         <div class="st-txt">${x.why ? esc(x.why.replace(/\*\*/g, '')) : '<i style="color:var(--muted)">No written reasoning was published for this one.</i>'}</div></div></div>` : ''}
     </div>
     ${tg.map(i => { const a = x.drv[i], my = done ? st.pick[i] : draft[i], tot = crowd ? crowd[i].reduce((p, q) => p + q, 0) : 0;
-      return `<div style="padding:10px 0;border-top:1px solid rgba(255,255,255,.06)"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">${_stAv(a, 34)}<span style="font-size:.7rem;color:var(--muted);font-weight:800">IS THIS DRIVER GUILTY?</span><b>${esc(a)}</b>
+      return `<div style="padding:10px 0;border-top:1px solid rgba(255,255,255,.06)"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">${_stAv(a, 34, (x.did || [])[i])}<span style="font-size:.7rem;color:var(--muted);font-weight:800">IS THIS DRIVER GUILTY?</span><b>${esc(a)}</b>
         ${st.reveal ? `<span style="margin-left:auto;font-size:.72rem;font-weight:800;color:${ans[i] ? '#f87171' : '#4ade80'}">STEWARDS: ${ans[i] ? '🔨 GUILTY' + ((x.od || [])[i] ? ' · ' + esc(x.od[i]) : '') : '🕊️ NOT GUILTY'}</span>` : ''}</div>
         ${_stCtx((x.rc || [])[i], (x.rap || [])[i], /quali/i.test(x.sess))}
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${ST_GNG.map(([c, l, ic, rgb]) => {
