@@ -28758,7 +28758,7 @@ window.renderBets = async function() {
     if (pts.length >= 3) {
       _ouPen = _ouFrom(pts, 1);
       const W = pts.reduce((a, x) => a + x.w, 0), Z = pts.reduce((a, x) => a + (x.v === 0 ? x.w : 0), 0);
-      _yn.push(['clean', 'Clean race (no steward penalties)', (Z + 1) / (W + 2)]);
+      _yn.push(['clean', 'Clean race (no time penalties or DSQs)', (Z + 1) / (W + 2)]);
     }
   }
   // Line + boosted price of a race-wide market in ANY division (same maths as that division's own tab),
@@ -29098,7 +29098,7 @@ window.renderBets = async function() {
             ['sprint', '⚡', 'Sprint', !!(upcoming && upcoming.isSprint && field.length)],
             ['fpos', '📍', 'Finish position', Object.keys(_fpos).length > 0],
             ['dnf', '💥', 'Driver to DNF', Object.keys(_dnfR).length > 0],
-            ['pen', '⚖️', 'Driver to get a penalty', Object.keys(_penR).length > 0],
+            ['pen', '⚖️', 'Driver to get a time penalty', Object.keys(_penR).length > 0],
             ['tri', '🎰', 'Tricast', field.length >= 3]].filter(x => x[3]);
           return B.length ? `<div class="bo-secbar" style="--h:${hue}">${B.map(([k, i, l]) => `<button class="${window._betSec === k ? 'on' : ''}" data-k="${k}" onclick="betSec('${k}')"><span>${i}</span>${l}</button>`).join('')}</div>` : ''; })()}
         <div class="bo-sec" data-sec="h2h"${_secHid('h2h')}>
@@ -29109,7 +29109,7 @@ window.renderBets = async function() {
         ${_wmar ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>🏁 Winning margin</span><small>Winner's gap to P2 at the flag</small></div>
           <div class="bo-pgap four">${_WMB.map(([k, l], ix) => `<div class="bo-pg-opt"><span>${l}</span>${oddsBtn('wmar', [k], div + ' winning margin: ' + l, finalOdds('wmar', [k], _betOdds(_wmar[ix])))}</div>`).join('')}</div></div>` : ''}
         ${(_ouMargin || _ouTime || _ouDnf || _ouMore.length) ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>📏 Over / under</span><small>Race winner</small></div>
-          ${[['margin', 'Winning margin (P1 → P2)', _ouMargin, (v) => (v / 1000).toFixed(1) + ' s'], ['wtime', 'Winning race time', _ouTime, _fmtT], ['dnf', 'DNFs in the race', _ouDnf, (v) => String(v)], ['npen', 'Drivers penalised by the stewards', _ouPen, (v) => String(v)], ..._ouMore].filter(x => x[2]).map(([k, l, o, f]) => `<div class="bo-ou"><div><b>${l}</b><span class="bo-ou-line">LINE <em>${f(o.line)}</em></span></div>
+          ${[['margin', 'Winning margin (P1 → P2)', _ouMargin, (v) => (v / 1000).toFixed(1) + ' s'], ['wtime', 'Winning race time', _ouTime, _fmtT], ['dnf', 'DNFs in the race', _ouDnf, (v) => String(v)], ['npen', 'Drivers given a time penalty (DSQ counts)', _ouPen, (v) => String(v)], ..._ouMore].filter(x => x[2]).map(([k, l, o, f]) => `<div class="bo-ou"><div><b>${l}</b><span class="bo-ou-line">LINE <em>${f(o.line)}</em></span></div>
             <div class="bo-ou-b"><i>OVER</i>${oddsBtn('ou', [k, 'over', String(o.line)], div + ' ' + l.toLowerCase() + ' over ' + f(o.line), _ouOdds('ou', [k, 'over', String(o.line)], o.po))}</div>
             <div class="bo-ou-b"><i>UNDER</i>${oddsBtn('ou', [k, 'under', String(o.line)], div + ' ' + l.toLowerCase() + ' under ' + f(o.line), _ouOdds('ou', [k, 'under', String(o.line)], 1 - o.po))}</div></div>`).join('')}</div>` : ''}
         ${_yn.length ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>🎯 Specials</span><small>Yes / no</small></div>
@@ -29139,10 +29139,10 @@ window.renderBets = async function() {
             <div class="bo-ou-b"><i>YES</i>${oddsBtn('yn', ['ddnf:' + d.id, 'yes'], d.name + ' to DNF (' + div + '): yes', _ouOdds('yn', ['ddnf:' + d.id, 'yes'], p))}</div>
             <div class="bo-ou-b"><i>NO</i>${oddsBtn('yn', ['ddnf:' + d.id, 'no'], d.name + ' to DNF (' + div + '): no', _ouOdds('yn', ['ddnf:' + d.id, 'no'], 1 - p))}</div></div>`; }).join('')}</div>` : ''}
         </div><div class="bo-sec" data-sec="pen"${_secHid('pen')}>
-        ${(!isC && Object.keys(_penR).length) ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>⚖️ Driver to get a penalty</span><small>Settles once the verdicts are in</small></div>
+        ${(!isC && Object.keys(_penR).length) ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>⚖️ Driver to get a time penalty</span><small>A time penalty or DSQ from the stewards · settles once the verdicts are in</small></div>
           ${field.filter(d => _penR[d.id] != null).map(d => { const p = _penR[d.id], x = (window._penRN || {})[d.id] || { n: 0, p: 0 }; return `<div class="bo-ou"><div class="bo-ou-c">${photo(d)}<div><b>${esc(d.name)}</b><span class="bo-ou-line">PENALTY CHANCE <em>${Math.round(p * 100)}%</em></span></div></div>
-            <div class="bo-ou-b"><i>YES</i>${oddsBtn('yn', ['dpen:' + d.id, 'yes'], d.name + ' to get a penalty (' + div + '): yes', _ouOdds('yn', ['dpen:' + d.id, 'yes'], p))}</div>
-            <div class="bo-ou-b"><i>NO</i>${oddsBtn('yn', ['dpen:' + d.id, 'no'], d.name + ' to get a penalty (' + div + '): no', _ouOdds('yn', ['dpen:' + d.id, 'no'], 1 - p))}</div></div>`; }).join('')}</div>` : ''}
+            <div class="bo-ou-b"><i>YES</i>${oddsBtn('yn', ['dpen:' + d.id, 'yes'], d.name + ' to get a time penalty (' + div + '): yes', _ouOdds('yn', ['dpen:' + d.id, 'yes'], p))}</div>
+            <div class="bo-ou-b"><i>NO</i>${oddsBtn('yn', ['dpen:' + d.id, 'no'], d.name + ' to get a time penalty (' + div + '): no', _ouOdds('yn', ['dpen:' + d.id, 'no'], 1 - p))}</div></div>`; }).join('')}</div>` : ''}
         </div><div class="bo-sec" data-sec="tri"${_secHid('tri')}>
         ${(!isC && field.length >= 3) ? (() => { const ts = (window._triSel && window._triSel.div === div) ? window._triSel.ids : [field[0].id, field[1].id, field[2].id];
           const opt = (k) => `<select id="tri-${k}" class="bo-tri-s" onchange="betTriUpdate()">${field.map(d => `<option value="${esc(d.id)}"${ts[k] === d.id ? ' selected' : ''}>${esc(d.name)}</option>`).join('')}</select>`;
