@@ -31464,49 +31464,56 @@ async function _stLoad(force) {
   return window._stInc;
 }
 const _stAns = (x) => x.o.map(c => c == null ? 0 : c); // no penalty for that driver → No further action
+// Only the reported driver(s) get a verdict — never the person who reported it (unless they reported themselves).
+const _stTg = (x) => { const r = _normName(x.rep), t = x.drv.map((a, i) => i).filter(i => _normName(x.drv[i]) !== r); return t.length ? t : x.drv.map((a, i) => i); };
 const _stScore = (pick, ans) => (pick || []).reduce((a, c, i) => a + (c == null ? 0 : c === ans[i] ? 3 : Math.abs(c - ans[i]) === 1 ? 1 : 0), 0);
-async function _stMine() { const me = _wdMe(); if (!me.uid) return { v: {} }; dbInvalidate && dbInvalidate('stewardVotes'); const d = await dbGet('stewardVotes', me.uid).catch(() => null); return d || { v: {} }; }
+const _stMode = (v) => v.m || (v.live ? 'live' : 'arch');
+async function _stMine() { const me = _wdMe(); if (!me.uid) return { v: {} }; try { dbInvalidate('stewardVotes'); } catch (e) {} const d = await dbGet('stewardVotes', me.uid).catch(() => null); const o = d || {}; o.v = o.v || {}; return o; }
 function _stAv(n, sz) { const a = (window._avatarByName || {})[_normName(n)]; return a ? `<img src="${esc(a)}" style="width:${sz}px;height:${sz}px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">` : `<span style="width:${sz}px;height:${sz}px;border-radius:50%;background:rgba(160,164,255,.25);display:inline-flex;align-items:center;justify-content:center;font-size:${sz * .4}px;font-weight:800;flex-shrink:0">${esc((n || '?')[0].toUpperCase())}</span>`; }
 const _stInvolved = (x) => { const id = typeof currentUser !== 'undefined' && currentUser && currentUser.discordId; return !!(id && x.ids.includes(String(id))); };
-window._stPick = function(k, i, c) { const p = window._stDraft[k] = window._stDraft[k] || []; p[i] = p[i] === c ? null : c; renderGames(); };
-window._stSubmit = async function(k) {
-  const me = _wdMe(); if (!me.uid) return showToast('Log in to play Steward Simulator.', 'error');
-  const x = (window._stInc || []).find(y => y.k === k); const p = (window._stDraft[k] || []);
-  if (!x || x.drv.some((_, i) => p[i] == null)) return showToast('Give a verdict for every driver.', 'error');
+const _stDayPick = (inc) => { const pool = inc.filter(x => !x.open).sort((a, b) => a.k.localeCompare(b.k)); if (!pool.length) return null; let h = 7; for (const ch of 'st' + _wdDayKey()) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return pool[h % pool.length]; };
+window._stPick = function(k, i, c) { const d = window._stDraft[k] = window._stDraft[k] || {}; d[i] = d[i] === c ? null : c; renderGames(); };
+window._stSubmit = async function(k, mode) {
+  const x = (window._stInc || []).find(y => y.k === k); if (!x) return;
+  const d = window._stDraft[k] || {}, tg = _stTg(x);
+  if (tg.some(i => d[i] == null)) return showToast(tg.length > 1 ? 'Give a verdict for each reported driver.' : 'Pick a verdict first.', 'error');
+  const c = x.drv.map((_, i) => tg.includes(i) ? d[i] : null);
+  if (mode === 'prac') { window._stPr = { k, c }; delete window._stDraft[k]; return renderGames(); }
+  const me = _wdMe(); if (!me.uid) return showToast('Log in to play — or try Practice.', 'error');
   if (_stInvolved(x)) return showToast('You were involved in this one — no voting on your own incident!', 'error');
   const mine = await _stMine(); if (mine.v[k]) return showToast('Already ruled on this one.', 'error');
-  mine.v[k] = { c: x.drv.map((_, i) => p[i]), live: !!x.open, t: Date.now() };
+  mine.v[k] = { c, m: mode === 'live' && x.open ? 'live' : 'daily', t: Date.now() };
   await dbSet('stewardVotes', me.uid, { name: me.name, avatar: me.avatar || '', v: mine.v });
-  window._stVotesAll = null; delete window._stDraft[k]; if (!x.open) window._stReveal = k; renderGames();
+  window._stVotesAll = null; delete window._stDraft[k];
+  if (mode === 'daily') { const a = _stAns(x); _gameCoins('st-daily', 10).then(() => { if (tg.every(i => c[i] === a[i])) _gameCoins('st-win', 10); }); }
+  renderGames();
 };
-window._stSetMode = function(m) { window._stMode = m; window._stReveal = null; renderGames(); };
-window._stNext = function() { window._stReveal = null; window._stSkip = null; renderGames(); };
-window._stSkipOne = function(k) { (window._stSkipped = window._stSkipped || new Set()).add(k); renderGames(); };
-function _stCrowd(all, x) { // per driver → count per category
-  return x.drv.map((_, i) => { const n = [0, 0, 0, 0, 0, 0]; all.forEach(u => { const c = u.v && u.v[x.k] && u.v[x.k].c && u.v[x.k].c[i]; if (c != null && n[c] != null) n[c]++; }); return n; });
-}
-function _stCardHtml(x, mineV, all, opts) {
-  const voted = mineV && mineV.c, draft = window._stDraft[x.k] || [], settled = !x.open, ans = _stAns(x), crowd = settled || opts.showCrowd ? _stCrowd(all, x) : null;
-  const DH = { D0: '#ffc800', D1: '#e8002d', D2: '#9b6fd4', D3: '#27f4d2', D4: '#2ecc71', E3: '#2ecc71' }, col = DH[x.d] || '#a0a4ff', inv = _stInvolved(x);
-  const sc = voted && settled ? _stScore(voted.c, ans) : null;
+window._stSetMode = function(m) { window._stMode = m; renderGames(); };
+window._stPracNext = function() { window._stPr = null; window._stPrCur = null; renderGames(); };
+function _stCrowd(all, x) { return x.drv.map((_, i) => { const n = [0, 0, 0, 0, 0, 0]; all.forEach(u => { const v = u.v && u.v[x.k], c = v && v.c && v.c[i]; if (c != null && n[c] != null) n[c]++; }); return n; }); }
+// st: { pick (locked choices or null), reveal (show stewards' answer), crowd, mode }
+function _stCardHtml(x, st, all) {
+  const draft = window._stDraft[x.k] || {}, ans = _stAns(x), tg = _stTg(x), crowd = st.crowd ? _stCrowd(all, x) : null, inv = st.mode !== 'prac' && _stInvolved(x), done = !!st.pick;
+  const DH = { D0: '#ffc800', D1: '#e8002d', D2: '#9b6fd4', D3: '#27f4d2', D4: '#2ecc71', E3: '#2ecc71' }, col = DH[x.d] || '#a0a4ff';
+  const sc = done && st.reveal ? _stScore(st.pick, ans) : null;
   return `<div class="card" style="padding:16px 18px;margin-bottom:14px;border-color:${col}55;background:linear-gradient(160deg,${col}14,var(--surface) 55%)">
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.7rem;font-weight:800;letter-spacing:1px">
       <span style="color:${col}">${esc(x.d)}</span><span class="text-muted">S${x.s} · R${x.r}${x.track ? ' · ' + esc(x.track) : ''} · ${esc(x.sess || 'Race')}${x.lap ? ' · Lap ' + esc(x.lap) : ''}</span>
-      ${settled ? '' : '<span style="margin-left:auto;color:#facc15">🟡 UNDER INVESTIGATION</span>'}${sc != null ? `<span style="margin-left:auto;color:${sc ? '#4ade80' : '#f87171'}">+${sc} PTS${mineV.live ? ' · LIVE' : ''}</span>` : ''}</div>
+      ${x.open ? '<span style="margin-left:auto;color:#facc15">🟡 UNDER INVESTIGATION</span>' : ''}${sc != null && st.mode !== 'prac' ? `<span style="margin-left:auto;color:${sc ? '#4ade80' : '#f87171'}">+${sc} PTS</span>` : ''}</div>
     <div style="display:flex;gap:10px;margin:12px 0 14px;align-items:flex-start">${_stAv(x.rep, 34)}<div style="flex:1;min-width:0"><div style="font-size:.7rem;color:var(--muted);font-weight:700">REPORTED BY <b style="color:#fff">${esc(x.rep || 'Unknown')}</b></div>
       <div style="margin-top:6px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.04);border-left:3px solid ${col};font-size:.88rem;line-height:1.5;white-space:pre-line;word-break:break-word">“${esc(x.desc.replace(/\*\*/g, ''))}”</div></div></div>
-    ${x.drv.map((a, i) => { const my = voted ? voted.c[i] : draft[i], tot = crowd ? crowd[i].reduce((p, q) => p + q, 0) : 0;
-      return `<div style="padding:10px 0;border-top:1px solid rgba(255,255,255,.06)"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">${_stAv(a, 26)}<b>${esc(a)}</b>
-        ${settled && (voted || opts.reveal) ? `<span style="margin-left:auto;font-size:.7rem;font-weight:800;color:#a0a4ff">STEWARDS: ${ST_CATS[ans[i]][2]} ${ST_CATS[ans[i]][1].toUpperCase()}</span>` : ''}</div>
+    ${tg.map(i => { const a = x.drv[i], my = done ? st.pick[i] : draft[i], tot = crowd ? crowd[i].reduce((p, q) => p + q, 0) : 0;
+      return `<div style="padding:10px 0;border-top:1px solid rgba(255,255,255,.06)"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">${_stAv(a, 26)}<span style="font-size:.7rem;color:var(--muted);font-weight:800">VERDICT FOR</span><b>${esc(a)}</b>
+        ${st.reveal ? `<span style="margin-left:auto;font-size:.7rem;font-weight:800;color:#a0a4ff">STEWARDS: ${ST_CATS[ans[i]][2]} ${ST_CATS[ans[i]][1].toUpperCase()}</span>` : ''}</div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(86px,1fr));gap:6px">${ST_CATS.map(([, l, ic], c) => {
-          const isAns = settled && (voted || opts.reveal) && ans[i] === c, isMine = my === c, pct = tot ? Math.round(crowd[i][c] / tot * 100) : null;
-          const bg = isAns ? 'rgba(74,222,128,.22)' : isMine ? (settled && voted ? 'rgba(248,113,113,.18)' : 'rgba(160,164,255,.25)') : 'rgba(255,255,255,.03)';
-          const bd = isAns ? 'rgba(74,222,128,.7)' : isMine ? (settled && voted ? 'rgba(248,113,113,.55)' : 'rgba(160,164,255,.8)') : 'rgba(255,255,255,.1)';
-          return `<button ${voted || inv ? 'disabled' : `onclick="_stPick('${x.k}',${i},${c})"`} style="position:relative;overflow:hidden;padding:8px 6px;border-radius:10px;border:1px solid ${bd};background:${bg};color:#fff;font-weight:700;font-size:.76rem;cursor:${voted || inv ? 'default' : 'pointer'};text-align:center">
-            ${pct != null ? `<span style="position:absolute;left:0;bottom:0;height:3px;width:${pct}%;background:${isAns ? '#4ade80' : '#a0a4ff'}"></span>` : ''}${ic} ${l}${isMine && voted ? ' •' : ''}${pct != null ? `<small style="display:block;font-size:.62rem;color:var(--muted);margin-top:2px">${pct}% of ${tot}</small>` : ''}</button>`; }).join('')}</div></div>`; }).join('')}
+          const isAns = st.reveal && ans[i] === c, isMine = my === c, pct = tot ? Math.round(crowd[i][c] / tot * 100) : null, wrong = isMine && st.reveal && !isAns;
+          const bg = isAns ? 'rgba(74,222,128,.22)' : wrong ? 'rgba(248,113,113,.18)' : isMine ? 'rgba(160,164,255,.25)' : 'rgba(255,255,255,.03)';
+          const bd = isAns ? 'rgba(74,222,128,.7)' : wrong ? 'rgba(248,113,113,.55)' : isMine ? 'rgba(160,164,255,.8)' : 'rgba(255,255,255,.1)';
+          return `<button ${done || inv ? 'disabled' : `onclick="_stPick('${x.k}',${i},${c})"`} style="position:relative;overflow:hidden;padding:8px 6px;border-radius:10px;border:1px solid ${bd};background:${bg};color:#fff;font-weight:700;font-size:.76rem;cursor:${done || inv ? 'default' : 'pointer'};text-align:center">
+            ${pct != null ? `<span style="position:absolute;left:0;bottom:0;height:3px;width:${pct}%;background:${isAns ? '#4ade80' : '#a0a4ff'}"></span>` : ''}${ic} ${l}${isMine && done ? ' •' : ''}${pct != null ? `<small style="display:block;font-size:.62rem;color:var(--muted);margin-top:2px">${pct}% of ${tot}</small>` : ''}</button>`; }).join('')}</div></div>`; }).join('')}
     ${inv ? '<div style="margin-top:10px;font-size:.78rem;color:#facc15">🙅 You were involved in this incident, so you can\'t rule on it.</div>'
-      : voted ? (settled ? '' : '<div style="margin-top:10px;font-size:.78rem;color:var(--muted)">✅ Verdict locked in. Scored when the stewards rule.</div>')
-      : `<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn btn-primary" onclick="_stSubmit('${x.k}')">⚖️ Submit verdict</button>${opts.skip ? `<button class="btn btn-secondary" onclick="_stSkipOne('${x.k}')">Skip</button>` : ''}</div>`}
+      : done ? (st.reveal ? '' : '<div style="margin-top:10px;font-size:.78rem;color:var(--muted)">✅ Verdict locked in. Scored when the stewards rule.</div>')
+      : `<div style="margin-top:12px"><button class="btn btn-primary" onclick="_stSubmit('${x.k}','${st.mode}')">⚖️ ${st.mode === 'prac' ? 'Reveal verdict' : 'Submit verdict'}</button></div>`}
   </div>`;
 }
 async function renderSTGame(el) {
@@ -31515,43 +31522,52 @@ async function renderSTGame(el) {
   const locked = !!(window._gamesLock || {}).st && !adminLoggedIn && !_gamesAccess();
   const inc = await _stLoad(), mine = await _stMine(), me = _wdMe();
   if (!window._stVotesAll || Date.now() - window._stVotesAll.at > 30e3) window._stVotesAll = { at: Date.now(), list: await dbGetAll('stewardVotes', { fresh: true }).catch(() => []) };
-  const all = window._stVotesAll.list, mode = window._stMode || 'live';
-  // Pay out live calls once their verdict is in: +2 IM$ per exact driver call (shared 25 IM$/day game cap).
+  const all = window._stVotesAll.list, mode = window._stMode || 'daily';
+  // Live calls pay out once their verdict is in: +2 IM$ per exact call (shared game cap).
   try { if (me.uid) { const paid = mine.paid || {}; let earn = 0; const nowPaid = [];
-    Object.entries(mine.v || {}).forEach(([k, v]) => { const x = inc.find(y => y.k === k); if (!v.live || paid[k] || !x || x.open) return; const a = _stAns(x); earn += 2 * v.c.filter((c, i) => c === a[i]).length; nowPaid.push(k); });
+    Object.entries(mine.v).forEach(([k, v]) => { const x = inc.find(y => y.k === k); if (_stMode(v) !== 'live' || paid[k] || !x || x.open) return; const a = _stAns(x); earn += 2 * v.c.filter((c, i) => c != null && c === a[i]).length; nowPaid.push(k); });
     if (nowPaid.length) { nowPaid.forEach(k => paid[k] = 1); await dbSet('stewardVotes', me.uid, { paid }); if (earn) _gameCoins('st-live', earn); } } } catch (e) {}
   const lockBanner = (window._gamesLock || {}).st ? `<div class="wd-lockbar">🔒 <b>Steward Simulator is locked</b><span>${locked ? 'It\'ll open soon — have a look around.' : 'Locked for players — you can still play.'}</span></div>` : '';
-  const curS = Number(window.currentSeason || window._reserveSeason) || 0;
-  const open = inc.filter(x => x.open), liveDone = inc.filter(x => !x.open && mine.v[x.k] && mine.v[x.k].live).sort((a, b) => b.r - a.r || b.at - a.at);
-  const arch = inc.filter(x => !x.open), archLeft = arch.filter(x => !mine.v[x.k] && !_stInvolved(x));
+  const open = inc.filter(x => x.open), settled = inc.filter(x => !x.open);
+  const liveDone = inc.filter(x => !x.open && mine.v[x.k] && _stMode(mine.v[x.k]) === 'live').sort((a, b) => b.r - a.r || b.at - a.at);
   let body = '';
-  if (mode === 'live') {
-    body = (open.length ? `<div class="text-muted" style="font-size:.82rem;margin:0 0 12px;text-align:center">${open.length} incident${open.length > 1 ? 's' : ''} waiting on the stewards. Call it before they do — <b style="color:#fff">3 pts</b> for the exact verdict, <b style="color:#fff">1 pt</b> if you're one step out, and <b style="color:#ffd84d">+2 IM$</b> per exact call.</div>` + open.sort((a, b) => a.d.localeCompare(b.d) || a.k.localeCompare(b.k)).map(x => _stCardHtml(x, mine.v[x.k], all, {})).join('')
-      : `<div class="card" style="text-align:center;padding:26px"><div style="font-size:2rem">⚖️</div><b>No incidents under investigation right now.</b><div class="text-muted" style="font-size:.85rem;margin-top:6px">New ones appear after each round, before the verdicts are out. Try the Archive meanwhile.</div></div>`)
-      + (liveDone.length ? `<div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;letter-spacing:1.5px;font-size:1.1rem;margin:22px 0 10px">🧾 YOUR RULED CALLS</div>` + liveDone.slice(0, 15).map(x => _stCardHtml(x, mine.v[x.k], all, {})).join('') : '');
-  } else if (mode === 'arch') {
-    const rv = window._stReveal && arch.find(x => x.k === window._stReveal);
-    const sk = window._stSkipped || new Set(); let pool = archLeft.filter(x => !sk.has(x.k)); if (!pool.length) { window._stSkipped = new Set(); pool = archLeft; }
-    const pick = rv || (() => { const id = window._stCur && pool.find(x => x.k === window._stCur); if (id) return id; const x = pool[Math.floor(Math.random() * pool.length)]; window._stCur = x && x.k; return x; })();
-    body = `<div class="text-muted" style="font-size:.82rem;margin:0 0 12px;text-align:center">${arch.length - archLeft.length} / ${arch.length} ruled · real incidents from S7 & S8. Bars show how everyone else ruled.</div>`
-      + (pick ? _stCardHtml(pick, mine.v[pick.k], all, { skip: !rv, reveal: !!rv }) + (rv ? `<div style="text-align:center"><button class="btn btn-primary" onclick="window._stCur=null;_stNext()">Next incident →</button></div>` : '')
-        : `<div class="card" style="text-align:center;padding:26px"><b>🏁 You've ruled on every archive incident!</b></div>`);
+  if (mode === 'daily') {
+    const x = _stDayPick(inc), v = x && mine.v[x.k];
+    body = x ? `<div class="text-muted" style="font-size:.82rem;margin:0 0 12px;text-align:center">One real incident a day, the same for everyone. <b style="color:#ffd84d">+10 IM$</b> for ruling, <b style="color:#ffd84d">+10 IM$</b> more if you match the stewards exactly.</div>`
+      + _stCardHtml(x, { pick: v ? v.c : null, reveal: !!v, crowd: !!v, mode: 'daily' }, all)
+      + (v ? `<div class="wd-end"><div><b>${_stScore(v.c, _stAns(x)) === 3 * _stTg(x).length ? '⚖️ SPOT ON — YOU THINK LIKE A STEWARD' : 'VERDICT IN'}</b><div class="wd-end-sub">Bars show how everyone else ruled today.</div></div><div class="wd-timer"><b id="st-timer">--:--:--</b><small>NEXT INCIDENT</small></div></div>` : '')
+      : `<div class="card" style="text-align:center;padding:26px">No incidents imported yet.</div>`;
+    if (v) { const until = Date.now() + _wdMsToMidnight(); clearInterval(window._wdTick);
+      const tick = () => { const t = document.getElementById('st-timer'); if (!t) { clearInterval(window._wdTick); return; } const ms = until - Date.now(); if (ms <= 0) { clearInterval(window._wdTick); renderGames(); return; }
+        t.textContent = [Math.floor(ms / 36e5), Math.floor(ms / 6e4) % 60, Math.floor(ms / 1e3) % 60].map(n => String(n).padStart(2, '0')).join(':'); };
+      setTimeout(() => { tick(); window._wdTick = setInterval(tick, 1000); }, 0); }
+  } else if (mode === 'live') {
+    body = (open.length ? `<div class="text-muted" style="font-size:.82rem;margin:0 0 12px;text-align:center">${open.length} incident${open.length > 1 ? 's' : ''} waiting on the stewards. Call it before they do — <b style="color:#ffd84d">+2 IM$</b> per exact call.</div>`
+        + open.sort((a, b) => a.d.localeCompare(b.d) || a.k.localeCompare(b.k)).map(x => _stCardHtml(x, { pick: mine.v[x.k] ? mine.v[x.k].c : null, reveal: false, crowd: false, mode: 'live' }, all)).join('')
+      : `<div class="card" style="text-align:center;padding:26px"><div style="font-size:2rem">⚖️</div><b>No incidents under investigation right now.</b><div class="text-muted" style="font-size:.85rem;margin-top:6px">New ones appear after each round, before the verdicts are out. Try the Daily or Practice meanwhile.</div></div>`)
+      + (liveDone.length ? `<div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;letter-spacing:1.5px;font-size:1.1rem;margin:22px 0 10px">🧾 YOUR RULED CALLS</div>` + liveDone.slice(0, 15).map(x => _stCardHtml(x, { pick: mine.v[x.k].c, reveal: true, crowd: true, mode: 'live' }, all)).join('') : '');
+  } else if (mode === 'prac') {
+    const pr = window._stPr && settled.find(x => x.k === window._stPr.k);
+    let x = pr || (window._stPrCur && settled.find(y => y.k === window._stPrCur));
+    if (!x && settled.length) { x = settled[Math.floor(Math.random() * settled.length)]; window._stPrCur = x.k; }
+    body = `<div class="text-muted" style="font-size:.82rem;margin:0 0 12px;text-align:center">Random settled incidents from S7 & S8. Nothing's saved and nothing's scored — just practice.</div>`
+      + (x ? _stCardHtml(x, { pick: pr ? window._stPr.c : null, reveal: !!pr, crowd: !!pr, mode: 'prac' }, all) + `<div style="text-align:center"><button class="btn ${pr ? 'btn-primary' : 'btn-secondary'}" onclick="_stPracNext()">${pr ? 'Next incident →' : 'Skip →'}</button></div>` : '<div class="card" style="text-align:center;padding:26px">No incidents imported yet.</div>');
   } else {
-    const rows = all.map(u => { let lp = 0, ap = 0, n = 0, ex = 0, tot = 0; Object.entries(u.v || {}).forEach(([k, v]) => { const x = inc.find(y => y.k === k); if (!x || x.open) return; const a = _stAns(x), sc = _stScore(v.c, a); v.live ? lp += sc : ap += sc; n++; ex += v.c.filter((c, i) => c === a[i]).length; tot += v.c.length; });
-      return { id: u.id, name: u.name || 'Player', av: u.avatar, lp, ap, n, acc: tot ? Math.round(ex / tot * 100) : 0 }; }).filter(r => r.n).sort((a, b) => (b.lp + b.ap) - (a.lp + a.ap) || b.acc - a.acc);
-    body = rows.length ? `<div class="wd-lb"><div class="wd-lb-h"><span>🏆 STEWARD RANKINGS</span><small>Live + Archive points · exact = 3, one step out = 1</small></div>
+    const rows = all.map(u => { let lp = 0, dp = 0, n = 0, ex = 0, tot = 0; Object.entries(u.v || {}).forEach(([k, v]) => { const x = inc.find(y => y.k === k); if (!x || x.open || !v.c) return; const a = _stAns(x), sc = _stScore(v.c, a); _stMode(v) === 'live' ? lp += sc : dp += sc; n++; v.c.forEach((c, i) => { if (c == null) return; tot++; if (c === a[i]) ex++; }); });
+      return { id: u.id, name: u.name || 'Player', av: u.avatar, lp, dp, n, acc: tot ? Math.round(ex / tot * 100) : 0 }; }).filter(r => r.n).sort((a, b) => (b.lp + b.dp) - (a.lp + a.dp) || b.acc - a.acc);
+    body = rows.length ? `<div class="wd-lb"><div class="wd-lb-h"><span>🏆 STEWARD RANKINGS</span><small>Daily + Live points · exact = 3, one step out = 1</small></div>
       ${rows.slice(0, 50).map((r, i) => `<div style="display:flex;align-items:center;gap:10px;padding:8px 4px;border-top:1px solid rgba(255,255,255,.06);${r.id === me.uid ? 'background:rgba(160,164,255,.1);border-radius:8px' : ''}">
         <b style="width:26px;text-align:center">${i + 1}</b>${r.av ? `<img src="${esc(r.av)}" style="width:28px;height:28px;border-radius:50%;object-fit:cover">` : _stAv(r.name, 28)}<b style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.name)}</b>
-        <small class="text-muted" style="white-space:nowrap">${r.n} ruled · ${r.acc}% exact</small><span style="font-size:.72rem;color:#facc15;white-space:nowrap">🟡 ${r.lp}</span><b style="min-width:42px;text-align:right">${r.lp + r.ap}</b></div>`).join('')}</div>`
+        <small class="text-muted" style="white-space:nowrap">${r.n} ruled · ${r.acc}% exact</small><b style="min-width:42px;text-align:right">${r.lp + r.dp}</b></div>`).join('')}</div>`
       : `<div class="card" style="text-align:center;padding:26px">No rulings yet — be the first steward.</div>`;
   }
   el.innerHTML = `<div class="wd-wrap"><div class="wd-top"><button class="wd-back" onclick="openGame('hub')" title="Back to Games">←</button>
-      <div class="wd-brand"><span style="font-size:1.9rem;-webkit-text-fill-color:initial">⚖️</span><span>STEWARDS</span></div><div class="wd-meta"><span class="wd-pill">${open.length} live</span><span class="wd-pill">${Object.keys(mine.v || {}).length} ruled</span></div></div>${lockBanner}
-    <div class="wd-modes">${[['live', '🟡', 'LIVE'], ['arch', '📚', 'ARCHIVE'], ['lb', '🏆', 'RANKINGS']].map(([m, i, l]) => `<button class="${mode === m ? 'on' : ''}" onclick="_stSetMode('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>
-    ${locked && mode !== 'lb' ? body.replace(/onclick="_stPick[^"]*"|onclick="_stSubmit[^"]*"/g, 'disabled') : body}
-    <div class="wd-info"><h3>How it works</h3><p>Every card is a real incident report from the IMS stewards' channel, written by the driver who reported it — so read it with a pinch of salt. Give a verdict for each driver involved.</p>
-      <ul><li><i>Live</i>: incidents still under investigation. Rule before the stewards do; scored automatically when the verdicts come out (+2 IM$ per exact call).</li><li><i>Archive</i>: settled incidents from S7 and S8 — rule, then see the real verdict and how everyone else called it.</li>
-      <li>Scoring per driver: exact verdict <b>3 pts</b>, one step out <b>1 pt</b>. Verdicts run: No action → Points only → ≤5s → 10s → 15s+ → DSQ / ban.</li><li>You can't vote on an incident you were involved in.</li></ul></div></div>`;
+      <div class="wd-brand"><span style="font-size:1.9rem;-webkit-text-fill-color:initial">⚖️</span><span>STEWARDS</span></div><div class="wd-meta">${open.length ? `<span class="wd-pill">${open.length} live</span>` : ''}</div></div>${lockBanner}
+    <div class="wd-modes">${[['daily', '📅', 'DAILY'], ['live', '🟡', 'LIVE'], ['prac', '🎯', 'PRACTICE'], ['lb', '🏆', 'RANKINGS']].map(([m, i, l]) => `<button class="${mode === m ? 'on' : ''}" onclick="_stSetMode('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>
+    ${locked && mode !== 'lb' ? body.replace(/onclick="_st(Pick|Submit)[^"]*"/g, 'disabled') : body}
+    <div class="wd-info"><h3>How it works</h3><p>Every card is a real incident report from the IMS stewards' channel, written by the driver who reported it — so read it with a pinch of salt. Hand out the penalty to the reported driver.</p>
+      <ul><li><i>Daily</i>: one settled incident a day, the same for everyone. See the real verdict and how everyone else ruled.</li><li><i>Live</i>: incidents still under investigation. Rule before the stewards do; scored automatically when the verdicts come out.</li>
+      <li><i>Practice</i>: endless random incidents — not saved, not scored.</li><li>Scoring: exact verdict <b>3 pts</b>, one step out <b>1 pt</b>. Verdicts run: No action → Points only → ≤5s → 10s → 15s+ → DSQ / ban.</li><li>You can't vote on an incident you were involved in.</li></ul></div></div>`;
 }
 
 // ---- Admin: lock / unlock games ----
@@ -31615,7 +31631,7 @@ async function _gameCoins(kind, amount) {
   if (typeof currentUser === 'undefined' || !currentUser || !currentUser.userId) return 0; // guests don't earn IM$
   try { const c = await _betLoadCoins(currentUser.userId); const now = Date.now(); const g = c.gameRewards || {};
     let give = 0;
-    if (/^(wd|gr|hl|cn|pt|tq|cp)-(daily|win|hidden)$/.test(kind)) { const day = _wdDayKey() + (_wdSalt() ? '#' + _wdSalt() : ''); if (g[kind] === day) return 0; g[kind] = day; give = amount; }
+    if (/^(wd|gr|hl|cn|pt|tq|cp|st)-(daily|win|hidden)$/.test(kind)) { const day = _wdDayKey() + (_wdSalt() ? '#' + _wdSalt() : ''); if (g[kind] === day) return 0; g[kind] = day; give = amount; }
     else { const log = (g[kind] || []).filter(x => now - x.t < 864e5); const used = log.reduce((a, x) => a + x.a, 0); give = Math.max(0, Math.min(amount, 25 - used));
       if (!give) { g[kind] = log; return 0; } log.push({ t: now, a: give }); g[kind] = log; }
     c.balance = (c.balance || 0) + give; c.gameRewards = g; c.gameEarned = (c.gameEarned || 0) + give;
@@ -31623,7 +31639,7 @@ async function _gameCoins(kind, amount) {
   } catch (e) { return 0; }
 }
 function _coinPop(n, kind) {
-  const lbl = { 'cn-hidden': 'Found a hidden group!', 'st-live': 'Called it like the stewards!', 'duel-cn': 'Connections duel win', 'cn-daily': 'Daily Connections', 'cn-win': 'Connections solved!', 'wd-daily': 'Daily PaddockDle', 'gr-daily': 'Daily Grid', 'wd-win': 'Got the daily driver!', 'gr-win': 'Perfect 9/9 grid!', 'hl-daily': 'Daily Higher or Lower', 'pt-daily': 'Daily Pointless', 'pt-win': 'Pointless — 60 or under!', 'tq-daily': 'Daily Trivia', 'cp-daily': 'Daily Career Path', 'cp-win': 'Career Path in 3 or fewer!', 'tq-win': 'Trivia 8/10 or better!', 'hl-win': '8/10 or better!', 'duel-hl': 'Higher or Lower duel win', 'duel-pt': 'Pointless duel win', 'duel-tq': 'Trivia duel win', 'duel-cp': 'Career Path duel win', 'duel-wd': 'PaddockDle duel win', 'duel-gr': 'Grid duel win' }[kind] || 'Games';
+  const lbl = { 'cn-hidden': 'Found a hidden group!', 'st-live': 'Called it like the stewards!', 'st-daily': 'Daily Steward ruling', 'st-win': 'Matched the stewards!', 'duel-cn': 'Connections duel win', 'cn-daily': 'Daily Connections', 'cn-win': 'Connections solved!', 'wd-daily': 'Daily PaddockDle', 'gr-daily': 'Daily Grid', 'wd-win': 'Got the daily driver!', 'gr-win': 'Perfect 9/9 grid!', 'hl-daily': 'Daily Higher or Lower', 'pt-daily': 'Daily Pointless', 'pt-win': 'Pointless — 60 or under!', 'tq-daily': 'Daily Trivia', 'cp-daily': 'Daily Career Path', 'cp-win': 'Career Path in 3 or fewer!', 'tq-win': 'Trivia 8/10 or better!', 'hl-win': '8/10 or better!', 'duel-hl': 'Higher or Lower duel win', 'duel-pt': 'Pointless duel win', 'duel-tq': 'Trivia duel win', 'duel-cp': 'Career Path duel win', 'duel-wd': 'PaddockDle duel win', 'duel-gr': 'Grid duel win' }[kind] || 'Games';
   const el = document.createElement('div'); el.className = 'coin-pop'; const nOpen = document.querySelectorAll('.coin-pop').length; if (nOpen) el.style.top = (84 + nOpen * 78) + 'px';
   el.innerHTML = `<span class="imc" style="font-size:1.6rem"></span><div><b>+${n} IM$</b><small>${lbl}</small></div>`;
   document.body.appendChild(el); setTimeout(() => el.classList.add('out'), 2600); setTimeout(() => el.remove(), 3200);
