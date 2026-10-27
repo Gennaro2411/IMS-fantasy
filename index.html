@@ -25782,6 +25782,8 @@ window.showRaceResults = function(raceId, season) {
 
   html += `</div></div>`;
   el.innerHTML = html;
+  // Opening a race always starts at the top (the race title + first divisions), not wherever the list was scrolled to.
+  try { window.scrollTo({ top: 0, behavior: 'auto' }); const sc = el.closest('.page'); if (sc && sc.scrollTop) sc.scrollTop = 0; } catch (e) {}
 };
 
 // ===== EXTRA PAGE =====
