@@ -31108,6 +31108,7 @@ window.renderGames = async function() {
   if (window._games.view === 'tq') { clearInterval(window._wdDuelPoll); return renderTQGame(el); }
   if (window._games.view === 'cp') { clearInterval(window._wdDuelPoll); return renderCPGame(el); }
   if (window._games.view === 'st') { clearInterval(window._wdDuelPoll); return renderSTGame(el); }
+  if (window._games.view === 'qs') { clearInterval(window._wdDuelPoll); return renderQSGame(el); }
   if (window._games.view !== 'wordle') {
     clearInterval(window._wdDuelPoll);
     { const lk = await dbGet('settings', 'gamesLock').catch(() => null); window._gamesLock = (lk && lk.value) || {}; }
@@ -31121,6 +31122,7 @@ window.renderGames = async function() {
       ${(() => { const tl = !!window._gamesLock.tq; return `<button class="gm-bubble${tl ? ' gm-locked' : ''}" onclick="openGame('tq')"><span class="gm-ico">${tl ? '🔒' : '🧠'}</span><b>IMS TRIVIA${tl ? ' <span class="gm-lock-tag">LOCKED</span>' : ''}</b><small>10 quick questions on IMS history — wins, poles, teams, nationalities and track records. How well do you know the league?</small></button>`; })()}
       ${(() => { const cl2 = !!window._gamesLock.cp; return `<button class="gm-bubble${cl2 ? ' gm-locked' : ''}" onclick="openGame('cp')"><span class="gm-ico">${cl2 ? '🔒' : '🛣️'}</span><b>IMS CAREER PATH${cl2 ? ' <span class="gm-lock-tag">LOCKED</span>' : ''}</b><small>A driver's team history, season by season. Guess who — every wrong guess reveals the next season.</small></button>`; })()}
       ${(() => { const sl = !!window._gamesLock.st; return `<button class="gm-bubble${sl ? ' gm-locked' : ''}" onclick="openGame('st')"><span class="gm-ico">${sl ? '🔒' : '⚖️'}</span><b>IMS STEWARD SIMULATOR${sl ? ' <span class="gm-lock-tag">LOCKED</span>' : ''}</b><small>Real IMS incidents. Read the report — guilty or not guilty? Then see how you compare with the stewards and everyone else.</small></button>`; })()}
+      ${(() => { const ql = !!window._gamesLock.qs; return `<button class="gm-bubble${ql ? ' gm-locked' : ''}" onclick="openGame('qs')"><span class="gm-ico">${ql ? '🔒' : '⏱️'}</span><b>IMS QUALI SHOOTOUT${ql ? ' <span class="gm-lock-tag">LOCKED</span>' : ''}</b><small>Predict each division's pole time to the thousandth before quali. Closest guess takes the division.</small></button>`; })()}
       <div class="gm-bubble gm-soon"><span class="gm-ico">🔒</span><b>MORE SOON</b><small>New games on the way.</small></div></div>`;
     return;
   }
@@ -31662,8 +31664,97 @@ async function renderSTGame(el) {
       <ul><li>Read the report, then decide: was the reported driver punished? 🔨 Guilty = any penalty (time penalty, DSQ, quali/race ban or penalty points). 🕊️ Not guilty = no further action.</li><li><i>Daily</i>: one settled incident a day, the same for everyone — see the real verdict and how everyone else ruled.</li><li><i>Live</i>: incidents still under investigation. Rule before the stewards do; scored when the verdicts come out.</li><li><i>Practice</i>: endless random incidents — not saved, not scored.</li><li>1 point per correct call. Called <b>Guilty</b>? Guess how much they got for a <b>+1 bonus</b>.</li><li>Each card shows the accused's penalty points going in, past guilty incidents, and where they started and finished. You can't rule on an incident you were involved in.</li></ul></div></div>`;
 }
 
+
+// ================= IMS QUALI SHOOTOUT =================
+// Before the round locks (same lock as bets/teams), guess each division's pole time (m:ss.sss).
+// Settles from the race doc's qualiMsByDiv (fastest quali time per division, written by the .db import).
+// Closest guess per division wins (+10 IM$, shared game cap). Votes: qualiGuesses/<userId> = { name, avatar, g: { roundKey: { D0: ms, … } }, paid: { 'roundKey|D0': 1 } }.
+const _qsFmt = (ms) => { if (ms == null || !isFinite(ms)) return '–'; const m = Math.floor(ms / 60000), sec = (ms % 60000) / 1000; return (m ? m + ':' + sec.toFixed(3).padStart(6, '0') : sec.toFixed(3)); };
+const _qsParse = (t) => { t = String(t || '').trim().replace(',', '.'); if (!t) return null; const m = t.match(/^(?:(\d{1,2}):)?(\d{1,2})\.(\d{1,3})$/); if (!m) return NaN; return (Number(m[1] || 0) * 60 + Number(m[2])) * 1000 + Number((m[3] + '00').slice(0, 3)); };
+const _qsKey = (name) => String(Number(window.currentSeason || window._reserveSeason) || 0) + '|' + (window.trackKey ? window.trackKey(name) : String(name || '').toLowerCase());
+const _qsPole = (race, dv) => { const m = (race.qualiMsByDiv || {})[dv === 'E3' && !(race.qualiMsByDiv || {}).E3 ? 'D4' : dv]; const v = m ? Object.values(m).filter(x => x > 0) : []; return v.length ? Math.min(...v) : null; };
+window._qsSave = async function(rk) {
+  const me = _wdMe(); if (!me.uid) return showToast('Log in to play Quali Shootout.', 'error');
+  if (window._qsLockAt && Date.now() >= window._qsLockAt) return showToast('Guesses are locked for this round.', 'error');
+  const out = {}; let bad = '';
+  document.querySelectorAll('[data-qs-div]').forEach(inp => { const v = _qsParse(inp.value); if (v == null) return; if (!isFinite(v) || v < 30000 || v > 240000) bad = inp.dataset.qsDiv; else out[inp.dataset.qsDiv] = v; });
+  if (bad) return showToast(`${bad}: use m:ss.sss, e.g. 1:23.456`, 'error');
+  if (!Object.keys(out).length) return showToast('Enter at least one pole time.', 'error');
+  const d = await dbGet('qualiGuesses', me.uid).catch(() => null) || {}; const g = d.g || {}; g[rk] = out;
+  await dbSet('qualiGuesses', me.uid, { name: me.name, avatar: me.avatar || '', g }); window._qsAll = null;
+  showToast('⏱️ Pole times locked in!', 'success'); renderGames();
+};
+window._qsSetMode = function(m) { window._qsMode = m; renderGames(); };
+async function renderQSGame(el) {
+  { const lk = await dbGet('settings', 'gamesLock').catch(() => null); window._gamesLock = (lk && lk.value) || {}; }
+  const locked = !!(window._gamesLock || {}).qs && !adminLoggedIn && !_gamesAccess();
+  const me = _wdMe(), mode = window._qsMode || 'now';
+  const [races, schedule, arcs, lockDoc] = await Promise.all([dbGetAll('races').catch(() => []), dbGetAll('schedule').catch(() => []), dbGetAll('seasonArchives').catch(() => []), dbGet('settings', 'teamsLocked').catch(() => null)]);
+  if (!window._qsAll || Date.now() - window._qsAll.at > 30e3) window._qsAll = { at: Date.now(), list: await dbGetAll('qualiGuesses', { fresh: true }).catch(() => []) };
+  const all = window._qsAll.list, mine = (all.find(u => u.id === me.uid) || {});
+  const divs = ((typeof divisionsForSeason === 'function') ? divisionsForSeason(window.currentSeason || window._reserveSeason || 8) : ['D0', 'D1', 'D2', 'D3', 'E3']).map(d => d === 'D4' ? 'E3' : d);
+  const HUE = { D0: '#ffc800', D1: '#e8002d', D2: '#9b6fd4', D3: '#27f4d2', E3: '#2ecc71' };
+  const teamsLocked = !!(lockDoc && lockDoc.value);
+  const up = (schedule || []).filter(r => r.lockTime > Date.now()).sort((a, b) => a.lockTime - b.lockTime)[0] || null;
+  const open = up && !teamsLocked; window._qsLockAt = up ? up.lockTime : 0;
+  // Settled rounds: current-season race docs with quali times.
+  const done = races.filter(r => divs.some(dv => _qsPole(r, dv) != null)).sort((a, b) => (b.raceNum || 0) - (a.raceNum || 0));
+  const resultsOf = (r) => { const rk = _qsKey(r.name); return divs.map(dv => { const pole = _qsPole(r, dv); if (pole == null) return null;
+    const rows = all.map(u => ({ u, g: ((u.g || {})[rk] || {})[dv] })).filter(x => x.g != null).map(x => ({ ...x, err: Math.abs(x.g - pole) })).sort((a, b) => a.err - b.err);
+    return { dv, pole, rows, poleBy: (r.poleByDiv || {})[dv] || '' }; }).filter(Boolean); };
+  // Pay out wins once (closest per division; ties all win).
+  try { if (me.uid) { const paid = mine.paid || {}; let earn = 0, ch = false;
+    done.forEach(r => resultsOf(r).forEach(x => { const k = _qsKey(r.name) + '|' + x.dv; if (paid[k] || !x.rows.length) return; const best = x.rows[0].err; if (x.rows.some(y => y.u.id === me.uid && y.err === best)) { earn += 10; } paid[k] = 1; ch = true; }));
+    if (ch) { await dbSet('qualiGuesses', me.uid, { paid }); if (earn) _gameCoins('qs-win', earn); } } } catch (e) {}
+  const lockBanner = (window._gamesLock || {}).qs ? `<div class="wd-lockbar">🔒 <b>Quali Shootout is locked</b><span>${locked ? 'It\'ll open soon — have a look around.' : 'Locked for players — you can still play.'}</span></div>` : '';
+  const av = (u, sz) => u.avatar ? `<img src="${esc(u.avatar)}" style="width:${sz}px;height:${sz}px;border-radius:50%;object-fit:cover;flex-shrink:0">` : (typeof initialsAvatar === 'function' ? initialsAvatar(u.name || '?', sz, 'border-radius:50%;flex-shrink:0') : '');
+  let body = '';
+  if (mode === 'now') {
+    if (!up) body = `<div class="card" style="text-align:center;padding:26px"><div style="font-size:2rem">⏱️</div><b>No upcoming round on the schedule.</b></div>`;
+    else {
+      const rk = _qsKey(up.name), myG = (mine.g || {})[rk] || {};
+      // Reference: past poles at this circuit (this season + archives) and this season's latest poles.
+      const tk = window.trackKey ? window.trackKey(up.name) : '';
+      const hist = []; [[Number(window.currentSeason || window._reserveSeason) || 0, races], ...arcs.map(a => [Number(a.season), a.races || []])].forEach(([se, rs]) => rs.forEach(r => { if (window.trackKey && window.trackKey(r.name) === tk) hist.push({ se, r }); }));
+      hist.sort((a, b) => b.se - a.se);
+      const cnt = all.filter(u => (u.g || {})[rk]).length;
+      body = `<div class="card" style="padding:16px 18px;margin-bottom:14px;text-align:center"><div style="font-size:.7rem;font-weight:800;letter-spacing:2px;color:var(--muted)">ROUND ${esc(String(up.raceNum || ''))}</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.7rem;letter-spacing:1.5px">${typeof getRaceFlag === 'function' ? getRaceFlag(up.name) : ''} ${esc(up.name)}</div>
+          <div class="text-muted" style="font-size:.82rem">${open ? `Guesses lock <b style="color:#fff" id="qs-lock">--</b> · ${cnt} player${cnt === 1 ? '' : 's'} in` : '🔒 Locked — the round is underway. Results land when quali times are imported.'}</div></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px">${divs.map(dv => { const h = hist.map(x => ({ se: x.se, p: _qsPole(x.r, dv), by: (x.r.poleByDiv || {})[dv] })).filter(x => x.p != null).slice(0, 3);
+          return `<div class="card" style="padding:14px 16px;border-color:${HUE[dv] || '#888'}66;background:linear-gradient(160deg,${HUE[dv] || '#888'}18,var(--surface) 60%)">
+            <div style="display:flex;align-items:center;justify-content:space-between"><b style="font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;letter-spacing:1.5px;color:${HUE[dv] || '#fff'}">${dv}</b>${myG[dv] != null ? `<small style="color:#4ade80;font-weight:800">✓ ${_qsFmt(myG[dv])}</small>` : ''}</div>
+            <input data-qs-div="${dv}" inputmode="decimal" placeholder="1:23.456" value="${myG[dv] != null ? _qsFmt(myG[dv]) : ''}" ${open && !locked ? '' : 'disabled'} style="width:100%;margin:10px 0 8px;padding:12px 14px;border-radius:12px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.15);color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:1.6rem;letter-spacing:2px;text-align:center">
+            <div style="font-size:.72rem;color:var(--muted);line-height:1.6">${h.length ? h.map(x => `S${x.se} pole here: <b style="color:#fff">${_qsFmt(x.p)}</b>${x.by ? ' · ' + esc(x.by) : ''}`).join('<br>') : 'No pole time here on record yet.'}</div></div>`; }).join('')}</div>
+        ${open && !locked ? `<div style="text-align:center;margin-top:14px"><button class="btn btn-primary" onclick="_qsSave('${esc(rk)}')">⏱️ ${Object.keys(myG).length ? 'Update guesses' : 'Lock in guesses'}</button><div class="text-muted" style="font-size:.74rem;margin-top:6px">Leave a division blank to skip it. You can change your guesses until the lock.</div></div>` : ''}`;
+      if (open) { clearInterval(window._wdTick); const tick = () => { const t = document.getElementById('qs-lock'); if (!t) { clearInterval(window._wdTick); return; } const ms = up.lockTime - Date.now(); if (ms <= 0) { clearInterval(window._wdTick); renderGames(); return; }
+        const d = Math.floor(ms / 864e5), h = Math.floor(ms / 36e5) % 24, m = Math.floor(ms / 6e4) % 60, sec = Math.floor(ms / 1e3) % 60; t.textContent = 'in ' + (d ? d + 'd ' : '') + [h, m, sec].map(n => String(n).padStart(2, '0')).join(':'); };
+        setTimeout(() => { tick(); window._wdTick = setInterval(tick, 1000); }, 0); }
+    }
+  } else if (mode === 'res') {
+    body = done.length ? done.slice(0, 12).map(r => { const R = resultsOf(r); if (!R.some(x => x.rows.length)) return '';
+      return `<div class="card" style="padding:14px 16px;margin-bottom:12px"><div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.25rem;letter-spacing:1px;margin-bottom:8px">R${r.raceNum} · ${typeof getRaceFlag === 'function' ? getRaceFlag(r.name) : ''} ${esc(r.name)}</div>
+        ${R.filter(x => x.rows.length).map(x => { const best = x.rows[0].err, myRow = x.rows.findIndex(y => y.u.id === me.uid);
+          return `<div style="padding:8px 0;border-top:1px solid rgba(255,255,255,.06)"><div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><b style="color:${HUE[x.dv] || '#fff'}">${x.dv}</b><span style="font-size:.8rem">Pole <b>${_qsFmt(x.pole)}</b>${x.poleBy ? ' · ' + esc(x.poleBy) : ''}</span>${myRow >= 0 ? `<small style="margin-left:auto;color:${x.rows[myRow].err === best ? '#4ade80' : 'var(--muted)'}">You: ${_qsFmt(x.rows[myRow].g)} (±${(x.rows[myRow].err / 1000).toFixed(3)}s) · P${myRow + 1}/${x.rows.length}</small>` : ''}</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">${x.rows.slice(0, 3).map((y, i) => `<span style="display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 3px;border-radius:20px;font-size:.76rem;background:${y.err === best ? 'rgba(74,222,128,.14)' : 'rgba(255,255,255,.04)'};border:1px solid ${y.err === best ? 'rgba(74,222,128,.5)' : 'rgba(255,255,255,.1)'}">${av(y.u, 22)}${y.err === best ? '🏆 ' : (i + 1) + '. '}<b>${esc(y.u.name || 'Player')}</b> ${_qsFmt(y.g)} <span class="text-muted">±${(y.err / 1000).toFixed(3)}</span></span>`).join('')}</div></div>`; }).join('')}</div>`; }).join('') || '<div class="card" style="text-align:center;padding:26px">No settled rounds with guesses yet.</div>'
+      : '<div class="card" style="text-align:center;padding:26px">No settled rounds yet.</div>';
+  } else {
+    const st = {}; done.forEach(r => resultsOf(r).forEach(x => { if (!x.rows.length) return; const best = x.rows[0].err; x.rows.forEach(y => { const o = st[y.u.id] = st[y.u.id] || { u: y.u, w: 0, n: 0, e: 0 }; o.n++; o.e += y.err; if (y.err === best) o.w++; }); }));
+    const rows = Object.values(st).sort((a, b) => b.w - a.w || a.e / a.n - b.e / b.n);
+    body = rows.length ? `<div class="wd-lb"><div class="wd-lb-h"><span>🏆 SHOOTOUT RANKINGS</span><small>Division wins · average miss</small></div>
+      ${rows.slice(0, 50).map((r, i) => `<div style="display:flex;align-items:center;gap:10px;padding:8px 4px;border-top:1px solid rgba(255,255,255,.06);${r.u.id === me.uid ? 'background:rgba(160,164,255,.1);border-radius:8px' : ''}"><b style="width:26px;text-align:center">${i + 1}</b>${av(r.u, 28)}<b style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.u.name || 'Player')}</b>
+        <small class="text-muted" style="white-space:nowrap">${r.n} guess${r.n === 1 ? '' : 'es'} · avg ±${(r.e / r.n / 1000).toFixed(3)}s</small><b style="min-width:42px;text-align:right">🏆 ${r.w}</b></div>`).join('')}</div>`
+      : '<div class="card" style="text-align:center;padding:26px">No settled guesses yet.</div>';
+  }
+  el.innerHTML = `<div class="wd-wrap"><div class="wd-top"><button class="wd-back" onclick="openGame('hub')" title="Back to Games">←</button>
+      <div class="wd-brand"><span style="font-size:1.9rem;-webkit-text-fill-color:initial">⏱️</span><span>SHOOTOUT</span></div><div class="wd-meta"></div></div>${lockBanner}
+    <div class="wd-modes">${[['now', '⏱️', 'THIS ROUND'], ['res', '📋', 'RESULTS'], ['lb', '🏆', 'RANKINGS']].map(([m, i, l]) => `<button class="${mode === m ? 'on' : ''}" onclick="_qsSetMode('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>
+    ${body}
+    <div class="wd-info"><h3>How it works</h3><ul><li>Before the round locks, guess the <b>pole time</b> in each division you fancy — to the thousandth (e.g. <i>1:23.456</i>).</li><li>When quali times are imported, the <b>closest guess</b> in each division wins <b>+10 IM$</b> (ties share it). Guess every division for more chances.</li><li>Past pole times at the same circuit are shown to help you.</li></ul></div></div>`;
+}
+
 // ---- Admin: lock / unlock games ----
-const GAMES_LIST = [['wordle', '🟩', 'IMS PaddockDle'], ['grid', '🔢', 'IMS PaddockDle Grid'], ['hl', '⬆️', 'IMS Higher or Lower'], ['cn', '🧩', 'IMS Connections'], ['pt', '🎯', 'IMS Pointless'], ['tq', '🧠', 'IMS Trivia'], ['cp', '🛣️', 'IMS Career Path'], ['st', '⚖️', 'IMS Steward Simulator']];
+const GAMES_LIST = [['wordle', '🟩', 'IMS PaddockDle'], ['grid', '🔢', 'IMS PaddockDle Grid'], ['hl', '⬆️', 'IMS Higher or Lower'], ['cn', '🧩', 'IMS Connections'], ['pt', '🎯', 'IMS Pointless'], ['tq', '🧠', 'IMS Trivia'], ['cp', '🛣️', 'IMS Career Path'], ['st', '⚖️', 'IMS Steward Simulator'], ['qs', '⏱️', 'IMS Quali Shootout']];
 window.renderAdminGames = async function() {
   const box = document.getElementById('admin-games-locks'); if (!box) return;
   const lk = await dbGet('settings', 'gamesLock').catch(() => null); const L = (lk && lk.value) || {};
@@ -31731,7 +31822,7 @@ async function _gameCoins(kind, amount) {
   } catch (e) { return 0; }
 }
 function _coinPop(n, kind) {
-  const lbl = { 'cn-hidden': 'Found a hidden group!', 'st-live': 'Called it like the stewards!', 'st-daily': 'Daily Steward ruling', 'st-win': 'Matched the stewards!', 'duel-cn': 'Connections duel win', 'cn-daily': 'Daily Connections', 'cn-win': 'Connections solved!', 'wd-daily': 'Daily PaddockDle', 'gr-daily': 'Daily Grid', 'wd-win': 'Got the daily driver!', 'gr-win': 'Perfect 9/9 grid!', 'hl-daily': 'Daily Higher or Lower', 'pt-daily': 'Daily Pointless', 'pt-win': 'Pointless — 60 or under!', 'tq-daily': 'Daily Trivia', 'cp-daily': 'Daily Career Path', 'cp-win': 'Career Path in 3 or fewer!', 'tq-win': 'Trivia 8/10 or better!', 'hl-win': '8/10 or better!', 'duel-hl': 'Higher or Lower duel win', 'duel-pt': 'Pointless duel win', 'duel-tq': 'Trivia duel win', 'duel-cp': 'Career Path duel win', 'duel-wd': 'PaddockDle duel win', 'duel-gr': 'Grid duel win' }[kind] || 'Games';
+  const lbl = { 'cn-hidden': 'Found a hidden group!', 'st-live': 'Called it like the stewards!', 'qs-win': 'Quali Shootout win!', 'st-daily': 'Daily Steward ruling', 'st-win': 'Matched the stewards!', 'duel-cn': 'Connections duel win', 'cn-daily': 'Daily Connections', 'cn-win': 'Connections solved!', 'wd-daily': 'Daily PaddockDle', 'gr-daily': 'Daily Grid', 'wd-win': 'Got the daily driver!', 'gr-win': 'Perfect 9/9 grid!', 'hl-daily': 'Daily Higher or Lower', 'pt-daily': 'Daily Pointless', 'pt-win': 'Pointless — 60 or under!', 'tq-daily': 'Daily Trivia', 'cp-daily': 'Daily Career Path', 'cp-win': 'Career Path in 3 or fewer!', 'tq-win': 'Trivia 8/10 or better!', 'hl-win': '8/10 or better!', 'duel-hl': 'Higher or Lower duel win', 'duel-pt': 'Pointless duel win', 'duel-tq': 'Trivia duel win', 'duel-cp': 'Career Path duel win', 'duel-wd': 'PaddockDle duel win', 'duel-gr': 'Grid duel win' }[kind] || 'Games';
   const el = document.createElement('div'); el.className = 'coin-pop'; const nOpen = document.querySelectorAll('.coin-pop').length; if (nOpen) el.style.top = (84 + nOpen * 78) + 'px';
   el.innerHTML = `<span class="imc" style="font-size:1.6rem"></span><div><b>+${n} IM$</b><small>${lbl}</small></div>`;
   document.body.appendChild(el); setTimeout(() => el.classList.add('out'), 2600); setTimeout(() => el.remove(), 3200);
