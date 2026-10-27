@@ -31465,8 +31465,12 @@ async function _stLoad(force) {
 }
 const _stAns = (x) => x.o.map(c => c == null ? 0 : c); // no penalty for that driver → No further action
 // Only the reported driver(s) get a verdict — never the person who reported it (unless they reported themselves).
-const _stTg = (x) => { const r = _normName(x.rep), t = x.drv.map((a, i) => i).filter(i => _normName(x.drv[i]) !== r); return t.length ? t : x.drv.map((a, i) => i); };
-const _stScore = (pick, ans) => (pick || []).reduce((a, c, i) => a + (c == null ? 0 : c === ans[i] ? 3 : Math.abs(c - ans[i]) === 1 ? 1 : 0), 0);
+const _stTg = (x) => { if (!x.open) { const p = x.drv.map((a, i) => i).filter(i => (x.o[i] || 0) >= 2), r = _normName(x.rep), q = p.filter(i => _normName(x.drv[i]) !== r); return q.length ? q : p; }
+  const r = _normName(x.rep), t = x.drv.map((a, i) => i).filter(i => _normName(x.drv[i]) !== r); return t.length ? t : x.drv.map((a, i) => i); };
+// Only incidents that ended in a time penalty / DSQ (or are still open) are playable.
+const _stOk = (x) => x.open || x.o.some(c => (c || 0) >= 2);
+const ST_SHOW = [2, 3, 4, 5];
+const _stScore = (pick, ans) => (pick || []).reduce((a, c, i) => a + (c == null || ans[i] < 2 ? 0 : c === ans[i] ? 3 : Math.abs(c - ans[i]) === 1 ? 1 : 0), 0);
 const _stMode = (v) => v.m || (v.live ? 'live' : 'arch');
 async function _stMine() { const me = _wdMe(); if (!me.uid) return { v: {} }; try { dbInvalidate('stewardVotes'); } catch (e) {} const d = await dbGet('stewardVotes', me.uid).catch(() => null); const o = d || {}; o.v = o.v || {}; return o; }
 function _stAv(n, sz) { const a = (window._avatarByName || {})[_normName(n)]; return a ? `<img src="${esc(a)}" style="width:${sz}px;height:${sz}px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">` : `<span style="width:${sz}px;height:${sz}px;border-radius:50%;background:rgba(160,164,255,.25);display:inline-flex;align-items:center;justify-content:center;font-size:${sz * .4}px;font-weight:800;flex-shrink:0">${esc((n || '?')[0].toUpperCase())}</span>`; }
@@ -31483,7 +31487,7 @@ async function _stMeLoad() {
   drivers.forEach(d => { if ((d.discordId && ids.includes(String(d.discordId))) || names.includes(_normName(d.name))) { if (d.discordId) ids.push(String(d.discordId)); [d.name, d.imsAlias].filter(Boolean).forEach(n => names.push(_normName(n))); } });
   window._stMeIds = { uid: currentUser.userId, ids: [...new Set(ids)], names: [...new Set(names)] };
 }
-const _stDayPick = (inc) => { const pool = inc.filter(x => !x.open).sort((a, b) => a.k.localeCompare(b.k)); if (!pool.length) return null; let h = 7; for (const ch of 'st' + _wdDayKey()) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return pool[h % pool.length]; };
+const _stDayPick = (inc) => { const pool = inc.filter(x => !x.open && _stOk(x)).sort((a, b) => a.k.localeCompare(b.k)); if (!pool.length) return null; let h = 7; for (const ch of 'st' + _wdDayKey()) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return pool[h % pool.length]; };
 window._stPick = function(k, i, c) { const d = window._stDraft[k] = window._stDraft[k] || {}; d[i] = d[i] === c ? null : c; renderGames(); };
 window._stSubmit = async function(k, mode) {
   const x = (window._stInc || []).find(y => y.k === k); if (!x) return;
@@ -31516,13 +31520,13 @@ function _stCardHtml(x, st, all) {
       <div style="margin-top:6px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.04);border-left:3px solid ${col};font-size:.88rem;line-height:1.5;white-space:pre-line;word-break:break-word">“${esc(x.desc.replace(/\*\*/g, ''))}”</div></div></div>
     ${tg.map(i => { const a = x.drv[i], my = done ? st.pick[i] : draft[i], tot = crowd ? crowd[i].reduce((p, q) => p + q, 0) : 0;
       return `<div style="padding:10px 0;border-top:1px solid rgba(255,255,255,.06)"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">${_stAv(a, 26)}<span style="font-size:.7rem;color:var(--muted);font-weight:800">VERDICT FOR</span><b>${esc(a)}</b>
-        ${st.reveal ? `<span style="margin-left:auto;font-size:.7rem;font-weight:800;color:#a0a4ff">STEWARDS: ${ST_CATS[ans[i]][2]} ${ST_CATS[ans[i]][1].toUpperCase()}</span>` : ''}</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(86px,1fr));gap:6px">${ST_CATS.map(([, l, ic], c) => {
+        ${st.reveal ? `<span style="margin-left:auto;font-size:.7rem;font-weight:800;color:#a0a4ff">STEWARDS: ${ans[i] >= 2 ? ST_CATS[ans[i]][2] + ' ' + ST_CATS[ans[i]][1].toUpperCase() : 'NO TIME PENALTY (void)'}</span>` : ''}</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(86px,1fr));gap:6px">${ST_CATS.map(([, l, ic], c) => ST_SHOW.includes(c) ? (() => {
           const isAns = st.reveal && ans[i] === c, isMine = my === c, pct = tot ? Math.round(crowd[i][c] / tot * 100) : null, wrong = isMine && st.reveal && !isAns;
           const bg = isAns ? 'rgba(74,222,128,.22)' : wrong ? 'rgba(248,113,113,.18)' : isMine ? 'rgba(160,164,255,.25)' : 'rgba(255,255,255,.03)';
           const bd = isAns ? 'rgba(74,222,128,.7)' : wrong ? 'rgba(248,113,113,.55)' : isMine ? 'rgba(160,164,255,.8)' : 'rgba(255,255,255,.1)';
           return `<button ${done || inv ? 'disabled' : `onclick="_stPick('${x.k}',${i},${c})"`} style="position:relative;overflow:hidden;padding:8px 6px;border-radius:10px;border:1px solid ${bd};background:${bg};color:#fff;font-weight:700;font-size:.76rem;cursor:${done || inv ? 'default' : 'pointer'};text-align:center">
-            ${pct != null ? `<span style="position:absolute;left:0;bottom:0;height:3px;width:${pct}%;background:${isAns ? '#4ade80' : '#a0a4ff'}"></span>` : ''}${ic} ${l}${isMine && done ? ' •' : ''}${pct != null ? `<small style="display:block;font-size:.62rem;color:var(--muted);margin-top:2px">${pct}% of ${tot}</small>` : ''}</button>`; }).join('')}</div></div>`; }).join('')}
+            ${pct != null ? `<span style="position:absolute;left:0;bottom:0;height:3px;width:${pct}%;background:${isAns ? '#4ade80' : '#a0a4ff'}"></span>` : ''}${ic} ${l}${isMine && done ? ' •' : ''}${pct != null ? `<small style="display:block;font-size:.62rem;color:var(--muted);margin-top:2px">${pct}% of ${tot}</small>` : ''}</button>`; })() : '').join('')}</div></div>`; }).join('')}
     ${inv ? '<div style="margin-top:10px;font-size:.78rem;color:#facc15">🙅 You were involved in this incident, so you can\'t rule on it.</div>'
       : done ? (st.reveal ? '' : '<div style="margin-top:10px;font-size:.78rem;color:var(--muted)">✅ Verdict locked in. Scored when the stewards rule.</div>')
       : `<div style="margin-top:12px"><button class="btn btn-primary" onclick="_stSubmit('${x.k}','${st.mode}')">⚖️ ${st.mode === 'prac' ? 'Reveal verdict' : 'Submit verdict'}</button></div>`}
@@ -31541,7 +31545,7 @@ async function renderSTGame(el) {
     Object.entries(mine.v).forEach(([k, v]) => { const x = inc.find(y => y.k === k); if (_stMode(v) !== 'live' || paid[k] || !x || x.open) return; const a = _stAns(x); earn += 2 * v.c.filter((c, i) => c != null && c === a[i]).length; nowPaid.push(k); });
     if (nowPaid.length) { nowPaid.forEach(k => paid[k] = 1); await dbSet('stewardVotes', me.uid, { paid }); if (earn) _gameCoins('st-live', earn); } } } catch (e) {}
   const lockBanner = (window._gamesLock || {}).st ? `<div class="wd-lockbar">🔒 <b>Steward Simulator is locked</b><span>${locked ? 'It\'ll open soon — have a look around.' : 'Locked for players — you can still play.'}</span></div>` : '';
-  const open = inc.filter(x => x.open), settled = inc.filter(x => !x.open);
+  const open = inc.filter(x => x.open), settled = inc.filter(x => !x.open && _stOk(x));
   const liveDone = inc.filter(x => !x.open && mine.v[x.k] && _stMode(mine.v[x.k]) === 'live').sort((a, b) => b.r - a.r || b.at - a.at);
   let body = '';
   if (mode === 'daily') {
@@ -31566,7 +31570,7 @@ async function renderSTGame(el) {
     body = `<div class="text-muted" style="font-size:.82rem;margin:0 0 12px;text-align:center">Random settled incidents from S7 & S8. Nothing's saved and nothing's scored — just practice.</div>`
       + (x ? _stCardHtml(x, { pick: pr ? window._stPr.c : null, reveal: !!pr, crowd: !!pr, mode: 'prac' }, all) + `<div style="text-align:center"><button class="btn ${pr ? 'btn-primary' : 'btn-secondary'}" onclick="_stPracNext()">${pr ? 'Next incident →' : 'Skip →'}</button></div>` : '<div class="card" style="text-align:center;padding:26px">No incidents imported yet.</div>');
   } else {
-    const rows = all.map(u => { let lp = 0, dp = 0, n = 0, ex = 0, tot = 0; Object.entries(u.v || {}).forEach(([k, v]) => { const x = inc.find(y => y.k === k); if (!x || x.open || !v.c) return; const a = _stAns(x), sc = _stScore(v.c, a); _stMode(v) === 'live' ? lp += sc : dp += sc; n++; v.c.forEach((c, i) => { if (c == null) return; tot++; if (c === a[i]) ex++; }); });
+    const rows = all.map(u => { let lp = 0, dp = 0, n = 0, ex = 0, tot = 0; Object.entries(u.v || {}).forEach(([k, v]) => { const x = inc.find(y => y.k === k); if (!x || x.open || !v.c) return; const a = _stAns(x), sc = _stScore(v.c, a); _stMode(v) === 'live' ? lp += sc : dp += sc; n++; v.c.forEach((c, i) => { if (c == null || a[i] < 2) return; tot++; if (c === a[i]) ex++; }); });
       return { id: u.id, name: u.name || 'Player', av: u.avatar, lp, dp, n, acc: tot ? Math.round(ex / tot * 100) : 0 }; }).filter(r => r.n).sort((a, b) => (b.lp + b.dp) - (a.lp + a.dp) || b.acc - a.acc);
     body = rows.length ? `<div class="wd-lb"><div class="wd-lb-h"><span>🏆 STEWARD RANKINGS</span><small>Daily + Live points · exact = 3, one step out = 1</small></div>
       ${rows.slice(0, 50).map((r, i) => `<div style="display:flex;align-items:center;gap:10px;padding:8px 4px;border-top:1px solid rgba(255,255,255,.06);${r.id === me.uid ? 'background:rgba(160,164,255,.1);border-radius:8px' : ''}">
@@ -31580,7 +31584,7 @@ async function renderSTGame(el) {
     ${locked && mode !== 'lb' ? body.replace(/onclick="_st(Pick|Submit)[^"]*"/g, 'disabled') : body}
     <div class="wd-info"><h3>How it works</h3><p>Every card is a real incident report from the IMS stewards' channel, written by the driver who reported it — so read it with a pinch of salt. Hand out the penalty to the reported driver.</p>
       <ul><li><i>Daily</i>: one settled incident a day, the same for everyone. See the real verdict and how everyone else ruled.</li><li><i>Live</i>: incidents still under investigation. Rule before the stewards do; scored automatically when the verdicts come out.</li>
-      <li><i>Practice</i>: endless random incidents — not saved, not scored.</li><li>Scoring: exact verdict <b>3 pts</b>, one step out <b>1 pt</b>. Verdicts run: No action → Points only → ≤5s → 10s → 15s+ → DSQ / ban.</li><li>You can't vote on an incident you were involved in.</li></ul></div></div>`;
+      <li><i>Practice</i>: endless random incidents — not saved, not scored.</li><li>Scoring: exact verdict <b>3 pts</b>, one step out <b>1 pt</b>. Every incident here ended in a time penalty — how big? ≤5s → 10s → 15s+ → DSQ / ban.</li><li>You can't vote on an incident you were involved in.</li></ul></div></div>`;
 }
 
 // ---- Admin: lock / unlock games ----
