@@ -31691,7 +31691,8 @@ window._qsDailySave = async function() {
   const P = window._qsDayPick; if (!P) return; const v = _qsParse((document.getElementById('qs-day-in') || {}).value);
   if (v == null || !isFinite(v) || v < 30000 || v > 240000) return showToast('Use m:ss.sss, e.g. 1:23.456', 'error');
   const d = await dbGet('qualiGuesses', me.uid).catch(() => null) || {}; if (d.daily && d.daily.day === _wdDayKey()) return showToast('Already played today.', 'error');
-  await dbSet('qualiGuesses', me.uid, { name: me.name, avatar: me.avatar || '', daily: { day: _wdDayKey(), g: v, k: P.k } }); window._qsAll = null;
+  const dh = Object.assign({}, d.dh || {}); dh[_wdDayKey()] = { e: Math.abs(v - P.pole), t: Date.now() }; // daily history → stats
+  await dbSet('qualiGuesses', me.uid, { name: me.name, avatar: me.avatar || '', daily: { day: _wdDayKey(), g: v, k: P.k }, dh }); window._qsAll = null;
   _gameCoins('qs-daily', 10).then(() => { if (Math.abs(v - P.pole) <= 100) _gameCoins('qs-win', 10); });
   renderGames();
 };
@@ -31742,6 +31743,20 @@ async function renderQSGame(el) {
             : `<input id="qs-day-in" inputmode="decimal" placeholder="1:23.456" ${locked ? 'disabled' : ''} style="width:100%;max-width:280px;margin:14px auto 10px;display:block;padding:14px;border-radius:14px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.15);color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:2rem;letter-spacing:2px;text-align:center">
               ${locked ? '' : '<button class="btn btn-primary" onclick="_qsDailySave()">⏱️ Lock it in</button>'}`}</div>
         ${dd && today.length ? `<div class="wd-lb"><div class="wd-lb-h"><span>TODAY'S CLOSEST</span><small>${today.length} played</small></div>${today.slice(0, 15).map((y, i) => `<div style="display:flex;align-items:center;gap:10px;padding:7px 4px;border-top:1px solid rgba(255,255,255,.06);${y.u.id === me.uid ? 'background:rgba(160,164,255,.1);border-radius:8px' : ''}"><b style="width:24px;text-align:center">${i + 1}</b>${av(y.u, 26)}<b style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(y.u.name || 'Player')}</b><small class="text-muted">${_qsFmt(y.g)}</small><b style="min-width:64px;text-align:right;color:${y.err <= 100 ? '#4ade80' : '#fff'}">±${(y.err / 1000).toFixed(3)}</b></div>`).join('')}</div>` : ''}`;
+      // All-time daily leaderboard: tenths, played, avg miss, best miss, current streak.
+      const dayMs = 864e5, pd = (k) => { const [d, m, y] = String(k).split('/').map(Number); return Date.UTC(y, m - 1, d); };
+      const todayT = pd(_wdDayKey());
+      const L = all.filter(u => u.dh && Object.keys(u.dh).length).map(u => { const E = Object.entries(u.dh).map(([k, v]) => ({ t: pd(k), e: Number(v.e) })).filter(x => isFinite(x.t) && isFinite(x.e));
+        const days = new Set(E.map(x => x.t)); let st = 0, c = days.has(todayT) ? todayT : todayT - dayMs; while (days.has(c)) { st++; c -= dayMs; }
+        return { u, n: E.length, tn: E.filter(x => x.e <= 100).length, avg: E.reduce((a, x) => a + x.e, 0) / E.length, best: Math.min(...E.map(x => x.e)), st }; })
+        .sort((a, b) => b.tn - a.tn || a.avg - b.avg || b.n - a.n);
+      const myL = L.find(r => r.u.id === me.uid);
+      body += `${myL ? `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-top:16px">${[['PLAYED', myL.n], ['WITHIN A TENTH', myL.tn], ['AVG MISS', '±' + (myL.avg / 1000).toFixed(3) + 's'], ['BEST', myL.best === 0 ? '🎯 0.000' : '±' + (myL.best / 1000).toFixed(3) + 's'], ['STREAK', '🔥 ' + myL.st]].map(([l, v]) => `<div style="padding:10px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);text-align:center"><div style="font-size:.58rem;font-weight:800;letter-spacing:1.5px;color:var(--muted)">${l}</div><div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.35rem">${v}</div></div>`).join('')}</div>` : ''}
+        <div class="wd-lb"><div class="wd-lb-h"><span>🏆 DAILY LEADERBOARD</span><small>Ranked by tenths hit, then average miss</small></div>
+        ${L.length ? `<div style="display:flex;gap:10px;padding:0 4px 6px;font-size:.58rem;font-weight:800;letter-spacing:1px;color:var(--muted)"><span style="width:24px"></span><span style="flex:1">PLAYER</span><span style="width:46px;text-align:center">PLAYED</span><span style="width:46px;text-align:center">🔥</span><span style="width:70px;text-align:right">AVG</span><span style="width:70px;text-align:right">BEST</span><span style="width:40px;text-align:right">≤0.1</span></div>`
+          + L.slice(0, 50).map((r, i) => `<div style="display:flex;align-items:center;gap:10px;padding:7px 4px;border-top:1px solid rgba(255,255,255,.06);font-size:.82rem;${r.u.id === me.uid ? 'background:rgba(160,164,255,.1);border-radius:8px' : ''}"><b style="width:24px;text-align:center">${i + 1}</b><span style="flex:1;min-width:0;display:flex;align-items:center;gap:8px">${av(r.u, 24)}<b style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.u.name || 'Player')}</b></span>
+            <span style="width:46px;text-align:center">${r.n}</span><span style="width:46px;text-align:center">${r.st || '–'}</span><span style="width:70px;text-align:right">±${(r.avg / 1000).toFixed(3)}</span><span style="width:70px;text-align:right">${r.best === 0 ? '🎯' : '±' + (r.best / 1000).toFixed(3)}</span><b style="width:40px;text-align:right;color:#4ade80">${r.tn}</b></div>`).join('')
+          : '<p class="text-muted" style="margin:0">No one has played the daily yet — be the first.</p>'}</div>`;
       if (dd) { const until = Date.now() + _wdMsToMidnight(); clearInterval(window._wdTick); const tick = () => { const t = document.getElementById('qs-day-timer'); if (!t) { clearInterval(window._wdTick); return; } const ms = until - Date.now(); if (ms <= 0) { clearInterval(window._wdTick); renderGames(); return; }
         t.textContent = [Math.floor(ms / 36e5), Math.floor(ms / 6e4) % 60, Math.floor(ms / 1e3) % 60].map(n => String(n).padStart(2, '0')).join(':'); }; setTimeout(() => { tick(); window._wdTick = setInterval(tick, 1000); }, 0); }
     }
