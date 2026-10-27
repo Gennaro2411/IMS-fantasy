@@ -28587,7 +28587,7 @@ window.renderBets = async function() {
   // (this season + last), shrunk towards the division's average so small samples don't go extreme.
   if (!isC && field.length && (window._fiaV || []).length) {
     const curS = Number(window.currentSeason || window._reserveSeason) || 0, seasonOf = new Map();
-    (races || []).forEach(r => seasonOf.set(r, curS)); (window._betArchives || []).forEach(a => (a.races || []).forEach(r => seasonOf.set(r, Number(a.season))));
+    (races || []).forEach(r => seasonOf.set(r, curS)); (window._betArchives || []).forEach(a => { if (Number(a.season) >= 7) (a.races || []).forEach(r => seasonOf.set(r, Number(a.season))); }); // steward records start in S7 — earlier seasons would all look penalty-free
     // A DSQ counts double (a far bigger offence than a time penalty).
     const hit = new Map(); (window._fiaV || []).forEach(v => { if (!(v.dq || (v.t != null && v.t > 0))) return; const w = v.dq ? 2 : 1; [v.id, window._fiaKey(v.a)].filter(Boolean).forEach(k => { const kk = v.s + '|' + v.r + '|' + v.d + '|' + k; hit.set(kk, Math.max(hit.get(kk) || 0, w)); }); });
     // Penalty points this season: the more a driver has, the more likely the next one.
@@ -28748,7 +28748,7 @@ window.renderBets = async function() {
   let _ouPen = null;
   if (!isC && (window._fiaV || []).length) {
     const curS = Number(window.currentSeason || window._reserveSeason) || 0, pts = [];
-    const sets = [[curS, races || []], ...((window._betArchives || []).map(a => [Number(a.season), a.races || []]))];
+    const sets = [[curS, races || []], ...((window._betArchives || []).filter(a => Number(a.season) >= 7).map(a => [Number(a.season), a.races || []]))]; // no steward records before S7
     sets.forEach(([se, rs]) => rs.forEach(r => { const dvs = new Set(); Object.values(r.driverPointsByDivision || {}).forEach(by => Object.keys(by || {}).forEach(d => dvs.add(d)));
       const has = dvs.has(div) || (div === 'E3' && dvs.has('D4')); if (!has || !r.driverPoints || !Object.values(r.driverPoints).some(v => v > 0)) return;
       if (se === curS && !r.verdictsAt && (races || []).some(x => (x.raceNum || 0) > (r.raceNum || 0)) === false) return; // this round's verdicts aren't in yet
