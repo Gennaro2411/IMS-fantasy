@@ -25422,18 +25422,27 @@ window._fiaVerdictsHtml = function(season, round) {
   const L = window._fiaFor(season, round).filter(p => p.t != null); if (!L.length) return '';
   const by = {}; L.forEach(p => { (by[p.d] = by[p.d] || []).push(p); });
   const DH = { D0: '#ffc800', D1: '#e8002d', D2: '#9b6fd4', D3: '#27f4d2', D4: '#2ecc71', E3: '#2ecc71' };
-  return `<details id="fia-verdicts" class="card" style="margin-top:14px;padding:12px 16px;border-color:rgba(160,164,255,.4);background:linear-gradient(160deg,rgba(160,164,255,.08),var(--surface) 60%)">
-    <summary style="cursor:pointer;list-style:none;display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font-size:1.2rem">⚖️</span><b style="font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;letter-spacing:1.5px">STEWARD VERDICTS</b><span style="font-size:.72rem;color:var(--muted)">${L.length} time penalt${L.length === 1 ? 'y' : 'ies'} · tap to read</span><span style="margin-left:auto;color:var(--muted)">▾</span></summary>
-    <div style="display:flex;flex-direction:column;gap:12px;margin-top:12px">${Object.keys(by).sort().map(dv => `<div>
-      <div style="font-size:.62rem;font-weight:800;letter-spacing:1.5px;color:${DH[dv] || '#a0a4ff'};margin-bottom:6px">${esc(dv)}</div>
-      ${by[dv].map(p => `<div style="padding:9px 12px;margin-bottom:6px;border-radius:10px;background:rgba(255,255,255,.03);border-left:3px solid ${DH[dv] || '#a0a4ff'}">
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b>${esc(p.a)}</b>
-          <span style="font-size:.66rem;font-weight:800;color:#ff8f6b;border:1px solid rgba(255,143,107,.5);border-radius:6px;padding:1px 7px">+${p.t}s</span>
-          ${p.pp ? `<span style="font-size:.66rem;font-weight:800;color:#facc15;border:1px solid rgba(250,204,21,.45);border-radius:6px;padding:1px 7px">${p.pp} penalty point${p.pp > 1 ? 's' : ''}</span>` : ''}
-          ${p.qb ? `<span style="font-size:.66rem;font-weight:800;color:#fb923c;border:1px solid rgba(251,146,60,.5);border-radius:6px;padding:1px 7px">⛔ ${p.qb} quali ban</span>` : ''}
-          ${p.rb ? `<span style="font-size:.66rem;font-weight:800;color:#ff3b4e;border:1px solid rgba(255,59,78,.55);border-radius:6px;padding:1px 7px">⛔ ${p.rb} race ban</span>` : ''}
-          ${p.inc ? `<span style="margin-left:auto;font-size:.62rem;color:var(--muted)">${esc(p.inc)}</span>` : ''}</div>
-        ${p.j ? `<div style="font-size:.8rem;line-height:1.5;color:var(--text);margin-top:6px;white-space:pre-line">${esc(p.j.replace(/\*\*/g, ''))}</div>` : ''}</div>`).join('')}</div>`).join('')}</div></details>`;
+  const drv = ((window._resultsData || {}).drivers) || window._allDrivers || [];
+  const findD = (p) => drv.find(d => p.id && String(d.discordId || '') === p.id) || drv.find(d => window._fiaKey(d.name) === window._fiaKey(p.a) || (d.imsAlias && window._fiaKey(d.imsAlias) === window._fiaKey(p.a)));
+  const chip = (txt, c) => `<span style="font-size:.64rem;font-weight:800;letter-spacing:.4px;color:${c};background:color-mix(in srgb,${c} 14%,transparent);border:1px solid color-mix(in srgb,${c} 45%,transparent);border-radius:999px;padding:2px 9px;white-space:nowrap">${txt}</span>`;
+  const item = (p, dv) => { const d = findD(p), ph = d && typeof driverPhoto === 'function' ? driverPhoto(d) : '', tm = d && d.team && !/^reserve$/i.test(d.team) ? d.team : '';
+    const tc = tm && typeof getTeamCardColour === 'function' ? (getTeamCardColour(tm) || {}).accent : null, ring = tc || DH[dv] || '#a0a4ff', lg = tm && typeof getTeamLogo === 'function' ? getTeamLogo(tm) : '';
+    const ini = window._fiaKey(p.a).slice(0, 2).toUpperCase() || '?';
+    return `<div style="display:flex;gap:12px;padding:12px;border-radius:14px;background:linear-gradient(135deg,color-mix(in srgb,${ring} 10%,transparent),rgba(255,255,255,.02) 70%);border:1px solid color-mix(in srgb,${ring} 28%,transparent)">
+      <div ${d ? `onclick="openDriverModal('${d.id}')"` : ''} style="flex:none;width:46px;height:46px;border-radius:50%;padding:2px;background:conic-gradient(from 200deg,${ring},transparent 70%,${ring});box-shadow:0 0 14px -3px ${ring};${d ? 'cursor:pointer' : ''}">
+        ${ph ? `<img src="${esc(ph)}" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;background:#15151d" onerror="this.outerHTML='<span style=&quot;display:flex;width:100%;height:100%;border-radius:50%;align-items:center;justify-content:center;background:#15151d;font-weight:900;font-size:.8rem&quot;>${ini}</span>'">` : `<span style="display:flex;width:100%;height:100%;border-radius:50%;align-items:center;justify-content:center;background:#15151d;font-weight:900;font-size:.8rem">${ini}</span>`}</div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b style="font-size:.95rem">${esc(d ? d.name : p.a)}</b>${tm ? `<span style="display:inline-flex;align-items:center;gap:4px;font-size:.68rem;color:var(--muted)">${lg ? `<img src="${esc(lg)}" alt="" style="height:12px">` : ''}${esc(tm)}</span>` : ''}${p.inc ? `<span style="margin-left:auto;font-size:.6rem;font-weight:700;color:var(--muted);letter-spacing:.5px">#${esc(p.inc)}</span>` : ''}</div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:5px">${chip('⏱ +' + p.t + 's', '#ff8f6b')}${p.pp ? chip(p.pp + ' penalty pt' + (p.pp > 1 ? 's' : ''), '#facc15') : ''}${p.qb ? chip('⛔ ' + p.qb + ' quali ban', '#fb923c') : ''}${p.rb ? chip('✕ ' + p.rb + ' race ban', '#ff3b4e') : ''}</div>
+        ${p.j ? `<div style="position:relative;font-size:.8rem;line-height:1.55;color:#e6e7f2;margin-top:8px;padding:8px 10px 8px 14px;border-radius:10px;background:rgba(0,0,0,.25);white-space:pre-line"><span style="position:absolute;left:5px;top:2px;font-size:1.1rem;color:${ring};opacity:.7">“</span>${esc(p.j.replace(/\*\*/g, ''))}</div>` : ''}
+      </div></div>`; };
+  return `<details id="fia-verdicts" style="margin:12px 0 4px;border-radius:16px;border:1px solid rgba(160,164,255,.35);background:radial-gradient(120% 120% at 0% 0%,rgba(160,164,255,.12),transparent 55%),var(--surface2);overflow:hidden">
+    <summary style="cursor:pointer;list-style:none;display:flex;align-items:center;gap:10px;padding:12px 16px;flex-wrap:wrap"><span style="width:34px;height:34px;border-radius:10px;background:rgba(160,164,255,.18);display:flex;align-items:center;justify-content:center;font-size:1.1rem">⚖️</span>
+      <div style="display:flex;flex-direction:column"><b style="font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;letter-spacing:1.5px;line-height:1">STEWARD VERDICTS</b><small style="font-size:.7rem;color:var(--muted)">${L.length} time penalt${L.length === 1 ? 'y' : 'ies'} · ${Object.keys(by).sort().join(' · ')}</small></div>
+      <span style="margin-left:auto;font-size:.72rem;font-weight:700;color:#c9cbff">Read ▾</span></summary>
+    <div style="display:flex;flex-direction:column;gap:14px;padding:0 14px 14px">${Object.keys(by).sort().map(dv => `<div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:.9rem;letter-spacing:1px;color:${DH[dv] || '#a0a4ff'}">${esc(dv)}</span><span style="flex:1;height:1px;background:linear-gradient(90deg,${DH[dv] || '#a0a4ff'}66,transparent)"></span></div>
+      <div style="display:flex;flex-direction:column;gap:8px">${by[dv].map(p => item(p, dv)).join('')}</div></div>`).join('')}</div></details>`;
 };
 window.showRaceResults = function(raceId, season) {
   const el = document.getElementById('results-content');
@@ -25611,6 +25620,7 @@ window.showRaceResults = function(raceId, season) {
   </div>
   <div class="card">
     <div class="card-title"><div class="dot"></div>Round ${race.raceNum} — ${getRaceFlag(race.name)} ${esc(race.name)}${window._raceVerdictPill ? ' ' + window._raceVerdictPill(race, true) : ''}${_isSprintWeekend(race) ? ' <span style="font-size:.62rem;letter-spacing:1.5px;color:#ffa751;border:1px solid rgba(255,167,81,0.5);border-radius:10px;padding:2px 8px;margin-left:6px">⚡ SPRINT WEEKEND</span>' : ''}</div>
+    ${window._fiaVerdictsHtml ? window._fiaVerdictsHtml(_raceSeason, race.raceNum) : ''}
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px;margin-top:10px">`;
 
   divsToShow.forEach(div => {
@@ -25763,7 +25773,6 @@ window.showRaceResults = function(raceId, season) {
   }
 
   html += `</div></div>`;
-  html += window._fiaVerdictsHtml ? window._fiaVerdictsHtml(_raceSeason, race.raceNum) : '';
   el.innerHTML = html;
 };
 
