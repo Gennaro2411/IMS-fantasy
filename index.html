@@ -28054,6 +28054,7 @@ window.adminUserBets = function(uid) {
 // don't wait for each player to open the app. Each player's results pop-up is queued on their coins
 // doc and shown the next time they open Bets.
 window._betSettleAll = async function() {
+  try { await window._fiaLoad(true); if (!window._allDrivers) window._allDrivers = await dbGetAll('drivers').catch(() => []); } catch (e) {}
   const [races, bets] = await Promise.all([dbGetAll('races', { fresh: true }).catch(() => []), dbGetAll('bets', { fresh: true }).catch(() => [])]);
   const users = [...new Set(bets.filter(b => b.userId).map(b => b.userId))];
   let n = 0;
@@ -28148,6 +28149,20 @@ function _betOutcome(b, races) {
     const [, L, S2] = String(b.sel[0]).split(':'), cp = race.constructorPoints || {};
     const a = cp[L], c = cp[S2];
     result = (a == null || c == null || Number(a) === Number(c)) ? 'void' : ((b.sel[1] === 'yes') === (Number(a) > Number(c)) ? 'won' : 'lost');
+  }
+  else if (b.market === 'yn' && String(b.sel[0]).startsWith('dpen:')) {
+    // Driver to get a penalty: waits until the round is "After verdicts" (or the next round has results,
+    // meaning the stewards are done). Void if they didn't race in this division.
+    const id = String(b.sel[0]).slice(5), st = String((((race.raceStatusByDivision || {})[id]) || {})[b.div] || '').toUpperCase();
+    const took = ((race.positionByDivision || {})[id] || {})[b.div] != null || st === 'DNF' || st === 'DSQ';
+    const later = races.some(r => (Number(r.raceNum) || 0) > (Number(race.raceNum) || 0) && r.driverPoints && Object.values(r.driverPoints).some(v => v > 0));
+    if (!race.verdictsAt && !later) return null;
+    if (st === 'DNS' || !took) result = 'void';
+    else { const drv = (window._allDrivers || []).find(d => d.id === id) || {}, keys = [String(drv.discordId || ''), window._fiaKey(drv.name), drv.imsAlias ? window._fiaKey(drv.imsAlias) : ''].filter(Boolean);
+      if (!keys.length) return null; // driver list not loaded yet — settle later
+      const curS = Number(window.currentSeason || window._reserveSeason) || 0;
+      const pen = (window._fiaV || []).some(v => v.s === curS && v.r === Number(race.raceNum) && v.d === b.div && (v.dq || (v.t != null && v.t > 0)) && (keys.includes(v.id) || keys.includes(window._fiaKey(v.a))));
+      result = (b.sel[1] === 'yes') === pen ? 'won' : 'lost'; }
   }
   else if (b.market === 'yn' && String(b.sel[0]).startsWith('ddnf:')) {
     // Driver to DNF: void if they didn't start / didn't race in this division.
@@ -28378,6 +28393,7 @@ function _betStartTicker() {
 // Betting uses check-in status regardless of the viewer's "hide check-in ticks" setting.
 function _betChk(fn, d) { const h = window._hideCheckin; window._hideCheckin = false; try { return typeof fn === 'function' ? !!fn(d) : false; } finally { window._hideCheckin = h; } }
 window.renderBets = async function() {
+  try { await window._fiaLoad(); if (!window._allDrivers) window._allDrivers = await dbGetAll('drivers').catch(() => []); } catch (e) {}
   const el = document.getElementById('bets-content');
   if (!el) return;
   if (!currentUser || !currentUser.userId) { el.innerHTML = '<div class="card">' + emptyState('🎰', 'Log in to bet', 'Sign in to get your 1,000 free IM$.') + '</div>'; return; }
@@ -28557,7 +28573,22 @@ window.renderBets = async function() {
   const P = window._betOddsCache[oKey] || { win: {}, top5: {} };
   // Driver specials: DNF chance (each driver's own DNF rate, pulled towards the league average) and a
   // finishing-position line from the full simulated order. A DNF/DSQ counts as finishing last (OVER).
-  const _dnfR = {}, _fpos = {};
+  const _dnfR = {}, _fpos = {}, _penR = {};
+  // Driver to get a penalty: races where the stewards gave them a time penalty or DSQ ÷ races started
+  // (this season + last), shrunk towards the division's average so small samples don't go extreme.
+  if (!isC && field.length && (window._fiaV || []).length) {
+    const curS = Number(window.currentSeason || window._reserveSeason) || 0, seasonOf = new Map();
+    (races || []).forEach(r => seasonOf.set(r, curS)); (window._betArchives || []).forEach(a => (a.races || []).forEach(r => seasonOf.set(r, Number(a.season))));
+    const hit = new Set(); (window._fiaV || []).forEach(v => { if (!(v.dq || (v.t != null && v.t > 0))) return; [v.id, window._fiaKey(v.a)].filter(Boolean).forEach(k => hit.add(v.s + '|' + v.r + '|' + v.d + '|' + k)); });
+    const per = {}; let T = 0, P = 0;
+    _allRaceSets.forEach(r => { const se = seasonOf.get(r); if (!se) return; const pbd = r.positionByDivision || {}, sbd = r.raceStatusByDivision || {};
+      field.forEach(d => { const pp = pbd[d.id] || {}, ss = sbd[d.id] || {};
+        Object.keys(Object.assign({}, pp, ss)).forEach(dv => { if (/^A/i.test(dv)) return; const st = String(ss[dv] || '').toUpperCase(); if (st === 'DNS' || (pp[dv] == null && st !== 'DNF' && st !== 'DSQ')) return;
+          const x = per[d.id] = per[d.id] || { n: 0, p: 0 }; x.n++; T++;
+          const k = se + '|' + r.raceNum + '|' + dv + '|'; if (hit.has(k + String(d.discordId || '')) || hit.has(k + window._fiaKey(d.name)) || (d.imsAlias && hit.has(k + window._fiaKey(d.imsAlias)))) { x.p++; P++; } }); }); });
+    const base = T ? P / T : 0.08;
+    field.forEach(d => { const x = per[d.id] || { n: 0, p: 0 }; _penR[d.id] = Math.min(0.7, Math.max(0.02, (x.p + 4 * base) / (x.n + 4))); window._penRN = window._penRN || {}; window._penRN[d.id] = x; });
+  }
   if (!isC && field.length) {
     const per = {}; let T = 0, D = 0;
     _allRaceSets.forEach(r => { const pbd = r.positionByDivision || {}, sbd = r.raceStatusByDivision || {};
@@ -29033,6 +29064,7 @@ window.renderBets = async function() {
             ['sprint', '⚡', 'Sprint', !!(upcoming && upcoming.isSprint && field.length)],
             ['fpos', '📍', 'Finish position', Object.keys(_fpos).length > 0],
             ['dnf', '💥', 'Driver to DNF', Object.keys(_dnfR).length > 0],
+            ['pen', '⚖️', 'Driver to get a penalty', Object.keys(_penR).length > 0],
             ['tri', '🎰', 'Tricast', field.length >= 3]].filter(x => x[3]);
           return B.length ? `<div class="bo-secbar" style="--h:${hue}">${B.map(([k, i, l]) => `<button class="${window._betSec === k ? 'on' : ''}" data-k="${k}" onclick="betSec('${k}')"><span>${i}</span>${l}</button>`).join('')}</div>` : ''; })()}
         <div class="bo-sec" data-sec="h2h"${_secHid('h2h')}>
@@ -29072,6 +29104,11 @@ window.renderBets = async function() {
           ${field.filter(d => _dnfR[d.id] != null).map(d => { const p = _dnfR[d.id]; return `<div class="bo-ou"><div class="bo-ou-c">${photo(d)}<div><b>${esc(d.name)}</b><span class="bo-ou-line">DNF RATE <em>${Math.round(p * 100)}%</em></span></div></div>
             <div class="bo-ou-b"><i>YES</i>${oddsBtn('yn', ['ddnf:' + d.id, 'yes'], d.name + ' to DNF (' + div + '): yes', _ouOdds('yn', ['ddnf:' + d.id, 'yes'], p))}</div>
             <div class="bo-ou-b"><i>NO</i>${oddsBtn('yn', ['ddnf:' + d.id, 'no'], d.name + ' to DNF (' + div + '): no', _ouOdds('yn', ['ddnf:' + d.id, 'no'], 1 - p))}</div></div>`; }).join('')}</div>` : ''}
+        </div><div class="bo-sec" data-sec="pen"${_secHid('pen')}>
+        ${(!isC && Object.keys(_penR).length) ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>⚖️ Driver to get a penalty</span><small>A time penalty or DSQ from the stewards · settles once the verdicts are in</small></div>
+          ${field.filter(d => _penR[d.id] != null).map(d => { const p = _penR[d.id], x = (window._penRN || {})[d.id] || { n: 0, p: 0 }; return `<div class="bo-ou"><div class="bo-ou-c">${photo(d)}<div><b>${esc(d.name)}</b><span class="bo-ou-line">PENALISED <em>${x.p}/${x.n}</em> races</span></div></div>
+            <div class="bo-ou-b"><i>YES</i>${oddsBtn('yn', ['dpen:' + d.id, 'yes'], d.name + ' to get a penalty (' + div + '): yes', _ouOdds('yn', ['dpen:' + d.id, 'yes'], p))}</div>
+            <div class="bo-ou-b"><i>NO</i>${oddsBtn('yn', ['dpen:' + d.id, 'no'], d.name + ' to get a penalty (' + div + '): no', _ouOdds('yn', ['dpen:' + d.id, 'no'], 1 - p))}</div></div>`; }).join('')}</div>` : ''}
         </div><div class="bo-sec" data-sec="tri"${_secHid('tri')}>
         ${(!isC && field.length >= 3) ? (() => { const ts = (window._triSel && window._triSel.div === div) ? window._triSel.ids : [field[0].id, field[1].id, field[2].id];
           const opt = (k) => `<select id="tri-${k}" class="bo-tri-s" onchange="betTriUpdate()">${field.map(d => `<option value="${esc(d.id)}"${ts[k] === d.id ? ' selected' : ''}>${esc(d.name)}</option>`).join('')}</select>`;
