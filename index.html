@@ -25405,12 +25405,24 @@ window.importVerdictsFromDb = async function(btn, quiet) {
   } catch (e) { console.error(e); if (!quiet) customAlert('Verdict import failed: ' + (e.message || e)); }
   finally { if (btn) { btn.disabled = false; btn.textContent = orig; } }
 };
+// Any "After verdicts" tag/banner → that race's results, with the Steward Verdicts card open and in view.
+window.openVerdictsByName = async function(name) {
+  const k = String(name || '').toLowerCase().trim(); const rs = await dbGetAll('races').catch(() => []);
+  const r = rs.filter(x => String(x.name || '').toLowerCase().trim() === k).sort((a, b) => (b.raceNum || 0) - (a.raceNum || 0))[0]; if (r) openVerdicts(r.id);
+};
+window.openVerdicts = async function(raceId) {
+  showPage('results');
+  for (let n = 0; n < 40 && !window._resultsData; n++) await new Promise(r => setTimeout(r, 150));
+  try { await window._fiaLoad(); window.showRaceResults(raceId); } catch (e) { return; }
+  setTimeout(() => { const d = document.getElementById('fia-verdicts'); if (d) { d.open = true; const y = d.getBoundingClientRect().top + window.scrollY - 70; window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' }); }
+    else if (typeof showToast === 'function') showToast('No time-penalty verdicts recorded for this round.', 'info'); }, 120);
+};
 window._fiaFor = (season, round, div) => (window._fiaV || []).filter(p => p.s === Number(season) && p.r === Number(round) && (!div || p.d === div));
 window._fiaVerdictsHtml = function(season, round) {
   const L = window._fiaFor(season, round).filter(p => p.t != null); if (!L.length) return '';
   const by = {}; L.forEach(p => { (by[p.d] = by[p.d] || []).push(p); });
   const DH = { D0: '#ffc800', D1: '#e8002d', D2: '#9b6fd4', D3: '#27f4d2', D4: '#2ecc71', E3: '#2ecc71' };
-  return `<details class="card" style="margin-top:14px;padding:12px 16px;border-color:rgba(160,164,255,.4);background:linear-gradient(160deg,rgba(160,164,255,.08),var(--surface) 60%)">
+  return `<details id="fia-verdicts" class="card" style="margin-top:14px;padding:12px 16px;border-color:rgba(160,164,255,.4);background:linear-gradient(160deg,rgba(160,164,255,.08),var(--surface) 60%)">
     <summary style="cursor:pointer;list-style:none;display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font-size:1.2rem">⚖️</span><b style="font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;letter-spacing:1.5px">STEWARD VERDICTS</b><span style="font-size:.72rem;color:var(--muted)">${L.length} time penalt${L.length === 1 ? 'y' : 'ies'} · tap to read</span><span style="margin-left:auto;color:var(--muted)">▾</span></summary>
     <div style="display:flex;flex-direction:column;gap:12px;margin-top:12px">${Object.keys(by).sort().map(dv => `<div>
       <div style="font-size:.62rem;font-weight:800;letter-spacing:1.5px;color:${DH[dv] || '#a0a4ff'};margin-bottom:6px">${esc(dv)}</div>
@@ -29213,7 +29225,7 @@ window._raceVerdictPill = function(race, big) {
   if (!race || !race.verdictsAt) return '';
   const when = new Date(race.verdictsAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
   const dv = (race.verdictDivs || []).join(', ');
-  return `<span title="Points and positions were updated after steward verdicts${dv ? ' in ' + dv : ''} (${when}). Your team points, standings and bets use the updated results." style="display:inline-flex;align-items:center;gap:5px;font-size:${big ? '.7rem' : '.6rem'};font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#c9cbff;background:rgba(160,164,255,.14);border:1px solid rgba(160,164,255,.45);border-radius:999px;padding:${big ? '3px 10px' : '1px 8px'};vertical-align:middle;white-space:nowrap">⚖️ After verdicts · ${esc(race.name || '')}</span>`;
+  return `<span onclick="event.stopPropagation();openVerdicts('${race.id}')" title="Tap to read the steward verdicts. Points and positions were updated after steward verdicts${dv ? ' in ' + dv : ''} (${when}). Your team points, standings and bets use the updated results." style="display:inline-flex;align-items:center;gap:5px;font-size:${big ? '.7rem' : '.6rem'};font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#c9cbff;background:rgba(160,164,255,.14);border:1px solid rgba(160,164,255,.45);border-radius:999px;padding:${big ? '3px 10px' : '1px 8px'};vertical-align:middle;white-space:nowrap;cursor:pointer">⚖️ After verdicts · ${esc(race.name || '')} ›</span>`;
 };
 // Banner for standings pages: the most recent race whose results changed after verdicts (last 10 days).
 window._verdictLatest = function(races) {
@@ -29224,9 +29236,9 @@ window._verdictBanner = function(races) {
   const r = window._verdictLatest(races); if (!r) return '';
   const after = !!r.verdictsAt, c = after ? '160,164,255' : '255,183,77';
   const when = after ? new Date(r.verdictsAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
-  return `<div style="display:flex;align-items:center;gap:10px;margin:0 0 12px;padding:9px 14px;border-radius:12px;background:linear-gradient(90deg,rgba(${c},.16),rgba(${c},.03));border:1px solid rgba(${c},.4)">
+  return `<div ${after ? `onclick="openVerdicts('${r.id}')" title="Tap to read the steward verdicts"` : ''} style="display:flex;align-items:center;gap:10px;margin:0 0 12px;padding:9px 14px;border-radius:12px;background:linear-gradient(90deg,rgba(${c},.16),rgba(${c},.03));border:1px solid rgba(${c},.4)${after ? ';cursor:pointer' : ''}">
     <span style="font-size:1.2rem">${after ? '⚖️' : '⏳'}</span><div style="flex:1;min-width:0"><div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;letter-spacing:1.2px;font-size:.95rem;color:rgb(${c});text-transform:uppercase">${after ? 'After' : 'Before'} verdicts · ${typeof getRaceFlag === 'function' ? getRaceFlag(r.name) + ' ' : ''}${esc(r.name)}</div>
-    <div style="font-size:.7rem;color:var(--muted)">${after ? 'Standings include the steward verdicts' + ((r.verdictDivs || []).length ? ' in ' + esc(r.verdictDivs.join(', ')) : '') + ' · updated ' + when : 'Provisional — points may change once the steward verdicts are in'}</div></div></div>`;
+    <div style="font-size:.7rem;color:var(--muted)">${after ? 'Standings include the steward verdicts' + ((r.verdictDivs || []).length ? ' in ' + esc(r.verdictDivs.join(', ')) : '') + ' · updated ' + when + ' · <b style="color:#c9cbff">read the verdicts ›</b>' : 'Provisional — points may change once the steward verdicts are in'}</div></div></div>`;
 };
 // An acca's price once refunded picks drop out: the remaining picks' odds multiplied, never more than
 // the price it was placed at (a bet-builder discount on linked picks stays with the bet).
@@ -29291,7 +29303,7 @@ window._verdictBadge = function(b) {
   if (!b || !b.resettled) return '';
   const nm = (x) => x === 'void' ? 'refunded' : x === 'cashed' ? 'cashed out' : (x || '');
   const was = b.prevStatus && b.prevStatus !== b.status ? ' · was ' + nm(b.prevStatus) : '';
-  return ` <span title="The race result changed after steward verdicts${b.settledAt ? ' (' + new Date(b.settledAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + ')' : ''}, so this bet was re-settled." style="display:inline-block;font-size:.6rem;font-weight:800;letter-spacing:.6px;color:#c9cbff;background:rgba(160,164,255,.14);border:1px solid rgba(160,164,255,.45);border-radius:6px;padding:1px 6px;vertical-align:middle;text-transform:uppercase">⚖️ After verdicts${was}</span>`;
+  return ` <span onclick="event.stopPropagation();openVerdictsByName('${esc(String(b.raceName || '').replace(/'/g, ''))}')" title="Tap to read the steward verdicts. The race result changed after steward verdicts${b.settledAt ? ' (' + new Date(b.settledAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + ')' : ''}, so this bet was re-settled." style="display:inline-block;font-size:.6rem;font-weight:800;letter-spacing:.6px;color:#c9cbff;background:rgba(160,164,255,.14);border:1px solid rgba(160,164,255,.45);border-radius:6px;padding:1px 6px;vertical-align:middle;text-transform:uppercase;cursor:pointer">⚖️ After verdicts${was} ›</span>`;
 };
 window.renderAdminBetChanges = async function() {
   const box = document.getElementById('bc-list'); if (!box) return;
