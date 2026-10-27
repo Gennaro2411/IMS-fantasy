@@ -31437,11 +31437,15 @@ const ST_CATS = [['nfa', 'No action', '✅'], ['pp', 'Points only', '⚠️'], [
 window._stImportIncidents = async function() {
   if (typeof _imsDb === 'undefined' || !_imsDb) return;
   const pen = {}; // key → alias → max category
-  const pr = _imsDb.exec(`SELECT season, round_no, division, incident_id, driver_alias, time_penalty_seconds, penalty_points, race_ban_count FROM fia_awarded_penalties WHERE status = 'active' AND incident_id IS NOT NULL AND incident_id != ''`);
-  (pr.length ? pr[0].values : []).forEach(([se, rn, dv, inc, al, tp, pp, rb]) => {
+  const det = {}; // key → alias → what they actually got (shown on the reveal)
+  const pr = _imsDb.exec(`SELECT season, round_no, division, incident_id, driver_alias, time_penalty_seconds, penalty_points, race_ban_count, quali_ban_count FROM fia_awarded_penalties WHERE status = 'active' AND incident_id IS NOT NULL AND incident_id != ''`);
+  (pr.length ? pr[0].values : []).forEach(([se, rn, dv, inc, al, tp, pp, rb, qb]) => {
     const k = `${se}-${rn}-${String(dv || '').toUpperCase()}-${inc}`, t = Number(tp);
-    const c = (String(tp).toUpperCase() === 'DSQ' || Number(rb) > 0) ? 5 : (isFinite(t) && t > 10) ? 4 : (isFinite(t) && t > 5) ? 3 : (isFinite(t) && t > 0) ? 2 : (Number(pp) > 0) ? 1 : 0;
+    const c = (String(tp).toUpperCase() === 'DSQ' || Number(rb) > 0) ? 5 : (isFinite(t) && t > 10) ? 4 : (isFinite(t) && t > 5) ? 3 : (isFinite(t) && t > 0) ? 2 : (Number(pp) > 0 || Number(qb) > 0) ? 1 : 0;
     const m = pen[k] = pen[k] || {}; m[al] = Math.max(m[al] || 0, c);
+    const D = (det[k] = det[k] || {})[al] = det[k][al] || [];
+    if (String(tp).toUpperCase() === 'DSQ') D.push('DSQ'); else if (isFinite(t) && t > 0) D.push('+' + t + 's'); else if (isFinite(t) && t < 0) D.push(t + 's back');
+    if (Number(qb) > 0) D.push(qb + ' quali ban' + (qb > 1 ? 's' : '')); if (Number(rb) > 0) D.push(rb + ' race ban' + (rb > 1 ? 's' : '')); if (Number(pp) > 0) D.push(pp + ' penalty pt' + (pp > 1 ? 's' : ''));
   });
   const why = {}; // stewards' written reasoning per incident
   try { const w = _imsDb.exec(`SELECT season, round_no, division, incident_id, verdict_text FROM fia_verdict_texts ORDER BY updated_at_ts`);
@@ -31454,7 +31458,7 @@ window._stImportIncidents = async function() {
     const d = String(dv || '').toUpperCase(), k = `${se}-${rn}-${d}-${inc}`, o = pen[k] || {};
     const drv = [...new Set([...J(rals), ...Object.keys(o)])].filter(Boolean).slice(0, 6);
     return { k, s: Number(se) || 0, r: Number(rn) || 0, d, sess: String(sess || ''), lap: lap == null ? '' : String(lap), rep: String(ral || ''), desc: String(desc || '').slice(0, 900), st: String(st || ''),
-      ids: [...new Set([String(rid || ''), ...J(rids)])].filter(Boolean), drv, o: drv.map(a => o[a] != null ? o[a] : null), hasPen: Object.keys(o).length > 0, at: Number(at) || 0, why: why[k] || '', ch: String(chId || ''), th: thr[k] || '' };
+      ids: [...new Set([String(rid || ''), ...J(rids)])].filter(Boolean), drv, o: drv.map(a => o[a] != null ? o[a] : null), od: drv.map(a => ((det[k] || {})[a] || []).join(' · ')), hasPen: Object.keys(o).length > 0, at: Number(at) || 0, why: why[k] || '', ch: String(chId || ''), th: thr[k] || '' };
   }).filter(x => x.r > 0 && x.drv.length && x.desc.replace(/\s+/g, ' ').trim().length >= 25 && !(x.st === 'Closed' && !x.hasPen));
   await dbSet('settings', 'stewardIncidents', { value: { at: Date.now(), list } });
   window._stInc = null;
@@ -31468,7 +31472,7 @@ async function _stLoad(force) {
     x.open = x.s === curS && !x.hasPen && !(rc && rc.verdictsAt) && !races.some(r => Number(r.raceNum) > x.r && played(r)); });
   return window._stInc;
 }
-const _stAns = (x) => x.o.map(c => (c || 0) >= 2 ? 1 : 0); // 1 = GUILTY (time penalty or DSQ), 0 = NOT GUILTY
+const _stAns = (x) => x.o.map(c => (c || 0) >= 1 ? 1 : 0); // 1 = GUILTY (any sanction: time penalty, DSQ, ban or penalty points), 0 = NOT GUILTY
 // Only the reported driver(s) get a verdict — never the person who reported it (unless they reported themselves).
 const _stTg = (x) => { const r = _normName(x.rep), t = x.drv.map((a, i) => i).filter(i => _normName(x.drv[i]) !== r); return t.length ? t : x.drv.map((a, i) => i); };
 // Only incidents that ended in a time penalty / DSQ (or are still open) are playable.
@@ -31524,7 +31528,7 @@ function _stCardHtml(x, st, all) {
       <div style="margin-top:6px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.04);border-left:3px solid ${col};font-size:.88rem;line-height:1.5;white-space:pre-line;word-break:break-word">“${esc(x.desc.replace(/\*\*/g, ''))}”</div></div></div>
     ${tg.map(i => { const a = x.drv[i], my = done ? st.pick[i] : draft[i], tot = crowd ? crowd[i].reduce((p, q) => p + q, 0) : 0;
       return `<div style="padding:10px 0;border-top:1px solid rgba(255,255,255,.06)"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">${_stAv(a, 26)}<span style="font-size:.7rem;color:var(--muted);font-weight:800">IS THIS DRIVER GUILTY?</span><b>${esc(a)}</b>
-        ${st.reveal ? `<span style="margin-left:auto;font-size:.72rem;font-weight:800;color:${ans[i] ? '#f87171' : '#4ade80'}">STEWARDS: ${ans[i] ? '🔨 GUILTY · ' + ST_CATS[x.o[i]][1] : '🕊️ NOT GUILTY'}</span>` : ''}</div>
+        ${st.reveal ? `<span style="margin-left:auto;font-size:.72rem;font-weight:800;color:${ans[i] ? '#f87171' : '#4ade80'}">STEWARDS: ${ans[i] ? '🔨 GUILTY' + ((x.od || [])[i] ? ' · ' + esc(x.od[i]) : '') : '🕊️ NOT GUILTY'}</span>` : ''}</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${ST_GNG.map(([c, l, ic, rgb]) => {
           const isAns = st.reveal && ans[i] === c, isMine = my === c, pct = tot ? Math.round(crowd[i][c] / tot * 100) : null, wrong = isMine && st.reveal && !isAns;
           const bg = isMine ? `rgba(${rgb},.25)` : 'rgba(255,255,255,.03)', bd = isAns ? 'rgba(255,255,255,.9)' : isMine ? `rgba(${rgb},.8)` : 'rgba(255,255,255,.1)';
@@ -31595,7 +31599,7 @@ async function renderSTGame(el) {
     <div class="wd-modes">${[['daily', '📅', 'DAILY'], ['live', '🟡', 'LIVE'], ['prac', '🎯', 'PRACTICE'], ['lb', '🏆', 'RANKINGS']].map(([m, i, l]) => `<button class="${mode === m ? 'on' : ''}" onclick="_stSetMode('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>
     ${locked && mode !== 'lb' ? body.replace(/onclick="_st(Pick|Submit)[^"]*"/g, 'disabled') : body}
     <div class="wd-info"><h3>How it works</h3><p>Every card is a real incident report from the IMS stewards' channel, written by the driver who reported it — so read it with a pinch of salt. Guilty or not guilty?</p>
-      <ul><li>Read the report, then decide: did the reported driver get a <b>time penalty</b> (or DSQ)? 🔨 Guilty or 🕊️ Not guilty. Penalty points or warnings alone count as not guilty.</li><li><i>Daily</i>: one settled incident a day, the same for everyone — see the real verdict and how everyone else ruled.</li><li><i>Live</i>: incidents still under investigation. Rule before the stewards do; scored when the verdicts come out.</li><li><i>Practice</i>: endless random incidents — not saved, not scored.</li><li>1 point per correct call. You can't rule on an incident you were involved in.</li></ul></div></div>`;
+      <ul><li>Read the report, then decide: was the reported driver punished? 🔨 Guilty = any penalty (time penalty, DSQ, quali/race ban or penalty points). 🕊️ Not guilty = no further action.</li><li><i>Daily</i>: one settled incident a day, the same for everyone — see the real verdict and how everyone else ruled.</li><li><i>Live</i>: incidents still under investigation. Rule before the stewards do; scored when the verdicts come out.</li><li><i>Practice</i>: endless random incidents — not saved, not scored.</li><li>1 point per correct call. You can't rule on an incident you were involved in.</li></ul></div></div>`;
 }
 
 // ---- Admin: lock / unlock games ----
