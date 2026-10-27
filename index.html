@@ -2600,6 +2600,7 @@
     .st-msg{position:relative;display:flex;gap:10px;align-items:flex-start}.st-msg>img,.st-msg>span{position:relative;z-index:1;box-shadow:0 0 0 3px var(--surface)}
     .st-bub{flex:1;min-width:0;padding:10px 14px;border-radius:4px 16px 16px 16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}
     .st-who{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:4px}.st-who b{font-size:.9rem}.st-who span{font-size:.7rem;color:var(--muted)}
+    .st-acc{display:inline-flex;align-items:center;gap:6px;padding:2px 9px 2px 2px;border-radius:20px;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.4)}.st-acc b{font-size:.8rem}
     .st-txt{font-size:.88rem;line-height:1.55;white-space:pre-line;word-break:break-word}
     .st-fia .st-bub{background:linear-gradient(160deg,rgba(160,164,255,.14),rgba(160,164,255,.04));border-color:rgba(160,164,255,.4);animation:wdHintIn .35s both}
     .st-fia-av{width:38px;height:38px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.15rem;background:linear-gradient(160deg,#a0a4ff,#3b3f9e)}
@@ -31566,14 +31567,14 @@ function _stCardHtml(x, st, all) {
         return (q ? tag('⏱ QUALI', '96,165,250') : tag('🏁 RACE', '226,232,240')) + (l === 1 ? tag('LAP 1', '251,146,60') : x.lap && !q ? tag('LAP ' + esc(x.lap), '160,164,255') : ''); })()}
       ${x.open ? '<span style="margin-left:auto;color:#facc15">🟡 UNDER INVESTIGATION</span>' : ''}${sc != null && st.mode !== 'prac' ? `<span style="margin-left:auto;color:${sc ? '#4ade80' : '#f87171'}">+${sc} PT${sc === 1 ? '' : 'S'}</span>` : ''}</div>
     <div class="st-chat">
-      <div class="st-msg">${_stAv(x.rep, 38)}<div class="st-bub"><div class="st-who"><b>${esc(x.rep || 'Unknown')}</b><span>reported an incident</span></div>
+      <div class="st-msg">${_stAv(x.rep, 38)}<div class="st-bub"><div class="st-who"><b>${esc(x.rep || 'Unknown')}</b><span>reported</span>${tg.map(i => `<span class="st-acc">${_stAv(x.drv[i], 22)}<b>${esc(x.drv[i])}</b></span>`).join('')}</div>
         ${x.rrc ? _stCtx(x.rrc, null, /quali/i.test(x.sess)).replace('margin:-2px 0 8px', 'margin:0 0 6px') : ''}
         <div class="st-txt">${esc(x.desc.replace(/\*\*/g, ''))}</div></div></div>
       ${st.reveal ? `<div class="st-msg st-fia"><span class="st-fia-av">⚖️</span><div class="st-bub"><div class="st-who"><b>FIA Stewards</b><span>replied · ${tg.map(i => esc(x.drv[i]) + ': ' + (ans[i] ? '🔨 GUILTY' + ((x.od || [])[i] ? ' (' + esc(x.od[i]) + ')' : '') : '🕊️ NOT GUILTY')).join(' · ')}</span></div>
         <div class="st-txt">${x.why ? esc(x.why.replace(/\*\*/g, '')) : '<i style="color:var(--muted)">No written reasoning was published for this one.</i>'}</div></div></div>` : ''}
     </div>
     ${tg.map(i => { const a = x.drv[i], my = done ? st.pick[i] : draft[i], tot = crowd ? crowd[i].reduce((p, q) => p + q, 0) : 0;
-      return `<div style="padding:10px 0;border-top:1px solid rgba(255,255,255,.06)"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">${_stAv(a, 26)}<span style="font-size:.7rem;color:var(--muted);font-weight:800">IS THIS DRIVER GUILTY?</span><b>${esc(a)}</b>
+      return `<div style="padding:10px 0;border-top:1px solid rgba(255,255,255,.06)"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">${_stAv(a, 34)}<span style="font-size:.7rem;color:var(--muted);font-weight:800">IS THIS DRIVER GUILTY?</span><b>${esc(a)}</b>
         ${st.reveal ? `<span style="margin-left:auto;font-size:.72rem;font-weight:800;color:${ans[i] ? '#f87171' : '#4ade80'}">STEWARDS: ${ans[i] ? '🔨 GUILTY' + ((x.od || [])[i] ? ' · ' + esc(x.od[i]) : '') : '🕊️ NOT GUILTY'}</span>` : ''}</div>
         ${_stCtx((x.rc || [])[i], (x.rap || [])[i], /quali/i.test(x.sess))}
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${ST_GNG.map(([c, l, ic, rgb]) => {
