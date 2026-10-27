@@ -31443,13 +31443,16 @@ window._stImportIncidents = async function() {
     const c = (String(tp).toUpperCase() === 'DSQ' || Number(rb) > 0) ? 5 : (isFinite(t) && t > 10) ? 4 : (isFinite(t) && t > 5) ? 3 : (isFinite(t) && t > 0) ? 2 : (Number(pp) > 0) ? 1 : 0;
     const m = pen[k] = pen[k] || {}; m[al] = Math.max(m[al] || 0, c);
   });
-  const r = _imsDb.exec(`SELECT season, round_no, division, incident_id, session_name, lap, reporter_discord_id, reporter_alias, description, status, reported_discord_ids, reported_aliases, created_at_ts FROM fia_incidents`);
+  const why = {}; // stewards' written reasoning per incident
+  try { const w = _imsDb.exec(`SELECT season, round_no, division, incident_id, verdict_text FROM fia_verdict_texts ORDER BY updated_at_ts`);
+    (w.length ? w[0].values : []).forEach(([se, rn, dv, inc, t]) => { if (t) why[`${se}-${rn}-${String(dv || '').toUpperCase()}-${inc}`] = String(t).slice(0, 1200); }); } catch (e) {}
+  const r = _imsDb.exec(`SELECT incident_channel_id, season, round_no, division, incident_id, session_name, lap, reporter_discord_id, reporter_alias, description, status, reported_discord_ids, reported_aliases, created_at_ts FROM fia_incidents`);
   const J = (x) => { try { const v = JSON.parse(x || '[]'); return Array.isArray(v) ? v.map(String) : []; } catch (e) { return []; } };
-  const list = (r.length ? r[0].values : []).map(([se, rn, dv, inc, sess, lap, rid, ral, desc, st, rids, rals, at]) => {
+  const list = (r.length ? r[0].values : []).map(([chId, se, rn, dv, inc, sess, lap, rid, ral, desc, st, rids, rals, at]) => {
     const d = String(dv || '').toUpperCase(), k = `${se}-${rn}-${d}-${inc}`, o = pen[k] || {};
     const drv = [...new Set([...J(rals), ...Object.keys(o)])].filter(Boolean).slice(0, 6);
     return { k, s: Number(se) || 0, r: Number(rn) || 0, d, sess: String(sess || ''), lap: lap == null ? '' : String(lap), rep: String(ral || ''), desc: String(desc || '').slice(0, 900), st: String(st || ''),
-      ids: [...new Set([String(rid || ''), ...J(rids)])].filter(Boolean), drv, o: drv.map(a => o[a] != null ? o[a] : null), hasPen: Object.keys(o).length > 0, at: Number(at) || 0 };
+      ids: [...new Set([String(rid || ''), ...J(rids)])].filter(Boolean), drv, o: drv.map(a => o[a] != null ? o[a] : null), hasPen: Object.keys(o).length > 0, at: Number(at) || 0, why: why[k] || '', ch: String(chId || '') };
   }).filter(x => x.r > 0 && x.drv.length && x.desc.replace(/\s+/g, ' ').trim().length >= 25 && !(x.st === 'Closed' && !x.hasPen));
   await dbSet('settings', 'stewardIncidents', { value: { at: Date.now(), list } });
   window._stInc = null;
@@ -31525,6 +31528,7 @@ function _stCardHtml(x, st, all) {
           const bg = isMine ? `rgba(${rgb},.25)` : 'rgba(255,255,255,.03)', bd = isAns ? 'rgba(255,255,255,.9)' : isMine ? `rgba(${rgb},.8)` : 'rgba(255,255,255,.1)';
           return `<button ${done || inv ? 'disabled' : `onclick="_stPick('${x.k}',${i},${c})"`} style="position:relative;overflow:hidden;padding:14px 8px;border-radius:12px;border:${isAns ? 2 : 1}px solid ${bd};background:${bg};color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:900;letter-spacing:1.5px;font-size:1.1rem;cursor:${done || inv ? 'default' : 'pointer'};text-align:center">
             ${pct != null ? `<span style="position:absolute;left:0;bottom:0;height:4px;width:${pct}%;background:rgb(${rgb})"></span>` : ''}${ic} ${l}${isMine && st.reveal ? (wrong ? ' ✗' : ' ✓') : ''}${pct != null ? `<small style="display:block;font-family:inherit;font-size:.7rem;font-weight:700;color:var(--muted);letter-spacing:.5px;margin-top:2px">${pct}% of ${tot}</small>` : ''}</button>`; }).join('')}</div></div>`; }).join('')}
+    ${st.reveal && x.why ? `<div style="margin-top:12px;padding:12px 14px;border-radius:12px;background:rgba(160,164,255,.08);border:1px solid rgba(160,164,255,.3)"><div style="font-size:.66rem;font-weight:800;letter-spacing:1.5px;color:#a0a4ff;margin-bottom:6px">⚖️ STEWARDS' REASONING</div><div style="font-size:.86rem;line-height:1.55;white-space:pre-line;word-break:break-word">${esc(x.why.replace(/\*\*/g, ''))}</div></div>` : ''}
     ${inv ? '<div style="margin-top:10px;font-size:.78rem;color:#facc15">🙅 You were involved in this incident, so you can\'t rule on it.</div>'
       : done ? (st.reveal ? '' : '<div style="margin-top:10px;font-size:.78rem;color:var(--muted)">✅ Verdict locked in. Scored when the stewards rule.</div>')
       : `<div style="margin-top:12px"><button class="btn btn-primary" onclick="_stSubmit('${x.k}','${st.mode}')">⚖️ ${st.mode === 'prac' ? 'Reveal verdict' : 'Submit verdict'}</button></div>`}
