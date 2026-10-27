@@ -25428,6 +25428,7 @@ window.importVerdictsFromDb = async function(btn, quiet) {
       applied.add(p.u); bans++;
     }
     await dbSet('settings', 'fiaVerdicts', { value: { at: Date.now(), list, bansApplied: [...applied] } });
+    try { await window._stImportIncidents(); } catch (e) { console.warn('steward incidents', e); }
     window._fiaV = list; window._adminDriverCache = null;
     if (!quiet) customAlert(`⚖️ Imported ${list.length} steward verdicts (${list.filter(x => x.t != null).length} time penalties, ${list.filter(x => x.dq).length} DSQs, ${list.filter(x => x.rb > 0).length} race bans).` + (bans ? `\n⛔ ${bans} new race ban${bans > 1 ? 's' : ''} applied.` : ''));
   } catch (e) { console.error(e); if (!quiet) customAlert('Verdict import failed: ' + (e.message || e)); }
@@ -31097,6 +31098,7 @@ window.renderGames = async function() {
   if (window._games.view === 'pt') { clearInterval(window._wdDuelPoll); return renderPTGame(el); }
   if (window._games.view === 'tq') { clearInterval(window._wdDuelPoll); return renderTQGame(el); }
   if (window._games.view === 'cp') { clearInterval(window._wdDuelPoll); return renderCPGame(el); }
+  if (window._games.view === 'st') { clearInterval(window._wdDuelPoll); return renderSTGame(el); }
   if (window._games.view !== 'wordle') {
     clearInterval(window._wdDuelPoll);
     { const lk = await dbGet('settings', 'gamesLock').catch(() => null); window._gamesLock = (lk && lk.value) || {}; }
@@ -31109,6 +31111,7 @@ window.renderGames = async function() {
       ${(() => { const pl = !!window._gamesLock.pt; return `<button class="gm-bubble${pl ? ' gm-locked' : ''}" onclick="openGame('pt')"><span class="gm-ico">${pl ? '🔒' : '🎯'}</span><b>IMS POINTLESS${pl ? ' <span class="gm-lock-tag">LOCKED</span>' : ''}</b><small>3 questions. Name the IMS drivers with the least appearances who fit — the fewer appearances, the fewer points. Lowest total wins.</small></button>`; })()}
       ${(() => { const tl = !!window._gamesLock.tq; return `<button class="gm-bubble${tl ? ' gm-locked' : ''}" onclick="openGame('tq')"><span class="gm-ico">${tl ? '🔒' : '🧠'}</span><b>IMS TRIVIA${tl ? ' <span class="gm-lock-tag">LOCKED</span>' : ''}</b><small>10 quick questions on IMS history — wins, poles, teams, nationalities and track records. How well do you know the league?</small></button>`; })()}
       ${(() => { const cl2 = !!window._gamesLock.cp; return `<button class="gm-bubble${cl2 ? ' gm-locked' : ''}" onclick="openGame('cp')"><span class="gm-ico">${cl2 ? '🔒' : '🛣️'}</span><b>IMS CAREER PATH${cl2 ? ' <span class="gm-lock-tag">LOCKED</span>' : ''}</b><small>A driver's team history, season by season. Guess who — every wrong guess reveals the next season.</small></button>`; })()}
+      ${(() => { const sl = !!window._gamesLock.st; return `<button class="gm-bubble${sl ? ' gm-locked' : ''}" onclick="openGame('st')"><span class="gm-ico">${sl ? '🔒' : '⚖️'}</span><b>IMS STEWARD SIMULATOR${sl ? ' <span class="gm-lock-tag">LOCKED</span>' : ''}</b><small>Real IMS incidents. Read the report, hand out the penalty — then see how you compare with the stewards and everyone else.</small></button>`; })()}
       <div class="gm-bubble gm-soon"><span class="gm-ico">🔒</span><b>MORE SOON</b><small>New games on the way.</small></div></div>`;
     return;
   }
@@ -31422,8 +31425,137 @@ window.careerLookup = async function(name) {
     ${moves.length ? `<div style="margin-top:12px;font-weight:800;font-size:.85rem">📋 Contract history</div>${moves.map(m => `<div style="font-size:.78rem;padding:4px 0;border-bottom:1px solid var(--border)"><span class="text-muted">${m.ts ? new Date(m.ts > 1e11 ? m.ts : m.ts * 1000).toLocaleDateString('en-GB') : ''}${m.d.season != null ? ' · S' + esc(String(m.d.season)) : ''}</span> — <b>${esc(m.a)}</b> ${esc(m.d.team || m.d.to_team || '')}${m.d.from_team ? ' (from ' + esc(m.d.from_team) + ')' : ''}${m.d.division || m.d.to_division ? ' · ' + esc(m.d.division || m.d.to_division) : ''}</div>`).join('')}` : ''}`;
 };
 
+
+// ================= IMS STEWARD SIMULATOR =================
+// Incidents come from fia_incidents in the .db (imported with the verdicts → settings/stewardIncidents).
+// Each incident asks for a verdict per driver involved. The answer = that driver's penalties linked by
+// season + round + division + incident id (none → No further action).
+// LIVE: the round's verdicts aren't out yet → vote now, scored when they land. ARCHIVE: settled incidents.
+// Votes: stewardVotes/<userId> = { name, avatar, v: { incKey: { c:[cat per driver], live, t } }, paid:{incKey:1} }.
+// Scoring per driver: exact = 3, one step out = 1. Drivers involved in an incident can't vote on it.
+const ST_CATS = [['nfa', 'No action', '✅'], ['pp', 'Points only', '⚠️'], ['5', '≤5s', '⏱'], ['10', '10s', '⏱'], ['15', '15s+', '⏱'], ['dsq', 'DSQ / ban', '⛔']];
+window._stImportIncidents = async function() {
+  if (typeof _imsDb === 'undefined' || !_imsDb) return;
+  const pen = {}; // key → alias → max category
+  const pr = _imsDb.exec(`SELECT season, round_no, division, incident_id, driver_alias, time_penalty_seconds, penalty_points, race_ban_count FROM fia_awarded_penalties WHERE status = 'active' AND incident_id IS NOT NULL AND incident_id != ''`);
+  (pr.length ? pr[0].values : []).forEach(([se, rn, dv, inc, al, tp, pp, rb]) => {
+    const k = `${se}-${rn}-${String(dv || '').toUpperCase()}-${inc}`, t = Number(tp);
+    const c = (String(tp).toUpperCase() === 'DSQ' || Number(rb) > 0) ? 5 : (isFinite(t) && t > 10) ? 4 : (isFinite(t) && t > 5) ? 3 : (isFinite(t) && t > 0) ? 2 : (Number(pp) > 0) ? 1 : 0;
+    const m = pen[k] = pen[k] || {}; m[al] = Math.max(m[al] || 0, c);
+  });
+  const r = _imsDb.exec(`SELECT season, round_no, division, incident_id, session_name, lap, reporter_discord_id, reporter_alias, description, status, reported_discord_ids, reported_aliases, created_at_ts FROM fia_incidents`);
+  const J = (x) => { try { const v = JSON.parse(x || '[]'); return Array.isArray(v) ? v.map(String) : []; } catch (e) { return []; } };
+  const list = (r.length ? r[0].values : []).map(([se, rn, dv, inc, sess, lap, rid, ral, desc, st, rids, rals, at]) => {
+    const d = String(dv || '').toUpperCase(), k = `${se}-${rn}-${d}-${inc}`, o = pen[k] || {};
+    const drv = [...new Set([...J(rals), ...Object.keys(o)])].filter(Boolean).slice(0, 6);
+    return { k, s: Number(se) || 0, r: Number(rn) || 0, d, sess: String(sess || ''), lap: lap == null ? '' : String(lap), rep: String(ral || ''), desc: String(desc || '').slice(0, 900), st: String(st || ''),
+      ids: [...new Set([String(rid || ''), ...J(rids)])].filter(Boolean), drv, o: drv.map(a => o[a] != null ? o[a] : null), hasPen: Object.keys(o).length > 0, at: Number(at) || 0 };
+  }).filter(x => x.r > 0 && x.drv.length && x.desc.replace(/\s+/g, ' ').trim().length >= 25 && !(x.st === 'Closed' && !x.hasPen));
+  await dbSet('settings', 'stewardIncidents', { value: { at: Date.now(), list } });
+  window._stInc = null;
+};
+async function _stLoad(force) {
+  if (!window._stInc || force) { const d = await dbGet('settings', 'stewardIncidents').catch(() => null); window._stInc = (d && d.value && d.value.list) || []; }
+  const races = await dbGetAll('races').catch(() => []), curS = Number(window.currentSeason || window._reserveSeason) || 0;
+  const played = (r) => r.driverPoints && Object.values(r.driverPoints).some(v => v > 0);
+  // Settled = penalties already linked, or the round is "After verdicts", or a later round has results (stewards are done).
+  window._stInc.forEach(x => { const rc = x.s === curS ? races.find(r => Number(r.raceNum) === x.r) : null; x.track = rc ? rc.name : '';
+    x.open = x.s === curS && !x.hasPen && !(rc && rc.verdictsAt) && !races.some(r => Number(r.raceNum) > x.r && played(r)); });
+  return window._stInc;
+}
+const _stAns = (x) => x.o.map(c => c == null ? 0 : c); // no penalty for that driver → No further action
+const _stScore = (pick, ans) => (pick || []).reduce((a, c, i) => a + (c == null ? 0 : c === ans[i] ? 3 : Math.abs(c - ans[i]) === 1 ? 1 : 0), 0);
+async function _stMine() { const me = _wdMe(); if (!me.uid) return { v: {} }; dbInvalidate && dbInvalidate('stewardVotes'); const d = await dbGet('stewardVotes', me.uid).catch(() => null); return d || { v: {} }; }
+function _stAv(n, sz) { const a = (window._avatarByName || {})[_normName(n)]; return a ? `<img src="${esc(a)}" style="width:${sz}px;height:${sz}px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">` : `<span style="width:${sz}px;height:${sz}px;border-radius:50%;background:rgba(160,164,255,.25);display:inline-flex;align-items:center;justify-content:center;font-size:${sz * .4}px;font-weight:800;flex-shrink:0">${esc((n || '?')[0].toUpperCase())}</span>`; }
+const _stInvolved = (x) => { const id = typeof currentUser !== 'undefined' && currentUser && currentUser.discordId; return !!(id && x.ids.includes(String(id))); };
+window._stPick = function(k, i, c) { const p = window._stDraft[k] = window._stDraft[k] || []; p[i] = p[i] === c ? null : c; renderGames(); };
+window._stSubmit = async function(k) {
+  const me = _wdMe(); if (!me.uid) return showToast('Log in to play Steward Simulator.', 'error');
+  const x = (window._stInc || []).find(y => y.k === k); const p = (window._stDraft[k] || []);
+  if (!x || x.drv.some((_, i) => p[i] == null)) return showToast('Give a verdict for every driver.', 'error');
+  if (_stInvolved(x)) return showToast('You were involved in this one — no voting on your own incident!', 'error');
+  const mine = await _stMine(); if (mine.v[k]) return showToast('Already ruled on this one.', 'error');
+  mine.v[k] = { c: x.drv.map((_, i) => p[i]), live: !!x.open, t: Date.now() };
+  await dbSet('stewardVotes', me.uid, { name: me.name, avatar: me.avatar || '', v: mine.v });
+  window._stVotesAll = null; delete window._stDraft[k]; if (!x.open) window._stReveal = k; renderGames();
+};
+window._stSetMode = function(m) { window._stMode = m; window._stReveal = null; renderGames(); };
+window._stNext = function() { window._stReveal = null; window._stSkip = null; renderGames(); };
+window._stSkipOne = function(k) { (window._stSkipped = window._stSkipped || new Set()).add(k); renderGames(); };
+function _stCrowd(all, x) { // per driver → count per category
+  return x.drv.map((_, i) => { const n = [0, 0, 0, 0, 0, 0]; all.forEach(u => { const c = u.v && u.v[x.k] && u.v[x.k].c && u.v[x.k].c[i]; if (c != null && n[c] != null) n[c]++; }); return n; });
+}
+function _stCardHtml(x, mineV, all, opts) {
+  const voted = mineV && mineV.c, draft = window._stDraft[x.k] || [], settled = !x.open, ans = _stAns(x), crowd = settled || opts.showCrowd ? _stCrowd(all, x) : null;
+  const DH = { D0: '#ffc800', D1: '#e8002d', D2: '#9b6fd4', D3: '#27f4d2', D4: '#2ecc71', E3: '#2ecc71' }, col = DH[x.d] || '#a0a4ff', inv = _stInvolved(x);
+  const sc = voted && settled ? _stScore(voted.c, ans) : null;
+  return `<div class="card" style="padding:16px 18px;margin-bottom:14px;border-color:${col}55;background:linear-gradient(160deg,${col}14,var(--surface) 55%)">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.7rem;font-weight:800;letter-spacing:1px">
+      <span style="color:${col}">${esc(x.d)}</span><span class="text-muted">S${x.s} · R${x.r}${x.track ? ' · ' + esc(x.track) : ''} · ${esc(x.sess || 'Race')}${x.lap ? ' · Lap ' + esc(x.lap) : ''}</span>
+      ${settled ? '' : '<span style="margin-left:auto;color:#facc15">🟡 UNDER INVESTIGATION</span>'}${sc != null ? `<span style="margin-left:auto;color:${sc ? '#4ade80' : '#f87171'}">+${sc} PTS${mineV.live ? ' · LIVE' : ''}</span>` : ''}</div>
+    <div style="display:flex;gap:10px;margin:12px 0 14px;align-items:flex-start">${_stAv(x.rep, 34)}<div style="flex:1;min-width:0"><div style="font-size:.7rem;color:var(--muted);font-weight:700">REPORTED BY <b style="color:#fff">${esc(x.rep || 'Unknown')}</b></div>
+      <div style="margin-top:6px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.04);border-left:3px solid ${col};font-size:.88rem;line-height:1.5;white-space:pre-line;word-break:break-word">“${esc(x.desc.replace(/\*\*/g, ''))}”</div></div></div>
+    ${x.drv.map((a, i) => { const my = voted ? voted.c[i] : draft[i], tot = crowd ? crowd[i].reduce((p, q) => p + q, 0) : 0;
+      return `<div style="padding:10px 0;border-top:1px solid rgba(255,255,255,.06)"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">${_stAv(a, 26)}<b>${esc(a)}</b>
+        ${settled && (voted || opts.reveal) ? `<span style="margin-left:auto;font-size:.7rem;font-weight:800;color:#a0a4ff">STEWARDS: ${ST_CATS[ans[i]][2]} ${ST_CATS[ans[i]][1].toUpperCase()}</span>` : ''}</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(86px,1fr));gap:6px">${ST_CATS.map(([, l, ic], c) => {
+          const isAns = settled && (voted || opts.reveal) && ans[i] === c, isMine = my === c, pct = tot ? Math.round(crowd[i][c] / tot * 100) : null;
+          const bg = isAns ? 'rgba(74,222,128,.22)' : isMine ? (settled && voted ? 'rgba(248,113,113,.18)' : 'rgba(160,164,255,.25)') : 'rgba(255,255,255,.03)';
+          const bd = isAns ? 'rgba(74,222,128,.7)' : isMine ? (settled && voted ? 'rgba(248,113,113,.55)' : 'rgba(160,164,255,.8)') : 'rgba(255,255,255,.1)';
+          return `<button ${voted || inv ? 'disabled' : `onclick="_stPick('${x.k}',${i},${c})"`} style="position:relative;overflow:hidden;padding:8px 6px;border-radius:10px;border:1px solid ${bd};background:${bg};color:#fff;font-weight:700;font-size:.76rem;cursor:${voted || inv ? 'default' : 'pointer'};text-align:center">
+            ${pct != null ? `<span style="position:absolute;left:0;bottom:0;height:3px;width:${pct}%;background:${isAns ? '#4ade80' : '#a0a4ff'}"></span>` : ''}${ic} ${l}${isMine && voted ? ' •' : ''}${pct != null ? `<small style="display:block;font-size:.62rem;color:var(--muted);margin-top:2px">${pct}% of ${tot}</small>` : ''}</button>`; }).join('')}</div></div>`; }).join('')}
+    ${inv ? '<div style="margin-top:10px;font-size:.78rem;color:#facc15">🙅 You were involved in this incident, so you can\'t rule on it.</div>'
+      : voted ? (settled ? '' : '<div style="margin-top:10px;font-size:.78rem;color:var(--muted)">✅ Verdict locked in. Scored when the stewards rule.</div>')
+      : `<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn btn-primary" onclick="_stSubmit('${x.k}')">⚖️ Submit verdict</button>${opts.skip ? `<button class="btn btn-secondary" onclick="_stSkipOne('${x.k}')">Skip</button>` : ''}</div>`}
+  </div>`;
+}
+async function renderSTGame(el) {
+  window._stDraft = window._stDraft || {};
+  { const lk = await dbGet('settings', 'gamesLock').catch(() => null); window._gamesLock = (lk && lk.value) || {}; }
+  const locked = !!(window._gamesLock || {}).st && !adminLoggedIn && !_gamesAccess();
+  const inc = await _stLoad(), mine = await _stMine(), me = _wdMe();
+  if (!window._stVotesAll || Date.now() - window._stVotesAll.at > 30e3) window._stVotesAll = { at: Date.now(), list: await dbGetAll('stewardVotes', { fresh: true }).catch(() => []) };
+  const all = window._stVotesAll.list, mode = window._stMode || 'live';
+  // Pay out live calls once their verdict is in: +2 IM$ per exact driver call (shared 25 IM$/day game cap).
+  try { if (me.uid) { const paid = mine.paid || {}; let earn = 0; const nowPaid = [];
+    Object.entries(mine.v || {}).forEach(([k, v]) => { const x = inc.find(y => y.k === k); if (!v.live || paid[k] || !x || x.open) return; const a = _stAns(x); earn += 2 * v.c.filter((c, i) => c === a[i]).length; nowPaid.push(k); });
+    if (nowPaid.length) { nowPaid.forEach(k => paid[k] = 1); await dbSet('stewardVotes', me.uid, { paid }); if (earn) _gameCoins('st-live', earn); } } } catch (e) {}
+  const lockBanner = (window._gamesLock || {}).st ? `<div class="wd-lockbar">🔒 <b>Steward Simulator is locked</b><span>${locked ? 'It\'ll open soon — have a look around.' : 'Locked for players — you can still play.'}</span></div>` : '';
+  const curS = Number(window.currentSeason || window._reserveSeason) || 0;
+  const open = inc.filter(x => x.open), liveDone = inc.filter(x => !x.open && mine.v[x.k] && mine.v[x.k].live).sort((a, b) => b.r - a.r || b.at - a.at);
+  const arch = inc.filter(x => !x.open), archLeft = arch.filter(x => !mine.v[x.k] && !_stInvolved(x));
+  let body = '';
+  if (mode === 'live') {
+    body = (open.length ? `<div class="text-muted" style="font-size:.82rem;margin:0 0 12px;text-align:center">${open.length} incident${open.length > 1 ? 's' : ''} waiting on the stewards. Call it before they do — <b style="color:#fff">3 pts</b> for the exact verdict, <b style="color:#fff">1 pt</b> if you're one step out, and <b style="color:#ffd84d">+2 IM$</b> per exact call.</div>` + open.sort((a, b) => a.d.localeCompare(b.d) || a.k.localeCompare(b.k)).map(x => _stCardHtml(x, mine.v[x.k], all, {})).join('')
+      : `<div class="card" style="text-align:center;padding:26px"><div style="font-size:2rem">⚖️</div><b>No incidents under investigation right now.</b><div class="text-muted" style="font-size:.85rem;margin-top:6px">New ones appear after each round, before the verdicts are out. Try the Archive meanwhile.</div></div>`)
+      + (liveDone.length ? `<div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;letter-spacing:1.5px;font-size:1.1rem;margin:22px 0 10px">🧾 YOUR RULED CALLS</div>` + liveDone.slice(0, 15).map(x => _stCardHtml(x, mine.v[x.k], all, {})).join('') : '');
+  } else if (mode === 'arch') {
+    const rv = window._stReveal && arch.find(x => x.k === window._stReveal);
+    const sk = window._stSkipped || new Set(); let pool = archLeft.filter(x => !sk.has(x.k)); if (!pool.length) { window._stSkipped = new Set(); pool = archLeft; }
+    const pick = rv || (() => { const id = window._stCur && pool.find(x => x.k === window._stCur); if (id) return id; const x = pool[Math.floor(Math.random() * pool.length)]; window._stCur = x && x.k; return x; })();
+    body = `<div class="text-muted" style="font-size:.82rem;margin:0 0 12px;text-align:center">${arch.length - archLeft.length} / ${arch.length} ruled · real incidents from S7 & S8. Bars show how everyone else ruled.</div>`
+      + (pick ? _stCardHtml(pick, mine.v[pick.k], all, { skip: !rv, reveal: !!rv }) + (rv ? `<div style="text-align:center"><button class="btn btn-primary" onclick="window._stCur=null;_stNext()">Next incident →</button></div>` : '')
+        : `<div class="card" style="text-align:center;padding:26px"><b>🏁 You've ruled on every archive incident!</b></div>`);
+  } else {
+    const rows = all.map(u => { let lp = 0, ap = 0, n = 0, ex = 0, tot = 0; Object.entries(u.v || {}).forEach(([k, v]) => { const x = inc.find(y => y.k === k); if (!x || x.open) return; const a = _stAns(x), sc = _stScore(v.c, a); v.live ? lp += sc : ap += sc; n++; ex += v.c.filter((c, i) => c === a[i]).length; tot += v.c.length; });
+      return { id: u.id, name: u.name || 'Player', av: u.avatar, lp, ap, n, acc: tot ? Math.round(ex / tot * 100) : 0 }; }).filter(r => r.n).sort((a, b) => (b.lp + b.ap) - (a.lp + a.ap) || b.acc - a.acc);
+    body = rows.length ? `<div class="wd-lb"><div class="wd-lb-h"><span>🏆 STEWARD RANKINGS</span><small>Live + Archive points · exact = 3, one step out = 1</small></div>
+      ${rows.slice(0, 50).map((r, i) => `<div style="display:flex;align-items:center;gap:10px;padding:8px 4px;border-top:1px solid rgba(255,255,255,.06);${r.id === me.uid ? 'background:rgba(160,164,255,.1);border-radius:8px' : ''}">
+        <b style="width:26px;text-align:center">${i + 1}</b>${r.av ? `<img src="${esc(r.av)}" style="width:28px;height:28px;border-radius:50%;object-fit:cover">` : _stAv(r.name, 28)}<b style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.name)}</b>
+        <small class="text-muted" style="white-space:nowrap">${r.n} ruled · ${r.acc}% exact</small><span style="font-size:.72rem;color:#facc15;white-space:nowrap">🟡 ${r.lp}</span><b style="min-width:42px;text-align:right">${r.lp + r.ap}</b></div>`).join('')}</div>`
+      : `<div class="card" style="text-align:center;padding:26px">No rulings yet — be the first steward.</div>`;
+  }
+  el.innerHTML = `<div class="wd-wrap"><div class="wd-top"><button class="wd-back" onclick="openGame('hub')" title="Back to Games">←</button>
+      <div class="wd-brand"><span style="font-size:1.9rem;-webkit-text-fill-color:initial">⚖️</span><span>STEWARDS</span></div><div class="wd-meta"><span class="wd-pill">${open.length} live</span><span class="wd-pill">${Object.keys(mine.v || {}).length} ruled</span></div></div>${lockBanner}
+    <div class="wd-modes">${[['live', '🟡', 'LIVE'], ['arch', '📚', 'ARCHIVE'], ['lb', '🏆', 'RANKINGS']].map(([m, i, l]) => `<button class="${mode === m ? 'on' : ''}" onclick="_stSetMode('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>
+    ${locked && mode !== 'lb' ? body.replace(/onclick="_stPick[^"]*"|onclick="_stSubmit[^"]*"/g, 'disabled') : body}
+    <div class="wd-info"><h3>How it works</h3><p>Every card is a real incident report from the IMS stewards' channel, written by the driver who reported it — so read it with a pinch of salt. Give a verdict for each driver involved.</p>
+      <ul><li><i>Live</i>: incidents still under investigation. Rule before the stewards do; scored automatically when the verdicts come out (+2 IM$ per exact call).</li><li><i>Archive</i>: settled incidents from S7 and S8 — rule, then see the real verdict and how everyone else called it.</li>
+      <li>Scoring per driver: exact verdict <b>3 pts</b>, one step out <b>1 pt</b>. Verdicts run: No action → Points only → ≤5s → 10s → 15s+ → DSQ / ban.</li><li>You can't vote on an incident you were involved in.</li></ul></div></div>`;
+}
+
 // ---- Admin: lock / unlock games ----
-const GAMES_LIST = [['wordle', '🟩', 'IMS PaddockDle'], ['grid', '🔢', 'IMS PaddockDle Grid'], ['hl', '⬆️', 'IMS Higher or Lower'], ['cn', '🧩', 'IMS Connections'], ['pt', '🎯', 'IMS Pointless'], ['tq', '🧠', 'IMS Trivia'], ['cp', '🛣️', 'IMS Career Path']];
+const GAMES_LIST = [['wordle', '🟩', 'IMS PaddockDle'], ['grid', '🔢', 'IMS PaddockDle Grid'], ['hl', '⬆️', 'IMS Higher or Lower'], ['cn', '🧩', 'IMS Connections'], ['pt', '🎯', 'IMS Pointless'], ['tq', '🧠', 'IMS Trivia'], ['cp', '🛣️', 'IMS Career Path'], ['st', '⚖️', 'IMS Steward Simulator']];
 window.renderAdminGames = async function() {
   const box = document.getElementById('admin-games-locks'); if (!box) return;
   const lk = await dbGet('settings', 'gamesLock').catch(() => null); const L = (lk && lk.value) || {};
@@ -31491,7 +31623,7 @@ async function _gameCoins(kind, amount) {
   } catch (e) { return 0; }
 }
 function _coinPop(n, kind) {
-  const lbl = { 'cn-hidden': 'Found a hidden group!', 'duel-cn': 'Connections duel win', 'cn-daily': 'Daily Connections', 'cn-win': 'Connections solved!', 'wd-daily': 'Daily PaddockDle', 'gr-daily': 'Daily Grid', 'wd-win': 'Got the daily driver!', 'gr-win': 'Perfect 9/9 grid!', 'hl-daily': 'Daily Higher or Lower', 'pt-daily': 'Daily Pointless', 'pt-win': 'Pointless — 60 or under!', 'tq-daily': 'Daily Trivia', 'cp-daily': 'Daily Career Path', 'cp-win': 'Career Path in 3 or fewer!', 'tq-win': 'Trivia 8/10 or better!', 'hl-win': '8/10 or better!', 'duel-hl': 'Higher or Lower duel win', 'duel-pt': 'Pointless duel win', 'duel-tq': 'Trivia duel win', 'duel-cp': 'Career Path duel win', 'duel-wd': 'PaddockDle duel win', 'duel-gr': 'Grid duel win' }[kind] || 'Games';
+  const lbl = { 'cn-hidden': 'Found a hidden group!', 'st-live': 'Called it like the stewards!', 'duel-cn': 'Connections duel win', 'cn-daily': 'Daily Connections', 'cn-win': 'Connections solved!', 'wd-daily': 'Daily PaddockDle', 'gr-daily': 'Daily Grid', 'wd-win': 'Got the daily driver!', 'gr-win': 'Perfect 9/9 grid!', 'hl-daily': 'Daily Higher or Lower', 'pt-daily': 'Daily Pointless', 'pt-win': 'Pointless — 60 or under!', 'tq-daily': 'Daily Trivia', 'cp-daily': 'Daily Career Path', 'cp-win': 'Career Path in 3 or fewer!', 'tq-win': 'Trivia 8/10 or better!', 'hl-win': '8/10 or better!', 'duel-hl': 'Higher or Lower duel win', 'duel-pt': 'Pointless duel win', 'duel-tq': 'Trivia duel win', 'duel-cp': 'Career Path duel win', 'duel-wd': 'PaddockDle duel win', 'duel-gr': 'Grid duel win' }[kind] || 'Games';
   const el = document.createElement('div'); el.className = 'coin-pop'; const nOpen = document.querySelectorAll('.coin-pop').length; if (nOpen) el.style.top = (84 + nOpen * 78) + 'px';
   el.innerHTML = `<span class="imc" style="font-size:1.6rem"></span><div><b>+${n} IM$</b><small>${lbl}</small></div>`;
   document.body.appendChild(el); setTimeout(() => el.classList.add('out'), 2600); setTimeout(() => el.remove(), 3200);
