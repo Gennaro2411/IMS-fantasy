@@ -28579,15 +28579,22 @@ window.renderBets = async function() {
   if (!isC && field.length && (window._fiaV || []).length) {
     const curS = Number(window.currentSeason || window._reserveSeason) || 0, seasonOf = new Map();
     (races || []).forEach(r => seasonOf.set(r, curS)); (window._betArchives || []).forEach(a => (a.races || []).forEach(r => seasonOf.set(r, Number(a.season))));
-    const hit = new Set(); (window._fiaV || []).forEach(v => { if (!(v.dq || (v.t != null && v.t > 0))) return; [v.id, window._fiaKey(v.a)].filter(Boolean).forEach(k => hit.add(v.s + '|' + v.r + '|' + v.d + '|' + k)); });
+    // A DSQ counts double (a far bigger offence than a time penalty).
+    const hit = new Map(); (window._fiaV || []).forEach(v => { if (!(v.dq || (v.t != null && v.t > 0))) return; const w = v.dq ? 2 : 1; [v.id, window._fiaKey(v.a)].filter(Boolean).forEach(k => { const kk = v.s + '|' + v.r + '|' + v.d + '|' + k; hit.set(kk, Math.max(hit.get(kk) || 0, w)); }); });
+    // Penalty points this season: the more a driver has, the more likely the next one.
+    const ppOf = (d) => { const ks = [String(d.discordId || ''), window._fiaKey(d.name), d.imsAlias ? window._fiaKey(d.imsAlias) : ''].filter(Boolean);
+      return (window._fiaV || []).filter(v => v.s === curS && v.pp > 0 && (ks.includes(v.id) || ks.includes(window._fiaKey(v.a)))).reduce((a, v) => a + v.pp, 0); };
     const per = {}; let T = 0, P = 0;
     _allRaceSets.forEach(r => { const se = seasonOf.get(r); if (!se) return; const pbd = r.positionByDivision || {}, sbd = r.raceStatusByDivision || {};
       field.forEach(d => { const pp = pbd[d.id] || {}, ss = sbd[d.id] || {};
         Object.keys(Object.assign({}, pp, ss)).forEach(dv => { if (/^A/i.test(dv)) return; const st = String(ss[dv] || '').toUpperCase(); if (st === 'DNS' || (pp[dv] == null && st !== 'DNF' && st !== 'DSQ')) return;
-          const x = per[d.id] = per[d.id] || { n: 0, p: 0 }; x.n++; T++;
-          const k = se + '|' + r.raceNum + '|' + dv + '|'; if (hit.has(k + String(d.discordId || '')) || hit.has(k + window._fiaKey(d.name)) || (d.imsAlias && hit.has(k + window._fiaKey(d.imsAlias)))) { x.p++; P++; } }); }); });
+          const x = per[d.id] = per[d.id] || { n: 0, p: 0, w: 0, dq: 0 }; x.n++; T++;
+          const k = se + '|' + r.raceNum + '|' + dv + '|', w = Math.max(hit.get(k + String(d.discordId || '')) || 0, hit.get(k + window._fiaKey(d.name)) || 0, d.imsAlias ? (hit.get(k + window._fiaKey(d.imsAlias)) || 0) : 0);
+          if (w) { x.p++; x.w += w; P += w; if (w > 1) x.dq++; } }); }); });
     const base = T ? P / T : 0.08;
-    field.forEach(d => { const x = per[d.id] || { n: 0, p: 0 }; _penR[d.id] = Math.min(0.7, Math.max(0.02, (x.p + 4 * base) / (x.n + 4))); window._penRN = window._penRN || {}; window._penRN[d.id] = x; });
+    field.forEach(d => { const x = per[d.id] || { n: 0, p: 0, w: 0, dq: 0 }; x.pp = ppOf(d);
+      const ppMul = 1 + Math.min(0.6, x.pp / 30); // e.g. 15 penalty points → ×1.5
+      _penR[d.id] = Math.min(0.75, Math.max(0.02, (x.w + 4 * base) / (x.n + 4) * ppMul)); window._penRN = window._penRN || {}; window._penRN[d.id] = x; });
   }
   if (!isC && field.length) {
     const per = {}; let T = 0, D = 0;
@@ -29105,8 +29112,8 @@ window.renderBets = async function() {
             <div class="bo-ou-b"><i>YES</i>${oddsBtn('yn', ['ddnf:' + d.id, 'yes'], d.name + ' to DNF (' + div + '): yes', _ouOdds('yn', ['ddnf:' + d.id, 'yes'], p))}</div>
             <div class="bo-ou-b"><i>NO</i>${oddsBtn('yn', ['ddnf:' + d.id, 'no'], d.name + ' to DNF (' + div + '): no', _ouOdds('yn', ['ddnf:' + d.id, 'no'], 1 - p))}</div></div>`; }).join('')}</div>` : ''}
         </div><div class="bo-sec" data-sec="pen"${_secHid('pen')}>
-        ${(!isC && Object.keys(_penR).length) ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>⚖️ Driver to get a penalty</span><small>A time penalty or DSQ from the stewards · settles once the verdicts are in</small></div>
-          ${field.filter(d => _penR[d.id] != null).map(d => { const p = _penR[d.id], x = (window._penRN || {})[d.id] || { n: 0, p: 0 }; return `<div class="bo-ou"><div class="bo-ou-c">${photo(d)}<div><b>${esc(d.name)}</b><span class="bo-ou-line">PENALISED <em>${x.p}/${x.n}</em> races</span></div></div>
+        ${(!isC && Object.keys(_penR).length) ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>⚖️ Driver to get a penalty</span><small>From their penalty record (DSQs count double) and penalty points · settles once the verdicts are in</small></div>
+          ${field.filter(d => _penR[d.id] != null).map(d => { const p = _penR[d.id], x = (window._penRN || {})[d.id] || { n: 0, p: 0 }; return `<div class="bo-ou"><div class="bo-ou-c">${photo(d)}<div><b>${esc(d.name)}</b><span class="bo-ou-line">PENALISED <em>${x.p}/${x.n}</em>${x.dq ? ` · <em style="color:#fff">${x.dq} DSQ</em>` : ''}${x.pp ? ` · PP <em style="color:#facc15">${x.pp}</em>` : ''}</span></div></div>
             <div class="bo-ou-b"><i>YES</i>${oddsBtn('yn', ['dpen:' + d.id, 'yes'], d.name + ' to get a penalty (' + div + '): yes', _ouOdds('yn', ['dpen:' + d.id, 'yes'], p))}</div>
             <div class="bo-ou-b"><i>NO</i>${oddsBtn('yn', ['dpen:' + d.id, 'no'], d.name + ' to get a penalty (' + div + '): no', _ouOdds('yn', ['dpen:' + d.id, 'no'], 1 - p))}</div></div>`; }).join('')}</div>` : ''}
         </div><div class="bo-sec" data-sec="tri"${_secHid('tri')}>
