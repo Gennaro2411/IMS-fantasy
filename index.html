@@ -28834,6 +28834,11 @@ window.renderBets = async function() {
   const _secHid = (k) => (window._betSec === k) ? '' : ' style="display:none"'; // driver divisions: one section open at a time
   const oddsBtn = (market, sel, label, odds) => {
     const key = market + ':' + sel.join('-');
+    // No bets under 1.05 (nothing to win, and the price is usually just the model's floor). For two-sided
+    // yes/no and over/under markets, if EITHER side is under 1.05 the whole market is suspended.
+    { let sus = !(Number(odds) >= BET_MIN_ODDS);
+      if (!sus && (market === 'yn' || market === 'ou' || market === 'cou')) { const R = (window._betOuReg || {})[key]; if (R && typeof R.p === 'number') sus = _betOdds(1 - R.p) < BET_MIN_ODDS || _betOdds(R.p) < BET_MIN_ODDS; }
+      if (sus && !(adminLoggedIn && window._betBoostMode)) return `<button class="bo-odd" disabled title="Suspended — one side is too short to price">—</button>`; }
     const on = (window._betLegs || []).some(l => l.key === div + '|' + key);
     window._betCurOdds[key] = odds;
     const mineOpen = myBets.some(b => b.status === 'open' && upcoming && b.raceName === upcoming.name && b.div === div && b.market === market && (b.sel || []).join('-') === sel.join('-'));
@@ -29771,6 +29776,7 @@ window.betDiv = function(d) { window._betDiv = d; renderBets(); };
 // markets the simulation can't model (DNFs, gaps, margins…), are still multiplied as normal.
 const BB_SIMS = 20000;
 const BET_MAX_MULTI = 1000000;
+const BET_MIN_ODDS = 1.05;
 function _bbEvalFn(l) {
   const m = l.market, s = l.sel || [];
   if (l.div === 'BOTT') { // S = { sc: {teamId: points}, rank: {teamId: 1..n}, max }
@@ -29977,6 +29983,7 @@ window.betPlace = async function() {
   const _lk = await dbGet('settings', 'teamsLocked').catch(() => null);
   if ((_lk && _lk.value) || ctx.upcoming.lockTime <= Date.now()) return err('Betting has closed for this round.');
   if (legs.length > 10) return err('Max 10 picks on one slip.');
+  if (legs.some(l => !(Number(l.odds) >= BET_MIN_ODDS))) return err('Picks priced under ' + BET_MIN_ODDS.toFixed(2) + ' can\'t be backed — remove them.');
   if (_betLegClashes(legs).size) return err('Some picks can\'t be combined — remove the highlighted ones.');
   const coins = await _betLoadCoins(currentUser.userId);
   if (stake < 1) return err('Enter a stake.');
