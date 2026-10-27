@@ -2772,6 +2772,7 @@
         <button class="btn btn-primary" onclick="replaySeasonPricing()" style="margin-left:8px">🎬 Replay Season Pricing</button>
         <button class="btn btn-secondary" onclick="runComputeTrackRecords(this)" style="margin-left:8px" title="Compute all-time per-track records from the loaded .db (all seasons) and cache for the Track History card">🏁 Compute Track Records</button>
         <button class="btn btn-secondary" onclick="copyWeeklyAwards(this)" style="margin-left:8px" title="Copy this round's auto-awards (Manager of the Week etc.) as Discord-ready text">🎖️ Copy Weekly Awards</button>
+        <button class="btn btn-secondary" onclick="importVerdictsFromDb(this)" style="margin-left:8px" title="Read fia_awarded_penalties from the loaded .db: steward verdicts on each race's results, penalty-corrected gaps, and race bans applied to drivers">⚖️ Import Steward Verdicts</button>
         <button class="btn btn-secondary" onclick="backfillSprintsFromDb(this)" style="margin-left:8px" title="Read sprint results (col P) and race grid starts (col M) for EVERY season in the loaded .db and add them to those races — including archived seasons like S6 Belgium. Display only; points are untouched.">⚡ Backfill Sprints, Grids & Teams</button>
         <button class="btn btn-secondary" onclick="runRebuildDominanceHistory(this)" style="margin-left:8px" title="Back-fill per-division dominance history (dominanceByRaceDiv) from the loaded .db, so drivers who changed divisions show the right dominance per division">📊 Rebuild Dominance History</button>
         <button class="btn btn-secondary" onclick="backfillPositionsFromDb(this)" style="margin-left:8px" title="Add finishing positions to existing races from the loaded .db, so driver profiles show P1/P2/P3 etc. next to points. Only writes positions — points, ELO and prices are untouched.">🏁 Backfill Finish Positions</button>
@@ -16005,10 +16006,16 @@ window.importDbRound = async function(roundNo, trackName) {
     // New round → +1 free transfer for every team (max 3 banked). Once per race (ftAwarded flag), so
     // importing more divisions / verdicts later never awards it twice. This .db import is how races
     // are created now, and it never awarded transfers — which is why nobody's were refilling.
-    if (!existingRace || (!existingRace.ftAwarded && !(existingRace.driverPoints && Object.keys(existingRace.driverPoints).length))) { try { await window.awardFreeTransfers(); await dbSet('races', raceId, { ...(await dbGet('races', raceId)), ftAwarded: Date.now() }); } catch (e) { console.warn('free transfer award failed', e); } }
+    if (!existingRace || (!existingRace.ftAwarded && !(existingRace.driverPoints && Object.keys(existingRace.driverPoints).length))) { try { await window.awardFreeTransfers(); await dbSet('races', raceId, { ...(await dbGet('races', raceId)), ftAwarded: Date.now() }); } catch (e) { console.warn('free transfer award failed', e); }
+      // A new round has been raced: each banned driver has now served one race of their ban.
+      try { const bd = (await dbGetAll('drivers', { fresh: true })).filter(d => (d.raceBanRacesLeft || 0) > 0 || d.raceBanned);
+        for (const d of bd) { if (d.raceBanRound && Number(d.raceBanRound) >= parseInt(roundNo)) continue; // ban handed out at this round: starts from the next one
+          const left = Math.max(0, (d.raceBanRacesLeft || (d.raceBanned ? 1 : 0)) - 1); await dbSet('drivers', d.id, { raceBanRacesLeft: left, raceBanned: left > 0, ...(left > 0 ? {} : { raceBanReason: '' }) }); }
+        window._adminDriverCache = null; } catch (e) {} }
 
     // Give every team a captain for this race (carry forward, or auto-assign if they've never set one)
     await ensureCaptainsForRace(raceId, parseInt(roundNo), trackName);
+    try { await window.importVerdictsFromDb(null, true); } catch (e) {} // keep steward verdicts + race bans in step with each import
 
     // RACE BAN COUNTDOWN — a ban is served over successive rounds. Decrement each banned driver's
     // raceBanRacesLeft once per round, clearing the ban at 0. The per-driver banCountedRaces guard
@@ -20010,6 +20017,8 @@ window.openDriverModal = async function(driverId) {
         </div>
       </div>`;
     })()}
+    ${isDriverBanned(driver) ? `<div style="margin:12px 20px 0;padding:10px 14px;border-radius:12px;background:linear-gradient(120deg,rgba(255,59,78,.16),var(--surface2) 80%);border:1px solid rgba(255,59,78,.55);display:flex;gap:10px;align-items:flex-start">
+      <span style="font-size:1.3rem;color:#ff3b4e;font-weight:900">✕</span><div style="font-size:.78rem;line-height:1.45"><b style="color:#ff6b7a">Race ban${(driver.raceBanRacesLeft || 0) > 0 ? ' · ' + driver.raceBanRacesLeft + ' race' + (driver.raceBanRacesLeft > 1 ? 's' : '') + ' left' : ''}${driver.raceBanRound ? ' · from the Round ' + driver.raceBanRound + ' verdict' : ''}</b><br>${driver.raceBanReason ? `<span style="white-space:pre-line">${esc(String(driver.raceBanReason).replace(/\*\*/g, ''))}</span>` : 'This driver can\'t race this round.'}</div></div>` : ''}
     ${(!window._hideDom && driver.lastDominance != null && driver.lastDominance >= 80 && driver.lastDominance < 100) ? `<div style="margin:12px 20px 0;padding:10px 14px;border-radius:12px;background:linear-gradient(120deg,rgba(255,183,77,.14),var(--surface2) 80%);border:1px solid rgba(255,183,77,.45);display:flex;gap:10px;align-items:center">
       <span style="font-size:1.3rem">⚠️</span><div style="font-size:.78rem;line-height:1.4"><b style="color:#ffb74d">Dominance ${Number(driver.lastDominance).toFixed(1)} — ${Math.ceil(100 - driver.lastDominance)} off 100.</b> Drivers this close to the line often manage their dominance to avoid moving up, which can mean lower scores and a price that trends down. Think twice before banking on them.</div></div>` : ''}
     </div>
@@ -24632,6 +24641,7 @@ window.setCareerSearch = function(v){
 async function renderResults() {
   const el = document.getElementById('results-content');
   if (!el || !PROJECT_ID) return;
+  try { await window._fiaLoad(); } catch (e) {}
   el.innerHTML = '<div class="ims-loader"><div class="ims-loader-mark"><img src="icons/icon-192.png?v=3" alt=""></div><div class="ims-loader-text">Loading</div><div class="ims-loader-bar"></div></div>';
 
   const [races, drivers, constrs, seasonArchives, seasonDoc, trophyArchives] = await Promise.all([
@@ -25358,6 +25368,61 @@ window.raceStatusPill = function(status) {
   const col = status === 'DNS' ? '#f39c12' : 'var(--red)';
   return ` <span style="font-size:.58rem;font-weight:800;color:${col};border:1px solid ${col};border-radius:4px;padding:0 4px;vertical-align:middle">${status}</span>`;
 };
+// ===== STEWARD VERDICTS (fia_awarded_penalties in the .db) =====
+// Imported into settings/fiaVerdicts. Used for: the Verdicts card on each race, penalty-corrected gaps,
+// and race bans (auto-applied to drivers so the red ✕ shows, with the stewards' justification on the profile).
+window._fiaKey = (n) => String(n || '').replace(/^\[[^\]]*\]\s*/, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+window._fiaLoad = async function(force) {
+  if (window._fiaV && !force) return window._fiaV;
+  try { const d = await dbGet('settings', 'fiaVerdicts'); window._fiaV = (d && d.value && d.value.list) || []; } catch (e) { window._fiaV = window._fiaV || []; }
+  return window._fiaV;
+};
+window.importVerdictsFromDb = async function(btn, quiet) {
+  if (typeof _imsDb === 'undefined' || !_imsDb) { if (!quiet) customAlert('Load the IMS Bible .db first.'); return; }
+  const orig = btn ? btn.textContent : ''; if (btn) { btn.disabled = true; btn.textContent = '⏳ Importing verdicts…'; }
+  try {
+    const res = _imsDb.exec(`SELECT penalty_uuid, season, round_no, division, driver_discord_id, driver_alias, time_penalty_seconds, penalty_points, quali_ban_count, race_ban_count, league_ban, justification, created_at_ts, incident_id
+      FROM fia_awarded_penalties WHERE status = 'active' ORDER BY created_at_ts`);
+    const list = (res.length ? res[0].values : []).map(([u, se, rn, dv, did, al, tp, pp, qb, rb, lb, j, at, inc]) => ({
+      u: String(u || ''), s: Number(se) || 0, r: Number(rn) || 0, d: String(dv || '').toUpperCase(), id: did ? String(did) : '', a: String(al || ''),
+      t: tp == null || tp === '' ? null : Number(tp), pp: pp == null ? null : Number(pp), qb: Number(qb) || 0, rb: Number(rb) || 0, lb: lb ? 1 : 0,
+      j: String(j || '').slice(0, 1500), at: Number(at) || 0, inc: inc ? String(inc) : '' }));
+    // Race bans this season → driver.raceBanRacesLeft (once per penalty), so the ✕ and pick-blocking just work.
+    const curS = Number(window.currentSeason || window._reserveSeason) || 0;
+    const prev = (await dbGet('settings', 'fiaVerdicts').catch(() => null)) || {};
+    const applied = new Set(((prev.value || {}).bansApplied) || []);
+    const drivers = await dbGetAll('drivers', { fresh: true }).catch(() => []);
+    let bans = 0;
+    for (const p of list.filter(x => x.s === curS && x.rb > 0 && !applied.has(x.u))) {
+      const d = drivers.find(x => (p.id && String(x.discordId || '') === p.id)) || drivers.find(x => window._fiaKey(x.name) === window._fiaKey(p.a) || (x.imsAlias && window._fiaKey(x.imsAlias) === window._fiaKey(p.a)));
+      if (!d) continue;
+      await dbSet('drivers', d.id, { raceBanRacesLeft: Math.max(Number(d.raceBanRacesLeft) || 0, p.rb), raceBanned: true, raceBanReason: p.j.slice(0, 400), raceBanRound: p.r });
+      applied.add(p.u); bans++;
+    }
+    await dbSet('settings', 'fiaVerdicts', { value: { at: Date.now(), list, bansApplied: [...applied] } });
+    window._fiaV = list; window._adminDriverCache = null;
+    if (!quiet) customAlert(`⚖️ Imported ${list.length} steward verdicts (${list.filter(x => x.t != null).length} with time penalties).` + (bans ? `\n⛔ ${bans} new race ban${bans > 1 ? 's' : ''} applied.` : ''));
+  } catch (e) { console.error(e); if (!quiet) customAlert('Verdict import failed: ' + (e.message || e)); }
+  finally { if (btn) { btn.disabled = false; btn.textContent = orig; } }
+};
+window._fiaFor = (season, round, div) => (window._fiaV || []).filter(p => p.s === Number(season) && p.r === Number(round) && (!div || p.d === div));
+window._fiaVerdictsHtml = function(season, round) {
+  const L = window._fiaFor(season, round).filter(p => p.t != null); if (!L.length) return '';
+  const by = {}; L.forEach(p => { (by[p.d] = by[p.d] || []).push(p); });
+  const DH = { D0: '#ffc800', D1: '#e8002d', D2: '#9b6fd4', D3: '#27f4d2', D4: '#2ecc71', E3: '#2ecc71' };
+  return `<details class="card" style="margin-top:14px;padding:12px 16px;border-color:rgba(160,164,255,.4);background:linear-gradient(160deg,rgba(160,164,255,.08),var(--surface) 60%)">
+    <summary style="cursor:pointer;list-style:none;display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font-size:1.2rem">⚖️</span><b style="font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;letter-spacing:1.5px">STEWARD VERDICTS</b><span style="font-size:.72rem;color:var(--muted)">${L.length} time penalt${L.length === 1 ? 'y' : 'ies'} · tap to read</span><span style="margin-left:auto;color:var(--muted)">▾</span></summary>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-top:12px">${Object.keys(by).sort().map(dv => `<div>
+      <div style="font-size:.62rem;font-weight:800;letter-spacing:1.5px;color:${DH[dv] || '#a0a4ff'};margin-bottom:6px">${esc(dv)}</div>
+      ${by[dv].map(p => `<div style="padding:9px 12px;margin-bottom:6px;border-radius:10px;background:rgba(255,255,255,.03);border-left:3px solid ${DH[dv] || '#a0a4ff'}">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b>${esc(p.a)}</b>
+          <span style="font-size:.66rem;font-weight:800;color:#ff8f6b;border:1px solid rgba(255,143,107,.5);border-radius:6px;padding:1px 7px">+${p.t}s</span>
+          ${p.pp ? `<span style="font-size:.66rem;font-weight:800;color:#facc15;border:1px solid rgba(250,204,21,.45);border-radius:6px;padding:1px 7px">${p.pp} penalty point${p.pp > 1 ? 's' : ''}</span>` : ''}
+          ${p.qb ? `<span style="font-size:.66rem;font-weight:800;color:#fb923c;border:1px solid rgba(251,146,60,.5);border-radius:6px;padding:1px 7px">⛔ ${p.qb} quali ban</span>` : ''}
+          ${p.rb ? `<span style="font-size:.66rem;font-weight:800;color:#ff3b4e;border:1px solid rgba(255,59,78,.55);border-radius:6px;padding:1px 7px">⛔ ${p.rb} race ban</span>` : ''}
+          ${p.inc ? `<span style="margin-left:auto;font-size:.62rem;color:var(--muted)">${esc(p.inc)}</span>` : ''}</div>
+        ${p.j ? `<div style="font-size:.8rem;line-height:1.5;color:var(--text);margin-top:6px;white-space:pre-line">${esc(p.j.replace(/\*\*/g, ''))}</div>` : ''}</div>`).join('')}</div>`).join('')}</div></details>`;
+};
 window.showRaceResults = function(raceId, season) {
   const el = document.getElementById('results-content');
   const { races, driverMap, constrs, seasonArchives, drivers } = window._resultsData;
@@ -25370,6 +25435,7 @@ window.showRaceResults = function(raceId, season) {
   }
   // Otherwise current season races first, then archives
   if (!race) race = races.find(r => r.id === raceId);
+  const _raceSeason = (() => { const a = (seasonArchives || []).find(a => (a.races || []).some(r => r.id === raceId) && (!season || a.season === season)); return a ? Number(a.season) : Number(window.currentSeason || window._reserveSeason) || 0; })();
   if (!race && seasonArchives) {
     for (const archive of seasonArchives) {
       race = (archive.races||[]).find(r => r.id === raceId);
@@ -25608,19 +25674,21 @@ window.showRaceResults = function(raceId, season) {
       const _tmap = race.raceTimeByDiv && race.raceTimeByDiv[div];
       const _tOf = (it) => { if (!_tmap || !it) return null; return _tmap[_nnr(it.name)] || _tmap[_nnr(String(it.name || '').replace(/^\[[^\]]*\]\s*/, ''))] || (it.driver && _tmap[_nnr(it.driver.name)]) || null; };
       const _sec = (t) => { if (!t || !/^[0-9:.,]+$/.test(t)) return null; let v = 0; for (const q of t.replace(',', '.').split(':')) v = v * 60 + parseFloat(q); return isFinite(v) ? v : null; };
-      const _myT = _tOf(item), _ldT = _tOf(divDriversShown[0]);
+      // Race times are before penalties: add each driver's stewards' time penalty (fia_awarded_penalties).
+      const _penOf = (it) => { if (!it) return 0; const k = window._fiaKey(it.name), k2 = it.driver ? window._fiaKey(it.driver.name) : ''; return window._fiaFor(_raceSeason, race.raceNum, div).filter(p => p.t != null && (window._fiaKey(p.a) === k || (k2 && window._fiaKey(p.a) === k2))).reduce((a, p) => a + p.t, 0); };
+      const _myT = _tOf(item), _ldT = _tOf(divDriversShown[0]), _myPen = _penOf(item), _ldPen = _penOf(divDriversShown[0]);
       let gapTxt = '';
       if (!out && _myT) { const lap = String(_myT).match(/(\d+)\s*Lap/i);
         if (lap) gapTxt = '+' + lap[1] + ' Lap' + (lap[1] === '1' ? '' : 's');
         else if (i === 0) gapTxt = 'LEADER';
-        else { const a = _sec(_myT), b = _sec(_ldT); if (a != null && b != null) { const d = a - b; gapTxt = d >= 0 ? '+' + d.toFixed(3) + 's' : 'PEN';
+        else { const a0 = _sec(_myT), b0 = _sec(_ldT), a = a0 != null ? a0 + _myPen : null, b = b0 != null ? b0 + _ldPen : null; if (a != null && b != null) { const d = a - b; gapTxt = d >= 0 ? '+' + d.toFixed(3) + 's' + (_myPen ? '|P' + _myPen : '') : 'PEN';
           // Crossed the line ahead of someone classified above them → they took a time penalty (race times are before penalties).
-          if (d >= 0 && divDriversShown.slice(0, i).some(o => { const t = _sec(_tOf(o)); return t != null && t > a + 0.0005; })) gapTxt += '|PEN'; } } }
+          if (d >= 0 && !_myPen && divDriversShown.slice(0, i).some(o => { const t = _sec(_tOf(o)); return t != null && t + _penOf(o) > a + 0.0005; })) gapTxt += '|PEN'; } } }
       const chips = (isPole ? _chip('POLE', 'pole') : '') + (isFL ? _chip('FL', 'fl') : '') + (rowStatus ? _chip(esc(rowStatus), 'out') : '') + (item.isReserve ? _chip('RES', 'res') : '');
       html += `<div class="rr-row${i < 3 && !out ? ' pod' : ''}${out ? ' is-out' : ''}" style="--team:${acc}">
         ${_posCell(i + 1, out)}
         <div class="rr-drv">${_avatar(item.driver, i === 0 && !out)}<div class="rr-nm"><b>${esc(item.name)}</b><small>${logo ? `<img src="${esc(logo)}" alt="">` : ''}${team ? esc(team) : ''}${chips}</small></div></div>
-        ${_hasTimes ? `<span class="rr-gap${i === 0 && !out ? ' ld' : ''}${gapTxt === 'PEN' ? ' pen' : ''}"${/\|PEN$/.test(gapTxt) ? ' title="Time penalty: they crossed the line here, before the penalty dropped them back"' : ''}>${/\|PEN$/.test(gapTxt) ? gapTxt.replace('|PEN', '') + '<small style="display:block;font-size:.55rem;font-weight:800;letter-spacing:1px;color:#ff8f6b;line-height:1">PEN</small>' : (gapTxt || (out ? '' : '–'))}</span>` : ''}<span class="rr-grid">${g ? 'P' + g : '–'}</span>${_gainCell(gained)}
+        ${_hasTimes ? `<span class="rr-gap${i === 0 && !out ? ' ld' : ''}${gapTxt === 'PEN' ? ' pen' : ''}"${/\|PEN$/.test(gapTxt) ? ' title="Time penalty: they crossed the line here, before the penalty dropped them back"' : ''}>${/\|PEN$/.test(gapTxt) ? gapTxt.replace('|PEN', '') + '<small style="display:block;font-size:.55rem;font-weight:800;letter-spacing:1px;color:#ff8f6b;line-height:1">PEN</small>' : /\|P\d/.test(gapTxt) ? gapTxt.replace(/\|P(\d+(?:\.\d+)?)/, '') + '<small style="display:block;font-size:.55rem;font-weight:800;letter-spacing:.5px;color:#ff8f6b;line-height:1">incl. +' + gapTxt.match(/\|P(\d+(?:\.\d+)?)/)[1] + 's pen</small>' : (gapTxt || (out ? '' : '–'))}</span>` : ''}<span class="rr-grid">${g ? 'P' + g : '–'}</span>${_gainCell(gained)}
         <span class="rr-pts">${item.pts}</span>
       </div>`;
     });
@@ -25683,6 +25751,7 @@ window.showRaceResults = function(raceId, season) {
   }
 
   html += `</div></div>`;
+  html += window._fiaVerdictsHtml ? window._fiaVerdictsHtml(_raceSeason, race.raceNum) : '';
   el.innerHTML = html;
 };
 
