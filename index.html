@@ -28115,14 +28115,17 @@ function _betOutcome(b, races) {
   if (b.market === 'win') { const p = pos(b.sel[0]); if (p != null) result = p === 1 ? 'won' : 'lost'; }
   else if (b.market === 'top5') { const p = pos(b.sel[0]); if (p != null) result = p <= (b.div === 'BOTT' ? 3 : 5) ? 'won' : 'lost'; }
   else if (b.market === 'pod') { const p = pos(b.sel[0]); if (p != null) result = p <= 3 ? 'won' : 'lost'; }
-  else if ((b.market === 'ou' && b.sel[0] === 'npen') || (b.market === 'yn' && b.sel[0] === 'clean')) {
+  else if ((b.market === 'ou' && ['npen', 'psec'].includes(b.sel[0])) || (b.market === 'yn' && ['clean', 'anydsq', 'anyban'].includes(b.sel[0]))) {
     // Steward markets: wait until the round is "After verdicts" (or the next round has results).
     const later = races.some(r => (Number(r.raceNum) || 0) > (Number(race.raceNum) || 0) && r.driverPoints && Object.values(r.driverPoints).some(v => v > 0));
     if (!race.verdictsAt && !later) return null;
     const curS = Number(window.currentSeason || window._reserveSeason) || 0;
     const n = new Set((window._fiaV || []).filter(v => v.s === curS && v.r === Number(race.raceNum) && v.d === b.div && (v.dq || (v.t != null && v.t > 0))).map(v => v.id || window._fiaKey(v.a))).size;
-    if (b.market === 'yn') result = (b.sel[1] === 'yes') === (n === 0) ? 'won' : 'lost';
-    else { const line = Number(b.sel[2]); result = !isFinite(line) ? 'void' : ((b.sel[1] === 'over') === (n > line) ? 'won' : 'lost'); }
+    const V = (window._fiaV || []).filter(v => v.s === curS && v.r === Number(race.raceNum) && v.d === b.div);
+    const yes = b.sel[0] === 'clean' ? n === 0 : b.sel[0] === 'anydsq' ? V.some(v => v.dq) : b.sel[0] === 'anyban' ? V.some(v => v.rb > 0) : null;
+    const val = b.sel[0] === 'psec' ? V.reduce((a, v) => a + (v.t != null && v.t > 0 ? v.t : 0), 0) : n;
+    if (b.market === 'yn') result = (b.sel[1] === 'yes') === yes ? 'won' : 'lost';
+    else { const line = Number(b.sel[2]); result = !isFinite(line) ? 'void' : ((b.sel[1] === 'over') === (val > line) ? 'won' : 'lost'); }
   }
   else if (b.market === 'ou' && !String(b.sel[0]).startsWith('fpos:')) {
     const v = b.sel[0] === 'margin' ? (race.winMarginByDiv || {})[b.div] : ['dnf', 'wgrid', 'gain', 'fin', 'flt'].includes(b.sel[0]) ? ((race.raceStatsByDiv || {})[b.div] || {})[b.sel[0]] : (race.winTimeByDiv || {})[b.div];
@@ -28754,7 +28757,7 @@ window.renderBets = async function() {
   if (_t12 != null) _yn.push(['t12', 'Team 1-2 (teammates finish P1 & P2)', _t12]);
   // Steward markets for this division: how many drivers the stewards penalised (time penalty or DSQ) in past
   // races here — races with no verdicts count as 0. Gives an over/under line and the "clean race" yes/no.
-  let _ouPen = null;
+  let _ouPen = null, _ouPenSec = null;
   if (!isC && (window._fiaV || []).length) {
     const curS = Number(window.currentSeason || window._reserveSeason) || 0, pts = [];
     const sets = [[curS, races || []], ...((window._betArchives || []).filter(a => Number(a.season) >= 7).map(a => [Number(a.season), a.races || []]))]; // no steward records before S7
@@ -28762,13 +28765,19 @@ window.renderBets = async function() {
       const has = dvs.has(div) || (div === 'E3' && dvs.has('D4')); if (!has || !r.driverPoints || !Object.values(r.driverPoints).some(v => v > 0)) return;
       if (se === curS && !r.verdictsAt && (races || []).some(x => (x.raceNum || 0) > (r.raceNum || 0)) === false) return; // this round's verdicts aren't in yet
       const dd = dvs.has(div) ? div : 'D4';
-      const n = new Set((window._fiaV || []).filter(v => v.s === se && v.r === Number(r.raceNum) && v.d === dd && (v.dq || (v.t != null && v.t > 0))).map(v => v.id || window._fiaKey(v.a))).size;
+      const V = (window._fiaV || []).filter(v => v.s === se && v.r === Number(r.raceNum) && v.d === dd);
+      const n = new Set(V.filter(v => v.dq || (v.t != null && v.t > 0)).map(v => v.id || window._fiaKey(v.a))).size;
+      const sec = V.reduce((a, v) => a + (v.t != null && v.t > 0 ? v.t : 0), 0), anyDq = V.some(v => v.dq), anyRb = V.some(v => v.rb > 0);
       const _tk = window.trackKey ? window.trackKey(r.name) : String(r.name || '').toLowerCase();
-      pts.push({ v: n, w: (se === curS ? 2 : 1) * (_upK && _tk === _upK ? 3 : 1) }); })); // past races at this circuit count 3×
+      pts.push({ v: n, sec, dq: anyDq, rb: anyRb, w: (se === curS ? 2 : 1) * (_upK && _tk === _upK ? 3 : 1) }); })); // past races at this circuit count 3×
     if (pts.length >= 3) {
       _ouPen = _ouFrom(pts, 1);
       const W = pts.reduce((a, x) => a + x.w, 0), Z = pts.reduce((a, x) => a + (x.v === 0 ? x.w : 0), 0);
       _yn.push(['clean', 'Clean race (no time penalties or DSQs)', (Z + 1) / (W + 2)]);
+      _ouPenSec = _ouFrom(pts.map(x => ({ v: x.sec, w: x.w })), 5);
+      const rate = (f) => (pts.reduce((a, x) => a + (f(x) ? x.w : 0), 0) + 0.5) / (W + 2);
+      _yn.push(['anydsq', 'Anyone disqualified by the stewards', rate(x => x.dq)]);
+      _yn.push(['anyban', 'A race ban is handed out', rate(x => x.rb)]);
     }
   }
   // Line + boosted price of a race-wide market in ANY division (same maths as that division's own tab),
@@ -29103,7 +29112,7 @@ window.renderBets = async function() {
             ['spec', '🎯', 'Specials', !!(_ldx || _bSpec.length)],
             ['cou', '📏', 'BOTT points', Object.keys(_ouCons).length > 0]].filter(x => x[3]) : [
             ['h2h', '⚔️', 'Head to head', !!h2h],
-            ['spec', '🎯', 'Specials', !!(_pgap || _wmar || _ouMargin || _ouTime || _ouDnf || _ouPen || _ouMore.length || _yn.length)],
+            ['spec', '🎯', 'Specials', !!(_pgap || _wmar || _ouMargin || _ouTime || _ouDnf || _ouPen || _ouPenSec || _ouMore.length || _yn.length)],
             ['spoon', '🥄', 'Wooden spoon', Object.keys(_spoonP).length > 0],
             ['sprint', '⚡', 'Sprint', !!(upcoming && upcoming.isSprint && field.length)],
             ['fpos', '📍', 'Finish position', Object.keys(_fpos).length > 0],
@@ -29119,7 +29128,7 @@ window.renderBets = async function() {
         ${_wmar ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>🏁 Winning margin</span><small>Winner's gap to P2 at the flag</small></div>
           <div class="bo-pgap four">${_WMB.map(([k, l], ix) => `<div class="bo-pg-opt"><span>${l}</span>${oddsBtn('wmar', [k], div + ' winning margin: ' + l, finalOdds('wmar', [k], _betOdds(_wmar[ix])))}</div>`).join('')}</div></div>` : ''}
         ${(_ouMargin || _ouTime || _ouDnf || _ouMore.length) ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>📏 Over / under</span><small>Race winner</small></div>
-          ${[['margin', 'Winning margin (P1 → P2)', _ouMargin, (v) => (v / 1000).toFixed(1) + ' s'], ['wtime', 'Winning race time', _ouTime, _fmtT], ['dnf', 'DNFs in the race', _ouDnf, (v) => String(v)], ['npen', 'Drivers given a time penalty (DSQ counts)', _ouPen, (v) => String(v)], ..._ouMore].filter(x => x[2]).map(([k, l, o, f]) => `<div class="bo-ou"><div><b>${l}</b><span class="bo-ou-line">LINE <em>${f(o.line)}</em></span></div>
+          ${[['margin', 'Winning margin (P1 → P2)', _ouMargin, (v) => (v / 1000).toFixed(1) + ' s'], ['wtime', 'Winning race time', _ouTime, _fmtT], ['dnf', 'DNFs in the race', _ouDnf, (v) => String(v)], ['npen', 'Drivers given a time penalty (DSQ counts)', _ouPen, (v) => String(v)], ['psec', 'Total time-penalty seconds', _ouPenSec, (v) => v + ' s'], ..._ouMore].filter(x => x[2]).map(([k, l, o, f]) => `<div class="bo-ou"><div><b>${l}</b><span class="bo-ou-line">LINE <em>${f(o.line)}</em></span></div>
             <div class="bo-ou-b"><i>OVER</i>${oddsBtn('ou', [k, 'over', String(o.line)], div + ' ' + l.toLowerCase() + ' over ' + f(o.line), _ouOdds('ou', [k, 'over', String(o.line)], o.po))}</div>
             <div class="bo-ou-b"><i>UNDER</i>${oddsBtn('ou', [k, 'under', String(o.line)], div + ' ' + l.toLowerCase() + ' under ' + f(o.line), _ouOdds('ou', [k, 'under', String(o.line)], 1 - o.po))}</div></div>`).join('')}</div>` : ''}
         ${_yn.length ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>🎯 Specials</span><small>Yes / no</small></div>
