@@ -31122,7 +31122,7 @@ window.renderGames = async function() {
       ${(() => { const tl = !!window._gamesLock.tq; return `<button class="gm-bubble${tl ? ' gm-locked' : ''}" onclick="openGame('tq')"><span class="gm-ico">${tl ? '🔒' : '🧠'}</span><b>IMS TRIVIA${tl ? ' <span class="gm-lock-tag">LOCKED</span>' : ''}</b><small>10 quick questions on IMS history — wins, poles, teams, nationalities and track records. How well do you know the league?</small></button>`; })()}
       ${(() => { const cl2 = !!window._gamesLock.cp; return `<button class="gm-bubble${cl2 ? ' gm-locked' : ''}" onclick="openGame('cp')"><span class="gm-ico">${cl2 ? '🔒' : '🛣️'}</span><b>IMS CAREER PATH${cl2 ? ' <span class="gm-lock-tag">LOCKED</span>' : ''}</b><small>A driver's team history, season by season. Guess who — every wrong guess reveals the next season.</small></button>`; })()}
       ${(() => { const sl = !!window._gamesLock.st; return `<button class="gm-bubble${sl ? ' gm-locked' : ''}" onclick="openGame('st')"><span class="gm-ico">${sl ? '🔒' : '⚖️'}</span><b>IMS STEWARD SIMULATOR${sl ? ' <span class="gm-lock-tag">LOCKED</span>' : ''}</b><small>Real IMS incidents. Read the report — guilty or not guilty? Then see how you compare with the stewards and everyone else.</small></button>`; })()}
-      ${(() => { const ql = !!window._gamesLock.qs; return `<button class="gm-bubble${ql ? ' gm-locked' : ''}" onclick="openGame('qs')"><span class="gm-ico">${ql ? '🔒' : '⏱️'}</span><b>IMS QUALI SHOOTOUT${ql ? ' <span class="gm-lock-tag">LOCKED</span>' : ''}</b><small>Predict each division's pole time to the thousandth before quali. Closest guess takes the division.</small></button>`; })()}
+      ${(() => { const ql = !!window._gamesLock.qs; return `<button class="gm-bubble${ql ? ' gm-locked' : ''}" onclick="openGame('qs')"><span class="gm-ico">${ql ? '🔒' : '⏱️'}</span><b>IMS QUALI SHOOTOUT${ql ? ' <span class="gm-lock-tag">LOCKED</span>' : ''}</b><small>Predict each division's pole time to the thousandth before quali. Closest wins 500 IM$ — spot on wins 5,000.</small></button>`; })()}
       <div class="gm-bubble gm-soon"><span class="gm-ico">🔒</span><b>MORE SOON</b><small>New games on the way.</small></div></div>`;
     return;
   }
@@ -31684,6 +31684,8 @@ window._qsSave = async function(rk) {
   await dbSet('qualiGuesses', me.uid, { name: me.name, avatar: me.avatar || '', g }); window._qsAll = null;
   showToast('⏱️ Pole times locked in!', 'success'); renderGames();
 };
+// Shootout prizes skip the normal games cap: 500 IM$ for the closest guess, 5000 IM$ for spot on.
+async function _qsCredit(uid, n) { try { const c = await _betLoadCoins(uid); c.balance = (c.balance || 0) + n; c.gameEarned = (c.gameEarned || 0) + n; await dbSet('coins', uid, c); _coinPop(n, 'qs-win'); } catch (e) {} }
 window._qsSetMode = function(m) { window._qsMode = m; renderGames(); };
 async function renderQSGame(el) {
   { const lk = await dbGet('settings', 'gamesLock').catch(() => null); window._gamesLock = (lk && lk.value) || {}; }
@@ -31704,8 +31706,8 @@ async function renderQSGame(el) {
     return { dv, pole, rows, poleBy: (r.poleByDiv || {})[dv] || '' }; }).filter(Boolean); };
   // Pay out wins once (closest per division; ties all win).
   try { if (me.uid) { const paid = mine.paid || {}; let earn = 0, ch = false;
-    done.forEach(r => resultsOf(r).forEach(x => { const k = _qsKey(r.name) + '|' + x.dv; if (paid[k] || !x.rows.length) return; const best = x.rows[0].err; if (x.rows.some(y => y.u.id === me.uid && y.err === best)) { earn += 10; } paid[k] = 1; ch = true; }));
-    if (ch) { await dbSet('qualiGuesses', me.uid, { paid }); if (earn) _gameCoins('qs-win', earn); } } } catch (e) {}
+    done.forEach(r => resultsOf(r).forEach(x => { const k = _qsKey(r.name) + '|' + x.dv; if (paid[k] || !x.rows.length) return; const best = x.rows[0].err; const my = x.rows.find(y => y.u.id === me.uid); if (my && my.err === 0) earn += 5000; else if (my && my.err === best) earn += 500; paid[k] = 1; ch = true; }));
+    if (ch) { await dbSet('qualiGuesses', me.uid, { paid }); if (earn) await _qsCredit(me.uid, earn); } } } catch (e) {}
   const lockBanner = (window._gamesLock || {}).qs ? `<div class="wd-lockbar">🔒 <b>Quali Shootout is locked</b><span>${locked ? 'It\'ll open soon — have a look around.' : 'Locked for players — you can still play.'}</span></div>` : '';
   const av = (u, sz) => u.avatar ? `<img src="${esc(u.avatar)}" style="width:${sz}px;height:${sz}px;border-radius:50%;object-fit:cover;flex-shrink:0">` : (typeof initialsAvatar === 'function' ? initialsAvatar(u.name || '?', sz, 'border-radius:50%;flex-shrink:0') : '');
   let body = '';
@@ -31736,7 +31738,7 @@ async function renderQSGame(el) {
       return `<div class="card" style="padding:14px 16px;margin-bottom:12px"><div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.25rem;letter-spacing:1px;margin-bottom:8px">R${r.raceNum} · ${typeof getRaceFlag === 'function' ? getRaceFlag(r.name) : ''} ${esc(r.name)}</div>
         ${R.filter(x => x.rows.length).map(x => { const best = x.rows[0].err, myRow = x.rows.findIndex(y => y.u.id === me.uid);
           return `<div style="padding:8px 0;border-top:1px solid rgba(255,255,255,.06)"><div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><b style="color:${HUE[x.dv] || '#fff'}">${x.dv}</b><span style="font-size:.8rem">Pole <b>${_qsFmt(x.pole)}</b>${x.poleBy ? ' · ' + esc(x.poleBy) : ''}</span>${myRow >= 0 ? `<small style="margin-left:auto;color:${x.rows[myRow].err === best ? '#4ade80' : 'var(--muted)'}">You: ${_qsFmt(x.rows[myRow].g)} (±${(x.rows[myRow].err / 1000).toFixed(3)}s) · P${myRow + 1}/${x.rows.length}</small>` : ''}</div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">${x.rows.slice(0, 3).map((y, i) => `<span style="display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 3px;border-radius:20px;font-size:.76rem;background:${y.err === best ? 'rgba(74,222,128,.14)' : 'rgba(255,255,255,.04)'};border:1px solid ${y.err === best ? 'rgba(74,222,128,.5)' : 'rgba(255,255,255,.1)'}">${av(y.u, 22)}${y.err === best ? '🏆 ' : (i + 1) + '. '}<b>${esc(y.u.name || 'Player')}</b> ${_qsFmt(y.g)} <span class="text-muted">±${(y.err / 1000).toFixed(3)}</span></span>`).join('')}</div></div>`; }).join('')}</div>`; }).join('') || '<div class="card" style="text-align:center;padding:26px">No settled rounds with guesses yet.</div>'
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">${x.rows.slice(0, 3).map((y, i) => `<span style="display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 3px;border-radius:20px;font-size:.76rem;background:${y.err === best ? 'rgba(74,222,128,.14)' : 'rgba(255,255,255,.04)'};border:1px solid ${y.err === best ? 'rgba(74,222,128,.5)' : 'rgba(255,255,255,.1)'}">${av(y.u, 22)}${y.err === 0 ? '🎯 ' : y.err === best ? '🏆 ' : (i + 1) + '. '}<b>${esc(y.u.name || 'Player')}</b> ${_qsFmt(y.g)} <span class="text-muted">±${(y.err / 1000).toFixed(3)}</span></span>`).join('')}</div></div>`; }).join('')}</div>`; }).join('') || '<div class="card" style="text-align:center;padding:26px">No settled rounds with guesses yet.</div>'
       : '<div class="card" style="text-align:center;padding:26px">No settled rounds yet.</div>';
   } else {
     const st = {}; done.forEach(r => resultsOf(r).forEach(x => { if (!x.rows.length) return; const best = x.rows[0].err; x.rows.forEach(y => { const o = st[y.u.id] = st[y.u.id] || { u: y.u, w: 0, n: 0, e: 0 }; o.n++; o.e += y.err; if (y.err === best) o.w++; }); }));
@@ -31750,7 +31752,7 @@ async function renderQSGame(el) {
       <div class="wd-brand"><span style="font-size:1.9rem;-webkit-text-fill-color:initial">⏱️</span><span>SHOOTOUT</span></div><div class="wd-meta"></div></div>${lockBanner}
     <div class="wd-modes">${[['now', '⏱️', 'THIS ROUND'], ['res', '📋', 'RESULTS'], ['lb', '🏆', 'RANKINGS']].map(([m, i, l]) => `<button class="${mode === m ? 'on' : ''}" onclick="_qsSetMode('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>
     ${body}
-    <div class="wd-info"><h3>How it works</h3><ul><li>Before the round locks, guess the <b>pole time</b> in each division you fancy — to the thousandth (e.g. <i>1:23.456</i>).</li><li>When quali times are imported, the <b>closest guess</b> in each division wins <b>+10 IM$</b> (ties share it). Guess every division for more chances.</li><li>Past pole times at the same circuit are shown to help you.</li></ul></div></div>`;
+    <div class="wd-info"><h3>How it works</h3><ul><li>Before the round locks, guess the <b>pole time</b> in each division you fancy — to the thousandth (e.g. <i>1:23.456</i>).</li><li>When quali times are imported, the <b>closest guess</b> in each division wins <b>+500 IM$</b> (ties all win). Get it <b>spot on to the thousandth</b> and you win <b>+5,000 IM$</b>. Guess every division for more chances.</li><li>Past pole times at the same circuit are shown to help you.</li></ul></div></div>`;
 }
 
 // ---- Admin: lock / unlock games ----
