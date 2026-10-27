@@ -28601,9 +28601,18 @@ window.renderBets = async function() {
           const k = se + '|' + r.raceNum + '|' + dv + '|', w = Math.max(hit.get(k + String(d.discordId || '')) || 0, hit.get(k + window._fiaKey(d.name)) || 0, d.imsAlias ? (hit.get(k + window._fiaKey(d.imsAlias)) || 0) : 0);
           if (w) { x.p++; x.w += w; P += w; if (w > 1) x.dq++; } }); }); });
     const base = T ? P / T : 0.08;
+    // Track bias: how penalty-heavy this circuit has been (all divisions, S7+) vs everywhere, shrunk so a
+    // single wild race here doesn't swing it too far. 1.0 = average circuit.
+    let trackMul = 1;
+    try { const tk = (r) => window.trackKey ? window.trackKey(r.name) : String(r.name || '').toLowerCase(), upK = upcoming ? tk(upcoming) : null; let tn = 0, tp = 0, an = 0, ap = 0;
+      _allRaceSets.forEach(r => { const se = seasonOf.get(r); if (!se) return; const dvs = new Set(); Object.values(r.driverPointsByDivision || {}).forEach(by => Object.keys(by || {}).forEach(dd => { if (!/^A/i.test(dd)) dvs.add(dd); }));
+        dvs.forEach(dd => { const c = new Set((window._fiaV || []).filter(v => v.s === se && v.r === Number(r.raceNum) && v.d === dd && (v.dq || (v.t != null && v.t > 0))).map(v => v.id || window._fiaKey(v.a))).size;
+          an++; ap += c; if (upK && tk(r) === upK) { tn++; tp += c; } }); });
+      const avg = an ? ap / an : 0; if (avg > 0) trackMul = Math.max(0.7, Math.min(1.5, ((tp + 3 * avg) / (tn + 3)) / avg));
+      window._penTrackMul = trackMul; } catch (e) {}
     field.forEach(d => { const x = per[d.id] || { n: 0, p: 0, w: 0, dq: 0 }; x.pp = ppOf(d);
       const ppMul = 1 + Math.min(0.6, x.pp / 30); // e.g. 15 penalty points → ×1.5
-      _penR[d.id] = Math.min(0.75, Math.max(0.02, (x.w + 4 * base) / (x.n + 4) * ppMul)); window._penRN = window._penRN || {}; window._penRN[d.id] = x; });
+      _penR[d.id] = Math.min(0.75, Math.max(0.02, (x.w + 4 * base) / (x.n + 4) * ppMul * trackMul)); window._penRN = window._penRN || {}; window._penRN[d.id] = x; });
   }
   if (!isC && field.length) {
     const per = {}; let T = 0, D = 0;
@@ -28754,7 +28763,8 @@ window.renderBets = async function() {
       if (se === curS && !r.verdictsAt && (races || []).some(x => (x.raceNum || 0) > (r.raceNum || 0)) === false) return; // this round's verdicts aren't in yet
       const dd = dvs.has(div) ? div : 'D4';
       const n = new Set((window._fiaV || []).filter(v => v.s === se && v.r === Number(r.raceNum) && v.d === dd && (v.dq || (v.t != null && v.t > 0))).map(v => v.id || window._fiaKey(v.a))).size;
-      pts.push({ v: n, w: se === curS ? 2 : 1 }); }));
+      const _tk = window.trackKey ? window.trackKey(r.name) : String(r.name || '').toLowerCase();
+      pts.push({ v: n, w: (se === curS ? 2 : 1) * (_upK && _tk === _upK ? 3 : 1) }); })); // past races at this circuit count 3×
     if (pts.length >= 3) {
       _ouPen = _ouFrom(pts, 1);
       const W = pts.reduce((a, x) => a + x.w, 0), Z = pts.reduce((a, x) => a + (x.v === 0 ? x.w : 0), 0);
