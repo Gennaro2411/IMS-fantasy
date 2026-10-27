@@ -18208,6 +18208,7 @@ async function renderPastRacesList() {
       +'<button class="btn btn-sm" style="background:rgba(123,79,191,0.15);color:#9b6fd4;border:1px solid rgba(123,79,191,0.4)" onclick="randomiseExistingRace(\''+r.id+'\',\''+esc(r.name)+'\')">🎲 Randomise</button>'
       +'<button class="btn btn-secondary btn-sm" onclick="renameRace(\''+r.id+'\',\''+r.name.replace(/'/g,"\\'")+'\')" >✏ Rename</button>'
       +'<button class="btn btn-secondary btn-sm" onclick="editRace(\''+r.id+'\')">Edit Points</button>'
+      +'<button class="btn btn-sm" style="background:rgba(255,200,0,0.1);color:var(--gold);border:1px solid rgba(255,200,0,0.45)" title="Add or remove BOTT points for a constructor this round only (drivers\' points untouched)" onclick="adminBottAdj(\''+r.id+'\')">⚖️ BOTT adjust'+(r.bottAdj && Object.values(r.bottAdj).some(v => v) ? ' ✓' : '')+'</button>'
       +'<button class="btn btn-sm" style="background:rgba(160,164,255,0.12);color:#c9cbff;border:1px solid rgba(160,164,255,0.45)" title="Switch the Before / After verdicts banner for this round" onclick="toggleRaceVerdicts(\''+r.id+'\')">'+(r.verdictsAt ? '⚖️ After verdicts ✓ (undo)' : '⏳ Mark after verdicts')+'</button>'
       +'</div>'
       +'</div>';
@@ -29430,6 +29431,29 @@ window._utcSlot = function(satStr, dayOffset, hour, minute) {
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const dayName = when.toLocaleString('en-US', { weekday: 'short', timeZone: tz }), timeStr = when.toLocaleString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: tz });
   return { label: dayName + ' ' + timeStr, day: dayName.toUpperCase(), time: timeStr, when };
+};
+// Admin: BOTT-only adjustments for one race (e.g. a driver's BOTT contribution scrapped). Stored on the race as
+// bottAdj {constructorId: ±points}, applied to its constructor points and kept through re-imports.
+window.adminBottAdj = async function(raceId) {
+  const [r, constrs] = await Promise.all([dbGet('races', raceId), dbGetAll('constructors')]); if (!r) return;
+  const adj = r.bottAdj || {};
+  document.getElementById('bad-modal')?.remove();
+  const el = document.createElement('div'); el.id = 'bad-modal'; el.style.cssText = 'position:fixed;inset:0;z-index:100002;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;padding:16px';
+  el.onclick = (e) => { if (e.target === el) el.remove(); };
+  el.innerHTML = `<div style="background:var(--surface);border:1px solid rgba(255,200,0,.45);border-radius:16px;width:100%;max-width:420px;max-height:85vh;overflow:auto;padding:16px 18px">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.2rem;letter-spacing:1px;color:var(--gold)">⚖️ BOTT ADJUSTMENTS · ${esc(r.name)}</div>
+    <p class="text-muted" style="font-size:.76rem;margin:4px 0 12px">Points added (+) or taken off (−) a constructor's BOTT for this round only. Drivers keep their own points. Kept when the race is re-imported.</p>
+    ${constrs.slice().sort((a, b) => String(a.name).localeCompare(String(b.name))).map(c => `<div style="display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="flex:1">${esc(c.name)}</span><small class="text-muted">${(r.constructorPoints || {})[c.id] || 0} pts</small><input type="number" step="1" data-cid="${esc(c.id)}" value="${Number(adj[c.id]) || 0}" style="width:80px"></div>`).join('')}
+    <label style="display:block;margin-top:10px;font-size:.74rem;color:var(--muted)">Reason (optional)<input id="bad-note" type="text" value="${esc(r.bottAdjNote || '')}" style="width:100%;margin-top:4px"></label>
+    <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end"><button class="btn btn-secondary btn-sm" onclick="document.getElementById('bad-modal').remove()">Cancel</button><button class="btn btn-primary btn-sm" onclick="adminBottAdjSave('${raceId}')">Save</button></div></div>`;
+  document.body.appendChild(el);
+};
+window.adminBottAdjSave = async function(raceId) {
+  const r = await dbGet('races', raceId); if (!r) return; const old = r.bottAdj || {}, nu = {}, cp = { ...(r.constructorPoints || {}) };
+  document.querySelectorAll('#bad-modal input[data-cid]').forEach(i => { const c = i.dataset.cid, v = Math.round(Number(i.value) || 0); if (v) nu[c] = v; const d = v - (Number(old[c]) || 0); if (d) cp[c] = Math.max(0, (cp[c] || 0) + d); });
+  await dbSet('races', raceId, { constructorPoints: cp, bottAdj: nu, bottAdjNote: ((document.getElementById('bad-note') || {}).value || '').trim().slice(0, 200) });
+  document.getElementById('bad-modal')?.remove(); if (typeof showToast === 'function') showToast('⚖️ BOTT adjustments saved for ' + r.name + ' — settle bets to update BOTT bets', 'success');
+  if (typeof renderPastRacesList === 'function') renderPastRacesList();
 };
 window.toggleRaceVerdicts = async function(id) {
   const r = await dbGet('races', id); if (!r) return;
