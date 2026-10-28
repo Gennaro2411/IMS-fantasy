@@ -29112,6 +29112,13 @@ window.renderBets = async function() {
         ${canRefill ? `<button class="btn btn-secondary btn-sm" style="margin-top:6px" onclick="betRefill()">⛽ Pit stop refill +${BET_REFILL_COINS}</button>` : ''}</div>
     </div>
     <div class="bo-ticker" id="bo-ticker">${_betTickerHtml(window._betAllBets || [], teamBy)}</div>
+    <button onclick="window._games=window._games||{};window._games.view='qs';window._qsMode='now';showPage('games')" style="display:flex;align-items:center;gap:14px;width:100%;margin:0 0 12px;padding:14px 16px;border-radius:16px;cursor:pointer;text-align:left;color:#fff;border:1px solid rgba(250,204,21,.45);background:linear-gradient(120deg,rgba(250,204,21,.16),rgba(232,0,45,.10) 60%,rgba(90,94,201,.12))">
+      <span style="font-size:2rem;flex-shrink:0">⏱️</span>
+      <span style="flex:1;min-width:0"><span style="display:block;font-size:.6rem;font-weight:800;letter-spacing:2px;color:#facc15">NEW GAME · QUALI SHOOTOUT</span>
+        <b style="display:block;font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;letter-spacing:1px;line-height:1.1;margin-top:2px">Guess the pole time — win <span style="color:#facc15">500 IM$</span> per division, <span style="color:#facc15">5,000</span> if you nail it</b>
+        <span style="display:block;font-size:.74rem;color:var(--muted);margin-top:3px">Free to enter · closes when teams lock${upcoming ? ' · ' + esc(upcoming.name) : ''}</span></span>
+      <span style="flex-shrink:0;padding:8px 14px;border-radius:10px;background:#facc15;color:#111;font-weight:900;font-size:.8rem;letter-spacing:1px">PLAY →</span>
+    </button>
     <div id="bet-of-week" style="display:none;margin:0 0 12px"></div><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="" style="display:none" onload="renderBetOfWeek()" onerror="renderBetOfWeek()">
     <div class="bo-disclaimer">Just for fun. IM$ are pretend money, with no value; they can't be bought, sold or cashed out.</div>
     ${BOOSTS.length && window._betBoostTitle ? `<div style="display:flex;align-items:center;gap:8px;margin:2px 0 8px"><span style="font-size:1.1rem">🚀</span><span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.35rem;line-height:1.05;text-transform:uppercase;letter-spacing:.5px;background:linear-gradient(90deg,#ffe259,#ffa751);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">${esc(window._betBoostTitle)}</span></div>` : ''}
