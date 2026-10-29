@@ -31760,7 +31760,7 @@ async function renderSTGame(el) {
   await _stMeLoad(); await _stPhotosLoad();
   const inc = await _stLoad(), mine = await _stMine(), me = _wdMe();
   if (!window._stVotesAll || Date.now() - window._stVotesAll.at > 30e3) window._stVotesAll = { at: Date.now(), list: await dbGetAll('stewardVotes', { fresh: true }).catch(() => []) };
-  const all = window._stVotesAll.list, mode = window._stMode || 'daily';
+  const all = window._stVotesAll.list, mode = ['daily', 'live', 'prac'].includes(window._stMode) ? window._stMode : 'daily';
   // Live calls pay out once their verdict is in: +2 IM$ per exact call (shared game cap).
   try { if (me.uid) { const paid = mine.paid || {}; let earn = 0; const nowPaid = [];
     Object.entries(mine.g).forEach(([k, v]) => { const x = inc.find(y => y.k === k); if (_stMode(v) !== 'live' || paid[k] || !x || x.open) return; const a = _stAns(x); earn += 2 * v.c.filter((c, i) => c != null && c === a[i]).length; nowPaid.push(k); });
@@ -31818,20 +31818,21 @@ async function renderSTGame(el) {
     body = `<div class="text-muted" style="font-size:.82rem;margin:0 0 10px;text-align:center">Random settled incidents from S7 & S8. Nothing's saved and nothing's scored — just practice.</div>
       <div style="display:flex;justify-content:center;margin:0 0 12px"><button class="btn btn-sm ${clipOnly ? 'btn-primary' : 'btn-secondary'}" onclick="window._stPrClips=${!clipOnly};window._stPrCur=null;window._stPr=null;renderGames()">🎥 ${clipOnly ? 'Clips only: ON' : 'Clips only: OFF'} · ${settled.filter(_stHasClip).length} with clips</button></div>`
       + (x ? _stCardHtml(x, { pick: pr ? window._stPr.c : null, b: pr ? window._stPr.b : null, reveal: !!pr, crowd: !!pr, mode: 'prac' }, all) + (pr || adminLoggedIn ? `<div style="text-align:center"><button class="btn ${pr ? 'btn-primary' : 'btn-secondary'}" onclick="_stPracNext()">${pr ? 'Next incident →' : 'Skip → (admin)'}</button></div>` : '') : '<div class="card" style="text-align:center;padding:26px">No incidents imported yet.</div>');
-  } else {
+  }
+  if (mode === 'live') {
     const rows = all.map(u => { let lp = 0, dp = 0, n = 0, ex = 0, tot = 0; Object.entries(u.g || {}).forEach(([k, v]) => { const x = inc.find(y => y.k === k); if (!x || x.open || !v.c) return; const a = _stAns(x), sc = _stScore(v.c, a) + _stBonus(v, x); _stMode(v) === 'live' ? lp += sc : dp += sc; n++; v.c.forEach((c, i) => { if (c == null) return; tot++; if (c === a[i]) ex++; }); });
       return { id: u.id, name: u.name || 'Player', av: u.avatar, lp, dp, n, acc: tot ? Math.round(ex / tot * 100) : 0 }; }).filter(r => r.n).sort((a, b) => (b.lp + b.dp) - (a.lp + a.dp) || b.acc - a.acc);
-    body = rows.length ? `<div class="wd-lb"><div class="wd-lb-h"><span>🏆 STEWARD RANKINGS</span><small>Daily + Live · 1 pt per correct call</small></div>
+    body += rows.length ? `<div class="wd-lb"><div class="wd-lb-h"><span>🏆 LIVE LEADERBOARD</span><small>Calls made before the stewards ruled · 1 pt each + size bonus</small></div>
       ${rows.slice(0, 50).map((r, i) => `<div style="display:flex;align-items:center;gap:10px;padding:8px 4px;border-top:1px solid rgba(255,255,255,.06);${r.id === me.uid ? 'background:rgba(160,164,255,.1);border-radius:8px' : ''}">
         <b style="width:26px;text-align:center">${i + 1}</b>${r.av ? `<img src="${esc(r.av)}" style="width:28px;height:28px;border-radius:50%;object-fit:cover">` : _stAv(r.name, 28)}<b style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.name)}</b>
         <small class="text-muted gm-sub" style="white-space:nowrap">${r.n} ruled · ${r.acc}% right</small><b style="min-width:42px;text-align:right">${r.lp + r.dp}</b></div>`).join('')}</div>`
-      : `<div class="card" style="text-align:center;padding:26px">No rulings yet — be the first steward.</div>`;
+      : '';
   }
   const myS = (() => { let n = 0, ok = 0, pts = 0; Object.entries(mine.g || {}).forEach(([k, v]) => { const x = inc.find(y => y.k === k); if (!x || x.open || !v.c) return; const a = _stAns(x); n++; pts += _stScore(v.c, a) + _stBonus(v, x); if (v.c.every((c, i) => c == null || c === a[i])) ok++; }); return { n, ok, pts }; })();
   el.innerHTML = `<div class="wd-wrap st-room"><div class="st-hero"><button class="wd-back" onclick="openGame('hub')" title="Back to Games">←</button>
       <div class="st-hero-t"><small>IMS · RACE CONTROL</small><b>STEWARDS' ROOM</b><span>Review the evidence. Hear the report. Hand down the decision.</span></div>
       <div class="st-hero-s">${[[myS.n, 'RULED'], [myS.n ? Math.round(myS.ok / myS.n * 100) + '%' : '–', 'RIGHT'], [myS.pts, 'POINTS'], [open.length, 'LIVE']].map(([v, l]) => `<div><b>${v}</b><small>${l}</small></div>`).join('')}</div></div>${lockBanner}
-    <div class="wd-modes">${[['daily', '📅', 'DAILY'], ['live', '🟡', 'LIVE'], ['prac', '🎯', 'PRACTICE'], ['lb', '🏆', 'RANKINGS']].map(([m, i, l]) => `<button class="${mode === m ? 'on' : ''}" onclick="_stSetMode('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>
+    <div class="wd-modes">${[['daily', '📅', 'DAILY'], ['live', '🟡', 'LIVE'], ['prac', '🎯', 'PRACTICE']].map(([m, i, l]) => `<button class="${mode === m ? 'on' : ''}" onclick="_stSetMode('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>
     ${locked && mode !== 'lb' ? body.replace(/onclick="_st(Pick|Submit)[^"]*"/g, 'disabled') : body}
     <div class="wd-info"><h3>How it works</h3><p>Every card is a real incident report from the IMS stewards' channel, written by the driver who reported it — so read it with a pinch of salt. Guilty or not guilty?</p>
       <ul><li>Read the report, then decide: was the reported driver punished? 🔨 Guilty = any penalty (time penalty, DSQ, quali/race ban or penalty points). 🕊️ Not guilty = no further action.</li><li><i>Daily</i>: one settled incident a day, the same for everyone — see the real verdict and how everyone else ruled.</li><li><i>Live</i>: incidents still under investigation. Rule before the stewards do; scored when the verdicts come out.</li><li><i>Practice</i>: endless random incidents — not saved, not scored.</li><li>1 point per correct call. Called <b>Guilty</b>? Guess how much they got for a <b>+1 bonus</b>.</li><li>Each card shows the accused's penalty points going in, past guilty incidents, and where they started and finished. You can't rule on an incident you were involved in.</li></ul></div></div>`;
