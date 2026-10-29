@@ -2642,6 +2642,13 @@
     @keyframes stStamp{from{transform:rotate(-8deg) scale(1.8);opacity:0}to{transform:rotate(-8deg) scale(1);opacity:.9}}
     @media (max-width:560px){.st-rc{margin:-13px -12px 10px;padding:6px 12px}.st-stamp{font-size:1rem;top:88px}}
     @media (max-width:560px){.st-hero-t b{font-size:1.6rem}.st-hero-s{width:100%}.st-hero-s div{flex:1;min-width:0}.st-card{padding:13px 12px}}
+    .st-watch{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;width:100%;height:100%;text-decoration:none;color:#fff;background:radial-gradient(circle at 50% 42%,color-mix(in srgb,var(--bc) 38%,transparent),#0b0b12 72%)}
+    .st-watch-logo{position:relative;width:76px;height:76px;border-radius:22px;display:flex;align-items:center;justify-content:center;background:#fff;box-shadow:0 0 0 4px color-mix(in srgb,var(--bc) 55%,transparent),0 12px 30px rgba(0,0,0,.5);transition:transform .15s}
+    .st-watch:hover .st-watch-logo{transform:scale(1.07)}.st-watch-logo img{position:absolute;inset:15px;width:46px;height:46px;object-fit:contain;background:#fff}.st-watch-logo i{font-style:normal;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:2.4rem;color:var(--bc)}
+    .st-watch b{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.35rem;letter-spacing:2px}.st-watch b em{font-style:normal;color:var(--bc);filter:brightness(1.25)}
+    .st-watch small{color:var(--muted);font-size:.74rem}
+    .st-clip-bar a.st-open{display:inline-flex;align-items:center;gap:6px;padding:4px 10px 4px 5px;border-radius:999px;color:#fff;font-weight:800;background:color-mix(in srgb,var(--bc) 22%,transparent);border:1px solid color-mix(in srgb,var(--bc) 60%,transparent)}
+    .st-clip-bar a.st-open img{width:16px;height:16px;border-radius:4px;background:#fff;padding:1px}
     .st-clip{margin:12px 0 4px}.st-clip-box{position:relative;width:100%;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#000;border:1px solid rgba(255,255,255,.1)}
     .st-clip-bar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:6px}.st-clip-bar button{display:inline-flex;align-items:center;gap:6px;max-width:170px;padding:3px 10px 3px 3px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.04);color:#fff;font-weight:800;font-size:.74rem;cursor:pointer}
     .st-clip-bar button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.st-clip-bar button.on{background:rgba(160,164,255,.25);border-color:rgba(160,164,255,.7)}.st-clip-bar a{margin-left:auto;font-size:.72rem;color:var(--muted);text-decoration:none}.st-clip-bar a+a{margin-left:8px}
@@ -31664,6 +31671,11 @@ const _stClipSrc = (c) => { const h = location.hostname || 'fantasy.ims-league.c
   return ''; };
 const _stClipLink = (c) => c[0] === 'twitch' ? `https://clips.twitch.tv/${c[1]}` : c[0] === 'medal' ? `https://medal.tv/games/f1-25/clips/${c[1]}` : c[0] === 'yt' ? `https://youtu.be/${c[1]}` : c[0] === 'st' ? `https://streamable.com/${c[1]}` : c[1];
 window._stVidFail = function(v) { const d = document.createElement('div'); d.className = 'st-noclip'; d.innerHTML = 'This clip can\'t play here — <a href="' + v.src + '" target="_blank" rel="noopener" style="color:#a0a4ff;margin-left:4px">open it ↗</a>'; v.replaceWith(d); };
+// Where each clip lives: name, brand colour and the site's own icon (fetched from the site).
+const _stBrand = (c) => { const xb = c[0] === 'link' && /xbox\.com/i.test(c[1]);
+  const M = { twitch: ['Twitch', '#9146ff', 'twitch.tv'], yt: ['YouTube', '#ff0033', 'youtube.com'], medal: ['Medal', '#ffb800', 'medal.tv'], st: ['Streamable', '#0f90fa', 'streamable.com'] };
+  const [name, col, dom] = M[c[0]] || (xb ? ['Xbox', '#107c10', 'xbox.com'] : ['the clip site', '#a0a4ff', '']);
+  return { name, col, ico: dom ? `https://www.google.com/s2/favicons?domain=${dom}&sz=64` : '' }; };
 window._stClipSel = function(k, i) { (window._stClipI = window._stClipI || {})[k] = i; renderGames(); };
 function _stPlayerHtml(x) {
   const up = window._stUp || new Set();
@@ -31673,7 +31685,7 @@ function _stPlayerHtml(x) {
   const NM = { twitch: 'Twitch', medal: 'Medal', yt: 'YouTube', st: 'Streamable', file: 'Clip', link: 'Xbox' };
   // Medal blocks embedding share links → a tap-to-watch tile that opens the clip on Medal.
   const player = !c ? '' : (c[0] === 'medal' || c[0] === 'link' || c[0] === 'st')
-    ? `<a href="${esc(_stClipLink(c))}" target="_blank" rel="noopener" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;width:100%;height:100%;text-decoration:none;color:#fff;background:radial-gradient(circle at 50% 40%,rgba(250,204,21,.22),#0b0b12 70%)"><span style="width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#facc15;color:#111;font-size:1.6rem">▶</span><b style="font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;letter-spacing:1.5px">WATCH ON ${c[0] === 'medal' ? 'MEDAL' : c[0] === 'st' ? 'STREAMABLE' : /xbox\.com/i.test(c[1]) ? 'XBOX' : 'THE CLIP SITE'}</b><small style="color:var(--muted)">Opens the clip in a new tab</small></a>`
+    ? (() => { const B = _stBrand(c); return `<a href="${esc(_stClipLink(c))}" target="_blank" rel="noopener" class="st-watch" style="--bc:${B.col}"><span class="st-watch-logo"><i>${esc(B.name[0])}</i>${B.ico ? `<img src="${B.ico}" alt="" onerror="this.remove()">` : ''}</span><b>WATCH ON <em>${B.name.toUpperCase()}</em></b><small>Opens the clip on ${B.name} in a new tab ↗</small></a>`; })()
     : c[0] === 'file' && /\.(png|jpe?g|gif|webp)$/i.test(c[1])
     ? `<a href="https://firebasestorage.googleapis.com/v0/b/fantasy-ims.firebasestorage.app/o/${encodeURIComponent('fia/' + c[1])}?alt=media" target="_blank" rel="noopener" style="display:block;width:100%;height:100%"><img src="https://firebasestorage.googleapis.com/v0/b/fantasy-ims.firebasestorage.app/o/${encodeURIComponent('fia/' + c[1])}?alt=media" alt="Evidence image" style="width:100%;height:100%;object-fit:contain;background:#000"></a>`
     : c[0] === 'file'
@@ -31681,7 +31693,7 @@ function _stPlayerHtml(x) {
     : `<iframe src="${esc(_stClipSrc(c))}" allowfullscreen allow="autoplay; fullscreen; picture-in-picture" loading="lazy" style="width:100%;height:100%;border:0;background:#000"></iframe>`;
   return `<div class="st-clip">${c ? `<div class="st-clip-box">${player}</div>` : ''}
     <div class="st-clip-bar">${items.length > 1 || (c && c[2]) ? items.map((it, j) => `<button class="${j === i ? 'on' : ''}" onclick="_stClipSel('${x.k}',${j})" title="Clip from ${esc(it[2] || 'unknown')}">${it[2] ? _stAv(it[2], 20, it[3]) + `<span>${/\.(png|jpe?g|gif|webp)$/i.test(String(it[1])) ? '🖼 ' : ''}${esc(it[2])}</span>` : (/\.(png|jpe?g|gif|webp)$/i.test(String(it[1])) ? '🖼 ' : '🎥 ') + (j + 1)}</button>`).join('') : ''}
-      ${c && c[0] !== 'file' ? `<a href="${esc(_stClipLink(c))}" target="_blank" rel="noopener">Open on ${NM[c[0]]} ↗</a>` : ''}
+      ${c && c[0] !== 'file' ? (() => { const B = _stBrand(c); return `<a class="st-open" href="${esc(_stClipLink(c))}" target="_blank" rel="noopener" style="--bc:${B.col}"><img src="${B.ico}" alt="" onerror="this.remove()">Open on ${B.name} ↗</a>`; })() : ''}
       ${links.map(l => `<a href="${esc(l[1])}" target="_blank" rel="noopener">Xbox clip ↗</a>`).join('')}</div></div>`;
 }
 const _stCtx = (rc, rap, quali) => { const p = [];
