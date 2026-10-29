@@ -2609,7 +2609,7 @@
     .st-hero{position:relative;overflow:hidden;display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:18px 18px 16px;margin-bottom:16px;border-radius:20px;border:1px solid rgba(46,204,113,.4);background:radial-gradient(circle at 100% 0,rgba(46,204,113,.22),transparent 45%),linear-gradient(135deg,rgba(46,204,113,.12),#111118 70%);box-shadow:0 14px 40px rgba(0,0,0,.35)}
     .st-hero::before{content:'';position:absolute;left:0;right:0;top:0;height:6px;background:repeating-linear-gradient(135deg,#facc15 0 12px,#111 12px 24px);opacity:.85}
     .st-hero::after{content:'⚖';position:absolute;right:-10px;bottom:-34px;font-size:9rem;opacity:.05;pointer-events:none}
-    .st-hero-t{flex:1;min-width:180px}.st-hero-t small{display:block;font-size:.6rem;font-weight:800;letter-spacing:3px;color:var(--sp3)}
+    .st-hero-logo{height:52px;width:auto;mix-blend-mode:screen;flex-shrink:0}.st-hero-t{flex:1;min-width:180px}.st-hero-t small{display:block;font-size:.6rem;font-weight:800;letter-spacing:3px;color:var(--sp3)}
     .st-hero-t b{display:block;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;font-size:2.1rem;letter-spacing:2px;line-height:1;background:linear-gradient(90deg,#4ade80,#2ecc71 45%,#a7f3d0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
     .st-hero-t span{display:block;font-size:.78rem;color:#9a9cc0;margin-top:4px}
     .st-hero-s{display:flex;gap:8px}.st-hero-s div{min-width:62px;padding:8px 10px;border-radius:12px;text-align:center;background:rgba(10,10,18,.55);border:1px solid rgba(46,204,113,.3)}
@@ -31845,6 +31845,7 @@ async function renderSTGame(el) {
   }
   const myS = (() => { let n = 0, ok = 0, pts = 0; Object.entries(mine.g || {}).forEach(([k, v]) => { const x = inc.find(y => y.k === k); if (!x || x.open || !v.c) return; const a = _stAns(x); n++; pts += _stScore(v.c, a) + _stBonus(v, x); if (v.c.every((c, i) => c == null || c === a[i])) ok++; }); return { n, ok, pts }; })();
   el.innerHTML = `<div class="wd-wrap st-room"><div class="st-hero"><button class="wd-back" onclick="openGame('hub')" title="Back to Games">←</button>
+      <img class="st-hero-logo" src="icons/icon-192.png?v=3" alt="IMS">
       <div class="st-hero-t"><small>IMS · RACE CONTROL</small><b>STEWARDS' ROOM</b><span>Review the evidence. Hear the report. Hand down the decision.</span></div>
       <div class="st-hero-s">${[[myS.n, 'RULED'], [myS.n ? Math.round(myS.ok / myS.n * 100) + '%' : '–', 'RIGHT'], [myS.pts, 'POINTS'], [open.length, 'LIVE']].map(([v, l]) => `<div><b>${v}</b><small>${l}</small></div>`).join('')}</div></div>${lockBanner}
     <div class="wd-modes">${[['daily', '📅', 'DAILY'], ['live', '🟡', 'LIVE'], ['prac', '🎯', 'PRACTICE']].map(([m, i, l]) => `<button class="${mode === m ? 'on' : ''}" onclick="_stSetMode('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>
@@ -32008,7 +32009,7 @@ async function renderQSGame(el) {
       : '<div class="card" style="text-align:center;padding:26px">No settled guesses yet.</div>';
   }
   el.innerHTML = `<div class="wd-wrap"><div class="wd-top"><button class="wd-back" onclick="openGame('hub')" title="Back to Games">←</button>
-      <div class="wd-brand"><span style="font-size:1.9rem;-webkit-text-fill-color:initial">⏱️</span><span>SHOOTOUT</span></div><div class="wd-meta"></div></div>${lockBanner}
+      <div class="wd-brand"><img src="icons/icon-192.png?v=3" alt="IMS"><span>SHOOTOUT</span></div><div class="wd-meta"></div></div>${lockBanner}
     <div class="wd-modes">${[['now', '⏱️', 'THIS ROUND'], ['day', '📅', 'DAILY'], ['res', '📋', 'RESULTS'], ['lb', '🏆', 'RANKINGS']].map(([m, i, l]) => `<button class="${mode === m ? 'on' : ''}" onclick="_qsSetMode('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>
     ${body}
     <div class="wd-info"><h3>How it works</h3><ul><li>Before the round locks, guess the <b>pole time</b> in each division you fancy — to the thousandth (e.g. <i>1:23.456</i>).</li><li>When quali times are imported, the <b>closest guess</b> in each division wins <b>+500 IM$</b> (ties all win). Get it <b>spot on to the thousandth</b> and you win <b>+5,000 IM$</b>. Guess every division for more chances.</li><li>Past pole times at the same circuit are shown to help you.</li><li><i>Daily</i>: guess one real IMS pole from the past each day — <b>+10 IM$</b> for playing, <b>+10 IM$</b> more if you're within 0.100s.</li></ul></div></div>`;
