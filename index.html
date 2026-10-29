@@ -31529,6 +31529,9 @@ window._stImportIncidents = async function() {
 };
 async function _stLoad(force) {
   if (!window._stInc || force) { const d = await dbGet('settings', 'stewardIncidents').catch(() => null); window._stInc = (d && d.value && d.value.list) || []; }
+  // Attach clips straight from fia-clips.json too, so they show even before the next verdict import.
+  if (!window._stClipMap) { try { const X = await fetch('fia-clips.json', { cache: 'no-store' }).then(r => r.ok ? r.json() : []); window._stClipMap = new Map(X.map(c => [c.k, c])); } catch (e) { window._stClipMap = new Map(); } }
+  window._stInc.forEach(x => { const c = window._stClipMap.get(x.k); if (c && !(x.clips || []).length && !(x.files || []).length) { x.clips = c.clips || []; x.files = c.files || []; } });
   const races = await dbGetAll('races').catch(() => []), curS = Number(window.currentSeason || window._reserveSeason) || 0;
   const played = (r) => r.driverPoints && Object.values(r.driverPoints).some(v => v > 0);
   // Settled = penalties already linked, or the round is "After verdicts", or a later round has results (stewards are done).
