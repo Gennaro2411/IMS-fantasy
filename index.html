@@ -2626,6 +2626,8 @@
     .st-room .st-fia-av{background:#111;border:2px solid #facc15}
     .st-room .st-clip-box{box-shadow:0 8px 24px rgba(0,0,0,.4)}
     .st-vbtn{transition:transform .12s,box-shadow .12s}.st-vbtn:not([disabled]):hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(46,204,113,.25)}
+    .st-def .st-bub{border-color:rgba(96,165,250,.35);background:rgba(96,165,250,.06)}.st-def .st-txt+.st-txt{margin-top:6px;padding-top:6px;border-top:1px dashed rgba(255,255,255,.08)}
+    .st-def-tag{font-size:.58rem!important;font-weight:900;letter-spacing:1.5px;padding:1px 7px;border-radius:4px;background:rgba(96,165,250,.2);color:#93c5fd!important}
     .st-rc{display:flex;align-items:center;gap:10px;margin:-16px -18px 12px;padding:7px 18px;background:#0b0b0f;border-bottom:1px solid rgba(250,204,21,.35);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.68rem;font-weight:700;letter-spacing:1.5px;color:#facc15;text-transform:uppercase}
     .st-rc i{font-style:normal;padding:1px 7px;border-radius:3px;background:#facc15;color:#111;font-weight:900}
     .st-rc.inv{animation:stBlink 1.6s infinite}@keyframes stBlink{50%{color:#fde68a}}
@@ -31572,7 +31574,7 @@ async function _stLoad(force) {
       do { const j = await fetch('https://firebasestorage.googleapis.com/v0/b/fantasy-ims.firebasestorage.app/o?prefix=' + encodeURIComponent('fia/') + '&maxResults=1000' + (tok ? '&pageToken=' + encodeURIComponent(tok) : '')).then(r => r.ok ? r.json() : {});
         (j.items || []).forEach(it => window._stUp.add(String(it.name || '').replace(/^fia\//, ''))); tok = j.nextPageToken || ''; } while (tok);
     } catch (e) {} }
-  window._stInc.forEach(x => { const c = window._stClipMap && window._stClipMap.get(x.k); if (c) { x.clips = c.clips || []; x.files = c.files || []; } }); // the shipped clip list is always the latest
+  window._stInc.forEach(x => { const c = window._stClipMap && window._stClipMap.get(x.k); if (c) { x.clips = c.clips || []; x.files = c.files || []; x.def = c.def || []; } }); // the shipped clip list is always the latest
   const races = await dbGetAll('races').catch(() => []), curS = Number(window.currentSeason || window._reserveSeason) || 0;
   const played = (r) => r.driverPoints && Object.values(r.driverPoints).some(v => v > 0);
   // Settled = penalties already linked, or the round is "After verdicts", or a later round has results (stewards are done).
@@ -31689,6 +31691,8 @@ function _stCardHtml(x, st, all) {
       <div class="st-msg">${_stAv(x.rep, 38, x.rid)}<div class="st-bub"><div class="st-who"><b>${esc(x.rep || 'Unknown')}</b><span>reported</span>${tg.map(i => `<span class="st-acc">${_stAv(x.drv[i], 22, (x.did || [])[i])}<b>${esc(x.drv[i])}</b></span>`).join('')}</div>
         ${x.rrc ? _stCtx(x.rrc, null, /quali/i.test(x.sess)).replace('margin:-2px 0 8px', 'margin:0 0 6px') : ''}
         <div class="st-txt">${esc(x.desc.replace(/\*\*/g, ''))}</div></div></div>
+      ${(() => { const D = x.def || []; if (!D.length) return ''; const by = {}; D.forEach(([n, id, t]) => { (by[id] = by[id] || { n, id, t: [] }).t.push(t); });
+        return Object.values(by).map(d => `<div class="st-msg st-def">${_stAv(d.n, 38, d.id)}<div class="st-bub"><div class="st-who"><b>${esc(d.n)}</b><span class="st-def-tag">DEFENCE</span></div>${d.t.map(t => `<div class="st-txt">${esc(t.replace(/\*\*/g, ''))}</div>`).join('')}</div></div>`).join(''); })()}
       ${st.reveal ? `<div class="st-msg st-fia"><span class="st-fia-av">⚖️</span><div class="st-bub"><div class="st-who"><b>STEWARDS' DECISION</b><span> ${tg.map(i => esc(x.drv[i]) + ': ' + (ans[i] ? '🔨 GUILTY' + ((x.od || [])[i] ? ' (' + esc(x.od[i]) + ')' : '') : '🕊️ NOT GUILTY')).join(' · ')}</span></div>
         <div class="st-txt">${x.why ? esc(x.why.replace(/\*\*/g, '')) : '<i style="color:var(--muted)">No written reasoning was published for this one.</i>'}</div></div></div>` : ''}
     </div>
