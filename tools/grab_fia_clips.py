@@ -73,8 +73,10 @@ index = []
 ts = threads()
 print(f"Found {len(ts)} threads")
 for t in sorted(ts, key=lambda x: x["name"]):
-    m = re.match(r"(\w+)-(i\d+)-s(\d+)r(\d+)", t["name"], re.I)
-    if not m or m.group(3) not in SEASONS: continue
+    # "d0-i0002-s8r2-a | D0 S8 R3 archive": the label after | has the real division/season/round
+    m0 = re.match(r"\w+-(i\d+)", t["name"], re.I)
+    lab = re.search(r"\|\s*(\w+)\s+S(\d+)\s+R(\d+)", t["name"], re.I)
+    if not m0 or not lab or lab.group(2) not in SEASONS: continue
     name = re.sub(r"[^\w\-]+", "_", t["name"].split("|")[0].strip())
     folder = os.path.join(OUT, name); os.makedirs(folder, exist_ok=True)
     msgs, files, links = messages(t["id"]), [], []
@@ -94,7 +96,7 @@ for t in sorted(ts, key=lambda x: x["name"]):
         for e in msg.get("embeds", []):
             for k in ("url",):
                 if e.get(k) and LINK.search(e[k]): links.append(e[k])
-    index.append({"thread": t["name"], "thread_id": t["id"], "div": m.group(1).upper(), "incident": m.group(2).upper(), "season": int(m.group(3)), "round": int(m.group(4)),
+    index.append({"thread": t["name"], "thread_id": t["id"], "div": lab.group(1).upper(), "incident": m0.group(1).upper(), "season": int(lab.group(2)), "round": int(lab.group(3)),
                   "files": files, "links": sorted(set(links)),
                   "messages": [{"by": x["author"].get("global_name") or x["author"]["username"], "at": x["timestamp"], "text": x.get("content", "")} for x in msgs]})
     print(f"  {t['name'][:40]:40}  {len(files)} file(s), {len(set(links))} link(s)")
