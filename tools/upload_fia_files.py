@@ -18,7 +18,7 @@ firebase_admin.initialize_app(credentials.Certificate(KEY), {"storageBucket": "f
 bucket = storage.bucket()
 MEDIA = re.compile(r"\.(mp4|mov|webm|mkv|m4v|png|jpe?g|gif|webp)$", re.I)
 
-up = skip = 0
+up = skip = failed = 0
 for folder in sorted(os.listdir("fia_clips")):
     full = os.path.join("fia_clips", folder)
     if not os.path.isdir(full):
@@ -32,7 +32,17 @@ for folder in sorted(os.listdir("fia_clips")):
         ct = mimetypes.guess_type(fn)[0] or ("video/mp4" if fn.lower().endswith(".mp4") else "application/octet-stream")
         if fn.lower().endswith(".mov"):
             ct = "video/quicktime"
-        blob.upload_from_filename(os.path.join(full, fn), content_type=ct)
-        up += 1
-        print(f"  uploaded {folder}/{fn}")
-print(f"\nDone — uploaded {up}, already there {skip}.")
+        blob.chunk_size = 2 * 1024 * 1024  # upload in 2MB pieces so slow connections don't time out
+        mb = os.path.getsize(os.path.join(full, fn)) / 1e6
+        print(f"  uploading {folder}/{fn} ({mb:.0f} MB)…", flush=True)
+        for attempt in range(3):
+            try:
+                blob.upload_from_filename(os.path.join(full, fn), content_type=ct, timeout=600)
+                up += 1
+                print("    done")
+                break
+            except Exception as e:
+                print(f"    try {attempt + 1} failed: {str(e)[:120]}")
+        else:
+            failed += 1
+print(f"\nDone — uploaded {up}, already there {skip}, failed {failed}." + (" Run it again to retry the failed ones." if failed else ""))
