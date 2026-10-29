@@ -2605,6 +2605,29 @@
       [data-qs-div]{font-size:1.35rem!important;padding:10px!important}#qs-day-in{font-size:1.6rem!important}
     }
     @media (max-width:380px){.wd-modes button span{display:none}}
+    .st-room{--sp:#5a5ec9;--sp2:#7b7fe8;--sp3:#a0a4ff;--sr:#e8002d}
+    .st-hero{position:relative;overflow:hidden;display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:18px 18px 16px;margin-bottom:16px;border-radius:20px;border:1px solid rgba(123,127,232,.35);background:radial-gradient(circle at 100% 0,rgba(232,0,45,.28),transparent 45%),linear-gradient(135deg,#1b1c3d,#12121c 70%);box-shadow:0 14px 40px rgba(0,0,0,.35)}
+    .st-hero::before{content:'';position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,var(--sp2),var(--sr))}
+    .st-hero::after{content:'⚖';position:absolute;right:-10px;bottom:-34px;font-size:9rem;opacity:.05;pointer-events:none}
+    .st-hero-t{flex:1;min-width:180px}.st-hero-t small{display:block;font-size:.6rem;font-weight:800;letter-spacing:3px;color:var(--sp3)}
+    .st-hero-t b{display:block;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;font-size:2.1rem;letter-spacing:2px;line-height:1;background:linear-gradient(90deg,#fff,#c9cbff 60%,#ff6b81);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+    .st-hero-t span{display:block;font-size:.78rem;color:#9a9cc0;margin-top:4px}
+    .st-hero-s{display:flex;gap:8px}.st-hero-s div{min-width:62px;padding:8px 10px;border-radius:12px;text-align:center;background:rgba(10,10,18,.55);border:1px solid rgba(123,127,232,.3)}
+    .st-hero-s b{display:block;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.35rem;line-height:1}.st-hero-s small{font-size:.55rem;font-weight:800;letter-spacing:1.5px;color:#9a9cc0}
+    .st-room .wd-modes{background:rgba(10,10,18,.6);border-color:rgba(123,127,232,.25)}
+    .st-room .wd-modes button.on{background:linear-gradient(135deg,var(--sp),var(--sr));box-shadow:0 6px 18px rgba(232,0,45,.25)}
+    .st-card{position:relative;overflow:hidden;padding:16px 18px;margin-bottom:16px;border-radius:18px;background:linear-gradient(180deg,#171728,#111119);border:1px solid rgba(123,127,232,.22);box-shadow:0 10px 30px rgba(0,0,0,.3)}
+    .st-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,var(--dc),transparent)}
+    .st-case{display:flex;align-items:center;gap:8px;font-size:.66rem;font-weight:700;letter-spacing:1.5px;color:#9a9cc0;text-transform:uppercase}
+    .st-case-id{font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:1px}.st-case-id b{color:var(--dc)}
+    .st-case-dot{width:4px;height:4px;border-radius:50%;background:#555}
+    .st-room .st-bub{background:rgba(255,255,255,.04);border-color:rgba(123,127,232,.18)}
+    .st-room .st-fia .st-bub{background:linear-gradient(160deg,rgba(90,94,201,.22),rgba(232,0,45,.06));border-color:rgba(123,127,232,.5)}
+    .st-room .st-fia-av{background:linear-gradient(160deg,var(--sp2),var(--sr))}
+    .st-room .st-clip-box{border-color:rgba(123,127,232,.35);box-shadow:0 8px 24px rgba(0,0,0,.4)}
+    .st-vbtn{transition:transform .12s,box-shadow .12s}.st-vbtn:not([disabled]):hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(90,94,201,.3)}
+    .st-room .btn-primary{background:linear-gradient(135deg,var(--sp),var(--sr));border:none}
+    @media (max-width:560px){.st-hero-t b{font-size:1.6rem}.st-hero-s{width:100%}.st-hero-s div{flex:1;min-width:0}.st-card{padding:13px 12px}}
     .st-clip{margin:12px 0 4px}.st-clip-box{position:relative;width:100%;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#000;border:1px solid rgba(255,255,255,.1)}
     .st-clip-bar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:6px}.st-clip-bar button{display:inline-flex;align-items:center;gap:6px;max-width:170px;padding:3px 10px 3px 3px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.04);color:#fff;font-weight:800;font-size:.74rem;cursor:pointer}
     .st-clip-bar button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.st-clip-bar button.on{background:rgba(160,164,255,.25);border-color:rgba(160,164,255,.7)}.st-clip-bar a{margin-left:auto;font-size:.72rem;color:var(--muted);text-decoration:none}.st-clip-bar a+a{margin-left:8px}
@@ -31645,9 +31668,9 @@ function _stCardHtml(x, st, all) {
   const draft = window._stDraft[x.k] || {}, ans = _stAns(x), tg = _stTg(x), crowd = st.crowd ? _stCrowd(all, x) : null, inv = st.mode !== 'prac' && _stInvolved(x), done = !!st.pick;
   const DH = { D0: '#ffc800', D1: '#e8002d', D2: '#9b6fd4', D3: '#27f4d2', D4: '#2ecc71', E3: '#2ecc71' }, col = DH[x.d] || '#a0a4ff';
   const sc = done && st.reveal ? _stScore(st.pick, ans) + _stBonus({ c: st.pick, b: st.b }, x) : null;
-  return `<div class="card st-card" style="padding:16px 18px;margin-bottom:14px;border-color:${col}55;background:linear-gradient(160deg,${col}14,var(--surface) 55%)">
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.7rem;font-weight:800;letter-spacing:1px">
-      <span style="color:${col}">${esc(x.d)}</span><span class="text-muted">S${x.s} · R${x.r}${x.track ? ' · ' + esc(x.track) : ''}</span>
+  return `<div class="st-card" style="--dc:${col}">
+    <div class="st-case"><span class="st-case-id">CASE <b>${esc(x.d)}-${esc(String(x.k).split('-').pop())}</b></span><span class="st-case-dot"></span><span>S${x.s} · R${x.r}${x.track ? ' · ' + esc(x.track) : ''}</span></div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.7rem;font-weight:800;letter-spacing:1px;margin-top:8px">
       ${(() => { const q = /quali/i.test(x.sess), l = Number(x.lap), tag = (t, c) => `<span style="padding:2px 8px;border-radius:6px;background:rgba(${c},.18);border:1px solid rgba(${c},.55);color:rgb(${c})">${t}</span>`;
         return (q ? tag('⏱ QUALI', '96,165,250') : tag('🏁 RACE', '226,232,240')) + (l === 1 ? tag('LAP 1', '251,146,60') : x.lap && !q ? tag('LAP ' + esc(x.lap), '160,164,255') : ''); })()}
       ${x.open ? '<span style="margin-left:auto;color:#facc15">🟡 UNDER INVESTIGATION</span>' : ''}${sc != null && st.mode !== 'prac' ? `<span style="margin-left:auto;color:${sc ? '#4ade80' : '#f87171'}">+${sc} PT${sc === 1 ? '' : 'S'}</span>` : ''}</div>
@@ -31668,7 +31691,7 @@ function _stCardHtml(x, st, all) {
           // Before the reveal: your pick in neutral purple. After: the right answer green, a wrong pick red.
           const bg = isAns ? 'rgba(74,222,128,.25)' : wrong ? 'rgba(248,113,113,.2)' : isMine ? 'rgba(160,164,255,.25)' : 'rgba(255,255,255,.03)';
           const bd = isAns ? 'rgba(74,222,128,.85)' : wrong ? 'rgba(248,113,113,.65)' : isMine ? 'rgba(160,164,255,.8)' : 'rgba(255,255,255,.1)';
-          return `<button ${done || inv ? 'disabled' : `onclick="_stPick('${x.k}',${i},${c})"`} style="position:relative;overflow:hidden;padding:14px 8px;border-radius:12px;border:${isAns ? 2 : 1}px solid ${bd};background:${bg};color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:900;letter-spacing:1.5px;font-size:clamp(.9rem,3.6vw,1.1rem);cursor:${done || inv ? 'default' : 'pointer'};text-align:center">
+          return `<button class="st-vbtn" ${done || inv ? 'disabled' : `onclick="_stPick('${x.k}',${i},${c})"`} style="position:relative;overflow:hidden;padding:14px 8px;border-radius:12px;border:${isAns ? 2 : 1}px solid ${bd};background:${bg};color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:900;letter-spacing:1.5px;font-size:clamp(.9rem,3.6vw,1.1rem);cursor:${done || inv ? 'default' : 'pointer'};text-align:center">
             ${pct != null ? `<span style="position:absolute;left:0;bottom:0;height:4px;width:${pct}%;background:${isAns ? '#4ade80' : '#a0a4ff'}"></span>` : ''}${ic} ${l}${isMine && st.reveal ? (wrong ? ' ✗' : ' ✓') : ''}${pct != null ? `<small style="display:block;font-family:inherit;font-size:.7rem;font-weight:700;color:var(--muted);letter-spacing:.5px;margin-top:2px">${pct}% of ${tot}</small>` : ''}</button>`; }).join('')}</div>
         ${(() => { const bp = done ? (st.b || [])[i] : draft['b' + i]; if (my !== 1 || (done && bp == null && !st.reveal)) return '';
           if (done && bp == null) return '';
@@ -31739,8 +31762,10 @@ async function renderSTGame(el) {
         <small class="text-muted gm-sub" style="white-space:nowrap">${r.n} ruled · ${r.acc}% right</small><b style="min-width:42px;text-align:right">${r.lp + r.dp}</b></div>`).join('')}</div>`
       : `<div class="card" style="text-align:center;padding:26px">No rulings yet — be the first steward.</div>`;
   }
-  el.innerHTML = `<div class="wd-wrap"><div class="wd-top"><button class="wd-back" onclick="openGame('hub')" title="Back to Games">←</button>
-      <div class="wd-brand"><span style="font-size:1.9rem;-webkit-text-fill-color:initial">⚖️</span><span>STEWARDS</span></div><div class="wd-meta">${open.length ? `<span class="wd-pill">${open.length} live</span>` : ''}</div></div>${lockBanner}
+  const myS = (() => { let n = 0, ok = 0, pts = 0; Object.entries(mine.g || {}).forEach(([k, v]) => { const x = inc.find(y => y.k === k); if (!x || x.open || !v.c) return; const a = _stAns(x); n++; pts += _stScore(v.c, a) + _stBonus(v, x); if (v.c.every((c, i) => c == null || c === a[i])) ok++; }); return { n, ok, pts }; })();
+  el.innerHTML = `<div class="wd-wrap st-room"><div class="st-hero"><button class="wd-back" onclick="openGame('hub')" title="Back to Games">←</button>
+      <div class="st-hero-t"><small>IMS · FIA</small><b>STEWARDS' ROOM</b><span>Watch the clip. Read the report. Make the call.</span></div>
+      <div class="st-hero-s">${[[myS.n, 'RULED'], [myS.n ? Math.round(myS.ok / myS.n * 100) + '%' : '–', 'RIGHT'], [myS.pts, 'POINTS'], [open.length, 'LIVE']].map(([v, l]) => `<div><b>${v}</b><small>${l}</small></div>`).join('')}</div></div>${lockBanner}
     <div class="wd-modes">${[['daily', '📅', 'DAILY'], ['live', '🟡', 'LIVE'], ['prac', '🎯', 'PRACTICE'], ['lb', '🏆', 'RANKINGS']].map(([m, i, l]) => `<button class="${mode === m ? 'on' : ''}" onclick="_stSetMode('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>
     ${locked && mode !== 'lb' ? body.replace(/onclick="_st(Pick|Submit)[^"]*"/g, 'disabled') : body}
     <div class="wd-info"><h3>How it works</h3><p>Every card is a real incident report from the IMS stewards' channel, written by the driver who reported it — so read it with a pinch of salt. Guilty or not guilty?</p>
