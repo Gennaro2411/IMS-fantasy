@@ -31745,7 +31745,13 @@ async function renderSTGame(el) {
   const liveDone = inc.filter(x => !x.open && mine.g[x.k] && _stMode(mine.g[x.k]) === 'live').sort((a, b) => b.r - a.r || b.at - a.at);
   let body = '';
   if (mode === 'daily') {
-    const x = _stDayPick(inc), v = x && mine.g[x.k];
+    // Today's incident is locked in Firestore by the first person to open the daily, so everyone gets the same one
+    // even if imports or clip uploads change the pool during the day.
+    let x = null; try { const dk = _wdDayKey(), L = await dbGet('settings', 'stDaily').catch(() => null), cur = L && L.value;
+      if (cur && cur.day === dk) x = inc.find(y => y.k === cur.k) || null;
+      if (!x) { x = _stDayPick(inc); if (x) await dbSet('settings', 'stDaily', { value: { day: dk, k: x.k } }).catch(() => {}); }
+    } catch (e) { x = _stDayPick(inc); }
+    const v = x && mine.g[x.k];
     body = x ? `<div class="text-muted" style="font-size:.82rem;margin:0 0 12px;text-align:center">One real incident a day, the same for everyone. <b style="color:#ffd84d">+10 IM$</b> for ruling, <b style="color:#ffd84d">+10 IM$</b> more if you call it right.</div>`
       + _stCardHtml(x, { pick: v ? v.c : null, b: v ? v.b : null, reveal: !!v, crowd: !!v, mode: 'daily' }, all)
       + (v ? `<div class="wd-end"><div><b>${_stScore(v.c, _stAns(x)) === _stTg(x).length ? '⚖️ SPOT ON — YOU THINK LIKE A STEWARD' : 'VERDICT IN'}</b><div class="wd-end-sub">Bars show how everyone else ruled today.</div></div><div class="wd-timer"><b id="st-timer">--:--:--</b><small>NEXT INCIDENT</small></div></div>` : '')
