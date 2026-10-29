@@ -31502,14 +31502,14 @@ window._stImportIncidents = async function() {
     (t.length ? t[0].values : []).forEach(([se, rn, dv, inc, th]) => { thr[`${se}-${rn}-${String(dv || '').toUpperCase()}-${inc}`] = String(th); }); } catch (e) {} // column only exists once the bot saves it
   const r = _imsDb.exec(`SELECT incident_channel_id, season, round_no, division, incident_id, session_name, lap, reporter_discord_id, reporter_alias, description, status, reported_discord_ids, reported_aliases, created_at_ts FROM fia_incidents`);
   const J = (x) => { try { const v = JSON.parse(x || '[]'); return Array.isArray(v) ? v.map(String) : []; } catch (e) { return []; } };
-  const list = (r.length ? r[0].values : []).map(([chId, se, rn, dv, inc, sess, lap, rid, ral, desc, st, rids, rals, at]) => {
+  let list = (r.length ? r[0].values : []).map(([chId, se, rn, dv, inc, sess, lap, rid, ral, desc, st, rids, rals, at]) => {
     const d = String(dv || '').toUpperCase(), k = `${se}-${rn}-${d}-${inc}`, o = pen[k] || {};
     const drv = [...new Set([...J(rals), ...Object.keys(o)])].filter(Boolean).slice(0, 6), ra = J(rals), ri = J(rids);
     ra.forEach((a, i) => { if (ri[i] && !idOf[nk0(a)]) idOf[nk0(a)] = ri[i]; }); if (rid && ral && !idOf[nk0(ral)]) idOf[nk0(ral)] = String(rid);
     return { k, s: Number(se) || 0, r: Number(rn) || 0, d, sess: String(sess || ''), lap: lap == null ? '' : String(lap), rep: String(ral || ''), desc: String(desc || '').slice(0, 900), st: String(st || ''),
       ids: [...new Set([String(rid || ''), ...J(rids)])].filter(Boolean), drv, o: drv.map(a => o[a] != null ? o[a] : null), od: drv.map(a => ((det[k] || {})[a] || []).join(' · ')), sz: drv.map(a => (szr[k] || {})[a] != null ? szr[k][a] : null), did: drv.map(a => idOf[nk0(a)] || ''), rid: String(rid || ''),
       rap: drv.map(a => rapOf(a, Number(se) || 0, Number(rn) || 0, k)), rc: drv.map(a => res[`${se}-${rn}-${d}-${nk(a)}`] || null), rrc: res[`${se}-${rn}-${d}-${nk(ral)}`] || null, hasPen: Object.keys(o).length > 0, at: Number(at) || 0, why: why[k] || '', ch: String(chId || ''), th: thr[k] || '' };
-  }).filter(x => x.r > 0 && x.drv.length && x.desc.replace(/\s+/g, ' ').trim().length >= 25 && !(x.st === 'Closed' && !x.hasPen));
+  }).filter(x => x.r > 0 && x.drv.length && x.desc.replace(/\s+/g, ' ').trim().length >= 5 && !(x.st === 'Closed' && !x.hasPen));
   // Clips + transcript-only incidents from the #fia-transcripts export (fia-clips.json, shipped with the app).
   try { const X = await fetch('fia-clips.json', { cache: 'no-store' }).then(r => r.ok ? r.json() : []);
     const byK = new Map(list.map(x => [x.k, x]));
@@ -31524,6 +31524,8 @@ window._stImportIncidents = async function() {
         rap: drv.map(a => rapOf(a, c.s, c.r, c.k)), rc: drv.map(a => res[`${c.s}-${c.r}-${c.d}-${nk0(a)}`] || null), rrc: res[`${c.s}-${c.r}-${c.d}-${nk0(c.rep)}`] || null,
         hasPen: pa.length > 0, at: 0, why: why[c.k] || '', ch: '', th: thr[c.k] || '', clips: c.clips || [], files: c.files || [] }); });
   } catch (e) { console.warn('fia-clips', e); }
+  // Short reports (under 25 characters) stay only when there's a clip to watch.
+  list = list.filter(x => x.desc.replace(/\s+/g, ' ').trim().length >= 25 || (x.clips || []).some(c => c[0] !== 'link') || (x.files || []).length);
   await dbSet('settings', 'stewardIncidents', { value: { at: Date.now(), list } });
   window._stInc = null;
 };
