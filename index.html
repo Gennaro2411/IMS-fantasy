@@ -31650,13 +31650,15 @@ function _stCardHtml(x, st, all) {
     </div>
     ${tg.map(i => { const a = x.drv[i], my = done ? st.pick[i] : draft[i], tot = crowd ? crowd[i].reduce((p, q) => p + q, 0) : 0;
       return `<div style="padding:10px 0;border-top:1px solid rgba(255,255,255,.06)"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">${_stAv(a, 34, (x.did || [])[i])}<span style="font-size:.7rem;color:var(--muted);font-weight:800">IS THIS DRIVER GUILTY?</span><b>${esc(a)}</b>
-        ${st.reveal ? `<span style="margin-left:auto;font-size:.72rem;font-weight:800;color:${ans[i] ? '#f87171' : '#4ade80'}">STEWARDS: ${ans[i] ? '🔨 GUILTY' + ((x.od || [])[i] ? ' · ' + esc(x.od[i]) : '') : '🕊️ NOT GUILTY'}</span>` : ''}</div>
+        ${st.reveal ? `<span style="margin-left:auto;font-size:.72rem;font-weight:800;color:#a0a4ff">STEWARDS: ${ans[i] ? '🔨 GUILTY' + ((x.od || [])[i] ? ' · ' + esc(x.od[i]) : '') : '🕊️ NOT GUILTY'}</span>` : ''}</div>
         ${_stCtx((x.rc || [])[i], (x.rap || [])[i], /quali/i.test(x.sess))}
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${ST_GNG.map(([c, l, ic, rgb]) => {
           const isAns = st.reveal && ans[i] === c, isMine = my === c, pct = tot ? Math.round(crowd[i][c] / tot * 100) : null, wrong = isMine && st.reveal && !isAns;
-          const bg = isMine ? `rgba(${rgb},.25)` : 'rgba(255,255,255,.03)', bd = isAns ? 'rgba(255,255,255,.9)' : isMine ? `rgba(${rgb},.8)` : 'rgba(255,255,255,.1)';
+          // Before the reveal: your pick in neutral purple. After: the right answer green, a wrong pick red.
+          const bg = isAns ? 'rgba(74,222,128,.25)' : wrong ? 'rgba(248,113,113,.2)' : isMine ? 'rgba(160,164,255,.25)' : 'rgba(255,255,255,.03)';
+          const bd = isAns ? 'rgba(74,222,128,.85)' : wrong ? 'rgba(248,113,113,.65)' : isMine ? 'rgba(160,164,255,.8)' : 'rgba(255,255,255,.1)';
           return `<button ${done || inv ? 'disabled' : `onclick="_stPick('${x.k}',${i},${c})"`} style="position:relative;overflow:hidden;padding:14px 8px;border-radius:12px;border:${isAns ? 2 : 1}px solid ${bd};background:${bg};color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:900;letter-spacing:1.5px;font-size:clamp(.9rem,3.6vw,1.1rem);cursor:${done || inv ? 'default' : 'pointer'};text-align:center">
-            ${pct != null ? `<span style="position:absolute;left:0;bottom:0;height:4px;width:${pct}%;background:rgb(${rgb})"></span>` : ''}${ic} ${l}${isMine && st.reveal ? (wrong ? ' ✗' : ' ✓') : ''}${pct != null ? `<small style="display:block;font-family:inherit;font-size:.7rem;font-weight:700;color:var(--muted);letter-spacing:.5px;margin-top:2px">${pct}% of ${tot}</small>` : ''}</button>`; }).join('')}</div>
+            ${pct != null ? `<span style="position:absolute;left:0;bottom:0;height:4px;width:${pct}%;background:${isAns ? '#4ade80' : '#a0a4ff'}"></span>` : ''}${ic} ${l}${isMine && st.reveal ? (wrong ? ' ✗' : ' ✓') : ''}${pct != null ? `<small style="display:block;font-family:inherit;font-size:.7rem;font-weight:700;color:var(--muted);letter-spacing:.5px;margin-top:2px">${pct}% of ${tot}</small>` : ''}</button>`; }).join('')}</div>
         ${(() => { const bp = done ? (st.b || [])[i] : draft['b' + i]; if (my !== 1 || (done && bp == null && !st.reveal)) return '';
           if (done && bp == null) return '';
           const ok = st.reveal && ans[i] === 1 && x.sz && x.sz[i] != null;
