@@ -2628,6 +2628,11 @@
     .st-vbtn{transition:transform .12s,box-shadow .12s}.st-vbtn:not([disabled]):hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(46,204,113,.25)}
     .st-def .st-bub{border-color:rgba(96,165,250,.35);background:rgba(96,165,250,.06)}.st-def .st-txt+.st-txt{margin-top:6px;padding-top:6px;border-top:1px dashed rgba(255,255,255,.08)}
     .st-def-tag{font-size:.58rem!important;font-weight:900;letter-spacing:1.5px;padding:1px 7px;border-radius:4px;background:rgba(96,165,250,.2);color:#93c5fd!important}
+    .st-dstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;margin-top:14px}.st-dstats div{padding:10px;border-radius:12px;text-align:center;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
+    .st-dstats.mine div{border-color:rgba(46,204,113,.35);background:rgba(46,204,113,.06)}.st-dstats b{display:block;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.4rem}.st-dstats small{font-size:.56rem;font-weight:800;letter-spacing:1.5px;color:var(--muted)}
+    .st-lbh{display:flex;gap:10px;padding:0 4px 6px;font-size:.58rem;font-weight:800;letter-spacing:1px;color:var(--muted)}
+    .st-lbr{display:flex;align-items:center;gap:10px;padding:8px 4px;border-top:1px solid rgba(255,255,255,.06);font-size:.84rem}.st-lbr.me{background:rgba(46,204,113,.1);border-radius:8px}
+    .st-c{width:52px;text-align:center;flex-shrink:0}@media (max-width:560px){.gm-sub2{display:none}.st-c{width:40px}}
     .st-rc{display:flex;align-items:center;gap:10px;margin:-16px -18px 12px;padding:7px 18px;background:#0b0b0f;border-bottom:1px solid rgba(250,204,21,.35);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.68rem;font-weight:700;letter-spacing:1.5px;color:#facc15;text-transform:uppercase}
     .st-rc i{font-style:normal;padding:1px 7px;border-radius:3px;background:#facc15;color:#111;font-weight:900}
     .st-rc.inv{animation:stBlink 1.6s infinite}@keyframes stBlink{50%{color:#fde68a}}
@@ -31739,7 +31744,16 @@ function _stCardHtml(x, st, all) {
       : `<div style="margin-top:12px"><button class="btn btn-primary" onclick="_stSubmit('${x.k}','${st.mode}')">⚖️ ${st.mode === 'prac' ? 'Reveal verdict' : 'Submit verdict'}</button></div>`}
   </div>`;
 }
+async function _stResetOnce() {
+  try { if (!adminLoggedIn) return; const f = await dbGet('settings', 'stResetV1').catch(() => null); if (f && f.value) return;
+    const docs = await dbGetAll('stewardVotes', { fresh: true }).catch(() => []);
+    for (const d of docs) await dbSet('stewardVotes', d.id, { g: {}, paid: {} }).catch(() => {});
+    await dbSet('settings', 'stDaily', { value: { day: '', k: '' } }).catch(() => {});
+    await dbSet('settings', 'stResetV1', { value: { at: Date.now(), n: docs.length } }); window._stVotesAll = null;
+    showToast(`⚖️ Steward Simulator stats reset (${docs.length} players).`, 'success');
+  } catch (e) { console.warn('st reset', e); } }
 async function renderSTGame(el) {
+  await _stResetOnce();
   window._stDraft = window._stDraft || {};
   { const lk = await dbGet('settings', 'gamesLock').catch(() => null); window._gamesLock = (lk && lk.value) || {}; }
   const locked = !!(window._gamesLock || {}).st && !adminLoggedIn && !_gamesAccess();
@@ -31771,6 +31785,26 @@ async function renderSTGame(el) {
       const tick = () => { const t = document.getElementById('st-timer'); if (!t) { clearInterval(window._wdTick); return; } const ms = until - Date.now(); if (ms <= 0) { clearInterval(window._wdTick); renderGames(); return; }
         t.textContent = [Math.floor(ms / 36e5), Math.floor(ms / 6e4) % 60, Math.floor(ms / 1e3) % 60].map(n => String(n).padStart(2, '0')).join(':'); };
       setTimeout(() => { tick(); window._wdTick = setInterval(tick, 1000); }, 0); }
+    // ---- Daily stats + leaderboard (daily rulings only) ----
+    const dayOf = (t) => new Date(t).toLocaleDateString('en-GB', { timeZone: 'Europe/London' });
+    const pd = (k) => { const [d, m, y] = String(k).split('/').map(Number); return Date.UTC(y, m - 1, d); }, DAY = 864e5, today = pd(_wdDayKey());
+    const statsOf = (u) => { const E = Object.entries(u.g || {}).map(([k, v]) => ({ k, v, x: inc.find(y => y.k === k) })).filter(e => e.v && _stMode(e.v) === 'daily' && e.v.c && e.x && !e.x.open);
+      if (!E.length) return null; let right = 0, pts = 0, bon = 0; const days = new Set();
+      E.forEach(({ v, x }) => { const a = _stAns(x); if (v.c.every((c, i) => c == null || c === a[i])) right++; pts += _stScore(v.c, a); bon += _stBonus(v, x); days.add(pd(dayOf(v.t || 0))); });
+      let st = 0, c = days.has(today) ? today : today - DAY; while (days.has(c)) { st++; c -= DAY; }
+      let best = 0, run = 0; [...days].sort((a, b) => a - b).forEach((d, i, A) => { run = i && d - A[i - 1] === DAY ? run + 1 : 1; best = Math.max(best, run); });
+      return { n: E.length, right, pct: Math.round(right / E.length * 100), pts: pts + bon, bon, st, best }; };
+    const L = all.map(u => ({ u, s: statsOf(u) })).filter(r => r.s).sort((a, b) => b.s.pts - a.s.pts || b.s.pct - a.s.pct || b.s.st - a.s.st);
+    const me0 = L.find(r => r.u.id === me.uid);
+    const todayV = x ? all.map(u => u.g && u.g[x.k]).filter(v => v && _stMode(v) === 'daily' && v.c) : [], tg0 = x ? _stTg(x) : [], ans0 = x ? _stAns(x) : [];
+    const tRight = todayV.filter(v => tg0.every(i => v.c[i] === ans0[i])).length;
+    body += `${v && todayV.length ? `<div class="st-dstats"><div><b>${todayV.length}</b><small>RULED TODAY</small></div><div><b>${Math.round(tRight / todayV.length * 100)}%</b><small>GOT IT RIGHT</small></div><div><b>${Math.round(todayV.filter(v => v.c.some(c => c === 1)).length / todayV.length * 100)}%</b><small>SAID GUILTY</small></div></div>` : ''}
+      ${me0 ? `<div class="st-dstats mine">${[['🔥 ' + me0.s.st, 'STREAK'], [me0.s.best, 'BEST STREAK'], [me0.s.n, 'PLAYED'], [me0.s.pct + '%', 'RIGHT'], [me0.s.pts, 'POINTS']].map(([a, b]) => `<div><b>${a}</b><small>${b}</small></div>`).join('')}</div>` : ''}
+      <div class="wd-lb"><div class="wd-lb-h"><span>🏆 DAILY LEADERBOARD</span><small>Daily points (1 per correct call + size bonus)</small></div>
+      ${L.length ? `<div class="st-lbh"><span style="width:26px"></span><span style="flex:1">STEWARD</span><span class="st-c">🔥</span><span class="st-c gm-sub2">PLAYED</span><span class="st-c">RIGHT</span><span class="st-c">PTS</span></div>`
+        + L.slice(0, 50).map((r, i) => `<div class="st-lbr${r.u.id === me.uid ? ' me' : ''}"><b style="width:26px;text-align:center">${i < 3 ? ['🥇', '🥈', '🥉'][i] : i + 1}</b><span style="flex:1;min-width:0;display:flex;align-items:center;gap:8px">${r.u.avatar ? `<img class="st-av" src="${esc(r.u.avatar)}" style="width:26px;height:26px">` : _stAv(r.u.name || '?', 26)}<b style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.u.name || 'Player')}</b></span>
+          <span class="st-c">${r.s.st || '–'}</span><span class="st-c gm-sub2">${r.s.n}</span><span class="st-c">${r.s.pct}%</span><b class="st-c" style="color:#4ade80">${r.s.pts}</b></div>`).join('')
+        : '<p class="text-muted" style="margin:0">Nobody has played the daily yet — be the first.</p>'}</div>`;
   } else if (mode === 'live') {
     body = (open.length ? `<div class="text-muted" style="font-size:.82rem;margin:0 0 12px;text-align:center">${open.length} incident${open.length > 1 ? 's' : ''} waiting on the stewards. Guilty or not guilty? Call it before they do — <b style="color:#ffd84d">+2 IM$</b> per correct call.</div>`
         + open.sort((a, b) => a.d.localeCompare(b.d) || a.k.localeCompare(b.k)).map(x => _stCardHtml(x, { pick: mine.g[x.k] ? mine.g[x.k].c : null, b: mine.g[x.k] ? mine.g[x.k].b : null, reveal: false, crowd: false, mode: 'live' }, all)).join('')
