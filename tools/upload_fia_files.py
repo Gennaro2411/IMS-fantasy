@@ -34,6 +34,8 @@ for folder in sorted(os.listdir("fia_clips")):
             ct = "video/quicktime"
         blob.chunk_size = 2 * 1024 * 1024  # upload in 2MB pieces so slow connections don't time out
         mb = os.path.getsize(os.path.join(full, fn)) / 1e6
+        if mb > 60:  # huge files would burn Firebase's free daily download allowance in a few views
+            print(f"  skipped {folder}/{fn} ({mb:.0f} MB) — too big for the app"); continue
         print(f"  uploading {folder}/{fn} ({mb:.0f} MB)…", flush=True)
         for attempt in range(3):
             try:
