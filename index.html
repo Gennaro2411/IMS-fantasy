@@ -31535,7 +31535,7 @@ async function _stLoad(force) {
   if (!window._stClipMap) { const get = (u) => fetch(u, { cache: 'no-store' }).then(r => { if (!r.ok) throw 0; return r.json(); });
     let X = []; try { X = await get('fia-clips.json'); } catch (e) { try { X = await get('https://raw.githubusercontent.com/Gennaro2411/IMS-fantasy/main/fia-clips.json'); } catch (e2) {} }
     window._stClipMap = (X || []).length ? new Map(X.map(c => [c.k, c])) : null; } // empty → try again next open
-  window._stInc.forEach(x => { const c = window._stClipMap && window._stClipMap.get(x.k); if (c && !(x.clips || []).length && !(x.files || []).length) { x.clips = c.clips || []; x.files = c.files || []; } });
+  window._stInc.forEach(x => { const c = window._stClipMap && window._stClipMap.get(x.k); if (c) { x.clips = c.clips || []; x.files = c.files || []; } // the shipped clip list is always the latest });
   const races = await dbGetAll('races').catch(() => []), curS = Number(window.currentSeason || window._reserveSeason) || 0;
   const played = (r) => r.driverPoints && Object.values(r.driverPoints).some(v => v > 0);
   // Settled = penalties already linked, or the round is "After verdicts", or a later round has results (stewards are done).
