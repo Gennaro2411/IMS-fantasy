@@ -31465,7 +31465,7 @@ window.careerLookup = async function(name) {
 // LIVE: the round's verdicts aren't out yet → vote now, scored when they land. ARCHIVE: settled incidents.
 // Votes: stewardVotes/<userId> = { name, avatar, v: { incKey: { c:[cat per driver], live, t } }, paid:{incKey:1} }.
 // Scoring per driver: exact = 3, one step out = 1. Drivers involved in an incident can't vote on it.
-const ST_CATS = [['nfa', 'No action', '✅'], ['pp', 'Points only', '⚠️'], ['5', '≤5s', '⏱'], ['10', '10s', '⏱'], ['15', '15s+', '⏱'], ['dsq', 'DSQ / ban', '⛔']];
+const ST_CATS = [['nfa', 'No action', '✅'], ['pp', 'Points only', '⚠️'], ['5', '≤5s', '⏱'], ['10', '6–10s', '⏱'], ['15', '11s+', '⏱'], ['dsq', 'DSQ / ban', '⛔']];
 window._stImportIncidents = async function() {
   if (typeof _imsDb === 'undefined' || !_imsDb) return;
   const pen = {}; // key → alias → max category
@@ -31555,7 +31555,7 @@ const _stTg = (x) => { const r = _normName(x.rep), t = x.drv.map((a, i) => i).fi
 // Only incidents that ended in a time penalty / DSQ (or are still open) are playable.
 const _stOk = (x) => true;
 const ST_GNG = [[1, 'GUILTY', '🔨', '248,113,113'], [0, 'NOT GUILTY', '🕊️', '74,222,128']];
-const ST_SZ = [[2, '≤5s'], [3, '10s'], [4, '15s+'], [1, 'Quali ban'], [5, 'DSQ / ban'], [0, 'Points only']];
+const ST_SZ = [[2, '≤5s'], [3, '6–10s'], [4, '11s+'], [1, 'Quali ban'], [5, 'DSQ / ban'], [0, 'Points only']];
 // Bonus: +1 for the right penalty size, only when you called GUILTY and they were guilty.
 const _stBonus = (v, x) => (v && v.b ? v.b.reduce((a, b, i) => a + (b != null && v.c[i] === 1 && _stAns(x)[i] === 1 && x.sz && x.sz[i] === b ? 1 : 0), 0) : 0);
 const _stScore = (pick, ans) => (pick || []).reduce((a, c, i) => a + (c != null && c === ans[i] ? 1 : 0), 0);
