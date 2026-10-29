@@ -2605,6 +2605,10 @@
       [data-qs-div]{font-size:1.35rem!important;padding:10px!important}#qs-day-in{font-size:1.6rem!important}
     }
     @media (max-width:380px){.wd-modes button span{display:none}}
+    .st-clip{margin:12px 0 4px}.st-clip-box{position:relative;width:100%;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#000;border:1px solid rgba(255,255,255,.1)}
+    .st-clip-bar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:6px}.st-clip-bar button{padding:5px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.04);color:#fff;font-weight:800;font-size:.74rem;cursor:pointer}
+    .st-clip-bar button.on{background:rgba(160,164,255,.25);border-color:rgba(160,164,255,.7)}.st-clip-bar a{margin-left:auto;font-size:.72rem;color:var(--muted);text-decoration:none}.st-clip-bar a+a{margin-left:8px}
+    .st-noclip{display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);font-size:.85rem}
     .st-chat{position:relative;display:flex;flex-direction:column;gap:12px;margin:14px 0 12px}
     .st-chat:has(.st-fia)::before{content:'';position:absolute;left:18px;top:42px;bottom:42px;width:2px;background:linear-gradient(rgba(255,255,255,.18),rgba(160,164,255,.6))}
     .st-msg{position:relative;display:flex;gap:10px;align-items:flex-start}.st-msg>img,.st-msg>span{position:relative;z-index:1;box-shadow:0 0 0 3px var(--surface)}
@@ -31506,6 +31510,20 @@ window._stImportIncidents = async function() {
       ids: [...new Set([String(rid || ''), ...J(rids)])].filter(Boolean), drv, o: drv.map(a => o[a] != null ? o[a] : null), od: drv.map(a => ((det[k] || {})[a] || []).join(' · ')), sz: drv.map(a => (szr[k] || {})[a] != null ? szr[k][a] : null), did: drv.map(a => idOf[nk0(a)] || ''), rid: String(rid || ''),
       rap: drv.map(a => rapOf(a, Number(se) || 0, Number(rn) || 0, k)), rc: drv.map(a => res[`${se}-${rn}-${d}-${nk(a)}`] || null), rrc: res[`${se}-${rn}-${d}-${nk(ral)}`] || null, hasPen: Object.keys(o).length > 0, at: Number(at) || 0, why: why[k] || '', ch: String(chId || ''), th: thr[k] || '' };
   }).filter(x => x.r > 0 && x.drv.length && x.desc.replace(/\s+/g, ' ').trim().length >= 25 && !(x.st === 'Closed' && !x.hasPen));
+  // Clips + transcript-only incidents from the #fia-transcripts export (fia-clips.json, shipped with the app).
+  try { const X = await fetch('fia-clips.json', { cache: 'no-store' }).then(r => r.ok ? r.json() : []);
+    const byK = new Map(list.map(x => [x.k, x]));
+    X.forEach(c => { const ex = byK.get(c.k);
+      if (ex) { ex.clips = c.clips || []; ex.files = c.files || []; if (!ex.sess && c.sess) ex.sess = c.sess; if (!ex.lap && c.lap) ex.lap = c.lap; return; }
+      if (!c.desc || c.desc.trim().length < 5) return;
+      const o = pen[c.k] || {}, pa = Object.keys(o), map = (n) => pa.find(a => nk0(a) === nk0(n)) || n;
+      const drv = [...new Set([...(c.drv || []).map(map), ...pa])].filter(Boolean).slice(0, 6); if (!drv.length) return;
+      list.push({ k: c.k, s: c.s, r: c.r, d: c.d, sess: c.sess || '', lap: c.lap || '', rep: c.rep || '', desc: c.desc.slice(0, 900), st: 'Archived', arch: 1,
+        ids: [c.repId].filter(Boolean), drv, o: drv.map(a => o[a] != null ? o[a] : null), od: drv.map(a => ((det[c.k] || {})[a] || []).join(' · ')),
+        sz: drv.map(a => (szr[c.k] || {})[a] != null ? szr[c.k][a] : null), did: drv.map(a => idOf[nk0(a)] || ''), rid: String(c.repId || ''),
+        rap: drv.map(a => rapOf(a, c.s, c.r, c.k)), rc: drv.map(a => res[`${c.s}-${c.r}-${c.d}-${nk0(a)}`] || null), rrc: res[`${c.s}-${c.r}-${c.d}-${nk0(c.rep)}`] || null,
+        hasPen: pa.length > 0, at: 0, why: why[c.k] || '', ch: '', th: thr[c.k] || '', clips: c.clips || [], files: c.files || [] }); });
+  } catch (e) { console.warn('fia-clips', e); }
   await dbSet('settings', 'stewardIncidents', { value: { at: Date.now(), list } });
   window._stInc = null;
 };
@@ -31515,7 +31533,7 @@ async function _stLoad(force) {
   const played = (r) => r.driverPoints && Object.values(r.driverPoints).some(v => v > 0);
   // Settled = penalties already linked, or the round is "After verdicts", or a later round has results (stewards are done).
   window._stInc.forEach(x => { const rc = x.s === curS ? races.find(r => Number(r.raceNum) === x.r) : null; x.track = rc ? rc.name : '';
-    x.open = x.s === curS && !x.hasPen && !(rc && rc.verdictsAt) && !races.some(r => Number(r.raceNum) > x.r && played(r)); });
+    x.open = !x.arch && x.s === curS && !x.hasPen && !(rc && rc.verdictsAt) && !races.some(r => Number(r.raceNum) > x.r && played(r)); });
   return window._stInc;
 }
 const _stAns = (x) => x.o.map(c => (c || 0) >= 1 ? 1 : 0); // 1 = GUILTY (any sanction: time penalty, DSQ, ban or penalty points), 0 = NOT GUILTY
@@ -31553,7 +31571,7 @@ async function _stMeLoad() {
   drivers.forEach(d => { if ((d.discordId && ids.includes(String(d.discordId))) || names.includes(_normName(d.name))) { if (d.discordId) ids.push(String(d.discordId)); [d.name, d.imsAlias].filter(Boolean).forEach(n => names.push(_normName(n))); } });
   window._stMeIds = { uid: currentUser.userId, ids: [...new Set(ids)], names: [...new Set(names)] };
 }
-const _stDayPick = (inc) => { const pool = inc.filter(x => !x.open && _stOk(x)).sort((a, b) => a.k.localeCompare(b.k)); if (!pool.length) return null; let h = 7; for (const ch of 'st' + _wdDayKey()) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return pool[h % pool.length]; };
+const _stDayPick = (inc) => { const all0 = inc.filter(x => !x.open && _stOk(x)), cl = all0.filter(_stHasClip), pool = (cl.length >= 20 ? cl : all0).sort((a, b) => a.k.localeCompare(b.k)); if (!pool.length) return null; let h = 7; for (const ch of 'st' + _wdDayKey()) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return pool[h % pool.length]; };
 window._stPick = function(k, i, c) { const d = window._stDraft[k] = window._stDraft[k] || {}; d[i] = d[i] === c ? null : c; renderGames(); };
 window._stPickB = function(k, i, c) { const d = window._stDraft[k] = window._stDraft[k] || {}; d['b' + i] = d['b' + i] === c ? null : c; renderGames(); };
 window._stSubmit = async function(k, mode) {
@@ -31575,6 +31593,29 @@ window._stSetMode = function(m) { window._stMode = m; renderGames(); };
 window._stPracNext = function() { window._stPr = null; window._stPrCur = null; renderGames(); };
 function _stCrowd(all, x) { return x.drv.map((_, i) => { const n = [0, 0]; all.forEach(u => { const v = u.g && u.g[x.k], c = v && v.c && v.c[i]; if (c != null && n[c] != null) n[c]++; }); return n; }); }
 // st: { pick (locked choices or null), reveal (show stewards' answer), crowd, mode }
+// ---- Clip player (Twitch / Medal / YouTube / Streamable embeds, rescued Discord files from Firebase Storage) ----
+const _stHasClip = (x) => !!((x.clips || []).some(c => c[0] !== 'link') || (x.files || []).length);
+const _stClipSrc = (c) => { const h = location.hostname || 'fantasy.ims-league.com';
+  if (c[0] === 'twitch') return `https://clips.twitch.tv/embed?clip=${encodeURIComponent(c[1])}&parent=${h}&autoplay=false`;
+  if (c[0] === 'medal') return `https://medal.tv/clip/${encodeURIComponent(c[1])}?autoplay=0&muted=0&loop=0&mobilebypass=true`;
+  if (c[0] === 'yt') return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(c[1])}?rel=0`;
+  if (c[0] === 'st') return `https://streamable.com/e/${encodeURIComponent(c[1])}`;
+  return ''; };
+const _stClipLink = (c) => c[0] === 'twitch' ? `https://clips.twitch.tv/${c[1]}` : c[0] === 'medal' ? `https://medal.tv/clip/${c[1]}` : c[0] === 'yt' ? `https://youtu.be/${c[1]}` : c[0] === 'st' ? `https://streamable.com/${c[1]}` : c[1];
+window._stClipSel = function(k, i) { (window._stClipI = window._stClipI || {})[k] = i; renderGames(); };
+function _stPlayerHtml(x) {
+  const items = [...(x.files || []).map(f => ['file', f]), ...(x.clips || []).filter(c => c[0] !== 'link')], links = (x.clips || []).filter(c => c[0] === 'link');
+  if (!items.length && !links.length) return '';
+  const i = Math.min(((window._stClipI || {})[x.k]) || 0, Math.max(0, items.length - 1)), c = items[i];
+  const NM = { twitch: 'Twitch', medal: 'Medal', yt: 'YouTube', st: 'Streamable', file: 'Clip' };
+  const player = !c ? '' : c[0] === 'file'
+    ? `<video controls playsinline preload="metadata" src="https://firebasestorage.googleapis.com/v0/b/fantasy-ims.firebasestorage.app/o/${encodeURIComponent('fia/' + c[1])}?alt=media" style="width:100%;height:100%;background:#000" onerror="this.outerHTML='<div class=\'st-noclip\'>This clip isn\'t available yet.</div>'"></video>`
+    : `<iframe src="${esc(_stClipSrc(c))}" allowfullscreen allow="autoplay; fullscreen; picture-in-picture" loading="lazy" style="width:100%;height:100%;border:0;background:#000"></iframe>`;
+  return `<div class="st-clip">${c ? `<div class="st-clip-box">${player}</div>` : ''}
+    <div class="st-clip-bar">${items.length > 1 ? items.map((it, j) => `<button class="${j === i ? 'on' : ''}" onclick="_stClipSel('${x.k}',${j})">🎥 ${j + 1}</button>`).join('') : ''}
+      ${c && c[0] !== 'file' ? `<a href="${esc(_stClipLink(c))}" target="_blank" rel="noopener">Open on ${NM[c[0]]} ↗</a>` : ''}
+      ${links.map(l => `<a href="${esc(l[1])}" target="_blank" rel="noopener">Xbox clip ↗</a>`).join('')}</div></div>`;
+}
 const _stCtx = (rc, rap, quali) => { const p = [];
   if (rap) p.push(`<span title="Penalty points this season before this round">⚠️ <b>${rap.pp}</b> pen pts going in</span>`);
   if (rc) { const f = rc.f == null ? '?' : typeof rc.f === 'number' ? 'P' + rc.f : rc.f, g = rc.g ? 'P' + rc.g : '?', d = typeof rc.f === 'number' && rc.g ? rc.g - rc.f : null;
@@ -31590,6 +31631,7 @@ function _stCardHtml(x, st, all) {
       ${(() => { const q = /quali/i.test(x.sess), l = Number(x.lap), tag = (t, c) => `<span style="padding:2px 8px;border-radius:6px;background:rgba(${c},.18);border:1px solid rgba(${c},.55);color:rgb(${c})">${t}</span>`;
         return (q ? tag('⏱ QUALI', '96,165,250') : tag('🏁 RACE', '226,232,240')) + (l === 1 ? tag('LAP 1', '251,146,60') : x.lap && !q ? tag('LAP ' + esc(x.lap), '160,164,255') : ''); })()}
       ${x.open ? '<span style="margin-left:auto;color:#facc15">🟡 UNDER INVESTIGATION</span>' : ''}${sc != null && st.mode !== 'prac' ? `<span style="margin-left:auto;color:${sc ? '#4ade80' : '#f87171'}">+${sc} PT${sc === 1 ? '' : 'S'}</span>` : ''}</div>
+    ${_stPlayerHtml(x)}
     <div class="st-chat">
       <div class="st-msg">${_stAv(x.rep, 38, x.rid)}<div class="st-bub"><div class="st-who"><b>${esc(x.rep || 'Unknown')}</b><span>reported</span>${tg.map(i => `<span class="st-acc">${_stAv(x.drv[i], 22, (x.did || [])[i])}<b>${esc(x.drv[i])}</b></span>`).join('')}</div>
         ${x.rrc ? _stCtx(x.rrc, null, /quali/i.test(x.sess)).replace('margin:-2px 0 8px', 'margin:0 0 6px') : ''}
@@ -31661,8 +31703,10 @@ async function renderSTGame(el) {
   } else if (mode === 'prac') {
     const pr = window._stPr && settled.find(x => x.k === window._stPr.k);
     let x = pr || (window._stPrCur && settled.find(y => y.k === window._stPrCur));
-    if (!x && settled.length) { x = settled[Math.floor(Math.random() * settled.length)]; window._stPrCur = x.k; }
-    body = `<div class="text-muted" style="font-size:.82rem;margin:0 0 12px;text-align:center">Random settled incidents from S7 & S8. Nothing's saved and nothing's scored — just practice.</div>`
+    const clipOnly = window._stPrClips !== false, pp = clipOnly && settled.some(_stHasClip) ? settled.filter(_stHasClip) : settled;
+    if (!x && pp.length) { x = pp[Math.floor(Math.random() * pp.length)]; window._stPrCur = x.k; }
+    body = `<div class="text-muted" style="font-size:.82rem;margin:0 0 10px;text-align:center">Random settled incidents from S7 & S8. Nothing's saved and nothing's scored — just practice.</div>
+      <div style="display:flex;justify-content:center;margin:0 0 12px"><button class="btn btn-sm ${clipOnly ? 'btn-primary' : 'btn-secondary'}" onclick="window._stPrClips=${!clipOnly};window._stPrCur=null;window._stPr=null;renderGames()">🎥 ${clipOnly ? 'Clips only: ON' : 'Clips only: OFF'} · ${settled.filter(_stHasClip).length} with clips</button></div>`
       + (x ? _stCardHtml(x, { pick: pr ? window._stPr.c : null, b: pr ? window._stPr.b : null, reveal: !!pr, crowd: !!pr, mode: 'prac' }, all) + `<div style="text-align:center"><button class="btn ${pr ? 'btn-primary' : 'btn-secondary'}" onclick="_stPracNext()">${pr ? 'Next incident →' : 'Skip →'}</button></div>` : '<div class="card" style="text-align:center;padding:26px">No incidents imported yet.</div>');
   } else {
     const rows = all.map(u => { let lp = 0, dp = 0, n = 0, ex = 0, tot = 0; Object.entries(u.g || {}).forEach(([k, v]) => { const x = inc.find(y => y.k === k); if (!x || x.open || !v.c) return; const a = _stAns(x), sc = _stScore(v.c, a) + _stBonus(v, x); _stMode(v) === 'live' ? lp += sc : dp += sc; n++; v.c.forEach((c, i) => { if (c == null) return; tot++; if (c === a[i]) ex++; }); });
