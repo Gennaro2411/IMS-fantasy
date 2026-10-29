@@ -31584,7 +31584,7 @@ async function _stMeLoad() {
   drivers.forEach(d => { if ((d.discordId && ids.includes(String(d.discordId))) || names.includes(_normName(d.name))) { if (d.discordId) ids.push(String(d.discordId)); [d.name, d.imsAlias].filter(Boolean).forEach(n => names.push(_normName(n))); } });
   window._stMeIds = { uid: currentUser.userId, ids: [...new Set(ids)], names: [...new Set(names)] };
 }
-const _stDayPick = (inc) => { const all0 = inc.filter(x => !x.open && _stOk(x)), cl = all0.filter(_stHasClip), pool = (cl.length >= 20 ? cl : all0).sort((a, b) => a.k.localeCompare(b.k)); if (!pool.length) return null; let h = 7; for (const ch of 'st' + _wdDayKey()) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return pool[h % pool.length]; };
+const _stDayPick = (inc) => { const all0 = inc.filter(x => !x.open && _stOk(x)), cl = all0.filter(_stHasClip), pool = cl.sort((a, b) => a.k.localeCompare(b.k)); if (!pool.length) return null; let h = 7; for (const ch of 'st' + _wdDayKey()) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return pool[h % pool.length]; };
 window._stPick = function(k, i, c) { const d = window._stDraft[k] = window._stDraft[k] || {}; d[i] = d[i] === c ? null : c; renderGames(); };
 window._stPickB = function(k, i, c) { const d = window._stDraft[k] = window._stDraft[k] || {}; d['b' + i] = d['b' + i] === c ? null : c; renderGames(); };
 window._stSubmit = async function(k, mode) {
