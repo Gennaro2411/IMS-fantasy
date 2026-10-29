@@ -31625,11 +31625,13 @@ function _stPlayerHtml(x) {
   // Medal blocks embedding share links → a tap-to-watch tile that opens the clip on Medal.
   const player = !c ? '' : c[0] === 'medal'
     ? `<a href="${esc(_stClipLink(c))}" target="_blank" rel="noopener" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;width:100%;height:100%;text-decoration:none;color:#fff;background:radial-gradient(circle at 50% 40%,rgba(250,204,21,.22),#0b0b12 70%)"><span style="width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#facc15;color:#111;font-size:1.6rem">▶</span><b style="font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;letter-spacing:1.5px">WATCH ON MEDAL</b><small style="color:var(--muted)">Opens the clip in a new tab</small></a>`
+    : c[0] === 'file' && /\.(png|jpe?g|gif|webp)$/i.test(c[1])
+    ? `<a href="https://firebasestorage.googleapis.com/v0/b/fantasy-ims.firebasestorage.app/o/${encodeURIComponent('fia/' + c[1])}?alt=media" target="_blank" rel="noopener" style="display:block;width:100%;height:100%"><img src="https://firebasestorage.googleapis.com/v0/b/fantasy-ims.firebasestorage.app/o/${encodeURIComponent('fia/' + c[1])}?alt=media" alt="Evidence image" style="width:100%;height:100%;object-fit:contain;background:#000"></a>`
     : c[0] === 'file'
     ? `<video controls playsinline preload="metadata" src="https://firebasestorage.googleapis.com/v0/b/fantasy-ims.firebasestorage.app/o/${encodeURIComponent('fia/' + c[1])}?alt=media" style="width:100%;height:100%;background:#000" onloadedmetadata="if(!this.videoWidth)_stVidFail(this)" onerror="_stVidFail(this)"></video>`
     : `<iframe src="${esc(_stClipSrc(c))}" allowfullscreen allow="autoplay; fullscreen; picture-in-picture" loading="lazy" style="width:100%;height:100%;border:0;background:#000"></iframe>`;
   return `<div class="st-clip">${c ? `<div class="st-clip-box">${player}</div>` : ''}
-    <div class="st-clip-bar">${items.length > 1 || (c && c[2]) ? items.map((it, j) => `<button class="${j === i ? 'on' : ''}" onclick="_stClipSel('${x.k}',${j})" title="Clip from ${esc(it[2] || 'unknown')}">${it[2] ? _stAv(it[2], 20, it[3]) + `<span>${esc(it[2])}</span>` : '🎥 ' + (j + 1)}</button>`).join('') : ''}
+    <div class="st-clip-bar">${items.length > 1 || (c && c[2]) ? items.map((it, j) => `<button class="${j === i ? 'on' : ''}" onclick="_stClipSel('${x.k}',${j})" title="Clip from ${esc(it[2] || 'unknown')}">${it[2] ? _stAv(it[2], 20, it[3]) + `<span>${/\.(png|jpe?g|gif|webp)$/i.test(String(it[1])) ? '🖼 ' : ''}${esc(it[2])}</span>` : (/\.(png|jpe?g|gif|webp)$/i.test(String(it[1])) ? '🖼 ' : '🎥 ') + (j + 1)}</button>`).join('') : ''}
       ${c && c[0] !== 'file' ? `<a href="${esc(_stClipLink(c))}" target="_blank" rel="noopener">Open on ${NM[c[0]]} ↗</a>` : ''}
       ${links.map(l => `<a href="${esc(l[1])}" target="_blank" rel="noopener">Xbox clip ↗</a>`).join('')}</div></div>`;
 }
