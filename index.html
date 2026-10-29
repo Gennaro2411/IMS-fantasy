@@ -25451,7 +25451,7 @@ window.importVerdictsFromDb = async function(btn, quiet) {
       applied.add(p.u); bans++;
     }
     await dbSet('settings', 'fiaVerdicts', { value: { at: Date.now(), list, bansApplied: [...applied] } });
-    try { await window._stImportIncidents(); } catch (e) { console.warn('steward incidents', e); }
+    try { await window._stImportIncidents(); } catch (e) { console.warn('steward incidents', e); if (!quiet) customAlert('Steward Simulator incidents failed to save: ' + (e.message || e)); }
     window._fiaV = list; window._adminDriverCache = null;
     if (!quiet) customAlert(`⚖️ Imported ${list.length} steward verdicts (${list.filter(x => x.t != null).length} time penalties, ${list.filter(x => x.dq).length} DSQs, ${list.filter(x => x.rb > 0).length} race bans).` + (bans ? `\n⛔ ${bans} new race ban${bans > 1 ? 's' : ''} applied.` : ''));
   } catch (e) { console.error(e); if (!quiet) customAlert('Verdict import failed: ' + (e.message || e)); }
@@ -31526,6 +31526,8 @@ window._stImportIncidents = async function() {
   } catch (e) { console.warn('fia-clips', e); }
   // Short reports (under 25 characters) stay only when there's a clip to watch.
   list = list.filter(x => x.desc.replace(/\s+/g, ' ').trim().length >= 25 || (x.clips || []).some(c => c[0] !== 'link') || (x.files || []).length);
+  // Firestore can't store arrays inside arrays — clips are attached in the app from fia-clips.json instead.
+  list.forEach(x => { delete x.clips; delete x.files; });
   await dbSet('settings', 'stewardIncidents', { value: { at: Date.now(), list } });
   window._stInc = null;
 };
@@ -31535,7 +31537,7 @@ async function _stLoad(force) {
   if (!window._stClipMap) { const get = (u) => fetch(u, { cache: 'no-store' }).then(r => { if (!r.ok) throw 0; return r.json(); });
     let X = []; try { X = await get('fia-clips.json'); } catch (e) { try { X = await get('https://raw.githubusercontent.com/Gennaro2411/IMS-fantasy/main/fia-clips.json'); } catch (e2) {} }
     window._stClipMap = (X || []).length ? new Map(X.map(c => [c.k, c])) : null; } // empty → try again next open
-  window._stInc.forEach(x => { const c = window._stClipMap && window._stClipMap.get(x.k); if (c) { x.clips = c.clips || []; x.files = c.files || []; } // the shipped clip list is always the latest });
+  window._stInc.forEach(x => { const c = window._stClipMap && window._stClipMap.get(x.k); if (c) { x.clips = c.clips || []; x.files = c.files || []; } }); // the shipped clip list is always the latest
   const races = await dbGetAll('races').catch(() => []), curS = Number(window.currentSeason || window._reserveSeason) || 0;
   const played = (r) => r.driverPoints && Object.values(r.driverPoints).some(v => v > 0);
   // Settled = penalties already linked, or the round is "After verdicts", or a later round has results (stewards are done).
