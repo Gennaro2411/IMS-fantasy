@@ -2646,7 +2646,10 @@
     .st-msg{position:relative;display:flex;gap:10px;align-items:flex-start}.st-msg>img,.st-msg>span{position:relative;z-index:1;box-shadow:0 0 0 3px var(--surface)}
     .st-bub{flex:1;min-width:0;padding:10px 14px;border-radius:4px 16px 16px 16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}
     .st-who{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:4px}.st-who b{font-size:.9rem}.st-who span{font-size:.7rem;color:var(--muted)}
-    .st-acc{display:inline-flex;align-items:center;gap:6px;padding:2px 9px 2px 2px;border-radius:20px;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.4)}.st-acc b{font-size:.8rem}
+    .st-av{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:50%;object-fit:cover;color:#fff;font-weight:900;font-family:'Barlow Condensed',sans-serif;line-height:1;box-shadow:0 0 0 2px rgba(0,0,0,.35)}
+    .st-acc{display:inline-flex;align-items:center;gap:7px;max-width:100%;padding:3px 11px 3px 3px;border-radius:999px;background:linear-gradient(90deg,rgba(248,113,113,.18),rgba(248,113,113,.06));border:1px solid rgba(248,113,113,.45)}
+    .st-acc b{font-size:.82rem;color:#fff;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px}
+    .st-acc::after{content:'ACCUSED';font-size:.52rem;font-weight:900;letter-spacing:1px;color:#fca5a5;margin-left:2px}
     .st-txt{font-size:.88rem;line-height:1.55;white-space:pre-line;word-break:break-word}
     .st-fia .st-bub{background:linear-gradient(160deg,rgba(160,164,255,.14),rgba(160,164,255,.04));border-color:rgba(160,164,255,.4);animation:wdHintIn .35s both}
     .st-fia-av{width:38px;height:38px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.15rem;background:linear-gradient(160deg,#a0a4ff,#3b3f9e)}
@@ -31601,9 +31604,17 @@ async function _stPhotosLoad() {
     drivers.forEach(d => { const ph = typeof driverPhoto === 'function' ? driverPhoto(d) : ''; if (!ph) return; [d.name, d.imsAlias].filter(Boolean).forEach(n => { const k = _normName(n); if (k && !m[k]) m[k] = ph; }); }); } catch (e) {}
   window._stPhoto = m;
 }
-function _stAv(n, sz, id) { const a = (id ? 'main-driver-avatars/driver-avatars/' + id + '.png' : '') || (window._stPhoto || {})[_normName(n)] || (window._avatarByName || {})[_normName(n)];
-  const b = (window._stPhoto || {})[_normName(n)] || (window._avatarByName || {})[_normName(n)] || '';
-  try { return initialsAvatar(n || '?', sz, 'border-radius:50%;flex-shrink:0', null, a || b); } catch (e) { return ''; } }
+function _stAv(n, sz, id) {
+  const ph = (window._stPhoto || {})[_normName(n)] || (window._avatarByName || {})[_normName(n)] || '';
+  const src = id ? 'main-driver-avatars/driver-avatars/' + id + '.png' : ph;
+  // Letter tile: first visible character of the name (works for any alphabet), colour from the name.
+  const clean = String(n || '?').replace(/^\[[^\]]*\]\s*/, '').trim() || '?', ch = (Array.from(clean)[0] || '?').toUpperCase();
+  let h = 0; for (const c of clean) h = (h * 31 + c.codePointAt(0)) % 360;
+  const tile = `<span class="st-av" style="width:${sz}px;height:${sz}px;font-size:${Math.round(sz * .45)}px;background:linear-gradient(135deg,hsl(${h},65%,55%),hsl(${(h + 40) % 360},70%,38%))">${esc(ch)}</span>`;
+  if (!src) return tile;
+  const alt = ph && id ? ph : '';
+  return `<img class="st-av" src="${esc(src)}" style="width:${sz}px;height:${sz}px" data-alt="${esc(alt)}" onerror="if(this.dataset.alt){this.src=this.dataset.alt;this.dataset.alt='';}else{this.outerHTML=decodeURIComponent('${encodeURIComponent(tile)}');}">`;
+}
 // Involved = your Discord id OR your name matches the reporter or any driver named in the incident.
 const _stInvolved = (x) => { const M = window._stMeIds || { ids: [], names: [] };
   return M.ids.some(id => x.ids.includes(id)) || [x.rep, ...x.drv].some(a => { const k = _normName(a); return k && M.names.includes(k); }); };
