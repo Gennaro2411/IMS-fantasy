@@ -2606,8 +2606,8 @@
     }
     @media (max-width:380px){.wd-modes button span{display:none}}
     .st-clip{margin:12px 0 4px}.st-clip-box{position:relative;width:100%;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#000;border:1px solid rgba(255,255,255,.1)}
-    .st-clip-bar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:6px}.st-clip-bar button{padding:5px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.04);color:#fff;font-weight:800;font-size:.74rem;cursor:pointer}
-    .st-clip-bar button.on{background:rgba(160,164,255,.25);border-color:rgba(160,164,255,.7)}.st-clip-bar a{margin-left:auto;font-size:.72rem;color:var(--muted);text-decoration:none}.st-clip-bar a+a{margin-left:8px}
+    .st-clip-bar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:6px}.st-clip-bar button{display:inline-flex;align-items:center;gap:6px;max-width:170px;padding:3px 10px 3px 3px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.04);color:#fff;font-weight:800;font-size:.74rem;cursor:pointer}
+    .st-clip-bar button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.st-clip-bar button.on{background:rgba(160,164,255,.25);border-color:rgba(160,164,255,.7)}.st-clip-bar a{margin-left:auto;font-size:.72rem;color:var(--muted);text-decoration:none}.st-clip-bar a+a{margin-left:8px}
     .st-noclip{display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);font-size:.85rem}
     .st-chat{position:relative;display:flex;flex-direction:column;gap:12px;margin:14px 0 12px}
     .st-chat:has(.st-fia)::before{content:'';position:absolute;left:18px;top:42px;bottom:42px;width:2px;background:linear-gradient(rgba(255,255,255,.18),rgba(160,164,255,.6))}
@@ -31610,7 +31610,7 @@ const _stClipSrc = (c) => { const h = location.hostname || 'fantasy.ims-league.c
 const _stClipLink = (c) => c[0] === 'twitch' ? `https://clips.twitch.tv/${c[1]}` : c[0] === 'medal' ? `https://medal.tv/games/f1-25/clips/${c[1]}` : c[0] === 'yt' ? `https://youtu.be/${c[1]}` : c[0] === 'st' ? `https://streamable.com/${c[1]}` : c[1];
 window._stClipSel = function(k, i) { (window._stClipI = window._stClipI || {})[k] = i; renderGames(); };
 function _stPlayerHtml(x) {
-  const items = [...(x.files || []).map(f => ['file', f]), ...(x.clips || []).filter(c => c[0] !== 'link')], links = (x.clips || []).filter(c => c[0] === 'link');
+  const items = [...(x.files || []).map(f => Array.isArray(f) ? ['file', f[0], f[1], f[2]] : ['file', f]), ...(x.clips || []).filter(c => c[0] !== 'link')], links = (x.clips || []).filter(c => c[0] === 'link');
   if (!items.length && !links.length) return '';
   const i = Math.min(((window._stClipI || {})[x.k]) || 0, Math.max(0, items.length - 1)), c = items[i];
   const NM = { twitch: 'Twitch', medal: 'Medal', yt: 'YouTube', st: 'Streamable', file: 'Clip' };
@@ -31621,7 +31621,7 @@ function _stPlayerHtml(x) {
     ? `<video controls playsinline preload="metadata" src="https://firebasestorage.googleapis.com/v0/b/fantasy-ims.firebasestorage.app/o/${encodeURIComponent('fia/' + c[1])}?alt=media" style="width:100%;height:100%;background:#000" onerror="this.outerHTML='<div class=\'st-noclip\'>This clip isn\'t available yet.</div>'"></video>`
     : `<iframe src="${esc(_stClipSrc(c))}" allowfullscreen allow="autoplay; fullscreen; picture-in-picture" loading="lazy" style="width:100%;height:100%;border:0;background:#000"></iframe>`;
   return `<div class="st-clip">${c ? `<div class="st-clip-box">${player}</div>` : ''}
-    <div class="st-clip-bar">${items.length > 1 ? items.map((it, j) => `<button class="${j === i ? 'on' : ''}" onclick="_stClipSel('${x.k}',${j})">🎥 ${j + 1}</button>`).join('') : ''}
+    <div class="st-clip-bar">${items.length > 1 || (c && c[2]) ? items.map((it, j) => `<button class="${j === i ? 'on' : ''}" onclick="_stClipSel('${x.k}',${j})" title="Clip from ${esc(it[2] || 'unknown')}">${it[2] ? _stAv(it[2], 20, it[3]) + `<span>${esc(it[2])}</span>` : '🎥 ' + (j + 1)}</button>`).join('') : ''}
       ${c && c[0] !== 'file' ? `<a href="${esc(_stClipLink(c))}" target="_blank" rel="noopener">Open on ${NM[c[0]]} ↗</a>` : ''}
       ${links.map(l => `<a href="${esc(l[1])}" target="_blank" rel="noopener">Xbox clip ↗</a>`).join('')}</div></div>`;
 }
