@@ -31630,7 +31630,8 @@ function _stAv(n, sz, id) {
   return `<img class="st-av" src="${esc(src)}" style="width:${sz}px;height:${sz}px" data-alt="${esc(alt)}" onerror="if(this.dataset.alt){this.src=this.dataset.alt;this.dataset.alt='';}else{this.outerHTML=decodeURIComponent('${encodeURIComponent(tile)}');}">`;
 }
 // Involved = your Discord id OR your name matches the reporter or any driver named in the incident.
-const _stInvolved = (x) => { const M = window._stMeIds || { ids: [], names: [] };
+const _stInvolved = (x) => false; // drivers can rule on their own incidents too
+const _stInvolvedOld = (x) => { const M = window._stMeIds || { ids: [], names: [] };
   return M.ids.some(id => x.ids.includes(id)) || [x.rep, ...x.drv].some(a => { const k = _normName(a); return k && M.names.includes(k); }); };
 async function _stMeLoad() {
   if (typeof currentUser === 'undefined' || !currentUser || !currentUser.userId) { window._stMeIds = { ids: [], names: [] }; return; }
@@ -31855,7 +31856,7 @@ async function renderSTGame(el) {
     <div class="wd-modes">${[['daily', '📅', 'DAILY'], ['live', '🟡', 'LIVE'], ['prac', '🎯', 'PRACTICE']].map(([m, i, l]) => `<button class="${mode === m ? 'on' : ''}" onclick="_stSetMode('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>
     ${locked && mode !== 'lb' ? body.replace(/onclick="_st(Pick|Submit)[^"]*"/g, 'disabled') : body}
     <div class="wd-info"><h3>How it works</h3><p>Every card is a real incident report from the IMS stewards' channel, written by the driver who reported it — so read it with a pinch of salt. Guilty or not guilty?</p>
-      <ul><li>Read the report, then decide: was the reported driver punished? 🔨 Guilty = any penalty (time penalty, DSQ, quali/race ban or penalty points). 🕊️ Not guilty = no further action.</li><li><i>Daily</i>: one settled incident a day, the same for everyone — see the real verdict and how everyone else ruled.</li><li><i>Live</i>: incidents still under investigation. Rule before the stewards do; scored when the verdicts come out.</li><li><i>Practice</i>: endless random incidents — not saved, not scored.</li><li>1 point per correct call. Called <b>Guilty</b>? Guess how much they got for a <b>+1 bonus</b>.</li><li>Each card shows the accused's penalty points going in, past guilty incidents, and where they started and finished. You can't rule on an incident you were involved in.</li></ul></div></div>`;
+      <ul><li>Read the report, then decide: was the reported driver punished? 🔨 Guilty = any penalty (time penalty, DSQ, quali/race ban or penalty points). 🕊️ Not guilty = no further action.</li><li><i>Daily</i>: one settled incident a day, the same for everyone — see the real verdict and how everyone else ruled.</li><li><i>Live</i>: incidents still under investigation. Rule before the stewards do; scored when the verdicts come out.</li><li><i>Practice</i>: endless random incidents — not saved, not scored.</li><li>1 point per correct call. Called <b>Guilty</b>? Guess how much they got for a <b>+1 bonus</b>.</li><li>Each card shows the accused's penalty points going in and where they started.</li></ul></div></div>`;
 }
 
 
