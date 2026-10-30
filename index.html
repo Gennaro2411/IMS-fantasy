@@ -2627,6 +2627,7 @@
     .st-room .st-clip-box{box-shadow:0 8px 24px rgba(0,0,0,.4)}
     .st-vbtn{transition:transform .12s,box-shadow .12s}.st-vbtn:not([disabled]):hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(46,204,113,.25)}
     .st-def .st-bub{border-color:rgba(96,165,250,.35);background:rgba(96,165,250,.06)}.st-def .st-txt+.st-txt{margin-top:6px;padding-top:6px;border-top:1px dashed rgba(255,255,255,.08)}
+    .st-lost{margin-top:6px;font-size:.74rem;color:var(--muted);font-style:italic}.st-txt+.st-lost{padding-top:6px;border-top:1px dashed rgba(255,255,255,.08)}
     .st-def-tag{font-size:.58rem!important;font-weight:900;letter-spacing:1.5px;padding:1px 7px;border-radius:4px;background:rgba(96,165,250,.2);color:#93c5fd!important}
     .st-dstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;margin-top:14px}.st-dstats div{padding:10px;border-radius:12px;text-align:center;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
     .st-dstats.mine div{border-color:rgba(46,204,113,.35);background:rgba(46,204,113,.06)}.st-dstats b{display:block;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.4rem}.st-dstats small{font-size:.56rem;font-weight:800;letter-spacing:1.5px;color:var(--muted)}
@@ -31722,8 +31723,11 @@ function _stCardHtml(x, st, all) {
       <div class="st-msg">${_stAv(x.rep, 38, x.rid)}<div class="st-bub"><div class="st-who"><b>${esc(x.rep || 'Unknown')}</b><span>reported</span>${tg.map(i => `<span class="st-acc">${_stAv(x.drv[i], 22, (x.did || [])[i])}<b>${esc(x.drv[i])}</b></span>`).join('')}</div>
         ${x.rrc ? _stCtx(x.rrc, null, /quali/i.test(x.sess)).replace('margin:-2px 0 8px', 'margin:0 0 6px') : ''}
         <div class="st-txt">${esc(x.desc.replace(/\*\*/g, ''))}</div></div></div>
-      ${(() => { const D = x.def || []; if (!D.length) return ''; const by = {}; D.forEach(([n, id, t]) => { (by[id] = by[id] || { n, id, t: [] }).t.push(t); });
-        return Object.values(by).map(d => `<div class="st-msg st-def">${_stAv(d.n, 38, d.id)}<div class="st-bub"><div class="st-who"><b>${esc(d.n)}</b><span class="st-def-tag">DEFENCE</span></div>${d.t.map(t => `<div class="st-txt">${esc(t.replace(/\*\*/g, ''))}</div>`).join('')}</div></div>`).join(''); })()}
+      ${(() => { const D = x.def || []; if (!D.length) return ''; const by = {}; D.forEach(([n, id, t, na]) => { const e = (by[id] = by[id] || { n, id, t: [], na: 0 }); if (t) e.t.push(t); e.na += Number(na) || 0; });
+        // Uploads that Discord deleted with the incident channel can't be shown — say so instead of leaving a blank bubble.
+        const own = (id) => [...(x.files || [])].filter(f => Array.isArray(f) && f[2] === id && (window._stUp || new Set()).has(f[0])).length;
+        return Object.values(by).map(d => { const lost = Math.max(0, d.na - own(d.id));
+          return `<div class="st-msg st-def">${_stAv(d.n, 38, d.id)}<div class="st-bub"><div class="st-who"><b>${esc(d.n)}</b><span class="st-def-tag">DEFENCE</span></div>${d.t.map(t => `<div class="st-txt">${esc(t.replace(/\*\*/g, ''))}</div>`).join('')}${lost ? `<div class="st-lost">📎 Uploaded ${lost} clip${lost > 1 ? 's' : ''} to Discord — no longer available</div>` : ''}${!d.t.length && !lost ? `<div class="st-lost">📎 Their clip is in the player above</div>` : ''}</div></div>`; }).join(''); })()}
       ${st.reveal ? `<div class="st-msg st-fia"><span class="st-fia-av">⚖️</span><div class="st-bub"><div class="st-who"><b>STEWARDS' DECISION</b><span> ${tg.map(i => esc(x.drv[i]) + ': ' + (ans[i] ? '🔨 GUILTY' + ((x.od || [])[i] ? ' (' + esc(x.od[i]) + ')' : '') : '🕊️ NOT GUILTY')).join(' · ')}</span></div>
         <div class="st-txt">${x.why ? esc(x.why.replace(/\*\*/g, '')) : '<i style="color:var(--muted)">No written reasoning was published for this one.</i>'}</div></div></div>` : ''}
     </div>
