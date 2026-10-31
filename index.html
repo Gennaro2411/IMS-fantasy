@@ -3641,7 +3641,8 @@ window.loadAttendance = async function() {
         const cur = (sch || []).filter(r => r.lockTime && r.lockTime <= Date.now()).sort((a, b) => b.lockTime - a.lockTime)[0];
         // Rounds drop off the schedule once they lock — fall back to the latest round in the results (e.g. Mexico R4).
         const lastPlayed = _rs.filter(r => r.driverPoints && Object.values(r.driverPoints).some(v => v > 0)).sort((a, b) => (b.raceNum || 0) - (a.raceNum || 0))[0];
-        if (live) up = cur || (lastPlayed ? { name: lastPlayed.name, raceNum: lastPlayed.raceNum, lockTime: 0 } : up); }
+        if (live && cur) cur._wk = 1;
+        if (live) up = cur || (lastPlayed ? { name: lastPlayed.name, raceNum: lastPlayed.raceNum, lockTime: 0, _wk: 1 } : up); }
       const tk = (x) => (window.trackKey ? window.trackKey(x) : String(x || '').toLowerCase().replace(/[^a-z0-9]/g, ''));
       // The bot puts track / round on each session, not at the top — read them from there too.
       const _s0 = (manifest.sessions || []).find(x => x && (x.round != null || x.track)) || {};
@@ -3653,7 +3654,7 @@ window.loadAttendance = async function() {
       // number, fall back to the track name.
       const roundOk = mRound != null && up && up.raceNum != null && mRound === Number(up.raceNum);
       const trackOk = mTrack && up && (tk(mTrack) === tk(up.name) || tk(mTrack).includes(tk(up.name)) || tk(up.name).includes(tk(mTrack)));
-      if (ok) ok = (mRound != null && up.raceNum != null) ? roundOk : (mTrack ? trackOk : ok);
+      if (ok) ok = (up && up._wk) ? (roundOk || trackOk) : (mRound != null && up.raceNum != null) ? roundOk : (mTrack ? trackOk : ok); // weekend: round OR track is enough
       if (ok && isFinite(gen) && up.lockTime) ok = gen >= up.lockTime - 10 * 86400000 && gen <= up.lockTime + 4 * 86400000;
       if (ok && !mTrack && !isFinite(gen)) ok = false; // can't verify at all
       window._attendanceStale = !ok;
