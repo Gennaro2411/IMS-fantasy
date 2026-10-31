@@ -3633,7 +3633,13 @@ window.loadAttendance = async function() {
     // Otherwise treat everyone as "not checked in yet" — never as checked out.
     try {
       const sch = await dbGetAll('schedule').catch(() => []);
-      const up = (sch || []).filter(r => r.lockTime > Date.now()).sort((a, b) => a.lockTime - b.lockTime)[0] || null;
+      let up = (sch || []).filter(r => r.lockTime > Date.now()).sort((a, b) => a.lockTime - b.lockTime)[0] || null;
+      // During the race weekend (teams locked / latest round only partly imported) the check-ins belong to the
+      // round that just locked, not the next one on the schedule.
+      { const _rs = await dbGetAll('races').catch(() => []), last = _rs.slice().sort((a, b) => (b.raceNum || 0) - (a.raceNum || 0))[0];
+        const live = (((await dbGet('settings', 'teamsLocked').catch(() => null)) || {}).value) || (last && typeof _raceAllDivsIn === 'function' && !_raceAllDivsIn(last));
+        const cur = (sch || []).filter(r => r.lockTime && r.lockTime <= Date.now()).sort((a, b) => b.lockTime - a.lockTime)[0];
+        if (live && cur) up = cur; }
       const tk = (x) => (window.trackKey ? window.trackKey(x) : String(x || '').toLowerCase().replace(/[^a-z0-9]/g, ''));
       // The bot puts track / round on each session, not at the top — read them from there too.
       const _s0 = (manifest.sessions || []).find(x => x && (x.round != null || x.track)) || {};
@@ -3646,7 +3652,7 @@ window.loadAttendance = async function() {
       const roundOk = mRound != null && up && up.raceNum != null && mRound === Number(up.raceNum);
       const trackOk = mTrack && up && (tk(mTrack) === tk(up.name) || tk(mTrack).includes(tk(up.name)) || tk(up.name).includes(tk(mTrack)));
       if (ok) ok = (mRound != null && up.raceNum != null) ? roundOk : (mTrack ? trackOk : ok);
-      if (ok && isFinite(gen) && up.lockTime) ok = gen >= up.lockTime - 10 * 86400000 && gen <= up.lockTime + 86400000;
+      if (ok && isFinite(gen) && up.lockTime) ok = gen >= up.lockTime - 10 * 86400000 && gen <= up.lockTime + 4 * 86400000;
       if (ok && !mTrack && !isFinite(gen)) ok = false; // can't verify at all
       window._attendanceStale = !ok;
       if (!ok) {
