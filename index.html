@@ -3613,7 +3613,10 @@ window.loadAttendance = async function() {
       const _r = await dbGetAll('races').catch(()=>[]);
       // A round entered ahead of time with all-zero points is still upcoming.
       window._noUpcomingRace = !_r.some(r => !r.driverPoints || Object.keys(r.driverPoints).length === 0 || !Object.values(r.driverPoints).some(v => v > 0))
-        && !(await dbGetAll('schedule').catch(() => [])).some(x => x && x.lockTime > Date.now());
+        && !(await dbGetAll('schedule').catch(() => [])).some(x => x && x.lockTime > Date.now())
+        // Race weekend still running (teams locked, or the latest round only has some divisions in) → keep check-ins showing.
+        && !((await dbGet('settings', 'teamsLocked').catch(() => null)) || {}).value
+        && !(typeof _raceAllDivsIn === 'function' && _r.length && !_raceAllDivsIn(_r.slice().sort((a, b) => (b.raceNum || 0) - (a.raceNum || 0))[0]));
     } catch(e) { window._noUpcomingRace = false; }
     if (window._noUpcomingRace) {
       window._attendanceByDiv = null; window._attendanceAll = null; window._attendanceNamesByDiv = null;
