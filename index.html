@@ -7474,6 +7474,7 @@ window.openBriefSection = function(cls, emptyMsg, scrollSel) {
 window.openFormReport = () => openBriefSection('brf-fr', 'Form report shows when the next race is set and you have a team.');
 window.openReservesIn = () => openBriefSection('brf-res', 'No reserves stepping in yet — check-ins for this round aren\'t in.', '#brf-avail');
 window.showPage = function(page) {
+  if (window._qsArmed && page !== 'games' && window._qsLeave) { window._qsLeave('left'); if (window._qsArmed) { window._qsArmed.away = true; try { localStorage.setItem('qsArmed', JSON.stringify(window._qsArmed)); } catch (e) {} } }
   if (page === 'admin' && typeof window._bottAdjOnce === 'function') setTimeout(() => window._bottAdjOnce(), 1500);
   if (!window._seasonDefs && typeof dbGet === 'function') dbGet('settings','seasonDefinitions').then(d => { if (d && d.value) window._seasonDefs = d.value; }).catch(()=>{});
   if (page === 'my-team') { window._wcWant = true; window._placePick = {}; }
@@ -31099,7 +31100,8 @@ async function renderConnGame(el) {
 }
 
 // ---- Render ----
-window.openGame = function(g) { if (g !== window._games.view && _wdGuardLeave(() => openGame(g))) return; if (g !== 'cn' && typeof _cnEndDuel === 'function') _cnEndDuel(false); if (g !== 'hl' && typeof _hdLeave === 'function') _hdLeave(true); if (g !== 'pt' && typeof _pdLeave === 'function') _pdLeave(true); if (g !== 'tq' && typeof _tqdLeave === 'function') _tqdLeave(true); if (g !== 'cp' && typeof _cpdLeave === 'function') _cpdLeave(true); if (g !== 'wordle') _wdEndDuel(false); if (g !== 'grid' && typeof _gdEnd === 'function') _gdEnd(false); window._grSel = null; window._games.view = g; renderGames(); };
+window.openGame = function(g) {
+  if (window._qsArmed && g !== 'qs' && window._qsLeave) { window._qsLeave('left'); if (window._qsArmed) { window._qsArmed.away = true; try { localStorage.setItem('qsArmed', JSON.stringify(window._qsArmed)); } catch (e) {} } } if (g !== window._games.view && _wdGuardLeave(() => openGame(g))) return; if (g !== 'cn' && typeof _cnEndDuel === 'function') _cnEndDuel(false); if (g !== 'hl' && typeof _hdLeave === 'function') _hdLeave(true); if (g !== 'pt' && typeof _pdLeave === 'function') _pdLeave(true); if (g !== 'tq' && typeof _tqdLeave === 'function') _tqdLeave(true); if (g !== 'cp' && typeof _cpdLeave === 'function') _cpdLeave(true); if (g !== 'wordle') _wdEndDuel(false); if (g !== 'grid' && typeof _gdEnd === 'function') _gdEnd(false); window._grSel = null; window._games.view = g; renderGames(); };
 // ---- Modes: 'daily' (one shared driver per UK day), 'inf' (random, back to back), 'duel' (1v1 race) ----
 const _wdGetMode = () => { try { return localStorage.getItem('imsWordleMode') || 'daily'; } catch (e) { return 'daily'; } };
 window.setWordleMode = function(m) { if (m !== _wdGetMode() && _wdGuardLeave(() => setWordleMode(m))) return; if (m !== 'duel') _wdEndDuel(false); try { localStorage.setItem('imsWordleMode', m); } catch (e) {} clearInterval(window._wdDuelPoll); renderGames(); };
@@ -31882,6 +31884,24 @@ window._qsSave = async function(rk) {
 // Shootout prizes skip the normal games cap: 500 IM$ for the closest guess, 5000 IM$ for spot on.
 async function _qsCredit(uid, n) { try { const c = await _betLoadCoins(uid); c.balance = (c.balance || 0) + n; c.gameEarned = (c.gameEarned || 0) + n; await dbSet('coins', uid, c); _coinPop(n, 'qs-win'); } catch (e) {} }
 // Anti-cheat: once today's pole is on screen, leaving it (other tab, other window, another page in the app, reload) loses the round.
+// Leaving the daily before locking in: first time = a warning, second time = round lost.
+window._qsLeave = async function(why) {
+  const A = window._qsArmed; if (!A || A.day !== _wdDayKey()) return false;
+  const now = Date.now(); if (A.last && now - A.last < 2000) return false; // blur + tab-hide fire together → count once
+  A.last = now; A.strikes = (A.strikes || 0) + 1; try { localStorage.setItem('qsArmed', JSON.stringify(A)); } catch (e) {}
+  if (A.strikes >= 2) { await window._qsForfeit(why); return true; }
+  window._qsWarnPending = true; if (!document.hidden) window._qsWarn();
+  return false;
+};
+window._qsWarn = function() {
+  if (!window._qsWarnPending) return; window._qsWarnPending = false;
+  const d = document.createElement('div'); d.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.7)';
+  d.innerHTML = `<div style="max-width:380px;width:100%;padding:22px;border-radius:18px;text-align:center;background:#16161f;border:1px solid rgba(250,204,21,.5);box-shadow:0 20px 60px rgba(0,0,0,.6)">
+    <div style="font-size:2.4rem">⚠️</div><b style="display:block;font-family:'Barlow Condensed',sans-serif;font-size:1.5rem;letter-spacing:1.5px;margin:4px 0">WARNING — YOU LEFT THE PAGE</b>
+    <p style="margin:6px 0 16px;color:#cfcfe0;font-size:.9rem;line-height:1.5">No looking up the answer! Leave the page again before locking in your guess and <b style="color:#f87171">you lose today's round</b>.</p>
+    <button class="btn btn-primary" style="width:100%">Got it</button></div>`;
+  d.querySelector('button').onclick = () => d.remove(); document.body.appendChild(d);
+};
 window._qsForfeit = async function(why) {
   const A = window._qsArmed; if (!A || A.day !== _wdDayKey()) return; window._qsArmed = null; try { localStorage.removeItem('qsArmed'); } catch (e) {}
   const me = _wdMe(); if (!me.uid) return; const d = await dbGet('qualiGuesses', me.uid).catch(() => null) || {}; if (d.daily && d.daily.day === _wdDayKey()) return;
@@ -31891,9 +31911,10 @@ window._qsForfeit = async function(why) {
   if (window._games && window._games.view === 'qs' && document.getElementById('games-content')) renderGames();
 };
 if (!window._qsListen) { window._qsListen = 1;
-  document.addEventListener('visibilitychange', () => { if (document.hidden && window._qsArmed) window._qsForfeit('tab'); });
-  window.addEventListener('blur', () => { if (window._qsArmed) window._qsForfeit('blur'); });
-  window.addEventListener('pagehide', () => { if (window._qsArmed) window._qsForfeit('left'); }); }
+  document.addEventListener('visibilitychange', () => { if (document.hidden && window._qsArmed) window._qsLeave('tab'); else if (!document.hidden) window._qsWarn(); });
+  window.addEventListener('blur', () => { if (window._qsArmed) window._qsLeave('blur'); });
+  window.addEventListener('focus', () => window._qsWarn());
+  window.addEventListener('pagehide', () => { if (window._qsArmed) window._qsLeave('left'); }); }
 window._qsDailySave = async function() {
   const me = _wdMe(); if (!me.uid) return showToast('Log in to play the daily.', 'error');
   const P = window._qsDayPick; if (!P) return; const v = _qsParse((document.getElementById('qs-day-in') || {}).value);
@@ -31912,7 +31933,11 @@ async function renderQSGame(el) {
   const me = _wdMe(), mode = window._qsMode || 'now';
   // Any re-render while today's pole is armed (switching tab in the game, leaving Games, reloading) = left the page.
   { let prev = window._qsArmed; if (!prev) { try { prev = JSON.parse(localStorage.getItem('qsArmed') || 'null'); } catch (e) {} }
-    if (prev && prev.day === _wdDayKey()) { window._qsArmed = prev; await window._qsForfeit('left'); if (document.getElementById('games-content') && window._games.view === 'qs') {} return; } }
+    if (prev && prev.day === _wdDayKey()) { window._qsArmed = prev;
+      if (prev.away) { if (mode === 'day') { prev.away = false; try { localStorage.setItem('qsArmed', JSON.stringify(prev)); } catch (e) {} } } // coming back: no extra strike
+      else if (mode !== 'day' || !window._qsSeen) { // left the daily (other tab / left Games / reloaded)
+        const lost = await window._qsLeave('left'); if (lost) return; prev.away = mode !== 'day'; try { localStorage.setItem('qsArmed', JSON.stringify(prev)); } catch (e) {} } } }
+  window._qsSeen = mode === 'day';
   const [races, schedule, arcs, lockDoc] = await Promise.all([dbGetAll('races').catch(() => []), dbGetAll('schedule').catch(() => []), dbGetAll('seasonArchives').catch(() => []), dbGet('settings', 'teamsLocked').catch(() => null)]);
   if (!window._qsAll || Date.now() - window._qsAll.at > 30e3) window._qsAll = { at: Date.now(), list: await dbGetAll('qualiGuesses', { fresh: true }).catch(() => []) };
   const all = window._qsAll.list, mine = (all.find(u => u.id === me.uid) || {});
@@ -31942,10 +31967,10 @@ async function renderQSGame(el) {
     let dd = mine.daily && mine.daily.day === _wdDayKey() ? mine.daily : null;
 
     if (!P) body = '<div class="card" style="text-align:center;padding:26px">No past pole times on record yet.</div>';
-    else { if (!dd && me.uid && !locked) { window._qsArmed = { day: _wdDayKey(), k: P.k }; try { localStorage.setItem('qsArmed', JSON.stringify(window._qsArmed)); } catch (e) {} }
+    else { if (!dd && me.uid && !locked) { const old = window._qsArmed && window._qsArmed.day === _wdDayKey() ? window._qsArmed : null; window._qsArmed = { day: _wdDayKey(), k: P.k, strikes: old ? old.strikes || 0 : 0, last: old ? old.last || 0 : 0 }; try { localStorage.setItem('qsArmed', JSON.stringify(window._qsArmed)); } catch (e) {} }
       const err = dd && !dd.f ? Math.abs(dd.g - P.pole) : null, col = HUE[P.dv] || HUE[P.dv === 'D4' ? 'E3' : P.dv] || '#a0a4ff';
       const today = all.filter(u => u.daily && !u.daily.f && u.daily.day === _wdDayKey() && u.daily.k === P.k).map(u => ({ u, err: Math.abs(u.daily.g - P.pole), g: u.daily.g })).sort((a, b) => a.err - b.err);
-      body = `<div class="text-muted" style="font-size:.82rem;margin:0 0 12px;text-align:center">⚠️ <b style="color:#fca5a5">Don't leave this page</b> — switching tab or app before locking in loses today's round. One real IMS pole a day. <b style="color:#ffd84d">+10 IM$</b> for playing, <b style="color:#ffd84d">+10 IM$</b> more if you're within a tenth.</div>
+      body = `<div class="text-muted" style="font-size:.82rem;margin:0 0 12px;text-align:center">⚠️ <b style="color:#fca5a5">Don't leave this page</b> — leave once and you get a warning, leave twice before locking in and you lose today's round. One real IMS pole a day. <b style="color:#ffd84d">+10 IM$</b> for playing, <b style="color:#ffd84d">+10 IM$</b> more if you're within a tenth.</div>
         <div class="card" style="padding:20px 18px;text-align:center;border-color:${col}66;background:linear-gradient(160deg,${col}1c,var(--surface) 60%)">
           <div style="font-size:.7rem;font-weight:800;letter-spacing:2px;color:${col}">SEASON ${P.se} · ${esc(P.dv)}${P.r.raceNum ? ' · ROUND ' + P.r.raceNum : ''}</div>
           <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.9rem;letter-spacing:1.5px;margin:4px 0 2px">${typeof getRaceFlag === 'function' ? getRaceFlag(P.r.name) : ''} ${esc(P.r.name)}</div>
