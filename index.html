@@ -28202,7 +28202,7 @@ function _betOutcome(b, races) {
   const race = races.filter(r => (r.name || '').toLowerCase().trim() === (b.raceName || '').toLowerCase().trim() && (b.div === 'BOTT' ? r.constructorPoints : r.positionByDivision))
     .sort((x, y) => ((b.div === 'BOTT' ? _raceAllDivsIn(y) : 0) - (b.div === 'BOTT' ? _raceAllDivsIn(x) : 0)) || ((y.updatedAt || y.createdAt || 0) - (x.updatedAt || x.createdAt || 0)) || ((y.raceNum || 0) - (x.raceNum || 0)))[0];
   if (!race) return null;
-  if (b.div === 'BOTT' && !b._resettle && !_raceAllDivsIn(race)) return null; // still waiting on later divisions — don't settle on partial BOTT points
+  if (b.div === 'BOTT' && !_raceAllDivsIn(race)) return null; // still waiting on later divisions — don't settle on partial BOTT points
   let pos;
   if (b.div === 'BOTT') {
     // Constructors: rank by this round's BOTT points. Ties share the better position.
@@ -28402,7 +28402,7 @@ async function _betSettleMine(userId, races, coins) {
       const oldPay = b.status === 'open' ? 0 : (b.payout || 0);
       if (b.status === st && oldPay === pay) {
         // Bet outcome unchanged, but leg results may have been recomputed (e.g. BOTT points corrected after the first settle) — refresh stale ✕/✓ on the legs.
-        const fresh = (b.legs || []).map((l, i) => ({ ...l, result: ls[i] != null ? ls[i] : (l.result || null) }));
+        const fresh = (b.legs || []).map((l, i) => ({ ...l, result: ls[i] != null ? ls[i] : (l.div === 'BOTT' && l.result !== 'void' ? null : (l.result || null)) })); // BOTT legs waiting on other divisions go back to ⏳
         if (fresh.some((l, i) => (l.result || null) !== ((b.legs || [])[i].result || null))) { b.legs = fresh; await dbSet('bets', b.id, b).catch(() => {}); changed = true; }
         continue;
       }
