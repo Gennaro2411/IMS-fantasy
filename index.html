@@ -3639,7 +3639,9 @@ window.loadAttendance = async function() {
       { const _rs = await dbGetAll('races').catch(() => []), last = _rs.slice().sort((a, b) => (b.raceNum || 0) - (a.raceNum || 0))[0];
         const live = (((await dbGet('settings', 'teamsLocked').catch(() => null)) || {}).value) || (last && typeof _raceAllDivsIn === 'function' && !_raceAllDivsIn(last));
         const cur = (sch || []).filter(r => r.lockTime && r.lockTime <= Date.now()).sort((a, b) => b.lockTime - a.lockTime)[0];
-        if (live && cur) up = cur; }
+        // Rounds drop off the schedule once they lock — fall back to the latest round in the results (e.g. Mexico R4).
+        const lastPlayed = _rs.filter(r => r.driverPoints && Object.values(r.driverPoints).some(v => v > 0)).sort((a, b) => (b.raceNum || 0) - (a.raceNum || 0))[0];
+        if (live) up = cur || (lastPlayed ? { name: lastPlayed.name, raceNum: lastPlayed.raceNum, lockTime: 0 } : up); }
       const tk = (x) => (window.trackKey ? window.trackKey(x) : String(x || '').toLowerCase().replace(/[^a-z0-9]/g, ''));
       // The bot puts track / round on each session, not at the top — read them from there too.
       const _s0 = (manifest.sessions || []).find(x => x && (x.round != null || x.track)) || {};
