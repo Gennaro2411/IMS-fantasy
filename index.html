@@ -22146,10 +22146,10 @@ const CHECKED_OUT_RING = '0 0 0 2px #ff3b4e, 0 0 8px rgba(255,59,78,0.4)';
 // Red ring (box-shadow) to wrap a banned driver's avatar.
 const RACE_BAN_RING = '0 0 0 2px #ff3b4e, 0 0 8px rgba(255,59,78,0.55)';
 // True when a driver is currently serving a race ban.
-// Dominance warnings: within 20 of +100 = promotion risk (not D0 — top division), within 20 of −100 = relegation risk (not the bottom division).
+// Dominance warnings: within 20 of +100 = promotion risk (not D0 — top division), within 20 of −100 = relegation risk (not D3/E3 — bottom tiers).
 function _domWarn(d) {
   if (window._hideDom || !d || d.lastDominance == null) return null; const v = Number(d.lastDominance), div = String(d.division || '').toUpperCase();
-  if (!isFinite(v)) return null; const bottom = ['E3', 'D4'].includes(div);
+  if (!isFinite(v)) return null; const bottom = ['D3', 'E3', 'D4'].includes(div); // D3 and E3 are both bottom tiers: no relegation
   if (v >= 80 && v < 100 && div !== 'D0') return { kind: 'promo', v, gap: Math.ceil(100 - v), col: '#ffb74d',
     short: `⚠️ DOM ${v.toFixed(0)}/100 · PROMOTION RISK · MAY MANAGE`, txt: `Dominance ${v.toFixed(1)} — ${Math.ceil(100 - v)} off the +100 promotion line.`, why: 'Drivers this close often manage their dominance to avoid being promoted, so their scores and price could trend down.' };
   if (v <= -80 && v > -100 && !bottom) return { kind: 'demo', v, gap: Math.ceil(v + 100), col: '#f87171',
