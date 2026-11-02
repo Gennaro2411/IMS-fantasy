@@ -4017,8 +4017,12 @@ async function fsRequest(method, url, body) {
 // that mutate objects can't corrupt the cache.
 window._dbCache = window._dbCache || {};        // col -> { at: ms, data: [...] }
 window._DB_CACHE_TTL = 8000;                     // ms; short enough that nothing feels stale
+// Collections that rarely change keep longer (your own writes still clear them instantly).
+window._DB_TTL = { archives: 1800000, seasonArchives: 1800000, constructors: 300000, drivers: 180000, schedule: 180000, races: 120000, teams: 90000, transfers: 90000, bets: 30000 };
+window._dbInflight = window._dbInflight || {};
 function dbInvalidate(col) {
-  if (col) delete window._dbCache[col]; else window._dbCache = {};
+  window._dbGen = (window._dbGen || 0) + 1;
+  if (col) { delete window._dbCache[col]; delete window._dbInflight[col]; } else { window._dbCache = {}; window._dbInflight = {}; }
   // Reserve plans depend on teams/races/drivers — drop the cached plans when any of those change.
   if (!col || col === 'teams' || col === 'races' || col === 'drivers') { try { window.clearReservePlanCache && window.clearReservePlanCache(); } catch(e){} }
 }
@@ -4056,9 +4060,18 @@ async function _dbGetAllRaw(col, opts) {
   if (!PROJECT_ID) return [];
   const noCache = opts && opts.fresh;
   const hit = window._dbCache[col];
-  if (!noCache && hit && (Date.now() - hit.at) < window._DB_CACHE_TTL) {
+  if (!noCache && hit && (Date.now() - hit.at) < (window._DB_TTL[col] || window._DB_CACHE_TTL)) {
     return _dbClone(hit.data);
   }
+  // Many parts of a page ask for the same collection at once — share one download instead of
+  // reading the whole collection once per caller (this was the bulk of the Firestore read bill).
+  const fl = window._dbInflight[col];
+  if (!noCache && fl) return fl.then(_dbClone);
+  const pr = _dbFetchAll(col); window._dbInflight[col] = pr;
+  try { return _dbClone(await pr); } finally { if (window._dbInflight[col] === pr) delete window._dbInflight[col]; }
+}
+async function _dbFetchAll(col) {
+  const gen = window._dbGen || 0;
   try {
     // Page through the whole collection — Firestore returns at most pageSize docs per call, so
     // without following nextPageToken anything past the first 300 docs (bets, teams…) was silently lost.
@@ -4069,8 +4082,8 @@ async function _dbGetAllRaw(col, opts) {
       arr = arr.concat((data.documents||[]).map(fsDocToObj));
       token = data.nextPageToken || null;
     } while (token && ++pages < 50);
-    window._dbCache[col] = { at: Date.now(), data: arr };
-    return _dbClone(arr);
+    if ((window._dbGen || 0) === gen) window._dbCache[col] = { at: Date.now(), data: arr }; // a write landed mid-download → don't keep possibly-old data
+    return arr;
   } catch(e) { console.error('dbGetAll',col,e); return []; }
 }
 
