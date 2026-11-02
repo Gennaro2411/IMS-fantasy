@@ -2011,6 +2011,8 @@
     #page-bets .bo-special{position:relative;overflow:hidden;margin:0 0 14px;padding:16px 18px;border-radius:18px;border:1px solid rgba(255,214,102,.55);background:radial-gradient(circle at 100% 0,rgba(255,214,102,.25),transparent 50%),linear-gradient(135deg,#2a2040,#15151f 70%);box-shadow:0 12px 30px rgba(0,0,0,.35)}
     #page-bets .bo-special::after{content:'🎂';position:absolute;right:10px;top:4px;font-size:3.4rem;opacity:.14}
     #page-bets .bo-special-k{font-size:.62rem;font-weight:900;letter-spacing:2px;color:#ffd666}
+    #page-bets .bo-special-tabs{position:relative;z-index:1;display:flex;gap:6px;margin:10px 0 2px;flex-wrap:wrap}#page-bets .bo-special-tabs button{padding:6px 14px;border-radius:999px;border:1px solid rgba(255,214,102,.45);background:rgba(255,214,102,.06);color:#ffd666;font-weight:900;letter-spacing:1px;font-size:.78rem;cursor:pointer}
+    #page-bets .bo-special-tabs button.on{background:linear-gradient(135deg,#ffe259,#ffa751);color:#111;border-color:transparent}
     #page-bets .bo-special-t{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;font-size:1.8rem;line-height:1;letter-spacing:.5px;margin-top:4px;background:linear-gradient(90deg,#fff,#ffd666);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
     #page-bets .bo-special-b{font-size:.8rem;color:#c9c9dd;margin-top:6px;line-height:1.45;max-width:560px}
     #page-bets .bo-special-legs{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:12px 0}
@@ -28234,9 +28236,18 @@ function _raceAllDivsIn(race) {
 // Legs use names (resolved to driver ids when placed). Settles on every leg: any loss → lost, all in → won,
 // a leg whose driver didn't race → the whole special is refunded.
 const BET_SPECIALS = [
-  { id: 'og-s1', race: 'Brazil', kicker: '🎂 IMS ANNIVERSARY SPECIAL', title: 'The Class of Season 1', odds: 26.0,
-    blurb: 'Four Season 1 originals, still racing eight seasons later. All four to finish in the top 5 of their division.',
-    legs: [{ div: 'D0', name: 'piastrigoat' }, { div: 'D1', name: 'Webbah87' }, { div: 'D2', name: 'Carlos Velez' }, { div: 'E3', name: 'L3on Tyl3r2500' }] }];
+  { id: 'og-s1', grp: 'og', tab: 'S1', race: 'Brazil', kicker: '🎂 IMS ANNIVERSARY SPECIAL', title: 'The Class of Season 1', odds: 26.0,
+    blurb: 'Four drivers who debuted in Season 1 — still racing eight seasons later. All four to finish in the top 5 of their division.',
+    legs: [{ div: 'D0', name: 'piastrigoat' }, { div: 'D1', name: 'Webbah87' }, { div: 'D3', name: 'Carlos Velez' }, { div: 'E3', name: 'L3on Tyl3r2500' }] },
+  { id: 'og-s2', grp: 'og', tab: 'S2', race: 'Brazil', kicker: '🎂 IMS ANNIVERSARY SPECIAL', title: 'The Class of Season 2', odds: 26.0,
+    blurb: 'Four drivers who debuted in Season 2. All four to finish in the top 5 of their division.',
+    legs: [{ div: 'D1', name: 'Rickk116' }, { div: 'D2', name: 'JDJT3593' }, { div: 'D3', name: 'NesbiLeGrand' }, { div: 'E3', name: 'Opts Tryhard' }] },
+  { id: 'og-s3', grp: 'og', tab: 'S3', race: 'Brazil', kicker: '🎂 IMS ANNIVERSARY SPECIAL', title: 'The Class of Season 3', odds: 26.0,
+    blurb: 'Four drivers who debuted in Season 3. All four to finish in the top 5 of their division.',
+    legs: [{ div: 'D0', name: 'Charlotte' }, { div: 'D1', name: 'Rizla' }, { div: 'D2', name: 'Schokolade' }, { div: 'E3', name: 'geo2002' }] },
+  { id: 'og-s4', grp: 'og', tab: 'S4', race: 'Brazil', kicker: '🎂 IMS ANNIVERSARY SPECIAL', title: 'The Class of Season 4', odds: 26.0,
+    blurb: 'Four drivers who debuted in Season 4. All four to finish in the top 5 of their division.',
+    legs: [{ div: 'D0', name: 'Sammy278' }, { div: 'D1', name: 'PolyTromp' }, { div: 'D2', name: 'BenArnold07' }, { div: 'E3', name: 'Jean_Claude04' }] }];
 window._betSpecialsFor = (raceName) => { const tk = (x) => window.trackKey ? window.trackKey(x) : String(x || '').toLowerCase();
   const ov = window._betSpecialOdds || {}; return BET_SPECIALS.filter(x => tk(raceName) === tk(x.race)).map(x => ({ ...x, odds: Number(ov[x.id]) || x.odds })); };
 function _betOutcome(b, races) {
@@ -29224,10 +29235,14 @@ window.renderBets = async function() {
     <div class="bo-disclaimer">Just for fun. IM$ are pretend money, with no value; they can't be bought, sold or cashed out.</div>
     ${(() => { const SP = upcoming ? window._betSpecialsFor(upcoming.name) : []; if (!SP.length) return '';
       const nk = (n) => String(n || '').toLowerCase().replace(/\[[^\]]*\]/g, '').replace(/[^a-z0-9]/g, '');
-      return SP.map(sp => { const L = sp.legs.map(l => { const d = (drivers || []).find(x => nk(x.name) === nk(l.name) || (x.imsAlias && nk(x.imsAlias) === nk(l.name))); return { ...l, d, id: d && d.id }; });
+      const groups = []; SP.forEach(x => { let g = groups.find(y => y.grp === (x.grp || x.id)); if (!g) groups.push(g = { grp: x.grp || x.id, items: [] }); g.items.push(x); });
+      window._betSpecSel = window._betSpecSel || {};
+      return groups.map(g => { const sp = g.items.find(x => x.id === window._betSpecSel[g.grp]) || g.items[0];
+        const tabs = g.items.length > 1 ? `<div class="bo-special-tabs">${g.items.map(x => `<button class="${x.id === sp.id ? 'on' : ''}" onclick="window._betSpecSel['${g.grp}']='${x.id}';renderBets()">${esc(x.tab || x.title)}</button>`).join('')}</div>` : '';
+        const L = sp.legs.map(l => { const d = (drivers || []).find(x => nk(x.name) === nk(l.name) || (x.imsAlias && nk(x.imsAlias) === nk(l.name))); return { ...l, d, id: d && d.id }; });
         const okAll = L.every(l => l.id), on = (window._betLegs || []).some(x => x.market === 'special' && x.sel[0] === sp.id);
         window._betSpecLegs = window._betSpecLegs || {}; window._betSpecLegs[sp.id] = L.map(l => ({ div: l.div, id: l.id, name: l.d ? l.d.name : l.name }));
-        return `<div class="bo-special"><div class="bo-special-k">${esc(sp.kicker)}</div><div class="bo-special-t">${esc(sp.title)}</div><div class="bo-special-b">${esc(sp.blurb)}</div>
+        return `<div class="bo-special"><div class="bo-special-k">${esc(sp.kicker)}</div>${tabs}<div class="bo-special-t">${esc(sp.title)}</div><div class="bo-special-b">${esc(sp.blurb)}</div>
           <div class="bo-special-legs">${L.map(l => `<div class="bo-special-leg">${l.d && typeof initialsAvatar === 'function' ? initialsAvatar(l.d.name, 34, 'border-radius:50%', null, typeof driverPhoto === 'function' ? driverPhoto(l.d) : '') : ''}<div><b>${esc(l.d ? l.d.name : l.name)}</b><small>${l.div} · TOP 5</small></div></div>`).join('')}</div>
           <div class="bo-special-f">${adminLoggedIn ? `<button class="btn btn-secondary btn-sm" onclick="betSpecialOdds('${sp.id}', ${sp.odds})">✎ Odds</button>` : ''}
             ${okAll && open ? `<button class="bo-special-go${on ? ' on' : ''}" onclick="betSpecialPick('${sp.id}', ${sp.odds}, '${esc(sp.title).replace(/'/g, '&#39;')}')">${on ? '✓ On your slip' : 'Back it'} <b>${fmtOdds(sp.odds)}</b></button>` : okAll ? '' : '<small class="text-muted">A driver in this special couldn\'t be found.</small>'}</div></div>`; }).join(''); })()}
