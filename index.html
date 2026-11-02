@@ -29148,7 +29148,9 @@ window.renderBets = async function() {
   (schedule || []).filter(r => r.lockTime && Number(r.lockTime) <= Date.now()).forEach(r => { const k = String(r.name).toLowerCase().replace(/grand prix|\bgp\b/g, '').replace(/[^a-z0-9]/g, ''); _pRnd[k] = { name: r.name, n: r.raceNum || (_pRnd[k] || {}).n || 0, t: Number(r.lockTime) }; });
   const _pastRounds = Object.values(_pRnd).sort((a, b) => (b.n - a.n) || (b.t - a.t)).map(r => r.name);
   const _rn = (x) => String(x || '').toLowerCase().replace(/grand prix|\bgp\b/g, '').replace(/[^a-z0-9]/g, '');
-  let _streak = 0; for (const n of _pastRounds) { if (myBets.some(b => _rn(b.raceName) === _rn(n))) _streak++; else break; }
+  // Streak = rounds in a row with a bet, counted back to (not including) the last round you used a streak free bet —
+  // so using it resets the count and you need another 3 rounds in a row. Gifted free bets don't reset it.
+  let _streak = 0; for (const n of _pastRounds) { const mine = myBets.filter(b => _rn(b.raceName) === _rn(n)); if (mine.some(b => b.free && !b.gifted)) break; if (mine.length) _streak++; else break; }
   // Streak free bet (once per round) OR a free bet the admin gifted (used whenever).
   const _haveFree = !!upcoming && ((coins.freeBetGifts || 0) > 0 || (_streak >= BET_FREE_STREAK && coins.freeBetUsed !== upcoming.name));
   window._betFreeOk = _haveFree; if (!_haveFree) window._betUseFree = false;
