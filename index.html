@@ -29253,7 +29253,7 @@ window.renderBets = async function() {
         // (this season + archives, nudged towards ~25% so a few races don't swing it). The special pays 2× that.
         const p5 = (id, dv) => { let n = 0, t = 0; _allRaceSets.forEach(r => { const v = ((r.positionByDivision || {})[id] || {})[dv]; if (v == null) return; n++; if (Number(v) <= 5) t++; }); return Math.min(0.95, Math.max(0.03, (t + 1) / (n + 4))); };
         const P = L.reduce((a, l) => a * (l.id ? p5(l.id, l.div) : 0.25), 1), fair = Math.round(Math.min(5000, 1 / Math.max(P, 1e-6)) * 100) / 100;
-        const ov = (window._betSpecialOdds || {})[sp.id]; sp.odds = Number(ov) > 1 ? Number(ov) : Math.round(fair * 2 * 100) / 100; sp.fair = fair;
+        const ov = Number((window._betSpecialOdds || {})[sp.id]); sp.odds = ov > fair ? ov : Math.round(fair * 2 * 100) / 100; sp.fair = fair; // a manual price below the normal odds isn't a boost → ignored
         const okAll = L.every(l => l.id), on = (window._betLegs || []).some(x => x.market === 'special' && x.sel[0] === sp.id);
         window._betSpecLegs = window._betSpecLegs || {}; window._betSpecLegs[sp.id] = L.map(l => ({ div: l.div, id: l.id, name: l.d ? l.d.name : l.name }));
         return `<div class="bo-special"><div class="bo-special-k">${esc(sp.kicker)}</div>${tabs}<div class="bo-special-t">${esc(sp.title)}</div><div class="bo-special-b">${esc(sp.blurb)}</div>
