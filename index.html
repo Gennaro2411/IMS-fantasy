@@ -30355,7 +30355,7 @@ window.betPlace = async function() {
   if (!useFree && stake < BET_MIN_STAKE) return err('Minimum bet is ' + BET_MIN_STAKE + ' <i class="imc" title="IM$"></i>.');
   if (useFree && !(coins.freeBetGifts > 0) && coins.freeBetUsed === ctx.upcoming.name) return err('You\'ve already used your free bet this round.');
   if (!useFree && stake > coins.balance) return err('Not enough coins.');
-  if (legs.some(l => l.market === 'pole' && !(window._betPoleOk && window._betPoleOk.has(l.sel[0])))) return err('Pole bets need a driver with at least 3 recorded qualifying laps.');
+  if (legs.some(l => l.market === 'pole' && !l.bday && !(window._betPoleOk && window._betPoleOk.has(l.sel[0])))) return err('Pole bets need a driver with at least 3 recorded qualifying laps.');
   if (window._betOutIds && legs.some(l => l.sel.some(id => window._betOutIds.has(id)))) return err('A driver on your slip is out of this race (checked out or race-banned) — remove them first.');
   const id = 'bet_' + currentUser.userId + '_' + Date.now();
   let doc, label, odds;
