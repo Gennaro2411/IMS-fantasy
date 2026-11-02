@@ -15728,7 +15728,7 @@ window.importDbRound = async function(roundNo, trackName) {
     // division in a round (e.g. a reserve drive), so a DNF in one must NOT show against their
     // result in another. { dId: { div: 'DNF' } }
     const statusByDriverDivision = {};
-    const batchDriverIds = new Set(); // every driver seen in this batch — for stale-status cleanup
+    const batchDivPairs = []; const batchDriverIds = new Set(); // every driver seen in this batch — for stale-status cleanup
     rows.forEach(([driver, team, raceDiv, finishPos, pts, eloPost, eloChange, rowOrder, raceTime, bottEff, licence]) => {
       const driverKey = (driver||'').toLowerCase().trim();
       // Dedupe by driver+division, not just driver — a driver can legitimately race in more
@@ -15762,6 +15762,7 @@ window.importDbRound = async function(roundNo, trackName) {
         // Track that this driver appeared in this batch — used to clear stale status badges
         // from earlier imports when re-importing
         batchDriverIds.add(dId);
+        if (raceDiv) batchDivPairs.push([dId, raceDiv]); // per-division results this batch re-states
         // Record the status against THIS row's division regardless of whether it counts for
         // fantasy points, so a DNF in one division never shows against a finish in another.
         {
@@ -16135,10 +16136,16 @@ window.importDbRound = async function(roundNo, trackName) {
     // Per-division statuses merge like driverPointsByDivision — each batch updates only the
     // divisions it contains, leaving other divisions' statuses intact.
     const mergedStatusByDivision = { ...((existingRace && existingRace.raceStatusByDivision) || {}) };
+    const mergedPositionByDivision = { ...((existingRace && existingRace.positionByDivision) || {}) };
+    // Re-import replaces this batch's per-division result outright: a driver who was DNF in an earlier
+    // import but now finished (e.g. "1 Lap(s)") must lose the old DNF badge, and vice versa.
+    batchDivPairs.forEach(([dId, dv]) => {
+      if (mergedStatusByDivision[dId]) { mergedStatusByDivision[dId] = { ...mergedStatusByDivision[dId] }; delete mergedStatusByDivision[dId][dv]; }
+      if (mergedPositionByDivision[dId]) { mergedPositionByDivision[dId] = { ...mergedPositionByDivision[dId] }; delete mergedPositionByDivision[dId][dv]; }
+    });
     Object.entries(statusByDriverDivision).forEach(([dId, byDiv]) => {
       mergedStatusByDivision[dId] = { ...(mergedStatusByDivision[dId] || {}), ...byDiv };
     });
-    const mergedPositionByDivision = { ...((existingRace && existingRace.positionByDivision) || {}) };
     Object.entries(positionByDivision).forEach(([dId, byDiv]) => {
       mergedPositionByDivision[dId] = { ...(mergedPositionByDivision[dId] || {}), ...byDiv };
     });
