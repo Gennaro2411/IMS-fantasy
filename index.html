@@ -28237,17 +28237,17 @@ function _raceAllDivsIn(race) {
 // a leg whose driver didn't race → the whole special is refunded.
 const BET_SPECIALS = [
   { id: 'og-s1', grp: 'og', tab: 'S1', race: 'Brazil', kicker: '🎂 IMS ANNIVERSARY SPECIAL', title: 'The Class of Season 1', odds: 26.0,
-    blurb: 'Four drivers who debuted in Season 1 — still racing eight seasons later. All four to finish in the top 5 of their division.',
-    legs: [{ div: 'D0', name: 'piastrigoat' }, { div: 'D1', name: 'Webbah87' }, { div: 'D3', name: 'Carlos Velez' }, { div: 'E3', name: 'L3on Tyl3r2500' }] },
+    blurb: 'The four best Season 1 debutants still racing eight seasons later. All four to finish in the top 5 of their division.',
+    legs: [{ div: 'D0', name: 'piastrigoat' }, { div: 'D0', name: 'ForestalWaif1' }, { div: 'D0', name: 'Wadz51' }, { div: 'D1', name: 'Webbah87' }] },
   { id: 'og-s2', grp: 'og', tab: 'S2', race: 'Brazil', kicker: '🎂 IMS ANNIVERSARY SPECIAL', title: 'The Class of Season 2', odds: 26.0,
-    blurb: 'Four drivers who debuted in Season 2. All four to finish in the top 5 of their division.',
-    legs: [{ div: 'D1', name: 'Rickk116' }, { div: 'D2', name: 'JDJT3593' }, { div: 'D3', name: 'NesbiLeGrand' }, { div: 'E3', name: 'Opts Tryhard' }] },
+    blurb: 'The four best drivers who debuted in Season 2. All four to finish in the top 5 of their division.',
+    legs: [{ div: 'D1', name: 'CONNOROCE' }, { div: 'D1', name: 'Rickk116' }, { div: 'D1', name: 'gennaro1173' }, { div: 'D2', name: 'JDJT3593' }] },
   { id: 'og-s3', grp: 'og', tab: 'S3', race: 'Brazil', kicker: '🎂 IMS ANNIVERSARY SPECIAL', title: 'The Class of Season 3', odds: 26.0,
-    blurb: 'Four drivers who debuted in Season 3. All four to finish in the top 5 of their division.',
-    legs: [{ div: 'D0', name: 'Charlotte' }, { div: 'D1', name: 'Rizla' }, { div: 'D2', name: 'Schokolade' }, { div: 'E3', name: 'geo2002' }] },
+    blurb: 'The four best drivers who debuted in Season 3. All four to finish in the top 5 of their division.',
+    legs: [{ div: 'D0', name: 'Charlotte' }, { div: 'D1', name: 'Rizla' }, { div: 'D1', name: 'xAQxFr' }, { div: 'D1', name: 'Walter9500' }] },
   { id: 'og-s4', grp: 'og', tab: 'S4', race: 'Brazil', kicker: '🎂 IMS ANNIVERSARY SPECIAL', title: 'The Class of Season 4', odds: 26.0,
-    blurb: 'Four drivers who debuted in Season 4. All four to finish in the top 5 of their division.',
-    legs: [{ div: 'D0', name: 'Sammy278' }, { div: 'D1', name: 'PolyTromp' }, { div: 'D2', name: 'BenArnold07' }, { div: 'E3', name: 'Jean_Claude04' }] }];
+    blurb: 'The four best drivers who debuted in Season 4. All four to finish in the top 5 of their division.',
+    legs: [{ div: 'D0', name: 'Sammy278' }, { div: 'D0', name: 'MacoDelVolante' }, { div: 'D1', name: 'PolyTromp' }, { div: 'D1', name: 'UKTUS' }] }];
 window._betSpecialsFor = (raceName) => { const tk = (x) => window.trackKey ? window.trackKey(x) : String(x || '').toLowerCase();
   const ov = window._betSpecialOdds || {}; return BET_SPECIALS.filter(x => tk(raceName) === tk(x.race)).map(x => ({ ...x, odds: Number(ov[x.id]) || x.odds })); };
 function _betOutcome(b, races) {
