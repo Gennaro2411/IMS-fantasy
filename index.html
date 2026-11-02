@@ -29265,7 +29265,7 @@ window.renderBets = async function() {
         const pa = 1 / (1 + Math.pow(10, ((b.elo || 0) - (a.elo || 0)) / 400)), m = Number(h.mult) || 1;
         const oa = Math.round(_betOdds(pa) * m * 100) / 100, ob = Math.round(_betOdds(1 - pa) * m * 100) / 100;
         const side = (d, sel, o) => `<div class="bo-h2h-side">${typeof initialsAvatar === 'function' ? initialsAvatar(d.name, 46, 'border-radius:50%', null, typeof driverPhoto === 'function' ? driverPhoto(d) : '') : ''}<b>${esc(d.name)}</b><small>${esc(d.team || '')}</small>${oddsBtn('h2h', sel, d.name + ' to beat ' + (d.id === a.id ? b.name : a.name) + ' (' + div + ')', o)}</div>`;
-        return `<div class="bo-h2h"><div class="bo-h2h-k">⚔️ ${esc(h.kicker || 'FEATURED HEAD TO HEAD')}${m > 1 ? ` · <span>🚀 ${m}× BOOSTED</span>` : ''}${adminLoggedIn ? `<button class="bo-h2h-x" onclick="betH2HDel('${esc(h.id)}')" title="Remove">✕</button>` : ''}</div>${h.title ? `<div class="bo-h2h-t">${esc(h.title)}</div>` : ''}
+        return `<div class="bo-h2h"><div class="bo-h2h-k">⚔️ ${esc(h.kicker || 'FEATURED HEAD TO HEAD')}${m > 1 ? ` · <span>🚀 ${m}× BOOSTED</span>` : ''}${adminLoggedIn ? `<button class="bo-h2h-x" style="margin-left:auto" onclick="betH2HNew('${esc(h.id)}')" title="Edit / boost">✎ Edit</button><button class="bo-h2h-x" style="margin-left:4px" onclick="betH2HDel('${esc(h.id)}')" title="Remove">✕</button>` : ''}</div>${h.title ? `<div class="bo-h2h-t">${esc(h.title)}</div>` : ''}
           <div class="bo-h2h-row">${side(a, [a.id, b.id], oa)}<div class="bo-h2h-vs">VS</div>${side(b, [b.id, a.id], ob)}</div><div class="bo-h2h-n">Whoever finishes ahead in ${esc(div)} wins. If either doesn't race, it's refunded.</div></div>`; };
       return H.map(card).join('') + (adminLoggedIn && upcoming ? `<button class="btn btn-secondary btn-sm" style="margin:0 0 12px" onclick="betH2HNew()">⚔️ Create a ${esc(div)} head to head</button>` : ''); })()}
     ${BOOSTS.length && window._betBoostTitle ? `<div style="display:flex;align-items:center;gap:8px;margin:2px 0 8px"><span style="font-size:1.1rem">🚀</span><span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.35rem;line-height:1.05;text-transform:uppercase;letter-spacing:.5px;background:linear-gradient(90deg,#ffe259,#ffa751);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">${esc(window._betBoostTitle)}</span></div>` : ''}
@@ -30126,25 +30126,29 @@ function _betLegClashes(legs) {
   }
   return bad;
 }
-window.betH2HNew = function() {
+window.betH2HNew = function(editId) {
+  const E = editId ? (window._betH2HList || []).find(x => x.id === editId) : null; window._betH2HEdit = E ? E.id : null;
   const F = (window._betH2HField || []).slice().sort((x, y) => String(x.name).localeCompare(String(y.name))), div = window._betDiv, up = window._betCtx && window._betCtx.upcoming; if (!up || !F.length) return;
   const opt = F.map(d => `<option value="${esc(d.id)}">${esc(d.name)}</option>`).join('');
   const el = document.createElement('div'); el.id = 'h2h-modal'; el.className = 'bst-ov in';
-  el.innerHTML = `<div class="bst-card"><div class="bst-top"><span class="bst-ic">⚔️</span><div><div class="bst-k">New head to head · ${esc(div)} · ${esc(up.name)}</div><div class="bst-t">Create a featured H2H</div></div><button class="bst-x" onclick="document.getElementById('h2h-modal').remove()">✕</button></div>
+  el.innerHTML = `<div class="bst-card"><div class="bst-top"><span class="bst-ic">⚔️</span><div><div class="bst-k">New head to head · ${esc(div)} · ${esc(up.name)}</div><div class="bst-t">${E ? 'Edit head to head' : 'Create a featured H2H'}</div></div><button class="bst-x" onclick="document.getElementById('h2h-modal').remove()">✕</button></div>
     <label class="bst-in"><span>Driver A</span><select id="h2h-a">${opt}</select></label>
     <label class="bst-in"><span>Driver B</span><select id="h2h-b">${opt}</select></label>
     <label class="bst-in"><span>Title (optional)</span><input id="h2h-t" maxlength="60" placeholder="e.g. Season 1 rivals, still at it"></label>
     <label class="bst-in"><span>Small heading (optional)</span><input id="h2h-k" maxlength="40" placeholder="e.g. 🎂 ANNIVERSARY H2H"></label>
-    <label class="bst-in"><span>Boost</span><select id="h2h-m"><option value="1">No boost (normal odds)</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label>
-    <div class="bst-err" id="h2h-err"></div><div class="bst-act"><button class="bst-c" onclick="document.getElementById('h2h-modal').remove()">Cancel</button><button class="bst-go" onclick="betH2HSave()">Create</button></div></div>`;
+    <label class="bst-in"><span>Boost</span><select id="h2h-m"><option value="1">No boost (normal odds)</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option><option value="3">3×</option></select></label>
+    <div class="bst-err" id="h2h-err"></div><div class="bst-act"><button class="bst-c" onclick="document.getElementById('h2h-modal').remove()">Cancel</button><button class="bst-go" onclick="betH2HSave()">${E ? 'Save' : 'Create'}</button></div></div>`;
   document.body.appendChild(el); const b = el.querySelector('#h2h-b'); if (b.options.length > 1) b.selectedIndex = 1;
+  if (E) { el.querySelector('#h2h-a').value = E.a; b.value = E.b; el.querySelector('#h2h-t').value = E.title || ''; el.querySelector('#h2h-k').value = E.kicker || ''; el.querySelector('#h2h-m').value = String(E.mult || 1); }
 };
 window.betH2HSave = async function() {
   const g = (i) => (document.getElementById(i) || {}).value, a = g('h2h-a'), b = g('h2h-b'), up = window._betCtx && window._betCtx.upcoming;
   if (!a || !b || a === b) { document.getElementById('h2h-err').textContent = 'Pick two different drivers.'; return; }
   const d = await dbGet('settings', 'betH2H').catch(() => null), L = ((d && d.value && d.value.list) || []).filter(x => x.raceName === up.name || false);
-  L.push({ id: 'h' + Date.now().toString(36), raceName: up.name, div: window._betDiv, a, b, title: (g('h2h-t') || '').trim(), kicker: (g('h2h-k') || '').trim(), mult: Number(g('h2h-m')) || 1 });
-  await dbSet('settings', 'betH2H', { value: { list: L } }); document.getElementById('h2h-modal').remove(); showToast('⚔️ Head to head created', 'success'); renderBets();
+  const rec = { raceName: up.name, div: window._betDiv, a, b, title: (g('h2h-t') || '').trim(), kicker: (g('h2h-k') || '').trim(), mult: Number(g('h2h-m')) || 1 };
+  const ei = window._betH2HEdit ? L.findIndex(x => x.id === window._betH2HEdit) : -1;
+  if (ei >= 0) L[ei] = { ...L[ei], ...rec }; else L.push({ id: 'h' + Date.now().toString(36), ...rec });
+  await dbSet('settings', 'betH2H', { value: { list: L } }); document.getElementById('h2h-modal').remove(); showToast(window._betH2HEdit ? '⚔️ Head to head updated' : '⚔️ Head to head created', 'success'); window._betH2HEdit = null; renderBets();
 };
 window.betH2HDel = async function(id) { if (!confirm('Remove this head to head? Bets already placed on it stay.')) return;
   const d = await dbGet('settings', 'betH2H').catch(() => null), L = ((d && d.value && d.value.list) || []).filter(x => x.id !== id);
