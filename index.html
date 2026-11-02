@@ -30204,13 +30204,17 @@ window.renderBdayBoost = async function() {
   const [drivers, races, arcs] = await Promise.all([dbGetAll('drivers').catch(() => []), dbGetAll('races').catch(() => []), dbGetAll('seasonArchives').catch(() => [])]);
   const nk = (n) => String(n || '').toLowerCase().replace(/\[[^\]]*\]/g, '').replace(/[^a-z0-9]/g, '');
   const d = drivers.find(x => nk(x.name) === nk(B.name) || (x.imsAlias && nk(x.imsAlias) === nk(B.name))); if (!d) { el.innerHTML = ''; return; }
-  // Normal prices from his record in this division (E3 was D4 before S8), nudged towards the division average so a few races don't swing them.
-  let n = 0, w = 0, pd3 = 0, po = 0;
-  races.concat(...arcs.map(a => a.races || [])).forEach(r => { const pp = (r.positionByDivision || {})[d.id] || {}; const dv = pp[B.div] != null ? B.div : (B.div === 'E3' && pp.D4 != null ? 'D4' : null); if (!dv) return;
-    n++; const v = Number(pp[dv]); if (v === 1) w++; if (v <= 3) pd3++; const pl = (r.poleByDiv || {})[dv]; if (pl && nk(pl) === nk(d.name)) po++; });
-  const pr = (k, base) => Math.min(0.9, Math.max(0.01, (k + base * 4) / (n + 4)));
-  const opts = [['pole', '⏱️', 'Pole position', pr(po, 0.06)], ['win', '🏆', 'Race win', pr(w, 0.06)], ['pod', '🍾', 'Podium', pr(pd3, 0.17)]].map(([m, ic, l, p]) => {
-    const fair = Math.round(Math.min(500, 1 / p) * 100) / 100; return { m, ic, l, fair, odds: Math.round(fair * B.mult * 100) / 100 }; });
+  // Normal prices = his actual current odds in the E3 markets. They're only priced while the E3 tab is open, so whoever
+  // views E3 saves them (settings/bdayOdds) and everyone else uses those.
+  const MK = [['pole', '⏱️', 'Pole position'], ['win', '🏆', 'Race win'], ['pod', '🍾', 'Podium']];
+  let live = null;
+  if (window._betDiv === B.div && typeof window._betAutoOdds === 'function') {
+    live = {}; MK.forEach(([m]) => { const v = (window._betCurOdds || {})[m + ':' + d.id] || window._betAutoOdds(m, [d.id]); if (Number(v) > 1) live[m] = Math.round(Number(v) * 100) / 100; });
+    const cur = await dbGet('settings', 'bdayOdds').catch(() => null), cv = (cur && cur.value) || {};
+    if (Object.keys(live).length && (cv.race !== up.name || MK.some(([m]) => cv[m] !== live[m]))) dbSet('settings', 'bdayOdds', { value: { race: up.name, ...live, at: Date.now() } }).catch(() => {});
+  }
+  if (!live || !Object.keys(live).length) { const cur = await dbGet('settings', 'bdayOdds').catch(() => null), cv = (cur && cur.value) || {}; live = cv.race === up.name ? cv : {}; }
+  const opts = MK.filter(([m]) => Number(live[m]) > 1).map(([m, ic, l]) => ({ m, ic, l, fair: Number(live[m]), odds: Math.round(Number(live[m]) * B.mult * 100) / 100 }));
   window._bday = { id: d.id, div: B.div, name: d.name, opts };
   const on = (m) => (window._betLegs || []).some(x => x.key === B.div + '|' + m + ':' + d.id);
   const ph = typeof driverPhoto === 'function' ? driverPhoto(d) : '';
@@ -30219,7 +30223,8 @@ window.renderBdayBoost = async function() {
     <div class="bd-m"><div class="bd-k">🎂 BIRTHDAY BOOST · ${esc(up.name).toUpperCase()} · ${B.div} · ${B.mult}× ODDS</div>
       <div class="bd-t">Happy Birthday, <span>${esc(d.name)}</span>!</div>
       <div class="bd-s">Every bet on the birthday boy is boosted <b>${B.mult}×</b> for his big day. Pick yours:</div></div>
-    <div class="bd-opts">${opts.map(o => `<button class="bd-opt${on(o.m) ? ' on' : ''}" onclick="bdayBet('${o.m}')"><span class="bd-oi">${o.ic}</span><span class="bd-ol">${o.l}</span><span class="bd-ow">Normally <s>${fmtOdds(o.fair)}</s></span><span class="bd-oo">${fmtOdds(o.odds)}</span><span class="bd-oa">${on(o.m) ? '✓ On your slip' : 'Add to slip'}</span></button>`).join('')}</div></div>`;
+    ${opts.length ? '' : `<div class="bd-opts" style="grid-template-columns:1fr"><button class="bd-opt" onclick="window._betDiv='${B.div}';renderBets()"><span class="bd-ol">Open ${B.div} to load his boosted prices →</span></button></div>`}
+    <div class="bd-opts"${opts.length ? '' : ' style="display:none"'}>${opts.map(o => `<button class="bd-opt${on(o.m) ? ' on' : ''}" onclick="bdayBet('${o.m}')"><span class="bd-oi">${o.ic}</span><span class="bd-ol">${o.l}</span><span class="bd-ow">Normally <s>${fmtOdds(o.fair)}</s></span><span class="bd-oo">${fmtOdds(o.odds)}</span><span class="bd-oa">${on(o.m) ? '✓ On your slip' : 'Add to slip'}</span></button>`).join('')}</div></div>`;
 };
 window.bdayBet = function(m) { const X = window._bday; if (!X) return; const o = X.opts.find(z => z.m === m); if (!o) return;
   const key = X.div + '|' + m + ':' + X.id, L = window._betLegs = (window._betLegs || []).filter(l => l.market !== 'special');
