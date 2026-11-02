@@ -2008,14 +2008,27 @@
     #page-bets{--bp:#5a5ec9;--bp2:#7b7fe8;--bp3:#a0a4ff;--br:#e8002d;--bpg:rgba(90,94,201,0.14);--bline:rgba(255,255,255,0.06);--bcard:#15151f;--bcard2:#1b1b28}
     #page-bets .bo-hero{position:relative;overflow:hidden;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;padding:24px 24px 22px;border-radius:18px;margin-bottom:12px;border:1px solid rgba(123,127,232,0.35);background:radial-gradient(90% 140% at 0% 0%,rgba(90,94,201,0.45),transparent 60%),radial-gradient(70% 120% at 100% 100%,rgba(232,0,45,0.22),transparent 60%),linear-gradient(135deg,#171729,#101018);box-shadow:0 12px 34px rgba(0,0,0,.35)}
     #page-bets .bo-hero::after{content:"";position:absolute;right:-60px;top:-60px;width:260px;height:260px;border-radius:50%;border:1px solid rgba(160,164,255,0.12);box-shadow:0 0 0 30px rgba(160,164,255,0.03),0 0 0 60px rgba(160,164,255,0.02);pointer-events:none}
-    #page-bets .bo-h2h{position:relative;margin:0 0 12px;padding:14px 16px;border-radius:18px;border:1px solid rgba(255,214,102,.4);background:linear-gradient(135deg,rgba(255,214,102,.08),#15151f 60%)}
-    #page-bets .bo-h2h-k{display:flex;align-items:center;gap:6px;font-size:.62rem;font-weight:900;letter-spacing:2px;color:#ffd666}#page-bets .bo-h2h-k span{color:#ffa751}
-    #page-bets .bo-h2h-x{margin-left:auto;background:none;border:none;color:var(--muted);cursor:pointer;font-size:.9rem}
-    #page-bets .bo-h2h-t{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;font-size:1.35rem;margin-top:3px}
-    #page-bets .bo-h2h-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;margin-top:10px}
-    #page-bets .bo-h2h-side{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;min-width:0}#page-bets .bo-h2h-side b{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#page-bets .bo-h2h-side small{font-size:.66rem;color:var(--muted)}
-    #page-bets .bo-h2h-vs{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;font-size:1.4rem;color:#ffd666}
-    #page-bets .bo-h2h-n{margin-top:8px;font-size:.7rem;color:var(--muted);text-align:center}
+    #page-bets .bo-fh{position:relative;overflow:hidden;margin:0 0 14px;padding:14px 16px 12px;border-radius:20px;border:1px solid rgba(255,255,255,.1);
+      background:linear-gradient(105deg,color-mix(in srgb,var(--ca) 30%,#12121a) 0%,#12121a 46%,#12121a 54%,color-mix(in srgb,var(--cb) 30%,#12121a) 100%);box-shadow:0 14px 34px rgba(0,0,0,.4)}
+    #page-bets .bo-fh::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(115deg,transparent 0 22px,rgba(255,255,255,.025) 22px 23px);pointer-events:none}
+    #page-bets .bo-fh::after{content:'';position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,var(--ca),#ffd666 50%,var(--cb))}
+    #page-bets .bo-fh-k{position:relative;display:flex;align-items:center;gap:8px;font-size:.62rem;font-weight:900;letter-spacing:2px;color:#ffd666}
+    #page-bets .bo-fh-boost{padding:2px 8px;border-radius:999px;background:linear-gradient(135deg,#ffe259,#ffa751);color:#111;letter-spacing:1px}
+    #page-bets .bo-fh-x{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:3px 8px;color:#ddd;cursor:pointer;font-size:.68rem;font-weight:800}
+    #page-bets .bo-fh-t{position:relative;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;font-size:1.5rem;letter-spacing:.5px;margin-top:4px;text-align:center}
+    #page-bets .bo-fh-row{position:relative;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;margin-top:10px}
+    #page-bets .bo-fh-side{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;min-width:0}
+    #page-bets .bo-fh-av{padding:3px;border-radius:50%;background:conic-gradient(var(--c),#ffd666,var(--c));box-shadow:0 0 22px color-mix(in srgb,var(--c) 55%,transparent)}
+    #page-bets .bo-fh-av>*{display:block;border:3px solid #12121a}
+    #page-bets .bo-fh-side b{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.2rem;letter-spacing:.5px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    #page-bets .bo-fh-side small{display:flex;align-items:center;gap:5px;font-size:.66rem;color:#bbb;margin-top:-3px}.bo-fh-logo{height:14px;width:22px;object-fit:contain}
+    #page-bets .bo-fh-pct{font-size:.62rem;font-weight:800;letter-spacing:1px;color:var(--c);filter:brightness(1.4)}
+    #page-bets .bo-fh-side .bo-odd{min-width:86px}
+    #page-bets .bo-fh-vs span{display:flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:12px;transform:rotate(45deg);background:linear-gradient(135deg,#ffe259,#ffa751);box-shadow:0 0 24px rgba(255,214,102,.45)}
+    #page-bets .bo-fh-vs span{font-size:0}#page-bets .bo-fh-vs span::before{content:'VS';transform:rotate(-45deg);font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;font-size:1.15rem;color:#111}
+    #page-bets .bo-fh-bar{position:relative;height:5px;margin:12px 4px 0;border-radius:3px;background:var(--cb);overflow:hidden}#page-bets .bo-fh-bar i{position:absolute;left:0;top:0;bottom:0;background:var(--ca);box-shadow:2px 0 0 #12121a}
+    #page-bets .bo-fh-n{position:relative;margin-top:8px;font-size:.68rem;color:var(--muted);text-align:center}
+    @media (max-width:520px){#page-bets .bo-fh-side b{font-size:1rem}#page-bets .bo-fh-vs span{width:36px;height:36px}#page-bets .bo-fh-side .bo-odd{min-width:70px}}
     #page-bets .bo-special{position:relative;overflow:hidden;margin:0 0 14px;padding:16px 18px;border-radius:18px;border:1px solid rgba(255,214,102,.55);background:radial-gradient(circle at 100% 0,rgba(255,214,102,.25),transparent 50%),linear-gradient(135deg,#2a2040,#15151f 70%);box-shadow:0 12px 30px rgba(0,0,0,.35)}
     #page-bets .bo-special::after{content:'🎂';position:absolute;right:10px;top:4px;font-size:3.4rem;opacity:.14}
     #page-bets .bo-special-k{font-size:.62rem;font-weight:900;letter-spacing:2px;color:#ffd666}
@@ -29264,9 +29277,13 @@ window.renderBets = async function() {
       const card = (h, i) => { const a = field.find(d => d.id === h.a), b = field.find(d => d.id === h.b); if (!a || !b) return '';
         const pa = 1 / (1 + Math.pow(10, ((b.elo || 0) - (a.elo || 0)) / 400)), m = Number(h.mult) || 1;
         const oa = Math.round(_betOdds(pa) * m * 100) / 100, ob = Math.round(_betOdds(1 - pa) * m * 100) / 100;
-        const side = (d, sel, o) => `<div class="bo-h2h-side">${typeof initialsAvatar === 'function' ? initialsAvatar(d.name, 46, 'border-radius:50%', null, typeof driverPhoto === 'function' ? driverPhoto(d) : '') : ''}<b>${esc(d.name)}</b><small>${esc(d.team || '')}</small>${oddsBtn('h2h', sel, d.name + ' to beat ' + (d.id === a.id ? b.name : a.name) + ' (' + div + ')', o)}</div>`;
-        return `<div class="bo-h2h"><div class="bo-h2h-k">⚔️ ${esc(h.kicker || 'FEATURED HEAD TO HEAD')}${m > 1 ? ` · <span>🚀 ${m}× BOOSTED</span>` : ''}${adminLoggedIn ? `<button class="bo-h2h-x" style="margin-left:auto" onclick="betH2HNew('${esc(h.id)}')" title="Edit / boost">✎ Edit</button><button class="bo-h2h-x" style="margin-left:4px" onclick="betH2HDel('${esc(h.id)}')" title="Remove">✕</button>` : ''}</div>${h.title ? `<div class="bo-h2h-t">${esc(h.title)}</div>` : ''}
-          <div class="bo-h2h-row">${side(a, [a.id, b.id], oa)}<div class="bo-h2h-vs">VS</div>${side(b, [b.id, a.id], ob)}</div><div class="bo-h2h-n">Whoever finishes ahead in ${esc(div)} wins. If either doesn't race, it's refunded.</div></div>`; };
+        const tc = (d) => ((typeof getTeamCardColour === 'function' && getTeamCardColour(d.team)) || {}).accent || '#7b7fe8', ca = tc(a), cb = tc(b);
+        const logo = (d) => (typeof getTeamLogo === 'function' && getTeamLogo(d.team)) ? `<img class="bo-fh-logo" src="${esc(getTeamLogo(d.team))}" alt="">` : '';
+        const side = (d, sel, o, c, r) => `<div class="bo-fh-side${r ? ' r' : ''}" style="--c:${c}"><div class="bo-fh-av">${typeof initialsAvatar === 'function' ? initialsAvatar(d.name, 64, 'border-radius:50%', null, typeof driverPhoto === 'function' ? driverPhoto(d) : '') : ''}</div>
+          <b>${esc(d.name)}</b><small>${logo(d)}${esc(d.team || '')}</small><div class="bo-fh-pct">${Math.round((d.id === a.id ? pa : 1 - pa) * 100)}% chance</div>${oddsBtn('h2h', sel, d.name + ' to beat ' + (d.id === a.id ? b.name : a.name) + ' (' + div + ')', o)}</div>`;
+        return `<div class="bo-fh" style="--ca:${ca};--cb:${cb}"><div class="bo-fh-k">⚔️ ${esc(h.kicker || 'FEATURED HEAD TO HEAD')}${m > 1 ? ` <span class="bo-fh-boost">🚀 ${m}× BOOSTED</span>` : ''}${adminLoggedIn ? `<button class="bo-fh-x" style="margin-left:auto" onclick="betH2HNew('${esc(h.id)}')" title="Edit / boost">✎ Edit</button><button class="bo-fh-x" style="margin-left:4px" onclick="betH2HDel('${esc(h.id)}')" title="Remove">✕</button>` : ''}</div>${h.title ? `<div class="bo-fh-t">${esc(h.title)}</div>` : ''}
+          <div class="bo-fh-row">${side(a, [a.id, b.id], oa, ca)}<div class="bo-fh-vs"><span>VS</span></div>${side(b, [b.id, a.id], ob, cb, 1)}</div>
+          <div class="bo-fh-bar"><i style="width:${Math.round(pa * 100)}%"></i></div><div class="bo-fh-n">Whoever finishes ahead in ${esc(div)} wins. If either doesn't race, it's refunded.</div></div>`; };
       return H.map(card).join('') + (adminLoggedIn && upcoming ? `<button class="btn btn-secondary btn-sm" style="margin:0 0 12px" onclick="betH2HNew()">⚔️ Create a ${esc(div)} head to head</button>` : ''); })()}
     ${BOOSTS.length && window._betBoostTitle ? `<div style="display:flex;align-items:center;gap:8px;margin:2px 0 8px"><span style="font-size:1.1rem">🚀</span><span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.35rem;line-height:1.05;text-transform:uppercase;letter-spacing:.5px;background:linear-gradient(90deg,#ffe259,#ffa751);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">${esc(window._betBoostTitle)}</span></div>` : ''}
     ${BOOSTS.length ? (() => {
