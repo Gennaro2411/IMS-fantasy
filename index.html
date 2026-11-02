@@ -2008,6 +2008,17 @@
     #page-bets{--bp:#5a5ec9;--bp2:#7b7fe8;--bp3:#a0a4ff;--br:#e8002d;--bpg:rgba(90,94,201,0.14);--bline:rgba(255,255,255,0.06);--bcard:#15151f;--bcard2:#1b1b28}
     #page-bets .bo-hero{position:relative;overflow:hidden;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;padding:24px 24px 22px;border-radius:18px;margin-bottom:12px;border:1px solid rgba(123,127,232,0.35);background:radial-gradient(90% 140% at 0% 0%,rgba(90,94,201,0.45),transparent 60%),radial-gradient(70% 120% at 100% 100%,rgba(232,0,45,0.22),transparent 60%),linear-gradient(135deg,#171729,#101018);box-shadow:0 12px 34px rgba(0,0,0,.35)}
     #page-bets .bo-hero::after{content:"";position:absolute;right:-60px;top:-60px;width:260px;height:260px;border-radius:50%;border:1px solid rgba(160,164,255,0.12);box-shadow:0 0 0 30px rgba(160,164,255,0.03),0 0 0 60px rgba(160,164,255,0.02);pointer-events:none}
+    #page-bets .bo-special{position:relative;overflow:hidden;margin:0 0 14px;padding:16px 18px;border-radius:18px;border:1px solid rgba(255,214,102,.55);background:radial-gradient(circle at 100% 0,rgba(255,214,102,.25),transparent 50%),linear-gradient(135deg,#2a2040,#15151f 70%);box-shadow:0 12px 30px rgba(0,0,0,.35)}
+    #page-bets .bo-special::after{content:'🎂';position:absolute;right:10px;top:4px;font-size:3.4rem;opacity:.14}
+    #page-bets .bo-special-k{font-size:.62rem;font-weight:900;letter-spacing:2px;color:#ffd666}
+    #page-bets .bo-special-t{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;font-size:1.8rem;line-height:1;letter-spacing:.5px;margin-top:4px;background:linear-gradient(90deg,#fff,#ffd666);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+    #page-bets .bo-special-b{font-size:.8rem;color:#c9c9dd;margin-top:6px;line-height:1.45;max-width:560px}
+    #page-bets .bo-special-legs{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:12px 0}
+    #page-bets .bo-special-leg{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}
+    #page-bets .bo-special-leg b{display:block;font-size:.86rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#page-bets .bo-special-leg small{font-size:.62rem;font-weight:800;letter-spacing:1px;color:#ffd666}
+    #page-bets .bo-special-f{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+    #page-bets .bo-special-go{display:inline-flex;align-items:center;gap:10px;padding:10px 18px;border-radius:12px;border:none;cursor:pointer;font-weight:900;letter-spacing:1px;color:#111;background:linear-gradient(135deg,#ffe259,#ffa751);box-shadow:0 8px 20px rgba(255,167,81,.3)}
+    #page-bets .bo-special-go b{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem}#page-bets .bo-special-go.on{background:linear-gradient(135deg,#4ade80,#16a34a);color:#fff}
     #page-bets .bo-kicker{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;font-weight:800;color:var(--bp3)}
     #page-bets .bo-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:2.6rem;line-height:.95;text-transform:uppercase;margin-top:6px;letter-spacing:.5px}
     #page-bets .bo-sub{font-size:.74rem;color:#9a9cc0;margin-top:6px}
@@ -28219,7 +28230,19 @@ function _raceAllDivsIn(race) {
   const have = new Set(); Object.values(race.driverPointsByDivision || {}).forEach(bd => Object.keys(bd || {}).forEach(k => have.add(String(k).toUpperCase())));
   return divs.every(d => have.has(d));
 }
+// ===== Anniversary / special combo bets: several picks across divisions at one fixed boosted price =====
+// Legs use names (resolved to driver ids when placed). Settles on every leg: any loss → lost, all in → won,
+// a leg whose driver didn't race → the whole special is refunded.
+const BET_SPECIALS = [
+  { id: 'og-s1', race: 'Brazil', kicker: '🎂 IMS ANNIVERSARY SPECIAL', title: 'The Class of Season 1', odds: 26.0,
+    blurb: 'Four Season 1 originals, still racing eight seasons later. All four to finish in the top 5 of their division.',
+    legs: [{ div: 'D0', name: 'piastrigoat' }, { div: 'D1', name: 'Webbah87' }, { div: 'D2', name: 'Carlos Velez' }, { div: 'E3', name: 'L3on Tyl3r2500' }] }];
+window._betSpecialsFor = (raceName) => { const tk = (x) => window.trackKey ? window.trackKey(x) : String(x || '').toLowerCase();
+  const ov = window._betSpecialOdds || {}; return BET_SPECIALS.filter(x => tk(raceName) === tk(x.race)).map(x => ({ ...x, odds: Number(ov[x.id]) || x.odds })); };
 function _betOutcome(b, races) {
+  if (b.market === 'special') {
+    const rs = (b.specLegs || []).map(l => _betOutcome({ raceName: b.raceName, div: l.div, market: 'top5', sel: [l.id] }, races));
+    if (rs.includes('lost')) return 'lost'; if (rs.includes(null) || !rs.length) return null; if (rs.includes('void')) return 'void'; return 'won'; }
   // If several race docs share the name (re-imports / old copies), use the most complete, most recently updated one — not just the first.
   const race = races.filter(r => (r.name || '').toLowerCase().trim() === (b.raceName || '').toLowerCase().trim() && (b.div === 'BOTT' ? r.constructorPoints : r.positionByDivision))
     .sort((x, y) => ((b.div === 'BOTT' ? _raceAllDivsIn(y) : 0) - (b.div === 'BOTT' ? _raceAllDivsIn(x) : 0)) || ((y.updatedAt || y.createdAt || 0) - (x.updatedAt || x.createdAt || 0)) || ((y.raceNum || 0) - (x.raceNum || 0)))[0];
@@ -28636,6 +28659,7 @@ window.renderBets = async function() {
     return Math.max(1.01, Math.round(auto * f * 100) / 100);
   };
   const _boostDoc = await dbGet('settings', 'betBoost').catch(() => null);
+  { const _sp = await dbGet('settings', 'betSpecials').catch(() => null); window._betSpecialOdds = (_sp && _sp.value) || {}; }
   const BOOSTS = upcoming ? window._betBoostList(_boostDoc, upcoming.name) : []; window._betBoostsNow = BOOSTS;
   window._betBoostTitle = (_boostDoc && _boostDoc.value && _boostDoc.value.title) || '';
   window._betBoost = BOOSTS;
@@ -29198,6 +29222,15 @@ window.renderBets = async function() {
     </button>
     <div id="bet-of-week" style="display:none;margin:0 0 12px"></div><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="" style="display:none" onload="renderBetOfWeek()" onerror="renderBetOfWeek()">
     <div class="bo-disclaimer">Just for fun. IM$ are pretend money, with no value; they can't be bought, sold or cashed out.</div>
+    ${(() => { const SP = upcoming ? window._betSpecialsFor(upcoming.name) : []; if (!SP.length) return '';
+      const nk = (n) => String(n || '').toLowerCase().replace(/\[[^\]]*\]/g, '').replace(/[^a-z0-9]/g, '');
+      return SP.map(sp => { const L = sp.legs.map(l => { const d = (drivers || []).find(x => nk(x.name) === nk(l.name) || (x.imsAlias && nk(x.imsAlias) === nk(l.name))); return { ...l, d, id: d && d.id }; });
+        const okAll = L.every(l => l.id), on = (window._betLegs || []).some(x => x.market === 'special' && x.sel[0] === sp.id);
+        window._betSpecLegs = window._betSpecLegs || {}; window._betSpecLegs[sp.id] = L.map(l => ({ div: l.div, id: l.id, name: l.d ? l.d.name : l.name }));
+        return `<div class="bo-special"><div class="bo-special-k">${esc(sp.kicker)}</div><div class="bo-special-t">${esc(sp.title)}</div><div class="bo-special-b">${esc(sp.blurb)}</div>
+          <div class="bo-special-legs">${L.map(l => `<div class="bo-special-leg">${l.d && typeof initialsAvatar === 'function' ? initialsAvatar(l.d.name, 34, 'border-radius:50%', null, typeof driverPhoto === 'function' ? driverPhoto(l.d) : '') : ''}<div><b>${esc(l.d ? l.d.name : l.name)}</b><small>${l.div} · TOP 5</small></div></div>`).join('')}</div>
+          <div class="bo-special-f">${adminLoggedIn ? `<button class="btn btn-secondary btn-sm" onclick="betSpecialOdds('${sp.id}', ${sp.odds})">✎ Odds</button>` : ''}
+            ${okAll && open ? `<button class="bo-special-go${on ? ' on' : ''}" onclick="betSpecialPick('${sp.id}', ${sp.odds}, '${esc(sp.title).replace(/'/g, '&#39;')}')">${on ? '✓ On your slip' : 'Back it'} <b>${fmtOdds(sp.odds)}</b></button>` : okAll ? '' : '<small class="text-muted">A driver in this special couldn\'t be found.</small>'}</div></div>`; }).join(''); })()}
     ${BOOSTS.length && window._betBoostTitle ? `<div style="display:flex;align-items:center;gap:8px;margin:2px 0 8px"><span style="font-size:1.1rem">🚀</span><span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.35rem;line-height:1.05;text-transform:uppercase;letter-spacing:.5px;background:linear-gradient(90deg,#ffe259,#ffa751);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">${esc(window._betBoostTitle)}</span></div>` : ''}
     ${BOOSTS.length ? (() => {
       // The same boost across several divisions (e.g. DNFs in the race) shows as ONE card with a price per division.
@@ -30056,7 +30089,15 @@ function _betLegClashes(legs) {
   }
   return bad;
 }
+window.betSpecialPick = function(id, odds, title) {
+  const legs = window._betLegs = window._betLegs || []; const i = legs.findIndex(l => l.market === 'special' && l.sel[0] === id);
+  if (i >= 0) legs.splice(i, 1); else { legs.length = 0; legs.push({ key: 'ALL|special:' + id, div: 'ALL', market: 'special', sel: [id], odds, label: '🎂 ' + title }); }
+  renderBets();
+};
+window.betSpecialOdds = async function(id, cur) { const v = prompt('Boosted odds for this special:', cur); if (v === null) return; const n = Number(v); if (!(n > 1)) return showToast('Enter decimal odds above 1.0', 'error');
+  const d = await dbGet('settings', 'betSpecials').catch(() => null); const o = Object.assign({}, (d && d.value) || {}); o[id] = n; await dbSet('settings', 'betSpecials', { value: o }); window._betSpecialOdds = o; showToast('🎂 Special odds set to ' + n.toFixed(2), 'success'); renderBets(); };
 window.betPick = function(market, selCsv, odds, label) {
+  if ((window._betLegs || []).some(l => l.market === 'special')) { if (typeof showToast === 'function') showToast('The special is a standalone bet — take it off your slip first.', 'error'); return; }
   const sel = selCsv.split(',');
   const div = window._betDiv;
   const key = div + '|' + market + ':' + sel.join('-');
@@ -30142,6 +30183,11 @@ window.betPlace = async function() {
   const _lk = await dbGet('settings', 'teamsLocked').catch(() => null);
   if ((_lk && _lk.value) || ctx.upcoming.lockTime <= Date.now()) return err('Betting has closed for this round.');
   if (legs.length > 10) return err('Max 10 picks on one slip.');
+  if (legs.some(l => l.market === 'special') && legs.length > 1) return err('The special is a standalone bet — it can\'t go in an acca.');
+  if (useFree && legs.some(l => l.market === 'special')) return err('Free bets can\'t be used on the special.');
+  if (legs[0] && legs[0].market === 'special') { const SL = (window._betSpecLegs || {})[legs[0].sel[0]] || [];
+    if (!SL.length || SL.some(x => !x.id)) return err('This special isn\'t available right now.');
+    if (window._betOutIds && SL.some(x => window._betOutIds.has(x.id))) return err('A driver in this special is out of the race (checked out or race-banned).'); }
   if (legs.some(l => !(Number(l.odds) >= BET_MIN_ODDS))) return err('Picks priced under ' + BET_MIN_ODDS.toFixed(2) + ' can\'t be backed — remove them.');
   if (_betLegClashes(legs).size) return err('Some picks can\'t be combined — remove the highlighted ones.');
   const coins = await _betLoadCoins(currentUser.userId);
@@ -30161,6 +30207,7 @@ window.betPlace = async function() {
     if (_dup) return err('You already have this bet (' + _dup.stake + ' <i class="imc" title="IM$"></i> @ ' + fmtOdds(_dup.odds) + '). One bet per pick — cash it out first if you want to change it.');
     label = l.label; odds = l.odds;
     doc = { id, userId: currentUser.userId, raceName: ctx.upcoming.name, div: l.div, market: l.market, sel: l.sel, selNames: l.sel.map(x => (window._betNames || {})[x] || null), label, odds, stake, status: 'open', placedAt: Date.now() };
+    if (l.market === 'special') { doc.specLegs = ((window._betSpecLegs || {})[l.sel[0]] || []).map(x => ({ div: x.div, id: x.id, name: x.name })); doc.selNames = [l.label]; }
   } else {
     const _bbp = _bbPrice(legs); if (_bbp.impossible) return err('These picks can\'t all happen in the same race — remove one.');
     odds = _bbp.odds;
