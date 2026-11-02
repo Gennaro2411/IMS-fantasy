@@ -2023,6 +2023,8 @@
     .bd-t{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;font-size:2rem;line-height:1.05;margin-top:4px}
     .bd-t span{background:linear-gradient(90deg,#ff6ec4,#ffd666,#7873f5);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
     .bd-s{font-size:.84rem;color:#d9cfe6;margin-top:6px;line-height:1.45}.bd-s b{color:#fff}
+    .bd-timer{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:4px 12px;border-radius:999px;background:rgba(0,0,0,.35);border:1px solid rgba(255,214,102,.4);font-size:.78rem;color:#ffd666}
+    .bd-timer b{font-family:'Barlow Condensed',sans-serif;font-size:1.05rem;letter-spacing:1.5px;color:#fff}.bd-timer small{color:#b9aecb}
     .bd-opts{position:relative;z-index:1;grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
     .bd-opt{display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px 8px;border-radius:16px;cursor:pointer;color:#fff;border:1px solid rgba(255,214,102,.35);background:rgba(20,12,30,.55);backdrop-filter:blur(4px);transition:transform .15s,box-shadow .15s}
     .bd-opt:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(255,110,196,.3)}
@@ -30195,12 +30197,12 @@ window.betH2HDel = async function(id) { if (!confirm('Remove this head to head? 
   const d = await dbGet('settings', 'betH2H').catch(() => null), L = ((d && d.value && d.value.list) || []).filter(x => x.id !== id);
   await dbSet('settings', 'betH2H', { value: { list: L } }); showToast('Removed', 'success'); renderBets(); };
 // ===== Birthday boost on the Bets page: pole / win / podium for one driver at 2× the normal odds, for one round =====
-const BET_BDAY = { race: 'Brazil', name: 'alfienerfboy', div: 'E3', mult: 2 };
+const BET_BDAY = { race: 'Brazil', name: 'alfienerfboy', div: 'E3', mult: 2, ends: Date.UTC(2026, 10, 3, 0, 0, 0) }; // ends at midnight UK time (GMT) on 2–3 Nov
 window.renderBdayBoost = async function() {
   const el = document.getElementById('bday-boost'); if (!el) return; const B = BET_BDAY;
   const sch = await dbGetAll('schedule').catch(() => []), up = sch.filter(r => r.lockTime > Date.now()).sort((a, b) => a.lockTime - b.lockTime)[0];
   const tk = (x) => window.trackKey ? window.trackKey(x) : String(x || '').toLowerCase();
-  if (!up || tk(up.name) !== tk(B.race)) { el.innerHTML = ''; return; }
+  if (!up || tk(up.name) !== tk(B.race) || Date.now() >= B.ends) { el.innerHTML = ''; return; }
   const [drivers, races, arcs] = await Promise.all([dbGetAll('drivers').catch(() => []), dbGetAll('races').catch(() => []), dbGetAll('seasonArchives').catch(() => [])]);
   const nk = (n) => String(n || '').toLowerCase().replace(/\[[^\]]*\]/g, '').replace(/[^a-z0-9]/g, '');
   const d = drivers.find(x => nk(x.name) === nk(B.name) || (x.imsAlias && nk(x.imsAlias) === nk(B.name))); if (!d) { el.innerHTML = ''; return; }
@@ -30222,13 +30224,18 @@ window.renderBdayBoost = async function() {
     <div class="bd-l"><div class="bd-av">${typeof initialsAvatar === 'function' ? initialsAvatar(d.name, 84, 'border-radius:50%', null, ph) : ''}<span class="bd-hat">🎉</span></div></div>
     <div class="bd-m"><div class="bd-k">🎂 BIRTHDAY BOOST · ${esc(up.name).toUpperCase()} · ${B.div} · ${B.mult}× ODDS</div>
       <div class="bd-t">Happy Birthday, <span>${esc(d.name)}</span>!</div>
-      <div class="bd-s">Every bet on the birthday boy is boosted <b>${B.mult}×</b> for his big day. Pick yours:</div></div>
+      <div class="bd-s">Every bet on the birthday boy is boosted <b>${B.mult}×</b> for his big day. Pick yours:</div>
+      <div class="bd-timer">⏳ Boost ends in <b id="bd-cd">--:--:--</b> <small>· midnight UK time</small></div></div>
     ${opts.length ? '' : `<div class="bd-opts" style="grid-template-columns:1fr"><button class="bd-opt" onclick="window._betDiv='${B.div}';renderBets()"><span class="bd-ol">Open ${B.div} to load his boosted prices →</span></button></div>`}
     <div class="bd-opts"${opts.length ? '' : ' style="display:none"'}>${opts.map(o => `<button class="bd-opt${on(o.m) ? ' on' : ''}" onclick="bdayBet('${o.m}')"><span class="bd-oi">${o.ic}</span><span class="bd-ol">${o.l}</span><span class="bd-ow">Normally <s>${fmtOdds(o.fair)}</s></span><span class="bd-oo">${fmtOdds(o.odds)}</span><span class="bd-oa">${on(o.m) ? '✓ On your slip' : 'Add to slip'}</span></button>`).join('')}</div></div>`;
 };
-window.bdayBet = function(m) { const X = window._bday; if (!X) return; const o = X.opts.find(z => z.m === m); if (!o) return;
+// Live countdown on the card; when it hits zero the card disappears.
+setInterval(() => { const t = document.getElementById('bd-cd'); if (!t) return; const ms = BET_BDAY.ends - Date.now();
+  if (ms <= 0) { const c = document.getElementById('bday-boost'); if (c) c.innerHTML = ''; (window._betLegs || []).forEach((l, i, L) => { if (l.bday) L.splice(i, 1); }); return; }
+  t.textContent = [Math.floor(ms / 36e5), Math.floor(ms / 6e4) % 60, Math.floor(ms / 1e3) % 60].map(n => String(n).padStart(2, '0')).join(':'); }, 1000);
+window.bdayBet = function(m) { const X = window._bday; if (!X) return; if (Date.now() >= BET_BDAY.ends) return showToast('The birthday boost has ended.', 'error'); const o = X.opts.find(z => z.m === m); if (!o) return;
   const key = X.div + '|' + m + ':' + X.id, L = window._betLegs = (window._betLegs || []).filter(l => l.market !== 'special');
-  const i = L.findIndex(l => l.key === key); if (i >= 0) L.splice(i, 1); else L.push({ key, div: X.div, market: m, sel: [X.id], odds: o.odds, label: X.name + ' — ' + o.l.toLowerCase() + ' (' + X.div + ') 🎂' });
+  const i = L.findIndex(l => l.key === key); if (i >= 0) L.splice(i, 1); else L.push({ key, div: X.div, market: m, sel: [X.id], odds: o.odds, bday: 1, label: X.name + ' — ' + o.l.toLowerCase() + ' (' + X.div + ') 🎂' });
   renderBets(); if (i < 0 && typeof showToast === 'function') showToast('🎂 ' + o.l + ' boost added to your slip', 'success'); };
 window.betSpecialPick = function(id, odds, title) {
   const legs = window._betLegs = window._betLegs || []; const i = legs.findIndex(l => l.market === 'special' && l.sel[0] === id);
@@ -30324,6 +30331,7 @@ window.betPlace = async function() {
   const _lk = await dbGet('settings', 'teamsLocked').catch(() => null);
   if ((_lk && _lk.value) || ctx.upcoming.lockTime <= Date.now()) return err('Betting has closed for this round.');
   if (legs.length > 10) return err('Max 10 picks on one slip.');
+  if (legs.some(l => l.bday) && Date.now() >= BET_BDAY.ends) { window._betLegs = legs.filter(l => !l.bday); renderBets(); return err('The birthday boost ended at midnight — those picks have been taken off your slip.'); }
   if (legs.some(l => l.market === 'special') && legs.length > 1) return err('The special is a standalone bet — it can\'t go in an acca.');
   if (useFree && legs.some(l => l.market === 'special')) return err('Free bets can\'t be used on the special.');
   if (legs[0] && legs[0].market === 'special') { const SL = (window._betSpecLegs || {})[legs[0].sel[0]] || [];
