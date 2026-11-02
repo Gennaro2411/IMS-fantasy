@@ -31863,13 +31863,15 @@ async function renderSTGame(el) {
       + (x ? _stCardHtml(x, { pick: pr ? window._stPr.c : null, b: pr ? window._stPr.b : null, reveal: !!pr, crowd: !!pr, mode: 'prac' }, all) + (pr || adminLoggedIn ? `<div style="text-align:center"><button class="btn ${pr ? 'btn-primary' : 'btn-secondary'}" onclick="_stPracNext()">${pr ? 'Next incident →' : 'Skip → (admin)'}</button></div>` : '') : '<div class="card" style="text-align:center;padding:26px">No incidents imported yet.</div>');
   }
   if (mode === 'live') {
-    const rows = all.map(u => { let lp = 0, dp = 0, n = 0, ex = 0, tot = 0; Object.entries(u.g || {}).forEach(([k, v]) => { const x = inc.find(y => y.k === k); if (!x || x.open || !v.c) return; const a = _stAns(x), sc = _stScore(v.c, a) + _stBonus(v, x); _stMode(v) === 'live' ? lp += sc : dp += sc; n++; v.c.forEach((c, i) => { if (c == null) return; tot++; if (c === a[i]) ex++; }); });
-      return { id: u.id, name: u.name || 'Player', av: u.avatar, lp, dp, n, acc: tot ? Math.round(ex / tot * 100) : 0 }; }).filter(r => r.n).sort((a, b) => (b.lp + b.dp) - (a.lp + a.dp) || b.acc - a.acc);
-    body += rows.length ? `<div class="wd-lb"><div class="wd-lb-h"><span>🏆 LIVE LEADERBOARD</span><small>Calls made before the stewards ruled · 1 pt each + size bonus</small></div>
-      ${rows.slice(0, 50).map((r, i) => `<div style="display:flex;align-items:center;gap:10px;padding:8px 4px;border-top:1px solid rgba(255,255,255,.06);${r.id === me.uid ? 'background:rgba(160,164,255,.1);border-radius:8px' : ''}">
-        <b style="width:26px;text-align:center">${i + 1}</b>${r.av ? `<img src="${esc(r.av)}" style="width:28px;height:28px;border-radius:50%;object-fit:cover">` : _stAv(r.name, 28)}<b style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.name)}</b>
-        <small class="text-muted gm-sub" style="white-space:nowrap">${r.n} ruled · ${r.acc}% right</small><b style="min-width:42px;text-align:right">${r.lp + r.dp}</b></div>`).join('')}</div>`
-      : '';
+    // Live leaderboard: ONLY calls made while the incident was still under investigation.
+    const rows = all.map(u => { let pts = 0, n = 0, right = 0, wait = 0; Object.entries(u.g || {}).forEach(([k, v]) => { if (!v || _stMode(v) !== 'live' || !v.c) return; const x = inc.find(y => y.k === k); if (!x) return;
+        if (x.open) { wait++; return; } const a = _stAns(x); n++; pts += _stScore(v.c, a) + _stBonus(v, x); if (v.c.every((c, i) => c == null || c === a[i])) right++; });
+      return { u, pts, n, wait, pct: n ? Math.round(right / n * 100) : 0 }; }).filter(r => r.n || r.wait).sort((a, b) => b.pts - a.pts || b.pct - a.pct || b.n - a.n);
+    body += `<div class="wd-lb"><div class="wd-lb-h"><span>🟡 LIVE LEADERBOARD</span><small>Calls made before the stewards ruled · 1 pt per correct call + size bonus</small></div>
+      ${rows.length ? `<div class="st-lbh"><span style="width:26px"></span><span style="flex:1">STEWARD</span><span class="st-c gm-sub2">RULED</span><span class="st-c">⏳</span><span class="st-c">RIGHT</span><span class="st-c">PTS</span></div>`
+        + rows.slice(0, 50).map((r, i) => `<div class="st-lbr${r.u.id === me.uid ? ' me' : ''}"><b style="width:26px;text-align:center">${i < 3 && r.n ? ['🥇', '🥈', '🥉'][i] : i + 1}</b><span style="flex:1;min-width:0;display:flex;align-items:center;gap:8px">${r.u.avatar ? `<img class="st-av" src="${esc(r.u.avatar)}" style="width:26px;height:26px">` : _stAv(r.u.name || '?', 26)}<b style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.u.name || 'Player')}</b></span>
+          <span class="st-c gm-sub2">${r.n}</span><span class="st-c" title="Calls waiting on the stewards">${r.wait || '–'}</span><span class="st-c">${r.n ? r.pct + '%' : '–'}</span><b class="st-c" style="color:#4ade80">${r.pts}</b></div>`).join('')
+        : '<p class="text-muted" style="margin:0">No live calls yet. Rule on an incident before the stewards do to get on the board.</p>'}</div>`;
   }
   const myS = (() => { let n = 0, ok = 0, pts = 0; Object.entries(mine.g || {}).forEach(([k, v]) => { const x = inc.find(y => y.k === k); if (!x || x.open || !v.c) return; const a = _stAns(x); n++; pts += _stScore(v.c, a) + _stBonus(v, x); if (v.c.every((c, i) => c == null || c === a[i])) ok++; }); return { n, ok, pts }; })();
   el.innerHTML = `<div class="wd-wrap st-room"><div class="st-hero"><button class="wd-back" onclick="openGame('hub')" title="Back to Games">←</button>
