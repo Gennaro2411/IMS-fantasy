@@ -2008,6 +2008,14 @@
     #page-bets{--bp:#5a5ec9;--bp2:#7b7fe8;--bp3:#a0a4ff;--br:#e8002d;--bpg:rgba(90,94,201,0.14);--bline:rgba(255,255,255,0.06);--bcard:#15151f;--bcard2:#1b1b28}
     #page-bets .bo-hero{position:relative;overflow:hidden;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;padding:24px 24px 22px;border-radius:18px;margin-bottom:12px;border:1px solid rgba(123,127,232,0.35);background:radial-gradient(90% 140% at 0% 0%,rgba(90,94,201,0.45),transparent 60%),radial-gradient(70% 120% at 100% 100%,rgba(232,0,45,0.22),transparent 60%),linear-gradient(135deg,#171729,#101018);box-shadow:0 12px 34px rgba(0,0,0,.35)}
     #page-bets .bo-hero::after{content:"";position:absolute;right:-60px;top:-60px;width:260px;height:260px;border-radius:50%;border:1px solid rgba(160,164,255,0.12);box-shadow:0 0 0 30px rgba(160,164,255,0.03),0 0 0 60px rgba(160,164,255,0.02);pointer-events:none}
+    #page-bets .bo-h2h{position:relative;margin:0 0 12px;padding:14px 16px;border-radius:18px;border:1px solid rgba(255,214,102,.4);background:linear-gradient(135deg,rgba(255,214,102,.08),#15151f 60%)}
+    #page-bets .bo-h2h-k{display:flex;align-items:center;gap:6px;font-size:.62rem;font-weight:900;letter-spacing:2px;color:#ffd666}#page-bets .bo-h2h-k span{color:#ffa751}
+    #page-bets .bo-h2h-x{margin-left:auto;background:none;border:none;color:var(--muted);cursor:pointer;font-size:.9rem}
+    #page-bets .bo-h2h-t{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;font-size:1.35rem;margin-top:3px}
+    #page-bets .bo-h2h-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;margin-top:10px}
+    #page-bets .bo-h2h-side{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;min-width:0}#page-bets .bo-h2h-side b{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#page-bets .bo-h2h-side small{font-size:.66rem;color:var(--muted)}
+    #page-bets .bo-h2h-vs{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;font-size:1.4rem;color:#ffd666}
+    #page-bets .bo-h2h-n{margin-top:8px;font-size:.7rem;color:var(--muted);text-align:center}
     #page-bets .bo-special{position:relative;overflow:hidden;margin:0 0 14px;padding:16px 18px;border-radius:18px;border:1px solid rgba(255,214,102,.55);background:radial-gradient(circle at 100% 0,rgba(255,214,102,.25),transparent 50%),linear-gradient(135deg,#2a2040,#15151f 70%);box-shadow:0 12px 30px rgba(0,0,0,.35)}
     #page-bets .bo-special::after{content:'🎂';position:absolute;right:10px;top:4px;font-size:3.4rem;opacity:.14}
     #page-bets .bo-special-k{font-size:.62rem;font-weight:900;letter-spacing:2px;color:#ffd666}
@@ -28671,6 +28679,7 @@ window.renderBets = async function() {
   };
   const _boostDoc = await dbGet('settings', 'betBoost').catch(() => null);
   { const _sp = await dbGet('settings', 'betSpecials').catch(() => null); window._betSpecialOdds = (_sp && _sp.value) || {}; }
+  { const _h = await dbGet('settings', 'betH2H').catch(() => null); window._betH2HList = ((_h && _h.value && _h.value.list) || []).filter(x => upcoming && x.raceName === upcoming.name); }
   const BOOSTS = upcoming ? window._betBoostList(_boostDoc, upcoming.name) : []; window._betBoostsNow = BOOSTS;
   window._betBoostTitle = (_boostDoc && _boostDoc.value && _boostDoc.value.title) || '';
   window._betBoost = BOOSTS;
@@ -29251,6 +29260,14 @@ window.renderBets = async function() {
           <div class="bo-special-legs">${L.map(l => `<div class="bo-special-leg">${l.d && typeof initialsAvatar === 'function' ? initialsAvatar(l.d.name, 34, 'border-radius:50%', null, typeof driverPhoto === 'function' ? driverPhoto(l.d) : '') : ''}<div><b>${esc(l.d ? l.d.name : l.name)}</b><small>${l.div} · TOP 5</small></div></div>`).join('')}</div>
           <div class="bo-special-f"><span class="bo-special-was">Normally <s>${fmtOdds(sp.fair)}</s> · <b>2× boosted</b></span>${adminLoggedIn ? `<button class="btn btn-secondary btn-sm" onclick="betSpecialOdds('${sp.id}', ${sp.odds})">✎ Odds</button>` : ''}
             ${okAll && open ? `<button class="bo-special-go${on ? ' on' : ''}" onclick="betSpecialPick('${sp.id}', ${sp.odds}, '${esc(sp.title).replace(/'/g, '&#39;')}')">${on ? '✓ On your slip' : 'Back it'} <b>${fmtOdds(sp.odds)}</b></button>` : okAll ? '' : '<small class="text-muted">A driver in this special couldn\'t be found.</small>'}</div></div>`; }).join(''); })()}
+    ${(() => { if (div === 'BOTT') return ''; const H = (window._betH2HList || []).filter(x => x.div === div); window._betH2HField = field;
+      const card = (h, i) => { const a = field.find(d => d.id === h.a), b = field.find(d => d.id === h.b); if (!a || !b) return '';
+        const pa = 1 / (1 + Math.pow(10, ((b.elo || 0) - (a.elo || 0)) / 400)), m = Number(h.mult) || 1;
+        const oa = Math.round(_betOdds(pa) * m * 100) / 100, ob = Math.round(_betOdds(1 - pa) * m * 100) / 100;
+        const side = (d, sel, o) => `<div class="bo-h2h-side">${typeof initialsAvatar === 'function' ? initialsAvatar(d.name, 46, 'border-radius:50%', null, typeof driverPhoto === 'function' ? driverPhoto(d) : '') : ''}<b>${esc(d.name)}</b><small>${esc(d.team || '')}</small>${oddsBtn('h2h', sel, d.name + ' to beat ' + (d.id === a.id ? b.name : a.name) + ' (' + div + ')', o)}</div>`;
+        return `<div class="bo-h2h"><div class="bo-h2h-k">⚔️ ${esc(h.kicker || 'FEATURED HEAD TO HEAD')}${m > 1 ? ` · <span>🚀 ${m}× BOOSTED</span>` : ''}${adminLoggedIn ? `<button class="bo-h2h-x" onclick="betH2HDel('${esc(h.id)}')" title="Remove">✕</button>` : ''}</div>${h.title ? `<div class="bo-h2h-t">${esc(h.title)}</div>` : ''}
+          <div class="bo-h2h-row">${side(a, [a.id, b.id], oa)}<div class="bo-h2h-vs">VS</div>${side(b, [b.id, a.id], ob)}</div><div class="bo-h2h-n">Whoever finishes ahead in ${esc(div)} wins. If either doesn't race, it's refunded.</div></div>`; };
+      return H.map(card).join('') + (adminLoggedIn && upcoming ? `<button class="btn btn-secondary btn-sm" style="margin:0 0 12px" onclick="betH2HNew()">⚔️ Create a ${esc(div)} head to head</button>` : ''); })()}
     ${BOOSTS.length && window._betBoostTitle ? `<div style="display:flex;align-items:center;gap:8px;margin:2px 0 8px"><span style="font-size:1.1rem">🚀</span><span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.35rem;line-height:1.05;text-transform:uppercase;letter-spacing:.5px;background:linear-gradient(90deg,#ffe259,#ffa751);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">${esc(window._betBoostTitle)}</span></div>` : ''}
     ${BOOSTS.length ? (() => {
       // The same boost across several divisions (e.g. DNFs in the race) shows as ONE card with a price per division.
@@ -30109,6 +30126,29 @@ function _betLegClashes(legs) {
   }
   return bad;
 }
+window.betH2HNew = function() {
+  const F = (window._betH2HField || []).slice().sort((x, y) => String(x.name).localeCompare(String(y.name))), div = window._betDiv, up = window._betCtx && window._betCtx.upcoming; if (!up || !F.length) return;
+  const opt = F.map(d => `<option value="${esc(d.id)}">${esc(d.name)}</option>`).join('');
+  const el = document.createElement('div'); el.id = 'h2h-modal'; el.className = 'bst-ov in';
+  el.innerHTML = `<div class="bst-card"><div class="bst-top"><span class="bst-ic">⚔️</span><div><div class="bst-k">New head to head · ${esc(div)} · ${esc(up.name)}</div><div class="bst-t">Create a featured H2H</div></div><button class="bst-x" onclick="document.getElementById('h2h-modal').remove()">✕</button></div>
+    <label class="bst-in"><span>Driver A</span><select id="h2h-a">${opt}</select></label>
+    <label class="bst-in"><span>Driver B</span><select id="h2h-b">${opt}</select></label>
+    <label class="bst-in"><span>Title (optional)</span><input id="h2h-t" maxlength="60" placeholder="e.g. Season 1 rivals, still at it"></label>
+    <label class="bst-in"><span>Small heading (optional)</span><input id="h2h-k" maxlength="40" placeholder="e.g. 🎂 ANNIVERSARY H2H"></label>
+    <label class="bst-in"><span>Boost</span><select id="h2h-m"><option value="1">No boost (normal odds)</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label>
+    <div class="bst-err" id="h2h-err"></div><div class="bst-act"><button class="bst-c" onclick="document.getElementById('h2h-modal').remove()">Cancel</button><button class="bst-go" onclick="betH2HSave()">Create</button></div></div>`;
+  document.body.appendChild(el); const b = el.querySelector('#h2h-b'); if (b.options.length > 1) b.selectedIndex = 1;
+};
+window.betH2HSave = async function() {
+  const g = (i) => (document.getElementById(i) || {}).value, a = g('h2h-a'), b = g('h2h-b'), up = window._betCtx && window._betCtx.upcoming;
+  if (!a || !b || a === b) { document.getElementById('h2h-err').textContent = 'Pick two different drivers.'; return; }
+  const d = await dbGet('settings', 'betH2H').catch(() => null), L = ((d && d.value && d.value.list) || []).filter(x => x.raceName === up.name || false);
+  L.push({ id: 'h' + Date.now().toString(36), raceName: up.name, div: window._betDiv, a, b, title: (g('h2h-t') || '').trim(), kicker: (g('h2h-k') || '').trim(), mult: Number(g('h2h-m')) || 1 });
+  await dbSet('settings', 'betH2H', { value: { list: L } }); document.getElementById('h2h-modal').remove(); showToast('⚔️ Head to head created', 'success'); renderBets();
+};
+window.betH2HDel = async function(id) { if (!confirm('Remove this head to head? Bets already placed on it stay.')) return;
+  const d = await dbGet('settings', 'betH2H').catch(() => null), L = ((d && d.value && d.value.list) || []).filter(x => x.id !== id);
+  await dbSet('settings', 'betH2H', { value: { list: L } }); showToast('Removed', 'success'); renderBets(); };
 window.betSpecialPick = function(id, odds, title) {
   const legs = window._betLegs = window._betLegs || []; const i = legs.findIndex(l => l.market === 'special' && l.sel[0] === id);
   if (i >= 0) legs.splice(i, 1); else { legs.length = 0; legs.push({ key: 'ALL|special:' + id, div: 'ALL', market: 'special', sel: [id], odds, label: '🎂 ' + title }); }
