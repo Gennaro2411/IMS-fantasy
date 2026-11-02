@@ -5853,7 +5853,10 @@ function _idbSess(op, val) {
 // Why was I signed out? Each sign-out records a reason so a surprise logout can be traced next time.
 // Rough per-device key (browser + OS string), so "last seen" can be tracked per device — a login on a
 // second device must not look like this device losing its saved login.
-function _devKey() { const u = navigator.userAgent || ''; let h = 0; for (let i = 0; i < u.length; i++) h = (h * 31 + u.charCodeAt(i)) | 0; return 'd' + (h >>> 0).toString(36); }
+function _devKey() { const u = navigator.userAgent || ''; let h = 0; for (let i = 0; i < u.length; i++) h = (h * 31 + u.charCodeAt(i)) | 0; // The home-screen app and the browser tab keep SEPARATE logins on iPhone (and incognito/other profiles on PC)
+  // but share a user agent — count the home-screen app as its own device so signing in there isn't logged as a lost login.
+  let sa = false; try { sa = !!(window.matchMedia && matchMedia('(display-mode: standalone)').matches) || !!navigator.standalone; } catch (e) {}
+  return 'd' + (h >>> 0).toString(36) + (sa ? 'a' : ''); }
 // Once someone is signed in again, send the reason for their last unexpected sign-out (and the device)
 // to the admin log, so "I keep getting logged out" can be traced.
 async function _reportSignOut() {
