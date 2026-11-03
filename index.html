@@ -4056,6 +4056,37 @@ async function dbGetAll(col, opts) {
   }
   return _r;
 }
+// ===== SNAPSHOT FILES =====
+// The snapshot server (functions/index.js) keeps one gzipped file per big collection in Storage, updated
+// every minute from the changes the app queues in _snapQ. Reading that one file instead of every
+// document is what keeps the Firestore bill down. Anything wrong (no file, server not running for 10+
+// minutes, old browser) → falls straight back to reading Firestore as before.
+window._SNAP_COLS = new Set(['drivers', 'races', 'teams', 'constructors', 'schedule', 'seasonArchives', 'archives', 'bets', 'transfers']);
+window._snapBypass = window._snapBypass || {};
+function _snapUrl(p, v) { return 'https://firebasestorage.googleapis.com/v0/b/fantasy-ims.firebasestorage.app/o/' + encodeURIComponent(p) + '?alt=media&token=ims-snap-v1' + (v ? '&v=' + v : ''); }
+function _snapMeta() {
+  const c = window._snapMetaC; if (c && Date.now() - c.at < 15000) return c.p;
+  const p = (async () => { try {
+    const r = await fetch(_snapUrl('snap/meta.json') + '&t=' + Math.floor(Date.now() / 15000)); if (!r.ok) return null;
+    const j = await r.json(); return (j && j.qok && j.v && Math.abs(Date.now() - (j.beat || 0)) < 10 * 60000) ? j : null;
+  } catch (e) { return null; } })();
+  window._snapMetaC = { at: Date.now(), p }; return p;
+}
+async function _snapGet(col) {
+  if (!window._SNAP_COLS.has(col) || typeof DecompressionStream === 'undefined') return null;
+  const b = window._snapBypass[col]; if (b && Date.now() - b < 180000) return null; // just wrote here → read live until the snapshot catches up
+  const m = await _snapMeta(), v = m && m.v[col]; if (!v) return null;
+  try {
+    const r = await fetch(_snapUrl('snap/' + col + '.json.gz', v)); if (!r.ok) return null;
+    const j = JSON.parse(await new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).text());
+    return (j && Array.isArray(j.docs)) ? j.docs : null;
+  } catch (e) { return null; }
+}
+// Tell the snapshot server this document changed (fire-and-forget), and read this collection live for a bit.
+function _snapEnq(col, id) {
+  if (!window._SNAP_COLS.has(col) || !id) return; window._snapBypass[col] = Date.now();
+  fsRequest('PATCH', fsUrl('_snapQ', encodeURIComponent(col + '__' + id)), { fields: { col: { stringValue: col }, id: { stringValue: String(id) }, at: { integerValue: String(Date.now()) } } }).catch(() => {});
+}
 async function _dbGetAllRaw(col, opts) {
   if (!PROJECT_ID) return [];
   const noCache = opts && opts.fresh;
@@ -4072,6 +4103,8 @@ async function _dbGetAllRaw(col, opts) {
 }
 async function _dbFetchAll(col) {
   const gen = window._dbGen || 0;
+  const sn = await _snapGet(col);
+  if (sn) { if ((window._dbGen || 0) === gen) window._dbCache[col] = { at: Date.now(), data: sn }; return sn; }
   try {
     // Page through the whole collection — Firestore returns at most pageSize docs per call, so
     // without following nextPageToken anything past the first 300 docs (bets, teams…) was silently lost.
@@ -4136,7 +4169,7 @@ async function dbAdd(col, obj) {
   if (!PROJECT_ID) throw new Error('Not connected');
   const url = 'https://firestore.googleapis.com/v1/projects/'+PROJECT_ID+'/databases/(default)/documents/'+col+'?key='+API_KEY;
   const data = await fsRequest('POST', url, {fields:objToFsFields(obj)});
-  dbInvalidate(col);
+  dbInvalidate(col); _snapEnq(col, data.name.split('/').pop());
   return data.name.split('/').pop();
 }
 
@@ -4170,13 +4203,13 @@ async function dbSet(col, id, obj) {
   const mask = Object.keys(fields).map(k => 'updateMask.fieldPaths='+encodeURIComponent(k)).join('&');
   const url = 'https://firestore.googleapis.com/v1/projects/'+PROJECT_ID+'/databases/(default)/documents/'+col+'/'+id+'?key='+API_KEY+'&'+mask;
   await fsRequest('PATCH', url, {fields});
-  dbInvalidate(col);
+  dbInvalidate(col); _snapEnq(col, id);
 }
 
 async function dbDelete(col, id) {
   if (!PROJECT_ID) throw new Error('Not connected');
   await fsRequest('DELETE', fsUrl(col, id));
-  dbInvalidate(col);
+  dbInvalidate(col); _snapEnq(col, id);
   if (col === 'teams') { try { window._deletedTeamIds.add(id); } catch(e){} }
 }
 

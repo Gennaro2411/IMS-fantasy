@@ -28,6 +28,7 @@ self.addEventListener('fetch', event => {
   // Don't intercept Firebase or Google API calls
   if (event.request.url.includes('firestore.googleapis.com') ||
       event.request.url.includes('script.google.com') ||
+      event.request.url.includes('firebasestorage.googleapis.com') ||
       event.request.url.includes('discord.com') ||
       event.request.url.includes('player.twitch.tv')) {
     return;
