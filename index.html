@@ -4061,7 +4061,8 @@ async function dbGetAll(col, opts) {
 // every minute from the changes the app queues in _snapQ. Reading that one file instead of every
 // document is what keeps the Firestore bill down. Anything wrong (no file, server not running for 10+
 // minutes, old browser) → falls straight back to reading Firestore as before.
-window._SNAP_COLS = new Set(['drivers', 'races', 'teams', 'constructors', 'schedule', 'seasonArchives', 'archives', 'bets', 'transfers']);
+window._SNAP_COLS = new Set(['drivers', 'races', 'teams', 'constructors', 'schedule', 'seasonArchives', 'archives', 'bets', 'transfers', 'rosterMoves', 'predictions', 'settings']);
+window._SNAP_SETTINGS = new Set(['seasonNumber','totalRounds','seasonDefinitions','trackRecords','qualiPace','heroImage','fiaVerdicts','betSpecials','betBoost','betH2H','betConfig','betOddsOverrides','bdayOdds','statOverrides','raceStats','musicCustom','departedFanZonePoints','departedDriverPrices','betStatsSince','wordleCfg','adminUsers','stewardIncidents']); // same list as functions/index.js
 window._snapBypass = window._snapBypass || {};
 function _snapUrl(p, v) { return 'https://firebasestorage.googleapis.com/v0/b/fantasy-ims.firebasestorage.app/o/' + encodeURIComponent(p) + '?alt=media&token=ims-snap-v1' + (v ? '&v=' + v : ''); }
 function _snapMeta() {
@@ -4084,7 +4085,7 @@ async function _snapGet(col) {
 }
 // Tell the snapshot server this document changed (fire-and-forget), and read this collection live for a bit.
 function _snapEnq(col, id) {
-  if (!window._SNAP_COLS.has(col) || !id) return; window._snapBypass[col] = Date.now();
+  if (!window._SNAP_COLS.has(col) || !id || (col === 'settings' && !window._SNAP_SETTINGS.has(id))) return; window._snapBypass[col] = Date.now(); if (col === 'settings') window._snapSetC = null;
   fsRequest('PATCH', fsUrl('_snapQ', encodeURIComponent(col + '__' + id)), { fields: { col: { stringValue: col }, id: { stringValue: String(id) }, at: { integerValue: String(Date.now()) } } }).catch(() => {});
 }
 async function _dbGetAllRaw(col, opts) {
@@ -4143,6 +4144,12 @@ async function _constrAliasFix(col, data) {
 // settings/wordleData is stored as a JSON string (older builds stored the object directly).
 window._wdDecode = function(v) { if (!v) return null; if (typeof v.json === 'string') { try { return JSON.parse(v.json); } catch (e) { return null; } } return v; };
 async function dbGet(col, id) {
+  // Common settings come from the snapshot file (one shared download) instead of one read each.
+  if (col === 'settings' && window._SNAP_SETTINGS && window._SNAP_SETTINGS.has(id)) {
+    const c = window._snapSetC; let docs = c && Date.now() - c.at < 15000 ? c.docs : null;
+    if (!docs) { docs = await _snapGet('settings').catch(() => null); if (docs) window._snapSetC = { at: Date.now(), docs }; }
+    if (docs && (await _snapMeta())) { const d = docs.find(x => x.id === id); return d ? _dbClone(d) : null; }
+  }
   const _d = await _dbGetRaw(col, id);
   if (_d && (col === 'races' || col === 'seasonArchives' || col === 'teams')) await _constrAliasFix(col, _d);
   return _d;

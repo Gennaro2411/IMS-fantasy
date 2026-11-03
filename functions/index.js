@@ -10,7 +10,13 @@ const zlib = require('zlib');
 admin.initializeApp();
 const db = admin.firestore();
 const bucket = admin.storage().bucket('fantasy-ims.firebasestorage.app');
-const COLS = ['drivers', 'races', 'teams', 'constructors', 'schedule', 'seasonArchives', 'archives', 'bets', 'transfers'];
+const COLS = ['drivers', 'races', 'teams', 'constructors', 'schedule', 'seasonArchives', 'archives', 'bets', 'transfers', 'rosterMoves', 'predictions', 'settings'];
+// Only these settings docs go in the snapshot: they change rarely and every visit reads them. Fast-changing
+// ones (lock state, live games, daily flags) are always read live by the app.
+const SETTINGS = ['seasonNumber','totalRounds','seasonDefinitions','trackRecords','qualiPace','heroImage','fiaVerdicts','betSpecials','betBoost','betH2H','betConfig','betOddsOverrides','bdayOdds','statOverrides','raceStats','musicCustom','departedFanZonePoints','departedDriverPrices','betStatsSince','wordleCfg','adminUsers','stewardIncidents'];
+const readCol = async c => c === 'settings'
+  ? (await db.getAll(...SETTINGS.map(id => db.collection('settings').doc(id)))).filter(s => s.exists)
+  : (await db.collection(c).get()).docs;
 const TOKEN = 'ims-snap-v1';            // fixed download token the app uses for snap/ files
 const FULL_EVERY = 6 * 3600 * 1000;
 
@@ -50,16 +56,16 @@ exports.imsSnapshot = onSchedule({ schedule: 'every 1 minutes', region: 'europe-
   }
   const now = Date.now();
   if (now - (meta.full || 0) > FULL_EVERY || COLS.some(c => !meta.v[c])) {
-    for (const c of COLS) meta.v[c] = await putCol(c, (await db.collection(c).get()).docs.map(toObj));
+    for (const c of COLS) meta.v[c] = await putCol(c, (await readCol(c)).map(toObj));
     meta.full = now;   // the queue is left alone: next run re-applies anything changed meanwhile
   } else {
     const q = await db.collection('_snapQ').limit(1000).get();
     if (!q.empty) {
       const byCol = {};
-      q.docs.forEach(d => { const { col, id } = d.data() || {}; if (COLS.includes(col) && id) (byCol[col] = byCol[col] || new Set()).add(id); });
+      q.docs.forEach(d => { const { col, id } = d.data() || {}; if (COLS.includes(col) && id && (col !== 'settings' || SETTINGS.includes(id))) (byCol[col] = byCol[col] || new Set()).add(id); });
       for (const [col, ids] of Object.entries(byCol)) {
         const cur = await readFile(`snap/${col}.json.gz`, true);
-        if (!cur || !Array.isArray(cur.docs)) { meta.v[col] = await putCol(col, (await db.collection(col).get()).docs.map(toObj)); continue; }
+        if (!cur || !Array.isArray(cur.docs)) { meta.v[col] = await putCol(col, (await readCol(col)).map(toObj)); continue; }
         const map = new Map(cur.docs.map(d => [d.id, d])), list = [...ids];
         for (let i = 0; i < list.length; i += 300) {
           const snaps = await db.getAll(...list.slice(i, i + 300).map(id => db.collection(col).doc(id)));
