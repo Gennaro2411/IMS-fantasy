@@ -4524,6 +4524,7 @@ async function bcLoadData() {
     dbGet('settings','totalRounds').catch(()=>null),
     dbGet('settings','teamsLocked').catch(()=>null)
   ]);
+  _noteMoveIds(rosterMoves);
   races.sort((a,b) => (b.raceNum||0) - (a.raceNum||0));
   const standings = teams.map(t => ({ name: t.teamName || t.playerName || '?', discordAvatar: t.discordAvatar || '', pts: races.reduce((s,r) => s + bcTeamRacePts(t, r, drivers), 0) }))
     .sort((a,b) => b.pts - a.pts);
@@ -23060,7 +23061,7 @@ async function renderMarket() {
   el.innerHTML='<div class="ims-loader"><div class="ims-loader-mark"><img src="icons/icon-192.png?v=3" alt=""></div><div class="ims-loader-text">Loading</div><div class="ims-loader-bar"></div></div>';
 
   const [allDrivers, constrs, teams, races, lockDoc, lastSyncedDoc, schedule, mktTransfers, hidePmDoc, rosterMoves] = await Promise.all([dbGetAll('drivers'), dbGetAll('constructors'), dbGetAll('teams'), dbGetAll('races'), dbGet('settings','teamsLocked'), dbGet('settings','lastSynced'), dbGetAll('schedule').catch(()=>[]), dbGetAll('transfers').catch(()=>[]), dbGet('settings','hidePriceMoves').catch(()=>null), dbGetAll('rosterMoves').catch(()=>[])]);
-  window._marketRosterMoves = rosterMoves || [];
+  window._marketRosterMoves = rosterMoves || []; _noteMoveIds(rosterMoves);
   // Managers' fantasy transfers for the wire's MANAGERS channel — newest 8, names hidden until deadline day like elsewhere.
   { const _rev = transferNamesRevealed(schedule || []), _tn = {}; (teams || []).forEach(t => { if (t && t.userId) _tn[t.userId] = (t.testAccount ? null : (t.teamName || t.playerName || 'A manager')); });
     window._marketMgrMoves = (mktTransfers || []).filter(t => t && t.timestamp && t.type !== 'constructor' && _tn[t.userId] !== null && (t.newName || t.oldName))
@@ -26464,6 +26465,8 @@ window._avatarByDiscord = window._avatarByDiscord || {};
 window._avatarByName = window._avatarByName || {};
 // Normalise a name for loose matching: drop [tags], lowercase, strip everything but a-z0-9.
 // "L3on Tyl3r2500" and "[IMS] l3on_tyl3r2500" both collapse to "l3ontyl3r2500".
+window._discordIdByName = window._discordIdByName || {};
+function _noteMoveIds(moves) { try { (moves || []).forEach(m => { const k = m && m.driverDiscordId && _normName(m.driver); if (k) window._discordIdByName[k] = m.driverDiscordId; }); } catch (e) {} }
 function _normName(s) { return String(s||'').toLowerCase().replace(/\[[^\]]*\]/g,'').replace(/[^a-z0-9]/g,''); }
 function buildAvatarIndex(teams) {
   try {
@@ -26491,6 +26494,10 @@ function driverPhoto(driver) {
   if (driver.discordId && window._avatarByDiscord[driver.discordId]) return window._avatarByDiscord[driver.discordId]; // 3. player-derived, matched by id
   const nk = _normName(driver.name);
   if (nk && window._avatarByName[nk]) return window._avatarByName[nk]; // 4. loose name match
+  // 5. the avatar saved in the repo by discord id (same picture the transfer wire shows) — id from the
+  // driver doc, or from a roster move that named this driver.
+  const did = driver.discordId || (nk && window._discordIdByName && window._discordIdByName[nk]);
+  if (did) return 'main-driver-avatars/driver-avatars/' + encodeURIComponent(did) + '.png';
   return '';
 }
 function initialsAvatar(name, size, extraStyle, overrideCols, avatarUrl) {
