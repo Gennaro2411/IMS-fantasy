@@ -13391,7 +13391,10 @@ window.findReserveForSlot = function(race, absentDriver, div) {
     // driver from a different team/division who filled this seat IS a valid reserve, even if their
     // home division happens to be the same one.
     const cand = dmap[did];
-    if (cand && !cand.isReserve && cand.division === div && normTeam(cand.team) === teamName) return; // team's own regular (a reserve the importer filed under this team/division is still a stand-in)
+    // Who drove as a reserve THAT round (from the bible) beats today's roster — a reserve who has since
+    // become full-time on this team still counts as the stand-in for the rounds he reserved.
+    const _rn = race.reserveNames && race.reserveNames[div], _fk = x => searchFold(String(x || '').replace(/\[[^\]]*\]/g, '')), wasRes = !!(_rn && cand && [cand.name, cand.imsAlias].some(x => x && _rn.includes(_fk(x))));
+    if (!wasRes && cand && !cand.isReserve && cand.division === div && normTeam(cand.team) === teamName) return; // team's own regular (a reserve the importer filed under this team/division is still a stand-in)
     let pts = (race.driverPointsByDivision[did] && race.driverPointsByDivision[did][div] !== undefined)
       ? race.driverPointsByDivision[did][div] : null;
     // A reserve who scored 0 may have no points entry at all — they still raced if they have a finishing position / race status here.
@@ -13400,7 +13403,7 @@ window.findReserveForSlot = function(race, absentDriver, div) {
     // Rank: a real reserve / driver from another division beats a driver whose own seat is in this
     // division (that's usually the absent driver's teammate with a stale team name, not a stand-in).
     // Only then fall back to points. Never pick by points alone.
-    const rank = (!cand || cand.isReserve || (cand.division && cand.division !== div)) ? 2 : 1; // not on the market at all = a reserve too
+    const rank = (wasRes || !cand || cand.isReserve || (cand.division && cand.division !== div)) ? 2 : 1; // not on the market at all = a reserve too
     const nm = (cand && cand.name) || (race.driverNames && race.driverNames[did]) || did;
     const st = (race.raceStatusByDivision && race.raceStatusByDivision[did] && race.raceStatusByDivision[did][div]) || '';
     if (!best || rank > best._rank || (rank === best._rank && pts > best.pts)) best = { reserveId: did, reserveName: nm, pts, status: String(st || ''), _rank: rank };
@@ -15264,6 +15267,19 @@ window._spHasAny = (race) => !!(race && race.sprintByDiv && Object.keys(race.spr
 function _normDbDiv(dv) { const x = String(dv || '').trim().toUpperCase(); return /^[0-9]$/.test(x) ? 'D' + x : x; }
 // The archive may name a round differently from the .db (e.g. "Great Britain" vs "Silverstone"):
 // use the exact name if the .db has it, otherwise any .db track name that's the same circuit.
+async function _syncReserveNames(season) {
+  if (!_imsDb) return; const e2 = v => String(v).replace(/'/g, "''"); let n = 0;
+  for (const r of await dbGetAll('races', { fresh: true })) {
+    if (!r || !r.name || !r.driverPoints || !Object.keys(r.driverPoints).length) continue;
+    const tr = _dbTrackName(season, r.name);
+    const q = _imsDb.exec(`SELECT col_c, col_e, col_r FROM inputs_rows WHERE col_a='${e2(season)}' AND col_ad='${e2(tr)}'`);
+    if (!q.length || !q[0].values.length) continue;
+    const out = {}; q[0].values.forEach(([dv, nm, role]) => { if (!/reserve/i.test(String(role || ''))) return; const d = _normDbDiv(dv); (out[d] = out[d] || []).push(searchFold(String(nm || '').replace(/\[[^\]]*\]/g, ''))); });
+    if (JSON.stringify(out) === JSON.stringify(r.reserveNames || null)) continue;
+    await dbSet('races', r.id, { reserveNames: out }); n++;
+  }
+  if (n) { dbInvalidate('races'); console.log('[reserves] saved reserve names on', n, 'round(s)'); }
+}
 function _dbTrackName(season, name) {
   if (!_imsDb) return name;
   const esc2 = (v) => String(v).replace(/'/g, "''");
@@ -15470,6 +15486,9 @@ window.loadDbFile = async function() {
     // but old S7 races). Group by track name since round numbers can be ambiguous across sources.
     const _seasonDoc = await dbGet('settings','seasonNumber').catch(()=>null);
     const LOAD_SEASON = (_seasonDoc && _seasonDoc.value) || window._reserveSeason || 7;
+    // Remember who drove each round as a RESERVE (col_r) on the race doc, so reserve step-ins stay
+    // correct after a reserve later becomes a full-time driver on that same team.
+    _syncReserveNames(LOAD_SEASON).catch(e => console.warn('reserve-name sync failed', e));
     let res = _imsDb.exec(`SELECT col_b as round, col_ad as track FROM inputs_rows WHERE col_a='${LOAD_SEASON}' AND col_ad IS NOT NULL AND col_ad != '' ORDER BY CAST(col_b as INTEGER)`);
     if (!res.length || !res[0].values.length) {
       msg.innerHTML = `<div class="alert alert-error">No Season ${LOAD_SEASON} race data found in this database.</div>`;
@@ -16196,6 +16215,7 @@ window.importDbRound = async function(roundNo, trackName) {
       pricingFinalized: alreadyPricedForThisRace || batchIncludesD4 || raceAlreadyHasD4
     });
 
+    _syncReserveNames(IMPORT_SEASON).catch(() => {}); // record this round's reserves (see findReserveForSlot)
     // New round → +1 free transfer for every team (max 3 banked). Once per race (ftAwarded flag), so
     // importing more divisions / verdicts later never awards it twice. This .db import is how races
     // are created now, and it never awarded transfers — which is why nobody's were refilling.
