@@ -1447,7 +1447,7 @@
     <details class="help-sec" style="--hcol:#2ecc71">
       <summary>🔄 Transfers</summary>
       <div class="help-body">
-        <p>You get <strong>1 free transfer per round, banked up to 3</strong>. Team changes beyond your banked transfers aren't allowed — plan ahead or save your Wildcard.</p>
+        <p>You get <strong>1 free transfer per round, banked up to 3</strong>. Filling an <strong>empty slot</strong> (e.g. after a driver is moved division or leaves) is always free. Team changes beyond your banked transfers aren't allowed — plan ahead or save your Wildcard.</p>
         <p>Swaps settle at the <strong>net price difference</strong>: sell a $10M driver, sign a $12M one, and it costs $2M of budget. Downgrades put credits back in your pocket — profit from price rises is real money for future signings.</p>
       </div>
     </details>
@@ -9529,7 +9529,7 @@ window.submitTeam = async function() {
   let _transferPenaltyPts = 0;
   if (existing && !wcActive) {
     const oldSel = existing.selections || {};
-    const changedCount = [...DIVISIONS, 'CONSTRUCTOR'].filter(div => selections[div] && selections[div] !== oldSel[div]).length;
+    const changedCount = [...DIVISIONS, 'CONSTRUCTOR'].filter(div => selections[div] && oldSel[div] && selections[div] !== oldSel[div]).length;
     const freeTransfers = existing.freeTransfers !== undefined ? existing.freeTransfers : 1;
     if (changedCount > freeTransfers) {
       const extra = changedCount - freeTransfers;
@@ -9626,7 +9626,7 @@ window.submitTeam = async function() {
     newBudget = Math.max(0, Math.round((myBudget - transferCost) * 10) / 10);
   }
   const oldSel2 = existing ? (existing.selections||{}) : {};
-  const changedCount2 = existing ? [...DIVISIONS, 'CONSTRUCTOR'].filter(div => selections[div] && selections[div] !== oldSel2[div]).length : 0;
+  const changedCount2 = existing ? [...DIVISIONS, 'CONSTRUCTOR'].filter(div => selections[div] && oldSel2[div] && selections[div] !== oldSel2[div]).length : 0;
   const currentFree = existing ? (existing.freeTransfers !== undefined ? existing.freeTransfers : 1) : 1;
   const newFreeTransfers = (existing && wcActive) ? currentFree : Math.max(0, currentFree - changedCount2);
   // Cumulative transfers made this season — only counts changes to an EXISTING team, so building
