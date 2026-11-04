@@ -13516,7 +13516,8 @@ window.getReservePlan = function(t, races) {
   // Signature reflects the actual scored content (per-division), not just the race count — so the
   // plan recomputes the moment a NEW division's results are imported into an existing round (e.g.
   // D3 comes in after D1), letting the reserve show as soon as that division is scored.
-  const sig = (races||[]).map(r => (r.id||'') + ':' + (r.driverPointsByDivision ? Object.keys(r.driverPointsByDivision).length : 0) + ':' + ((r.updatedAt||r.createdAt||0))).join('|');
+  const sig = (races||[]).map(r => (r.id||'') + ':' + (r.driverPointsByDivision ? Object.keys(r.driverPointsByDivision).length : 0) + ':' + ((r.updatedAt||r.createdAt||0)) + ':' + (r.reserveNames ? JSON.stringify(r.reserveNames).length : 0)).join('|')
+    + '#' + ((window._allDrivers || []).length) + '#' + (window.RESERVE_START_RACENUM || 0); // drivers / reserve list / start round change the answer too
   const c = window._reservePlanCache[key];
   if (c && c._sig === sig) return c.plan;
   const plan = window.computeReservePlan(t, races);
