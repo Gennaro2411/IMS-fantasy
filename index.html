@@ -9569,8 +9569,12 @@ window.submitTeam = async function() {
 
   /* Drivers who lost their seat (now reserves) can be replaced without using a free transfer. */
   let _seatLostIds = new Set();
-  try { (await dbGetAll('drivers')).forEach(d => { if (d && d.isReserve) _seatLostIds.add(d.id); }); } catch (e) {}
-  const _countsAsTransfer = (div, oldSel) => selections[div] && oldSel[div] && selections[div] !== oldSel[div] && !(div !== 'CONSTRUCTOR' && _seatLostIds.has(oldSel[div]));
+  let _liveIds = null;
+  try { const [_ds, _cs] = await Promise.all([dbGetAll('drivers'), dbGetAll('constructors')]); _liveIds = new Set();
+    _ds.forEach(d => { if (!d) return; _liveIds.add(d.id); if (d.isReserve) _seatLostIds.add(d.id); }); _cs.forEach(c => { if (c) _liveIds.add(c.id); }); } catch (e) {}
+  /* Free if the old pick lost their seat or was deleted from the database. */
+  const _countsAsTransfer = (div, oldSel) => selections[div] && oldSel[div] && selections[div] !== oldSel[div]
+    && !(div !== 'CONSTRUCTOR' && _seatLostIds.has(oldSel[div])) && !(_liveIds && _liveIds.size && !_liveIds.has(oldSel[div]));
   let _transferPenaltyPts = 0;
   if (existing && !wcActive) {
     const oldSel = existing.selections || {};
@@ -23450,6 +23454,7 @@ async function renderMarket() {
     if (!id) return;
     const dObj = allDrivers.find(x => x.id === id); /* allDrivers: a driver who lost their seat is still on your team and must be sold, not ignored */
     if (dObj) myFielded[dv] = { id, price: driverPrice(dObj), name: dObj.name, div: dv };
+    else myFielded[dv] = { id, price: 0, name: 'Removed driver', div: dv, gone: true }; /* deleted from the database: still a slot to replace (free) */
   });
 
   // One driver row — shared by grouped and flat views (division-aware per driver)
@@ -23687,7 +23692,8 @@ window.confirmTransfer = async function(oldDriverId, newDriverId, div, teamId, c
   const wcChip = (team.chips||{}).wildcard;
   const wcActiveNow = _wcActive(team, await dbGetAll('races').catch(() => []));
   /* Replacing a driver who has lost their seat (now a reserve with no roster seat) is free: no transfer used, no penalty. */
-  const _seatLost = !isConstructor && !!oldDriverId && !!(drivers.find(d => d.id === oldDriverId) || {}).isReserve;
+  const _oldEnt = oldDriverId ? (isConstructor ? constrs : drivers).find(x => x.id === oldDriverId) : null;
+  const _seatLost = !!oldDriverId && (!_oldEnt || (!isConstructor && !!_oldEnt.isReserve)); /* lost seat, or deleted from the database */
 
   // Past your free transfers (and not on a wildcard) you can still transfer, but each move beyond
   // the free limit docks 30 points from the current round. Confirmed further down.
@@ -23723,7 +23729,7 @@ window.confirmTransfer = async function(oldDriverId, newDriverId, div, teamId, c
     : cost < 0 ? `This will save you ${formatM(Math.abs(cost))}.`
     : 'This is a free transfer.';
   const feeStr = wcActiveNow ? ' 🃏 Wildcard active — unlimited transfers this round.'
-    : _seatLost ? ` 💺 ${oldName||'This driver'} has lost their seat, so replacing them doesn't use a free transfer.`
+    : _seatLost ? (_oldEnt ? ` 💺 ${oldName||'This driver'} has lost their seat, so replacing them doesn't use a free transfer.` : ` 💺 Your old ${type} was removed from the database, so replacing them doesn't use a free transfer.`)
     : _marketPenaltyPts > 0
       ? ` ⚠️ You have no free transfers left — this move will cost you ${_marketPenaltyPts} points off this round's score.`
       : ` You have ${freeTransfers} free transfer${freeTransfers!==1?'s':''} banked${freeTransfers>=3?' (MAX)':''}.`;
