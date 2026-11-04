@@ -23448,7 +23448,7 @@ async function renderMarket() {
   DIVISIONS.forEach(dv => {
     const id = mySel[dv];
     if (!id) return;
-    const dObj = drivers.find(x => x.id === id);
+    const dObj = allDrivers.find(x => x.id === id); /* allDrivers: a driver who lost their seat is still on your team and must be sold, not ignored */
     if (dObj) myFielded[dv] = { id, price: driverPrice(dObj), name: dObj.name, div: dv };
   });
 
