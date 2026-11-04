@@ -9567,10 +9567,14 @@ window.submitTeam = async function() {
     }
   }
 
+  /* Drivers who lost their seat (now reserves) can be replaced without using a free transfer. */
+  let _seatLostIds = new Set();
+  try { (await dbGetAll('drivers')).forEach(d => { if (d && d.isReserve) _seatLostIds.add(d.id); }); } catch (e) {}
+  const _countsAsTransfer = (div, oldSel) => selections[div] && oldSel[div] && selections[div] !== oldSel[div] && !(div !== 'CONSTRUCTOR' && _seatLostIds.has(oldSel[div]));
   let _transferPenaltyPts = 0;
   if (existing && !wcActive) {
     const oldSel = existing.selections || {};
-    const changedCount = [...DIVISIONS, 'CONSTRUCTOR'].filter(div => selections[div] && oldSel[div] && selections[div] !== oldSel[div]).length;
+    const changedCount = [...DIVISIONS, 'CONSTRUCTOR'].filter(div => _countsAsTransfer(div, oldSel)).length;
     const freeTransfers = existing.freeTransfers !== undefined ? existing.freeTransfers : 1;
     if (changedCount > freeTransfers) {
       const extra = changedCount - freeTransfers;
@@ -9667,7 +9671,7 @@ window.submitTeam = async function() {
     newBudget = Math.max(0, Math.round((myBudget - transferCost) * 10) / 10);
   }
   const oldSel2 = existing ? (existing.selections||{}) : {};
-  const changedCount2 = existing ? [...DIVISIONS, 'CONSTRUCTOR'].filter(div => selections[div] && oldSel2[div] && selections[div] !== oldSel2[div]).length : 0;
+  const changedCount2 = existing ? [...DIVISIONS, 'CONSTRUCTOR'].filter(div => _countsAsTransfer(div, oldSel2)).length : 0;
   const currentFree = existing ? (existing.freeTransfers !== undefined ? existing.freeTransfers : 1) : 1;
   const newFreeTransfers = (existing && wcActive) ? currentFree : Math.max(0, currentFree - changedCount2);
   // Cumulative transfers made this season — only counts changes to an EXISTING team, so building
@@ -23668,10 +23672,12 @@ window.confirmTransfer = async function(oldDriverId, newDriverId, div, teamId, c
   const freeTransfers = team.freeTransfers !== undefined ? team.freeTransfers : 1;
   const wcChip = (team.chips||{}).wildcard;
   const wcActiveNow = _wcActive(team, await dbGetAll('races').catch(() => []));
+  /* Replacing a driver who has lost their seat (now a reserve with no roster seat) is free: no transfer used, no penalty. */
+  const _seatLost = !isConstructor && !!oldDriverId && !!(drivers.find(d => d.id === oldDriverId) || {}).isReserve;
 
   // Past your free transfers (and not on a wildcard) you can still transfer, but each move beyond
   // the free limit docks 30 points from the current round. Confirmed further down.
-  const _marketPenaltyPts = (!wcActiveNow && freeTransfers <= 0) ? 30 : 0;
+  const _marketPenaltyPts = (!wcActiveNow && !_seatLost && freeTransfers <= 0) ? 30 : 0;
 
   // Anti price-farming: you can buy/sell freely, but the SECOND sell of the same driver within a
   // single round is blocked — one round-trip is fine, repeated churn (which farms the demand
@@ -23703,6 +23709,7 @@ window.confirmTransfer = async function(oldDriverId, newDriverId, div, teamId, c
     : cost < 0 ? `This will save you ${formatM(Math.abs(cost))}.`
     : 'This is a free transfer.';
   const feeStr = wcActiveNow ? ' 🃏 Wildcard active — unlimited transfers this round.'
+    : _seatLost ? ` 💺 ${oldName||'This driver'} has lost their seat, so replacing them doesn't use a free transfer.`
     : _marketPenaltyPts > 0
       ? ` ⚠️ You have no free transfers left — this move will cost you ${_marketPenaltyPts} points off this round's score.`
       : ` You have ${freeTransfers} free transfer${freeTransfers!==1?'s':''} banked${freeTransfers>=3?' (MAX)':''}.`;
@@ -23715,7 +23722,7 @@ window.confirmTransfer = async function(oldDriverId, newDriverId, div, teamId, c
     const newSel = {...(team.selections||{}), [div]: newDriverId};
     const newBudget = Math.max(0, Math.round((currentBudget - totalCost) * 10) / 10);
     // Wildcard: don't deduct free transfers. Normal: deduct one.
-    const newFreeTransfers = wcActiveNow ? freeTransfers : Math.max(0, freeTransfers - 1);
+    const newFreeTransfers = (wcActiveNow || _seatLost) ? freeTransfers : Math.max(0, freeTransfers - 1);
     // Record & persist the round-scoped sell count for the driver being dropped.
     const newSellCounts = {...(team.sellCounts||{})};
     if (oldDriverId) {
@@ -23743,7 +23750,7 @@ window.confirmTransfer = async function(oldDriverId, newDriverId, div, teamId, c
       div, type,
       oldId: oldDriverId, oldName: oldName || '—',
       newId: newDriverId, newName: newName || '—',
-      cost: totalCost, timestamp: Date.now(), ftAfter: newFreeTransfers, ...(wcActiveNow ? { via: 'wildcard' } : {})
+      cost: totalCost, timestamp: Date.now(), ftAfter: newFreeTransfers, ...(wcActiveNow ? { via: 'wildcard' } : _seatLost ? { via: 'seat-lost' } : {})
     });
     currentUser.selections = newSel;
     _saveSession(currentUser);
