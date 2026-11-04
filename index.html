@@ -15979,6 +15979,20 @@ window.importDbRound = async function(roundNo, trackName) {
       drivers.push(...newReserveDrivers);
     }
 
+    /* Drivers who LOST their seat and didn't race this round never appear in the race rows, so they
+       were never flagged. Mark any full-time driver with no occupied roster seat (by name, alias or
+       plain-letter fold) as a reserve. Only when the roster query actually returned seats. */
+    {
+      const _seatKeys = new Set(), _seatFolds = new Set();
+      Object.keys(rosterDivMap).forEach(k => { _seatKeys.add(k); const f = searchFold(k); if (f) _seatFolds.add(f); });
+      if (_seatKeys.size >= 20) drivers.forEach(d => {
+        if (!d || d.isReserve || String(d.id).startsWith('driver_reserve_') || divisionFixes.some(f => f.id === d.id)) return;
+        const names = [d.name, d.imsAlias].filter(Boolean);
+        const seated = names.some(n => _seatKeys.has(n.toLowerCase().trim()) || _seatFolds.has(searchFold(n)));
+        if (!seated) divisionFixes.push({ id: d.id, name: d.name, oldDiv: d.division, newDiv: d.division, driverObj: d, reserveOnly: true });
+      });
+    }
+
     // Fix divisions/reserve status on existing drivers to match their current roster seat
     if (divisionFixes.length) {
       await Promise.all(divisionFixes.map(fix => dbSet('drivers', fix.id, {
