@@ -15561,10 +15561,36 @@ window.loadDbFile = async function() {
           <div style="font-size:.75rem;color:var(--muted)">Season ${LOAD_SEASON} · Round ${round}</div>
         </div>
         <button class="btn btn-primary btn-sm" onclick="importDbRound('${round}','${esc(track||round)}')">Import →</button>
-      </div>`;
+      </div>
+      <div id="dbchg-${esc(String(round))}" style="margin:-4px 0 2px;padding:0 14px;font-size:.74rem;color:var(--muted)">Checking for changes…</div>`;
     });
     html += '</div>';
     roundsList.innerHTML = html;
+    /* Under each round: has the .db changed since this round was last imported? */
+    (async () => {
+      const races = await dbGetAll('races', { fresh: true }).catch(() => []);
+      const tk = n => window.trackKey ? window.trackKey(n) : String(n || '').toLowerCase().trim();
+      rounds.forEach(([round, track]) => {
+        const el = document.getElementById('dbchg-' + String(round)); if (!el) return;
+        const rn = parseInt(round, 10);
+        const race = races.find(r => r && +r.raceNum === rn && tk(r.name) === tk(track)) || races.find(r => r && tk(r.name) === tk(track) && +r.raceNum === rn) || races.find(r => r && +r.raceNum === rn && r.driverPoints);
+        if (!race || !race.driverPoints || !Object.keys(race.driverPoints).length) { el.innerHTML = '🆕 <b style="color:#60a5fa">Not imported yet</b>'; return; }
+        const when = race.dbImportedAt ? new Date(race.dbImportedAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : null;
+        if (!race.dbRowsJson) { el.innerHTML = '⚪ Not tracked yet: import it once and changes will show here from then on.'; return; }
+        let old = {}; try { old = JSON.parse(race.dbRowsJson) || {}; } catch (e) {}
+        const now = window._dbRoundSig(LOAD_SEASON, track);
+        const ch = [];
+        Object.keys(now).forEach(k => { const [dv, nm] = [k.split('|')[0], k.slice(k.indexOf('|') + 1)]; const a = old[k], b = now[k];
+          if (a === undefined) { ch.push(`${esc(dv)} · <b>${esc(nm)}</b> added`); return; }
+          if (a === b) return; const [p0, f0, b0] = a.split('/'), [p1, f1, b1] = b.split('/'); const bits = [];
+          if (p0 !== p1) bits.push(`P${esc(p0 || '–')} → P${esc(p1 || '–')}`); if (f0 !== f1) bits.push(`${esc(f0)} → ${esc(f1)} pts`); if (b0 !== b1) bits.push(`BOTT ${esc(b0)} → ${esc(b1)}`);
+          ch.push(`${esc(dv)} · <b>${esc(nm)}</b>: ${bits.join(', ')}`); });
+        Object.keys(old).forEach(k => { if (now[k] === undefined) ch.push(`${esc(k.split('|')[0])} · <b>${esc(k.slice(k.indexOf('|') + 1))}</b> removed`); });
+        if (!ch.length) { el.innerHTML = `✅ <span style="color:#4ade80">No changes since last import</span>${when ? ' (' + esc(when) + ')' : ''}`; return; }
+        el.innerHTML = `⚠️ <b style="color:#fbbf24">${ch.length} change${ch.length !== 1 ? 's' : ''} since last import${when ? ' (' + esc(when) + ')' : ''}, import again</b>`
+          + `<div style="margin-top:3px;line-height:1.5">${ch.slice(0, 8).join('<br>')}${ch.length > 8 ? `<br>…and ${ch.length - 8} more` : ''}</div>`;
+      });
+    })().catch(e => console.warn('db change check failed', e));
   } catch(e) {
     msg.innerHTML = '<div class="alert alert-error">Error loading database: ' + esc(e.message) + '</div>';
   }
@@ -15691,6 +15717,17 @@ function buildConstructorPriceBreakdownHtml(constrBreakdown) {
   return html;
 }
 
+/* Per-row fingerprint of a round in the .db (finish, fantasy pts, BOTT pts per driver per division),
+   saved on the race at import so the round list can say what changed since then. */
+window._dbRoundSig = function(season, dbTrack) {
+  const out = {}; if (!_imsDb) return out; const e2 = v => String(v).replace(/'/g, "''");
+  const divs = (typeof divisionsForSeason === 'function') ? divisionsForSeason(season) : ['D0','D1','D2','D3','D4'];
+  const q = _imsDb.exec(`SELECT col_c, col_e, COALESCE(NULLIF(TRIM(col_ao), ''), col_n), col_as, bott_points_effective FROM inputs_rows
+    WHERE col_a='${e2(season)}' AND col_ad='${e2(dbTrack)}' AND col_c IN (${divs.map(d => `'${d}'`).join(',')})`);
+  if (q.length) q[0].values.forEach(([dv, nm, pos, pts, bott]) => { if (!nm) return;
+    out[dv + '|' + nm] = [pos == null ? '' : String(pos).trim(), pts == null ? '' : String(Number(pts) || 0), bott == null ? '' : String(Number(bott) || 0)].join('/'); });
+  return out;
+};
 window.importDbRound = async function(roundNo, trackName) {
   // The .db may title a round differently from the app (e.g. "Spain" vs "Barcelona"). Query the .db with
   // its own name (dbTrack), but store/match everything in the app under the app's race name (trackName).
@@ -16276,7 +16313,9 @@ window.importDbRound = async function(roundNo, trackName) {
       } catch (e) { return {}; } })(),
       createdAt: existingRace ? existingRace.createdAt : Date.now(),
       updatedAt: Date.now(),
-      pricingFinalized: alreadyPricedForThisRace || batchIncludesD4 || raceAlreadyHasD4
+      pricingFinalized: alreadyPricedForThisRace || batchIncludesD4 || raceAlreadyHasD4,
+      dbRowsJson: (() => { try { return JSON.stringify(window._dbRoundSig(IMPORT_SEASON, dbTrack)); } catch (e) { return (existingRace && existingRace.dbRowsJson) || ''; } })(), /* for "changed since last import" */
+      dbImportedAt: Date.now()
     });
 
     _syncReserveNames(IMPORT_SEASON).catch(() => {}); // record this round's reserves (see findReserveForSlot)
