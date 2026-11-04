@@ -3862,6 +3862,24 @@ window._adminFlagOk = function() {
   return false;
 };
 window._bottAdjOnce = async function() {
+  /* Retired: the league .db already scraps Greg's BOTT (bott_points_effective = 0), so this −31 was a
+     second deduction. Undo it once instead (Aston Martin COTA 89 → 120, season 483 → 514). */
+  try {
+    if (localStorage.getItem('imsMigGregplBottUndo') === '1') return;
+    const flag = await dbGet('settings', 'migGregplBottUndo').catch(() => null); if (flag && flag.value) { localStorage.setItem('imsMigGregplBottUndo', '1'); return; }
+    const [races, constrs] = await Promise.all([dbGetAll('races', { fresh: true }), dbGetAll('constructors')]);
+    const am = constrs.find(c => /aston/i.test(c.name || '')); if (!am) return;
+    const hits = races.filter(r => r && r.bottAdj && Number(r.bottAdj[am.id]) === -31);
+    for (const r of hits) {
+      const cp = { ...(r.constructorPoints || {}) }; cp[am.id] = (Number(cp[am.id]) || 0) + 31;
+      await dbSet('races', r.id, { constructorPoints: cp, bottAdj: { ...r.bottAdj, [am.id]: 0 }, bottAdjNote: 'Greg −31 undone: the league .db already removes his BOTT points.' });
+    }
+    await dbSet('settings', 'migGregplBottUndo', { value: { at: Date.now(), races: hits.map(r => r.name) } }); localStorage.setItem('imsMigGregplBottUndo', '1');
+    try { localStorage.setItem('imsMigGregplBott', '1'); } catch (e) {}
+    if (hits.length && typeof showToast === 'function') showToast('⚖️ Aston Martin +31 BOTT restored on ' + hits.map(r => r.name).join(', ') + ' (it was being taken off twice)', 'success');
+  } catch (e) { console.warn('gregpl bott undo', e); }
+};
+window._bottAdjOnceOld = async function() {
   try {
     if (localStorage.getItem('imsMigGregplBott') === '1') return;
     const flag = await dbGet('settings', 'migGregplBott').catch(() => null); if (flag && flag.value) { localStorage.setItem('imsMigGregplBott', '1'); return; }
