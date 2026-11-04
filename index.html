@@ -8825,7 +8825,7 @@ async function renderTeamBuilder(existingTeam, locked, allTeams) {
 
   // Build driver point totals for pricing
   window._driverPointTotals = {};
-  window._allDrivers = drivers;
+  window._allDrivers = allDrivers2; /* full list incl. reserves: the scorer needs drivers who lost their seat */
   updateDivEloAvg(drivers);
   drivers.forEach(d => { window._driverPointTotals[d.id] = 0; });
   races.forEach(r => {
@@ -23194,7 +23194,7 @@ async function renderMarket() {
   
   // Build driver point totals for pricing
   window._driverPointTotals = {};
-  window._allDrivers = drivers;
+  window._allDrivers = allDrivers; /* full list incl. reserves: the scorer needs drivers who lost their seat */
   updateDivEloAvg(drivers);
   recomputeOwnership((typeof teams !== 'undefined' ? teams : []), drivers, (typeof constrs !== 'undefined' ? constrs : []));
   drivers.forEach(d => { window._driverPointTotals[d.id] = 0; });
