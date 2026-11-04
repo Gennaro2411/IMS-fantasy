@@ -13424,10 +13424,18 @@ function driverRacedInDiv(race, driverId, div) {
 // Find the reserve who drove the absent driver's seat (same team + division) this round.
 // Returns { reserveId, reserveName, pts } or null. The reserve can be anyone — including a driver on
 // the market for another division — as long as they raced for that team in that division this round.
-window.findReserveForSlot = function(race, absentDriver, div) {
+window.findReserveForSlot = function(race, absentDriver, div, allRaces) {
   if (!race || !absentDriver || !race.driverTeamByDivision || !race.driverPointsByDivision) return null;
   const normTeam = s => String(s||'').toLowerCase().replace(/\b(racing|f1 team|team|gp|scuderia)\b/g,'').replace(/[^a-z0-9]/g,'').trim();
-  const teamName = normTeam(absentDriver.team);
+  /* Team a driver raced for in this division AT THE TIME: the most recent EARLIER race where they raced it.
+     Earlier races only, so neither a later roster change (lost seat, team move) nor later results can
+     rescore an old round. */
+  const _other = (allRaces || []).filter(r => r && r !== race && r.id !== race.id && r.driverTeamByDivision && (r.raceNum || 0) < (race.raceNum || 0))
+    .map(r => ({ r, d: (r.raceNum || 0) - (race.raceNum || 0) }))
+    .sort((a, b) => b.d - a.d);
+  const _hasHist = _other.length > 0;
+  const histTeam = (did) => { for (const { r } of _other) { const t = r.driverTeamByDivision[did] && r.driverTeamByDivision[did][div]; if (t) return normTeam(t); } return null; };
+  const teamName = (allRaces ? histTeam(absentDriver.id) : null) || normTeam(absentDriver.team);
   if (!teamName) return null;
   const dmap = _driverByIdCache();
   let best = null;
@@ -13443,7 +13451,9 @@ window.findReserveForSlot = function(race, absentDriver, div) {
     // Who drove as a reserve THAT round (from the bible) beats today's roster — a reserve who has since
     // become full-time on this team still counts as the stand-in for the rounds he reserved.
     const _rn = race.reserveNames && race.reserveNames[div], _fk = x => searchFold(String(x || '').replace(/\[[^\]]*\]/g, '')), wasRes = !!(_rn && cand && [cand.name, cand.imsAlias].some(x => x && _rn.includes(_fk(x))));
-    if (!wasRes && cand && !cand.isReserve && cand.division === div && normTeam(cand.team) === teamName) return; // team's own regular (a reserve the importer filed under this team/division is still a stand-in)
+    /* Team's own regular? Judge from who raced this seat around that round when we have the races; today's roster only as a fallback. */
+    const _ht = allRaces ? histTeam(did) : null, _useHist = !!allRaces && _hasHist;
+    if (!wasRes && (_useHist ? _ht === teamName : (cand && !cand.isReserve && cand.division === div && normTeam(cand.team) === teamName))) return; // team's own regular (a reserve the importer filed under this team/division is still a stand-in)
     let pts = (race.driverPointsByDivision[did] && race.driverPointsByDivision[did][div] !== undefined)
       ? race.driverPointsByDivision[did][div] : null;
     // A reserve who scored 0 may have no points entry at all — they still raced if they have a finishing position / race status here.
@@ -13452,7 +13462,7 @@ window.findReserveForSlot = function(race, absentDriver, div) {
     // Rank: a real reserve / driver from another division beats a driver whose own seat is in this
     // division (that's usually the absent driver's teammate with a stale team name, not a stand-in).
     // Only then fall back to points. Never pick by points alone.
-    const rank = (wasRes || !cand || cand.isReserve || (cand.division && cand.division !== div)) ? 2 : 1; // not on the market at all = a reserve too
+    const rank = (wasRes || (_useHist ? _ht !== teamName : (!cand || cand.isReserve || (cand.division && cand.division !== div)))) ? 2 : 1; // not on the market at all = a reserve too
     const nm = (cand && cand.name) || (race.driverNames && race.driverNames[did]) || did;
     const st = (race.raceStatusByDivision && race.raceStatusByDivision[did] && race.raceStatusByDivision[did][div]) || '';
     if (!best || rank > best._rank || (rank === best._rank && pts > best.pts)) best = { reserveId: did, reserveName: nm, pts, status: String(st || ''), _rank: rank };
@@ -13487,9 +13497,8 @@ window.computeReservePlan = function(t, races) {
       if (!did) continue;
       if (driverRacedInDiv(race, did, div)) continue;                      // driver raced — no sub needed
       if (plan.tokensLeft <= 0) continue;                                  // out of tokens
-      const absent = dmap[did];
-      if (!absent) continue;
-      const res = window.findReserveForSlot(race, absent, div);
+      const absent = dmap[did] || { id: did, team: '' }; /* driver list not loaded / driver deleted: the team still comes from race history */
+      const res = window.findReserveForSlot(race, absent, div, races);
       if (!res) continue;                                                  // no reserve took the seat (0 pts still counts)
       if (!plan.byRace[race.id]) plan.byRace[race.id] = {};
       plan.byRace[race.id][div] = { absentId: did, reserveId: res.reserveId, reserveName: res.reserveName, pts: res.pts };
