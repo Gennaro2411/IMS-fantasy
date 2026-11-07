@@ -22323,7 +22323,7 @@ function getTeamLogo(teamName) {
   const t = teamName.toLowerCase().replace(/\s+/g,'');
   { const k0 = t.replace(/[^a-z0-9]/g,''); for (const k in window.DELETED_TEAM_LOGOS) { if (k0.includes(k)) return window.DELETED_TEAM_LOGOS[k]; } }
   if (window._allConstrs) {
-    const match = window._allConstrs.find(c => c.name.toLowerCase().replace(/\s+/g,'') === t);
+    const match = window._allConstrs.find(c => c.name.toLowerCase().replace(/\s+/g,'') === t) || window._allConstrs.find(c => c.logo && teamKey(c.name) === teamKey(teamName));
     if (match && match.logo) return match.logo;
   }
   // Deleted-constructor fallback (Haas/Mercedes) — match by normalized name.
