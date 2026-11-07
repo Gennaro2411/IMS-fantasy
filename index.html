@@ -4139,6 +4139,9 @@ async function _dbFetchAll(col) {
   } catch(e) { console.error('dbGetAll',col,e); return []; }
 }
 
+// One key per real team: "Red Bull", "RedBull" and "Red Bull Racing" are the same team (the bible
+// renamed some teams mid-season). Lower-case, letters/digits only, trailing "racing"/"f1 team"/"team" dropped.
+window.teamKey = function(s) { let k = String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); const t = k.replace(/(racing|f1team|team)$/, ''); return t || k; };
 // Haas / Mercedes were deleted and re-added, so old results and team picks point at their OLD ids.
 // On load, remap the old id → the current record's id everywhere (points, picks, snapshots) so
 // history adds up once, under one team.
@@ -8893,10 +8896,10 @@ async function renderTeamBuilder(existingTeam, locked, allTeams) {
 
   // Group drivers by team instead of division — easier to scan when a team only has a
   // couple of drivers, vs hunting across 5 long division rows.
-  const teamNames = [...new Set(drivers.map(d => d.team).filter(Boolean))]
+  const teamNames = [...new Map(drivers.map(d => d.team).filter(Boolean).map(t => [teamKey(t), t])).values()] // one group per real team ("Red Bull" = "Red Bull Racing")
     .sort((a, b) => teamSortKey(a) - teamSortKey(b));
   const driversByTeam = {};
-  teamNames.forEach(t => { driversByTeam[t] = drivers.filter(d => d.team === t); });
+  teamNames.forEach(t => { driversByTeam[t] = drivers.filter(d => teamKey(d.team) === teamKey(t)); });
 
   const firstSelectedDriverId = ACTIVE_DIVS.map(div => existing[div]).find(Boolean);
   const firstSelectedDriver = firstSelectedDriverId ? drivers.find(d => d.id === firstSelectedDriverId) : null;
@@ -14604,10 +14607,10 @@ async function renderAdminDrivers() {
   const fill = (id, vals, all) => { const el = document.getElementById(id); if (!el) return ''; const cur = el.value;
     el.innerHTML = '<option value="">' + all + '</option>' + vals.map(v => '<option' + (v === cur ? ' selected' : '') + '>' + esc(v) + '</option>').join(''); return vals.includes(cur) ? cur : ''; };
   const fDiv = fill('admin-driver-div', [...new Set(drivers.map(d => d.division).filter(Boolean))].sort(), 'All divisions');
-  const fTeam = fill('admin-driver-team', [...new Set(drivers.map(d => d.team).filter(Boolean))].sort((a, b) => a.localeCompare(b)), 'All teams');
+  const fTeam = fill('admin-driver-team', [...new Map(drivers.map(d => d.team).filter(Boolean).map(t => [teamKey(t), t])).values()].sort((a, b) => a.localeCompare(b)), 'All teams');
   const sortBy = document.getElementById('admin-driver-sort')?.value || 'name';
   if (fDiv) drivers = drivers.filter(d => d.division === fDiv);
-  if (fTeam) drivers = drivers.filter(d => d.team === fTeam);
+  if (fTeam) drivers = drivers.filter(d => teamKey(d.team) === teamKey(fTeam));
   if (q) {
     drivers = drivers.filter(d =>
       (d.name||'').toLowerCase().includes(q) ||
@@ -15831,7 +15834,7 @@ window.importDbRound = async function(roundNo, trackName) {
 
     const constrNameMap = {};
     constrs.forEach(c => {
-      constrNameMap[c.name.toLowerCase().trim()] = c.id;
+      constrNameMap[c.name.toLowerCase().trim()] = c.id; constrNameMap['#' + teamKey(c.name)] = c.id;
     });
 
     const offDivOutings = []; // drivers who raced outside their main division this round — those results count for BOTT/constructors only
@@ -16008,6 +16011,7 @@ window.importDbRound = async function(roundNo, trackName) {
       // BOTT constructor points — always count, regardless of whether the driver has a seat
       const teamKey = (realTeam||'').toLowerCase().trim().replace(/\s+/g, ' ');
       let cId = constrNameMap[teamKey];
+      if (!cId) cId = constrNameMap['#' + window.teamKey(realTeam)];
       if (!cId) {
         const teamKeyNoSpace = teamKey.replace(/\s+/g, '');
         cId = Object.entries(constrNameMap).find(([k]) => k.replace(/\s+/g, '') === teamKeyNoSpace)?.[1];
@@ -16104,8 +16108,7 @@ window.importDbRound = async function(roundNo, trackName) {
       if (!pts || pts <= 0) return;
       const driverObj = drivers.find(d => d.id === dId) || newReserveDrivers.find(d => d.id === dId);
       if (!driverObj || !driverObj.team) return;
-      const teamKey = driverObj.team.toLowerCase().trim().replace(/\s+/g, '');
-      const constrMatch = constrs.find(c => c.name.toLowerCase().trim().replace(/\s+/g, '') === teamKey);
+      const constrMatch = constrs.find(c => window.teamKey(c.name) === window.teamKey(driverObj.team));
       if (constrMatch) {
         finalConstructorPoints[constrMatch.id] = (finalConstructorPoints[constrMatch.id] || 0) + pts;
       }
@@ -16180,8 +16183,7 @@ window.importDbRound = async function(roundNo, trackName) {
           teamName = driverObj ? driverObj.team : null;
         }
         if (!teamName) return;
-        const teamKey = teamName.toLowerCase().trim().replace(/\s+/g, '');
-        const constrMatch = constrs.find(c => c.name.toLowerCase().trim().replace(/\s+/g, '') === teamKey);
+        const constrMatch = constrs.find(c => window.teamKey(c.name) === window.teamKey(teamName));
         if (!constrMatch) return;
         mergedConstructorPoints[constrMatch.id] = (mergedConstructorPoints[constrMatch.id] || 0) + pts;
       });
@@ -17893,6 +17895,7 @@ window.importRaceFromSheet = async function() {
   fsConstrs.forEach(c => {
     constrMap[c.name.toLowerCase()] = c;
     constrMap[c.name.toLowerCase().replace(/\s+/g,'')] = c; // "redbull" matches "Red Bull"
+    constrMap['#' + teamKey(c.name)] = c;
   });
 
   // Tally driver points — only non-reserves with a roster entry
@@ -17932,7 +17935,7 @@ window.importRaceFromSheet = async function() {
 
     // Constructor points — include everyone (reserves count for their team)
     if (r.team) {
-      const fsConstr = constrMap[r.team.toLowerCase()] || constrMap[r.team.toLowerCase().replace(/\s+/g,'')];
+      const fsConstr = constrMap[r.team.toLowerCase()] || constrMap[r.team.toLowerCase().replace(/\s+/g,'')] || constrMap['#' + teamKey(r.team)];
       if (fsConstr) {
         constructorPoints[fsConstr.id] = (constructorPoints[fsConstr.id] || 0) + pts;
       }
@@ -23495,7 +23498,7 @@ async function renderMarket() {
 
   // When sorting by team, offer a constructor dropdown to narrow the list to one team.
   if (!onConstrTab && _marketSort === 'team') {
-    const teamNames = [...new Set(drivers.filter(d => d.team).map(d => d.team))].sort((a,b)=>a.localeCompare(b));
+    const teamNames = [...new Map(drivers.filter(d => d.team).map(d => [teamKey(d.team), d.team])).values()].sort((a,b)=>a.localeCompare(b));
     html += '<div style="display:flex;gap:8px;align-items:center;margin:-6px 0 14px;flex-wrap:wrap">'
       + '<span style="font-size:.62rem;font-weight:800;letter-spacing:1.5px;color:var(--muted)">TEAM</span>'
       + '<select onchange="setMarketTeamFilter(this.value)" style="font-size:.72rem;font-weight:700;padding:5px 10px;border-radius:6px;background:var(--surface3);color:#fff;border:1px solid rgba(255,255,255,0.15);cursor:pointer;max-width:220px">'
@@ -23611,7 +23614,7 @@ async function renderMarket() {
       : (!window._hideDom && typeof d.lastDominance === 'number' ? d.lastDominance : -Infinity);
     const flat = _marketTab === 'CONSTRUCTOR' ? [] : drivers
       .filter(d => _marketTab === 'ALL' ? true : d.division === _marketTab)
-      .filter(d => (_marketSort === 'team' && _marketTeamFilter !== 'ALL') ? d.team === _marketTeamFilter : true)
+      .filter(d => (_marketSort === 'team' && _marketTeamFilter !== 'ALL') ? teamKey(d.team) === teamKey(_marketTeamFilter) : true)
       .map(d => ({...d, _sortPrice: driverPrice(d)}))
       .sort((a,b) => {
         // Team sort groups drivers by constructor (A→Z), then by price within each team.
@@ -29266,7 +29269,7 @@ window.renderBets = async function() {
   } catch (e) {} }
   // Every teammate pairing in this division (a 3-driver team gives 3 battles), grouped by team
   // name case/spacing-insensitively so "Red Bull" and "RedBull" still count as teammates.
-  const byTeam = {}; if (!isC) field.forEach(d => { const k = (d.team || '').toLowerCase().replace(/[^a-z0-9]/g, ''); if (k) (byTeam[k] = byTeam[k] || []).push(d); });
+  const byTeam = {}; if (!isC) field.forEach(d => { const k = teamKey(d.team); if (k) (byTeam[k] = byTeam[k] || []).push(d); });
   Object.values(byTeam).forEach(ts => { for (let i = 0; i < ts.length; i++) for (let j = i + 1; j < ts.length; j++) { pairs.push([ts[i], ts[j], 'Teammates · ' + (ts[i].team || '')]); used.add(ts[i].id); used.add(ts[j].id); } });
   const rest = field.filter(d => !used.has(d.id));
   for (let i = 0, extra = 0; i + 1 < rest.length && extra < (isC ? 6 : 4); i += 2, extra++) pairs.push([rest[i], rest[i + 1], isC ? 'Constructor battle' : 'Close battle']);
