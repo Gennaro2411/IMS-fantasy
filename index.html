@@ -890,6 +890,9 @@
   .bo-sprint-ad{display:flex;align-items:center;gap:14px;width:100%;margin:0 0 12px;padding:12px 16px;border-radius:16px;cursor:pointer;text-align:left;color:#fff;
     border:1px solid rgba(255,150,60,.5);background:radial-gradient(120% 160% at 0% 50%,rgba(255,122,24,.22),transparent 60%),linear-gradient(135deg,#1a1009,#120d0a);box-shadow:0 10px 30px -14px rgba(255,120,20,.7)}
   .bo-sprint-ad .rh-sprint{margin:0;flex-shrink:0}
+  .bo-sprint-ad{position:relative;overflow:hidden;animation:mtZapBox 4s infinite}
+  .bo-sprint-ad > .mt-zap,.bo-sprint-ad > .mt-zap-flash{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+  .bo-sprint-ad > :not(.mt-zap):not(.mt-zap-flash){position:relative;z-index:1}
   .bo-sprint-ad-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
   .bo-sprint-ad-txt>span{font-size:.6rem;font-weight:800;letter-spacing:2px;color:#ffa751}
   .bo-sprint-ad-txt b{font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;letter-spacing:.8px;line-height:1.1}.bo-sprint-ad-txt b i{font-style:italic;color:#ffb066}
@@ -964,6 +967,7 @@
     87%{color:#fff8e6;text-shadow:0 0 4px #fff,0 0 16px #ffb347,0 0 30px #ff7a00;opacity:1}88%{opacity:.35}89%{opacity:1;color:#ffd27a}
     90%{color:#fff;text-shadow:0 0 6px #fff,0 0 22px #ffb347}91.5%{opacity:.6}93%{opacity:1;color:#ffe2b0;text-shadow:0 0 12px #ff9a3c}}
   /* shockwave from the bolt (inside the badge, so it always starts at the bolt) */
+  .rh-sp-wave,.rh-sp-boltwrap i{display:none!important}
   .rh-sp-wave{position:absolute;left:50%;top:50%;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;pointer-events:none;opacity:0;z-index:-1;
     border:2px solid rgba(255,230,180,.9);box-shadow:0 0 18px rgba(255,160,60,.8),inset 0 0 12px rgba(255,190,90,.6);animation:mtWave 4s cubic-bezier(.1,.6,.3,1) infinite}
   @media (prefers-reduced-motion:reduce){.rh.rh-charged,.rh.rh-charged .rh-track,.rh.rh-charged .rh-cd-box,.rh.rh-charged .rh-cd-box .hero-cd-num,.rh-sp-wave{animation:none}}
@@ -978,7 +982,7 @@
   @media (max-width:560px){.mt-zap-wave{right:71px;bottom:25px}}
   .mt-zap polyline{fill:none;stroke:#fff1c9;stroke-width:1.6;vector-effect:non-scaling-stroke;stroke-linejoin:round;
     filter:drop-shadow(0 0 3px #ff9a3c);opacity:0;animation:mtZapArc 4s infinite}
-  .mt-zap .z1{animation-delay:.05s}.mt-zap .z2{animation-delay:.1s}.mt-zap .z3{animation-delay:.03s}
+  .mt-zap .z1{animation-delay:.07s}.mt-zap .z2{animation-delay:.14s}.mt-zap .zf{stroke-width:1;opacity:0}
   @keyframes mtZapArc{0%,86%{opacity:0}87%{opacity:1}88%{opacity:.2}89%{opacity:.95}90.5%{opacity:.4}92%,100%{opacity:0}}
   .mt-zap-flash{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:0;background:radial-gradient(60% 80% at 50% 70%,rgba(255,220,150,.35),rgba(255,140,40,.12) 45%,transparent 75%);animation:mtZapFlash 4s infinite}
   @keyframes mtZapFlash{0%,86%{opacity:0}87%{opacity:1}89%{opacity:.3}90%{opacity:.8}94%,100%{opacity:0}}
@@ -5749,7 +5753,17 @@ window.sprintTagHtml = function(sub, flag) { return `<div class="rh-sprint">
             ${sub === '' ? '' : `<span class="rh-sp-sub">${sub || 'Weekend · 2 races'}</span>`}</div>${flag ? `<span class="mt-sp-flag">${flag}</span>` : ''}</div>`; };
 // Jagged electric arcs tracing the edge of a box (0–100 coords, stretched to the box) — new shape each render.
 // Strike flash layer for an electrocuted box (the old edge arcs / charging border were removed — too busy).
-window.sprintZapSvg = function() { return '<div class="mt-zap-flash"></div>'; };
+// Electrocutes the box on each strike: a few jagged lightning streaks flicker ACROSS it (new shape every
+// render), with the flash. No ring/explosion. Coordinates 0–100, stretched to the box.
+window.sprintZapSvg = function() {
+  const streak = () => { let x = -2, y = 15 + Math.random() * 70; const pts = [`${x},${y.toFixed(1)}`];
+    const fork = [];
+    while (x < 102) { x += 1.5 + Math.random() * 3; y = Math.max(4, Math.min(96, y + (Math.random() - .5) * 34)); pts.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+      if (Math.random() < .07) { let fx = x, fy = y; const f = [`${fx.toFixed(1)},${fy.toFixed(1)}`]; for (let k = 0; k < 4; k++) { fx += 1 + Math.random() * 2.5; fy = Math.max(2, Math.min(98, fy + (Math.random() - .3) * 30)); f.push(`${fx.toFixed(1)},${fy.toFixed(1)}`); } fork.push(f.join(' ')); } }
+    return [pts.join(' '), ...fork]; };
+  return '<div class="mt-zap-flash"></div><svg class="mt-zap" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">'
+    + [0, 1, 2].map(i => streak().map((pp, j) => `<polyline class="z${i}${j ? ' zf' : ''}" points="${pp}"/>`).join('')).join('') + '</svg>';
+};
 // My Team: the upcoming round (next lock in the schedule), if it's a sprint weekend → its name, else null.
 window.myTeamSprintNext = async function() {
   try {
@@ -29812,8 +29826,8 @@ window.renderBets = async function() {
         ${canRefill ? `<button class="btn btn-secondary btn-sm" style="margin-top:6px" onclick="betRefill()">⛽ Pit stop refill +${BET_REFILL_COINS}</button>` : ''}</div>
     </div>
     <div class="bo-ticker" id="bo-ticker">${_betTickerHtml(window._betAllBets || [], teamBy)}</div>
-    ${(upcoming && (upcoming.isSprint || (window._isSprintWeekend && window._isSprintWeekend(upcoming)))) ? `<button class="bo-sprint-ad" onclick="window._betSec=null;betSec('sprint');const el=document.querySelector('#page-bets .bo-sec[data-sec=sprint]');if(el)el.scrollIntoView({behavior:'smooth',block:'start'})">
-      ${window.sprintTagHtml('Reverse grid')}
+    ${(upcoming && (upcoming.isSprint || (window._isSprintWeekend && window._isSprintWeekend(upcoming)))) ? `<button class="bo-sprint-ad rh-charged-ad" onclick="window._betSec=null;betSec('sprint');const el=document.querySelector('#page-bets .bo-sec[data-sec=sprint]');if(el)el.scrollIntoView({behavior:'smooth',block:'start'})">
+      ${window.sprintZapSvg()}${window.sprintTagHtml('Reverse grid')}
       <span class="bo-sprint-ad-txt"><span>${esc(String(upcoming.name).replace(/\s*\(sprint\)\s*/i, ''))} · SPRINT BETS OPEN</span><b>Bet on the sprint — the leaders start <i>last</i></b><small>Sprint winner &amp; podium in every division · grid is the championship in reverse</small></span>
       <span class="bo-sprint-ad-go">BET →</span></button>` : ''}
     <button onclick="window._games=window._games||{};window._games.view='qs';window._qsMode='now';showPage('games')" style="display:flex;align-items:center;gap:14px;width:100%;margin:0 0 12px;padding:14px 16px;border-radius:16px;cursor:pointer;text-align:left;color:#fff;border:1px solid rgba(250,204,21,.45);background:linear-gradient(120deg,rgba(250,204,21,.16),rgba(232,0,45,.10) 60%,rgba(90,94,201,.12))">
