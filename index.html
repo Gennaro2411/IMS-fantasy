@@ -910,6 +910,11 @@
   @keyframes rhSpCharge{0%,80%{stroke:rgba(255,160,70,.18)}86%{stroke:rgba(255,215,140,.95)}100%{stroke:rgba(255,160,70,.18)}}
   .rh-sp-sub{font-size:.6rem;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;color:#ffb066;opacity:.9}
   @media (prefers-reduced-motion:reduce){.rh-sp-bolt,.rh-sp-word,.rh-sp-arc .a2{animation:none}}
+  .mt-sprint{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:12px 16px;margin-bottom:14px;border-radius:14px;
+    background:radial-gradient(120% 160% at 0% 50%,rgba(255,122,24,.20),transparent 60%),var(--surface);border:1px solid rgba(255,150,60,.35)}
+  .mt-sprint .rh-sprint{margin:0}
+  .mt-sprint-txt{flex:1;min-width:200px;display:flex;flex-direction:column;gap:3px}
+  .mt-sprint-txt b{font-size:.9rem;color:#fff}.mt-sprint-txt span{font-size:.76rem;color:var(--muted);line-height:1.4}.mt-sprint-txt i{font-style:normal;color:#ffb066;font-weight:700}
   .rh-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:2.7rem;line-height:.95;text-transform:uppercase;letter-spacing:1px;background:linear-gradient(180deg,#fff 35%,#c4bfdc);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
   .rh-cd{display:flex;gap:8px}
   .rh-cd-box{position:relative;overflow:hidden;text-align:center;min-width:62px;padding:9px 6px 7px;border-radius:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.10);backdrop-filter:blur(6px)}
@@ -5632,6 +5637,19 @@ async function stampLiveWeekend(schedule) {
   } catch(e) { console.log('live weekend stamp failed (non-fatal):', e); }
 }
 
+window.sprintTagHtml = function() { return `<div class="rh-sprint">
+          <svg class="rh-sp-bolt" viewBox="0 0 34 42" aria-hidden="true"><defs><linearGradient id="rhSpG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3c4"/><stop offset=".45" stop-color="#ffb347"/><stop offset="1" stop-color="#ff5a00"/></linearGradient></defs><path d="M21 1 4 24h11l-4 17 19-25H18l5-15z"/></svg>
+          <div class="rh-sp-col"><span class="rh-sp-word">Sprint</span>
+            <svg class="rh-sp-arc" viewBox="0 0 150 12" preserveAspectRatio="none" aria-hidden="true"><polyline class="a1" points="150,5 130,9 116,3 104,8 90,2 76,10 64,4 50,9 38,3 24,10 14,2 0,6"/><polyline class="a2" points="150,5 130,9 116,3 104,8 90,2 76,10 64,4 50,9 38,3 24,10 14,2 0,6"/></svg>
+            <span class="rh-sp-sub">Weekend · 2 races</span></div></div>`; };
+// Sprint banner for My Team: the upcoming round (next lock in the schedule) is a sprint weekend.
+window.myTeamSprintBanner = async function() {
+  try {
+    const sch = (await dbGetAll('schedule')).filter(r => r.lockTime > Date.now()).sort((a, b) => a.lockTime - b.lockTime);
+    const nr = sch[0]; if (!nr || !(nr.isSprint || (window._isSprintWeekend && window._isSprintWeekend(nr)))) return '';
+    return `<div class="mt-sprint">${window.sprintTagHtml()}<div class="mt-sprint-txt"><b>${esc(nr.name)} is a sprint weekend</b><span>Your team scores in the sprint <i>and</i> the feature race — two chances, so pick (and captain) wisely.</span></div></div>`;
+  } catch (e) { return ''; }
+};
 function buildRaceHero(nextRace, allRaces, schedule, actionBtnHtml, heroId, isLive) {
   if (!nextRace) return '';
   const now = Date.now();
@@ -5701,11 +5719,7 @@ function buildRaceHero(nextRace, allRaces, schedule, actionBtnHtml, heroId, isLi
           <span style="font-size:2rem;line-height:1;filter:drop-shadow(0 4px 10px rgba(0,0,0,.5))">${getRaceFlag(nextRace.name)}</span>
           <span class="rh-title">${esc(nextRace.name)}</span>
         </div>
-        ${_rhSprint ? `<div><div class="rh-sprint">
-          <svg class="rh-sp-bolt" viewBox="0 0 34 42" aria-hidden="true"><defs><linearGradient id="rhSpG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3c4"/><stop offset=".45" stop-color="#ffb347"/><stop offset="1" stop-color="#ff5a00"/></linearGradient></defs><path d="M21 1 4 24h11l-4 17 19-25H18l5-15z"/></svg>
-          <div class="rh-sp-col"><span class="rh-sp-word">Sprint</span>
-            <svg class="rh-sp-arc" viewBox="0 0 150 12" preserveAspectRatio="none" aria-hidden="true"><polyline class="a1" points="150,5 130,9 116,3 104,8 90,2 76,10 64,4 50,9 38,3 24,10 14,2 0,6"/><polyline class="a2" points="150,5 130,9 116,3 104,8 90,2 76,10 64,4 50,9 38,3 24,10 14,2 0,6"/></svg>
-            <span class="rh-sp-sub">Weekend · 2 races</span></div></div></div>` : ''}
+        ${_rhSprint ? `<div>${window.sprintTagHtml()}</div>` : ''}
         <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px">
           ${isLive ? (() => {
             // Division import tracker — which divisions' points are already in for this race
@@ -10755,7 +10769,8 @@ async function renderMyTeam() {
     ? 'radial-gradient(120% 140% at 0% 0%,'+_fzCol.accent+'55,transparent 60%),linear-gradient(135deg,'+_fzCol.accent+'22 0%,#12121a 60%,#0e0e15 100%)'
     : 'radial-gradient(120% 140% at 0% 0%,rgba(123,79,191,0.22),transparent 55%),linear-gradient(135deg,#17111f 0%,#12121a 60%,#0e0e15 100%)';
   const _bannerBorder = _fzCol ? _fzCol.accent : 'rgba(123,79,191,0.35)';
-  let html = (_adminBanner || '') + '<div class="card mt-teamcard" style="padding:0;overflow:hidden'+(_fzCol ? ';border-color:'+_fzCol.accent+'66;background:linear-gradient(180deg,'+_fzCol.accent+'14,var(--surface) 55%)' : ';background:radial-gradient(120% 90% at 0% 0%,rgba(90,94,201,.16),transparent 55%),var(--surface);border-color:rgba(123,127,232,.28)')+'">'
+  const _sprintBan = viewingLastRace ? '' : await window.myTeamSprintBanner();
+  let html = (_adminBanner || '') + _sprintBan + '<div class="card mt-teamcard" style="padding:0;overflow:hidden'+(_fzCol ? ';border-color:'+_fzCol.accent+'66;background:linear-gradient(180deg,'+_fzCol.accent+'14,var(--surface) 55%)' : ';background:radial-gradient(120% 90% at 0% 0%,rgba(90,94,201,.16),transparent 55%),var(--surface);border-color:rgba(123,127,232,.28)')+'">'
     // Identity banner: avatar, team name, player, edit — with value + latest points as stats
     + '<div style="position:relative;overflow:hidden;background:'+_bannerBg+';border-bottom:1px solid '+_bannerBorder+';padding:18px 18px 16px">'
     + (_fzCol ? '<div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,'+_fzCol.accent+',transparent 85%)"></div>'
