@@ -887,6 +887,15 @@
     box-shadow:0 12px 36px rgba(0,0,0,0.38)}
   .rh-lines{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(65deg,rgba(255,255,255,0.028) 0 2px,transparent 2px 20px);-webkit-mask:linear-gradient(270deg,transparent 5%,#000 70%);mask:linear-gradient(270deg,transparent 5%,#000 70%)}
   .rh-track{position:absolute;right:-18px;top:50%;transform:translateY(-50%) rotate(-6deg);height:150%;max-width:56%;object-fit:contain;filter:invert(1) drop-shadow(0 0 18px rgba(255,255,255,0.25));opacity:.15;pointer-events:none}
+  .bo-sprint-ad{display:flex;align-items:center;gap:14px;width:100%;margin:0 0 12px;padding:12px 16px;border-radius:16px;cursor:pointer;text-align:left;color:#fff;
+    border:1px solid rgba(255,150,60,.5);background:radial-gradient(120% 160% at 0% 50%,rgba(255,122,24,.22),transparent 60%),linear-gradient(135deg,#1a1009,#120d0a);box-shadow:0 10px 30px -14px rgba(255,120,20,.7)}
+  .bo-sprint-ad .rh-sprint{margin:0;flex-shrink:0}
+  .bo-sprint-ad-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .bo-sprint-ad-txt>span{font-size:.6rem;font-weight:800;letter-spacing:2px;color:#ffa751}
+  .bo-sprint-ad-txt b{font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;letter-spacing:.8px;line-height:1.1}.bo-sprint-ad-txt b i{font-style:italic;color:#ffb066}
+  .bo-sprint-ad-txt small{font-size:.72rem;color:var(--muted)}
+  .bo-sprint-ad-go{flex-shrink:0;padding:8px 14px;border-radius:10px;background:linear-gradient(135deg,#ffb347,#ff6a00);color:#1a0a00;font-weight:900;font-size:.8rem;letter-spacing:1px}
+  @media (max-width:560px){.bo-sprint-ad{flex-wrap:wrap;gap:10px}.bo-sprint-ad-go{margin-left:auto}.bo-sprint-ad-txt{flex-basis:100%;order:3}}
   .qs-win-ov{position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;padding:16px;background:rgba(5,5,10,.7);backdrop-filter:blur(4px);animation:qsWinIn .25s ease}
   .qs-win{width:min(420px,100%);padding:22px 20px 18px;border-radius:20px;text-align:center;background:radial-gradient(120% 90% at 50% 0%,rgba(250,204,21,.22),transparent 60%),#12121a;border:1px solid rgba(250,204,21,.45);box-shadow:0 30px 80px -20px rgba(250,204,21,.45)}
   .qs-win-ico{font-size:2.6rem;animation:qsWinPop .6s cubic-bezier(.2,1.6,.4,1)}
@@ -29803,6 +29812,10 @@ window.renderBets = async function() {
         ${canRefill ? `<button class="btn btn-secondary btn-sm" style="margin-top:6px" onclick="betRefill()">⛽ Pit stop refill +${BET_REFILL_COINS}</button>` : ''}</div>
     </div>
     <div class="bo-ticker" id="bo-ticker">${_betTickerHtml(window._betAllBets || [], teamBy)}</div>
+    ${(upcoming && (upcoming.isSprint || (window._isSprintWeekend && window._isSprintWeekend(upcoming)))) ? `<button class="bo-sprint-ad" onclick="window._betSec=null;betSec('sprint');const el=document.querySelector('#page-bets .bo-sec[data-sec=sprint]');if(el)el.scrollIntoView({behavior:'smooth',block:'start'})">
+      ${window.sprintTagHtml('Reverse grid')}
+      <span class="bo-sprint-ad-txt"><span>${esc(String(upcoming.name).replace(/\s*\(sprint\)\s*/i, ''))} · SPRINT BETS OPEN</span><b>Bet on the sprint — the leaders start <i>last</i></b><small>Sprint winner &amp; podium in every division · grid is the championship in reverse</small></span>
+      <span class="bo-sprint-ad-go">BET →</span></button>` : ''}
     <button onclick="window._games=window._games||{};window._games.view='qs';window._qsMode='now';showPage('games')" style="display:flex;align-items:center;gap:14px;width:100%;margin:0 0 12px;padding:14px 16px;border-radius:16px;cursor:pointer;text-align:left;color:#fff;border:1px solid rgba(250,204,21,.45);background:linear-gradient(120deg,rgba(250,204,21,.16),rgba(232,0,45,.10) 60%,rgba(90,94,201,.12))">
       <span style="font-size:2rem;flex-shrink:0">⏱️</span>
       <span style="flex:1;min-width:0"><span style="display:block;font-size:.6rem;font-weight:800;letter-spacing:2px;color:#facc15">NEW GAME · QUALI SHOOTOUT</span>
