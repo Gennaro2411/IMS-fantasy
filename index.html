@@ -3721,7 +3721,9 @@ window.applyS7Top10Override = function(rows, seasonNum) {
 // Returns the fixed podium for a race as [{t, p}] resolved against the live team list (so avatars
 // show), or null if no override applies. Season 7 only.
 window.getPodiumOverride = function(race, teams, season) {
-  if (season !== undefined && season !== null && Number(season) !== 7) return null;
+  // Only when the caller says it's Season 7 — S8 has rounds with the same names (e.g. Brazil), and the
+  // round reel passed no season, so S8 Brazil showed S7 Brazil's winner.
+  if (Number(season) !== 7) return null;
   const pod = (window.S7_PODIUMS || {})[((race && race.name) || '').toLowerCase().trim()];
   if (!pod) return null;
   const norm = s => String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
