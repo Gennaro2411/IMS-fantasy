@@ -13551,6 +13551,9 @@ window.computeReservePlan = function(t, races) {
       if (plan.tokensLeft <= 0) continue;                                  // out of tokens
       const absent = dmap[did];
       if (!absent) continue;
+      // A reserve driver has no race seat of his own, so there's no seat for anyone to cover — him not
+      // racing just scores 0 (otherwise whoever raced for his listed team got swapped in and a token spent).
+      if (absent.isReserve) continue;
       const res = window.findReserveForSlot(race, absent, div);
       if (!res) continue;                                                  // no reserve took the seat (0 pts still counts)
       if (!plan.byRace[race.id]) plan.byRace[race.id] = {};
