@@ -4128,12 +4128,13 @@ async function _dbGetAllRaw(col, opts) {
   // reading the whole collection once per caller (this was the bulk of the Firestore read bill).
   const fl = window._dbInflight[col];
   if (!noCache && fl) return fl.then(_dbClone);
-  const pr = _dbFetchAll(col); window._dbInflight[col] = pr;
+  // {fresh:true} must be the database itself — admin tools rely on it (never the 1-minute snapshot).
+  const pr = _dbFetchAll(col, noCache); if (!noCache) window._dbInflight[col] = pr;
   try { return _dbClone(await pr); } finally { if (window._dbInflight[col] === pr) delete window._dbInflight[col]; }
 }
-async function _dbFetchAll(col) {
+async function _dbFetchAll(col, live) {
   const gen = window._dbGen || 0;
-  const sn = await _snapGet(col);
+  const sn = live ? null : await _snapGet(col);
   if (sn) { if ((window._dbGen || 0) === gen) window._dbCache[col] = { at: Date.now(), data: sn }; return sn; }
   try {
     // Page through the whole collection — Firestore returns at most pageSize docs per call, so
@@ -28452,11 +28453,11 @@ window._betSettleAll = async function() {
   return n;
 };
 // ===== ADMIN: MERGE TWO PLAYER ACCOUNTS =====
-window.acmLoad = async function(btn) {
+window.acmLoad = async function(btn, quiet) {
   const ts = (await dbGetAll('teams', { fresh: true })).filter(t => t && t.userId).sort((a, b) => String(a.playerName || '').localeCompare(String(b.playerName || '')));
   const opt = '<option value="">— choose —</option>' + ts.map(t => `<option value="${esc(t.id)}">${esc(t.playerName || '?')} · ${esc(t.teamName || '')}${t.createdAt ? ' · made ' + new Date(t.createdAt).toLocaleDateString('en-GB') : ''}</option>`).join('');
   ['acm-keep', 'acm-dup'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = opt; });
-  document.getElementById('acm-msg').innerHTML = `<div class="alert alert-success">${ts.length} accounts loaded.</div>`;
+  if (!quiet) document.getElementById('acm-msg').innerHTML = `<div class="alert alert-success">${ts.length} accounts loaded.</div>`;
 };
 async function _acmPlan() {
   const kId = document.getElementById('acm-keep').value, dId = document.getElementById('acm-dup').value;
@@ -28500,10 +28501,12 @@ window.acmMerge = async function(btn) {
     say(`✓ ${P.bets.length} bet(s), ${P.transfers.length} transfer(s), ${P.predVotes.length} vote(s) moved`);
     // 3. IM$: add the duplicate's balance minus its starting grant; add up the bet counters.
     const [kc, dc] = await Promise.all([dbGet('coins', K.userId), dbGet('coins', D.userId)]);
-    if (dc) { const c = kc || { userId: K.userId, balance: BET_START_COINS, staked: 0, won: 0, betsPlaced: 0, betsWon: 0, createdAt: Date.now() };
+    if (dc && !((kc && kc.mergedFrom) || []).includes(D.userId)) { const c = kc || { userId: K.userId, balance: BET_START_COINS, staked: 0, won: 0, betsPlaced: 0, betsWon: 0, createdAt: Date.now() };
       c.balance = Math.max(0, (Number(c.balance) || 0) + (Number(dc.balance) || 0) - BET_START_COINS);
       ['staked', 'won', 'betsPlaced', 'betsWon'].forEach(k => { c[k] = (Number(c[k]) || 0) + (Number(dc[k]) || 0); });
+      c.mergedFrom = [...((kc && kc.mergedFrom) || []), D.userId]; // a re-run after a dropped connection never adds it twice
       await dbSet('coins', K.userId, c); await dbDelete('coins', D.userId).catch(() => {}); say(`✓ IM$ now ${Math.round(c.balance)}`); }
+    else if (dc) await dbDelete('coins', D.userId).catch(() => {});
     // 4. Game stats kept per player id: keep the kept account's, else take the duplicate's.
     for (const col of ['wordleScores', 'qualiGuesses', 'stewardVotes']) {
       const kid = col === 'wordleScores' ? _wdScoreId(K.userId) : K.userId, did = col === 'wordleScores' ? _wdScoreId(D.userId) : D.userId;
@@ -28516,11 +28519,17 @@ window.acmMerge = async function(btn) {
       const keep = ['selections', 'captains', 'chips', 'budget', 'freeTransfers', 'guardianAngelDriver']; const up = {};
       keep.forEach(k => { if (D[k] !== undefined) up[k] = D[k]; }); await dbSet('teams', K.id, up);
     }
+    // Chips: a chip used on EITHER account stays used (no second go); active state follows the line-up kept.
+    { const dup = document.getElementById('acm-lineup').value === 'dup', a = K.chips || {}, b = D.chips || {};
+      const ch = dup ? { ...a, ...b } : { ...b, ...a };
+      if (a.guardianAngelPoints && b.guardianAngelPoints) ch.guardianAngelPoints = Number(a.guardianAngelPoints) + Number(b.guardianAngelPoints);
+      Object.keys({ ...a, ...b }).forEach(k => { if (/Used$/.test(k) && (a[k] || b[k])) ch[k] = a[k] || b[k]; });
+      await dbSet('teams', K.id, { chips: ch }); }
     if (!K.discordId && D.discordId) await dbSet('teams', K.id, { discordId: D.discordId, discordUsername: D.discordUsername || null, discordAvatar: D.discordAvatar || null });
     await dbDelete('teams', D.id);
     if (typeof clearReservePlanCache === 'function') clearReservePlanCache();
     say(`✓ "${D.playerName}" merged into "${K.playerName}" and deleted. They log in as ${K.playerName}.`);
-    acmLoad();
+    acmLoad(null, true);
   } catch (e) { say('✗ Stopped: ' + e.message + ' — press Merge again to finish (it picks up where it left off).'); }
   btn.disabled = false;
 };
