@@ -923,6 +923,32 @@
     88%{transform:translate(-1px,1px)}89%{box-shadow:0 0 0 1px rgba(255,190,110,.6),0 0 14px rgba(255,130,30,.6),inset 0 0 18px rgba(255,170,60,.2);transform:translate(1px,0)}
     90%{box-shadow:0 0 0 1px #fff3d0,0 0 34px rgba(255,170,60,.9),inset 0 0 36px rgba(255,190,90,.4);transform:none}93%{box-shadow:0 0 0 1px rgba(255,150,60,.3),0 0 10px rgba(255,120,30,.3)}}
   .mt-zap{position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none;overflow:visible}
+  /* ===== home hero electrocuted on sprint weekends (same 4s cycle as the bolt) ===== */
+  .rh.rh-charged > .mt-zap-charge,.rh.rh-charged > .mt-zap,.rh.rh-charged > .mt-zap-flash{position:absolute;inset:0;width:100%;height:100%;z-index:4}
+  .rh.rh-charged > .mt-zap-wave{display:none}
+  .rh.rh-charged{animation:mtZapBox 4s infinite}
+  .rh.rh-charged .rh-track{animation:rhTrackZap 4s infinite}
+  @keyframes rhTrackZap{0%,84%{filter:invert(1) drop-shadow(0 0 8px var(--rh-accent))}
+    87%{opacity:.95;filter:invert(1) sepia(1) saturate(5) hue-rotate(-12deg) brightness(1.4) drop-shadow(0 0 4px #fff) drop-shadow(0 0 18px #ff8a00)}
+    88%{filter:invert(1) drop-shadow(0 0 8px var(--rh-accent))}
+    89.5%{opacity:.95;filter:invert(1) sepia(1) saturate(5) hue-rotate(-12deg) brightness(1.5) drop-shadow(0 0 3px #fff) drop-shadow(0 0 22px #ffb347)}
+    94%,100%{filter:invert(1) drop-shadow(0 0 8px var(--rh-accent))}}
+  /* the countdown takes the hit: boxes spark, digits flicker */
+  .rh.rh-charged .rh-cd-box{animation:rhCdZap 4s infinite}
+  .rh.rh-charged .rh-cd-box:nth-child(2){animation-delay:.04s}.rh.rh-charged .rh-cd-box:nth-child(3){animation-delay:.08s}.rh.rh-charged .rh-cd-box:nth-child(4){animation-delay:.12s}
+  @keyframes rhCdZap{0%,86%,96%,100%{box-shadow:none;transform:none}
+    87%{border-color:#ffe2a8;box-shadow:0 0 0 1px #fff3d0,0 0 22px rgba(255,150,40,.9),inset 0 0 18px rgba(255,170,60,.45);transform:translateY(-2px) rotate(-1deg)}
+    88.5%{box-shadow:0 0 10px rgba(255,130,30,.5);transform:translate(1px,1px)}
+    90%{border-color:#ffd27a;box-shadow:0 0 0 1px #ffd27a,0 0 28px rgba(255,170,60,.95),inset 0 0 22px rgba(255,190,90,.5);transform:translateY(-1px) rotate(1deg)}
+    93%{box-shadow:0 0 12px rgba(255,140,40,.4);transform:none}}
+  .rh.rh-charged .rh-cd-box .hero-cd-num{animation:rhNumZap 4s infinite}
+  @keyframes rhNumZap{0%,86%,95%,100%{color:var(--rh-num,#fff);text-shadow:0 0 14px var(--rh-numglow)}
+    87%{color:#fff8e6;text-shadow:0 0 4px #fff,0 0 16px #ffb347,0 0 30px #ff7a00;opacity:1}88%{opacity:.35}89%{opacity:1;color:#ffd27a}
+    90%{color:#fff;text-shadow:0 0 6px #fff,0 0 22px #ffb347}91.5%{opacity:.6}93%{opacity:1;color:#ffe2b0;text-shadow:0 0 12px #ff9a3c}}
+  /* shockwave from the bolt (inside the badge, so it always starts at the bolt) */
+  .rh-sp-wave{position:absolute;left:50%;top:50%;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;pointer-events:none;opacity:0;z-index:-1;
+    border:2px solid rgba(255,230,180,.9);box-shadow:0 0 18px rgba(255,160,60,.8),inset 0 0 12px rgba(255,190,90,.6);animation:mtWave 4s cubic-bezier(.1,.6,.3,1) infinite}
+  @media (prefers-reduced-motion:reduce){.rh.rh-charged,.rh.rh-charged .rh-track,.rh.rh-charged .rh-cd-box,.rh.rh-charged .rh-cd-box .hero-cd-num,.rh-sp-wave{animation:none}}
   /* the border fills up like a charge meter as the spark travels, then discharges on the strike */
   @property --mtc{syntax:'<angle>';inherits:false;initial-value:0deg}
   .mt-zap-charge{pointer-events:none;border-radius:inherit;padding:1.5px;
@@ -1797,7 +1823,7 @@
     #page-my-team .mt-hero-track{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;transform:scale(1.15);filter:invert(1) drop-shadow(0 0 2px rgba(255,255,255,.6));opacity:.3;pointer-events:none;z-index:0}
     #page-my-team .mt-hero-pts > *:not(.mt-hero-track){position:relative;z-index:1}
     #page-my-team .mt-hero-pts > .mt-zap-charge,#page-my-team .mt-hero-pts > .mt-zap,#page-my-team .mt-hero-pts > .mt-zap-flash{position:absolute;inset:0;width:100%;height:100%;z-index:3}
-    #page-my-team .mt-hero-pts > .mt-zap-wave{position:absolute;z-index:3}
+    #page-my-team .mt-hero-pts > .mt-zap-wave{display:none}
     #page-my-team .mt-hero-pts > .mt-hero-sprint{position:absolute;right:10px;bottom:8px;margin:0;z-index:4} /* corner badge: box keeps its normal size */
     @media (max-width:560px){#page-my-team .mt-hero-pts > .mt-hero-sprint{right:8px;bottom:6px}#page-my-team .mt-hero-sprint .rh-sp-col{display:none}#page-my-team .mt-hero-sprint .rh-sprint{padding:5px 7px}#page-my-team .mt-hero-sprint .mt-sp-flag{margin-left:2px;padding-left:6px}}
     #page-my-team #total-pts-display{font-size:3rem;line-height:1.02}
@@ -5700,7 +5726,7 @@ async function stampLiveWeekend(schedule) {
 }
 
 window.sprintTagHtml = function(sub, flag) { return `<div class="rh-sprint">
-          <span class="rh-sp-boltwrap"><svg class="rh-sp-bolt" viewBox="0 0 34 42" aria-hidden="true"><defs><linearGradient id="rhSpG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3c4"/><stop offset=".45" stop-color="#ffb347"/><stop offset="1" stop-color="#ff5a00"/></linearGradient></defs><path d="M21 1 4 24h11l-4 17 19-25H18l5-15z"/></svg><i style="--a:-150deg"></i><i style="--a:-100deg"></i><i style="--a:-40deg"></i><i style="--a:20deg"></i><i style="--a:70deg"></i><i style="--a:130deg"></i><i style="--a:180deg"></i></span>
+          <span class="rh-sp-boltwrap"><span class="rh-sp-wave"></span><svg class="rh-sp-bolt" viewBox="0 0 34 42" aria-hidden="true"><defs><linearGradient id="rhSpG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3c4"/><stop offset=".45" stop-color="#ffb347"/><stop offset="1" stop-color="#ff5a00"/></linearGradient></defs><path d="M21 1 4 24h11l-4 17 19-25H18l5-15z"/></svg><i style="--a:-150deg"></i><i style="--a:-100deg"></i><i style="--a:-40deg"></i><i style="--a:20deg"></i><i style="--a:70deg"></i><i style="--a:130deg"></i><i style="--a:180deg"></i></span>
           <div class="rh-sp-col"><span class="rh-sp-word">Sprint</span>
             <svg class="rh-sp-arc" viewBox="0 0 150 12" preserveAspectRatio="none" aria-hidden="true"><polyline class="a1" points="150,5 130,9 116,3 104,8 90,2 76,10 64,4 50,9 38,3 24,10 14,2 0,6"/><polyline class="a2" points="150,5 130,9 116,3 104,8 90,2 76,10 64,4 50,9 38,3 24,10 14,2 0,6"/></svg>
             ${sub === '' ? '' : `<span class="rh-sp-sub">${sub || 'Weekend · 2 races'}</span>`}</div>${flag ? `<span class="mt-sp-flag">${flag}</span>` : ''}</div>`; };
@@ -5770,8 +5796,9 @@ function buildRaceHero(nextRace, allRaces, schedule, actionBtnHtml, heroId, isLi
     ? '--rh-g1:rgba(232,0,45,0.30);--rh-g2:rgba(90,94,201,0.18);--rh-b:rgba(232,0,45,0.45);--rh-accent:#ff5470;--rh-num:#fff;--rh-numglow:rgba(255,84,112,0.4)'
     : '--rh-g1:rgba(90,94,201,0.36);--rh-g2:rgba(232,0,45,0.18);--rh-b:rgba(90,94,201,0.5);--rh-accent:#7b7fe8;--rh-num:#fff;--rh-numglow:rgba(123,127,232,0.45)';
   return `
-    <div class="card rh${isDeadlineDay?' lock-soon':''}" style="padding:0;${rhVars}">
+    <div class="card rh${isDeadlineDay?' lock-soon':''}${_rhSprint?' rh-charged':''}" style="padding:0;${rhVars}">
       ${patternSvg}
+      ${_rhSprint ? window.sprintZapSvg() : ''}
       <div class="rh-lines"></div>
       ${outlineImg}
       <div style="position:absolute;left:-6px;bottom:-30px;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:7rem;color:rgba(255,255,255,0.045);line-height:1;pointer-events:none">R${esc(String(nextRace.raceNum||''))}</div>
