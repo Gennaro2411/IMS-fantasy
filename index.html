@@ -28539,6 +28539,10 @@ function _betRng(seedStr) { let h = 1779033703 ^ seedStr.length; for (let i = 0;
 // scaled by where they start (P1 = last in the standings). Overtaking is "possible but not easy", so the
 // back of the grid keeps ~e^-1.8 ≈ 17% of their pace-based chance relative to starting on pole.
 const SPRINT_GRID_WEIGHT = 1.8;
+// Sprints are the most random race of the weekend, so the house keeps a bigger edge on them:
+// every sprint price pays 12% less profit than the plain model price (e.g. 10.00 → 8.92).
+const SPRINT_PROFIT_CUT = 0.88;
+function _betOddsSprint(p) { const o = _betOdds(p); return o == null ? o : Math.max(1.01, Math.round((1 + (o - 1) * SPRINT_PROFIT_CUT) * 100) / 100); }
 function _betSimSprint(field, grid, sims, seed) {
   field = field.slice().sort((a, b) => String(a.id).localeCompare(String(b.id)));
   const rnd = _betRng(seed || 'ims-sprint'), N = Math.max(2, field.length);
@@ -29292,7 +29296,7 @@ window.renderBets = async function() {
     if (market === 'tri') { const p = _betTriP(field, sel); return p > 0 ? _betOdds(p, 10000) : null; }
     if (market === 'spoon') { const pr = _spoonP[sel[0]]; return pr == null ? null : _betOdds(pr); }
     if (!['win', 'pod', 'pole', 'top5', 'spw', 'spp'].includes(market)) return null;
-    const pr = (market === 'spw' && SP) ? SP.win[sel[0]] : (market === 'spp' && SP) ? SP.pod[sel[0]] : (market === 'win' || market === 'spw') ? P.win[sel[0]] : (market === 'pod' || market === 'spp') ? (P.pod || {})[sel[0]] : market === 'pole' ? (P.pole || {})[sel[0]] : P.top5[sel[0]]; return pr == null ? null : _betOdds(pr);
+    const pr = (market === 'spw' && SP) ? SP.win[sel[0]] : (market === 'spp' && SP) ? SP.pod[sel[0]] : (market === 'win' || market === 'spw') ? P.win[sel[0]] : (market === 'pod' || market === 'spp') ? (P.pod || {})[sel[0]] : market === 'pole' ? (P.pole || {})[sel[0]] : P.top5[sel[0]]; return pr == null ? null : ((market === 'spw' || market === 'spp') ? _betOddsSprint(pr) : _betOdds(pr));
   };
   window._betDivNow = div;
   // Cache odds per race+division so they don't wobble on every re-render.
@@ -29917,7 +29921,7 @@ window.renderBets = async function() {
           ${field.filter(d => _spoonP[d.id] != null).slice().sort((a, b) => _spoonP[b.id] - _spoonP[a.id]).map(d => `<div class="bo-row">${photo(d)}<div class="bo-nm"><b>${esc(d.name)}</b><small>Finishes last of the classified</small></div>${oddsBtn('spoon', [d.id], d.name + ' wooden spoon in ' + div, finalOdds('spoon', [d.id], _betOdds(_spoonP[d.id])))}</div>`).join('')}</div>` : ''}
         </div><div class="bo-sec" data-sec="sprint"${_secHid('sprint')}>
         ${(!isC && upcoming && upcoming.isSprint && field.length) ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>⚡ Sprint</span><span class="bo-cols"><i>WIN</i><i>PODIUM</i></span></div>
-          ${field.slice().sort((a, b) => (_spGrid[a.id] || 99) - (_spGrid[b.id] || 99)).map(d => `<div class="bo-row">${photo(d)}<div class="bo-nm"><b>${esc(d.name)}</b><small>${_spGrid[d.id] ? 'Reverse grid · starts P' + _spGrid[d.id] : 'Sprint race'}</small></div>${oddsBtn('spw', [d.id], d.name + ' to win the ' + div + ' sprint', finalOdds('spw', [d.id], _betOdds((SP || P).win[d.id])))}${oddsBtn('spp', [d.id], d.name + ' sprint podium in ' + div, finalOdds('spp', [d.id], _betOdds(((SP || P).pod || {})[d.id])))}</div>`).join('')}</div>` : ''}
+          ${field.slice().sort((a, b) => (_spGrid[a.id] || 99) - (_spGrid[b.id] || 99)).map(d => `<div class="bo-row">${photo(d)}<div class="bo-nm"><b>${esc(d.name)}</b><small>${_spGrid[d.id] ? 'Reverse grid · starts P' + _spGrid[d.id] : 'Sprint race'}</small></div>${oddsBtn('spw', [d.id], d.name + ' to win the ' + div + ' sprint', finalOdds('spw', [d.id], _betOddsSprint((SP || P).win[d.id])))}${oddsBtn('spp', [d.id], d.name + ' sprint podium in ' + div, finalOdds('spp', [d.id], _betOddsSprint(((SP || P).pod || {})[d.id])))}</div>`).join('')}</div>` : ''}
         </div><div class="bo-sec" data-sec="fpos"${_secHid('fpos')}>
         ${(!isC && Object.keys(_fpos).length) ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>📍 Finishing position</span><small>Over = finishes lower (a DNF counts as over)</small></div>
           ${field.filter(d => _fpos[d.id]).map(d => { const o = _fpos[d.id], L = String(o.line); return `<div class="bo-ou"><div class="bo-ou-c">${photo(d)}<div><b>${esc(d.name)}</b><span class="bo-ou-line">LINE <em>P${o.line}</em></span></div></div>
