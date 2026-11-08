@@ -899,46 +899,6 @@
   .bo-sprint-ad-txt small{font-size:.72rem;color:var(--muted)}
   .bo-sprint-ad-go{flex-shrink:0;padding:8px 14px;border-radius:10px;background:linear-gradient(135deg,#ffb347,#ff6a00);color:#1a0a00;font-weight:900;font-size:.8rem;letter-spacing:1px}
   @media (max-width:560px){.bo-sprint-ad{flex-wrap:wrap;gap:10px}.bo-sprint-ad-go{margin-left:auto}.bo-sprint-ad-txt{flex-basis:100%;order:3}}
-  /* ===== PERFORMANCE: sprint strike effects use opacity/transform only (GPU-composited, no repaints) ===== */
-  .rh.rh-charged,#page-my-team .mt-hero-pts.mt-charged,.bo-sprint-ad{animation:none!important}
-  .rh.rh-charged .rh-track,#page-my-team .mt-hero-pts.mt-charged .mt-hero-track{animation:none!important}
-  .rh.rh-charged .rh-cd-box{animation:none!important}
-  .rh.rh-charged .rh-cd-box .hero-cd-num{animation:rhNumZapLite 4s infinite!important;will-change:opacity}
-  @keyframes rhNumZapLite{0%,86%,95%,100%{opacity:1}87%{opacity:.25}88.5%{opacity:1}90%{opacity:.4}91.5%{opacity:1}}
-  .mt-zap polyline{filter:none!important;stroke-width:1.3;stroke:#ffe6b8}
-  .mt-zap{will-change:opacity;animation:mtZapLayer 4s infinite}
-  @keyframes mtZapLayer{0%,86%{opacity:0}87%{opacity:1}88%{opacity:.15}89%{opacity:.95}90.5%{opacity:.3}91.5%{opacity:.8}93%,100%{opacity:0}}
-  .mt-zap-flash{will-change:opacity}
-  .rh-sp-bolt{animation:rhSpStrikeLite 4s infinite!important;will-change:transform,opacity}
-  @keyframes rhSpStrikeLite{0%,86%,94%,100%{transform:none;opacity:.9}88%{transform:scale(1.18) rotate(-6deg);opacity:1}90%{transform:scale(.96)}92%{transform:scale(1.1)}}
-  .rh-sp-word{animation:rhSpFlick 4s infinite;will-change:opacity}
-  /* ===== ELECTROCUTION (cheap: opacity/transform only) ===== */
-  .mt-zap{animation:none!important;opacity:1}
-  .mt-zap polyline{stroke:#e8f4ff!important;stroke-width:1.4!important;opacity:0;will-change:opacity}
-  .mt-zap polyline.cg{stroke:rgba(140,190,255,.45)!important;stroke-width:5!important}
-  .mt-zap .c0{animation:elBuzz0 4s steps(1) infinite!important}.mt-zap .c1{animation:elBuzz1 4s steps(1) infinite!important}.mt-zap .c2{animation:elBuzz2 4s steps(1) infinite!important}
-  @keyframes elBuzz0{0%,86%{opacity:0}86.6%{opacity:1}87.4%{opacity:0}88%{opacity:1}89.2%{opacity:.2}90%{opacity:1}91%{opacity:0}92%{opacity:.9}93%,100%{opacity:0}}
-  @keyframes elBuzz1{0%,86.3%{opacity:0}87%{opacity:1}88%{opacity:0}88.8%{opacity:1}90.4%{opacity:0}91.4%{opacity:1}92.6%,100%{opacity:0}}
-  @keyframes elBuzz2{0%,86.8%{opacity:0}87.6%{opacity:1}88.4%{opacity:.1}89.4%{opacity:1}90.8%{opacity:.3}91.8%{opacity:1}93.2%,100%{opacity:0}}
-  .mt-zap-flash{background:radial-gradient(90% 120% at 50% 50%,rgba(210,235,255,.28),rgba(255,180,90,.12) 55%,transparent 80%)!important;animation:elSurge 4s steps(1) infinite!important}
-  @keyframes elSurge{0%,86%{opacity:0}86.6%{opacity:1}87.2%{opacity:0}88%{opacity:.8}88.6%{opacity:0}89.6%{opacity:1}90.4%{opacity:.1}91.6%{opacity:.7}92.4%,100%{opacity:0}}
-  /* the box itself convulses while the current runs through it */
-  .rh.rh-charged,#page-my-team .mt-hero-pts.mt-charged,.bo-sprint-ad{animation:elShake 4s infinite!important;will-change:transform}
-  @keyframes elShake{0%,86%,93%,100%{transform:none}86.6%{transform:translate(2px,-1px)}87.2%{transform:translate(-2px,1px)}87.8%{transform:translate(1px,2px)}88.4%{transform:translate(-1px,-2px)}
-    89%{transform:translate(2px,1px)}89.6%{transform:translate(-2px,-1px)}90.2%{transform:translate(1px,-1px)}90.8%{transform:translate(-1px,1px)}91.6%{transform:translate(1px,0)}92.3%{transform:translate(0,1px)}}
-  @media (prefers-reduced-motion:reduce){.mt-zap polyline,.mt-zap-flash,.rh.rh-charged,#page-my-team .mt-hero-pts.mt-charged,.bo-sprint-ad{animation:none!important}}
-  /* ===== ELECTROCUTION v2: surging electric edge + static + shake ===== */
-  .el-edge,.el-static{position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;will-change:opacity}
-  .el-edge{z-index:6;border:1.5px solid #e6f3ff;box-shadow:0 0 8px #9fd0ff,0 0 22px rgba(120,180,255,.7),inset 0 0 10px rgba(170,215,255,.8),inset 0 0 40px rgba(120,180,255,.35);animation:elEdge 4s steps(1) infinite}
-  @keyframes elEdge{0%,86%{opacity:0}86.5%{opacity:1}87%{opacity:.25}87.6%{opacity:1}88.1%{opacity:.5}88.7%{opacity:1}89.3%{opacity:.2}90%{opacity:.95}90.7%{opacity:.35}91.4%{opacity:.85}92.2%{opacity:.2}93%,100%{opacity:0}}
-  .el-static{z-index:5;inset:-20px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .75 0 0 0 0 .87 0 0 0 0 1 0 0 0 2.2 -1.1'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");animation:elStatic 4s steps(1) infinite}
-  @keyframes elStatic{0%,86%{opacity:0;transform:none}86.5%{opacity:.22;transform:translate(-7px,3px)}87.6%{opacity:.08;transform:translate(5px,-6px)}88.7%{opacity:.25;transform:translate(-3px,-4px)}
-    90%{opacity:.12;transform:translate(6px,5px)}91.4%{opacity:.2;transform:translate(-5px,2px)}92.2%{opacity:.06}93%,100%{opacity:0;transform:none}}
-  .mt-zap-flash{background:radial-gradient(100% 120% at 50% 50%,rgba(170,215,255,.22),transparent 70%)!important}
-  .rh.rh-charged > .el-edge,.rh.rh-charged > .el-static,#page-my-team .mt-hero-pts > .el-edge,#page-my-team .mt-hero-pts > .el-static,.bo-sprint-ad > .el-edge,.bo-sprint-ad > .el-static{position:absolute}
-  #page-my-team .mt-hero-pts > .el-static,.bo-sprint-ad > .el-static,.rh.rh-charged > .el-static{inset:-20px}
-  #page-my-team .mt-hero-pts > .el-edge,.bo-sprint-ad > .el-edge,.rh.rh-charged > .el-edge{inset:0}
-  @media (prefers-reduced-motion:reduce){.el-edge,.el-static{animation:none}}
   .qs-win-ov{position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;padding:16px;background:rgba(5,5,10,.7);backdrop-filter:blur(4px);animation:qsWinIn .25s ease}
   .qs-win{width:min(420px,100%);padding:22px 20px 18px;border-radius:20px;text-align:center;background:radial-gradient(120% 90% at 50% 0%,rgba(250,204,21,.22),transparent 60%),#12121a;border:1px solid rgba(250,204,21,.45);box-shadow:0 30px 80px -20px rgba(250,204,21,.45)}
   .qs-win-ico{font-size:2.6rem;animation:qsWinPop .6s cubic-bezier(.2,1.6,.4,1)}
@@ -1007,7 +967,7 @@
     87%{color:#fff8e6;text-shadow:0 0 4px #fff,0 0 16px #ffb347,0 0 30px #ff7a00;opacity:1}88%{opacity:.35}89%{opacity:1;color:#ffd27a}
     90%{color:#fff;text-shadow:0 0 6px #fff,0 0 22px #ffb347}91.5%{opacity:.6}93%{opacity:1;color:#ffe2b0;text-shadow:0 0 12px #ff9a3c}}
   /* shockwave from the bolt (inside the badge, so it always starts at the bolt) */
-  .rh-sp-wave,.rh-sp-boltwrap i{display:none!important}
+  .rh-sp-wave{display:none!important}
   .rh-sp-wave{position:absolute;left:50%;top:50%;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;pointer-events:none;opacity:0;z-index:-1;
     border:2px solid rgba(255,230,180,.9);box-shadow:0 0 18px rgba(255,160,60,.8),inset 0 0 12px rgba(255,190,90,.6);animation:mtWave 4s cubic-bezier(.1,.6,.3,1) infinite}
   @media (prefers-reduced-motion:reduce){.rh.rh-charged,.rh.rh-charged .rh-track,.rh.rh-charged .rh-cd-box,.rh.rh-charged .rh-cd-box .hero-cd-num,.rh-sp-wave{animation:none}}
@@ -1022,7 +982,7 @@
   @media (max-width:560px){.mt-zap-wave{right:71px;bottom:25px}}
   .mt-zap polyline{fill:none;stroke:#fff1c9;stroke-width:1.6;vector-effect:non-scaling-stroke;stroke-linejoin:round;
     filter:drop-shadow(0 0 3px #ff9a3c);opacity:0;animation:mtZapArc 4s infinite}
-  .mt-zap .z1{animation-delay:.07s}.mt-zap .z2{animation-delay:.14s}.mt-zap .zf{stroke-width:1;opacity:0}
+  .mt-zap .z1{animation-delay:.05s}.mt-zap .z2{animation-delay:.1s}.mt-zap .z3{animation-delay:.03s}
   @keyframes mtZapArc{0%,86%{opacity:0}87%{opacity:1}88%{opacity:.2}89%{opacity:.95}90.5%{opacity:.4}92%,100%{opacity:0}}
   .mt-zap-flash{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:0;background:radial-gradient(60% 80% at 50% 70%,rgba(255,220,150,.35),rgba(255,140,40,.12) 45%,transparent 75%);animation:mtZapFlash 4s infinite}
   @keyframes mtZapFlash{0%,86%{opacity:0}87%{opacity:1}89%{opacity:.3}90%{opacity:.8}94%,100%{opacity:0}}
@@ -1881,7 +1841,7 @@
     #page-my-team .mt-hero-pts{position:relative;overflow:hidden;margin-top:14px;text-align:center;background:rgba(255,200,0,0.05);border:1px solid rgba(255,200,0,0.25);border-radius:14px;padding:13px 16px 14px}
     #page-my-team .mt-hero-track{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;transform:scale(1.15);filter:invert(1) drop-shadow(0 0 2px rgba(255,255,255,.6));opacity:.3;pointer-events:none;z-index:0}
     #page-my-team .mt-hero-pts > *:not(.mt-hero-track){position:relative;z-index:1}
-    #page-my-team .mt-hero-pts.mt-charged > .el-edge{position:absolute;inset:0;z-index:6}#page-my-team .mt-hero-pts.mt-charged > .el-static{position:absolute;inset:-20px;z-index:5}
+
     #page-my-team .mt-hero-pts > .mt-zap-charge,#page-my-team .mt-hero-pts > .mt-zap,#page-my-team .mt-hero-pts > .mt-zap-flash{position:absolute;inset:0;width:100%;height:100%;z-index:3}
     #page-my-team .mt-hero-pts > .mt-zap-wave{display:none}
     #page-my-team .mt-hero-pts > .mt-hero-sprint{position:absolute;right:10px;bottom:8px;margin:0;z-index:4} /* corner badge: box keeps its normal size */
@@ -5796,9 +5756,13 @@ window.sprintTagHtml = function(sub, flag) { return `<div class="rh-sprint">
 // Strike flash layer for an electrocuted box (the old edge arcs / charging border were removed — too busy).
 // Electrocutes the box on each strike: a few jagged lightning streaks flicker ACROSS it (new shape every
 // render), with the flash. No ring/explosion. Coordinates 0–100, stretched to the box.
-// Electrocutes the box on each strike: the whole edge surges with electric blue-white current, static
-// crackles over the box, and it shakes. All layers only change opacity/transform (no repaints → no lag).
-window.sprintZapSvg = function() { return '<div class="mt-zap-flash"></div><div class="el-static"></div><div class="el-edge"></div>'; };
+// Electrocutes the box on each strike: jagged arcs crackle along the edges + flash (original version).
+window.sprintZapSvg = function() {
+  const j = (a, b, n, fx) => { const pts = []; for (let i = 0; i <= n; i++) { const t = i / n; pts.push(fx(a + (b - a) * t, (i % 2 ? 1 : -1) * (0.6 + Math.random() * 1.6))); } return pts.join(' '); };
+  const e = [ j(0, 100, 14, (x, d) => `${x.toFixed(1)},${(1.2 + d).toFixed(1)}`), j(0, 100, 7, (y, d) => `${(98.8 + d).toFixed(1)},${y.toFixed(1)}`),
+              j(100, 0, 14, (x, d) => `${x.toFixed(1)},${(98.8 + d).toFixed(1)}`), j(100, 0, 7, (y, d) => `${(1.2 + d).toFixed(1)},${y.toFixed(1)}`) ];
+  return '<svg class="mt-zap" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">' + e.map((p, i) => `<polyline class="z${i}" points="${p}"/>`).join('') + '</svg><div class="mt-zap-flash"></div>';
+};
 // My Team: the upcoming round (next lock in the schedule), if it's a sprint weekend → its name, else null.
 window.myTeamSprintNext = async function() {
   try {
