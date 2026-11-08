@@ -910,6 +910,13 @@
   @keyframes rhSpCharge{0%,80%{stroke:rgba(255,160,70,.18)}86%{stroke:rgba(255,215,140,.95)}100%{stroke:rgba(255,160,70,.18)}}
   .rh-sp-sub{font-size:.6rem;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;color:#ffb066;opacity:.9}
   @media (prefers-reduced-motion:reduce){.rh-sp-bolt,.rh-sp-word,.rh-sp-arc .a2{animation:none}}
+  /* compact copy of the sprint tag, sitting under the points in the My Team hero (by the track map) */
+  .mt-hero-sprint{position:relative;z-index:2;display:flex;justify-content:center;margin-top:10px;pointer-events:none}
+  .mt-hero-sprint .rh-sprint{margin:0;gap:7px;padding:5px 12px 5px 8px;border-radius:10px;background:rgba(20,10,4,.45);border:1px solid rgba(255,150,60,.3);backdrop-filter:blur(4px)}
+  .mt-hero-sprint .rh-sp-bolt{width:20px;height:25px}
+  .mt-hero-sprint .rh-sp-word{font-size:1rem;letter-spacing:2px}
+  .mt-hero-sprint .rh-sp-arc{width:96px;height:7px}
+  .mt-hero-sprint .rh-sp-sub{font-size:.52rem;letter-spacing:1.6px}
   .mt-sprint{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:12px 16px;margin-bottom:14px;border-radius:14px;
     background:radial-gradient(120% 160% at 0% 50%,rgba(255,122,24,.20),transparent 60%),var(--surface);border:1px solid rgba(255,150,60,.35)}
   .mt-sprint .rh-sprint{margin:0}
@@ -5637,18 +5644,17 @@ async function stampLiveWeekend(schedule) {
   } catch(e) { console.log('live weekend stamp failed (non-fatal):', e); }
 }
 
-window.sprintTagHtml = function() { return `<div class="rh-sprint">
+window.sprintTagHtml = function(sub) { return `<div class="rh-sprint">
           <svg class="rh-sp-bolt" viewBox="0 0 34 42" aria-hidden="true"><defs><linearGradient id="rhSpG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3c4"/><stop offset=".45" stop-color="#ffb347"/><stop offset="1" stop-color="#ff5a00"/></linearGradient></defs><path d="M21 1 4 24h11l-4 17 19-25H18l5-15z"/></svg>
           <div class="rh-sp-col"><span class="rh-sp-word">Sprint</span>
             <svg class="rh-sp-arc" viewBox="0 0 150 12" preserveAspectRatio="none" aria-hidden="true"><polyline class="a1" points="150,5 130,9 116,3 104,8 90,2 76,10 64,4 50,9 38,3 24,10 14,2 0,6"/><polyline class="a2" points="150,5 130,9 116,3 104,8 90,2 76,10 64,4 50,9 38,3 24,10 14,2 0,6"/></svg>
-            <span class="rh-sp-sub">Weekend · 2 races</span></div></div>`; };
-// Sprint banner for My Team: the upcoming round (next lock in the schedule) is a sprint weekend.
-window.myTeamSprintBanner = async function() {
+            <span class="rh-sp-sub">${sub || 'Weekend · 2 races'}</span></div></div>`; };
+// My Team: the upcoming round (next lock in the schedule), if it's a sprint weekend → its name, else null.
+window.myTeamSprintNext = async function() {
   try {
-    const sch = (await dbGetAll('schedule')).filter(r => r.lockTime > Date.now()).sort((a, b) => a.lockTime - b.lockTime);
-    const nr = sch[0]; if (!nr || !(nr.isSprint || (window._isSprintWeekend && window._isSprintWeekend(nr)))) return '';
-    return `<div class="mt-sprint">${window.sprintTagHtml()}<div class="mt-sprint-txt"><b>${esc(nr.name)} is a sprint weekend</b><span>Your team scores in the sprint <i>and</i> the feature race — two chances, so pick (and captain) wisely.</span></div></div>`;
-  } catch (e) { return ''; }
+    const nr = (await dbGetAll('schedule')).filter(r => r.lockTime > Date.now()).sort((a, b) => a.lockTime - b.lockTime)[0];
+    return nr && (nr.isSprint || (window._isSprintWeekend && window._isSprintWeekend(nr))) ? String(nr.name || '').replace(/\s*\(sprint\)\s*/i, '') : null;
+  } catch (e) { return null; }
 };
 function buildRaceHero(nextRace, allRaces, schedule, actionBtnHtml, heroId, isLive) {
   if (!nextRace) return '';
@@ -10769,8 +10775,8 @@ async function renderMyTeam() {
     ? 'radial-gradient(120% 140% at 0% 0%,'+_fzCol.accent+'55,transparent 60%),linear-gradient(135deg,'+_fzCol.accent+'22 0%,#12121a 60%,#0e0e15 100%)'
     : 'radial-gradient(120% 140% at 0% 0%,rgba(123,79,191,0.22),transparent 55%),linear-gradient(135deg,#17111f 0%,#12121a 60%,#0e0e15 100%)';
   const _bannerBorder = _fzCol ? _fzCol.accent : 'rgba(123,79,191,0.35)';
-  const _sprintBan = viewingLastRace ? '' : await window.myTeamSprintBanner();
-  let html = (_adminBanner || '') + _sprintBan + '<div class="card mt-teamcard" style="padding:0;overflow:hidden'+(_fzCol ? ';border-color:'+_fzCol.accent+'66;background:linear-gradient(180deg,'+_fzCol.accent+'14,var(--surface) 55%)' : ';background:radial-gradient(120% 90% at 0% 0%,rgba(90,94,201,.16),transparent 55%),var(--surface);border-color:rgba(123,127,232,.28)')+'">'
+  const _sprintNext = viewingLastRace ? null : await window.myTeamSprintNext();
+  let html = (_adminBanner || '') + '<div class="card mt-teamcard" style="padding:0;overflow:hidden'+(_fzCol ? ';border-color:'+_fzCol.accent+'66;background:linear-gradient(180deg,'+_fzCol.accent+'14,var(--surface) 55%)' : ';background:radial-gradient(120% 90% at 0% 0%,rgba(90,94,201,.16),transparent 55%),var(--surface);border-color:rgba(123,127,232,.28)')+'">'
     // Identity banner: avatar, team name, player, edit — with value + latest points as stats
     + '<div style="position:relative;overflow:hidden;background:'+_bannerBg+';border-bottom:1px solid '+_bannerBorder+';padding:18px 18px 16px">'
     + (_fzCol ? '<div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,'+_fzCol.accent+',transparent 85%)"></div>'
@@ -10809,6 +10815,7 @@ async function renderMyTeam() {
           + '<div class="mt-tile-sub">'+(pointsRace?(pointsRaceScored?'This round':'Not scored yet'):'No races yet')+'</div>'
           + (pointsRace && pointsRaceScored && window._raceVerdictPill ? (pointsRace.verdictsAt ? '<div style="margin-top:6px">'+window._raceVerdictPill(pointsRace)+'</div>'
               : ((window._verdictLatest(races) || {}).id === pointsRace.id ? '<div style="margin-top:6px"><span title="Provisional — points may change once the steward verdicts are in" style="display:inline-flex;align-items:center;gap:5px;font-size:.6rem;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#ffb74d;background:rgba(255,183,77,.12);border:1px solid rgba(255,183,77,.45);border-radius:999px;padding:1px 8px">⏳ Before verdicts · '+esc(pointsRace.name)+'</span></div>' : '')) : '')
+          + (_sprintNext ? '<div class="mt-hero-sprint">'+window.sprintTagHtml('Next · '+esc(_sprintNext)+' · 2 races')+'</div>' : '')
           + '</div>'
           + (() => {
               let _col = false; try { _col = localStorage.getItem('ims_mt_stats_collapsed') === '1'; } catch(e) {}
