@@ -892,7 +892,7 @@
   .bo-sprint-ad .rh-sprint{margin:0;flex-shrink:0}
   .bo-sprint-ad{position:relative;overflow:hidden;animation:mtZapBox 4s infinite}
   .bo-sprint-ad > .mt-zap,.bo-sprint-ad > .mt-zap-flash{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
-  .bo-sprint-ad > :not(.mt-zap):not(.mt-zap-flash){position:relative;z-index:1}
+  .bo-sprint-ad > :not(.mt-zap):not(.mt-zap-flash):not(.el-edge):not(.el-static){position:relative;z-index:1}
   .bo-sprint-ad-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
   .bo-sprint-ad-txt>span{font-size:.6rem;font-weight:800;letter-spacing:2px;color:#ffa751}
   .bo-sprint-ad-txt b{font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;letter-spacing:.8px;line-height:1.1}.bo-sprint-ad-txt b i{font-style:italic;color:#ffb066}
@@ -927,6 +927,18 @@
   @keyframes elShake{0%,86%,93%,100%{transform:none}86.6%{transform:translate(2px,-1px)}87.2%{transform:translate(-2px,1px)}87.8%{transform:translate(1px,2px)}88.4%{transform:translate(-1px,-2px)}
     89%{transform:translate(2px,1px)}89.6%{transform:translate(-2px,-1px)}90.2%{transform:translate(1px,-1px)}90.8%{transform:translate(-1px,1px)}91.6%{transform:translate(1px,0)}92.3%{transform:translate(0,1px)}}
   @media (prefers-reduced-motion:reduce){.mt-zap polyline,.mt-zap-flash,.rh.rh-charged,#page-my-team .mt-hero-pts.mt-charged,.bo-sprint-ad{animation:none!important}}
+  /* ===== ELECTROCUTION v2: surging electric edge + static + shake ===== */
+  .el-edge,.el-static{position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;will-change:opacity}
+  .el-edge{z-index:6;border:1.5px solid #e6f3ff;box-shadow:0 0 8px #9fd0ff,0 0 22px rgba(120,180,255,.7),inset 0 0 10px rgba(170,215,255,.8),inset 0 0 40px rgba(120,180,255,.35);animation:elEdge 4s steps(1) infinite}
+  @keyframes elEdge{0%,86%{opacity:0}86.5%{opacity:1}87%{opacity:.25}87.6%{opacity:1}88.1%{opacity:.5}88.7%{opacity:1}89.3%{opacity:.2}90%{opacity:.95}90.7%{opacity:.35}91.4%{opacity:.85}92.2%{opacity:.2}93%,100%{opacity:0}}
+  .el-static{z-index:5;inset:-20px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .75 0 0 0 0 .87 0 0 0 0 1 0 0 0 2.2 -1.1'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");animation:elStatic 4s steps(1) infinite}
+  @keyframes elStatic{0%,86%{opacity:0;transform:none}86.5%{opacity:.22;transform:translate(-7px,3px)}87.6%{opacity:.08;transform:translate(5px,-6px)}88.7%{opacity:.25;transform:translate(-3px,-4px)}
+    90%{opacity:.12;transform:translate(6px,5px)}91.4%{opacity:.2;transform:translate(-5px,2px)}92.2%{opacity:.06}93%,100%{opacity:0;transform:none}}
+  .mt-zap-flash{background:radial-gradient(100% 120% at 50% 50%,rgba(170,215,255,.22),transparent 70%)!important}
+  .rh.rh-charged > .el-edge,.rh.rh-charged > .el-static,#page-my-team .mt-hero-pts > .el-edge,#page-my-team .mt-hero-pts > .el-static,.bo-sprint-ad > .el-edge,.bo-sprint-ad > .el-static{position:absolute}
+  #page-my-team .mt-hero-pts > .el-static,.bo-sprint-ad > .el-static,.rh.rh-charged > .el-static{inset:-20px}
+  #page-my-team .mt-hero-pts > .el-edge,.bo-sprint-ad > .el-edge,.rh.rh-charged > .el-edge{inset:0}
+  @media (prefers-reduced-motion:reduce){.el-edge,.el-static{animation:none}}
   .qs-win-ov{position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;padding:16px;background:rgba(5,5,10,.7);backdrop-filter:blur(4px);animation:qsWinIn .25s ease}
   .qs-win{width:min(420px,100%);padding:22px 20px 18px;border-radius:20px;text-align:center;background:radial-gradient(120% 90% at 50% 0%,rgba(250,204,21,.22),transparent 60%),#12121a;border:1px solid rgba(250,204,21,.45);box-shadow:0 30px 80px -20px rgba(250,204,21,.45)}
   .qs-win-ico{font-size:2.6rem;animation:qsWinPop .6s cubic-bezier(.2,1.6,.4,1)}
@@ -1869,6 +1881,7 @@
     #page-my-team .mt-hero-pts{position:relative;overflow:hidden;margin-top:14px;text-align:center;background:rgba(255,200,0,0.05);border:1px solid rgba(255,200,0,0.25);border-radius:14px;padding:13px 16px 14px}
     #page-my-team .mt-hero-track{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;transform:scale(1.15);filter:invert(1) drop-shadow(0 0 2px rgba(255,255,255,.6));opacity:.3;pointer-events:none;z-index:0}
     #page-my-team .mt-hero-pts > *:not(.mt-hero-track){position:relative;z-index:1}
+    #page-my-team .mt-hero-pts.mt-charged > .el-edge{position:absolute;inset:0;z-index:6}#page-my-team .mt-hero-pts.mt-charged > .el-static{position:absolute;inset:-20px;z-index:5}
     #page-my-team .mt-hero-pts > .mt-zap-charge,#page-my-team .mt-hero-pts > .mt-zap,#page-my-team .mt-hero-pts > .mt-zap-flash{position:absolute;inset:0;width:100%;height:100%;z-index:3}
     #page-my-team .mt-hero-pts > .mt-zap-wave{display:none}
     #page-my-team .mt-hero-pts > .mt-hero-sprint{position:absolute;right:10px;bottom:8px;margin:0;z-index:4} /* corner badge: box keeps its normal size */
@@ -5783,17 +5796,9 @@ window.sprintTagHtml = function(sub, flag) { return `<div class="rh-sprint">
 // Strike flash layer for an electrocuted box (the old edge arcs / charging border were removed — too busy).
 // Electrocutes the box on each strike: a few jagged lightning streaks flicker ACROSS it (new shape every
 // render), with the flash. No ring/explosion. Coordinates 0–100, stretched to the box.
-// Electrocutes the box on each strike: short crackling arcs hugging the edges at random spots (they stay
-// put and buzz — nothing travels), a power-surge flicker and a violent shake. Coordinates 0–100.
-window.sprintZapSvg = function() {
-  const arc = (x0, y0, horiz) => { const pts = []; let x = x0, y = y0; const n = 6 + Math.floor(Math.random() * 4);
-    for (let i = 0; i < n; i++) { pts.push(`${x.toFixed(1)},${y.toFixed(1)}`); if (horiz) { x += 1 + Math.random() * 2.2; y = y0 + (Math.random() - .5) * 9; } else { y += 2 + Math.random() * 4; x = x0 + (Math.random() - .5) * 3.5; } }
-    return pts.join(' '); };
-  const spots = []; for (let i = 0; i < 7; i++) { const e = i % 4, t = 6 + Math.random() * 80;
-    spots.push(e === 0 ? arc(t, 3, true) : e === 1 ? arc(98, t * .8, false) : e === 2 ? arc(t, 97, true) : arc(2, t * .8, false)); }
-  return '<div class="mt-zap-flash"></div><svg class="mt-zap" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">'
-    + spots.map((pp, i) => `<polyline class="c${i % 3} cg" points="${pp}"/><polyline class="c${i % 3}" points="${pp}"/>`).join('') + '</svg>';
-};
+// Electrocutes the box on each strike: the whole edge surges with electric blue-white current, static
+// crackles over the box, and it shakes. All layers only change opacity/transform (no repaints → no lag).
+window.sprintZapSvg = function() { return '<div class="mt-zap-flash"></div><div class="el-static"></div><div class="el-edge"></div>'; };
 // My Team: the upcoming round (next lock in the schedule), if it's a sprint weekend → its name, else null.
 window.myTeamSprintNext = async function() {
   try {
