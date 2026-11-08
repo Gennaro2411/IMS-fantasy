@@ -942,6 +942,21 @@
   .mt-zap-flash{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:0;background:radial-gradient(60% 80% at 50% 70%,rgba(255,220,150,.35),rgba(255,140,40,.12) 45%,transparent 75%);animation:mtZapFlash 4s infinite}
   @keyframes mtZapFlash{0%,86%{opacity:0}87%{opacity:1}89%{opacity:.3}90%{opacity:.8}94%,100%{opacity:0}}
   @media (prefers-reduced-motion:reduce){#page-my-team .mt-hero-pts.mt-charged,.mt-zap polyline,.mt-zap-flash,.rh-sp-boltwrap i,.mt-zap-charge,.mt-zap-wave,.mt-hero-sprint .rh-sprint{animation:none}}
+  /* flag of the sprint round, next to the badge */
+  .mt-hero-sprint{align-items:center;gap:8px}
+  .mt-sp-flag{display:grid;place-items:center;padding:3px;border-radius:9px;background:rgba(20,10,4,.5);border:1px solid rgba(255,150,60,.35);backdrop-filter:blur(6px);box-shadow:0 6px 18px -8px rgba(255,120,20,.7)}
+  .mt-sp-flag img{width:34px!important;height:24px!important;border-radius:5px!important;display:block;animation:mtFlagZap 4s infinite}
+  @keyframes mtFlagZap{0%,86%,94%,100%{filter:none}87%{filter:brightness(1.8) drop-shadow(0 0 6px #ffd27a)}89%{filter:brightness(1.1)}90%{filter:brightness(1.6) drop-shadow(0 0 8px #ffb347)}}
+  /* the track map gets electrocuted too: glows hot orange-white and flickers on the strike */
+  #page-my-team .mt-hero-pts.mt-charged .mt-hero-track{animation:mtTrackZap 4s infinite}
+  @keyframes mtTrackZap{0%,84%{opacity:.3;filter:invert(1) drop-shadow(0 0 2px rgba(255,255,255,.6))}
+    86%{opacity:.4;filter:invert(1) drop-shadow(0 0 3px rgba(255,200,120,.8))}
+    87%{opacity:.95;filter:invert(1) sepia(1) saturate(5) hue-rotate(-12deg) brightness(1.4) drop-shadow(0 0 4px #fff) drop-shadow(0 0 12px #ff8a00)}
+    88%{opacity:.35;filter:invert(1) drop-shadow(0 0 2px rgba(255,255,255,.6))}
+    89.5%{opacity:.9;filter:invert(1) sepia(1) saturate(5) hue-rotate(-12deg) brightness(1.5) drop-shadow(0 0 3px #fff) drop-shadow(0 0 16px #ffb347)}
+    93%{opacity:.55;filter:invert(1) sepia(1) saturate(3) hue-rotate(-12deg) brightness(1.2) drop-shadow(0 0 8px #ff8a00)}
+    100%{opacity:.3;filter:invert(1) drop-shadow(0 0 2px rgba(255,255,255,.6))}}
+  @media (prefers-reduced-motion:reduce){#page-my-team .mt-hero-pts.mt-charged .mt-hero-track,.mt-sp-flag img{animation:none}}
   /* compact copy of the sprint tag, sitting under the points in the My Team hero (by the track map) */
   .mt-hero-sprint{position:relative;z-index:2;display:flex;justify-content:center;margin-top:10px;pointer-events:none}
   .mt-hero-sprint .rh-sprint{margin:0;gap:7px;padding:5px 12px 5px 8px;border-radius:12px;backdrop-filter:blur(8px) saturate(140%);
@@ -10863,7 +10878,7 @@ async function renderMyTeam() {
           + '<div class="mt-tile-sub">'+(pointsRace?(pointsRaceScored?'This round':'Not scored yet'):'No races yet')+'</div>'
           + (pointsRace && pointsRaceScored && window._raceVerdictPill ? (pointsRace.verdictsAt ? '<div style="margin-top:6px">'+window._raceVerdictPill(pointsRace)+'</div>'
               : ((window._verdictLatest(races) || {}).id === pointsRace.id ? '<div style="margin-top:6px"><span title="Provisional — points may change once the steward verdicts are in" style="display:inline-flex;align-items:center;gap:5px;font-size:.6rem;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#ffb74d;background:rgba(255,183,77,.12);border:1px solid rgba(255,183,77,.45);border-radius:999px;padding:1px 8px">⏳ Before verdicts · '+esc(pointsRace.name)+'</span></div>' : '')) : '')
-          + (_sprintNext ? '<div class="mt-hero-sprint">'+window.sprintTagHtml('')+'</div>' : '')
+          + (_sprintNext ? '<div class="mt-hero-sprint">'+(typeof getRaceFlag === 'function' ? '<span class="mt-sp-flag" title="'+esc(_sprintNext)+'">'+getRaceFlag(_sprintNext).replace('/w20/','/w80/')+'</span>' : '')+window.sprintTagHtml('')+'</div>' : '')
           + '</div>'
           + (() => {
               let _col = false; try { _col = localStorage.getItem('ims_mt_stats_collapsed') === '1'; } catch(e) {}
