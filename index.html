@@ -887,6 +887,18 @@
     box-shadow:0 12px 36px rgba(0,0,0,0.38)}
   .rh-lines{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(65deg,rgba(255,255,255,0.028) 0 2px,transparent 2px 20px);-webkit-mask:linear-gradient(270deg,transparent 5%,#000 70%);mask:linear-gradient(270deg,transparent 5%,#000 70%)}
   .rh-track{position:absolute;right:-18px;top:50%;transform:translateY(-50%) rotate(-6deg);height:150%;max-width:56%;object-fit:contain;filter:invert(1) drop-shadow(0 0 18px rgba(255,255,255,0.25));opacity:.15;pointer-events:none}
+  /* ⚡ Sprint weekend badge on the next-race hero */
+  .rh-sprint{display:inline-flex;align-items:center;gap:10px;margin:-2px 0 14px;padding:7px 14px 7px 9px;border-radius:12px;position:relative;overflow:hidden;
+    background:linear-gradient(100deg,rgba(255,122,24,.22),rgba(255,196,0,.12) 60%,rgba(255,122,24,.05));border:1px solid rgba(255,167,81,.55);
+    box-shadow:0 0 0 1px rgba(255,167,81,.08) inset,0 8px 28px -10px rgba(255,122,24,.7)}
+  .rh-sprint::after{content:'';position:absolute;inset:0;background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.22) 48%,transparent 66%);transform:translateX(-120%);animation:rhSpShine 3.2s ease-in-out infinite}
+  @keyframes rhSpShine{0%,55%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
+  .rh-sprint-bolt{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-size:1.05rem;background:linear-gradient(135deg,#ffb347,#ff6a00);box-shadow:0 0 16px rgba(255,140,0,.75);animation:rhSpPulse 1.6s ease-in-out infinite}
+  @keyframes rhSpPulse{0%,100%{box-shadow:0 0 10px rgba(255,140,0,.55)}50%{box-shadow:0 0 22px rgba(255,170,0,.95)}}
+  .rh-sprint b{display:block;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;font-size:1.15rem;letter-spacing:2px;line-height:1;
+    background:linear-gradient(90deg,#fff,#ffd27a 55%,#ff9a3c);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .rh-sprint small{display:block;font-size:.66rem;font-weight:600;color:#ffcf9a;opacity:.85;margin-top:3px;letter-spacing:.2px}
+  @media (prefers-reduced-motion:reduce){.rh-sprint::after,.rh-sprint-bolt{animation:none}}
   .rh-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:2.7rem;line-height:.95;text-transform:uppercase;letter-spacing:1px;background:linear-gradient(180deg,#fff 35%,#c4bfdc);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
   .rh-cd{display:flex;gap:8px}
   .rh-cd-box{position:relative;overflow:hidden;text-align:center;min-width:62px;padding:9px 6px 7px;border-radius:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.10);backdrop-filter:blur(6px)}
@@ -5653,7 +5665,10 @@ function buildRaceHero(nextRace, allRaces, schedule, actionBtnHtml, heroId, isLi
   const outlineUrl = getTrackOutlineUrl(nextRace.name);
   const outlineImg = outlineUrl ? `<img class="rh-track" src="${outlineUrl}" alt="" onerror="this.style.display='none'">` : '';
   // Theme: gold + purple glow normally; red on deadline day and during a live weekend.
-  const rhVars = redTheme
+  const _rhSprint = !!(nextRace && (nextRace.isSprint || (window._isSprintWeekend && window._isSprintWeekend(nextRace))));
+  const rhVars = (_rhSprint && !redTheme)
+    ? '--rh-g1:rgba(255,122,24,0.30);--rh-g2:rgba(90,94,201,0.20);--rh-b:rgba(255,150,60,0.5);--rh-accent:#ffa751;--rh-num:#fff;--rh-numglow:rgba(255,160,80,0.45)'
+    : redTheme
     ? '--rh-g1:rgba(232,0,45,0.30);--rh-g2:rgba(90,94,201,0.18);--rh-b:rgba(232,0,45,0.45);--rh-accent:#ff5470;--rh-num:#fff;--rh-numglow:rgba(255,84,112,0.4)'
     : '--rh-g1:rgba(90,94,201,0.36);--rh-g2:rgba(232,0,45,0.18);--rh-b:rgba(90,94,201,0.5);--rh-accent:#7b7fe8;--rh-num:#fff;--rh-numglow:rgba(123,127,232,0.45)';
   return `
@@ -5668,12 +5683,13 @@ function buildRaceHero(nextRace, allRaces, schedule, actionBtnHtml, heroId, isLi
             ? `<span style="font-size:.65rem;font-weight:800;letter-spacing:2.5px;color:var(--red)"><span class="dd-dot"></span>RACE WEEKEND LIVE — ROUND ${esc(String(nextRace.raceNum||'?'))}</span>`
             : isDeadlineDay
             ? `<span style="font-size:.65rem;font-weight:800;letter-spacing:2.5px;color:var(--red)"><span class="dd-dot"></span>DEADLINE DAY — ROUND ${esc(String(nextRace.raceNum||'?'))} LOCKS SOON</span>`
-            : `<span style="font-size:.65rem;font-weight:800;letter-spacing:2.5px;color:#9b6fd4">NEXT RACE — ROUND ${esc(String(nextRace.raceNum||'?'))}</span>`}
+            : `<span style="font-size:.65rem;font-weight:800;letter-spacing:2.5px;color:${_rhSprint ? '#ffa751' : '#9b6fd4'}">NEXT RACE — ROUND ${esc(String(nextRace.raceNum||'?'))}${_rhSprint ? ' · ⚡ SPRINT' : ''}</span>`}
         </div>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
           <span style="font-size:2rem;line-height:1;filter:drop-shadow(0 4px 10px rgba(0,0,0,.5))">${getRaceFlag(nextRace.name)}</span>
           <span class="rh-title">${esc(nextRace.name)}</span>
         </div>
+        ${_rhSprint ? `<div class="rh-sprint"><span class="rh-sprint-bolt">⚡</span><span><b>SPRINT WEEKEND</b><small>Sprint + feature race · extra points up for grabs</small></span></div>` : ''}
         <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px">
           ${isLive ? (() => {
             // Division import tracker — which divisions' points are already in for this race
