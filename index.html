@@ -3343,8 +3343,8 @@
       <div class="card">
         <div class="card-title"><div class="dot"></div>👥 Merge Two Player Accounts</div>
         <p class="text-muted" style="margin-bottom:12px;font-size:.82rem">For a player who got logged out, made a new account, then got back into the old one. Everything from the <b>duplicate</b> moves onto the account they <b>keep</b>: their scored rounds, bets, IM$ (the duplicate's starting 1,000 isn't double-counted), transfers, prediction votes and game stats. Rounds both accounts played keep the kept account's score. The duplicate is then deleted — they log in with the kept account. Made a mistake? <b>↩ Undo last merge</b> puts both accounts back exactly as they were.</p>
-        <div class="form-row"><div class="form-group"><label>Keep this account</label><select class="form-control" id="acm-keep"></select></div>
-          <div class="form-group"><label>Merge in &amp; delete (duplicate)</label><select class="form-control" id="acm-dup"></select></div></div>
+        <div class="form-row"><div class="form-group"><label>Keep this account</label><select class="form-control" id="acm-keep" onfocus="acmAuto()" onmousedown="acmAuto()" ontouchstart="acmAuto()"><option value="">Tap to load accounts…</option></select></div>
+          <div class="form-group"><label>Merge in &amp; delete (duplicate)</label><select class="form-control" id="acm-dup" onfocus="acmAuto()" onmousedown="acmAuto()" ontouchstart="acmAuto()"><option value="">Tap to load accounts…</option></select></div></div>
         <div class="form-group"><label>Current line-up to keep</label><select class="form-control" id="acm-lineup"><option value="dup">The duplicate's (the one they've been playing on)</option><option value="keep">The kept account's</option></select></div>
         <button class="btn btn-secondary" onclick="acmLoad(this)">↻ Load accounts</button>
         <button class="btn btn-secondary" onclick="acmPreview(this)">🔍 Preview</button>
@@ -28470,6 +28470,8 @@ window._betSettleAll = async function() {
   return n;
 };
 // ===== ADMIN: MERGE TWO PLAYER ACCOUNTS =====
+// The account lists fill themselves the first time you tap either box (no need to press ↻ first).
+window.acmAuto = function() { const el = document.getElementById('acm-keep'); if (el && el.options.length > 1 || window._acmLoading) return; window._acmLoading = acmLoad(null, true).finally(() => { window._acmLoading = null; }); };
 window.acmLoad = async function(btn, quiet) {
   const ts = (await dbGetAll('teams', { fresh: true })).filter(t => t && t.userId).sort((a, b) => String(a.playerName || '').localeCompare(String(b.playerName || '')));
   const opt = '<option value="">— choose —</option>' + ts.map(t => `<option value="${esc(t.id)}">${esc(t.playerName || '?')} · ${esc(t.teamName || '')}${t.createdAt ? ' · made ' + new Date(t.createdAt).toLocaleDateString('en-GB') : ''}</option>`).join('');
