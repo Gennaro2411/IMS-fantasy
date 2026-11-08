@@ -28535,6 +28535,26 @@ function _betForm(field, div, raceSets) {
 // Deterministic RNG so every player sees identical odds for the same round/division/data.
 function _betRng(seedStr) { let h = 1779033703 ^ seedStr.length; for (let i = 0; i < seedStr.length; i++) { h = Math.imul(h ^ seedStr.charCodeAt(i), 3432918353); h = (h << 13) | (h >>> 19); }
   let a = h >>> 0; return function() { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+// Sprint with a REVERSE-CHAMPIONSHIP grid: same pace model as the race, but each driver's strength is
+// scaled by where they start (P1 = last in the standings). Overtaking is "possible but not easy", so the
+// back of the grid keeps ~e^-1.8 ≈ 17% of their pace-based chance relative to starting on pole.
+const SPRINT_GRID_WEIGHT = 1.8;
+function _betSimSprint(field, grid, sims, seed) {
+  field = field.slice().sort((a, b) => String(a.id).localeCompare(String(b.id)));
+  const rnd = _betRng(seed || 'ims-sprint'), N = Math.max(2, field.length);
+  const win = {}, pod = {}; field.forEach(d => { win[d.id] = 0; pod[d.id] = 0; });
+  const base = field.map(d => ({ id: d.id, s: _betStrength(d.elo) * Math.exp(-SPRINT_GRID_WEIGHT * (((grid[d.id] || N) - 1) / (N - 1))) }));
+  for (let k = 0; k < sims; k++) {
+    let pool = base.slice(), total = pool.reduce((a, d) => a + d.s, 0);
+    for (let place = 1; place <= Math.min(3, base.length); place++) {
+      let r = rnd() * total, i = 0; while (i < pool.length - 1 && (r -= pool[i].s) > 0) i++;
+      const pick = pool[i]; if (place === 1) win[pick.id]++; pod[pick.id]++; total -= pick.s; pool.splice(i, 1);
+    }
+  }
+  Object.keys(pod).forEach(id => { pod[id] /= sims; });
+  const S = base.reduce((a, d) => a + d.s, 0); base.forEach(d => { win[d.id] = S > 0 ? d.s / S : 0; });
+  return { win, pod };
+}
 function _betSim(field, sims, seed, topN) {
   field = field.slice().sort((a, b) => String(a.id).localeCompare(String(b.id))); // order-independent
   const rnd = _betRng(seed || 'ims'); const TN = topN || 5;
@@ -29228,7 +29248,7 @@ window.renderBets = async function() {
     else if (market === 'ou' || market === 'cou' || market === 'yn') { const OR = (window._betOuReg || {})[market + ':' + key]; if (!OR) return; const os = sel.slice(); os[1] = ({ over: 'under', under: 'over', yes: 'no', no: 'yes' })[sel[1]] || sel[1]; R = { auto, fair: OR.p, opp: os.join('-') }; }
     else if (market === 'pgap' || market === 'wmar') R = { fixed: auto };
     else if (market === 'tri') R = { fixed: auto };
-    else { const probs = market === 'spoon' ? _spoonP : (market === 'win' || market === 'spw') ? P.win : (market === 'pod' || market === 'spp') ? (P.pod || {}) : market === 'pole' ? (P.pole || {}) : P.top5; const sumP = Object.values(probs).reduce((x, y) => x + y, 0) || 1; R = { auto, fair: (probs[sel[0]] || 0) / sumP }; }
+    else { const probs = market === 'spoon' ? _spoonP : (market === 'spw' && SP) ? SP.win : (market === 'spp' && SP) ? SP.pod : (market === 'win' || market === 'spw') ? P.win : (market === 'pod' || market === 'spp') ? (P.pod || {}) : market === 'pole' ? (P.pole || {}) : P.top5; const sumP = Object.values(probs).reduce((x, y) => x + y, 0) || 1; R = { auto, fair: (probs[sel[0]] || 0) / sumP }; }
     const old = window._betReg[rk]; if (!old || JSON.stringify(old) !== JSON.stringify(R)) { window._betReg[rk] = R; _regSave(); } };
   const finalOdds = (market, sel, auto) => { try { _regPut(market, sel, auto); } catch (e) {} return _finalRaw(market, sel, auto); };
   const _finalRaw = (market, sel, auto) => {
@@ -29252,7 +29272,7 @@ window.renderBets = async function() {
       const a = _stakeOn(market, key), b = _stakeOn(market, oppSel.join('-')), tot = a + b;
       return tot ? _dyn(auto, a / tot, fair, tot) : auto; }
     if (market === 'pgap' || market === 'wmar' || market === 'tri') return auto;
-    const probs = market === 'spoon' ? _spoonP : (market === 'win' || market === 'spw') ? P.win : (market === 'pod' || market === 'spp') ? (P.pod || {}) : market === 'pole' ? (P.pole || {}) : P.top5; const sumP = Object.values(probs).reduce((x, y) => x + y, 0) || 1;
+    const probs = market === 'spoon' ? _spoonP : (market === 'spw' && SP) ? SP.win : (market === 'spp' && SP) ? SP.pod : (market === 'win' || market === 'spw') ? P.win : (market === 'pod' || market === 'spp') ? (P.pod || {}) : market === 'pole' ? (P.pole || {}) : P.top5; const sumP = Object.values(probs).reduce((x, y) => x + y, 0) || 1;
     const tot = _openHere.filter(b => b.market === market).reduce((x, b) => x + (b.stake || 0), 0);
     return tot ? _dyn(auto, _stakeOn(market, key) / tot, (probs[sel[0]] || 0) / sumP, tot) : auto;
   };
@@ -29272,7 +29292,7 @@ window.renderBets = async function() {
     if (market === 'tri') { const p = _betTriP(field, sel); return p > 0 ? _betOdds(p, 10000) : null; }
     if (market === 'spoon') { const pr = _spoonP[sel[0]]; return pr == null ? null : _betOdds(pr); }
     if (!['win', 'pod', 'pole', 'top5', 'spw', 'spp'].includes(market)) return null;
-    const pr = (market === 'win' || market === 'spw') ? P.win[sel[0]] : (market === 'pod' || market === 'spp') ? (P.pod || {})[sel[0]] : market === 'pole' ? (P.pole || {})[sel[0]] : P.top5[sel[0]]; return pr == null ? null : _betOdds(pr);
+    const pr = (market === 'spw' && SP) ? SP.win[sel[0]] : (market === 'spp' && SP) ? SP.pod[sel[0]] : (market === 'win' || market === 'spw') ? P.win[sel[0]] : (market === 'pod' || market === 'spp') ? (P.pod || {})[sel[0]] : market === 'pole' ? (P.pole || {})[sel[0]] : P.top5[sel[0]]; return pr == null ? null : _betOdds(pr);
   };
   window._betDivNow = div;
   // Cache odds per race+division so they don't wobble on every re-render.
@@ -29280,6 +29300,17 @@ window.renderBets = async function() {
   window._betOddsCache = window._betOddsCache || {};
   if (!window._betOddsCache[oKey] && field.length) window._betOddsCache[oKey] = _betSim(field, 60000, oKey, isC ? 3 : 5);
   const P = window._betOddsCache[oKey] || { win: {}, top5: {} };
+  // Sprint round: grid = reverse of this division's championship standings → separate sprint prices.
+  const _spGrid = {}; let SP = null;
+  if (!isC && field.length && upcoming && (upcoming.isSprint || (window._isSprintWeekend && window._isSprintWeekend(upcoming))) && typeof window.computeDriverChampStandings === 'function') {
+    try {
+      const cr = (races || []).filter(r => r && r.driverPoints && Object.keys(r.driverPoints).length);
+      const st = (window.computeDriverChampStandings(cr, window._allDrivers && window._allDrivers.length ? window._allDrivers : field) || {})[div] || {};
+      field.slice().sort((a, b) => ((st[a.id] || 0) - (st[b.id] || 0)) || String(b.name || '').localeCompare(String(a.name || ''))).forEach((d, i) => { _spGrid[d.id] = i + 1; });
+      const sk = oKey + '|sprint|' + field.map(d => d.id + '@' + _spGrid[d.id]).join(',');
+      SP = window._betOddsCache[sk] = window._betOddsCache[sk] || _betSimSprint(field, _spGrid, 60000, sk);
+    } catch (e) { SP = null; }
+  }
   // Driver specials: DNF chance (each driver's own DNF rate, pulled towards the league average) and a
   // finishing-position line from the full simulated order. A DNF/DSQ counts as finishing last (OVER).
   const _dnfR = {}, _fpos = {}, _penR = {};
@@ -29886,7 +29917,7 @@ window.renderBets = async function() {
           ${field.filter(d => _spoonP[d.id] != null).slice().sort((a, b) => _spoonP[b.id] - _spoonP[a.id]).map(d => `<div class="bo-row">${photo(d)}<div class="bo-nm"><b>${esc(d.name)}</b><small>Finishes last of the classified</small></div>${oddsBtn('spoon', [d.id], d.name + ' wooden spoon in ' + div, finalOdds('spoon', [d.id], _betOdds(_spoonP[d.id])))}</div>`).join('')}</div>` : ''}
         </div><div class="bo-sec" data-sec="sprint"${_secHid('sprint')}>
         ${(!isC && upcoming && upcoming.isSprint && field.length) ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>⚡ Sprint</span><span class="bo-cols"><i>WIN</i><i>PODIUM</i></span></div>
-          ${field.map(d => `<div class="bo-row">${photo(d)}<div class="bo-nm"><b>${esc(d.name)}</b><small>Sprint race</small></div>${oddsBtn('spw', [d.id], d.name + ' to win the ' + div + ' sprint', finalOdds('spw', [d.id], _betOdds(P.win[d.id])))}${oddsBtn('spp', [d.id], d.name + ' sprint podium in ' + div, finalOdds('spp', [d.id], _betOdds((P.pod || {})[d.id])))}</div>`).join('')}</div>` : ''}
+          ${field.slice().sort((a, b) => (_spGrid[a.id] || 99) - (_spGrid[b.id] || 99)).map(d => `<div class="bo-row">${photo(d)}<div class="bo-nm"><b>${esc(d.name)}</b><small>${_spGrid[d.id] ? 'Reverse grid · starts P' + _spGrid[d.id] : 'Sprint race'}</small></div>${oddsBtn('spw', [d.id], d.name + ' to win the ' + div + ' sprint', finalOdds('spw', [d.id], _betOdds((SP || P).win[d.id])))}${oddsBtn('spp', [d.id], d.name + ' sprint podium in ' + div, finalOdds('spp', [d.id], _betOdds(((SP || P).pod || {})[d.id])))}</div>`).join('')}</div>` : ''}
         </div><div class="bo-sec" data-sec="fpos"${_secHid('fpos')}>
         ${(!isC && Object.keys(_fpos).length) ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>📍 Finishing position</span><small>Over = finishes lower (a DNF counts as over)</small></div>
           ${field.filter(d => _fpos[d.id]).map(d => { const o = _fpos[d.id], L = String(o.line); return `<div class="bo-ou"><div class="bo-ou-c">${photo(d)}<div><b>${esc(d.name)}</b><span class="bo-ou-line">LINE <em>P${o.line}</em></span></div></div>
