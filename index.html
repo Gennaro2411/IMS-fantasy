@@ -887,18 +887,31 @@
     box-shadow:0 12px 36px rgba(0,0,0,0.38)}
   .rh-lines{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(65deg,rgba(255,255,255,0.028) 0 2px,transparent 2px 20px);-webkit-mask:linear-gradient(270deg,transparent 5%,#000 70%);mask:linear-gradient(270deg,transparent 5%,#000 70%)}
   .rh-track{position:absolute;right:-18px;top:50%;transform:translateY(-50%) rotate(-6deg);height:150%;max-width:56%;object-fit:contain;filter:invert(1) drop-shadow(0 0 18px rgba(255,255,255,0.25));opacity:.15;pointer-events:none}
-  /* ⚡ Sprint weekend badge on the next-race hero */
-  .rh-sprint{display:inline-flex;align-items:center;gap:10px;margin:-2px 0 14px;padding:7px 14px 7px 9px;border-radius:12px;position:relative;overflow:hidden;
-    background:linear-gradient(100deg,rgba(255,122,24,.22),rgba(255,196,0,.12) 60%,rgba(255,122,24,.05));border:1px solid rgba(255,167,81,.55);
-    box-shadow:0 0 0 1px rgba(255,167,81,.08) inset,0 8px 28px -10px rgba(255,122,24,.7)}
-  .rh-sprint::after{content:'';position:absolute;inset:0;background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.22) 48%,transparent 66%);transform:translateX(-120%);animation:rhSpShine 3.2s ease-in-out infinite}
-  @keyframes rhSpShine{0%,55%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
-  .rh-sprint-bolt{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-size:1.05rem;background:linear-gradient(135deg,#ffb347,#ff6a00);box-shadow:0 0 16px rgba(255,140,0,.75);animation:rhSpPulse 1.6s ease-in-out infinite}
-  @keyframes rhSpPulse{0%,100%{box-shadow:0 0 10px rgba(255,140,0,.55)}50%{box-shadow:0 0 22px rgba(255,170,0,.95)}}
-  .rh-sprint b{display:block;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;font-size:1.15rem;letter-spacing:2px;line-height:1;
-    background:linear-gradient(90deg,#fff,#ffd27a 55%,#ff9a3c);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-  .rh-sprint small{display:block;font-size:.66rem;font-weight:600;color:#ffcf9a;opacity:.85;margin-top:3px;letter-spacing:.2px}
-  @media (prefers-reduced-motion:reduce){.rh-sprint::after,.rh-sprint-bolt{animation:none}}
+  /* ⚡ Sprint weekend banner on the next-race hero */
+  .rh-sprint{position:relative;margin:0 0 16px;border-radius:14px;overflow:hidden;isolation:isolate;
+    background:linear-gradient(115deg,#ff5a00 0%,#ff8a00 38%,#1a0d05 38.2%,#120a06 100%);
+    box-shadow:0 0 0 1px rgba(255,150,60,.55),0 14px 40px -14px rgba(255,110,0,.85)}
+  .rh-sprint::before{content:'';position:absolute;inset:0;z-index:-1;opacity:.35;
+    background:repeating-linear-gradient(115deg,transparent 0 10px,rgba(0,0,0,.35) 10px 12px)}
+  .rh-sprint::after{content:'';position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.28) 50%,transparent 65%);transform:translateX(-130%);animation:rhSpShine 3.4s cubic-bezier(.6,0,.2,1) infinite}
+  @keyframes rhSpShine{0%,50%{transform:translateX(-130%)}100%{transform:translateX(130%)}}
+  .rh-sp-in{display:flex;align-items:center;gap:14px;padding:12px 16px 12px 14px}
+  .rh-sp-tag{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;width:58px;height:58px;border-radius:12px;
+    background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.35);backdrop-filter:blur(4px);font-size:1.6rem;line-height:1;
+    animation:rhSpPulse 1.4s ease-in-out infinite;text-shadow:0 0 14px #fff6}
+  .rh-sp-tag i{font-style:normal;font-size:.5rem;font-weight:900;letter-spacing:1.5px;margin-top:4px;color:#fff}
+  @keyframes rhSpPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,220,150,.0)}50%{box-shadow:0 0 0 6px rgba(255,220,150,.18)}}
+  .rh-sp-txt{min-width:0;flex:1}
+  .rh-sp-word{display:flex;align-items:baseline;gap:8px;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;line-height:.9;text-transform:uppercase}
+  .rh-sp-word b{font-size:2rem;letter-spacing:1px;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.25)}
+  .rh-sp-word span{font-size:1.05rem;letter-spacing:3px;-webkit-text-stroke:1px rgba(255,190,120,.9);color:transparent}
+  .rh-sp-chev{margin-left:auto;display:flex;gap:1px;font-weight:900;font-style:normal;font-size:1.3rem;color:#ffb066}
+  .rh-sp-chev em{font-style:normal;animation:rhSpChev 1.2s infinite}.rh-sp-chev em:nth-child(2){animation-delay:.15s}.rh-sp-chev em:nth-child(3){animation-delay:.3s}
+  @keyframes rhSpChev{0%,100%{opacity:.2;transform:translateX(0)}50%{opacity:1;transform:translateX(3px)}}
+  .rh-sp-pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .rh-sp-pills span{font-size:.6rem;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;padding:4px 9px;border-radius:999px;color:#ffe2c4;
+    background:rgba(255,140,40,.14);border:1px solid rgba(255,160,80,.4)}
+  @media (prefers-reduced-motion:reduce){.rh-sprint::after,.rh-sp-tag,.rh-sp-chev em{animation:none}}
   .rh-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:2.7rem;line-height:.95;text-transform:uppercase;letter-spacing:1px;background:linear-gradient(180deg,#fff 35%,#c4bfdc);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
   .rh-cd{display:flex;gap:8px}
   .rh-cd-box{position:relative;overflow:hidden;text-align:center;min-width:62px;padding:9px 6px 7px;border-radius:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.10);backdrop-filter:blur(6px)}
@@ -5689,7 +5702,7 @@ function buildRaceHero(nextRace, allRaces, schedule, actionBtnHtml, heroId, isLi
           <span style="font-size:2rem;line-height:1;filter:drop-shadow(0 4px 10px rgba(0,0,0,.5))">${getRaceFlag(nextRace.name)}</span>
           <span class="rh-title">${esc(nextRace.name)}</span>
         </div>
-        ${_rhSprint ? `<div class="rh-sprint"><span class="rh-sprint-bolt">⚡</span><span><b>SPRINT WEEKEND</b><small>Sprint + feature race · extra points up for grabs</small></span></div>` : ''}
+        ${_rhSprint ? `<div class="rh-sprint"><div class="rh-sp-in"><div class="rh-sp-tag">⚡<i>SPRINT</i></div><div class="rh-sp-txt"><div class="rh-sp-word"><b>Sprint</b><span>Weekend</span></div><div class="rh-sp-pills"><span>🏁 2 races</span><span>➕ Extra points</span><span>⚡ Full send</span></div></div></div></div>` : ''}
         <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px">
           ${isLive ? (() => {
             // Division import tracker — which divisions' points are already in for this race
