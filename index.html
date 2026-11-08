@@ -931,10 +931,10 @@
     filter:drop-shadow(0 0 4px rgba(255,160,60,.8));animation:mtCharge 4s linear infinite}
   @keyframes mtCharge{0%{--mtc:0deg;opacity:.9}84%{--mtc:360deg;opacity:1}88%{--mtc:360deg;opacity:1}96%,100%{--mtc:360deg;opacity:0}}
   /* shockwave rings out from the badge when it strikes */
-  .mt-zap-wave{right:132px;bottom:25px;width:40px;height:40px;margin:0 -20px -20px 0;border-radius:50%;pointer-events:none;opacity:0;
+  .mt-zap-wave{right:189px;bottom:26px;width:40px;height:40px;margin:0 -20px -20px 0;border-radius:50%;pointer-events:none;opacity:0;
     border:2px solid rgba(255,230,180,.9);box-shadow:0 0 18px rgba(255,160,60,.8),inset 0 0 12px rgba(255,190,90,.6);animation:mtWave 4s cubic-bezier(.1,.6,.3,1) infinite}
   @keyframes mtWave{0%,86%{opacity:0;transform:scale(.2)}87%{opacity:1;transform:scale(.4)}96%{opacity:0;transform:scale(9)}100%{opacity:0;transform:scale(9)}}
-  @media (max-width:560px){.mt-zap-wave{right:34px;bottom:23px}}
+  @media (max-width:560px){.mt-zap-wave{right:71px;bottom:25px}}
   .mt-zap polyline{fill:none;stroke:#fff1c9;stroke-width:1.6;vector-effect:non-scaling-stroke;stroke-linejoin:round;
     filter:drop-shadow(0 0 3px #ffb347) drop-shadow(0 0 6px #ff7a00);opacity:0;animation:mtZapArc 4s infinite}
   .mt-zap .z1{animation-delay:.05s}.mt-zap .z2{animation-delay:.1s}.mt-zap .z3{animation-delay:.03s}
@@ -944,8 +944,8 @@
   @media (prefers-reduced-motion:reduce){#page-my-team .mt-hero-pts.mt-charged,.mt-zap polyline,.mt-zap-flash,.rh-sp-boltwrap i,.mt-zap-charge,.mt-zap-wave,.mt-hero-sprint .rh-sprint{animation:none}}
   /* flag of the sprint round, next to the badge */
   .mt-hero-sprint{align-items:center;gap:8px}
-  .mt-sp-flag{display:grid;place-items:center;padding:3px;border-radius:9px;background:rgba(20,10,4,.5);border:1px solid rgba(255,150,60,.35);backdrop-filter:blur(6px);box-shadow:0 6px 18px -8px rgba(255,120,20,.7)}
-  .mt-sp-flag img{width:34px!important;height:24px!important;border-radius:5px!important;display:block;animation:mtFlagZap 4s infinite}
+  .mt-sp-flag{display:grid;place-items:center;margin-left:4px;padding-left:9px;border-left:1px solid rgba(255,170,90,.3)}
+  .mt-sp-flag img{width:30px!important;height:21px!important;box-shadow:0 0 0 1px rgba(255,255,255,.2),0 2px 8px rgba(0,0,0,.5);border-radius:5px!important;display:block;animation:mtFlagZap 4s infinite}
   @keyframes mtFlagZap{0%,86%,94%,100%{filter:none}87%{filter:brightness(1.8) drop-shadow(0 0 6px #ffd27a)}89%{filter:brightness(1.1)}90%{filter:brightness(1.6) drop-shadow(0 0 8px #ffb347)}}
   /* the track map gets electrocuted too: glows hot orange-white and flickers on the strike */
   #page-my-team .mt-hero-pts.mt-charged .mt-hero-track{animation:mtTrackZap 4s infinite}
@@ -1799,7 +1799,7 @@
     #page-my-team .mt-hero-pts > .mt-zap-charge,#page-my-team .mt-hero-pts > .mt-zap,#page-my-team .mt-hero-pts > .mt-zap-flash{position:absolute;inset:0;width:100%;height:100%;z-index:3}
     #page-my-team .mt-hero-pts > .mt-zap-wave{position:absolute;z-index:3}
     #page-my-team .mt-hero-pts > .mt-hero-sprint{position:absolute;right:10px;bottom:8px;margin:0;z-index:4} /* corner badge: box keeps its normal size */
-    @media (max-width:560px){#page-my-team .mt-hero-pts > .mt-hero-sprint{right:8px;bottom:6px}#page-my-team .mt-hero-sprint .rh-sp-col{display:none}#page-my-team .mt-hero-sprint .rh-sprint{padding:5px 7px}}
+    @media (max-width:560px){#page-my-team .mt-hero-pts > .mt-hero-sprint{right:8px;bottom:6px}#page-my-team .mt-hero-sprint .rh-sp-col{display:none}#page-my-team .mt-hero-sprint .rh-sprint{padding:5px 7px}#page-my-team .mt-hero-sprint .mt-sp-flag{margin-left:2px;padding-left:6px}}
     #page-my-team #total-pts-display{font-size:3rem;line-height:1.02}
     @media (max-width:520px){ #page-my-team #total-pts-display{font-size:2.4rem} }
     @media (max-width:520px){ #page-my-team .mt-tiles{grid-template-columns:1fr 1fr} #page-my-team .mt-tile:last-child:nth-child(odd){grid-column:1/-1} }
@@ -5699,11 +5699,11 @@ async function stampLiveWeekend(schedule) {
   } catch(e) { console.log('live weekend stamp failed (non-fatal):', e); }
 }
 
-window.sprintTagHtml = function(sub) { return `<div class="rh-sprint">
+window.sprintTagHtml = function(sub, flag) { return `<div class="rh-sprint">
           <span class="rh-sp-boltwrap"><svg class="rh-sp-bolt" viewBox="0 0 34 42" aria-hidden="true"><defs><linearGradient id="rhSpG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3c4"/><stop offset=".45" stop-color="#ffb347"/><stop offset="1" stop-color="#ff5a00"/></linearGradient></defs><path d="M21 1 4 24h11l-4 17 19-25H18l5-15z"/></svg><i style="--a:-150deg"></i><i style="--a:-100deg"></i><i style="--a:-40deg"></i><i style="--a:20deg"></i><i style="--a:70deg"></i><i style="--a:130deg"></i><i style="--a:180deg"></i></span>
           <div class="rh-sp-col"><span class="rh-sp-word">Sprint</span>
             <svg class="rh-sp-arc" viewBox="0 0 150 12" preserveAspectRatio="none" aria-hidden="true"><polyline class="a1" points="150,5 130,9 116,3 104,8 90,2 76,10 64,4 50,9 38,3 24,10 14,2 0,6"/><polyline class="a2" points="150,5 130,9 116,3 104,8 90,2 76,10 64,4 50,9 38,3 24,10 14,2 0,6"/></svg>
-            ${sub === '' ? '' : `<span class="rh-sp-sub">${sub || 'Weekend · 2 races'}</span>`}</div></div>`; };
+            ${sub === '' ? '' : `<span class="rh-sp-sub">${sub || 'Weekend · 2 races'}</span>`}</div>${flag ? `<span class="mt-sp-flag">${flag}</span>` : ''}</div>`; };
 // Jagged electric arcs tracing the edge of a box (0–100 coords, stretched to the box) — new shape each render.
 window.sprintZapSvg = function() {
   const j = (a, b, n, fx) => { const pts = []; for (let i = 0; i <= n; i++) { const t = i / n; pts.push(fx(a + (b - a) * t, (i % 2 ? 1 : -1) * (0.6 + Math.random() * 1.6))); } return pts.join(' '); };
@@ -10878,7 +10878,7 @@ async function renderMyTeam() {
           + '<div class="mt-tile-sub">'+(pointsRace?(pointsRaceScored?'This round':'Not scored yet'):'No races yet')+'</div>'
           + (pointsRace && pointsRaceScored && window._raceVerdictPill ? (pointsRace.verdictsAt ? '<div style="margin-top:6px">'+window._raceVerdictPill(pointsRace)+'</div>'
               : ((window._verdictLatest(races) || {}).id === pointsRace.id ? '<div style="margin-top:6px"><span title="Provisional — points may change once the steward verdicts are in" style="display:inline-flex;align-items:center;gap:5px;font-size:.6rem;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#ffb74d;background:rgba(255,183,77,.12);border:1px solid rgba(255,183,77,.45);border-radius:999px;padding:1px 8px">⏳ Before verdicts · '+esc(pointsRace.name)+'</span></div>' : '')) : '')
-          + (_sprintNext ? '<div class="mt-hero-sprint">'+(typeof getRaceFlag === 'function' ? '<span class="mt-sp-flag" title="'+esc(_sprintNext)+'">'+getRaceFlag(_sprintNext).replace('/w20/','/w80/')+'</span>' : '')+window.sprintTagHtml('')+'</div>' : '')
+          + (_sprintNext ? '<div class="mt-hero-sprint">'+window.sprintTagHtml('', typeof getRaceFlag === 'function' ? getRaceFlag(_sprintNext).replace('/w20/','/w80/') : '')+'</div>' : '')
           + '</div>'
           + (() => {
               let _col = false; try { _col = localStorage.getItem('ims_mt_stats_collapsed') === '1'; } catch(e) {}
