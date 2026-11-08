@@ -910,6 +910,26 @@
   @keyframes rhSpCharge{0%,80%{stroke:rgba(255,160,70,.18)}86%{stroke:rgba(255,215,140,.95)}100%{stroke:rgba(255,160,70,.18)}}
   .rh-sp-sub{font-size:.6rem;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;color:#ffb066;opacity:.9}
   @media (prefers-reduced-motion:reduce){.rh-sp-bolt,.rh-sp-word,.rh-sp-arc .a2{animation:none}}
+  /* strike: spark burst out of the bolt */
+  .rh-sp-boltwrap{position:relative;flex:none;display:grid;place-items:center}
+  .rh-sp-boltwrap i{position:absolute;left:50%;top:50%;width:16px;height:2px;margin:-1px 0 0 -1px;border-radius:2px;transform-origin:0 50%;
+    background:linear-gradient(90deg,#fff,#ffd27a 40%,transparent);opacity:0;animation:rhSpSpark 4s infinite}
+  @keyframes rhSpSpark{0%,85%{opacity:0;transform:rotate(var(--a)) translateX(6px) scaleX(.2)}87%{opacity:1;transform:rotate(var(--a)) translateX(12px) scaleX(1)}
+    92%{opacity:0;transform:rotate(var(--a)) translateX(26px) scaleX(.4)}100%{opacity:0}}
+  /* My Team hero gets electrocuted on each strike */
+  #page-my-team .mt-hero-pts.mt-charged{animation:mtZapBox 4s infinite}
+  @keyframes mtZapBox{0%,85%,100%{box-shadow:none;transform:none}
+    87%{box-shadow:0 0 0 1px #ffe2a8,0 0 26px rgba(255,150,40,.85),inset 0 0 30px rgba(255,170,60,.35);transform:translate(1px,-1px)}
+    88%{transform:translate(-1px,1px)}89%{box-shadow:0 0 0 1px rgba(255,190,110,.6),0 0 14px rgba(255,130,30,.6),inset 0 0 18px rgba(255,170,60,.2);transform:translate(1px,0)}
+    90%{box-shadow:0 0 0 1px #fff3d0,0 0 34px rgba(255,170,60,.9),inset 0 0 36px rgba(255,190,90,.4);transform:none}93%{box-shadow:0 0 0 1px rgba(255,150,60,.3),0 0 10px rgba(255,120,30,.3)}}
+  .mt-zap{position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none;overflow:visible}
+  .mt-zap polyline{fill:none;stroke:#fff1c9;stroke-width:1.6;vector-effect:non-scaling-stroke;stroke-linejoin:round;
+    filter:drop-shadow(0 0 3px #ffb347) drop-shadow(0 0 6px #ff7a00);opacity:0;animation:mtZapArc 4s infinite}
+  .mt-zap .z1{animation-delay:.05s}.mt-zap .z2{animation-delay:.1s}.mt-zap .z3{animation-delay:.03s}
+  @keyframes mtZapArc{0%,86%{opacity:0}87%{opacity:1}88%{opacity:.2}89%{opacity:.95}90.5%{opacity:.4}92%,100%{opacity:0}}
+  .mt-zap-flash{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:0;background:radial-gradient(60% 80% at 50% 70%,rgba(255,220,150,.35),rgba(255,140,40,.12) 45%,transparent 75%);animation:mtZapFlash 4s infinite}
+  @keyframes mtZapFlash{0%,86%{opacity:0}87%{opacity:1}89%{opacity:.3}90%{opacity:.8}94%,100%{opacity:0}}
+  @media (prefers-reduced-motion:reduce){#page-my-team .mt-hero-pts.mt-charged,.mt-zap polyline,.mt-zap-flash,.rh-sp-boltwrap i{animation:none}}
   /* compact copy of the sprint tag, sitting under the points in the My Team hero (by the track map) */
   .mt-hero-sprint{position:relative;z-index:2;display:flex;justify-content:center;margin-top:10px;pointer-events:none}
   .mt-hero-sprint .rh-sprint{margin:0;gap:7px;padding:5px 12px 5px 8px;border-radius:10px;background:rgba(20,10,4,.45);border:1px solid rgba(255,150,60,.3);backdrop-filter:blur(4px)}
@@ -5645,10 +5665,17 @@ async function stampLiveWeekend(schedule) {
 }
 
 window.sprintTagHtml = function(sub) { return `<div class="rh-sprint">
-          <svg class="rh-sp-bolt" viewBox="0 0 34 42" aria-hidden="true"><defs><linearGradient id="rhSpG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3c4"/><stop offset=".45" stop-color="#ffb347"/><stop offset="1" stop-color="#ff5a00"/></linearGradient></defs><path d="M21 1 4 24h11l-4 17 19-25H18l5-15z"/></svg>
+          <span class="rh-sp-boltwrap"><svg class="rh-sp-bolt" viewBox="0 0 34 42" aria-hidden="true"><defs><linearGradient id="rhSpG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3c4"/><stop offset=".45" stop-color="#ffb347"/><stop offset="1" stop-color="#ff5a00"/></linearGradient></defs><path d="M21 1 4 24h11l-4 17 19-25H18l5-15z"/></svg><i style="--a:-150deg"></i><i style="--a:-100deg"></i><i style="--a:-40deg"></i><i style="--a:20deg"></i><i style="--a:70deg"></i><i style="--a:130deg"></i><i style="--a:180deg"></i></span>
           <div class="rh-sp-col"><span class="rh-sp-word">Sprint</span>
             <svg class="rh-sp-arc" viewBox="0 0 150 12" preserveAspectRatio="none" aria-hidden="true"><polyline class="a1" points="150,5 130,9 116,3 104,8 90,2 76,10 64,4 50,9 38,3 24,10 14,2 0,6"/><polyline class="a2" points="150,5 130,9 116,3 104,8 90,2 76,10 64,4 50,9 38,3 24,10 14,2 0,6"/></svg>
-            <span class="rh-sp-sub">${sub || 'Weekend · 2 races'}</span></div></div>`; };
+            ${sub === '' ? '' : `<span class="rh-sp-sub">${sub || 'Weekend · 2 races'}</span>`}</div></div>`; };
+// Jagged electric arcs tracing the edge of a box (0–100 coords, stretched to the box) — new shape each render.
+window.sprintZapSvg = function() {
+  const j = (a, b, n, fx) => { const pts = []; for (let i = 0; i <= n; i++) { const t = i / n; pts.push(fx(a + (b - a) * t, (i % 2 ? 1 : -1) * (0.6 + Math.random() * 1.6))); } return pts.join(' '); };
+  const e = [ j(0, 100, 14, (x, d) => `${x.toFixed(1)},${(1.2 + d).toFixed(1)}`), j(0, 100, 7, (y, d) => `${(98.8 + d).toFixed(1)},${y.toFixed(1)}`),
+              j(100, 0, 14, (x, d) => `${x.toFixed(1)},${(98.8 + d).toFixed(1)}`), j(100, 0, 7, (y, d) => `${(1.2 + d).toFixed(1)},${y.toFixed(1)}`) ];
+  return '<svg class="mt-zap" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">' + e.map((p, i) => `<polyline class="z${i}" points="${p}"/>`).join('') + '</svg><div class="mt-zap-flash"></div>';
+};
 // My Team: the upcoming round (next lock in the schedule), if it's a sprint weekend → its name, else null.
 window.myTeamSprintNext = async function() {
   try {
@@ -10807,7 +10834,8 @@ async function renderMyTeam() {
         const _tv = (_ss && _ss.teamValue != null) ? _ss.teamValue : totalTeamValue;
         const _stot = (_es && _es.seasonTotal != null) ? _es.seasonTotal : (_ss && _ss.seasonTotalBefore != null) ? Math.round((_ss.seasonTotalBefore + (racePts(viewedRace) || 0)) * 10) / 10 : totalPts;
         const _trackBg = (pointsRace && typeof getTrackOutlineUrl === 'function') ? getTrackOutlineUrl(pointsRace.name) : null;
-        return '<div class="mt-hero-pts">'
+        return '<div class="mt-hero-pts'+(_sprintNext ? ' mt-charged' : '')+'">'
+          + (_sprintNext ? window.sprintZapSvg() : '')
           + (pointsRace ? '<div class="mt-hero-photo" data-place="'+esc(pointsRace.name)+'"></div>' : '')
           + (_trackBg ? '<img class="mt-hero-track" src="'+esc(_trackBg)+'" alt="" onerror="this.style.display=\'none\'">' : '')
           + '<div class="mt-lbl">'+(pointsRace?'Points · '+(function(){ try { const _rs = races.filter(r => !r.excludeFromFantasy).slice().sort((a,b)=>(a.raceNum||0)-(b.raceNum||0)); const _ix = _rs.findIndex(r => r.id === pointsRace.id); return _ix >= 0 ? 'Round '+(_ix+1)+' · ' : ''; } catch(e) { return ''; } })()+esc(pointsRace.name):'Points')+'</div>'
@@ -10815,7 +10843,7 @@ async function renderMyTeam() {
           + '<div class="mt-tile-sub">'+(pointsRace?(pointsRaceScored?'This round':'Not scored yet'):'No races yet')+'</div>'
           + (pointsRace && pointsRaceScored && window._raceVerdictPill ? (pointsRace.verdictsAt ? '<div style="margin-top:6px">'+window._raceVerdictPill(pointsRace)+'</div>'
               : ((window._verdictLatest(races) || {}).id === pointsRace.id ? '<div style="margin-top:6px"><span title="Provisional — points may change once the steward verdicts are in" style="display:inline-flex;align-items:center;gap:5px;font-size:.6rem;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#ffb74d;background:rgba(255,183,77,.12);border:1px solid rgba(255,183,77,.45);border-radius:999px;padding:1px 8px">⏳ Before verdicts · '+esc(pointsRace.name)+'</span></div>' : '')) : '')
-          + (_sprintNext ? '<div class="mt-hero-sprint">'+window.sprintTagHtml('Next · '+esc(_sprintNext)+' · 2 races')+'</div>' : '')
+          + (_sprintNext ? '<div class="mt-hero-sprint">'+window.sprintTagHtml('')+'</div>' : '')
           + '</div>'
           + (() => {
               let _col = false; try { _col = localStorage.getItem('ims_mt_stats_collapsed') === '1'; } catch(e) {}
