@@ -3357,6 +3357,7 @@
         <button class="btn btn-secondary" onclick="acmPreview(this)">🔍 Preview</button>
         <button class="btn" style="background:#2a0a0a;color:var(--red);border:1px solid var(--red)" onclick="acmMerge(this)">👥 Merge accounts</button>
         <button class="btn btn-secondary" onclick="acmUndo(this)">↩ Undo last merge</button>
+        <button class="btn btn-secondary" onclick="acmFixShared(this)" title="For a merge done before this fix">🔧 Shared rounds → duplicate's line-up</button>
         <div id="acm-msg" style="margin-top:10px"></div>
       </div>
       <div class="card">
@@ -28523,6 +28524,23 @@ window.acmUndo = async function(btn) {
   } catch (e) { say('✗ Stopped: ' + e.message + ' — press Undo again to finish.'); }
   btn.disabled = false;
 };
+// Merges done before the fix kept the OLD account's line-up for rounds both accounts had locked, while
+// the team itself came from the duplicate (captain/picks didn't match the points). This re-applies the
+// duplicate's locked line-up for those rounds, from the last merge's backup.
+window.acmFixShared = async function(btn) {
+  const m = document.getElementById('acm-msg');
+  const B = (await dbGetAll('mergeBackups', { fresh: true }).catch(() => [])).filter(x => !x.undone).sort((a, b) => (b.at || 0) - (a.at || 0))[0];
+  if (!B) { m.innerHTML = '<div class="alert alert-error">No merge found.</div>'; return; }
+  const shared = (B.races || []).filter(r => r.k && r.d);
+  if (!shared.length) { m.innerHTML = `<div class="alert alert-success">The last merge (${esc(B.dupName)} → ${esc(B.keepName)}) had no rounds locked on both accounts — nothing to fix.</div>`; return; }
+  if (!confirm(`Use ${B.dupName}'s locked line-up (the account they were playing on) for: ${shared.map(r => r.id).join(', ')}?`)) return;
+  btn.disabled = true;
+  try { for (const r of shared) { const cur = await dbGet('races', r.id); if (!cur) continue; const ts = cur.teamSnapshots || {}; ts[B.keepId] = r.d; await dbSet('races', r.id, { teamSnapshots: ts }); }
+    if (typeof clearReservePlanCache === 'function') clearReservePlanCache();
+    m.innerHTML = `<div class="alert alert-success">✓ ${shared.length} shared round(s) now use ${esc(B.dupName)}'s line-up. Reload to see it.</div>`;
+  } catch (e) { m.innerHTML = `<div class="alert alert-error">✗ ${esc(e.message)} — press it again.</div>`; }
+  btn.disabled = false;
+};
 async function _acmPlan() {
   const kId = document.getElementById('acm-keep').value, dId = document.getElementById('acm-dup').value;
   if (!kId || !dId) throw new Error('Pick both accounts (press ↻ Load accounts first).');
@@ -28540,7 +28558,7 @@ window.acmPreview = async function(btn) {
   const m = document.getElementById('acm-msg');
   try { const P = await _acmPlan(), [kc, dc] = await Promise.all([dbGet('coins', P.K.userId), dbGet('coins', P.D.userId)]).catch(() => [null, null]);
     m.innerHTML = `<div class="alert alert-success" style="line-height:1.6"><b>${esc(P.D.playerName)}</b> → <b>${esc(P.K.playerName)}</b><br>
-      Scored rounds moved: <b>${P.moveRaces.length - P.clash.length}</b>${P.clash.length ? ` · both played (keeps <b>${esc(P.K.playerName)}</b>'s score): ${P.clash.map(esc).join(', ')}` : ''}<br>
+      Scored rounds moved: <b>${P.moveRaces.length - P.clash.length}</b>${P.clash.length ? ` · locked on both accounts (uses <b>${esc(document.getElementById('acm-lineup').value === 'dup' ? P.D.playerName : P.K.playerName)}</b>'s line-up, same as the team kept): ${P.clash.map(esc).join(', ')}` : ''}<br>
       Bets: <b>${P.bets.length}</b> · Transfers: <b>${P.transfers.length}</b> · Prediction votes: <b>${P.predVotes.length}</b><br>
       IM$: ${Math.round((kc && kc.balance) || 0)} + ${Math.round((dc && dc.balance) || 0)} − ${BET_START_COINS} start = <b>${Math.round(((kc && kc.balance) || 0) + ((dc && dc.balance) || BET_START_COINS) - BET_START_COINS)}</b><br>
       Line-up kept: <b>${document.getElementById('acm-lineup').value === 'dup' ? esc(P.D.playerName) + "'s" : esc(P.K.playerName) + "'s"}</b></div>`;
@@ -28569,7 +28587,9 @@ window.acmMerge = async function(btn) {
       say('✓ Backup saved (for undo)');
     }
     // 1. Scored rounds: the duplicate's lock snapshot moves to the kept account (kept account wins a clash).
-    const mv = r => { const ts = r.teamSnapshots; if (ts[D.id] && !ts[K.id]) ts[K.id] = ts[D.id]; delete ts[D.id]; };
+    // A round both accounts locked: the account whose line-up they kept is the one they were really playing on.
+    const dupWins = document.getElementById('acm-lineup').value === 'dup';
+    const mv = r => { const ts = r.teamSnapshots; if (ts[D.id] && (!ts[K.id] || dupWins)) ts[K.id] = ts[D.id]; delete ts[D.id]; };
     for (const r of P.moveRaces) { mv(r); await dbSet('races', r.id, { teamSnapshots: r.teamSnapshots }); }
     for (const a of P.arch) { (a.races || []).forEach(r => r.teamSnapshots && r.teamSnapshots[D.id] && mv(r)); await dbSet('seasonArchives', a.id, { races: a.races }); }
     say(`✓ ${P.moveRaces.length} round(s) moved`);
