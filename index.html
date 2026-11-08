@@ -891,7 +891,9 @@
   .rh-sprint{display:inline-flex;align-items:center;gap:10px;margin:-2px 0 14px;position:relative}
   .rh-sp-bolt{width:34px;height:42px;flex:none;overflow:visible;filter:drop-shadow(0 0 6px #ffb347) drop-shadow(0 0 14px #ff6a00);animation:rhSpStrike 4s infinite}
   .rh-sp-bolt path{fill:url(#rhSpG);stroke:#fff6d8;stroke-width:1.2;stroke-linejoin:round}
-  @keyframes rhSpStrike{0%,86%,100%{transform:none;filter:drop-shadow(0 0 6px #ffb347) drop-shadow(0 0 14px #ff6a00)}
+  @keyframes rhSpStrike{0%,100%{transform:none;opacity:.8;filter:drop-shadow(0 0 4px #ffb347) drop-shadow(0 0 8px #ff6a00)}
+    84%{transform:none;opacity:.9;filter:drop-shadow(0 0 7px #ffb347) drop-shadow(0 0 16px #ff6a00)}
+    94%{transform:none;opacity:1;filter:drop-shadow(0 0 6px #ffb347) drop-shadow(0 0 14px #ff6a00)}
     88%{transform:scale(1.18) rotate(-6deg);filter:drop-shadow(0 0 4px #fff) drop-shadow(0 0 26px #ffd27a) brightness(1.8)}
     90%{transform:scale(.96)}92%{transform:scale(1.1);filter:drop-shadow(0 0 3px #fff) drop-shadow(0 0 20px #ffb347) brightness(1.5)}}
   .rh-sp-col{display:flex;flex-direction:column;gap:2px}
@@ -901,9 +903,11 @@
   @keyframes rhSpFlick{0%,86%,93%,100%{opacity:1}87%{opacity:.35}89%{opacity:1}91%{opacity:.55}}
   .rh-sp-arc{width:150px;height:12px;overflow:visible;display:block}
   .rh-sp-arc polyline{fill:none;stroke-linecap:round;stroke-linejoin:round}
-  .rh-sp-arc .a1{stroke:rgba(255,160,70,.25);stroke-width:2}
-  .rh-sp-arc .a2{stroke:#ffd27a;stroke-width:2;stroke-dasharray:26 140;filter:drop-shadow(0 0 4px #ff9a3c);animation:rhSpRun 1.6s linear infinite}
-  @keyframes rhSpRun{from{stroke-dashoffset:166}to{stroke-dashoffset:0}}
+  .rh-sp-arc .a1{stroke:rgba(255,160,70,.18);stroke-width:1.5;animation:rhSpCharge 4s infinite}
+  .rh-sp-arc .a2{stroke:#fff1c9;stroke-width:2.2;stroke-dasharray:22 420;stroke-dashoffset:22;filter:drop-shadow(0 0 3px #ffb347) drop-shadow(0 0 7px #ff7a00);animation:rhSpRun 4s cubic-bezier(.45,0,.7,1) infinite}
+  /* one spark of current travels the line into the bolt (0→84%), the bolt strikes (86–92%), repeat */
+  @keyframes rhSpRun{0%{stroke-dashoffset:22;opacity:0}6%{opacity:1}84%{stroke-dashoffset:-188;opacity:1}86%,100%{stroke-dashoffset:-188;opacity:0}}
+  @keyframes rhSpCharge{0%,80%{stroke:rgba(255,160,70,.18)}86%{stroke:rgba(255,215,140,.95)}100%{stroke:rgba(255,160,70,.18)}}
   .rh-sp-sub{font-size:.6rem;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;color:#ffb066;opacity:.9}
   @media (prefers-reduced-motion:reduce){.rh-sp-bolt,.rh-sp-word,.rh-sp-arc .a2{animation:none}}
   .rh-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:2.7rem;line-height:.95;text-transform:uppercase;letter-spacing:1px;background:linear-gradient(180deg,#fff 35%,#c4bfdc);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
@@ -5700,7 +5704,7 @@ function buildRaceHero(nextRace, allRaces, schedule, actionBtnHtml, heroId, isLi
         ${_rhSprint ? `<div><div class="rh-sprint">
           <svg class="rh-sp-bolt" viewBox="0 0 34 42" aria-hidden="true"><defs><linearGradient id="rhSpG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3c4"/><stop offset=".45" stop-color="#ffb347"/><stop offset="1" stop-color="#ff5a00"/></linearGradient></defs><path d="M21 1 4 24h11l-4 17 19-25H18l5-15z"/></svg>
           <div class="rh-sp-col"><span class="rh-sp-word">Sprint</span>
-            <svg class="rh-sp-arc" viewBox="0 0 150 12" preserveAspectRatio="none" aria-hidden="true"><polyline class="a1" points="0,6 14,2 24,10 38,3 50,9 64,4 76,10 90,2 104,8 116,3 130,9 150,5"/><polyline class="a2" points="0,6 14,2 24,10 38,3 50,9 64,4 76,10 90,2 104,8 116,3 130,9 150,5"/></svg>
+            <svg class="rh-sp-arc" viewBox="0 0 150 12" preserveAspectRatio="none" aria-hidden="true"><polyline class="a1" points="150,5 130,9 116,3 104,8 90,2 76,10 64,4 50,9 38,3 24,10 14,2 0,6"/><polyline class="a2" points="150,5 130,9 116,3 104,8 90,2 76,10 64,4 50,9 38,3 24,10 14,2 0,6"/></svg>
             <span class="rh-sp-sub">Weekend · 2 races</span></div></div></div>` : ''}
         <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px">
           ${isLive ? (() => {
