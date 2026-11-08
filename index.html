@@ -3330,13 +3330,14 @@
       </div>
       <div class="card">
         <div class="card-title"><div class="dot"></div>👥 Merge Two Player Accounts</div>
-        <p class="text-muted" style="margin-bottom:12px;font-size:.82rem">For a player who got logged out, made a new account, then got back into the old one. Everything from the <b>duplicate</b> moves onto the account they <b>keep</b>: their scored rounds, bets, IM$ (the duplicate's starting 1,000 isn't double-counted), transfers, prediction votes and game stats. Rounds both accounts played keep the kept account's score. The duplicate is then deleted — they log in with the kept account.</p>
+        <p class="text-muted" style="margin-bottom:12px;font-size:.82rem">For a player who got logged out, made a new account, then got back into the old one. Everything from the <b>duplicate</b> moves onto the account they <b>keep</b>: their scored rounds, bets, IM$ (the duplicate's starting 1,000 isn't double-counted), transfers, prediction votes and game stats. Rounds both accounts played keep the kept account's score. The duplicate is then deleted — they log in with the kept account. Made a mistake? <b>↩ Undo last merge</b> puts both accounts back exactly as they were.</p>
         <div class="form-row"><div class="form-group"><label>Keep this account</label><select class="form-control" id="acm-keep"></select></div>
           <div class="form-group"><label>Merge in &amp; delete (duplicate)</label><select class="form-control" id="acm-dup"></select></div></div>
         <div class="form-group"><label>Current line-up to keep</label><select class="form-control" id="acm-lineup"><option value="dup">The duplicate's (the one they've been playing on)</option><option value="keep">The kept account's</option></select></div>
         <button class="btn btn-secondary" onclick="acmLoad(this)">↻ Load accounts</button>
         <button class="btn btn-secondary" onclick="acmPreview(this)">🔍 Preview</button>
         <button class="btn" style="background:#2a0a0a;color:var(--red);border:1px solid var(--red)" onclick="acmMerge(this)">👥 Merge accounts</button>
+        <button class="btn btn-secondary" onclick="acmUndo(this)">↩ Undo last merge</button>
         <div id="acm-msg" style="margin-top:10px"></div>
       </div>
       <div class="card">
@@ -28459,6 +28460,40 @@ window.acmLoad = async function(btn, quiet) {
   ['acm-keep', 'acm-dup'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = opt; });
   if (!quiet) document.getElementById('acm-msg').innerHTML = `<div class="alert alert-success">${ts.length} accounts loaded.</div>`;
 };
+// Puts both accounts back exactly as they were before the most recent (not yet undone) merge.
+window.acmUndo = async function(btn) {
+  const m = document.getElementById('acm-msg');
+  const B = (await dbGetAll('mergeBackups', { fresh: true }).catch(() => [])).filter(x => !x.undone).sort((a, b) => (b.at || 0) - (a.at || 0))[0];
+  if (!B) { m.innerHTML = '<div class="alert alert-error">No merge to undo.</div>'; return; }
+  if (!confirm(`Undo the merge of "${B.dupName}" into "${B.keepName}" (${new Date(B.at).toLocaleString('en-GB')})?\nBoth accounts go back to how they were then — anything they changed since the merge is lost.`)) return;
+  btn.disabled = true; const log = []; const say = t => { log.push(t); m.innerHTML = `<div class="alert alert-success">${log.map(esc).join('<br>')}</div>`; };
+  try {
+    const K = B.keep, D = B.dup;
+    // Exact restore of a doc: write the saved fields and blank any field the merge added.
+    const put = async (c, id, data) => { const cur = await dbGet(c, id).catch(() => null);
+      if (!data) { if (cur) await dbDelete(c, id); return; }
+      const up = { ...data }; if (cur) Object.keys(cur).forEach(k => { if (k !== 'id' && !(k in data)) up[k] = null; }); await dbSet(c, id, up); };
+    const putSnap = (ts, id, v) => { if (v) ts[id] = v; else delete ts[id]; };
+    for (const r of B.races || []) { const cur = await dbGet('races', r.id); if (!cur) continue; const ts = cur.teamSnapshots || {};
+      putSnap(ts, B.keepId, r.k); putSnap(ts, B.dupId, r.d); await dbSet('races', r.id, { teamSnapshots: ts }); }
+    for (const a of B.arch || []) { const cur = await dbGet('seasonArchives', a.id); if (!cur) continue;
+      (a.rs || []).forEach(x => { const r = (cur.races || [])[x.i]; if (!r) return; r.teamSnapshots = r.teamSnapshots || {}; putSnap(r.teamSnapshots, B.keepId, x.k); putSnap(r.teamSnapshots, B.dupId, x.d); });
+      await dbSet('seasonArchives', a.id, { races: cur.races }); }
+    say(`✓ ${(B.races || []).length} round(s) put back`);
+    await put('teams', B.dupId, D); await put('teams', B.keepId, K); say(`✓ "${B.dupName}" account restored`);
+    for (const id of B.bets || []) await dbSet('bets', id, { userId: D.userId });
+    for (const t of B.transfers || []) await dbSet('transfers', t.id, { userId: t.userId, teamId: t.teamId });
+    for (const v of B.votes || []) await dbSet('predVotes', v.id, v.data);
+    say(`✓ ${(B.bets || []).length} bet(s), ${(B.transfers || []).length} transfer(s), ${(B.votes || []).length} vote(s) given back`);
+    await put('coins', K.userId, B.coinsK); await put('coins', D.userId, B.coinsD);
+    const sid = (c, u) => c === 'wordleScores' ? _wdScoreId(u) : u;
+    for (const [c, v] of Object.entries(B.games || {})) { await put(c, sid(c, K.userId), v.k); await put(c, sid(c, D.userId), v.d); }
+    await dbSet('mergeBackups', B.id, { undone: Date.now() });
+    if (typeof clearReservePlanCache === 'function') clearReservePlanCache();
+    say(`✓ Undone — "${B.keepName}" and "${B.dupName}" are back to how they were.`); acmLoad(null, true);
+  } catch (e) { say('✗ Stopped: ' + e.message + ' — press Undo again to finish.'); }
+  btn.disabled = false;
+};
 async function _acmPlan() {
   const kId = document.getElementById('acm-keep').value, dId = document.getElementById('acm-dup').value;
   if (!kId || !dId) throw new Error('Pick both accounts (press ↻ Load accounts first).');
@@ -28486,9 +28521,24 @@ window.acmMerge = async function(btn) {
   const m = document.getElementById('acm-msg'); let P;
   try { P = await _acmPlan(); } catch (e) { m.innerHTML = `<div class="alert alert-error">${esc(e.message)}</div>`; return; }
   const { K, D } = P;
-  if (!confirm(`Merge "${D.playerName}" INTO "${K.playerName}" and delete "${D.playerName}"? This can't be undone.`)) return;
+  if (!confirm(`Merge "${D.playerName}" INTO "${K.playerName}" and delete "${D.playerName}"? (You can undo it with ↩ Undo last merge.)`)) return;
   btn.disabled = true; const log = []; const say = t => { log.push(t); m.innerHTML = `<div class="alert alert-success">${log.map(esc).join('<br>')}</div>`; };
   try {
+    // 0. Backup of everything this merge touches, taken BEFORE any change (a re-run reuses the first one).
+    const old = (await dbGetAll('mergeBackups', { fresh: true }).catch(() => [])).find(x => x.keepId === K.id && x.dupId === D.id && !x.undone);
+    if (!old) {
+      const g = async (c, id) => { const d = await dbGet(c, id).catch(() => null); if (!d) return null; const { id: _, ...r } = d; return r; };
+      const sid = (c, u) => c === 'wordleScores' ? _wdScoreId(u) : u, games = {};
+      for (const c of ['wordleScores', 'qualiGuesses', 'stewardVotes']) games[c] = { k: await g(c, sid(c, K.userId)), d: await g(c, sid(c, D.userId)) };
+      const strip = t => { const { id, ...r } = t; return r; };
+      await dbSet('mergeBackups', 'm' + Date.now(), { at: Date.now(), keepId: K.id, dupId: D.id, keepName: K.playerName || '', dupName: D.playerName || '',
+        keep: strip(K), dup: strip(D), coinsK: await g('coins', K.userId), coinsD: await g('coins', D.userId), games,
+        races: P.moveRaces.map(r => ({ id: r.id, k: r.teamSnapshots[K.id] || null, d: r.teamSnapshots[D.id] || null })),
+        arch: P.arch.map(a => ({ id: a.id, rs: (a.races || []).map((r, i) => r.teamSnapshots && r.teamSnapshots[D.id] ? { i, k: r.teamSnapshots[K.id] || null, d: r.teamSnapshots[D.id] } : null).filter(Boolean) })),
+        bets: P.bets.map(b => b.id), transfers: P.transfers.map(t => ({ id: t.id, userId: t.userId || null, teamId: t.teamId || null })),
+        votes: P.predVotes.map(v => { const { id, ...r } = v; return { id, data: r }; }) });
+      say('✓ Backup saved (for undo)');
+    }
     // 1. Scored rounds: the duplicate's lock snapshot moves to the kept account (kept account wins a clash).
     const mv = r => { const ts = r.teamSnapshots; if (ts[D.id] && !ts[K.id]) ts[K.id] = ts[D.id]; delete ts[D.id]; };
     for (const r of P.moveRaces) { mv(r); await dbSet('races', r.id, { teamSnapshots: r.teamSnapshots }); }
