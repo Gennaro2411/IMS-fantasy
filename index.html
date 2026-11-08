@@ -3329,6 +3329,17 @@
         <div id="repair-drv-msg" style="margin-top:10px"></div>
       </div>
       <div class="card">
+        <div class="card-title"><div class="dot"></div>👥 Merge Two Player Accounts</div>
+        <p class="text-muted" style="margin-bottom:12px;font-size:.82rem">For a player who got logged out, made a new account, then got back into the old one. Everything from the <b>duplicate</b> moves onto the account they <b>keep</b>: their scored rounds, bets, IM$ (the duplicate's starting 1,000 isn't double-counted), transfers, prediction votes and game stats. Rounds both accounts played keep the kept account's score. The duplicate is then deleted — they log in with the kept account.</p>
+        <div class="form-row"><div class="form-group"><label>Keep this account</label><select class="form-control" id="acm-keep"></select></div>
+          <div class="form-group"><label>Merge in &amp; delete (duplicate)</label><select class="form-control" id="acm-dup"></select></div></div>
+        <div class="form-group"><label>Current line-up to keep</label><select class="form-control" id="acm-lineup"><option value="dup">The duplicate's (the one they've been playing on)</option><option value="keep">The kept account's</option></select></div>
+        <button class="btn btn-secondary" onclick="acmLoad(this)">↻ Load accounts</button>
+        <button class="btn btn-secondary" onclick="acmPreview(this)">🔍 Preview</button>
+        <button class="btn" style="background:#2a0a0a;color:var(--red);border:1px solid var(--red)" onclick="acmMerge(this)">👥 Merge accounts</button>
+        <div id="acm-msg" style="margin-top:10px"></div>
+      </div>
+      <div class="card">
         <div class="card-title"><div class="dot"></div>📊 Market Price-Change Display</div>
         <p class="text-muted" style="margin-bottom:12px">Hides the ▲/▼ "up/down since last race" tags on every market row, driver blob, and driver/constructor profile. The <strong>biggest risers &amp; fallers ticker stays visible either way</strong>. Use this after adjusting prices manually so players don't see swings that don't reflect race results.</p>
         <label class="set-toggle" style="max-width:none"><input type="checkbox" id="admin-hide-price-moves" onchange="setHidePriceMoves(this.checked)"><span><strong>Hide price-change indicators</strong><em>Applies to all players. Prices themselves stay visible — only the change arrows/tags are hidden.</em></span></label>
@@ -28439,6 +28450,79 @@ window._betSettleAll = async function() {
   }
   window._betJustSettled = [];
   return n;
+};
+// ===== ADMIN: MERGE TWO PLAYER ACCOUNTS =====
+window.acmLoad = async function(btn) {
+  const ts = (await dbGetAll('teams', { fresh: true })).filter(t => t && t.userId).sort((a, b) => String(a.playerName || '').localeCompare(String(b.playerName || '')));
+  const opt = '<option value="">— choose —</option>' + ts.map(t => `<option value="${esc(t.id)}">${esc(t.playerName || '?')} · ${esc(t.teamName || '')}${t.createdAt ? ' · made ' + new Date(t.createdAt).toLocaleDateString('en-GB') : ''}</option>`).join('');
+  ['acm-keep', 'acm-dup'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = opt; });
+  document.getElementById('acm-msg').innerHTML = `<div class="alert alert-success">${ts.length} accounts loaded.</div>`;
+};
+async function _acmPlan() {
+  const kId = document.getElementById('acm-keep').value, dId = document.getElementById('acm-dup').value;
+  if (!kId || !dId) throw new Error('Pick both accounts (press ↻ Load accounts first).');
+  if (kId === dId) throw new Error('Those are the same account.');
+  const [teams, races, archives, bets, transfers, predVotes] = await Promise.all(['teams', 'races', 'seasonArchives', 'bets', 'transfers', 'predVotes'].map(c => dbGetAll(c, { fresh: true }).catch(() => [])));
+  const K = teams.find(t => t.id === kId), D = teams.find(t => t.id === dId);
+  if (!K || !D) throw new Error('Account not found — reload the list.');
+  const moveRaces = races.filter(r => r.teamSnapshots && r.teamSnapshots[dId]);
+  const clash = moveRaces.filter(r => r.teamSnapshots[kId]).map(r => r.name);
+  const arch = archives.filter(a => (a.races || []).some(r => r.teamSnapshots && r.teamSnapshots[dId]));
+  const uidMatch = x => x && x.userId === D.userId;
+  return { K, D, moveRaces, clash, arch, bets: bets.filter(uidMatch), transfers: transfers.filter(x => uidMatch(x) || x.teamId === dId), predVotes: predVotes.filter(uidMatch), myVotes: new Set(predVotes.filter(v => v.userId === K.userId).map(v => v.predId)) };
+}
+window.acmPreview = async function(btn) {
+  const m = document.getElementById('acm-msg');
+  try { const P = await _acmPlan(), [kc, dc] = await Promise.all([dbGet('coins', P.K.userId), dbGet('coins', P.D.userId)]).catch(() => [null, null]);
+    m.innerHTML = `<div class="alert alert-success" style="line-height:1.6"><b>${esc(P.D.playerName)}</b> → <b>${esc(P.K.playerName)}</b><br>
+      Scored rounds moved: <b>${P.moveRaces.length - P.clash.length}</b>${P.clash.length ? ` · both played (keeps <b>${esc(P.K.playerName)}</b>'s score): ${P.clash.map(esc).join(', ')}` : ''}<br>
+      Bets: <b>${P.bets.length}</b> · Transfers: <b>${P.transfers.length}</b> · Prediction votes: <b>${P.predVotes.length}</b><br>
+      IM$: ${Math.round((kc && kc.balance) || 0)} + ${Math.round((dc && dc.balance) || 0)} − ${BET_START_COINS} start = <b>${Math.round(((kc && kc.balance) || 0) + ((dc && dc.balance) || BET_START_COINS) - BET_START_COINS)}</b><br>
+      Line-up kept: <b>${document.getElementById('acm-lineup').value === 'dup' ? esc(P.D.playerName) + "'s" : esc(P.K.playerName) + "'s"}</b></div>`;
+  } catch (e) { m.innerHTML = `<div class="alert alert-error">${esc(e.message)}</div>`; }
+};
+window.acmMerge = async function(btn) {
+  const m = document.getElementById('acm-msg'); let P;
+  try { P = await _acmPlan(); } catch (e) { m.innerHTML = `<div class="alert alert-error">${esc(e.message)}</div>`; return; }
+  const { K, D } = P;
+  if (!confirm(`Merge "${D.playerName}" INTO "${K.playerName}" and delete "${D.playerName}"? This can't be undone.`)) return;
+  btn.disabled = true; const log = []; const say = t => { log.push(t); m.innerHTML = `<div class="alert alert-success">${log.map(esc).join('<br>')}</div>`; };
+  try {
+    // 1. Scored rounds: the duplicate's lock snapshot moves to the kept account (kept account wins a clash).
+    const mv = r => { const ts = r.teamSnapshots; if (ts[D.id] && !ts[K.id]) ts[K.id] = ts[D.id]; delete ts[D.id]; };
+    for (const r of P.moveRaces) { mv(r); await dbSet('races', r.id, { teamSnapshots: r.teamSnapshots }); }
+    for (const a of P.arch) { (a.races || []).forEach(r => r.teamSnapshots && r.teamSnapshots[D.id] && mv(r)); await dbSet('seasonArchives', a.id, { races: a.races }); }
+    say(`✓ ${P.moveRaces.length} round(s) moved`);
+    // 2. Bets, transfers, prediction votes → kept account.
+    for (const b of P.bets) await dbSet('bets', b.id, { userId: K.userId });
+    for (const t of P.transfers) await dbSet('transfers', t.id, { userId: K.userId, teamId: K.id });
+    for (const v of P.predVotes) { if (P.myVotes.has(v.predId)) await dbDelete('predVotes', v.id); else await dbSet('predVotes', v.id, { userId: K.userId }); }
+    say(`✓ ${P.bets.length} bet(s), ${P.transfers.length} transfer(s), ${P.predVotes.length} vote(s) moved`);
+    // 3. IM$: add the duplicate's balance minus its starting grant; add up the bet counters.
+    const [kc, dc] = await Promise.all([dbGet('coins', K.userId), dbGet('coins', D.userId)]);
+    if (dc) { const c = kc || { userId: K.userId, balance: BET_START_COINS, staked: 0, won: 0, betsPlaced: 0, betsWon: 0, createdAt: Date.now() };
+      c.balance = Math.max(0, (Number(c.balance) || 0) + (Number(dc.balance) || 0) - BET_START_COINS);
+      ['staked', 'won', 'betsPlaced', 'betsWon'].forEach(k => { c[k] = (Number(c[k]) || 0) + (Number(dc[k]) || 0); });
+      await dbSet('coins', K.userId, c); await dbDelete('coins', D.userId).catch(() => {}); say(`✓ IM$ now ${Math.round(c.balance)}`); }
+    // 4. Game stats kept per player id: keep the kept account's, else take the duplicate's.
+    for (const col of ['wordleScores', 'qualiGuesses', 'stewardVotes']) {
+      const kid = col === 'wordleScores' ? _wdScoreId(K.userId) : K.userId, did = col === 'wordleScores' ? _wdScoreId(D.userId) : D.userId;
+      const dd = await dbGet(col, did).catch(() => null); if (!dd) continue;
+      const kd = await dbGet(col, kid).catch(() => null); if (!kd) { const { id, ...rest } = dd; await dbSet(col, kid, rest); }
+      await dbDelete(col, did).catch(() => {});
+    }
+    // 5. Current line-up, then delete the duplicate.
+    if (document.getElementById('acm-lineup').value === 'dup') {
+      const keep = ['selections', 'captains', 'chips', 'budget', 'freeTransfers', 'guardianAngelDriver']; const up = {};
+      keep.forEach(k => { if (D[k] !== undefined) up[k] = D[k]; }); await dbSet('teams', K.id, up);
+    }
+    if (!K.discordId && D.discordId) await dbSet('teams', K.id, { discordId: D.discordId, discordUsername: D.discordUsername || null, discordAvatar: D.discordAvatar || null });
+    await dbDelete('teams', D.id);
+    if (typeof clearReservePlanCache === 'function') clearReservePlanCache();
+    say(`✓ "${D.playerName}" merged into "${K.playerName}" and deleted. They log in as ${K.playerName}.`);
+    acmLoad();
+  } catch (e) { say('✗ Stopped: ' + e.message + ' — press Merge again to finish (it picks up where it left off).'); }
+  btn.disabled = false;
 };
 async function _betLoadCoins(userId) {
   let c = await dbGet('coins', userId).catch(() => null);
