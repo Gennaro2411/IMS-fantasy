@@ -25957,10 +25957,14 @@ window.importVerdictsFromDb = async function(btn, quiet) {
   try {
     const res = _imsDb.exec(`SELECT penalty_uuid, season, round_no, division, driver_discord_id, driver_alias, time_penalty_seconds, penalty_points, quali_ban_count, race_ban_count, league_ban, justification, created_at_ts, incident_id
       FROM fia_awarded_penalties WHERE status = 'active' ORDER BY created_at_ts`);
+    // Which session each penalty came from (Race / Quali / Sprint), via its incident — so sprint penalties
+    // can be kept out of the race betting markets.
+    const sessOf = {}; try { const sr = _imsDb.exec(`SELECT incident_id, season, round_no, session_name FROM fia_incidents`);
+      (sr.length ? sr[0].values : []).forEach(([iid, se, rn, sn]) => { if (iid) sessOf[String(iid) + '|' + se + '|' + rn] = String(sn || ''); }); } catch (e) {}
     const list = (res.length ? res[0].values : []).map(([u, se, rn, dv, did, al, tp, pp, qb, rb, lb, j, at, inc]) => ({
       u: String(u || ''), s: Number(se) || 0, r: Number(rn) || 0, d: String(dv || '').toUpperCase(), id: did ? String(did) : '', a: String(al || ''),
       dq: /dsq|disq/i.test(String(tp || '')) ? 1 : 0, t: tp == null || tp === '' || !isFinite(parseFloat(tp)) ? null : parseFloat(tp), pp: pp == null || !isFinite(parseFloat(pp)) ? null : parseFloat(pp), qb: Number(qb) || 0, rb: Number(rb) || 0, lb: lb ? 1 : 0,
-      j: String(j || '').slice(0, 1500), at: Number(at) || 0, inc: inc ? String(inc) : '' }));
+      j: String(j || '').slice(0, 1500), at: Number(at) || 0, inc: inc ? String(inc) : '', ss: inc ? (sessOf[String(inc) + '|' + se + '|' + rn] || '') : '' }));
     // Race bans this season → driver.raceBanRacesLeft (once per penalty), so the ✕ and pick-blocking just work.
     const curS = Number(window.currentSeason || window._reserveSeason) || 0;
     const prev = (await dbGet('settings', 'fiaVerdicts').catch(() => null)) || {};
@@ -25999,6 +26003,9 @@ window.openVerdicts = async function(raceId) {
     d.open = true; const y = d.getBoundingClientRect().top + window.scrollY - 70; window.scrollTo({ top: Math.max(0, y), behavior: last === d ? 'auto' : 'smooth' });
     still = d === last ? still + 1 : 0; last = d; if (still >= 4) clearInterval(t); }, 200);
 };
+// Betting only ever looks at the RACE: verdicts from a sprint session are left out of every penalty market
+// (pricing and settling). ss = the incident's session name from the bible ('Race', 'Quali', 'Sprint'…).
+window._fiaRaceV = () => (window._fiaV || []).filter(v => !/sprint/i.test(v.ss || ''));
 window._fiaFor = (season, round, div) => (window._fiaV || []).filter(p => p.s === Number(season) && p.r === Number(round) && (!div || p.d === div));
 window._fiaVerdictsHtml = function(season, round) {
   // Time penalties, disqualifications and race bans.
@@ -28881,8 +28888,15 @@ function _betOutcome(b, races) {
   if (b.div === 'BOTT' && !_raceAllDivsIn(race)) return null; // still waiting on later divisions — don't settle on partial BOTT points
   let pos;
   if (b.div === 'BOTT') {
-    // Constructors: rank by this round's BOTT points. Ties share the better position.
-    const cp = race.constructorPoints || {};
+    // Constructors: rank by this round's BOTT points — RACE ONLY. On a sprint weekend the imported BOTT
+    // points include the sprint (10-9-…-1 for P1–P10), so each team's sprint points are taken back off.
+    const cp = { ...(race.constructorPoints || {}) };
+    if (window._spHasAny && window._spHasAny(race) && (window._allConstrs || []).length) {
+      const byKey = {}; window._allConstrs.forEach(c => { byKey[teamKey(c.name)] = c.id; });
+      Object.keys(race.sprintByDiv || {}).forEach(dv => (window._spRowsOf(race, dv) || []).forEach(row => {
+        const cid = byKey[teamKey(row.team)], sp = row.pos != null && row.pos >= 1 && row.pos <= 10 ? 11 - row.pos : 0;
+        if (cid && sp && cp[cid] != null) cp[cid] = Math.max(0, Number(cp[cid]) - sp); }));
+    }
     if (!Object.values(cp).some(v => v > 0)) return null;
     const vals = Object.values(cp).map(Number);
     pos = (id) => (cp[id] == null) ? null : 1 + vals.filter(v => v > Number(cp[id])).length;
@@ -28903,8 +28917,8 @@ function _betOutcome(b, races) {
     const later = races.some(r => (Number(r.raceNum) || 0) > (Number(race.raceNum) || 0) && r.driverPoints && Object.values(r.driverPoints).some(v => v > 0));
     if (!race.verdictsAt && !later) return null;
     const curS = Number(window.currentSeason || window._reserveSeason) || 0;
-    const n = new Set((window._fiaV || []).filter(v => v.s === curS && v.r === Number(race.raceNum) && v.d === b.div && (v.dq || (v.t != null && v.t > 0))).map(v => v.id || window._fiaKey(v.a))).size;
-    const V = (window._fiaV || []).filter(v => v.s === curS && v.r === Number(race.raceNum) && v.d === b.div);
+    const n = new Set(window._fiaRaceV().filter(v => v.s === curS && v.r === Number(race.raceNum) && v.d === b.div && (v.dq || (v.t != null && v.t > 0))).map(v => v.id || window._fiaKey(v.a))).size;
+    const V = window._fiaRaceV().filter(v => v.s === curS && v.r === Number(race.raceNum) && v.d === b.div);
     const yes = b.sel[0] === 'clean' ? n === 0 : b.sel[0] === 'anydsq' ? V.some(v => v.dq) : b.sel[0] === 'anyban' ? V.some(v => v.rb > 0) : null;
     const val = b.sel[0] === 'psec' ? V.reduce((a, v) => a + (v.t != null && v.t > 0 ? v.t : 0), 0) : n;
     if (b.market === 'yn') result = (b.sel[1] === 'yes') === yes ? 'won' : 'lost';
@@ -28956,7 +28970,7 @@ function _betOutcome(b, races) {
     else { const drv = (window._allDrivers || []).find(d => d.id === id) || {}, keys = [String(drv.discordId || ''), window._fiaKey(drv.name), drv.imsAlias ? window._fiaKey(drv.imsAlias) : ''].filter(Boolean);
       if (!keys.length) return null; // driver list not loaded yet — settle later
       const curS = Number(window.currentSeason || window._reserveSeason) || 0;
-      const pen = (window._fiaV || []).some(v => v.s === curS && v.r === Number(race.raceNum) && v.d === b.div && (v.dq || (v.t != null && v.t > 0)) && (keys.includes(v.id) || keys.includes(window._fiaKey(v.a))));
+      const pen = window._fiaRaceV().some(v => v.s === curS && v.r === Number(race.raceNum) && v.d === b.div && (v.dq || (v.t != null && v.t > 0)) && (keys.includes(v.id) || keys.includes(window._fiaKey(v.a))));
       result = (b.sel[1] === 'yes') === pen ? 'won' : 'lost'; }
   }
   else if (b.market === 'yn' && String(b.sel[0]).startsWith('ddnf:')) {
@@ -29384,14 +29398,14 @@ window.renderBets = async function() {
   const _dnfR = {}, _fpos = {}, _penR = {};
   // Driver to get a penalty: races where the stewards gave them a time penalty or DSQ ÷ races started
   // (this season + last), shrunk towards the division's average so small samples don't go extreme.
-  if (!isC && field.length && (window._fiaV || []).length) {
+  if (!isC && field.length && window._fiaRaceV().length) {
     const curS = Number(window.currentSeason || window._reserveSeason) || 0, seasonOf = new Map();
     (races || []).forEach(r => seasonOf.set(r, curS)); (window._betArchives || []).forEach(a => { if (Number(a.season) >= 7) (a.races || []).forEach(r => seasonOf.set(r, Number(a.season))); }); // steward records start in S7 — earlier seasons would all look penalty-free
     // A DSQ counts double (a far bigger offence than a time penalty).
-    const hit = new Map(); (window._fiaV || []).forEach(v => { if (!(v.dq || (v.t != null && v.t > 0))) return; const w = v.dq ? 2 : 1; [v.id, window._fiaKey(v.a)].filter(Boolean).forEach(k => { const kk = v.s + '|' + v.r + '|' + v.d + '|' + k; hit.set(kk, Math.max(hit.get(kk) || 0, w)); }); });
+    const hit = new Map(); window._fiaRaceV().forEach(v => { if (!(v.dq || (v.t != null && v.t > 0))) return; const w = v.dq ? 2 : 1; [v.id, window._fiaKey(v.a)].filter(Boolean).forEach(k => { const kk = v.s + '|' + v.r + '|' + v.d + '|' + k; hit.set(kk, Math.max(hit.get(kk) || 0, w)); }); });
     // Penalty points this season: the more a driver has, the more likely the next one.
     const ppOf = (d) => { const ks = [String(d.discordId || ''), window._fiaKey(d.name), d.imsAlias ? window._fiaKey(d.imsAlias) : ''].filter(Boolean);
-      return (window._fiaV || []).filter(v => v.s === curS && v.pp > 0 && (ks.includes(v.id) || ks.includes(window._fiaKey(v.a)))).reduce((a, v) => a + v.pp, 0); };
+      return window._fiaRaceV().filter(v => v.s === curS && v.pp > 0 && (ks.includes(v.id) || ks.includes(window._fiaKey(v.a)))).reduce((a, v) => a + v.pp, 0); };
     const per = {}; let T = 0, P = 0;
     _allRaceSets.forEach(r => { const se = seasonOf.get(r); if (!se) return; const pbd = r.positionByDivision || {}, sbd = r.raceStatusByDivision || {};
       field.forEach(d => { const pp = pbd[d.id] || {}, ss = sbd[d.id] || {};
@@ -29405,7 +29419,7 @@ window.renderBets = async function() {
     let trackMul = 1;
     try { const tk = (r) => window.trackKey ? window.trackKey(r.name) : String(r.name || '').toLowerCase(), upK = upcoming ? tk(upcoming) : null; let tn = 0, tp = 0, an = 0, ap = 0;
       _allRaceSets.forEach(r => { const se = seasonOf.get(r); if (!se) return; const dvs = new Set(); Object.values(r.driverPointsByDivision || {}).forEach(by => Object.keys(by || {}).forEach(dd => { if (!/^A/i.test(dd)) dvs.add(dd); }));
-        dvs.forEach(dd => { const c = new Set((window._fiaV || []).filter(v => v.s === se && v.r === Number(r.raceNum) && v.d === dd && (v.dq || (v.t != null && v.t > 0))).map(v => v.id || window._fiaKey(v.a))).size;
+        dvs.forEach(dd => { const c = new Set(window._fiaRaceV().filter(v => v.s === se && v.r === Number(r.raceNum) && v.d === dd && (v.dq || (v.t != null && v.t > 0))).map(v => v.id || window._fiaKey(v.a))).size;
           an++; ap += c; if (upK && tk(r) === upK) { tn++; tp += c; } }); });
       const avg = an ? ap / an : 0; if (avg > 0) trackMul = Math.max(0.7, Math.min(1.5, ((tp + 3 * avg) / (tn + 3)) / avg));
       window._penTrackMul = trackMul; } catch (e) {}
@@ -29554,14 +29568,14 @@ window.renderBets = async function() {
   // Steward markets for this division: how many drivers the stewards penalised (time penalty or DSQ) in past
   // races here — races with no verdicts count as 0. Gives an over/under line and the "clean race" yes/no.
   let _ouPen = null, _ouPenSec = null;
-  if (!isC && (window._fiaV || []).length) {
+  if (!isC && window._fiaRaceV().length) {
     const curS = Number(window.currentSeason || window._reserveSeason) || 0, pts = [];
     const sets = [[curS, races || []], ...((window._betArchives || []).filter(a => Number(a.season) >= 7).map(a => [Number(a.season), a.races || []]))]; // no steward records before S7
     sets.forEach(([se, rs]) => rs.forEach(r => { const dvs = new Set(); Object.values(r.driverPointsByDivision || {}).forEach(by => Object.keys(by || {}).forEach(d => dvs.add(d)));
       const has = dvs.has(div) || (div === 'E3' && dvs.has('D4')); if (!has || !r.driverPoints || !Object.values(r.driverPoints).some(v => v > 0)) return;
       if (se === curS && !r.verdictsAt && (races || []).some(x => (x.raceNum || 0) > (r.raceNum || 0)) === false) return; // this round's verdicts aren't in yet
       const dd = dvs.has(div) ? div : 'D4';
-      const V = (window._fiaV || []).filter(v => v.s === se && v.r === Number(r.raceNum) && v.d === dd);
+      const V = window._fiaRaceV().filter(v => v.s === se && v.r === Number(r.raceNum) && v.d === dd);
       const n = new Set(V.filter(v => v.dq || (v.t != null && v.t > 0)).map(v => v.id || window._fiaKey(v.a))).size;
       const sec = V.reduce((a, v) => a + (v.t != null && v.t > 0 ? v.t : 0), 0), anyDq = V.some(v => v.dq), anyRb = V.some(v => v.rb > 0);
       const _tk = window.trackKey ? window.trackKey(r.name) : String(r.name || '').toLowerCase();
