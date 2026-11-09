@@ -28431,6 +28431,25 @@ window.betPickAllIn = function(key) {
   try { todo.forEach(([dv, m, sc, o, l]) => { window._betDiv = dv; betPick(m, sc, o, l); }); } finally { window.renderBets = _r; window._betDiv = prev; }
   renderBets(); if (typeof showToast === 'function') showToast('🚀 Added ' + todo.length + ' boosted picks to your slip', 'success');
 };
+// Add an all-division boost for a division that isn't open (sprint markets etc. whose line/price only exists
+// once that division's odds are worked out): quietly price that division, take the boosted button's exact
+// line and odds, add it to the slip, and come straight back — the player never leaves this tab.
+window.betPickWideIn = async function(el, dv, market, st, side) {
+  const pg = document.getElementById('page-bets'), prev = window._betDiv, y = window.scrollY; if (el) { el.disabled = true; el.textContent = '⏳'; }
+  let found = null;
+  try {
+    if (pg) pg.style.visibility = 'hidden';
+    window._betDiv = dv; await window.renderBets();
+    const want = "betPick('" + market + "','" + st + ",";
+    const b = [...(pg ? pg.querySelectorAll('button.bo-odd') : [])].find(x => { const oc = x.getAttribute('onclick') || ''; return oc.startsWith(want) && (!side || oc.startsWith(want + side + ',') || oc.startsWith(want + side + "'")); });
+    const m = b && (b.getAttribute('onclick') || '').match(/^betPick\('([^']*)','([^']*)',([\d.]+),'([\s\S]*)'\)$/);
+    if (m) found = [m[1], m[2], Number(m[3]), m[4].replace(/\\'/g, "'")];
+  } catch (e) { console.warn('wide pick', e); }
+  window._betDiv = prev;
+  if (found) { const _r = window.renderBets; window.renderBets = () => {}; try { window._betDiv = dv; betPick(found[0], found[1], found[2], found[3]); } finally { window.renderBets = _r; window._betDiv = prev; } }
+  await window.renderBets(); if (pg) pg.style.visibility = ''; window.scrollTo(0, y);
+  if (!found && typeof showToast === 'function') showToast('That boost isn\'t available in ' + dv + ' right now.', 'error');
+};
 window.betPickIn = function(dv, market, selCsv, odds, label) {
   const prev = window._betDiv; window._betDiv = dv;
   const _r = window.renderBets; window.renderBets = () => {}; // betPick re-renders; do it once, back on the current tab
@@ -30013,7 +30032,7 @@ window.renderBets = async function() {
               const allBtn = all.length > 1 && open ? `<button class="btn btn-secondary btn-sm" style="padding:4px 9px" onclick="betPickAllIn('${key}')" title="Add this boost in every division to your slip">＋ All ${all.length}</button>` : '';
               // Every division's row is rendered up front; the pills just show/hide them — no page re-render, no bounce.
               const row = (x) => { const w = _wideFor(f, x), lnTxt = w && w.line != null ? sd.charAt(0).toUpperCase() + sd.slice(1) + ' ' + w.line : (f.market === 'yn' ? sd.toUpperCase() : ''), lbl = w ? x + ' ' + base + (f.market === 'ou' ? ' ' + w.line : '') : '';
-                const btn = !w ? `<button class="btn btn-primary btn-sm" onclick="betDiv('${esc(x)}')">🚀 +${pct}% · go to ${esc(x)} →</button>`
+                const btn = !w ? `<button class="bo-odd boosted" ${open ? '' : 'disabled'} onclick="betPickWideIn(this,'${esc(x)}','${f.market}','${esc(String(f.sel[0]))}','${esc(sd)}')">🚀 +${pct}% · add</button>`
                   : x === div ? oddsBtn(f.market, w.sel, lbl, w.odds) : `<button class="bo-odd boosted" ${open ? '' : 'disabled'} onclick="betPickIn('${esc(x)}','${f.market}','${w.sel.join(',')}',${w.odds},'${esc(lbl).replace(/'/g, "\\'")}')">🚀 ${fmtOdds(w.odds)}</button>`;
                 return `<div class="bsel-row" data-bkey="${esc(key)}" data-dv="${esc(x)}" style="display:${x === sel0 ? 'flex' : 'none'};flex:1;align-items:center;gap:8px;flex-wrap:wrap;min-width:0">
                   <span style="font-size:.78rem;color:var(--muted)">${esc(lnTxt)}</span>${w ? `<s style="font-size:.74rem;color:var(--muted)">${fmtOdds(w.was)}</s>` : ''}
