@@ -28926,6 +28926,21 @@ const BET_SPECIALS = [
     legs: [{ div: 'D1', name: 'PolyTromp' }, { div: 'E3', name: 'Ceetee19' }, { div: 'E3', name: 'Jean_Claude04' }, { div: 'D3', name: 'Jan' }] }];
 window._betSpecialsFor = (raceName) => { const tk = (x) => window.trackKey ? window.trackKey(x) : String(x || '').toLowerCase();
   const ov = window._betSpecialOdds || {}; return BET_SPECIALS.filter(x => tk(raceName) === tk(x.race)).map(x => ({ ...x, odds: Number(ov[x.id]) || x.odds })); };
+// A round's BOTT points for BETTING = race only. On a sprint weekend the imported BOTT points include each
+// driver's sprint points (10-9-…-1 for P1–P10), so those are taken back off, team by team.
+window._raceCP = function(race) {
+  if (!race || !race.constructorPoints) return {};
+  if (race._rcp && race._rcpSrc === race.constructorPoints) return race._rcp;
+  const cp = { ...race.constructorPoints };
+  if (window._spHasAny && window._spHasAny(race) && (window._allConstrs || []).length) {
+    const byKey = {}; window._allConstrs.forEach(c => { byKey[teamKey(c.name)] = c.id; });
+    Object.keys(race.sprintByDiv || {}).forEach(dv => (window._spRowsOf(race, dv) || []).forEach(row => {
+      const cid = byKey[teamKey(row.team)], sp = row.pos != null && row.pos >= 1 && row.pos <= 10 ? 11 - row.pos : 0;
+      if (cid && sp && cp[cid] != null) cp[cid] = Math.max(0, Number(cp[cid]) - sp); }));
+  }
+  try { Object.defineProperty(race, '_rcp', { value: cp, writable: true, enumerable: false, configurable: true }); Object.defineProperty(race, '_rcpSrc', { value: race.constructorPoints, writable: true, enumerable: false, configurable: true }); } catch (e) {}
+  return cp;
+};
 function _betOutcome(b, races) {
   if (b.market === 'special') {
     const rs = (b.specLegs || []).map(l => _betOutcome({ raceName: b.raceName, div: l.div, market: 'top5', sel: [l.id] }, races));
@@ -28939,13 +28954,7 @@ function _betOutcome(b, races) {
   if (b.div === 'BOTT') {
     // Constructors: rank by this round's BOTT points — RACE ONLY. On a sprint weekend the imported BOTT
     // points include the sprint (10-9-…-1 for P1–P10), so each team's sprint points are taken back off.
-    const cp = { ...(race.constructorPoints || {}) };
-    if (window._spHasAny && window._spHasAny(race) && (window._allConstrs || []).length) {
-      const byKey = {}; window._allConstrs.forEach(c => { byKey[teamKey(c.name)] = c.id; });
-      Object.keys(race.sprintByDiv || {}).forEach(dv => (window._spRowsOf(race, dv) || []).forEach(row => {
-        const cid = byKey[teamKey(row.team)], sp = row.pos != null && row.pos >= 1 && row.pos <= 10 ? 11 - row.pos : 0;
-        if (cid && sp && cp[cid] != null) cp[cid] = Math.max(0, Number(cp[cid]) - sp); }));
-    }
+    const cp = window._raceCP(race);
     if (!Object.values(cp).some(v => v > 0)) return null;
     const vals = Object.values(cp).map(Number);
     pos = (id) => (cp[id] == null) ? null : 1 + vals.filter(v => v > Number(cp[id])).length;
@@ -29038,7 +29047,7 @@ function _betOutcome(b, races) {
     result = (!a || !c || !tn(a) || !tn(c)) ? 'void' : ((b.sel[1] === 'yes') === (tn(a) === tn(c)) ? 'won' : 'lost');
   }
   else if (b.market === 'yn' && /^(ldw|gk|bmx|bgap):/.test(String(b.sel[0]))) {
-    const parts = String(b.sel[0]).split(':'), kind = parts[0], cp = race.constructorPoints || {};
+    const parts = String(b.sel[0]).split(':'), kind = parts[0], cp = window._raceCP(race);
     const vals = Object.values(cp).map(Number).sort((a, b) => b - a); let yes = null;
     if (kind === 'ldw') { const v = cp[parts[1]]; if (v != null && vals.length) yes = Number(v) === vals[0] ? (vals.filter(x => x === vals[0]).length > 1 ? null : true) : false; }  // tied for top → void
     else if (kind === 'gk') { const a = cp[parts[2]], c = cp[parts[1]]; if (a != null && c != null && Number(a) !== Number(c)) yes = Number(a) > Number(c); }
@@ -29048,7 +29057,7 @@ function _betOutcome(b, races) {
   }
   else if (b.market === 'yn' && String(b.sel[0]).startsWith('ldx:')) {
     // BOTT leader extends lead: the leader (at bet time) scores MORE BOTT points this round than P2. Level → void.
-    const [, L, S2] = String(b.sel[0]).split(':'), cp = race.constructorPoints || {};
+    const [, L, S2] = String(b.sel[0]).split(':'), cp = window._raceCP(race);
     const a = cp[L], c = cp[S2];
     result = (a == null || c == null || Number(a) === Number(c)) ? 'void' : ((b.sel[1] === 'yes') === (Number(a) > Number(c)) ? 'won' : 'lost');
   }
@@ -29109,7 +29118,7 @@ function _betOutcome(b, races) {
     result = v == null ? 'void' : ((b.sel[1] === 'yes') === !!v ? 'won' : 'lost');
   }
   else if (b.market === 'cou') {
-    const v = (race.constructorPoints || {})[b.sel[0]]; const line = Number(b.sel[2]);
+    const v = window._raceCP(race)[b.sel[0]]; const line = Number(b.sel[2]);
     result = (v == null || !isFinite(line)) ? 'void' : ((b.sel[1] === 'over') === (Number(v) > line) ? 'won' : 'lost');
   }
   else if (b.market === 'wmar') {
@@ -29613,17 +29622,17 @@ window.renderBets = async function() {
   if (isC && _bSt && _bSt.length >= 2) { const st = _bSt, L = st[0];
     // More BOTT specials. Each row: [selKey, title, subtitle, P(yes)].
     const Z = st[st.length - 1], PW = (P && P.win) || {};
-    const _isSp = !!(upcoming && upcoming.isSprint), _swk = (r) => !!(window._isSprintWeekend && window._isSprintWeekend(r)) === _isSp; // sprint rounds score far more — only compare like with like
+    const _isSp = false, _swk = () => true; // BOTT bets are race-only: sprint points are removed from every round (window._raceCP), so all rounds compare like with like
     const _s7 = (window._betArchives || []).find(a => Number(a.season) === 7); // Big haul: Season 7 + Season 8 only
     const _hAll = [...(_s7 ? (_s7.races || []) : []), ...(races || [])], _hSame = _hAll.filter(_swk);
     const _s7set = new Set(_s7 ? (_s7.races || []) : []);
-    const _hSrc = (_hSame.length >= 3 ? _hSame : _hAll), hist = _hSrc.map(r => Object.values(r.constructorPoints || {}).map(Number).filter(v => v > 0).sort((a, b) => b - a)).filter(v => v.length >= 2);
+    const _hSrc = (_hSame.length >= 3 ? _hSame : _hAll), hist = _hSrc.map(r => Object.values(window._raceCP(r)).map(Number).filter(v => v > 0).sort((a, b) => b - a)).filter(v => v.length >= 2);
     // Big haul is a FIXED bar (155+ pts), priced from how often a round's top scorer actually reached it (same weekend type).
     // Big haul: 155+ on a normal round. Sprint weekends score far more, so the bar is scaled by how much
     // bigger a sprint round's top score is than a normal round's (from history), and every past round is
     // judged against the bar for ITS weekend type — so sprint and normal rounds both count fairly.
     const _BH0 = 155.5;
-    const _tops = _hAll.map(r => ({ top: Math.max(0, ...Object.values(r.constructorPoints || {}).map(Number)), s7: _s7set.has(r), sp: !!(window._isSprintWeekend && window._isSprintWeekend(r)) })).filter(x => x.top > 0);
+    const _tops = _hAll.map(r => ({ top: Math.max(0, ...Object.values(window._raceCP(r)).map(Number)), s7: _s7set.has(r), sp: false })).filter(x => x.top > 0);
     const _avg = (f) => { const a = _tops.filter(f); return a.length ? a.reduce((t, x) => t + x.top, 0) / a.length : null; };
     const _mN = _avg(x => !x.sp), _mS = _avg(x => x.sp), _nS = _tops.filter(x => x.sp).length;
     const _ratio = (_mN && _mS && _nS >= 2) ? Math.max(1.1, Math.min(2, _mS / _mN)) : 1.35;
@@ -29727,17 +29736,17 @@ window.renderBets = async function() {
     const cr = [...(_prevArc ? (_prevArc.races || []) : []), ...(races || [])].filter(r => r.constructorPoints && Object.values(r.constructorPoints).some(v => v > 0)).sort(_byNum);
     // Constructor lines = this season's average BOTT points per round (rounded to a .5 line).
     const _curAll = (races || []).filter(r => r.constructorPoints && Object.values(r.constructorPoints).some(v => v > 0));
-    const _spNow = !!(upcoming && upcoming.isSprint), _curSame = _curAll.filter(r => !!(window._isSprintWeekend && window._isSprintWeekend(r)) === _spNow);
+    const _curSame = _curAll; // race-only points (sprint taken off) → every round is comparable
     const _curC = _curSame.length >= 2 ? _curSame : _curAll; // sprint weekends score far more — average like with like
-    field.forEach(c => { const _vs = _curC.filter(r => r.constructorPoints[c.id] != null).map(r => Number(r.constructorPoints[c.id]) || 0);
+    field.forEach(c => { const _vs = _curC.filter(r => window._raceCP(r)[c.id] != null).map(r => Number(window._raceCP(r)[c.id]) || 0);
       if (_vs.length) { const avg = _vs.reduce((a, v) => a + v, 0) / _vs.length, line = Math.floor(avg) + 0.5, over = _vs.filter(v => v > line).length;
         _ouCons[c.id] = { line, po: (over + 1) / (_vs.length + 2), n: _vs.length }; return; }
-      const rr = cr.filter(r => r.constructorPoints[c.id] != null); const tk = (r) => window.trackKey ? window.trackKey(r.name) : String(r.name || '').toLowerCase();
-      const pts = rr.map((r, i) => ({ v: Number(r.constructorPoints[c.id]) || 0, w: (i >= rr.length - 3 ? 2 : 1) * (_upK && tk(r) === _upK ? 3 : 1) }));
+      const rr = cr.filter(r => window._raceCP(r)[c.id] != null); const tk = (r) => window.trackKey ? window.trackKey(r.name) : String(r.name || '').toLowerCase();
+      const pts = rr.map((r, i) => ({ v: Number(window._raceCP(r)[c.id]) || 0, w: (i >= rr.length - 3 ? 2 : 1) * (_upK && tk(r) === _upK ? 3 : 1) }));
       const o = _ouFrom(pts, 1); if (o) _ouCons[c.id] = o; });
     // Bet builder (BOTT): each team's round-score spread — this season's same-type rounds, else recent history.
-    { const st = {}; field.forEach(c => { let v = _curC.filter(r => r.constructorPoints[c.id] != null).map(r => Number(r.constructorPoints[c.id]) || 0);
-        if (v.length < 2) v = cr.slice(-8).filter(r => r.constructorPoints[c.id] != null).map(r => Number(r.constructorPoints[c.id]) || 0);
+    { const st = {}; field.forEach(c => { let v = _curC.filter(r => window._raceCP(r)[c.id] != null).map(r => Number(window._raceCP(r)[c.id]) || 0);
+        if (v.length < 2) v = cr.slice(-8).filter(r => window._raceCP(r)[c.id] != null).map(r => Number(window._raceCP(r)[c.id]) || 0);
         if (!v.length) return; const m = v.reduce((a, x) => a + x, 0) / v.length, sd = Math.sqrt(v.reduce((a, x) => a + (x - m) * (x - m), 0) / Math.max(1, v.length - 1)); st[c.id] = { m, sd: Math.max(sd, m * 0.2 + 5) }; });
       const ms = Object.values(st).map(x => x.m).sort((a, b) => a - b), med = ms.length ? ms[Math.floor(ms.length / 2)] : 50;
       window._bbCtx = window._bbCtx || {}; window._bbCtx.BOTT = { bott: true, teams: field.map(c => ({ id: c.id, m: (st[c.id] || {}).m != null ? st[c.id].m : med, sd: (st[c.id] || {}).sd || med * 0.3 + 5 })) }; }
