@@ -5761,7 +5761,7 @@ window.sprintTagHtml = function(sub, flag) { return `<div class="rh-sprint">
 window.sprintZapArcs = function() {
   const R = (a, b) => a + Math.random() * (b - a), out = [];
   const run = (edge) => { // edge: 0 top, 1 right, 2 bottom, 3 left — broken into a few chaotic pieces
-    let t = R(-4, 12);
+    let t = R(-6, 0);
     while (t < 100) {
       const len = R(10, 38), end = Math.min(104, t + len), pts = [], fk = []; let u = t, off = R(-1, 2.5);
       const V = edge % 2, lo = V ? -1.2 : -2.5, hi = V ? 2.2 : 5, st = V ? 1.1 : 2.6; // side edges: x is the long axis, keep them tight
@@ -5774,8 +5774,8 @@ window.sprintZapArcs = function() {
           fk.push(f.join(' ')); }
         u += R(.5, edge % 2 ? 4.5 : 2.6) * (Math.random() < .2 ? 2.2 : 1); }
       out.push({ e: edge, p: pts.join(' ') }); fk.forEach(f => out.push({ e: edge, p: f, f: 1 }));
-      t = end + R(4, 26); } };
-  [0, 1, 2, 3].forEach(run);
+      t = end + R(-3, 2); } };
+  [0, 1, 2, 3, 0, 1, 2, 3].forEach(run); // two tangled strands per edge, no gaps — all the way round
   return out.map((x, i) => `<polyline class="z${x.e}${x.f ? ' zf' : ''}" style="animation-delay:${(Math.random() * .12).toFixed(2)}s" points="${x.p}"/>`).join('');
 };
 window.sprintZapSvg = function() { return '<svg class="mt-zap" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">' + window.sprintZapArcs() + '</svg><div class="mt-zap-flash"></div>'; };
