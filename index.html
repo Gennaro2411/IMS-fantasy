@@ -5776,6 +5776,10 @@ window.sprintZapArcs = function() {
       out.push({ e: edge, p: pts.join(' ') }); fk.forEach(f => out.push({ e: edge, p: f, f: 1 }));
       t = end + R(-3, 2); } };
   [0, 1, 2, 3, 0, 1, 2, 3].forEach(run); // two tangled strands per edge, no gaps — all the way round
+  // …and crackling over the whole box: short, tangled bursts of current scattered everywhere inside.
+  for (let i = 0; i < 16; i++) { let x = R(4, 96), y = R(8, 92), a = R(0, Math.PI * 2); const pts = [x.toFixed(1) + ',' + y.toFixed(1)], n = 5 + Math.floor(Math.random() * 7);
+    for (let k = 0; k < n; k++) { a += R(-1.5, 1.5); x = Math.max(1, Math.min(99, x + Math.cos(a) * R(.8, 3.2))); y = Math.max(2, Math.min(98, y + Math.sin(a) * R(2, 9))); pts.push(x.toFixed(1) + ',' + y.toFixed(1)); }
+    out.push({ e: i % 4, p: pts.join(' '), f: Math.random() < .5 ? 1 : 0 }); }
   return out.map((x, i) => `<polyline class="z${x.e}${x.f ? ' zf' : ''}" style="animation-delay:${(Math.random() * .12).toFixed(2)}s" points="${x.p}"/>`).join('');
 };
 window.sprintZapSvg = function() { return '<svg class="mt-zap" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">' + window.sprintZapArcs() + '</svg><div class="mt-zap-flash"></div>'; };
