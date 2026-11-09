@@ -34755,6 +34755,7 @@ async function _wfPuzzles() {
       const grid = (r.raceGridByDiv || {})[D.raw] || {}, tm = r.driverTeamByDivision || {};
       list.push({ k, s: S.s, rn: r.raceNum || 0, track: r.name, dv, rows: rows.map(d => { const q = Number(grid[_wfK(d.name)] || grid[_wfK(String(d.name).replace(/^\[[^\]]*\]\s*/, ''))]) || 0;
         return { id: d.id, name: d.name, photo: typeof driverPhoto === 'function' ? driverPhoto(d) : '', team: ((tm[d.id] || {})[D.raw]) || '', grid: q }; }) }); }); }));
+  for (let i = list.length - 1; i >= 0; i--) if (!(list[i].s >= 4 && list[i].s <= 8)) list.splice(i, 1); // only Seasons 4–8
   list.sort((a, b) => a.k < b.k ? -1 : 1);
   window._wfP = { at: _now(), list }; return list; }
 // Shuffle that never starts with anyone already in their right place.
