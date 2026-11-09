@@ -2732,8 +2732,10 @@
     .wf-pd.p1 .wf-pd-step{height:78px;color:#fcd34d;background:linear-gradient(180deg,rgba(252,211,77,.3),rgba(252,211,77,.04))}.wf-pd.p2 .wf-pd-step{height:56px;color:#e5e7eb}.wf-pd.p3 .wf-pd-step{height:42px;color:#f0a76b;background:linear-gradient(180deg,rgba(240,167,107,.25),rgba(240,167,107,.03))}
     @keyframes wfPd{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:none}}
     @media (prefers-reduced-motion:reduce){.wf-row.rev,.wf-pd,.wf-lights,.wf-arena .wf-lights~*{animation:none!important}.wf-lights{display:none}}
-    .wf-clues{position:relative;display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:12px}
-    .wf-clue{display:flex;align-items:center;gap:6px;padding:7px 11px;border-radius:999px;cursor:pointer;color:#fff;font:inherit;font-size:.78rem;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14)}
+    .wf-cluebox{position:relative;margin:14px auto 0;max-width:460px;padding:10px 10px 12px;border-radius:16px;background:linear-gradient(160deg,rgba(253,224,71,.1),rgba(253,224,71,.02));border:1px dashed rgba(253,224,71,.45)}
+    .wf-clue-h{display:flex;align-items:baseline;justify-content:center;gap:8px;font-size:.78rem;letter-spacing:1.5px;color:#fde047}.wf-clue-h small{letter-spacing:0;color:var(--muted);font-size:.72rem}
+    .wf-clues{position:relative;display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+    .wf-clue{display:flex;align-items:center;gap:6px;padding:7px 11px;border-radius:999px;cursor:pointer;color:#fff;font:inherit;font-size:.78rem;background:rgba(253,224,71,.08);border:1px solid rgba(253,224,71,.35)}
     .wf-clue:not(:disabled):active{transform:scale(.96)}.wf-clue em{font-style:normal;font-weight:900;color:#f87171;font-size:.72rem}.wf-clue.used{opacity:.45}.wf-clue.used em{color:var(--muted)}
     .wf-clue-out{position:relative;display:flex;flex-direction:column;gap:5px;align-items:center;margin-top:8px}.wf-clue-out span{font-size:.8rem;padding:5px 12px;border-radius:999px;background:rgba(253,224,71,.1);border:1px solid rgba(253,224,71,.35);animation:wdPop .4s both}
     .wf-meter{position:relative;display:inline-flex;align-items:baseline;gap:6px;margin-top:10px;padding:5px 14px;border-radius:999px;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.3)}.wf-meter span{font-size:.68rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}.wf-meter b{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;color:#4ade80}.wf-meter small{color:var(--muted);font-size:.7rem}
@@ -34856,7 +34858,7 @@ async function renderWFGame(el) {
     const used = st.h || [], flIn = P.fl && P.rows.some(d => _wfK(d.name) === P.fl || _wfK(String(d.name).replace(/^\[[^\]]*\]\s*/, '')) === P.fl);
     const avail = { fl: !!P.fl, mg: P.mg != null, win: true };
     const clueOut = used.map(c => c === 'fl' ? (flIn ? '' : `<span>🚦 None of this top 5 started on pole</span>`) : c === 'mg' ? `<span>⏱️ The winner won by <b>${P.mg.toFixed(3)}s</b></span>` : '').filter(Boolean).join('');
-    const clues = st.done ? '' : `<div class="wf-clues">${Object.entries(WF_CLUES).filter(([c]) => avail[c]).map(([c, [ic, nm, cost]]) => `<button class="wf-clue${used.includes(c) ? ' used' : ''}" onclick="wfClue('${c}')" ${used.includes(c) || locked ? 'disabled' : ''}><span>${ic}</span><b>${nm}</b><em>${used.includes(c) ? 'used' : '−' + cost}</em></button>`).join('')}</div>${clueOut ? `<div class="wf-clue-out">${clueOut}</div>` : ''}
+    const clues = st.done ? '' : `<div class="wf-cluebox"><div class="wf-clue-h">💡 <b>NEED A CLUE?</b><small>Each one costs points</small></div><div class="wf-clues">${Object.entries(WF_CLUES).filter(([c]) => avail[c]).map(([c, [ic, nm, cost]]) => `<button class="wf-clue${used.includes(c) ? ' used' : ''}" onclick="wfClue('${c}')" ${used.includes(c) || locked ? 'disabled' : ''}><span>${ic}</span><b>${nm}</b><em>${used.includes(c) ? 'used' : '−' + cost}</em></button>`).join('')}</div>${clueOut ? `<div class="wf-clue-out">${clueOut}</div>` : ''}</div>
       <div class="wf-meter"><span>Up for grabs</span><b>${_wfMaxNow(st)}</b><small>pts</small></div>`;
     const sc = st.done ? _wfScore(st, P) : null;
     const scoreBox = sc ? `<div class="wf-score"><div class="wf-score-big"><small>SCORE</small><b data-to="${sc.total}">${sc.total}</b></div><div class="wf-score-br">
