@@ -2743,9 +2743,13 @@
     .wf-score{position:relative;display:flex;align-items:center;gap:16px;justify-content:center;margin:14px auto 0;max-width:460px;padding:12px 16px;border-radius:16px;background:linear-gradient(135deg,rgba(74,222,128,.12),rgba(56,189,248,.08));border:1px solid rgba(74,222,128,.3);animation:wdPop .5s both}
     .wf-score-big{display:flex;flex-direction:column;align-items:center}.wf-score-big small{font-size:.62rem;letter-spacing:2px;color:var(--muted)}.wf-score-big b{font-family:'Barlow Condensed',sans-serif;font-size:2.8rem;line-height:1;color:#4ade80;font-variant-numeric:tabular-nums}
     .wf-score-br{display:flex;flex-direction:column;gap:2px;font-size:.78rem;min-width:150px}.wf-score-br span{display:flex;justify-content:space-between;gap:12px}.wf-score-br i{font-style:normal;color:var(--muted)}.wf-score-br b{color:#4ade80}.wf-score-br .neg b{color:#f87171}
-    .wf-replay{position:relative;margin:12px auto 0;display:block;padding:7px 14px;border-radius:999px;cursor:pointer;font:inherit;font-size:.72rem;letter-spacing:1.5px;color:#fca5a5;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.35);transition:background .3s}.wf-replay:active{transform:scale(.97)}.wf-list.rp .wf-row{transition:transform .5s cubic-bezier(.35,0,.15,1);will-change:transform}.wf-list.rp-snap .wf-row{transition:none!important}.wf-list.rp .wf-gain,.wf-list.rp .wf-ic{opacity:0}.wf-list.rp .wf-row.m-g{background:linear-gradient(90deg,color-mix(in srgb,var(--tc) 16%,rgba(14,16,30,.92)),rgba(14,16,30,.85) 55%);border-color:rgba(255,255,255,.1)}.wf-list.rp .wf-row.m-g .wf-p{color:#fff}.wf-list.rp .wf-row.ovt .wf-p{color:#4ade80}.wf-gain,.wf-ic{transition:opacity .4s}
+    .wf-replay{position:relative;margin:12px auto 0;display:block;padding:7px 14px;border-radius:999px;cursor:pointer;font:inherit;font-size:.72rem;letter-spacing:1.5px;color:#fca5a5;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.35);transition:background .3s}.wf-replay:active{transform:scale(.97)}.wf-list.rp .wf-row{transition:transform .75s cubic-bezier(.4,0,.2,1),background .35s,border-color .35s;will-change:transform}
+    .wf-gap{position:absolute;right:12px;top:6px;font-size:.66rem;font-weight:900;letter-spacing:.8px;color:#4ade80;opacity:0;font-variant-numeric:tabular-nums;transition:opacity .3s}.wf-list.rp .wf-row.fin .wf-gap{opacity:1}
+    .wf-list.rp .wf-row.fin{background:linear-gradient(90deg,rgba(34,197,94,.3),rgba(34,197,94,.06))!important;border-color:rgba(34,197,94,.65)!important}.wf-list.rp .wf-row.fin .wf-p{color:#4ade80!important}
+    .wf-list.rp .wf-row.fin::after{transform:none;background:repeating-conic-gradient(rgba(255,255,255,.22) 0 25%,transparent 0 50%) 0 0/12px 12px;mask-image:linear-gradient(90deg,transparent 55%,#000);-webkit-mask-image:linear-gradient(90deg,transparent 55%,#000);animation:wfChq .6s both}
+    @keyframes wfChq{from{opacity:0;transform:translateX(-30%)}to{opacity:.55;transform:none}}.wf-list.rp-snap .wf-row{transition:none!important}.wf-list.rp .wf-gain,.wf-list.rp .wf-ic{opacity:0}.wf-list.rp .wf-row.m-g{background:linear-gradient(90deg,color-mix(in srgb,var(--tc) 16%,rgba(14,16,30,.92)),rgba(14,16,30,.85) 55%);border-color:rgba(255,255,255,.1)}.wf-list.rp .wf-row.m-g .wf-p{color:#fff}.wf-list.rp .wf-row.ovt .wf-p{color:#4ade80}.wf-gain,.wf-ic{transition:opacity .4s}
     .wf-row.ovt{z-index:3}.wf-row.ovt::before{width:8px;background:#4ade80}.wf-row.ovt .wf-p{color:#4ade80}.wf-row.lost .wf-p{color:#f87171}
-    .wf-replay .wf-rp-lap{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1rem;letter-spacing:1px;color:#fff}.wf-replay .wf-rp-lap.warn{color:#fde047}.wf-replay .wf-rp-bar{display:block;height:3px;margin:5px 0;border-radius:2px;background:rgba(255,255,255,.1);overflow:hidden}.wf-replay .wf-rp-bar i{display:block;height:100%;background:linear-gradient(90deg,#ef4444,#fde047);transition:width .5s}.wf-replay .wf-rp-txt{display:block;letter-spacing:0;font-size:.78rem;color:#e5e7eb;min-height:1.2em}
+    .wf-replay .wf-rp-lap{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1rem;letter-spacing:1px;color:#fff}.wf-replay .wf-rp-lap.warn{color:#fde047}.wf-replay .wf-rp-bar{display:block;height:3px;margin:5px 0;border-radius:2px;background:rgba(255,255,255,.1);overflow:hidden}.wf-replay .wf-rp-bar i{display:block;height:100%;background:linear-gradient(90deg,#ef4444,#fde047);transition:width .15s linear}.wf-replay .wf-rp-txt{display:block;letter-spacing:0;font-size:.78rem;color:#e5e7eb;min-height:1.2em}
     .wf-replay:has(.wf-rp-lap){width:100%;max-width:460px;cursor:default;border-style:solid;background:rgba(10,10,18,.9)}.wf-replay b{color:inherit}
     .wf-hist{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;margin-top:12px}.wf-hist div{display:flex;gap:4px}.wf-hist i{width:16px;height:16px;border-radius:4px}.wf-hist i.m-g{background:#22c55e}.wf-hist i.m-y{background:#facc15}.wf-hist i.m-r{background:#ef4444}
     @media (max-width:640px){.cp-step{width:96px}.cp-arr{display:none}}
@@ -34771,8 +34775,10 @@ async function _wfPuzzles() {
       const fl = String(((r.poleByDiv || {})[D.raw]) || ((r.poleByDiv || {})[dv]) || ''), tmap = (r.raceTimeByDiv || {})[D.raw] || (r.raceTimeByDiv || {})[dv] || {};
       const tSec = (d) => { const t = String(tmap[_wfK(d.name)] || tmap[_wfK(String(d.name).replace(/^\[[^\]]*\]\s*/, ''))] || ''); if (!/^[0-9:.,]+$/.test(t)) return null; let v = 0; for (const q of t.replace(',', '.').split(':')) v = v * 60 + parseFloat(q); return isFinite(v) && v > 0 ? v : null; };
       const t1 = tSec(rows[0]), t2 = tSec(rows[1]), mg = t1 && t2 && t2 > t1 && t2 - t1 < 600 ? +(t2 - t1).toFixed(3) : null;
-      list.push({ k, s: S.s, rn: r.raceNum || 0, track: r.name, dv, fl: _wfK(fl), mg, rows: rows.map(d => { const q = Number(grid[_wfK(d.name)] || grid[_wfK(String(d.name).replace(/^\[[^\]]*\]\s*/, ''))]) || 0;
-        return { id: d.id, name: d.name, photo: typeof driverPhoto === 'function' ? driverPhoto(d) : '', team: tOf(d), grid: q }; }) }); }); }));
+      const tRaw = (d) => String(tmap[_wfK(d.name)] || tmap[_wfK(String(d.name).replace(/^\[[^\]]*\]\s*/, ''))] || '');
+      list.push({ k, s: S.s, rn: r.raceNum || 0, track: r.name, dv, fl: _wfK(fl), mg, rows: rows.map((d, ri) => { const ts = tSec(d), lp = tRaw(d).match(/(\d+)\s*Lap/i);
+        const gap = ri === 0 ? 0 : lp ? 'L' + lp[1] : (ts && t1 && ts >= t1 && ts - t1 < 600 ? +(ts - t1).toFixed(3) : null); const q = Number(grid[_wfK(d.name)] || grid[_wfK(String(d.name).replace(/^\[[^\]]*\]\s*/, ''))]) || 0;
+        return { id: d.id, name: d.name, photo: typeof driverPhoto === 'function' ? driverPhoto(d) : '', team: tOf(d), grid: q, gap }; }) }); }); }));
   for (let i = list.length - 1; i >= 0; i--) if (!(list[i].s >= 4 && list[i].s <= 8)) list.splice(i, 1); // only Seasons 4–8
   list.sort((a, b) => a.k < b.k ? -1 : 1);
   window._wfP = { at: _now(), list }; return list; }
@@ -34856,7 +34862,7 @@ async function renderWFGame(el) {
       const mine = st.done && !st.won && last ? (() => { const at = last.indexOf(id); return at === i ? '' : `<small class="wf-was">you had P${at + 1}</small>`; })() : '';
       const rev = window._wfRev === st.tries.length && !st.done, flb = P.fl && ((st.h || []).includes('fl') || st.done) && (_wfK(d.name) === P.fl || _wfK(String(d.name).replace(/^\[[^\]]*\]\s*/, '')) === P.fl), gain = st.done && d.grid ? d.grid - (i + 1) : null;
       return `<button class="wf-row${lockd ? ' lock' : ''}${sel ? ' sel' : ''}${!st.done && last && !lockd && last[i] === id ? ' m-' + mk : ''}${st.done ? (mk === 'g' ? ' m-g' : ' m-r') : ''}${rev ? ' rev' : ''}" data-id="${esc(id)}" data-i="${i}" style="${col ? '--tc:' + col.accent + ';' : ''}--d:${rev ? .12 + i * .19 : 0}s" onclick="wfTap(${i})" ${st.done || lockd || locked ? 'disabled' : ''}>
-        <span class="wf-p"><i>P</i>${i + 1}</span><span class="wf-av">${_wdAv(d, 40)}</span><span class="wf-nm"><b>${esc(d.name)}${flb ? '<em class="wf-fl">POLE</em>' : ''}</b><small>${lg ? `<img src="${esc(lg)}" alt="">` : ''}<span>${esc(d.team || '')}</span></small>${mine}</span>
+        <span class="wf-p"><i>P</i>${i + 1}</span><span class="wf-av">${_wdAv(d, 40)}</span><span class="wf-gap"></span><span class="wf-nm"><b>${esc(d.name)}${flb ? '<em class="wf-fl">POLE</em>' : ''}</b><small>${lg ? `<img src="${esc(lg)}" alt="">` : ''}<span>${esc(d.team || '')}</span></small>${mine}</span>
         ${gain != null ? `<span class="wf-gain ${gain > 0 ? 'up' : gain < 0 ? 'dn' : ''}">${gain > 0 ? '▲' + gain : gain < 0 ? '▼' + -gain : '–'}<small>from P${d.grid}</small></span>` : ''}<span class="wf-ic">${lockd || (st.done && mk === 'g') ? '✓' : sel ? '⇅' : st.done ? '✕' : '<svg viewBox="0 0 10 16" width="10" height="16"><g fill="currentColor"><circle cx="2" cy="2" r="1.5"/><circle cx="8" cy="2" r="1.5"/><circle cx="2" cy="8" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="2" cy="14" r="1.5"/><circle cx="8" cy="14" r="1.5"/></g></svg>'}</span></button>`; };
     const podium = st.done ? `<div class="wf-pod">${[1, 0, 2].map(j => { const d = P.rows[j]; return `<div class="wf-pd p${j + 1}" style="--pd:${.15 + [1, 0, 2].indexOf(j) * .18}s"><div class="wf-pd-av">${_wdAv(d, j ? 52 : 66)}${j === 0 ? '<span class="wf-crown">🏆</span>' : ''}</div><b>${esc(String(d.name).replace(/^\[[^\]]*\]\s*/, ''))}</b><div class="wf-pd-step"><span>${j + 1}</span></div></div>`; }).join('')}</div>` : '';
     const lights = window._wfIntro !== st.pk + mode && !st.tries.length ? (window._wfIntro = st.pk + mode, `<div class="wf-lights" aria-hidden="true">${'<i><b></b><b></b></i>'.repeat(5)}</div>`) : '';
@@ -34927,18 +34933,27 @@ async function _wfReplay(P, manual) { const L = document.getElementById('wf-list
   try { _ptSnd.tone(220, 0, .6, 'sawtooth', .05, 520); } catch (e) {} await wait(1300);
   let si = 0, last = '';
   for (let lap = 1; lap <= LAPS && alive(); lap++) {
-    hud(lap, last); await wait(LAPS > 30 ? 85 : 100);
+    hud(lap, last); await wait(LAPS > 30 ? 110 : 130);
     const inc = incs.find(x => x.lap === lap);
     if (inc) { last = `⚠️ <b>Incident</b> — ${inc.who}`; hud(lap, last, 'warn'); try { _ptSnd.tone(880, 0, .12, 'square', .05); _ptSnd.tone(880, .18, .12, 'square', .05); } catch (e) {} await wait(900); }
     while (si < steps.length && lapOf[si] === lap && alive()) { const [a, b] = steps[si++];
       [slotOf[a], slotOf[b]] = [slotOf[b], slotOf[a]]; place();
       rows[a].classList.remove('ovt'); rows[b].classList.remove('lost'); void rows[a].offsetWidth; rows[a].classList.add('ovt'); rows[b].classList.add('lost');
       last = `<b>${name(a)}</b> passes ${name(b)} for P${slotOf[a] + 1}`; hud(lap, last);
-      try { _ptSnd.tone(480 + (n - slotOf[a]) * 90, 0, .16, 'sawtooth', .04, 900); } catch (e) {} await wait(560); } }
+      try { _ptSnd.tone(480 + (n - slotOf[a]) * 90, 0, .16, 'sawtooth', .04, 900); } catch (e) {} await wait(820); } }
   while (si < steps.length && alive()) { const [a, b] = steps[si++]; [slotOf[a], slotOf[b]] = [slotOf[b], slotOf[a]]; place(); }
-  if (!alive()) return; await wait(250);
-  L.classList.remove('rp'); rows.forEach((r, i) => { r.style.transform = ''; r.classList.remove('ovt', 'lost'); const pl = r.querySelector('.wf-p'); if (pl) pl.innerHTML = `<i>P</i>${i + 1}`; });
-  hud('F', `<b>${name(0)}</b> wins at ${esc(P.track)}`); try { _ptSnd.ding(); } catch (e) {}
+  if (!alive()) return; await wait(450);
+  rows.forEach(r => r.classList.remove('ovt', 'lost'));
+  // Chequered flag: they cross the line one at a time, spaced by their real gaps to the winner.
+  let prev = 0;
+  for (let i = 0; i < n && alive(); i++) { const g = P.rows[i].gap, sec = typeof g === 'number' ? g : null;
+    const dt = i === 0 ? 0 : sec != null ? Math.max(260, Math.min(1800, (sec - prev) * 220 + 200)) : /^L/.test(g || '') ? 1600 : 520; if (sec != null) prev = sec;
+    await wait(dt); if (!alive()) return;
+    const r = rows[i]; r.classList.add('fin'); const gt = r.querySelector('.wf-gap'); if (gt) gt.textContent = i === 0 ? 'WINNER' : sec != null ? '+' + sec.toFixed(3) + 's' : /^L/.test(g || '') ? '+' + g.slice(1) + ' LAP' + (g.slice(1) === '1' ? '' : 'S') : '';
+    hud('F', i === 0 ? `<b>${name(0)}</b> wins at ${esc(P.track)}!` : `<b>${name(i)}</b> crosses the line in P${i + 1}${sec != null ? ` · +${sec.toFixed(3)}s` : ''}`);
+    try { i === 0 ? _ptSnd.win() : _ptSnd.tone(660 + (n - i) * 70, 0, .14, 'triangle', .09); } catch (e) {} }
+  if (!alive()) return; await wait(700);
+  L.classList.remove('rp'); rows.forEach((r, i) => { r.style.transform = ''; r.classList.remove('fin'); const pl = r.querySelector('.wf-p'); if (pl) pl.innerHTML = `<i>P</i>${i + 1}`; });
   await wait(3500); if (btn && btn.isConnected && window._wfRpTok === tok) btn.innerHTML = '▶ <b>WATCH RACE REPLAY</b>';
   } finally { if (window._wfRpTok === tok) window._wfRpOn = false; } }
 // Swaps only redraw the 5 rows (no full page rebuild, no flash, no scroll jump).
