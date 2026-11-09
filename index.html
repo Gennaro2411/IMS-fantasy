@@ -32640,6 +32640,12 @@ window._stImportIncidents = async function() {
   } catch (e) { console.warn('fia-clips', e); }
   // Short reports (under 25 characters) stay only when there's a clip to watch.
   list = list.filter(x => x.desc.replace(/\s+/g, ' ').trim().length >= 25 || (x.clips || []).some(c => c[0] !== 'link') || (x.files || []).length);
+  // New rounds: clips the bot saved in the .db (fia_incident_media, if it exists) → settings/stClipsExtra.
+  try { const mr = _imsDb.exec(`SELECT season, round_no, division, incident_id, author, url FROM fia_incident_media`);
+    if (mr.length && mr[0].values.length) { const d = await dbGet('settings', 'stClipsExtra').catch(() => null), v = (d && d.value) || {}; let n = 0;
+      mr[0].values.forEach(([se, rn, dv, inc, au, url]) => { const c = window._stParseClip(url); if (!c) return; const k = `${se}-${rn}-${String(dv || '').toUpperCase()}-${inc}`;
+        const t = c[0] + '|' + c[1] + '|' + String(au || '').replace(/\|/g, ''); if (!(v[k] || []).includes(t)) { v[k] = [...(v[k] || []), t]; n++; } });
+      if (n) await dbSet('settings', 'stClipsExtra', { value: v }); window._stExtra = v; } } catch (e) { /* table not there yet — fine */ }
   // Firestore can't store arrays inside arrays — clips are attached in the app from fia-clips.json instead.
   list.forEach(x => { delete x.clips; delete x.files; });
   await dbSet('settings', 'stewardIncidents', { value: { at: Date.now(), list } });
@@ -32656,6 +32662,9 @@ async function _stLoad(force) {
         (j.items || []).forEach(it => window._stUp.add(String(it.name || '').replace(/^fia\//, ''))); tok = j.nextPageToken || ''; } while (tok);
     } catch (e) {} }
   window._stInc.forEach(x => { const c = window._stClipMap && window._stClipMap.get(x.k); if (c) { x.clips = c.clips || []; x.files = c.files || []; x.def = c.def || []; } }); // the shipped clip list is always the latest
+  if (!window._stExtra) { try { const d = await dbGet('settings', 'stClipsExtra'); window._stExtra = (d && d.value) || {}; } catch (e) { window._stExtra = {}; } }
+  window._stInc.forEach(x => { const add = (window._stExtra[x.k] || []).map(t => { const [ty, id, au] = String(t).split('|'); return [ty, id, au || '', '']; });
+    if (add.length) { const seen = new Set((x.clips || []).map(c => c[0] + '|' + c[1])); x.clips = [...(x.clips || []), ...add.filter(c => !seen.has(c[0] + '|' + c[1]))]; } });
   // Any clip incident missing from the saved list (e.g. the saved list is from an older/partial import) is rebuilt
   // here from the shipped clip file + the imported steward verdicts, so every clip is always playable.
   if (window._stClipMap && !window._stInc._clipFill) { try {
@@ -32752,6 +32761,20 @@ window._stPracNext = function() { window._stPr = null; window._stPrCur = null; r
 function _stCrowd(all, x) { return x.drv.map((_, i) => { const n = [0, 0]; all.forEach(u => { const v = u.g && u.g[x.k], c = v && v.c && v.c[i]; if (c != null && n[c] != null) n[c]++; }); return n; }); }
 // st: { pick (locked choices or null), reveal (show stewards' answer), crowd, mode }
 // ---- Clip player (Twitch / Medal / YouTube / Streamable embeds, rescued Discord files from Firebase Storage) ----
+// Clips added after the transcript export (admin "＋ Clip", or the bot's fia_incident_media table) live in
+// settings/stClipsExtra as { incidentKey: ['type|id|author', …] } (Firestore can't hold arrays of arrays).
+window._stParseClip = (u) => { u = String(u || '').trim(); let m;
+  if ((m = u.match(/clips\.twitch\.tv\/([\w-]+)/i)) || (m = u.match(/twitch\.tv\/[^/]+\/clip\/([\w-]+)/i))) return ['twitch', m[1]];
+  if ((m = u.match(/medal\.tv\/.*?clips\/([\w-]+)/i))) return ['medal', m[1]];
+  if ((m = u.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/))([\w-]{6,})/i))) return ['yt', m[1]];
+  if ((m = u.match(/streamable\.com\/(?:e\/)?([\w]+)/i))) return ['st', m[1]];
+  return /^https?:\/\//i.test(u) ? ['link', u] : null; };
+window.stAddClip = async function(k) {
+  if (!adminLoggedIn) return; const u = prompt('Paste a clip link for this incident (Twitch, Medal, YouTube, Streamable or any video link):'); if (!u) return;
+  const c = window._stParseClip(u); if (!c) { customAlert ? customAlert('That doesn\'t look like a link.') : alert('Not a link'); return; }
+  const d = await dbGet('settings', 'stClipsExtra').catch(() => null), v = (d && d.value) || {}; v[k] = [...new Set([...(v[k] || []), c[0] + '|' + c[1] + '|Admin'])];
+  await dbSet('settings', 'stClipsExtra', { value: v }); window._stExtra = v; window._stInc = null; window._stClipMap = null; renderGames();
+};
 const _stHasClip = (x) => !!((x.clips || []).length || (x.files || []).some(f => (window._stUp || new Set()).has(Array.isArray(f) ? f[0] : f)));
 const _stClipSrc = (c) => { const h = location.hostname || 'fantasy.ims-league.com';
   if (c[0] === 'twitch') return `https://clips.twitch.tv/embed?clip=${encodeURIComponent(c[1])}&parent=${h}&autoplay=false`;
@@ -32806,6 +32829,7 @@ function _stCardHtml(x, st, all) {
         return (q ? tag('⏱ QUALI', '96,165,250') : tag('🏁 RACE', '226,232,240')) + (l === 1 ? tag('LAP 1', '251,146,60') : x.lap && !q ? tag('LAP ' + esc(x.lap), '160,164,255') : ''); })()}
       ${x.open ? '<span style="margin-left:auto;color:#facc15">🟡 UNDER INVESTIGATION</span>' : ''}${sc != null && st.mode !== 'prac' ? `<span style="margin-left:auto;color:${sc ? '#4ade80' : '#f87171'}">+${sc} PT${sc === 1 ? '' : 'S'}</span>` : ''}</div>
     ${_stPlayerHtml(x)}
+    ${adminLoggedIn ? `<div style="text-align:right;margin:4px 0 -2px"><button class="btn btn-secondary btn-sm" style="padding:2px 9px;font-size:.68rem" onclick="stAddClip('${esc(x.k)}')">＋ Clip</button></div>` : ''}
     <div class="st-chat">
       <div class="st-msg">${_stAv(x.rep, 38, x.rid)}<div class="st-bub"><div class="st-who"><b>${esc(x.rep || 'Unknown')}</b><span>reported</span>${tg.map(i => `<span class="st-acc">${_stAv(x.drv[i], 22, (x.did || [])[i])}<b>${esc(x.drv[i])}</b></span>`).join('')}</div>
         ${x.rrc ? _stCtx(x.rrc, null, /quali/i.test(x.sess)).replace('margin:-2px 0 8px', 'margin:0 0 6px') : ''}
