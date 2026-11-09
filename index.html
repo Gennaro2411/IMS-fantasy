@@ -982,7 +982,7 @@
   @media (max-width:560px){.mt-zap-wave{right:71px;bottom:25px}}
   .mt-zap polyline{fill:none;stroke:#fff1c9;stroke-width:1.6;vector-effect:non-scaling-stroke;stroke-linejoin:round;
     filter:drop-shadow(0 0 3px #ff9a3c);opacity:0;animation:mtZapArc 4s infinite}
-  .mt-zap .z1{animation-delay:.05s}.mt-zap .z2{animation-delay:.1s}.mt-zap .z3{animation-delay:.03s}
+  .mt-zap .zf{stroke-width:1!important}
   @keyframes mtZapArc{0%,86%{opacity:0}87%{opacity:1}88%{opacity:.2}89%{opacity:.95}90.5%{opacity:.4}92%,100%{opacity:0}}
   .mt-zap-flash{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:0;background:radial-gradient(60% 80% at 50% 70%,rgba(255,220,150,.35),rgba(255,140,40,.12) 45%,transparent 75%);animation:mtZapFlash 4s infinite}
   @keyframes mtZapFlash{0%,86%{opacity:0}87%{opacity:1}89%{opacity:.3}90%{opacity:.8}94%,100%{opacity:0}}
@@ -5756,13 +5756,31 @@ window.sprintTagHtml = function(sub, flag) { return `<div class="rh-sprint">
 // Strike flash layer for an electrocuted box (the old edge arcs / charging border were removed — too busy).
 // Electrocutes the box on each strike: a few jagged lightning streaks flicker ACROSS it (new shape every
 // render), with the flash. No ring/explosion. Coordinates 0–100, stretched to the box.
-// Electrocutes the box on each strike: jagged arcs crackle along the edges + flash (original version).
-window.sprintZapSvg = function() {
-  const j = (a, b, n, fx) => { const pts = []; for (let i = 0; i <= n; i++) { const t = i / n; pts.push(fx(a + (b - a) * t, (i % 2 ? 1 : -1) * (0.6 + Math.random() * 1.6))); } return pts.join(' '); };
-  const e = [ j(0, 100, 14, (x, d) => `${x.toFixed(1)},${(1.2 + d).toFixed(1)}`), j(0, 100, 7, (y, d) => `${(98.8 + d).toFixed(1)},${y.toFixed(1)}`),
-              j(100, 0, 14, (x, d) => `${x.toFixed(1)},${(98.8 + d).toFixed(1)}`), j(100, 0, 7, (y, d) => `${(1.2 + d).toFixed(1)},${y.toFixed(1)}`) ];
-  return '<svg class="mt-zap" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">' + e.map((p, i) => `<polyline class="z${i}" points="${p}"/>`).join('') + '</svg><div class="mt-zap-flash"></div>';
+// Electrocutes the box on each strike: wild, broken arcs crackle along the edges (random step lengths,
+// random amplitude, gaps and forks — never a neat zig-zag) + flash. Reshuffled every strike.
+window.sprintZapArcs = function() {
+  const R = (a, b) => a + Math.random() * (b - a), out = [];
+  const run = (edge) => { // edge: 0 top, 1 right, 2 bottom, 3 left — broken into a few chaotic pieces
+    let t = R(-4, 12);
+    while (t < 100) {
+      const len = R(10, 38), end = Math.min(104, t + len), pts = [], fk = []; let u = t, off = R(-1, 2.5);
+      const V = edge % 2, lo = V ? -1.2 : -2.5, hi = V ? 2.2 : 5, st = V ? 1.1 : 2.6; // side edges: x is the long axis, keep them tight
+      while (u < end) { off = Math.max(lo, Math.min(hi, off + R(-st, st) * (Math.random() < .25 ? 2 : 1)));
+        const P = edge === 0 ? [u, 1 + off] : edge === 1 ? [99 - off, u] : edge === 2 ? [100 - u, 99 - off] : [1 + off, 100 - u];
+        pts.push(P[0].toFixed(1) + ',' + P[1].toFixed(1));
+        if (Math.random() < .09) { let fo = off, fu = u; const f = [P[0].toFixed(1) + ',' + P[1].toFixed(1)];
+          for (let k = 0; k < 3 + Math.floor(Math.random() * 3); k++) { fu += R(.6, 2.4); fo += V ? R(.4, 1.4) : R(1.2, 3.5);
+            const Q = edge === 0 ? [fu, 1 + fo] : edge === 1 ? [99 - fo, fu] : edge === 2 ? [100 - fu, 99 - fo] : [1 + fo, 100 - fu]; f.push(Q[0].toFixed(1) + ',' + Q[1].toFixed(1)); }
+          fk.push(f.join(' ')); }
+        u += R(.5, edge % 2 ? 4.5 : 2.6) * (Math.random() < .2 ? 2.2 : 1); }
+      out.push({ e: edge, p: pts.join(' ') }); fk.forEach(f => out.push({ e: edge, p: f, f: 1 }));
+      t = end + R(4, 26); } };
+  [0, 1, 2, 3].forEach(run);
+  return out.map((x, i) => `<polyline class="z${x.e}${x.f ? ' zf' : ''}" style="animation-delay:${(Math.random() * .12).toFixed(2)}s" points="${x.p}"/>`).join('');
 };
+window.sprintZapSvg = function() { return '<svg class="mt-zap" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">' + window.sprintZapArcs() + '</svg><div class="mt-zap-flash"></div>'; };
+// New random arcs for every strike (cheap: once per 4 s, only while a sprint box is on screen).
+if (!window._zapReshuffle) window._zapReshuffle = setInterval(() => { document.querySelectorAll('.mt-zap').forEach(el => { if (el.offsetParent) el.innerHTML = window.sprintZapArcs(); }); }, 4000);
 // My Team: the upcoming round (next lock in the schedule), if it's a sprint weekend → its name, else null.
 window.myTeamSprintNext = async function() {
   try {
