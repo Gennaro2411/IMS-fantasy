@@ -23288,13 +23288,15 @@ function rtSlideHtml(m) {
   if (!div && wireDriver && wireDriver.division) div = wireDriver.division;
   // Reserve/dropped drivers show a purple R badge instead of a photo, with a purple accent.
   if (wireIsReserve) teamAccent = RESERVE_PURPLE;
-  let photoUrl = (wireDriver && !wireIsReserve) ? driverPhoto(wireDriver) : '';
-  if (!photoUrl && !wireIsReserve && m.driverDiscordId) photoUrl = `main-driver-avatars/driver-avatars/${encodeURIComponent(m.driverDiscordId)}.png`;
-  const img = wireIsReserve
-    ? `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(123,79,191,0.12);border-radius:12px">${reserveBadgeSvg(30)}</div>`
-    : (photoUrl
-      ? `<img src="${esc(photoUrl)}" alt="" onerror="this.style.display='none'" style="position:absolute;inset:0;width:46px;height:46px;border-radius:12px;object-fit:cover;object-position:top center">`
-      : '');
+  // Everyone shows their picture (reserves/dropped drivers too); the purple R badge is the fallback when
+  // there's no picture, and a small R tag marks a reserve on top of their photo.
+  let photoUrl = wireDriver ? driverPhoto(wireDriver) : '';
+  const _did = m.driverDiscordId || (wireDriver && wireDriver.discordId);
+  if (!photoUrl && _did) photoUrl = `main-driver-avatars/driver-avatars/${encodeURIComponent(_did)}.png`;
+  const _rBadge = `<div class="tw-rb" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(123,79,191,0.12);border-radius:12px">${reserveBadgeSvg(30)}</div>`;
+  const img = photoUrl
+    ? `${wireIsReserve ? `<div class="tw-rb" style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(123,79,191,0.12);border-radius:12px">${reserveBadgeSvg(30)}</div>` : ''}<img src="${esc(photoUrl)}" alt="" onerror="this.style.display='none';const r=this.parentElement&&this.parentElement.querySelector('.tw-rb');if(r)r.style.display='flex'" style="position:absolute;inset:0;width:46px;height:46px;border-radius:12px;object-fit:cover;object-position:top center">${wireIsReserve ? '<span style="position:absolute;right:2px;bottom:2px;z-index:2;font:900 .55rem/1 Barlow Condensed,sans-serif;padding:2px 4px;border-radius:4px;background:#7b4fbf;color:#fff">R</span>' : ''}`
+    : (wireIsReserve ? _rBadge : '');
 
   return `
     <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;position:relative;flex:1;min-width:0">
