@@ -28610,6 +28610,11 @@ function _betRng(seedStr) { let h = 1779033703 ^ seedStr.length; for (let i = 0;
 // scaled by where they start (P1 = last in the standings). Overtaking is "possible but not easy", so the
 // back of the grid keeps ~e^-1.8 ≈ 17% of their pace-based chance relative to starting on pole.
 const _nmK = (x) => String(x || '').replace(/^\[[^\]]*\]\s*/, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+// Sprint incidents: ~10 laps (about half a race) but drivers are more careless and the reverse grid means
+// far more overtaking, so penalties come at about the race's rate per session; DNFs a bit below it.
+const SPRINT_PEN_FACTOR = 1.0, SPRINT_DNF_FACTOR = 0.7;
+const _poisCdf = (lam, k) => { let t = Math.exp(-lam), sum = t; for (let i = 1; i <= k; i++) { t *= lam / i; sum += t; } return sum; };
+const _poisLine = (lam) => { let best = null; for (let k = 0; k <= 12; k++) { const over = 1 - _poisCdf(lam, k); if (over > .1 && over < .9 && (!best || Math.abs(over - .5) < Math.abs(best.po - .5))) best = { line: k + .5, po: over }; } return best; };
 const SPRINT_GRID_WEIGHT = 2.6; // tuned: starting at the back costs more than first modelled (back-half wins were priced too short)
 // Sprints are the most random race of the weekend, so the house keeps a bigger edge on them:
 // every sprint price pays 12% less profit than the plain model price (e.g. 10.00 → 8.92).
@@ -28938,6 +28943,26 @@ function _betOutcome(b, races) {
     const val = b.sel[0] === 'psec' ? V.reduce((a, v) => a + (v.t != null && v.t > 0 ? v.t : 0), 0) : n;
     if (b.market === 'yn') result = (b.sel[1] === 'yes') === yes ? 'won' : 'lost';
     else { const line = Number(b.sel[2]); result = !isFinite(line) ? 'void' : ((b.sel[1] === 'over') === (val > line) ? 'won' : 'lost'); }
+  }
+  else if ((b.market === 'ou' && ['sppen', 'spdnf'].includes(b.sel[0])) || (b.market === 'yn' && (['spclean', 'spnodnf'].includes(b.sel[0]) || String(b.sel[0]).startsWith('sppd:')))) {
+    const k = String(b.sel[0]), rows = window._spRowsOf ? window._spRowsOf(race, b.div) : null;
+    if (!rows || !rows.length) { result = 'void'; }
+    else if (k === 'spdnf' || k === 'spnodnf') {
+      const n = rows.filter(x => /DNF|DSQ/.test(String(x.status || '').toUpperCase())).length, line = Number(b.sel[2]);
+      result = k === 'spnodnf' ? ((b.sel[1] === 'yes') === (n === 0) ? 'won' : 'lost') : (!isFinite(line) ? 'void' : ((b.sel[1] === 'over') === (n > line) ? 'won' : 'lost'));
+    } else {
+      // Sprint verdicts only (session name contains "Sprint"). Waits until the round's verdicts are in.
+      const later = races.some(r => (Number(r.raceNum) || 0) > (Number(race.raceNum) || 0) && r.driverPoints && Object.values(r.driverPoints).some(v => v > 0));
+      if (!race.verdictsAt && !later) return null;
+      const curS = Number(window.currentSeason || window._reserveSeason) || 0;
+      const V = (window._fiaV || []).filter(v => v.s === curS && v.r === Number(race.raceNum) && v.d === b.div && /sprint/i.test(v.ss || '') && (v.dq || (v.t != null && v.t > 0)));
+      if (k === 'spclean') result = (b.sel[1] === 'yes') === (V.length === 0) ? 'won' : 'lost';
+      else if (k === 'sppen') { const n = new Set(V.map(v => v.id || window._fiaKey(v.a))).size, line = Number(b.sel[2]); result = !isFinite(line) ? 'void' : ((b.sel[1] === 'over') === (n > line) ? 'won' : 'lost'); }
+      else { const id = k.slice(5), drv = (window._allDrivers || []).find(d => d.id === id) || {}, keys = [String(drv.discordId || ''), window._fiaKey(drv.name), drv.imsAlias ? window._fiaKey(drv.imsAlias) : ''].filter(Boolean);
+        if (!keys.length) return null;
+        const raced = rows.some(x => _nmK(x.name) === _nmK(drv.name) && String(x.status || '').toUpperCase() !== 'DNS');
+        result = !raced ? 'void' : ((b.sel[1] === 'yes') === V.some(v => keys.includes(v.id) || keys.includes(window._fiaKey(v.a))) ? 'won' : 'lost'); }
+    }
   }
   else if (b.market === 'ou' && String(b.sel[0]).startsWith('spfp:')) {
     // A driver's sprint finishing position line. DNF/DSQ = over (behind everyone); didn't start / no data → void.
@@ -29587,7 +29612,7 @@ window.renderBets = async function() {
       _bmx ? ['bmx:' + _bmx.line, 'Big haul', 'A team scores <em>' + Math.ceil(_bmx.line) + '+ pts</em>' + (_isSp ? ' (sprint weekend bar)' : '') + ' · rounds that hit their bar: ' + _bmx.txt + ' (S7 counts ¼)', _bmx.po] : null
     ].filter(Boolean); }
   const _rsS = (_rsDoc && _rsDoc.value && _rsDoc.value.sessions) || [];
-  let _wmar = null, _ouMargin = null, _ouTime = null, _ouCons = {}, _ouDnf = null, _yn = [], _ouMore = [];
+  let _wmar = null, _ouMargin = null, _ouTime = null, _ouCons = {}, _ouDnf = null, _yn = [], _ouMore = []; window._betDnfMean = null;
   // E3 is new this season: seed its history with last season's D4, then E3's own races add on top.
   const _rsCur = _rsS.filter(x => x.d === 'E3').reduce((m, x) => Math.min(m, x.s), Infinity); // first E3 season (none yet → all D4 counts)
   const _sd = (x) => x.d === div || (div === 'E3' && x.d === 'D4' && x.s < _rsCur);
@@ -29600,6 +29625,7 @@ window.renderBets = async function() {
     _ouTime = _ouFrom(tPts, 100);
     // DNFs: this division only; races at this track count 5×.
     _ouDnf = _ouFrom(_rsS.filter(x => _sd(x) && x.dnf != null).map(x => ({ v: x.dnf, w: x.t === _upK ? 3 : 1 })), 1);
+    { const dp = _rsS.filter(x => _sd(x) && x.dnf != null); window._betDnfMean = dp.length >= 3 ? dp.reduce((a, x) => a + x.dnf, 0) / dp.length : null; }
     const _divPts = (f) => _rsS.filter(x => x[f] != null && _sd(x)).map(x => ({ v: x[f], w: x.t === _upK ? 3 : 1 }));
     _ouMore = [
       ['gain', 'Most places gained by one driver', _ouFrom(_divPts('gain'), 1), (v) => String(v)],
@@ -29622,7 +29648,7 @@ window.renderBets = async function() {
   if (_t12 != null) _yn.push(['t12', 'Team 1-2 (teammates finish P1 & P2)', _t12]);
   // Steward markets for this division: how many drivers the stewards penalised (time penalty or DSQ) in past
   // races here — races with no verdicts count as 0. Gives an over/under line and the "clean race" yes/no.
-  let _ouPen = null, _ouPenSec = null;
+  let _ouPen = null, _ouPenSec = null; window._betPenMean = null;
   if (!isC && window._fiaRaceV().length) {
     const curS = Number(window.currentSeason || window._reserveSeason) || 0, pts = [];
     const sets = [[curS, races || []], ...((window._betArchives || []).filter(a => Number(a.season) >= 7).map(a => [Number(a.season), a.races || []]))]; // no steward records before S7
@@ -29636,7 +29662,7 @@ window.renderBets = async function() {
       const _tk = window.trackKey ? window.trackKey(r.name) : String(r.name || '').toLowerCase();
       pts.push({ v: n, sec, dq: anyDq, rb: anyRb, w: (se === curS ? 2 : 1) * (_upK && _tk === _upK ? 3 : 1) }); })); // past races at this circuit count 3×
     if (pts.length >= 3) {
-      _ouPen = _ouFrom(pts, 1);
+      _ouPen = _ouFrom(pts, 1); window._betPenMean = pts.reduce((a, x) => a + x.v * x.w, 0) / pts.reduce((a, x) => a + x.w, 0);
       const W = pts.reduce((a, x) => a + x.w, 0), Z = pts.reduce((a, x) => a + (x.v === 0 ? x.w : 0), 0);
       _yn.push(['clean', 'Clean race (no time penalties or DSQs)', (Z + 1) / (W + 2)]);
       _ouPenSec = _ouFrom(pts.map(x => ({ v: x.sec, w: x.w })), 5);
@@ -30075,7 +30101,21 @@ window.renderBets = async function() {
               ${SP.vs.map(({ a, c, p: q }) => { const A = field.find(d => d.id === a), C = field.find(d => d.id === c); if (!A || !C) return ''; const k = 'spvs:' + _nmK(A.name) + '|' + _nmK(C.name);
                 return `<div class="bo-ou"><div><b>${esc(A.name)} <span style="opacity:.6">vs</span> ${esc(C.name)}</b><span class="bo-ou-line">Start P${_spGrid[a]} vs P${_spGrid[c]}</span></div>
                   <div class="bo-ou-b"><i>${esc(String(A.name).slice(0, 10))}</i>${oddsBtn('yn', [k, 'yes'], A.name + ' beats ' + C.name + ' in the ' + div + ' sprint', _ouOdds('yn', [k, 'yes'], ex(q)))}</div>
-                  <div class="bo-ou-b"><i>${esc(String(C.name).slice(0, 10))}</i>${oddsBtn('yn', [k, 'no'], C.name + ' beats ' + A.name + ' in the ' + div + ' sprint', _ouOdds('yn', [k, 'no'], ex(1 - q)))}</div></div>`; }).join('')}</div>` : ''}`; })() : ''}
+                  <div class="bo-ou-b"><i>${esc(String(C.name).slice(0, 10))}</i>${oddsBtn('yn', [k, 'no'], C.name + ' beats ' + A.name + ' in the ' + div + ' sprint', _ouOdds('yn', [k, 'no'], ex(1 - q)))}</div></div>`; }).join('')}</div>` : ''}
+            ${(() => { // ⚖️ sprint stewards + carnage
+              const lamP = window._betPenMean != null ? window._betPenMean * SPRINT_PEN_FACTOR : null, lamD = window._betDnfMean != null ? window._betDnfMean * SPRINT_DNF_FACTOR : null;
+              const yn = [], ouR = [];
+              if (lamP != null) { yn.push(['spclean', 'Clean sprint', 'No time penalties or DSQs from the sprint', Math.exp(-lamP)]); const l = _poisLine(lamP); if (l) ouR.push(['sppen', 'Drivers penalised in the sprint', l]); }
+              if (lamD != null) { const l = _poisLine(lamD); if (l) ouR.push(['spdnf', 'Sprint DNFs', l]); yn.push(['spnodnf', 'Everyone finishes the sprint', 'No DNFs in the sprint', Math.exp(-lamD)]); }
+              const pn = (L3 || []).filter(d => _penR && _penR[d.id] != null).map(d => ['sppd:' + d.id, esc(d.name) + ' penalised in the sprint', 'Starts P' + _spGrid[d.id] + ' and has to fight through the pack', Math.min(.8, 1 - Math.pow(1 - _penR[d.id], SPRINT_PEN_FACTOR * 1.25))]);
+              if (!yn.length && !ouR.length && !pn.length) return '';
+              return `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>⚖️ Sprint stewards &amp; carnage</span><small>~10 laps · settled once the sprint verdicts are in</small></div>
+                ${ouR.map(([k, t, o]) => { const Ls = String(o.line); return `<div class="bo-ou"><div><b>${t}</b><span class="bo-ou-line">LINE <em>${o.line}</em></span></div>
+                  <div class="bo-ou-b"><i>OVER</i>${oddsBtn('ou', [k, 'over', Ls], div + ' ' + t.toLowerCase() + ' over ' + o.line, _ouOdds('ou', [k, 'over', Ls], ex(o.po)))}</div>
+                  <div class="bo-ou-b"><i>UNDER</i>${oddsBtn('ou', [k, 'under', Ls], div + ' ' + t.toLowerCase() + ' under ' + o.line, _ouOdds('ou', [k, 'under', Ls], ex(1 - o.po)))}</div></div>`; }).join('')}
+                ${[...yn, ...pn].map(([k, t, sub, q]) => `<div class="bo-ou"><div><b>${t}</b><span class="bo-ou-line">${sub}</span></div>
+                  <div class="bo-ou-b"><i>YES</i>${oddsBtn('yn', [k, 'yes'], div + ' sprint: ' + String(t).replace(/<[^>]+>/g, '').toLowerCase() + ': yes', _ouOdds('yn', [k, 'yes'], ex(q)))}</div>
+                  <div class="bo-ou-b"><i>NO</i>${oddsBtn('yn', [k, 'no'], div + ' sprint: ' + String(t).replace(/<[^>]+>/g, '').toLowerCase() + ': no', _ouOdds('yn', [k, 'no'], ex(1 - q)))}</div></div>`).join('')}</div>`; })()}`; })() : ''}
         </div><div class="bo-sec" data-sec="fpos"${_secHid('fpos')}>
         ${(!isC && Object.keys(_fpos).length) ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>📍 Finishing position</span><small>Over = finishes lower (a DNF counts as over)</small></div>
           ${field.filter(d => _fpos[d.id]).map(d => { const o = _fpos[d.id], L = String(o.line); return `<div class="bo-ou"><div class="bo-ou-c">${photo(d)}<div><b>${esc(d.name)}</b><span class="bo-ou-line">LINE <em>P${o.line}</em></span></div></div>
