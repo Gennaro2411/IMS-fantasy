@@ -28484,7 +28484,7 @@ window.betShowResults = function(list) {
   const L = list.slice().sort((a, b) => (ord[a.status] ?? 3) - (ord[b.status] ?? 3));
   const W = L.filter(b => b.status === 'won'), Lo = L.filter(b => b.status === 'lost');
   const won = W.reduce((a, b) => a + (Number(b.payout) || 0), 0), staked = L.filter(b => b.status !== 'void').reduce((a, b) => a + (b.free ? 0 : Number(b.stake) || 0), 0);
-  const COIN = '<i class="imc"></i>', mkt = { win: 'Win', pod: 'Podium', top5: 'Top 5', h2h: 'Head to head', qh2h: 'Quali H2H', pole: 'Pole', pgap: 'Pole gap', wmar: 'Winning margin', ou: 'Over / under', cou: 'Constructor pts', yn: 'Special', spw: 'Sprint win', spp: 'Sprint podium', tri: 'Tricast', spoon: 'Wooden spoon', acca: 'Accumulator' };
+  const COIN = '<i class="imc"></i>', mkt = { win: 'Win', pod: 'Podium', top5: 'Top 5', h2h: 'Head to head', qh2h: 'Quali H2H', pole: 'Pole', pgap: 'Pole gap', wmar: 'Winning margin', ou: 'Over / under', cou: 'Constructor pts', yn: 'Special', spw: 'Sprint win', spp: 'Sprint podium', sp5: 'Sprint top 5', tri: 'Tricast', spoon: 'Wooden spoon', acca: 'Accumulator' };
   const row = (b) => { const st = b.status, odds = Number(b.odds) || 0;
     const res = st === 'won' ? `<b class="bsr-w">+${(Number(b.payout) || 0).toLocaleString()} ${COIN}</b>` : st === 'lost' ? `<b class="bsr-l">−${b.free ? 0 : (Number(b.stake) || 0).toLocaleString()} ${COIN}</b>` : `<b class="bsr-v">Refunded</b>`;
     const legs = (b.legs && b.legs.length) ? `<div class="bsr-legs">${b.legs.map(l => `<span class="${l.result || ''}">${l.result === 'won' ? '✓' : l.result === 'lost' ? '✕' : '•'} ${esc(l.label || '')}</span>`).join('')}</div>` : '';
@@ -28617,18 +28617,18 @@ function _betOddsSprint(p) { const o = _betOdds(p); return o == null ? o : Math.
 function _betSimSprint(field, grid, sims, seed) {
   field = field.slice().sort((a, b) => String(a.id).localeCompare(String(b.id)));
   const rnd = _betRng(seed || 'ims-sprint'), N = Math.max(2, field.length);
-  const win = {}, pod = {}; field.forEach(d => { win[d.id] = 0; pod[d.id] = 0; });
+  const win = {}, pod = {}, top5 = {}; field.forEach(d => { win[d.id] = 0; pod[d.id] = 0; top5[d.id] = 0; });
   const base = field.map(d => ({ id: d.id, s: _betStrength(d.elo) * Math.exp(-SPRINT_GRID_WEIGHT * (((grid[d.id] || N) - 1) / (N - 1))) }));
   for (let k = 0; k < sims; k++) {
     let pool = base.slice(), total = pool.reduce((a, d) => a + d.s, 0);
-    for (let place = 1; place <= Math.min(3, base.length); place++) {
+    for (let place = 1; place <= Math.min(5, base.length); place++) {
       let r = rnd() * total, i = 0; while (i < pool.length - 1 && (r -= pool[i].s) > 0) i++;
-      const pick = pool[i]; if (place === 1) win[pick.id]++; pod[pick.id]++; total -= pick.s; pool.splice(i, 1);
+      const pick = pool[i]; if (place === 1) win[pick.id]++; if (place <= 3) pod[pick.id]++; top5[pick.id]++; total -= pick.s; pool.splice(i, 1);
     }
   }
-  Object.keys(pod).forEach(id => { pod[id] /= sims; });
+  Object.keys(pod).forEach(id => { pod[id] /= sims; top5[id] /= sims; });
   const S = base.reduce((a, d) => a + d.s, 0); base.forEach(d => { win[d.id] = S > 0 ? d.s / S : 0; });
-  return { win, pod };
+  return { win, pod, top5 };
 }
 function _betSim(field, sims, seed, topN) {
   field = field.slice().sort((a, b) => String(a.id).localeCompare(String(b.id))); // order-independent
@@ -28984,12 +28984,23 @@ function _betOutcome(b, races) {
     const p = pos(String(b.sel[0]).slice(5)), line = Number(b.sel[2]);
     result = (p == null || !isFinite(line)) ? 'void' : ((b.sel[1] === 'over') === (p > line) ? 'won' : 'lost');
   }
-  else if (b.market === 'spw' || b.market === 'spp') {
+  else if (b.market === 'yn' && /^sp(fr|bk|ldr:)/.test(String(b.sel[0]))) {
+    // Sprint specials — settled from the sprint classification (and its grid). No sprint rows → void.
+    const rows = window._spRowsOf ? window._spRowsOf(race, b.div) : null, k = String(b.sel[0]);
+    const nm = (x) => String(x || '').replace(/^\[[^\]]*\]\s*/, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    let yes = null;
+    if (rows && rows.length) { const W = rows.find(x => x.pos === 1), N = rows.filter(x => x.grid).length || rows.length;
+      if (k === 'spfr' && W && W.grid) yes = W.grid <= 2;
+      else if (k === 'spbk' && W && W.grid) yes = W.grid > N / 2;
+      else if (k.startsWith('spldr:')) { const me = rows.find(x => nm(x.name) === k.slice(6)); if (me && String(me.status || '') !== 'DNS') yes = me.pos != null && me.pos <= 3; } }
+    result = yes == null ? 'void' : ((b.sel[1] === 'yes') === yes ? 'won' : 'lost');
+  }
+  else if (b.market === 'spw' || b.market === 'spp' || b.market === 'sp5') {
     // Sprint: settled from the sprint results (rows by driver name). No sprint rows → void.
     const rows = window._spRowsOf ? window._spRowsOf(race, b.div) : null; const nm = (x) => String(x || '').replace(/^\[[^\]]*\]\s*/, '').toLowerCase().replace(/[^a-z0-9]/g, '');
     const mine = nm((b.selNames && b.selNames[0]) || (race.driverNames || {})[b.sel[0]]); const row = rows && mine ? rows.find(x => nm(x.name) === mine) : null;
     if (!rows || !row || String(row.status || '') === 'DNS') result = 'void';
-    else result = (row.pos != null && row.pos <= (b.market === 'spw' ? 1 : 3)) ? 'won' : 'lost';
+    else result = (row.pos != null && row.pos <= (b.market === 'spw' ? 1 : b.market === 'sp5' ? 5 : 3)) ? 'won' : 'lost';
   }
   else if (b.market === 'tri') {
     const ps = (b.sel || []).map(id => pos(id));
@@ -29330,7 +29341,7 @@ window.renderBets = async function() {
     else if (market === 'ou' || market === 'cou' || market === 'yn') { const OR = (window._betOuReg || {})[market + ':' + key]; if (!OR) return; const os = sel.slice(); os[1] = ({ over: 'under', under: 'over', yes: 'no', no: 'yes' })[sel[1]] || sel[1]; R = { auto, fair: OR.p, opp: os.join('-') }; }
     else if (market === 'pgap' || market === 'wmar') R = { fixed: auto };
     else if (market === 'tri') R = { fixed: auto };
-    else { const probs = market === 'spoon' ? _spoonP : (market === 'spw' && SP) ? SP.win : (market === 'spp' && SP) ? SP.pod : (market === 'win' || market === 'spw') ? P.win : (market === 'pod' || market === 'spp') ? (P.pod || {}) : market === 'pole' ? (P.pole || {}) : P.top5; const sumP = Object.values(probs).reduce((x, y) => x + y, 0) || 1; R = { auto, fair: (probs[sel[0]] || 0) / sumP }; }
+    else { const probs = market === 'spoon' ? _spoonP : (market === 'spw' && SP) ? SP.win : (market === 'spp' && SP) ? SP.pod : (market === 'sp5' && SP) ? (SP.top5 || {}) : (market === 'win' || market === 'spw') ? P.win : (market === 'pod' || market === 'spp') ? (P.pod || {}) : market === 'pole' ? (P.pole || {}) : P.top5; const sumP = Object.values(probs).reduce((x, y) => x + y, 0) || 1; R = { auto, fair: (probs[sel[0]] || 0) / sumP }; }
     const old = window._betReg[rk]; if (!old || JSON.stringify(old) !== JSON.stringify(R)) { window._betReg[rk] = R; _regSave(); } };
   const finalOdds = (market, sel, auto) => { try { _regPut(market, sel, auto); } catch (e) {} return _finalRaw(market, sel, auto); };
   const _finalRaw = (market, sel, auto) => {
@@ -29354,7 +29365,7 @@ window.renderBets = async function() {
       const a = _stakeOn(market, key), b = _stakeOn(market, oppSel.join('-')), tot = a + b;
       return tot ? _dyn(auto, a / tot, fair, tot) : auto; }
     if (market === 'pgap' || market === 'wmar' || market === 'tri') return auto;
-    const probs = market === 'spoon' ? _spoonP : (market === 'spw' && SP) ? SP.win : (market === 'spp' && SP) ? SP.pod : (market === 'win' || market === 'spw') ? P.win : (market === 'pod' || market === 'spp') ? (P.pod || {}) : market === 'pole' ? (P.pole || {}) : P.top5; const sumP = Object.values(probs).reduce((x, y) => x + y, 0) || 1;
+    const probs = market === 'spoon' ? _spoonP : (market === 'spw' && SP) ? SP.win : (market === 'spp' && SP) ? SP.pod : (market === 'sp5' && SP) ? (SP.top5 || {}) : (market === 'win' || market === 'spw') ? P.win : (market === 'pod' || market === 'spp') ? (P.pod || {}) : market === 'pole' ? (P.pole || {}) : P.top5; const sumP = Object.values(probs).reduce((x, y) => x + y, 0) || 1;
     const tot = _openHere.filter(b => b.market === market).reduce((x, b) => x + (b.stake || 0), 0);
     return tot ? _dyn(auto, _stakeOn(market, key) / tot, (probs[sel[0]] || 0) / sumP, tot) : auto;
   };
@@ -29373,7 +29384,8 @@ window.renderBets = async function() {
     if (market === 'ou' || market === 'cou' || market === 'yn') { const R = (window._betOuReg || {})[market + ':' + sel.join('-')]; return R ? R.auto : null; }
     if (market === 'tri') { const p = _betTriP(field, sel); return p > 0 ? _betOdds(p, 10000) : null; }
     if (market === 'spoon') { const pr = _spoonP[sel[0]]; return pr == null ? null : _betOdds(pr); }
-    if (!['win', 'pod', 'pole', 'top5', 'spw', 'spp'].includes(market)) return null;
+    if (!['win', 'pod', 'pole', 'top5', 'spw', 'spp', 'sp5'].includes(market)) return null;
+    if (market === 'sp5') { const q = SP && SP.top5 ? SP.top5[sel[0]] : null; return q == null ? null : _betOddsSprint(q); }
     const pr = (market === 'spw' && SP) ? SP.win[sel[0]] : (market === 'spp' && SP) ? SP.pod[sel[0]] : (market === 'win' || market === 'spw') ? P.win[sel[0]] : (market === 'pod' || market === 'spp') ? (P.pod || {})[sel[0]] : market === 'pole' ? (P.pole || {})[sel[0]] : P.top5[sel[0]]; return pr == null ? null : ((market === 'spw' || market === 'spp') ? _betOddsSprint(pr) : _betOdds(pr));
   };
   window._betDivNow = div;
@@ -29389,7 +29401,7 @@ window.renderBets = async function() {
       const cr = (races || []).filter(r => r && r.driverPoints && Object.keys(r.driverPoints).length);
       const st = (window.computeDriverChampStandings(cr, window._allDrivers && window._allDrivers.length ? window._allDrivers : field) || {})[div] || {};
       field.slice().sort((a, b) => ((st[a.id] || 0) - (st[b.id] || 0)) || String(b.name || '').localeCompare(String(a.name || ''))).forEach((d, i) => { _spGrid[d.id] = i + 1; });
-      const sk = oKey + '|sprint|' + field.map(d => d.id + '@' + _spGrid[d.id]).join(',');
+      const sk = oKey + '|sprint5|' + field.map(d => d.id + '@' + _spGrid[d.id]).join(',');
       SP = window._betOddsCache[sk] = window._betOddsCache[sk] || _betSimSprint(field, _spGrid, 60000, sk);
     } catch (e) { SP = null; }
   }
@@ -29721,7 +29733,7 @@ window.renderBets = async function() {
   }).join('') + (board.length > 10 ? `<button onclick="window._betLbAll=!window._betLbAll;renderBets()" style="display:block;width:100%;padding:9px;border:none;border-top:1px solid var(--bline);background:transparent;color:var(--muted);font-family:inherit;font-size:.75rem;font-weight:700;cursor:pointer">${window._betLbAll ? '▲ Show top 10' : '▼ Show all ' + board.length}</button>` : '')
     || '<div class="text-muted" style="padding:10px 14px;font-size:.8rem">No bettors yet — be the first.</div>';
   // Your betting stats
-  const _MKN = { win: 'Win', pod: 'Podium', top5: 'Top 5 / Top 3', h2h: 'Head to head', qh2h: 'Quali H2H', pole: 'Pole', pgap: 'Pole gap', wmar: 'Winning margin', ou: 'Over / under', cou: 'Constructor pts', yn: 'Specials', spw: 'Sprint win', spp: 'Sprint podium', tri: 'Tricast', spoon: 'Wooden spoon', acca: 'Accumulators' };
+  const _MKN = { win: 'Win', pod: 'Podium', top5: 'Top 5 / Top 3', h2h: 'Head to head', qh2h: 'Quali H2H', pole: 'Pole', pgap: 'Pole gap', wmar: 'Winning margin', ou: 'Over / under', cou: 'Constructor pts', yn: 'Specials', spw: 'Sprint win', spp: 'Sprint podium', sp5: 'Sprint top 5', tri: 'Tricast', spoon: 'Wooden spoon', acca: 'Accumulators' };
   const _mine = myBets.filter(b => ['won', 'lost', 'cashed'].includes(b.status)).sort((a, b) => (a.settledAt || a.placedAt || 0) - (b.settledAt || b.placedAt || 0));
   const _pnl = (b) => b.status === 'lost' ? -(Number(b.stake) || 0) : (Number(b.payout) || 0) - (Number(b.stake) || 0);
   let _myStatsHtml = '';
@@ -30002,8 +30014,21 @@ window.renderBets = async function() {
         ${(!isC && Object.keys(_spoonP).length) ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>🥄 Wooden spoon</span><small>Last classified finisher</small></div>
           ${field.filter(d => _spoonP[d.id] != null).slice().sort((a, b) => _spoonP[b.id] - _spoonP[a.id]).map(d => `<div class="bo-row">${photo(d)}<div class="bo-nm"><b>${esc(d.name)}</b><small>Finishes last of the classified</small></div>${oddsBtn('spoon', [d.id], d.name + ' wooden spoon in ' + div, finalOdds('spoon', [d.id], _betOdds(_spoonP[d.id])))}</div>`).join('')}</div>` : ''}
         </div><div class="bo-sec" data-sec="sprint"${_secHid('sprint')}>
-        ${(!isC && upcoming && upcoming.isSprint && field.length) ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>⚡ Sprint</span><span class="bo-cols"><i>WIN</i><i>PODIUM</i></span></div>
-          ${field.slice().sort((a, b) => (_spGrid[a.id] || 99) - (_spGrid[b.id] || 99)).map(d => `<div class="bo-row">${photo(d)}<div class="bo-nm"><b>${esc(d.name)}</b><small>${_spGrid[d.id] ? 'Reverse grid · starts P' + _spGrid[d.id] : 'Sprint race'}</small></div>${oddsBtn('spw', [d.id], d.name + ' to win the ' + div + ' sprint', finalOdds('spw', [d.id], _betOddsSprint((SP || P).win[d.id])))}${oddsBtn('spp', [d.id], d.name + ' sprint podium in ' + div, finalOdds('spp', [d.id], _betOddsSprint(((SP || P).pod || {})[d.id])))}</div>`).join('')}</div>` : ''}
+        ${(!isC && upcoming && upcoming.isSprint && field.length) ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>⚡ Sprint</span><span class="bo-cols"><i>WIN</i><i>PODIUM</i><i>TOP 5</i></span></div>
+          ${field.slice().sort((a, b) => (_spGrid[a.id] || 99) - (_spGrid[b.id] || 99)).map(d => `<div class="bo-row">${photo(d)}<div class="bo-nm"><b>${esc(d.name)}</b><small>${_spGrid[d.id] ? 'Reverse grid · starts P' + _spGrid[d.id] : 'Sprint race'}</small></div>${oddsBtn('spw', [d.id], d.name + ' to win the ' + div + ' sprint', finalOdds('spw', [d.id], _betOddsSprint((SP || P).win[d.id])))}${oddsBtn('spp', [d.id], d.name + ' sprint podium in ' + div, finalOdds('spp', [d.id], _betOddsSprint(((SP || P).pod || {})[d.id])))}${oddsBtn('sp5', [d.id], d.name + ' sprint top 5 in ' + div, finalOdds('sp5', [d.id], _betOddsSprint(((SP || P).top5 || {})[d.id])))}</div>`).join('')}</div>` : ''}
+        ${(!isC && upcoming && upcoming.isSprint && SP && field.length >= 4) ? (() => {
+          const N = field.length, ids = field.map(d => d.id), ex = (q) => 1 / (1 + (1 / Math.max(.001, Math.min(.999, q)) - 1) * SPRINT_PROFIT_CUT); // sprint edge
+          const frontP = ids.filter(id => (_spGrid[id] || 99) <= 2).reduce((a, id) => a + (SP.win[id] || 0), 0);
+          const backP = ids.filter(id => (_spGrid[id] || 0) > N / 2).reduce((a, id) => a + (SP.win[id] || 0), 0);
+          const ldr = field.slice().sort((a, b) => (_spGrid[b.id] || 0) - (_spGrid[a.id] || 0))[0];
+          const nm = (x) => String(x || '').replace(/^\[[^\]]*\]\s*/, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+          const rows = [['spfr', 'Sprint won from the front row', 'The winner starts P1 or P2', frontP],
+                        ['spbk', 'Sprint won from the back half', 'The winner starts P' + (Math.floor(N / 2) + 1) + ' or lower', backP],
+                        ['spldr:' + nm(ldr.name), esc(ldr.name) + ' charges to the podium', 'Championship leader starts last (P' + N + ') — finishes top 3', SP.pod[ldr.id] || 0]];
+          return `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>⚡ Sprint specials</span><small>Reverse grid · yes / no</small></div>
+            ${rows.map(([k, t, sub, q]) => `<div class="bo-ou"><div><b>${t}</b><span class="bo-ou-line">${sub}</span></div>
+              <div class="bo-ou-b"><i>YES</i>${oddsBtn('yn', [k, 'yes'], div + ' sprint: ' + String(t).replace(/<[^>]+>/g, '').toLowerCase() + ': yes', _ouOdds('yn', [k, 'yes'], ex(q)))}</div>
+              <div class="bo-ou-b"><i>NO</i>${oddsBtn('yn', [k, 'no'], div + ' sprint: ' + String(t).replace(/<[^>]+>/g, '').toLowerCase() + ': no', _ouOdds('yn', [k, 'no'], ex(1 - q)))}</div></div>`).join('')}</div>`; })() : ''}
         </div><div class="bo-sec" data-sec="fpos"${_secHid('fpos')}>
         ${(!isC && Object.keys(_fpos).length) ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>📍 Finishing position</span><small>Over = finishes lower (a DNF counts as over)</small></div>
           ${field.filter(d => _fpos[d.id]).map(d => { const o = _fpos[d.id], L = String(o.line); return `<div class="bo-ou"><div class="bo-ou-c">${photo(d)}<div><b>${esc(d.name)}</b><span class="bo-ou-line">LINE <em>P${o.line}</em></span></div></div>
@@ -30767,7 +30792,7 @@ function _betLegClashes(legs) {
       || (a.market === b.market && (a.market === 'h2h' || a.market === 'qh2h') && a.sel.slice().sort().join() === b.sel.slice().sort().join())
       || (a.market === 'tri' && b.market === 'tri')
       || ((a.market === 'tri') !== (b.market === 'tri') && (() => { // a tricast already fixes its 3 drivers' places: no other race pick on THOSE drivers can ride with it
-        const t = a.market === 'tri' ? a : b, o = a.market === 'tri' ? b : a; if (['spw', 'spp', 'pole', 'qh2h', 'pgap'].includes(o.market)) return false; // sprint & qualifying markets don't touch the race result
+        const t = a.market === 'tri' ? a : b, o = a.market === 'tri' ? b : a; if (['spw', 'spp', 'sp5', 'pole', 'qh2h', 'pgap'].includes(o.market)) return false; // sprint & qualifying markets don't touch the race result
         return (o.sel || []).some(x => t.sel.includes(String(x).replace(/^(fpos|ddnf):/, ''))); })())
       || (a.market === 'spoon' && b.market === 'spoon')
       // Same driver can't DNF and also finish last / win / podium / top 5 (wooden spoon = last CLASSIFIED finisher).
@@ -30777,7 +30802,7 @@ function _betLegClashes(legs) {
           return (da && fb && da === fb) || (db && fa && db === fa); })()
       // Last place and a win / podium / top 5 for the same driver can't both happen.
       || (a.sel[0] === b.sel[0] && ((a.market === 'spoon' && ['win', 'pod', 'top5'].includes(b.market)) || (b.market === 'spoon' && ['win', 'pod', 'top5'].includes(a.market))))
-      || (a.market === 'spw' && b.market === 'spw') || (['spw', 'spp'].includes(a.market) && ['spw', 'spp'].includes(b.market) && a.market !== b.market && a.sel[0] === b.sel[0])
+      || (a.market === 'spw' && b.market === 'spw') || (['spw', 'spp', 'sp5'].includes(a.market) && ['spw', 'spp', 'sp5'].includes(b.market) && a.market !== b.market && a.sel[0] === b.sel[0])
       || (['win', 'pod', 'top5'].includes(a.market) && ['win', 'pod', 'top5'].includes(b.market) && a.market !== b.market && a.sel[0] === b.sel[0]);
     if (clash) { bad.add(a.key); bad.add(b.key); }
   }
