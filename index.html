@@ -30078,7 +30078,7 @@ window.renderBets = async function(dry) {
               const _miss = [];
               const row = (x) => { const c = window._betWideCache[_wideKey(x, f.market, String(f.sel[0]), sd)];
                 const w = _wideFor(f, x) || (c && !c.none ? { sel: c.sel, odds: c.odds, was: Math.round(c.odds / (f.mult || 1) * 100) / 100, line: c.line } : null);
-                if (!w && !c && x !== div) _miss.push([x, f.market, String(f.sel[0]), sd]);
+                if (!w && !c) _miss.push([x, f.market, String(f.sel[0]), sd]); // incl. the division you're on — sprint lines only exist once priced
                 const lnTxt = w && w.line != null ? sd.charAt(0).toUpperCase() + sd.slice(1) + ' ' + w.line : (f.market === 'yn' ? sd.toUpperCase() : ''), lbl = w ? x + ' ' + base + (f.market === 'ou' ? ' ' + w.line : '') : '';
                 const btn = !w ? (c && c.none ? `<span style="font-size:.72rem;color:var(--muted)">Not offered in ${esc(x)}</span>` : `<span style="font-size:.72rem;color:var(--muted)">⏳ pricing ${esc(x)}…</span>`)
                   : x === div ? oddsBtn(f.market, w.sel, lbl, w.odds) : `<button class="bo-odd boosted" ${open ? '' : 'disabled'} onclick="betPickIn('${esc(x)}','${f.market}','${w.sel.join(',')}',${w.odds},'${esc(lbl).replace(/'/g, "\\'")}')">🚀 ${fmtOdds(w.odds)}</button>`;
