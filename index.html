@@ -29683,7 +29683,8 @@ window.renderBets = async function(dry) {
     _ouTime = _ouFrom(tPts, 100);
     // DNFs: this division only; races at this track count 5×.
     _ouDnf = _ouFrom(_rsS.filter(x => _sd(x) && x.dnf != null).map(x => ({ v: x.dnf, w: x.t === _upK ? 3 : 1 })), 1);
-    { const dp = _rsS.filter(x => _sd(x) && x.dnf != null); window._betDnfMean = dp.length >= 3 ? dp.reduce((a, x) => a + x.dnf, 0) / dp.length : null; }
+    { const dp = _rsS.filter(x => _sd(x) && x.dnf != null); window._betDnfMean = dp.length >= 3 ? dp.reduce((a, x) => a + x.dnf, 0) / dp.length : null;
+      const da = _rsS.filter(x => x.dnf != null); window._betDnfMeanAll = da.length ? da.reduce((a, x) => a + x.dnf, 0) / da.length : null; }
     const _divPts = (f) => _rsS.filter(x => x[f] != null && _sd(x)).map(x => ({ v: x[f], w: x.t === _upK ? 3 : 1 }));
     _ouMore = [
       ['gain', 'Most places gained by one driver', _ouFrom(_divPts('gain'), 1), (v) => String(v)],
@@ -29720,7 +29721,7 @@ window.renderBets = async function(dry) {
       const _tk = window.trackKey ? window.trackKey(r.name) : String(r.name || '').toLowerCase();
       pts.push({ v: n, sec, dq: anyDq, rb: anyRb, w: (se === curS ? 2 : 1) * (_upK && _tk === _upK ? 3 : 1) }); })); // past races at this circuit count 3×
     if (pts.length >= 3) {
-      _ouPen = _ouFrom(pts, 1); window._betPenMean = pts.reduce((a, x) => a + x.v * x.w, 0) / pts.reduce((a, x) => a + x.w, 0);
+      _ouPen = _ouFrom(pts, 1); window._betPenMean = pts.reduce((a, x) => a + x.v * x.w, 0) / pts.reduce((a, x) => a + x.w, 0); (window._betPenMeans = window._betPenMeans || {})[div] = window._betPenMean;
       const W = pts.reduce((a, x) => a + x.w, 0), Z = pts.reduce((a, x) => a + (x.v === 0 ? x.w : 0), 0);
       _yn.push(['clean', 'Clean race (no time penalties or DSQs)', (Z + 1) / (W + 2)]);
       _ouPenSec = _ouFrom(pts.map(x => ({ v: x.sec, w: x.w })), 5);
@@ -30172,7 +30173,10 @@ window.renderBets = async function(dry) {
                   <div class="bo-ou-b"><i>${esc(String(A.name).slice(0, 10))}</i>${oddsBtn('yn', [k, 'yes'], A.name + ' beats ' + C.name + ' in the ' + div + ' sprint', _ouOdds('yn', [k, 'yes'], ex(q)))}</div>
                   <div class="bo-ou-b"><i>${esc(String(C.name).slice(0, 10))}</i>${oddsBtn('yn', [k, 'no'], C.name + ' beats ' + A.name + ' in the ' + div + ' sprint', _ouOdds('yn', [k, 'no'], ex(1 - q)))}</div></div>`; }).join('')}</div>` : ''}
             ${(() => { // ⚖️ sprint stewards + carnage
-              const lamP = window._betPenMean != null ? window._betPenMean * SPRINT_PEN_FACTOR : null, lamD = window._betDnfMean != null ? window._betDnfMean * SPRINT_DNF_FACTOR : null;
+              // a division without enough history of its own borrows the league-wide average (never "not offered")
+              const _pm = Object.values(window._betPenMeans || {}), _penBase = window._betPenMean != null ? window._betPenMean : _pm.length ? _pm.reduce((a, x) => a + x, 0) / _pm.length : 1.2;
+              const _dnfBase = window._betDnfMean != null ? window._betDnfMean : window._betDnfMeanAll != null ? window._betDnfMeanAll : 2;
+              const lamP = _penBase * SPRINT_PEN_FACTOR, lamD = _dnfBase * SPRINT_DNF_FACTOR;
               const yn = [], ouR = [];
               if (lamP != null) { yn.push(['spclean', 'Clean sprint', 'No time penalties or DSQs from the sprint', Math.exp(-lamP)]); const l = _poisLine(lamP); if (l) ouR.push(['sppen', 'Drivers penalised in the sprint', l]); }
               if (lamD != null) { const l = _poisLine(lamD); if (l) ouR.push(['spdnf', 'Sprint DNFs', l]); yn.push(['spnodnf', 'Everyone finishes the sprint', 'No DNFs in the sprint', Math.exp(-lamD)]); }
