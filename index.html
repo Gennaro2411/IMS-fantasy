@@ -2863,6 +2863,57 @@
     .gd-timer{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.05rem;padding:3px 10px;border-radius:9px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);min-width:52px;text-align:center}.gd-timer.low{color:#f87171;border-color:rgba(248,113,113,.6);animation:wdPop .5s infinite alternate}
     .gr-cell.gd-win{box-shadow:0 0 0 3px #ffd24a,0 0 22px rgba(255,210,74,.5);animation:wdPop .5s both}
     .gd-myturn{border-color:rgba(255,107,61,0.5)}.gd-last{font-size:.78rem!important;margin-top:10px!important;padding-top:8px;border-top:1px solid rgba(255,255,255,0.08)}
+    /* ===== Quali Shootout ===== */
+    .qs-arena{--qc:#a0a4ff;position:relative;overflow:hidden;text-align:center;padding:22px 18px 20px;border-radius:22px;border:1px solid color-mix(in srgb,var(--qc) 35%,rgba(255,255,255,.08));background:radial-gradient(90% 70% at 50% -20%,color-mix(in srgb,var(--qc) 26%,transparent),transparent 65%),linear-gradient(170deg,#0d1120,#0a0a14);box-shadow:0 20px 50px rgba(0,0,0,.35)}
+    .qs-arena::after{content:'';position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,transparent,var(--qc),transparent)}
+    .qs-tag{display:inline-flex;align-items:center;gap:7px;font-size:.66rem;font-weight:800;letter-spacing:2.2px;color:var(--qc)}.qs-tag i{width:7px;height:7px;border-radius:50%;background:var(--qc);box-shadow:0 0 10px var(--qc);animation:qsPulse 1.6s infinite}
+    @keyframes qsPulse{50%{opacity:.35}}
+    .qs-trk{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:2rem;letter-spacing:1px;margin:6px 0 2px;line-height:1.1}
+    .qs-q{color:var(--muted);font-size:.84rem}
+    .qs-inwrap{margin:18px auto 14px;max-width:320px}.qs-inwrap small{display:block;margin-top:6px;font-size:.66rem;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase}
+    .qs-in{width:100%;padding:16px 12px;border-radius:16px;text-align:center;color:#fff;font-family:'JetBrains Mono','SF Mono',ui-monospace,Menlo,monospace;font-weight:700;font-size:2.1rem;letter-spacing:3px;font-variant-numeric:tabular-nums;background:linear-gradient(180deg,rgba(0,0,0,.5),rgba(0,0,0,.25));border:1px solid rgba(255,255,255,.12);box-shadow:inset 0 2px 10px rgba(0,0,0,.5);outline:none;transition:border-color .2s,box-shadow .2s}
+    .qs-in:focus{border-color:var(--qc,#a0a4ff);box-shadow:inset 0 2px 10px rgba(0,0,0,.5),0 0 0 3px color-mix(in srgb,var(--qc,#a0a4ff) 30%,transparent)}.qs-in::placeholder{color:rgba(255,255,255,.18)}.qs-in:disabled{opacity:.55}
+    .qs-in.sm{font-size:1.45rem;padding:11px 10px;border-radius:12px;letter-spacing:2px;margin:10px 0}
+    .qs-go{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-width:220px;padding:14px 26px;border:none;border-radius:999px;cursor:pointer;font:inherit;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.15rem;letter-spacing:2px;color:#0b0b12;background:linear-gradient(135deg,#fde047,#f59e0b);box-shadow:0 10px 26px rgba(245,158,11,.35);transition:transform .15s,box-shadow .15s}
+    .qs-go:hover{transform:translateY(-1px);box-shadow:0 14px 30px rgba(245,158,11,.45)}.qs-go:active{transform:scale(.97)}
+    .qs-prize{display:flex;justify-content:center;flex-wrap:wrap;gap:6px;margin-top:14px}.qs-prize span{font-size:.72rem;padding:5px 11px;border-radius:999px;color:var(--muted);background:rgba(253,224,71,.06);border:1px solid rgba(253,224,71,.22)}.qs-prize b{color:#fde047}
+    .qs-warn{display:flex;gap:10px;align-items:flex-start;text-align:left;margin-bottom:12px;padding:11px 14px;border-radius:14px;font-size:.8rem;background:rgba(239,68,68,.08);border:1px solid rgba(248,113,113,.3)}.qs-warn>span{font-size:1.1rem}.qs-warn b{color:#fca5a5}
+    .qs-clock{margin:18px auto 6px;display:flex;flex-direction:column;align-items:center}.qs-clock small{font-size:.62rem;letter-spacing:3px;color:var(--qc);font-weight:800}
+    .qs-clock b{font-family:'JetBrains Mono','SF Mono',ui-monospace,Menlo,monospace;font-size:2.8rem;font-weight:700;letter-spacing:2px;line-height:1.1;font-variant-numeric:tabular-nums;text-shadow:0 0 24px color-mix(in srgb,var(--qc) 50%,transparent);animation:qsIn .6s both}
+    .qs-clock span{font-size:.82rem;color:var(--muted);margin-top:2px}
+    @keyframes qsIn{from{opacity:0;transform:translateY(8px) scale(.96);filter:blur(4px)}to{opacity:1;transform:none;filter:none}}
+    .qs-you{display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:10px;padding:8px 14px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);font-size:.88rem}
+    .qs-you em{font-style:normal;font-weight:900;color:#f87171;font-family:'JetBrains Mono',ui-monospace,monospace}.qs-you.ok em{color:#4ade80}.qs-you i{font-style:normal;font-size:.62rem;font-weight:900;letter-spacing:1px;padding:3px 7px;border-radius:6px;background:#16a34a;color:#fff}
+    .qs-gauge{max-width:360px;margin:16px auto 0}.qs-gauge-tr{position:relative;height:10px;border-radius:6px;background:linear-gradient(90deg,rgba(248,113,113,.35),rgba(74,222,128,.35) 45%,rgba(74,222,128,.35) 55%,rgba(248,113,113,.35))}
+    .qs-gauge-z{position:absolute;left:50%;top:-4px;bottom:-4px;width:2px;background:#fff;transform:translateX(-1px)}
+    .qs-gauge-dot{position:absolute;top:50%;width:16px;height:16px;border-radius:50%;background:#f87171;border:2px solid #fff;transform:translate(-50%,-50%);box-shadow:0 0 12px #f87171;animation:qsDot .9s cubic-bezier(.2,.9,.25,1.2) both}.qs-gauge-dot.ok{background:#4ade80;box-shadow:0 0 12px #4ade80}
+    @keyframes qsDot{from{left:50%;opacity:0}}
+    .qs-gauge-l{display:flex;justify-content:space-between;margin-top:6px;font-size:.6rem;letter-spacing:1px;color:var(--muted)}
+    .qs-next{display:inline-flex;flex-direction:column;align-items:center;margin-top:16px;padding:8px 18px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}.qs-next small{font-size:.58rem;letter-spacing:2px;color:var(--muted)}.qs-next b{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:1.25rem;font-variant-numeric:tabular-nums}
+    .qs-lost{margin-top:16px;padding:12px;border-radius:14px;display:flex;flex-direction:column;gap:4px;background:rgba(239,68,68,.12);border:1px solid rgba(248,113,113,.45);font-size:.84rem}
+    .qs-lockin{display:inline-flex;flex-direction:column;align-items:center;margin-top:12px;padding:10px 20px;border-radius:16px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1)}.qs-lockin small{font-size:.58rem;letter-spacing:2.5px;color:var(--muted)}.qs-lockin b{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:1.6rem;font-variant-numeric:tabular-nums;color:#fde047}.qs-lockin span{font-size:.72rem;color:var(--muted)}
+    .qs-divs{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(240px,100%),1fr));gap:12px;margin-top:14px}
+    .qs-div{--qc:#888;position:relative;overflow:hidden;padding:14px 14px 12px;border-radius:18px;background:linear-gradient(170deg,color-mix(in srgb,var(--qc) 12%,#0e1020),#0b0b14);border:1px solid rgba(255,255,255,.08);transition:border-color .2s,transform .2s}
+    .qs-div::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--qc)}.qs-div:focus-within{border-color:color-mix(in srgb,var(--qc) 60%,transparent);transform:translateY(-2px)}.qs-div.set{border-color:rgba(74,222,128,.35)}
+    .qs-div-h{display:flex;align-items:center;justify-content:space-between}.qs-div-h b{font-family:'Barlow Condensed',sans-serif;font-size:1.45rem;letter-spacing:1.5px;color:var(--qc)}.qs-div-h small{font-size:.72rem;font-weight:800;color:#4ade80}.qs-div-h small.mt{color:var(--muted);font-weight:500}
+    .qs-hist{display:flex;flex-direction:column;gap:3px}.qs-hist>div{display:flex;align-items:baseline;gap:8px;font-size:.72rem;color:var(--muted)}.qs-hist span{font-weight:800;min-width:24px}.qs-hist b{color:#fff;font-family:'JetBrains Mono',ui-monospace,monospace;font-weight:600}.qs-hist small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.qs-hist .mt{font-size:.72rem}
+    .qs-panel{margin-top:14px;padding:14px;border-radius:18px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.08)}
+    .qs-ph{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:8px}.qs-ph b{font-family:'Barlow Condensed',sans-serif;font-size:1.15rem;letter-spacing:1.5px}.qs-ph small{color:var(--muted);font-size:.72rem}
+    .qs-row{display:flex;align-items:center;gap:10px;padding:8px 6px;border-radius:10px;font-size:.84rem}.qs-row+.qs-row{border-top:1px solid rgba(255,255,255,.05)}
+    .qs-row.me,.qs-lrow.me,.qs-rrow.me{background:rgba(160,164,255,.1);box-shadow:inset 0 0 0 1px rgba(160,164,255,.3)}
+    .qs-pos{width:26px;text-align:center;font-weight:900;flex-shrink:0}.qs-nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.qs-g{color:var(--muted);font-family:'JetBrains Mono',ui-monospace,monospace}
+    .qs-err{min-width:66px;text-align:right;font-family:'JetBrains Mono',ui-monospace,monospace}.qs-err.ok,.qs-lrow b.ok{color:#4ade80}.gold{color:#facc15}
+    .qs-mono{font-family:'JetBrains Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
+    .qs-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.qs-tile{display:flex;flex-direction:column;align-items:center;padding:10px 4px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07)}.qs-tile b{font-family:'Barlow Condensed',sans-serif;font-size:1.35rem;line-height:1.1}.qs-tile small{font-size:.6rem;letter-spacing:1px;text-transform:uppercase;color:var(--muted);text-align:center}
+    .qs-lrow,.qs-rrow{display:grid;align-items:center;gap:8px;padding:8px 6px;border-radius:10px;font-size:.8rem}.qs-lrow+.qs-lrow,.qs-rrow+.qs-rrow{border-top:1px solid rgba(255,255,255,.05)}
+    .qs-lrow{grid-template-columns:26px minmax(0,1fr) 46px 30px 64px 64px 34px 28px}.qs-rrow{grid-template-columns:26px minmax(0,1fr) 60px 80px 58px}
+    .qs-lrow>*:nth-child(n+3),.qs-rrow>*:nth-child(n+3){text-align:right}.qs-lh{font-size:.58rem!important;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted);padding-top:0!important}
+    .qs-who{display:flex;align-items:center;gap:8px;min-width:0}.qs-who b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .qs-rs{--qc:#888;padding:10px 0 10px 12px;border-top:1px solid rgba(255,255,255,.05);border-left:3px solid var(--qc);margin-top:6px}
+    .qs-rs-h{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;font-size:.8rem}.qs-rs-h>b{color:var(--qc);font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;letter-spacing:1px}.qs-rs-h small{margin-left:auto;color:var(--muted)}.qs-rs-h small.ok{color:#4ade80}
+    .qs-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.qs-chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 3px;border-radius:999px;font-size:.75rem;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1)}.qs-chip em{font-style:normal}.qs-chip small{color:var(--muted)}.qs-chip.win{background:rgba(74,222,128,.12);border-color:rgba(74,222,128,.45)}
+    .qs-empty{display:flex;flex-direction:column;align-items:center;gap:6px;padding:34px 16px;border-radius:20px;text-align:center;background:rgba(255,255,255,.025);border:1px dashed rgba(255,255,255,.12)}.qs-empty span{font-size:2rem}
+    @media (max-width:560px){.qs-trk{font-size:1.6rem}.qs-in{font-size:1.7rem}.qs-clock b{font-size:2.2rem}.qs-lrow{grid-template-columns:24px minmax(0,1fr) 28px 58px 30px 26px;gap:6px;font-size:.74rem}.qs-rrow{grid-template-columns:24px minmax(0,1fr) 44px 70px 50px;font-size:.74rem}.qs-tiles{gap:6px}}
     @media (max-width:640px){.gd-p b{font-size:.9rem}.gd-turn{font-size:.7rem;padding:3px 8px}.gr-cell.gd-host span,.gr-cell.gd-guest span{font-size:.55rem}}
     @media (max-width:560px){
       .qs-cn,.qs-cb{display:none!important}
@@ -2871,7 +2922,6 @@
       .wd-lb{padding:14px 10px}.wd-info{padding:16px 14px}
       .st-bub{padding:9px 11px}.st-txt{font-size:.84rem}.st-chat::before{left:15px!important}.st-msg>img,.st-msg>span{width:32px!important;height:32px!important}.st-fia-av{width:32px!important;height:32px!important;font-size:1rem!important}
       .card.st-card{padding:13px 12px!important}
-      [data-qs-div]{font-size:1.35rem!important;padding:10px!important}#qs-day-in{font-size:1.6rem!important}
     }
     @media (max-width:380px){.wd-modes button span{display:none}}
     .st-room{--sp:#16a34a;--sp2:#2ecc71;--sp3:#86efac;--sr:#0e7a3a;--rc:#facc15}
@@ -33180,7 +33230,10 @@ async function renderQSGame(el) {
   try { if (me.uid && mine.g) await window._qsSettleMine({ mine, races, all }); } catch (e) {}
   const lockBanner = (window._gamesLock || {}).qs ? `<div class="wd-lockbar">🔒 <b>Quali Shootout is locked</b><span>${locked ? 'It\'ll open soon — have a look around.' : 'Locked for players — you can still play.'}</span></div>` : '';
   const av = (u, sz) => u.avatar ? `<img src="${esc(u.avatar)}" style="width:${sz}px;height:${sz}px;border-radius:50%;object-fit:cover;flex-shrink:0">` : (typeof initialsAvatar === 'function' ? initialsAvatar(u.name || '?', sz, 'border-radius:50%;flex-shrink:0') : '');
-  let body = '';
+  const flag = (n) => typeof getRaceFlag === 'function' ? getRaceFlag(n) : '';
+  const miss = (e) => '±' + (e / 1000).toFixed(3);
+  const empty = (ic, t) => `<div class="qs-empty"><span>${ic}</span><b>${t}</b></div>`;
+  let body = '', pills = '';
   if (mode === 'day') {
     // Today's pole: one past pole from any season (same for everyone), picked by date.
     const pool = []; [[Number(window.currentSeason || window._reserveSeason) || 0, races], ...arcs.map(a => [Number(a.season), a.races || []])].forEach(([se, rs]) => rs.forEach(r => divs.concat('D4').forEach(dv => { const pole = _qsPole(r, dv); if (pole != null && !(dv === 'D4' && divs.includes('E3') && se >= 8)) pool.push({ k: se + '|' + r.name + '|' + dv, se, r, dv: dv === 'D4' && se >= 8 ? 'E3' : dv, pole }); })));
@@ -33189,23 +33242,28 @@ async function renderQSGame(el) {
     const P = P0.length ? P0[h % P0.length] : null; window._qsDayPick = P;
     let dd = mine.daily && mine.daily.day === _wdDayKey() ? mine.daily : null;
 
-    if (!P) body = '<div class="card" style="text-align:center;padding:26px">No past pole times on record yet.</div>';
+    if (!P) body = empty('⏱️', 'No past pole times on record yet.');
     else { if (!dd && me.uid && !locked) { const old = window._qsArmed && window._qsArmed.day === _wdDayKey() ? window._qsArmed : null; window._qsArmed = { day: _wdDayKey(), k: P.k, strikes: old ? old.strikes || 0 : 0, last: old ? old.last || 0 : 0 }; try { localStorage.setItem('qsArmed', JSON.stringify(window._qsArmed)); } catch (e) {} }
       const err = dd && !dd.f ? Math.abs(dd.g - P.pole) : null, col = HUE[P.dv] || HUE[P.dv === 'D4' ? 'E3' : P.dv] || '#a0a4ff';
       const today = all.filter(u => u.daily && !u.daily.f && u.daily.day === _wdDayKey() && u.daily.k === P.k).map(u => ({ u, err: Math.abs(u.daily.g - P.pole), g: u.daily.g })).sort((a, b) => a.err - b.err);
-      body = `<div class="text-muted" style="font-size:.82rem;margin:0 0 12px;text-align:center">⚠️ <b style="color:#fca5a5">Don't leave this page</b> — leave once and you get a warning, leave twice before locking in and you lose today's round. One real IMS pole a day. <b style="color:#ffd84d">+10 IM$</b> for playing, <b style="color:#ffd84d">+10 IM$</b> more if you're within a tenth.</div>
-        <div class="card" style="padding:20px 18px;text-align:center;border-color:${col}66;background:linear-gradient(160deg,${col}1c,var(--surface) 60%)">
-          <div style="font-size:.7rem;font-weight:800;letter-spacing:2px;color:${col}">SEASON ${P.se} · ${esc(P.dv)}${P.r.raceNum ? ' · ROUND ' + P.r.raceNum : ''}</div>
-          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.9rem;letter-spacing:1.5px;margin:4px 0 2px">${typeof getRaceFlag === 'function' ? getRaceFlag(P.r.name) : ''} ${esc(P.r.name)}</div>
-          <div class="text-muted" style="font-size:.82rem">What was the pole time?</div>
-          ${dd && dd.f ? `<div style="margin-top:14px;padding:12px;border-radius:12px;background:rgba(239,68,68,.12);border:1px solid rgba(248,113,113,.45)"><b>⛔ ROUND LOST</b><div class="text-muted" style="font-size:.82rem;margin-top:4px">You left the page before locking in a guess. Pole was <b style="color:#fff">${_qsFmt(P.pole)}</b>.</div></div><div class="wd-timer" style="margin-top:12px"><b id="qs-day-timer">--:--:--</b><small>NEXT POLE</small></div>`
-          : dd ? `<div style="margin-top:14px;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:2.6rem;letter-spacing:2px">${_qsFmt(P.pole)}</div>
-              <div style="font-size:.85rem">${(P.r.poleByDiv || {})[P.dv] || (P.r.poleByDiv || {}).D4 ? '🏁 ' + esc((P.r.poleByDiv || {})[P.dv] || (P.r.poleByDiv || {}).D4) : ''}</div>
-              <div style="margin-top:10px;font-size:.95rem">You said <b>${_qsFmt(dd.g)}</b> · <b style="color:${err <= 100 ? '#4ade80' : '#f87171'}">${err === 0 ? '🎯 SPOT ON' : (dd.g > P.pole ? '+' : '−') + (err / 1000).toFixed(3) + 's'}</b>${err <= 100 ? ' · within a tenth!' : ''}</div>
-              <div class="wd-timer" style="margin-top:12px"><b id="qs-day-timer">--:--:--</b><small>NEXT POLE</small></div>`
-            : `<input id="qs-day-in" inputmode="decimal" placeholder="1:23.456" ${locked ? 'disabled' : ''} style="width:100%;max-width:280px;margin:14px auto 10px;display:block;padding:14px;border-radius:14px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.15);color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:2rem;letter-spacing:2px;text-align:center">
-              ${locked ? '' : '<button class="btn btn-primary" onclick="_qsDailySave()">⏱️ Lock it in</button>'}`}</div>
-        ${dd && today.length ? `<div class="wd-lb"><div class="wd-lb-h"><span>TODAY'S CLOSEST</span><small>${today.length} played</small></div>${today.slice(0, 15).map((y, i) => `<div style="display:flex;align-items:center;gap:10px;padding:7px 4px;border-top:1px solid rgba(255,255,255,.06);${y.u.id === me.uid ? 'background:rgba(160,164,255,.1);border-radius:8px' : ''}"><b style="width:24px;text-align:center">${i + 1}</b>${av(y.u, 26)}<b style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(y.u.name || 'Player')}</b><small class="text-muted gm-sub">${_qsFmt(y.g)}</small><b style="min-width:64px;text-align:right;color:${y.err <= 100 ? '#4ade80' : '#fff'}">±${(y.err / 1000).toFixed(3)}</b></div>`).join('')}</div>` : ''}`;
+      const poleBy = (P.r.poleByDiv || {})[P.dv] || (P.r.poleByDiv || {}).D4 || '';
+      // How close: 0 → dead centre, a full second or more → the edge of the gauge.
+      const gauge = err != null ? `<div class="qs-gauge"><div class="qs-gauge-tr"><i class="qs-gauge-z"></i><i class="qs-gauge-dot ${err <= 100 ? 'ok' : ''}" style="left:${50 + Math.max(-1, Math.min(1, (dd.g - P.pole) / 1000)) * 46}%"></i></div><div class="qs-gauge-l"><span>−1.000s</span><span>POLE</span><span>+1.000s</span></div></div>` : '';
+      pills = `<span class="wd-pill">📅 Daily</span>`;
+      body = `${dd ? '' : `<div class="qs-warn"><span>⚠️</span><div><b>Stay on this page.</b> Leave once and you get a warning — leave twice before locking in and today's round is lost.</div></div>`}
+        <div class="qs-arena" style="--qc:${col}">
+          <div class="qs-tag"><i></i>SEASON ${P.se} · ${esc(P.dv)}${P.r.raceNum ? ' · ROUND ' + P.r.raceNum : ''}</div>
+          <div class="qs-trk">${flag(P.r.name)} ${esc(P.r.name)}</div>
+          <div class="qs-q">What was the pole time?</div>
+          ${dd && dd.f ? `<div class="qs-lost"><b>⛔ ROUND LOST</b><span>You left the page before locking in. Pole was <b>${_qsFmt(P.pole)}</b>.</span></div><div class="qs-next"><small>NEXT POLE IN</small><b id="qs-day-timer">--:--:--</b></div>`
+          : dd ? `<div class="qs-clock"><small>POLE</small><b>${_qsFmt(P.pole)}</b>${poleBy ? `<span>🏁 ${esc(poleBy)}</span>` : ''}</div>
+              <div class="qs-you ${err <= 100 ? 'ok' : ''}"><span>You said <b>${_qsFmt(dd.g)}</b></span><em>${err === 0 ? '🎯 SPOT ON' : (dd.g > P.pole ? '+' : '−') + (err / 1000).toFixed(3) + 's'}</em>${err <= 100 && err > 0 ? '<i>WITHIN A TENTH</i>' : ''}</div>
+              ${gauge}<div class="qs-next"><small>NEXT POLE IN</small><b id="qs-day-timer">--:--:--</b></div>`
+            : `<div class="qs-inwrap"><input id="qs-day-in" class="qs-in" inputmode="decimal" placeholder="1:23.456" autocomplete="off" ${locked ? 'disabled' : ''} onkeydown="if(event.key==='Enter')_qsDailySave()"><small>minutes : seconds . thousandths</small></div>
+              ${locked ? '' : '<button class="qs-go" onclick="_qsDailySave()">⏱️ LOCK IT IN</button>'}
+              <div class="qs-prize"><span><b>+10</b> IM$ for playing</span><span><b>+10</b> IM$ within a tenth</span></div>`}
+        </div>
+        ${dd && today.length ? `<div class="qs-panel"><div class="qs-ph"><b>⚡ TODAY'S CLOSEST</b><small>${today.length} played</small></div>${today.slice(0, 15).map((y, i) => `<div class="qs-row${y.u.id === me.uid ? ' me' : ''}"><span class="qs-pos">${['🥇', '🥈', '🥉'][i] || i + 1}</span>${av(y.u, 28)}<b class="qs-nm">${esc(y.u.name || 'Player')}</b><small class="qs-g">${_qsFmt(y.g)}</small><b class="qs-err ${y.err <= 100 ? 'ok' : ''}">${y.err === 0 ? '🎯' : miss(y.err)}</b></div>`).join('')}</div>` : ''}`;
       // All-time daily leaderboard: tenths, played, avg miss, best miss, current streak.
       const dayMs = 864e5, pd = (k) => { const [d, m, y] = String(k).split('/').map(Number); return Date.UTC(y, m - 1, d); };
       const todayT = pd(_wdDayKey());
@@ -33215,17 +33273,17 @@ async function renderQSGame(el) {
         return { u, n: A0.length, so: E.filter(x => x.e === 0).length, tn: E.filter(x => x.e <= 100).length, avg: E.reduce((a, x) => a + x.e, 0) / E.length, best: Math.min(...E.map(x => x.e)), st }; })
         .sort((a, b) => b.so - a.so || b.tn - a.tn || a.avg - b.avg || b.n - a.n);
       const myL = L.find(r => r.u.id === me.uid);
-      body += `${myL ? `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-top:16px">${[['PLAYED', myL.n], ['🎯 SPOT ON', myL.so], ['WITHIN A TENTH', myL.tn], ['AVG MISS', isFinite(myL.avg) ? '±' + (myL.avg / 1000).toFixed(3) + 's' : '–'], ['BEST', myL.best === 0 ? '🎯 0.000' : isFinite(myL.best) ? '±' + (myL.best / 1000).toFixed(3) + 's' : '–'], ['STREAK', '🔥 ' + myL.st]].map(([l, v]) => `<div style="padding:10px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);text-align:center"><div style="font-size:.58rem;font-weight:800;letter-spacing:1.5px;color:var(--muted)">${l}</div><div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.35rem">${v}</div></div>`).join('')}</div>` : ''}
-        <div class="wd-lb"><div class="wd-lb-h"><span>🏆 DAILY LEADERBOARD</span><small>Ranked by spot-ons, tenths hit, then average miss</small></div>
-        ${L.length ? `<div style="display:flex;gap:10px;padding:0 4px 6px;font-size:.58rem;font-weight:800;letter-spacing:1px;color:var(--muted)"><span style="width:24px"></span><span style="flex:1">PLAYER</span><span class="qs-cn" style="width:46px;text-align:center">PLAYED</span><span style="width:46px;text-align:center">🔥</span><span style="width:70px;text-align:right">AVG</span><span class="qs-cb" style="width:70px;text-align:right">BEST</span><span style="width:40px;text-align:right">≤0.1</span><span style="width:34px;text-align:right">🎯</span></div>`
-          + L.slice(0, 50).map((r, i) => `<div style="display:flex;align-items:center;gap:10px;padding:7px 4px;border-top:1px solid rgba(255,255,255,.06);font-size:.82rem;${r.u.id === me.uid ? 'background:rgba(160,164,255,.1);border-radius:8px' : ''}"><b style="width:24px;text-align:center">${i + 1}</b><span style="flex:1;min-width:0;display:flex;align-items:center;gap:8px">${av(r.u, 24)}<b style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.u.name || 'Player')}</b></span>
-            <span class="qs-cn" style="width:46px;text-align:center">${r.n}</span><span style="width:46px;text-align:center">${r.st || '–'}</span><span style="width:70px;text-align:right">${isFinite(r.avg) ? '±' + (r.avg / 1000).toFixed(3) : '–'}</span><span class="qs-cb" style="width:70px;text-align:right">${r.best === 0 ? '🎯' : isFinite(r.best) ? '±' + (r.best / 1000).toFixed(3) : '–'}</span><b style="width:40px;text-align:right;color:#4ade80">${r.tn}</b><b style="width:34px;text-align:right;color:#facc15">${r.so}</b></div>`).join('')
+      body += `${myL ? `<div class="qs-panel"><div class="qs-ph"><b>📈 YOUR DAILY RECORD</b></div><div class="qs-tiles">${[['Played', myL.n], ['🎯 Spot on', myL.so], ['Within a tenth', myL.tn], ['Avg miss', isFinite(myL.avg) ? miss(myL.avg) + 's' : '–'], ['Best', myL.best === 0 ? '🎯 0.000' : isFinite(myL.best) ? miss(myL.best) + 's' : '–'], ['Streak', '🔥 ' + myL.st]].map(([l, v]) => `<div class="qs-tile"><b>${v}</b><small>${l}</small></div>`).join('')}</div></div>` : ''}
+        <div class="qs-panel"><div class="qs-ph"><b>🏆 DAILY LEADERBOARD</b><small>Spot-ons, then tenths, then average miss</small></div>
+        ${L.length ? `<div class="qs-lrow qs-lh"><span>#</span><span>Player</span><span class="qs-cn">Played</span><span>🔥</span><span>Avg</span><span class="qs-cb">Best</span><span>≤0.1</span><span>🎯</span></div>`
+          + L.slice(0, 50).map((r, i) => `<div class="qs-lrow${r.u.id === me.uid ? ' me' : ''}${i < 3 ? ' top' : ''}"><span class="qs-pos">${['🥇', '🥈', '🥉'][i] || i + 1}</span><span class="qs-who">${av(r.u, 26)}<b>${esc(r.u.name || 'Player')}</b></span>
+            <span class="qs-cn">${r.n}</span><span>${r.st || '–'}</span><span class="qs-mono">${isFinite(r.avg) ? miss(r.avg) : '–'}</span><span class="qs-cb qs-mono">${r.best === 0 ? '🎯' : isFinite(r.best) ? miss(r.best) : '–'}</span><b class="ok">${r.tn}</b><b class="gold">${r.so}</b></div>`).join('')
           : '<p class="text-muted" style="margin:0">No one has played the daily yet — be the first.</p>'}</div>`;
       if (dd) { const until = Date.now() + _wdMsToMidnight(); clearInterval(window._wdTick); const tick = () => { const t = document.getElementById('qs-day-timer'); if (!t) { clearInterval(window._wdTick); return; } const ms = until - Date.now(); if (ms <= 0) { clearInterval(window._wdTick); renderGames(); return; }
         t.textContent = [Math.floor(ms / 36e5), Math.floor(ms / 6e4) % 60, Math.floor(ms / 1e3) % 60].map(n => String(n).padStart(2, '0')).join(':'); }; setTimeout(() => { tick(); window._wdTick = setInterval(tick, 1000); }, 0); }
     }
   } else if (mode === 'now') {
-    if (!up) body = `<div class="card" style="text-align:center;padding:26px"><div style="font-size:2rem">⏱️</div><b>No upcoming round on the schedule.</b></div>`;
+    if (!up) body = empty('⏱️', 'No upcoming round on the schedule.');
     else {
       const rk = _qsKey(up.name), myG = (mine.g || {})[rk] || {};
       // Reference: past poles at this circuit (this season + archives) and this season's latest poles.
@@ -33233,36 +33291,40 @@ async function renderQSGame(el) {
       const hist = []; [[Number(window.currentSeason || window._reserveSeason) || 0, races], ...arcs.map(a => [Number(a.season), a.races || []])].forEach(([se, rs]) => rs.forEach(r => { if (window.trackKey && window.trackKey(r.name) === tk) hist.push({ se, r }); }));
       hist.sort((a, b) => b.se - a.se);
       const cnt = all.filter(u => (u.g || {})[rk]).length;
-      body = `<div class="card" style="padding:16px 18px;margin-bottom:14px;text-align:center"><div style="font-size:.7rem;font-weight:800;letter-spacing:2px;color:var(--muted)">ROUND ${esc(String(up.raceNum || ''))}</div>
-          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.7rem;letter-spacing:1.5px">${typeof getRaceFlag === 'function' ? getRaceFlag(up.name) : ''} ${esc(up.name)}</div>
-          <div class="text-muted" style="font-size:.82rem">${open ? `Guesses lock <b style="color:#fff" id="qs-lock">--</b> · ${cnt} player${cnt === 1 ? '' : 's'} in` : '🔒 Locked — the round is underway. Results land when quali times are imported.'}</div></div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(250px,100%),1fr));gap:12px">${divs.map(dv => { const h = hist.map(x => ({ se: x.se, p: _qsPole(x.r, dv), by: (x.r.poleByDiv || {})[dv] })).filter(x => x.p != null).slice(0, 3);
-          return `<div class="card" style="padding:14px 16px;border-color:${HUE[dv] || '#888'}66;background:linear-gradient(160deg,${HUE[dv] || '#888'}18,var(--surface) 60%)">
-            <div style="display:flex;align-items:center;justify-content:space-between"><b style="font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;letter-spacing:1.5px;color:${HUE[dv] || '#fff'}">${dv}</b>${myG[dv] != null ? `<small style="color:#4ade80;font-weight:800">✓ ${_qsFmt(myG[dv])}</small>` : ''}</div>
-            <input data-qs-div="${dv}" inputmode="decimal" placeholder="1:23.456" value="${myG[dv] != null ? _qsFmt(myG[dv]) : ''}" ${open && !locked ? '' : 'disabled'} style="width:100%;margin:10px 0 8px;padding:12px 14px;border-radius:12px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.15);color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:1.6rem;letter-spacing:2px;text-align:center">
-            <div style="font-size:.72rem;color:var(--muted);line-height:1.6">${h.length ? h.map(x => `S${x.se} pole here: <b style="color:#fff">${_qsFmt(x.p)}</b>${x.by ? ' · ' + esc(x.by) : ''}`).join('<br>') : 'No pole time here on record yet.'}</div></div>`; }).join('')}</div>
-        ${open && !locked ? `<div style="text-align:center;margin-top:14px"><button class="btn btn-primary" onclick="_qsSave('${esc(rk)}')">⏱️ ${Object.keys(myG).length ? 'Update guesses' : 'Lock in guesses'}</button><div class="text-muted" style="font-size:.74rem;margin-top:6px">Leave a division blank to skip it. You can change your guesses until the lock.</div></div>` : ''}`;
+      pills = `<span class="wd-pill">👥 ${cnt}</span>`;
+      body = `<div class="qs-arena qs-hero" style="--qc:#a0a4ff">
+          <div class="qs-tag"><i></i>ROUND ${esc(String(up.raceNum || ''))} · POLE TIME PREDICTOR</div>
+          <div class="qs-trk">${flag(up.name)} ${esc(up.name)}</div>
+          ${open ? `<div class="qs-lockin"><small>GUESSES LOCK</small><b id="qs-lock">--</b><span>${cnt} player${cnt === 1 ? '' : 's'} in</span></div>` : `<div class="qs-q">🔒 Locked — the round is underway. Results land when quali times are imported.</div>`}
+          <div class="qs-prize"><span>🏆 Closest per division <b>+500</b> IM$</span><span>🎯 Spot on <b>+5,000</b> IM$</span></div></div>
+        <div class="qs-divs">${divs.map(dv => { const h = hist.map(x => ({ se: x.se, p: _qsPole(x.r, dv), by: (x.r.poleByDiv || {})[dv] })).filter(x => x.p != null).slice(0, 3);
+          return `<div class="qs-div${myG[dv] != null ? ' set' : ''}" style="--qc:${HUE[dv] || '#888'}">
+            <div class="qs-div-h"><b>${dv}</b>${myG[dv] != null ? `<small>✓ ${_qsFmt(myG[dv])}</small>` : '<small class="mt">No guess yet</small>'}</div>
+            <input class="qs-in sm" data-qs-div="${dv}" inputmode="decimal" placeholder="1:23.456" autocomplete="off" value="${myG[dv] != null ? _qsFmt(myG[dv]) : ''}" ${open && !locked ? '' : 'disabled'}>
+            <div class="qs-hist">${h.length ? h.map(x => `<div><span>S${x.se}</span><b>${_qsFmt(x.p)}</b>${x.by ? `<small>${esc(x.by)}</small>` : ''}</div>`).join('') : '<div class="mt">No pole time here on record yet.</div>'}</div></div>`; }).join('')}</div>
+        ${open && !locked ? `<div style="text-align:center;margin-top:16px"><button class="qs-go" onclick="_qsSave('${esc(rk)}')">⏱️ ${Object.keys(myG).length ? 'UPDATE GUESSES' : 'LOCK IN GUESSES'}</button><div class="text-muted" style="font-size:.74rem;margin-top:8px">Leave a division blank to skip it. You can change your guesses until the lock.</div></div>` : ''}`;
       if (open) { clearInterval(window._wdTick); const tick = () => { const t = document.getElementById('qs-lock'); if (!t) { clearInterval(window._wdTick); return; } const ms = up.lockTime - Date.now(); if (ms <= 0) { clearInterval(window._wdTick); renderGames(); return; }
-        const d = Math.floor(ms / 864e5), h = Math.floor(ms / 36e5) % 24, m = Math.floor(ms / 6e4) % 60, sec = Math.floor(ms / 1e3) % 60; t.textContent = 'in ' + (d ? d + 'd ' : '') + [h, m, sec].map(n => String(n).padStart(2, '0')).join(':'); };
+        const d = Math.floor(ms / 864e5), h = Math.floor(ms / 36e5) % 24, m = Math.floor(ms / 6e4) % 60, sec = Math.floor(ms / 1e3) % 60; t.textContent = (d ? d + 'd ' : '') + [h, m, sec].map(n => String(n).padStart(2, '0')).join(':'); };
         setTimeout(() => { tick(); window._wdTick = setInterval(tick, 1000); }, 0); }
     }
   } else if (mode === 'res') {
     body = done.length ? done.slice(0, 12).map(r => { const R = resultsOf(r); if (!R.some(x => x.rows.length)) return '';
-      return `<div class="card" style="padding:14px 16px;margin-bottom:12px"><div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.25rem;letter-spacing:1px;margin-bottom:8px">R${r.raceNum} · ${typeof getRaceFlag === 'function' ? getRaceFlag(r.name) : ''} ${esc(r.name)}</div>
+      return `<div class="qs-panel"><div class="qs-ph"><b>R${r.raceNum} · ${flag(r.name)} ${esc(r.name)}</b></div>
         ${R.filter(x => x.rows.length).map(x => { const best = x.rows[0].err, myRow = x.rows.findIndex(y => y.u.id === me.uid);
-          return `<div style="padding:8px 0;border-top:1px solid rgba(255,255,255,.06)"><div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><b style="color:${HUE[x.dv] || '#fff'}">${x.dv}</b><span style="font-size:.8rem">Pole <b>${_qsFmt(x.pole)}</b>${x.poleBy ? ' · ' + esc(x.poleBy) : ''}</span>${myRow >= 0 ? `<small style="margin-left:auto;color:${x.rows[myRow].err === best ? '#4ade80' : 'var(--muted)'}">You: ${_qsFmt(x.rows[myRow].g)} (±${(x.rows[myRow].err / 1000).toFixed(3)}s) · P${myRow + 1}/${x.rows.length}</small>` : ''}</div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">${x.rows.slice(0, 3).map((y, i) => `<span style="display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 3px;border-radius:20px;font-size:.76rem;background:${y.err === best ? 'rgba(74,222,128,.14)' : 'rgba(255,255,255,.04)'};border:1px solid ${y.err === best ? 'rgba(74,222,128,.5)' : 'rgba(255,255,255,.1)'}">${av(y.u, 22)}${y.err === 0 ? '🎯 ' : y.err === best ? '🏆 ' : (i + 1) + '. '}<b>${esc(y.u.name || 'Player')}</b> ${_qsFmt(y.g)} <span class="text-muted">±${(y.err / 1000).toFixed(3)}</span></span>`).join('')}</div></div>`; }).join('')}</div>`; }).join('') || '<div class="card" style="text-align:center;padding:26px">No settled rounds with guesses yet.</div>'
-      : '<div class="card" style="text-align:center;padding:26px">No settled rounds yet.</div>';
+          return `<div class="qs-rs" style="--qc:${HUE[x.dv] || '#888'}"><div class="qs-rs-h"><b>${x.dv}</b><span>Pole <b class="qs-mono">${_qsFmt(x.pole)}</b>${x.poleBy ? ' · ' + esc(x.poleBy) : ''}</span>${myRow >= 0 ? `<small class="${x.rows[myRow].err === best ? 'ok' : ''}">You ${_qsFmt(x.rows[myRow].g)} · ${miss(x.rows[myRow].err)}s · P${myRow + 1}/${x.rows.length}</small>` : ''}</div>
+            <div class="qs-chips">${x.rows.slice(0, 3).map((y, i) => `<span class="qs-chip${y.err === best ? ' win' : ''}">${av(y.u, 22)}<em>${y.err === 0 ? '🎯' : y.err === best ? '🏆' : i + 1 + '.'}</em><b>${esc(y.u.name || 'Player')}</b><span class="qs-mono">${_qsFmt(y.g)}</span><small>${miss(y.err)}</small></span>`).join('')}</div></div>`; }).join('')}</div>`; }).join('') || empty('📋', 'No settled rounds with guesses yet.')
+      : empty('📋', 'No settled rounds yet.');
   } else {
     const st = {}; done.forEach(r => resultsOf(r).forEach(x => { if (!x.rows.length) return; const best = x.rows[0].err; x.rows.forEach(y => { const o = st[y.u.id] = st[y.u.id] || { u: y.u, w: 0, n: 0, e: 0 }; o.n++; o.e += y.err; if (y.err === best) o.w++; }); }));
     const rows = Object.values(st).sort((a, b) => b.w - a.w || a.e / a.n - b.e / b.n);
-    body = rows.length ? `<div class="wd-lb"><div class="wd-lb-h"><span>🏆 SHOOTOUT RANKINGS</span><small>Division wins · average miss</small></div>
-      ${rows.slice(0, 50).map((r, i) => `<div style="display:flex;align-items:center;gap:10px;padding:8px 4px;border-top:1px solid rgba(255,255,255,.06);${r.u.id === me.uid ? 'background:rgba(160,164,255,.1);border-radius:8px' : ''}"><b style="width:26px;text-align:center">${i + 1}</b>${av(r.u, 28)}<b style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.u.name || 'Player')}</b>
-        <small class="text-muted gm-sub" style="white-space:nowrap">${r.n} guess${r.n === 1 ? '' : 'es'} · avg ±${(r.e / r.n / 1000).toFixed(3)}s</small><b style="min-width:42px;text-align:right">🏆 ${r.w}</b></div>`).join('')}</div>`
-      : '<div class="card" style="text-align:center;padding:26px">No settled guesses yet.</div>';
+    body = rows.length ? `<div class="qs-panel"><div class="qs-ph"><b>🏆 SHOOTOUT RANKINGS</b><small>Division wins, then average miss</small></div>
+      <div class="qs-rrow qs-lh"><span>#</span><span>Player</span><span>Guesses</span><span>Avg miss</span><span>Wins</span></div>
+      ${rows.slice(0, 50).map((r, i) => `<div class="qs-rrow${r.u.id === me.uid ? ' me' : ''}${i < 3 ? ' top' : ''}"><span class="qs-pos">${['🥇', '🥈', '🥉'][i] || i + 1}</span><span class="qs-who">${av(r.u, 28)}<b>${esc(r.u.name || 'Player')}</b></span>
+        <span>${r.n}</span><span class="qs-mono">${miss(r.e / r.n)}s</span><b class="gold">🏆 ${r.w}</b></div>`).join('')}</div>`
+      : empty('🏆', 'No settled guesses yet.');
   }
-  el.innerHTML = `<div class="wd-wrap"><div class="wd-top"><button class="wd-back" onclick="openGame('hub')" title="Back to Games">←</button>
-      <div class="wd-brand"><img src="icons/icon-192.png?v=3" alt="IMS"><span>SHOOTOUT</span></div><div class="wd-meta"></div></div>${lockBanner}
+  el.innerHTML = `<div class="wd-wrap qs-wrap"><div class="wd-top"><button class="wd-back" onclick="openGame('hub')" title="Back to Games">←</button>
+      <div class="wd-brand"><img src="icons/icon-192.png?v=3" alt="IMS"><span>QUALI <em>SHOOTOUT</em></span></div><div class="wd-meta">${pills}</div></div>${lockBanner}
     <div class="wd-modes">${[['now', '⏱️', 'THIS ROUND'], ['day', '📅', 'DAILY'], ['res', '📋', 'RESULTS'], ['lb', '🏆', 'RANKINGS']].map(([m, i, l]) => `<button class="${mode === m ? 'on' : ''}" onclick="_qsSetMode('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>
     ${body}
     <div class="wd-info"><h3>How it works</h3><ul><li>Before the round locks, guess the <b>pole time</b> in each division you fancy — to the thousandth (e.g. <i>1:23.456</i>).</li><li>When quali times are imported, the <b>closest guess</b> in each division wins <b>+500 IM$</b> (ties all win). Get it <b>spot on to the thousandth</b> and you win <b>+5,000 IM$</b>. Guess every division for more chances.</li><li>Past pole times at the same circuit are shown to help you.</li><li><i>Daily</i>: guess one real IMS pole from the past each day — <b>+10 IM$</b> for playing, <b>+10 IM$</b> more if you're within 0.100s.</li></ul></div></div>`;
