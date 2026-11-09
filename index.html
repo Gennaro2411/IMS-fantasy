@@ -2737,7 +2737,7 @@
     .wf-clue:not(:disabled):active{transform:scale(.96)}.wf-clue em{font-style:normal;font-weight:900;color:#f87171;font-size:.72rem}.wf-clue.used{opacity:.45}.wf-clue.used em{color:var(--muted)}
     .wf-clue-out{position:relative;display:flex;flex-direction:column;gap:5px;align-items:center;margin-top:8px}.wf-clue-out span{font-size:.8rem;padding:5px 12px;border-radius:999px;background:rgba(253,224,71,.1);border:1px solid rgba(253,224,71,.35);animation:wdPop .4s both}
     .wf-meter{position:relative;display:inline-flex;align-items:baseline;gap:6px;margin-top:10px;padding:5px 14px;border-radius:999px;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.3)}.wf-meter span{font-size:.68rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}.wf-meter b{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;color:#4ade80}.wf-meter small{color:var(--muted);font-size:.7rem}
-    .wf-fl{font-style:normal;margin-left:6px;font-size:.58rem;font-weight:900;letter-spacing:.8px;padding:2px 6px;border-radius:5px;background:#a855f7;color:#fff;vertical-align:middle}
+    .wf-fl{font-style:normal;margin-left:6px;font-size:.58rem;font-weight:900;letter-spacing:.8px;padding:2px 6px;border-radius:5px;background:#e11d48;color:#fff;vertical-align:middle}
     .wf-score{position:relative;display:flex;align-items:center;gap:16px;justify-content:center;margin:14px auto 0;max-width:460px;padding:12px 16px;border-radius:16px;background:linear-gradient(135deg,rgba(74,222,128,.12),rgba(56,189,248,.08));border:1px solid rgba(74,222,128,.3);animation:wdPop .5s both}
     .wf-score-big{display:flex;flex-direction:column;align-items:center}.wf-score-big small{font-size:.62rem;letter-spacing:2px;color:var(--muted)}.wf-score-big b{font-family:'Barlow Condensed',sans-serif;font-size:2.8rem;line-height:1;color:#4ade80;font-variant-numeric:tabular-nums}
     .wf-score-br{display:flex;flex-direction:column;gap:2px;font-size:.78rem;min-width:150px}.wf-score-br span{display:flex;justify-content:space-between;gap:12px}.wf-score-br i{font-style:normal;color:var(--muted)}.wf-score-br b{color:#4ade80}.wf-score-br .neg b{color:#f87171}
@@ -34763,7 +34763,7 @@ async function _wfPuzzles() {
       const k = S.s + '|' + _wfK(r.name) + '|' + dv; if (seen.has(k)) return; seen.add(k);
       const grid = (r.raceGridByDiv || {})[D.raw] || (r.raceGridByDiv || {})[dv] || {}, tm = r.driverTeamByDivision || {}, tn = (r.teamByDivName || {})[D.raw] || (r.teamByDivName || {})[dv] || {};
       const tOf = (d) => ((tm[d.id] || {})[D.raw]) || ((tm[d.id] || {})[dv]) || tn[_wfK(d.name)] || tn[_wfK(String(d.name).replace(/^\[[^\]]*\]\s*/, ''))] || (d.imsAlias && tn[_wfK(d.imsAlias)]) || '';
-      const fl = String(((r.fastestLapByDiv || {})[D.raw]) || ((r.fastestLapByDiv || {})[dv]) || ''), tmap = (r.raceTimeByDiv || {})[D.raw] || (r.raceTimeByDiv || {})[dv] || {};
+      const fl = String(((r.poleByDiv || {})[D.raw]) || ((r.poleByDiv || {})[dv]) || ''), tmap = (r.raceTimeByDiv || {})[D.raw] || (r.raceTimeByDiv || {})[dv] || {};
       const tSec = (d) => { const t = String(tmap[_wfK(d.name)] || tmap[_wfK(String(d.name).replace(/^\[[^\]]*\]\s*/, ''))] || ''); if (!/^[0-9:.,]+$/.test(t)) return null; let v = 0; for (const q of t.replace(',', '.').split(':')) v = v * 60 + parseFloat(q); return isFinite(v) && v > 0 ? v : null; };
       const t1 = tSec(rows[0]), t2 = tSec(rows[1]), mg = t1 && t2 && t2 > t1 && t2 - t1 < 600 ? +(t2 - t1).toFixed(3) : null;
       list.push({ k, s: S.s, rn: r.raceNum || 0, track: r.name, dv, fl: _wfK(fl), mg, rows: rows.map(d => { const q = Number(grid[_wfK(d.name)] || grid[_wfK(String(d.name).replace(/^\[[^\]]*\]\s*/, ''))]) || 0;
@@ -34779,7 +34779,7 @@ function _wfState(mode, list) { if (!list.length) return null;
   const rnd = _grRng(_wdHash('imswf' + key)), P = list[Math.floor(rnd() * list.length)];
   st = { key, pk: P.k, cur: _wfShuffle(P.rows.map(x => x.id), rnd), tries: [], done: false, won: false, h: [], t0: Date.now() }; _wfSave(st); return st; }
 // ---- Scoring: 20 per driver in the right spot, 8 if one place out, + solve bonus by try, + speed bonus, − clues ----
-const WF_CLUES = { fl: ['🏎️', 'Fastest lap', 10], mg: ['⏱️', 'Winning margin', 5], win: ['🥇', 'Reveal winner', 15] };
+const WF_CLUES = { fl: ['🚦', 'Pole sitter', 10], mg: ['⏱️', 'Winning margin', 5], win: ['🥇', 'Reveal winner', 15] };
 const WF_SOLVE = [30, 20, 10], WF_SPEED = 20, WF_SPEED_MS = 180e3;
 const _wfClueCost = (st) => (st.h || []).reduce((a, c) => a + ((WF_CLUES[c] || [])[2] || 0), 0);
 function _wfScore(st, P) { const last = st.tries[st.tries.length - 1]; if (!last) return null;
@@ -34848,14 +34848,14 @@ async function renderWFGame(el) {
       const mine = st.done && !st.won && last ? (() => { const at = last.indexOf(id); return at === i ? '' : `<small class="wf-was">you had P${at + 1}</small>`; })() : '';
       const rev = window._wfRev === st.tries.length && !st.done, flb = P.fl && ((st.h || []).includes('fl') || st.done) && (_wfK(d.name) === P.fl || _wfK(String(d.name).replace(/^\[[^\]]*\]\s*/, '')) === P.fl), gain = st.done && d.grid ? d.grid - (i + 1) : null;
       return `<button class="wf-row${lockd ? ' lock' : ''}${sel ? ' sel' : ''}${!st.done && last && !lockd && last[i] === id ? ' m-' + mk : ''}${st.done ? (mk === 'g' ? ' m-g' : ' m-r') : ''}${rev ? ' rev' : ''}" data-id="${esc(id)}" data-i="${i}" style="${col ? '--tc:' + col.accent + ';' : ''}--d:${rev ? .12 + i * .19 : 0}s" onclick="wfTap(${i})" ${st.done || lockd || locked ? 'disabled' : ''}>
-        <span class="wf-p"><i>P</i>${i + 1}</span><span class="wf-av">${_wdAv(d, 40)}</span><span class="wf-nm"><b>${esc(d.name)}${flb ? '<em class="wf-fl">FASTEST LAP</em>' : ''}</b><small>${lg ? `<img src="${esc(lg)}" alt="">` : ''}<span>${esc(d.team || '')}</span>${d.grid && !st.done ? `<em class="wf-grid">GRID P${d.grid}</em>` : ''}</small>${mine}</span>
+        <span class="wf-p"><i>P</i>${i + 1}</span><span class="wf-av">${_wdAv(d, 40)}</span><span class="wf-nm"><b>${esc(d.name)}${flb ? '<em class="wf-fl">POLE</em>' : ''}</b><small>${lg ? `<img src="${esc(lg)}" alt="">` : ''}<span>${esc(d.team || '')}</span></small>${mine}</span>
         ${gain != null ? `<span class="wf-gain ${gain > 0 ? 'up' : gain < 0 ? 'dn' : ''}">${gain > 0 ? '▲' + gain : gain < 0 ? '▼' + -gain : '–'}<small>from P${d.grid}</small></span>` : ''}<span class="wf-ic">${lockd || (st.done && mk === 'g') ? '✓' : sel ? '⇅' : st.done ? '✕' : '<svg viewBox="0 0 10 16" width="10" height="16"><g fill="currentColor"><circle cx="2" cy="2" r="1.5"/><circle cx="8" cy="2" r="1.5"/><circle cx="2" cy="8" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="2" cy="14" r="1.5"/><circle cx="8" cy="14" r="1.5"/></g></svg>'}</span></button>`; };
     const podium = st.done ? `<div class="wf-pod">${[1, 0, 2].map(j => { const d = P.rows[j]; return `<div class="wf-pd p${j + 1}" style="--pd:${.15 + [1, 0, 2].indexOf(j) * .18}s"><div class="wf-pd-av">${_wdAv(d, j ? 52 : 66)}${j === 0 ? '<span class="wf-crown">🏆</span>' : ''}</div><b>${esc(String(d.name).replace(/^\[[^\]]*\]\s*/, ''))}</b><div class="wf-pd-step"><span>${j + 1}</span></div></div>`; }).join('')}</div>` : '';
     const lights = window._wfIntro !== st.pk + mode && !st.tries.length ? (window._wfIntro = st.pk + mode, `<div class="wf-lights" aria-hidden="true">${'<i><b></b><b></b></i>'.repeat(5)}</div>`) : '';
     window._wfCard = card;
     const used = st.h || [], flIn = P.fl && P.rows.some(d => _wfK(d.name) === P.fl || _wfK(String(d.name).replace(/^\[[^\]]*\]\s*/, '')) === P.fl);
     const avail = { fl: !!P.fl, mg: P.mg != null, win: true };
-    const clueOut = used.map(c => c === 'fl' ? (flIn ? '' : `<span>🏎️ Fastest lap wasn't set by anyone in this top 5</span>`) : c === 'mg' ? `<span>⏱️ The winner won by <b>${P.mg.toFixed(3)}s</b></span>` : '').filter(Boolean).join('');
+    const clueOut = used.map(c => c === 'fl' ? (flIn ? '' : `<span>🚦 None of this top 5 started on pole</span>`) : c === 'mg' ? `<span>⏱️ The winner won by <b>${P.mg.toFixed(3)}s</b></span>` : '').filter(Boolean).join('');
     const clues = st.done ? '' : `<div class="wf-clues">${Object.entries(WF_CLUES).filter(([c]) => avail[c]).map(([c, [ic, nm, cost]]) => `<button class="wf-clue${used.includes(c) ? ' used' : ''}" onclick="wfClue('${c}')" ${used.includes(c) || locked ? 'disabled' : ''}><span>${ic}</span><b>${nm}</b><em>${used.includes(c) ? 'used' : '−' + cost}</em></button>`).join('')}</div>${clueOut ? `<div class="wf-clue-out">${clueOut}</div>` : ''}
       <div class="wf-meter"><span>Up for grabs</span><b>${_wfMaxNow(st)}</b><small>pts</small></div>`;
     const sc = st.done ? _wfScore(st, P) : null;
@@ -34873,8 +34873,8 @@ async function renderWFGame(el) {
   if (mode === 'daily') body += (st && st.done || !window._wfLb) ? (window._wfLb = await _wfLeaderboardHtml()) : window._wfLb;
   window._wfRev = null;
   const _old = {}; document.querySelectorAll('#wf-list .wf-row').forEach(r => { _old[r.dataset.id] = r.getBoundingClientRect().top; });
-  el.innerHTML = `<div class="wd-wrap">${body}<div class="wd-info"><h3>How to play</h3><p>A real IMS race: the <b>top 5 finishers</b> of one division, shuffled. Each driver shows the team they raced for and where they <b>started</b>. <b>Drag</b> them into order (or tap two to swap), then <b>LOCK IN</b>. 🟩 right spot (it locks), 🟨 one place out, 🟥 further. <b>${WF_TRIES} tries.</b></p>
-    <p><b>Scoring (out of 100)</b> — <b>10</b> per driver in the right spot, <b>4</b> if one place out, then <b>+30 / +20 / +10</b> for solving on try 1 / 2 / 3 and up to <b>+20</b> for speed. Stuck? Buy a clue — 🏎️ fastest lap (−10), ⏱️ winning margin (−5), 🥇 reveal the winner (−15).</p>
+  el.innerHTML = `<div class="wd-wrap">${body}<div class="wd-info"><h3>How to play</h3><p>A real IMS race: the <b>top 5 finishers</b> of one division, shuffled. Each driver shows the team they raced for. <b>Drag</b> them into order (or tap two to swap), then <b>LOCK IN</b>. 🟩 right spot (it locks), 🟨 one place out, 🟥 further. <b>${WF_TRIES} tries.</b></p>
+    <p><b>Scoring (out of 100)</b> — <b>10</b> per driver in the right spot, <b>4</b> if one place out, then <b>+30 / +20 / +10</b> for solving on try 1 / 2 / 3 and up to <b>+20</b> for speed. Stuck? Buy a clue — 🚦 pole sitter (−10), ⏱️ winning margin (−5), 🥇 reveal the winner (−15).</p>
     <p><b>📅 Daily</b> — the same race for everyone. <b>∞ Practice</b> — unlimited, any race from any season.</p>
     <p style="margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(247,207,85,.08);border:1px solid rgba(247,207,85,.35);font-size:.84rem"><span class="imc"></span> <b>Earn IM$:</b> play the daily for <b>+10 IM$</b>, solve it in <b>2 tries or fewer</b> for <b>another +10 IM$</b>. Log in to earn.</p></div></div>`;
   if (document.getElementById('pt-timer')) { const until = _now() + _wdMsToMidnight(); clearInterval(window._wdTick);
