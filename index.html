@@ -2745,7 +2745,7 @@
     .wf-score-br{display:flex;flex-direction:column;gap:2px;font-size:.78rem;min-width:150px}.wf-score-br span{display:flex;justify-content:space-between;gap:12px}.wf-score-br i{font-style:normal;color:var(--muted)}.wf-score-br b{color:#4ade80}.wf-score-br .neg b{color:#f87171}
     .wf-replay{position:relative;margin:12px auto 0;display:block;padding:7px 14px;border-radius:999px;cursor:pointer;font:inherit;font-size:.72rem;letter-spacing:1.5px;color:#fca5a5;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.35);transition:background .3s}.wf-replay:active{transform:scale(.97)}.wf-list.rp .wf-row{transition:transform .5s cubic-bezier(.35,0,.15,1);will-change:transform}.wf-list.rp-snap .wf-row{transition:none!important}.wf-list.rp .wf-gain,.wf-list.rp .wf-ic{opacity:0}.wf-list.rp .wf-row.m-g{background:linear-gradient(90deg,color-mix(in srgb,var(--tc) 16%,rgba(14,16,30,.92)),rgba(14,16,30,.85) 55%);border-color:rgba(255,255,255,.1)}.wf-list.rp .wf-row.m-g .wf-p{color:#fff}.wf-list.rp .wf-row.ovt .wf-p{color:#4ade80}.wf-gain,.wf-ic{transition:opacity .4s}
     .wf-row.ovt{z-index:3}.wf-row.ovt::before{width:8px;background:#4ade80}.wf-row.ovt .wf-p{color:#4ade80}.wf-row.lost .wf-p{color:#f87171}
-    .wf-replay .wf-rp-lap{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1rem;letter-spacing:1px;color:#fff}.wf-replay .wf-rp-bar{display:block;height:3px;margin:5px 0;border-radius:2px;background:rgba(255,255,255,.1);overflow:hidden}.wf-replay .wf-rp-bar i{display:block;height:100%;background:linear-gradient(90deg,#ef4444,#fde047);transition:width .5s}.wf-replay .wf-rp-txt{display:block;letter-spacing:0;font-size:.78rem;color:#e5e7eb;min-height:1.2em}
+    .wf-replay .wf-rp-lap{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1rem;letter-spacing:1px;color:#fff}.wf-replay .wf-rp-lap.warn{color:#fde047}.wf-replay .wf-rp-bar{display:block;height:3px;margin:5px 0;border-radius:2px;background:rgba(255,255,255,.1);overflow:hidden}.wf-replay .wf-rp-bar i{display:block;height:100%;background:linear-gradient(90deg,#ef4444,#fde047);transition:width .5s}.wf-replay .wf-rp-txt{display:block;letter-spacing:0;font-size:.78rem;color:#e5e7eb;min-height:1.2em}
     .wf-replay:has(.wf-rp-lap){width:100%;max-width:460px;cursor:default;border-style:solid;background:rgba(10,10,18,.9)}.wf-replay b{color:inherit}
     .wf-hist{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;margin-top:12px}.wf-hist div{display:flex;gap:4px}.wf-hist i{width:16px;height:16px;border-radius:4px}.wf-hist i.m-g{background:#22c55e}.wf-hist i.m-y{background:#facc15}.wf-hist i.m-r{background:#ef4444}
     @media (max-width:640px){.cp-step{width:96px}.cp-arr{display:none}}
@@ -34890,32 +34890,54 @@ async function renderWFGame(el) {
     r.animate([{ transform: `translateY(${dy}px)` }, { transform: 'none' }], { duration: 380, easing: 'cubic-bezier(.2,.9,.25,1.15)' }); });
   if (st) window._wfShown = st.pk; _wfDragInit();
   if (st && st.done && P && window._wfReplayed !== st.pk + (st.t1 || '')) { window._wfReplayed = st.pk + (st.t1 || ''); _wfReplay(P); }
+  { const big = document.querySelector('.wf-score-big b'); if (big && window._wfCounted !== st.pk + (st.t1 || '')) { window._wfCounted = st.pk + (st.t1 || ''); const to = +big.dataset.to || 0, t0 = performance.now(); const f = (t) => { const q = Math.min(1, (t - t0) / 1400); big.textContent = Math.round(to * (1 - Math.pow(1 - q, 3))); if (q < 1) requestAnimationFrame(f); }; requestAnimationFrame(f); } }
 }
 window.wfReplay = function() { if (window._wfRpOn) return; const st = _wfCur(), P = st && _wfPz(st); if (P) _wfReplay(P, true); };
 // Race replay: rows start in grid order and race down to where they finished, overtakes and all.
-function _wfReplay(P, manual) { const L = document.getElementById('wf-list'); if (!L || window._wfRpOn || (!manual && window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+// Race distance per track (IMS track reference).
+const WF_LAPS = { bahrain: 29, brazil: 36, interlagos: 36, monza: 27, italy: 27, china: 28, shanghai: 28, 'las vegas': 25, vegas: 25, silverstone: 26, britain: 26, british: 26, 'abu dhabi': 29, spa: 22, belgium: 22, austria: 35, singapore: 31, imola: 31, emilia: 31, monaco: 39, baku: 26, azerbaijan: 26, hungary: 35, spain: 33, barcelona: 33, texas: 28, cota: 28, austin: 28, 'united states': 28, portugal: 33, australia: 29, japan: 27, suzuka: 27, canada: 35, jeddah: 25, saudi: 25, qatar: 29, mexico: 36, miami: 29, zandvoort: 36, dutch: 36, netherlands: 36 };
+const _wfLapsOf = (t) => { const n = String(t || '').toLowerCase(); const k = Object.keys(WF_LAPS).sort((a, b) => b.length - a.length).find(x => n.includes(x)); return k ? WF_LAPS[k] : 30; };
+// Race replay at speed: every lap of the real race distance ticks by, the real FIA incident laps are called out,
+// and the running order goes from the grid to the real result one overtake at a time.
+async function _wfReplay(P, manual) { const L = document.getElementById('wf-list'); if (!L || window._wfRpOn || (!manual && window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
   const rows = [...L.querySelectorAll('.wf-row')]; if (rows.length < 2 || !P.rows.some(d => d.grid)) return;
-  const pitch = rows[1].offsetTop - rows[0].offsetTop, n = rows.length;
-  // Running order starts as the grid (drivers without a grid slot keep their finishing order), then every overtake
-  // is an adjacent swap — bubble the order into the real result, one pass at a time, like a race.
+  window._wfRpOn = true; const tok = window._wfRpTok = {};
+  try {
+  const pitch = rows[1].offsetTop - rows[0].offsetTop, n = rows.length, LAPS = _wfLapsOf(P.track);
   const order = P.rows.map((d, i) => ({ i, g: d.grid || 99 + i })).sort((a, b) => a.g - b.g).map(x => x.i), steps = [];
   { const o = order.slice(); let moved = true; while (moved) { moved = false; for (let k = n - 1; k > 0; k--) if (o[k] < o[k - 1]) { steps.push([o[k], o[k - 1]]); [o[k], o[k - 1]] = [o[k - 1], o[k]]; moved = true; } } }
-  const LAPS = Math.max(6, steps.length + 2), T_OVT = 640, T_START = 1500, slot = order.slice(), pIdx = {}; slot.forEach((ri, k) => { pIdx[ri] = k; });
-  window._wfRpOn = true; L.classList.add('rp'); const btn = document.getElementById('wf-replay'); if (manual) L.scrollIntoView({ block: 'center', behavior: 'smooth' });
-  const place = () => rows.forEach((r, i) => { r.style.transform = `translate3d(0,${(pIdx[i] - i) * pitch}px,0)`; const pl = r.querySelector('.wf-p'); if (pl) pl.innerHTML = `<i>P</i>${pIdx[i] + 1}`; });
-  const hud = (lap, txt) => { if (btn) btn.innerHTML = `<span class="wf-rp-lap">${lap === 'F' ? '🏁 FINISH' : lap === 0 ? '🚦 LIGHTS OUT' : `LAP ${lap}/${LAPS}`}</span><span class="wf-rp-bar"><i style="width:${lap === 'F' ? 100 : (lap / LAPS) * 100}%"></i></span><span class="wf-rp-txt">${txt || ''}</span>`; };
-  L.classList.add('rp-snap'); place(); void L.offsetHeight; L.classList.remove('rp-snap'); hud(0, `${steps.length} overtake${steps.length === 1 ? '' : 's'} to come`);
-  try { _ptSnd.tone(220, 0, .5, 'sawtooth', .05, 440); } catch (e) {}
+  // Spread the passes through the race (seeded per race so a replay looks the same every time) — the opening laps get the most.
+  const rnd = _grRng(_wdHash('wfrp' + P.k)), lapOf = steps.map(() => Math.max(1, Math.min(LAPS - 1, Math.round(1 + Math.pow(rnd(), 1.6) * (LAPS - 2))))).sort((a, b) => a - b);
+  // Real stewards' incidents in this race (race session only), on the lap they happened.
+  let incs = []; try { if (!window._stInc) { const d = await dbGet('settings', 'stewardIncidents').catch(() => null); window._stInc = (d && d.value && d.value.list) || []; }
+    const tk = _wfK(P.track); incs = (window._stInc || []).filter(x => x && Number(x.s) === Number(P.s) && String(x.d).toUpperCase() === P.dv && !/quali|sprint/i.test(x.sess || '') && Number(x.lap) > 0 && (Number(x.r) === Number(P.rn) || (x.t && _wfK(x.t).includes(tk))))
+      .map(x => ({ lap: Math.min(LAPS, Number(x.lap)), who: (x.drv || []).slice(0, 2).map(a => esc(String(a))).join(' & ') || esc(x.rep || '') })); } catch (e) {}
+  const seenLap = new Set(); incs = incs.filter(x => !seenLap.has(x.lap) && seenLap.add(x.lap));
+  L.classList.add('rp'); const btn = document.getElementById('wf-replay'); if (manual) L.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  const slotOf = {}; order.forEach((ri, k) => { slotOf[ri] = k; });
+  const place = () => rows.forEach((r, i) => { r.style.transform = `translate3d(0,${(slotOf[i] - i) * pitch}px,0)`; const pl = r.querySelector('.wf-p'); if (pl) pl.innerHTML = `<i>P</i>${slotOf[i] + 1}`; });
+  const hud = (lap, txt, cls) => { if (btn && btn.isConnected) btn.innerHTML = `<span class="wf-rp-lap ${cls || ''}">${lap === 'F' ? '🏁 CHEQUERED FLAG' : lap === 0 ? '🚦 LIGHTS OUT' : lap === LAPS ? `FINAL LAP · ${LAPS}/${LAPS}` : `LAP ${lap}/${LAPS}`}</span><span class="wf-rp-bar"><i style="width:${lap === 'F' ? 100 : (lap / LAPS) * 100}%"></i></span><span class="wf-rp-txt">${txt || ''}</span>`; };
+  const wait = (ms) => new Promise(r => setTimeout(r, ms)), alive = () => window._wfRpTok === tok && L.isConnected;
   const name = (ri) => esc(String(P.rows[ri].name).replace(/^\[[^\]]*\]\s*/, ''));
-  steps.forEach(([a, b], k) => setTimeout(() => { if (!rows[a].isConnected) return;
-    [pIdx[a], pIdx[b]] = [pIdx[b], pIdx[a]]; place(); const lap = Math.min(LAPS - 1, Math.round(1 + (k + 1) * (LAPS - 2) / steps.length));
-    rows[a].classList.remove('ovt'); rows[b].classList.remove('lost'); void rows[a].offsetWidth; rows[a].classList.add('ovt'); rows[b].classList.add('lost');
-    hud(lap, `<b>${name(a)}</b> passes ${name(b)} for P${pIdx[a] + 1}`);
-    try { _ptSnd.tone(500 + (n - pIdx[a]) * 90, 0, .16, 'sawtooth', .04, 900); } catch (e) {} }, T_START + k * T_OVT));
-  setTimeout(() => { L.classList.remove('rp'); rows.forEach(r => { r.style.transform = ''; r.classList.remove('ovt', 'lost'); }); rows.forEach((r, i) => { const pl = r.querySelector('.wf-p'); if (pl) pl.innerHTML = `<i>P</i>${i + 1}`; });
-    hud('F', `<b>${name(0)}</b> takes the win`); window._wfRpOn = false; try { _ptSnd.ding(); } catch (e) {}
-    setTimeout(() => { if (btn && btn.isConnected) btn.innerHTML = '▶ <b>WATCH RACE REPLAY</b>'; }, 3500); }, T_START + steps.length * T_OVT + 300);
-  const big = !manual && document.querySelector('.wf-score-big b'); if (big) { const to = +big.dataset.to || 0, t0 = performance.now(); const f = (t) => { const q = Math.min(1, (t - t0) / 1400); big.textContent = Math.round(to * (1 - Math.pow(1 - q, 3))); if (q < 1) requestAnimationFrame(f); }; requestAnimationFrame(f); } }
+  L.classList.add('rp-snap'); place(); void L.offsetHeight; L.classList.remove('rp-snap');
+  hud(0, `${LAPS} laps · ${steps.length} overtake${steps.length === 1 ? '' : 's'} in the top 5${incs.length ? ` · ${incs.length} incident${incs.length === 1 ? '' : 's'}` : ''}`);
+  try { _ptSnd.tone(220, 0, .6, 'sawtooth', .05, 520); } catch (e) {} await wait(1300);
+  let si = 0, last = '';
+  for (let lap = 1; lap <= LAPS && alive(); lap++) {
+    hud(lap, last); await wait(LAPS > 30 ? 85 : 100);
+    const inc = incs.find(x => x.lap === lap);
+    if (inc) { last = `⚠️ <b>Incident</b> — ${inc.who}`; hud(lap, last, 'warn'); try { _ptSnd.tone(880, 0, .12, 'square', .05); _ptSnd.tone(880, .18, .12, 'square', .05); } catch (e) {} await wait(900); }
+    while (si < steps.length && lapOf[si] === lap && alive()) { const [a, b] = steps[si++];
+      [slotOf[a], slotOf[b]] = [slotOf[b], slotOf[a]]; place();
+      rows[a].classList.remove('ovt'); rows[b].classList.remove('lost'); void rows[a].offsetWidth; rows[a].classList.add('ovt'); rows[b].classList.add('lost');
+      last = `<b>${name(a)}</b> passes ${name(b)} for P${slotOf[a] + 1}`; hud(lap, last);
+      try { _ptSnd.tone(480 + (n - slotOf[a]) * 90, 0, .16, 'sawtooth', .04, 900); } catch (e) {} await wait(560); } }
+  while (si < steps.length && alive()) { const [a, b] = steps[si++]; [slotOf[a], slotOf[b]] = [slotOf[b], slotOf[a]]; place(); }
+  if (!alive()) return; await wait(250);
+  L.classList.remove('rp'); rows.forEach((r, i) => { r.style.transform = ''; r.classList.remove('ovt', 'lost'); const pl = r.querySelector('.wf-p'); if (pl) pl.innerHTML = `<i>P</i>${i + 1}`; });
+  hud('F', `<b>${name(0)}</b> wins at ${esc(P.track)}`); try { _ptSnd.ding(); } catch (e) {}
+  await wait(3500); if (btn && btn.isConnected && window._wfRpTok === tok) btn.innerHTML = '▶ <b>WATCH RACE REPLAY</b>';
+  } finally { if (window._wfRpTok === tok) window._wfRpOn = false; } }
 // Swaps only redraw the 5 rows (no full page rebuild, no flash, no scroll jump).
 function _wfList() { const L = document.getElementById('wf-list'), st = _wfCur(); if (!L || !st || !window._wfCard) return renderGames();
   const old = {}; L.querySelectorAll('.wf-row').forEach(r => { old[r.dataset.id] = r.getBoundingClientRect().top; });
