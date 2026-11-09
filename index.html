@@ -32663,8 +32663,12 @@ async function _stLoad(force) {
     } catch (e) {} }
   window._stInc.forEach(x => { const c = window._stClipMap && window._stClipMap.get(x.k); if (c) { x.clips = c.clips || []; x.files = c.files || []; x.def = c.def || []; } }); // the shipped clip list is always the latest
   if (!window._stExtra) { try { const d = await dbGet('settings', 'stClipsExtra'); window._stExtra = (d && d.value) || {}; } catch (e) { window._stExtra = {}; } }
-  window._stInc.forEach(x => { const add = (window._stExtra[x.k] || []).map(t => { const [ty, id, au] = String(t).split('|'); return [ty, id, au || '', '']; });
-    if (add.length) { const seen = new Set((x.clips || []).map(c => c[0] + '|' + c[1])); x.clips = [...(x.clips || []), ...add.filter(c => !seen.has(c[0] + '|' + c[1]))]; } });
+  if (!window._stDefX) { try { const d = await dbGet('settings', 'stDefExtra'); window._stDefX = (d && d.value) || {}; } catch (e) { window._stDefX = {}; } }
+  window._stInc.forEach(x => { const all = (window._stExtra[x.k] || []).map(t => String(t).split('|'));
+    const add = all.filter(p => p[0] !== 'file').map(([ty, id, au]) => [ty, id, au || '', '']), fl = all.filter(p => p[0] === 'file').map(([, path, au]) => [path, au || '', '']);
+    if (add.length) { const seen = new Set((x.clips || []).map(c => c[0] + '|' + c[1])); x.clips = [...(x.clips || []), ...add.filter(c => !seen.has(c[0] + '|' + c[1]))]; }
+    if (fl.length) { const seen = new Set((x.files || []).map(f => Array.isArray(f) ? f[0] : f)); x.files = [...(x.files || []), ...fl.filter(f => !seen.has(f[0]))]; }
+    if (!(x.def || []).length && (window._stDefX[x.k] || []).length) x.def = window._stDefX[x.k].map(t => { const [n, id, na, ...b] = String(t).split('|'); return [n, id, b.join('|'), Number(na) || 0]; }); });
   // Any clip incident missing from the saved list (e.g. the saved list is from an older/partial import) is rebuilt
   // here from the shipped clip file + the imported steward verdicts, so every clip is always playable.
   if (window._stClipMap && !window._stInc._clipFill) { try {
