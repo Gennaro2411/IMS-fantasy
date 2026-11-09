@@ -34752,7 +34752,7 @@ const _wfDv = (dv) => { let d = String(dv).trim().toUpperCase(); if (/^\d$/.test
 const _wfK = (x) => String(x || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 // Every race-division in the current season + the archives where P1–P5 are all known drivers.
 async function _wfPuzzles() {
-  if (window._wfP && _now() - window._wfP.at < 10 * 60e3) return window._wfP.list;
+  if (window._wfP && _now() - window._wfP.at < 30 * 60e3) return window._wfP.list;
   const [drivers, races, arch] = await Promise.all([dbGetAll('drivers').catch(() => []), dbGetAll('races').catch(() => []), dbGetAll('seasonArchives').catch(() => [])]);
   const byId = {}, byNm = {}; drivers.forEach(d => { if (!d || !d.name) return; byId[d.id] = d; byNm[_wfK(d.name)] = d; byNm[_wfK(String(d.name).replace(/^\[[^\]]*\]\s*/, ''))] = d; if (d.imsAlias) byNm[_wfK(d.imsAlias)] = d; });
   const cur = Number(window.currentSeason) || 7, seen = new Set(), list = [];
@@ -34818,12 +34818,15 @@ window.wfAgain = function() { window._wfInf = null; window._wfSel = null; render
 async function _wfRecord(st, P) { const me = _wdMe(), id = _wdScoreId(me.uid), n = st.tries.length, right = st.cur.filter((x, i) => x === P.rows[i].id).length, pts = (_wfScore(st, P) || {}).total || 0;
   try { dbInvalidate('wordleScores'); const cur = await dbGet('wordleScores', id).catch(() => null) || {}; if (cur.wfDay === st.key) return;
     const streak = st.won ? (cur.wfDayPlain === _wdYesterdayKey() && cur.wfLastWon ? (cur.wfStreak || 0) + 1 : 1) : 0;
-    await dbSet('wordleScores', id, { uid: me.uid, name: me.name, points: cur.points || 0, wfDay: st.key, wfDayPlain: _wdDayKey(), wfLastWon: !!st.won, wfStreak: streak, wfDayTries: st.won ? n : 0, wfDayRight: right,
-      wfDays: (cur.wfDays || 0) + 1, wfWins: (cur.wfWins || 0) + (st.won ? 1 : 0), wfTrySum: (cur.wfTrySum || 0) + (st.won ? n : 0), wfFirst: (cur.wfFirst || 0) + (st.won && n === 1 ? 1 : 0), wfDayPts: pts, wfPts: (cur.wfPts || 0) + pts, wfBest: Math.max(cur.wfBest || 0, pts) }); } catch (e) {}
+    const doc = { uid: me.uid, name: me.name, points: cur.points || 0, wfDay: st.key, wfDayPlain: _wdDayKey(), wfLastWon: !!st.won, wfStreak: streak, wfDayTries: st.won ? n : 0, wfDayRight: right,
+      wfDays: (cur.wfDays || 0) + 1, wfWins: (cur.wfWins || 0) + (st.won ? 1 : 0), wfTrySum: (cur.wfTrySum || 0) + (st.won ? n : 0), wfFirst: (cur.wfFirst || 0) + (st.won && n === 1 ? 1 : 0), wfDayPts: pts, wfPts: (cur.wfPts || 0) + pts, wfBest: Math.max(cur.wfBest || 0, pts) };
+    await dbSet('wordleScores', id, doc); window._wfMine = Object.assign({}, cur, doc); } catch (e) {}
   await _gameCoins('wf-daily', 10); if (st.won && n <= 2) await _gameCoins('wf-win', 10); }
 async function _wfLeaderboardHtml() {
-  const rows = (await _gmNoTest(await dbGetAll('wordleScores', { fresh: true }).catch(() => []))).filter(r => r && r.uid && (r.wfDays || 0) > 0), me = _wdMe().uid, day = _dailyKey();
-  const avg = (r) => r.wfWins ? r.wfTrySum / r.wfWins : 9;
+  const me = _wdMe().uid, day = _dailyKey();
+  if (!window._wfLbRows || _now() - window._wfLbRows.at > 5 * 60e3) window._wfLbRows = { at: _now(), rows: await dbGetAll('wordleScores').catch(() => []) };
+  let all = window._wfLbRows.rows.slice(); if (window._wfMine) { all = all.filter(r => !r || r.uid !== me); all.push(window._wfMine); }
+  const rows = (await _gmNoTest(all)).filter(r => r && r.uid && (r.wfDays || 0) > 0);
   rows.sort((a, b) => (b.wfPts || 0) - (a.wfPts || 0) || (b.wfWins || 0) - (a.wfWins || 0) || (a.wfDays - b.wfDays));
   const mi = rows.findIndex(r => r.uid === me);
   const head = `<div class="ptb-row cpb-row ptb-head"><span>#</span><span>Player</span><span class="c">Today</span><span class="c">Points</span><span class="c">Solved</span><span class="c">Best</span><span class="c">🔥</span></div>`;
@@ -34839,7 +34842,7 @@ window.wfShare = function() { const mode = _wfGetMode(), st = _wfCur(); if (!st 
   const txt = `IMS Who Finished Where? ${mode === 'daily' ? '#' + _wfDayNum() : '∞'} · ${st.won ? st.tries.length + '/' + WF_TRIES : 'X/' + WF_TRIES} · ${(_wfScore(st, P) || {}).total || 0} pts${(st.h || []).length ? ' · ' + st.h.map(c => WF_CLUES[c][0]).join('') : ''}\nS${P.s} ${P.track} · ${P.dv}\n${sq}\nhttps://fantasy.ims-league.com`;
   if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) navigator.share({ text: txt }).catch(() => {}); else if (navigator.clipboard) navigator.clipboard.writeText(txt).then(() => { if (typeof showToast === 'function') showToast('📋 Copied — paste it in Discord!', 'success'); }).catch(() => prompt('Copy your result:', txt)); else prompt('Copy your result:', txt); };
 async function renderWFGame(el) {
-  { const lk = await dbGet('settings', 'gamesLock').catch(() => null); window._gamesLock = (lk && lk.value) || {}; }
+  if (!window._wfLockAt || _now() - window._wfLockAt > 120e3) { const lk = await dbGet('settings', 'gamesLock').catch(() => null); window._gamesLock = (lk && lk.value) || {}; window._wfLockAt = _now(); }
   const list = await _wfPuzzles(), mode = _wfGetMode(); const locked = !!(window._gamesLock || {}).wf && !adminLoggedIn && !_gamesAccess(); window._wfLocked = locked;
   const tabs = `<div class="wd-modes">${[['daily', '📅', 'DAILY'], ['inf', '∞', 'PRACTICE']].map(([m, i, l]) => `<button class="${mode === m ? 'on' : ''}" onclick="setWFMode('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>`;
   const st = _wfState(mode, list), P = st ? _wfPz(st) : null;
