@@ -34761,7 +34761,7 @@ const _wfGetMode = () => window._wfMode || 'daily';
 window.setWFMode = function(m) { window._wfMode = m; window._wfSel = null; renderGames(); };
 const _wfLoadSt = () => { try { return JSON.parse(localStorage.getItem('imsWfDaily') || 'null'); } catch (e) { return null; } };
 const _wfSave = (st) => { try { localStorage.setItem('imsWfDaily', JSON.stringify(st)); } catch (e) {} };
-const _wfDayNum = () => { const p = _wdDayKey().split('/'); return Math.max(1, Math.round((Date.UTC(+p[2], +p[1] - 1, +p[0]) - Date.UTC(2026, 10, 9)) / 864e5) + 1); }; // 9 Nov 2026 = #1
+const _wfDayNum = () => { const p = _wdDayKey().split('/'); return Math.max(0, Math.round((Date.UTC(+p[2], +p[1] - 1, +p[0]) - Date.UTC(2026, 10, 9)) / 864e5)); }; // 9 Nov 2026 = #0, 10 Nov (launch) = #1
 const _wfDv = (dv) => { let d = String(dv).trim().toUpperCase(); if (/^\d$/.test(d)) d = 'D' + d; return d; };
 const _wfK = (x) => String(x || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 // Every race-division in the current season + the archives where P1–P5 are all known drivers.
