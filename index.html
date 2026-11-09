@@ -34779,15 +34779,15 @@ function _wfState(mode, list) { if (!list.length) return null;
   const rnd = _grRng(_wdHash('imswf' + key)), P = list[Math.floor(rnd() * list.length)];
   st = { key, pk: P.k, cur: _wfShuffle(P.rows.map(x => x.id), rnd), tries: [], done: false, won: false, h: [], t0: Date.now() }; _wfSave(st); return st; }
 // ---- Scoring: 20 per driver in the right spot, 8 if one place out, + solve bonus by try, + speed bonus, − clues ----
-const WF_CLUES = { fl: ['🏎️', 'Fastest lap', 15], mg: ['⏱️', 'Winning margin', 10], win: ['🥇', 'Reveal winner', 30] };
-const WF_SOLVE = [50, 30, 15], WF_SPEED = 25, WF_SPEED_MS = 180e3;
+const WF_CLUES = { fl: ['🏎️', 'Fastest lap', 10], mg: ['⏱️', 'Winning margin', 5], win: ['🥇', 'Reveal winner', 15] };
+const WF_SOLVE = [30, 20, 10], WF_SPEED = 20, WF_SPEED_MS = 180e3;
 const _wfClueCost = (st) => (st.h || []).reduce((a, c) => a + ((WF_CLUES[c] || [])[2] || 0), 0);
 function _wfScore(st, P) { const last = st.tries[st.tries.length - 1]; if (!last) return null;
-  const slot = last.reduce((a, id, i) => { const m = _wfMark(id, i, P); return a + (m === 'g' ? 20 : m === 'y' ? 8 : 0); }, 0);
+  const slot = last.reduce((a, id, i) => { const m = _wfMark(id, i, P); return a + (m === 'g' ? 10 : m === 'y' ? 4 : 0); }, 0);
   const bonus = st.won ? WF_SOLVE[st.tries.length - 1] || 0 : 0, ms = (st.t1 || Date.now()) - (st.t0 || Date.now());
   const speed = st.won ? Math.max(0, Math.round(WF_SPEED * (1 - ms / WF_SPEED_MS))) : 0, clue = _wfClueCost(st);
   return { slot, bonus, speed, clue, total: Math.max(0, slot + bonus + speed - clue), ms }; }
-const _wfMaxNow = (st) => Math.max(0, 100 + (WF_SOLVE[st.tries.length] || 0) + WF_SPEED - _wfClueCost(st));
+const _wfMaxNow = (st) => Math.max(0, 50 + (WF_SOLVE[st.tries.length] || 0) + WF_SPEED - _wfClueCost(st));
 window.wfClue = function(c) { if (window._wfLocked) return; const st = _wfCur(); if (!st || st.done) return; const P = _wfPz(st); if (!P || !WF_CLUES[c]) return; st.h = st.h || []; if (st.h.includes(c)) return;
   st.h.push(c); if (!st.t0) st.t0 = Date.now();
   if (c === 'win') { const w = P.rows[0].id, at = st.cur.indexOf(w); if (at > 0) [st.cur[0], st.cur[at]] = [st.cur[at], st.cur[0]]; }
@@ -34874,7 +34874,7 @@ async function renderWFGame(el) {
   window._wfRev = null;
   const _old = {}; document.querySelectorAll('#wf-list .wf-row').forEach(r => { _old[r.dataset.id] = r.getBoundingClientRect().top; });
   el.innerHTML = `<div class="wd-wrap">${body}<div class="wd-info"><h3>How to play</h3><p>A real IMS race: the <b>top 5 finishers</b> of one division, shuffled. Each driver shows the team they raced for and where they <b>started</b>. <b>Drag</b> them into order (or tap two to swap), then <b>LOCK IN</b>. 🟩 right spot (it locks), 🟨 one place out, 🟥 further. <b>${WF_TRIES} tries.</b></p>
-    <p><b>Scoring</b> — <b>20</b> per driver in the right spot, <b>8</b> if one place out, then <b>+50 / +30 / +15</b> for solving on try 1 / 2 / 3 and up to <b>+25</b> for speed. Stuck? Buy a clue — 🏎️ fastest lap (−15), ⏱️ winning margin (−10), 🥇 reveal the winner (−30). Max <b>175</b>.</p>
+    <p><b>Scoring (out of 100)</b> — <b>10</b> per driver in the right spot, <b>4</b> if one place out, then <b>+30 / +20 / +10</b> for solving on try 1 / 2 / 3 and up to <b>+20</b> for speed. Stuck? Buy a clue — 🏎️ fastest lap (−10), ⏱️ winning margin (−5), 🥇 reveal the winner (−15).</p>
     <p><b>📅 Daily</b> — the same race for everyone. <b>∞ Practice</b> — unlimited, any race from any season.</p>
     <p style="margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(247,207,85,.08);border:1px solid rgba(247,207,85,.35);font-size:.84rem"><span class="imc"></span> <b>Earn IM$:</b> play the daily for <b>+10 IM$</b>, solve it in <b>2 tries or fewer</b> for <b>another +10 IM$</b>. Log in to earn.</p></div></div>`;
   if (document.getElementById('pt-timer')) { const until = _now() + _wdMsToMidnight(); clearInterval(window._wdTick);
