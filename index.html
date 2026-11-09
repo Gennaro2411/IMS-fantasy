@@ -28609,26 +28609,37 @@ function _betRng(seedStr) { let h = 1779033703 ^ seedStr.length; for (let i = 0;
 // Sprint with a REVERSE-CHAMPIONSHIP grid: same pace model as the race, but each driver's strength is
 // scaled by where they start (P1 = last in the standings). Overtaking is "possible but not easy", so the
 // back of the grid keeps ~e^-1.8 ≈ 17% of their pace-based chance relative to starting on pole.
-const SPRINT_GRID_WEIGHT = 1.8;
+const _nmK = (x) => String(x || '').replace(/^\[[^\]]*\]\s*/, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+const SPRINT_GRID_WEIGHT = 2.6; // tuned: starting at the back costs more than first modelled (back-half wins were priced too short)
 // Sprints are the most random race of the weekend, so the house keeps a bigger edge on them:
 // every sprint price pays 12% less profit than the plain model price (e.g. 10.00 → 8.92).
-const SPRINT_PROFIT_CUT = 0.88;
+const SPRINT_PROFIT_CUT = 0.85;
 function _betOddsSprint(p) { const o = _betOdds(p); return o == null ? o : Math.max(1.01, Math.round((1 + (o - 1) * SPRINT_PROFIT_CUT) * 100) / 100); }
 function _betSimSprint(field, grid, sims, seed) {
   field = field.slice().sort((a, b) => String(a.id).localeCompare(String(b.id)));
   const rnd = _betRng(seed || 'ims-sprint'), N = Math.max(2, field.length);
   const win = {}, pod = {}, top5 = {}; field.forEach(d => { win[d.id] = 0; pod[d.id] = 0; top5[d.id] = 0; });
-  const base = field.map(d => ({ id: d.id, s: _betStrength(d.elo) * Math.exp(-SPRINT_GRID_WEIGHT * (((grid[d.id] || N) - 1) / (N - 1))) }));
+  const base = field.map(d => ({ id: d.id, g: grid[d.id] || N, s: _betStrength(d.elo) * Math.exp(-SPRINT_GRID_WEIGHT * (((grid[d.id] || N) - 1) / (N - 1))) }));
+  // the 3 championship leaders = the 3 starting furthest back
+  const lead = base.slice().sort((a, b) => b.g - a.g).slice(0, 3).map(x => x.id);
+  let poleWins = 0, gain10 = 0, leadPts = 0; const ptsCut = Math.min(10, base.length), hWg = {}, hGain = {}, hLead = {};
   for (let k = 0; k < sims; k++) {
-    let pool = base.slice(), total = pool.reduce((a, d) => a + d.s, 0);
-    for (let place = 1; place <= Math.min(5, base.length); place++) {
+    let pool = base.slice(), total = pool.reduce((a, d) => a + d.s, 0), bestGain = -99, leadIn = 0;
+    for (let place = 1; place <= base.length; place++) {
       let r = rnd() * total, i = 0; while (i < pool.length - 1 && (r -= pool[i].s) > 0) i++;
-      const pick = pool[i]; if (place === 1) win[pick.id]++; if (place <= 3) pod[pick.id]++; top5[pick.id]++; total -= pick.s; pool.splice(i, 1);
+      const pick = pool[i];
+      if (place === 1) { win[pick.id]++; if (pick.g === 1) poleWins++; hWg[pick.g] = (hWg[pick.g] || 0) + 1; } if (place <= 3) pod[pick.id]++; if (place <= 5) top5[pick.id]++;
+      if (pick.g - place > bestGain) bestGain = pick.g - place; if (place <= ptsCut && lead.includes(pick.id)) leadIn++;
+      total -= pick.s; pool.splice(i, 1);
     }
+    if (bestGain >= 10) gain10++; if (leadIn === lead.length) leadPts++; hGain[bestGain] = (hGain[bestGain] || 0) + 1; hLead[leadIn] = (hLead[leadIn] || 0) + 1;
   }
   Object.keys(pod).forEach(id => { pod[id] /= sims; top5[id] /= sims; });
   const S = base.reduce((a, d) => a + d.s, 0); base.forEach(d => { win[d.id] = S > 0 ? d.s / S : 0; });
-  return { win, pod, top5 };
+  // over/under line closest to 50/50 for a simulated count
+  const line = (h) => { const ks = Object.keys(h).map(Number).sort((a, b) => a - b); let best = null;
+    ks.forEach(k => { const L = k + .5, over = ks.filter(x => x > L).reduce((a, x) => a + h[x], 0) / sims; if (over > .08 && over < .92 && (!best || Math.abs(over - .5) < Math.abs(best.po - .5))) best = { line: L, po: over }; }); return best; };
+  return { win, pod, top5, poleWin: poleWins / sims, gain10: gain10 / sims, leadPts: leadPts / sims, lead, ouWg: line(hWg), ouGain: line(hGain), ouLead: line(hLead) };
 }
 function _betSim(field, sims, seed, topN) {
   field = field.slice().sort((a, b) => String(a.id).localeCompare(String(b.id))); // order-independent
@@ -28924,6 +28935,16 @@ function _betOutcome(b, races) {
     if (b.market === 'yn') result = (b.sel[1] === 'yes') === yes ? 'won' : 'lost';
     else { const line = Number(b.sel[2]); result = !isFinite(line) ? 'void' : ((b.sel[1] === 'over') === (val > line) ? 'won' : 'lost'); }
   }
+  else if (b.market === 'ou' && /^sp(wg|gain|l3:)/.test(String(b.sel[0]))) {
+    // Sprint over/unders — from the sprint classification + grid only. No sprint data → void.
+    const rows = window._spRowsOf ? window._spRowsOf(race, b.div) : null, k = String(b.sel[0]), line = Number(b.sel[2]); let v = null;
+    if (rows && rows.length && isFinite(line)) {
+      if (k === 'spwg') { const W = rows.find(x => x.pos === 1); if (W && W.grid) v = W.grid; }
+      else if (k === 'spgain') { const g = rows.filter(x => x.grid && x.pos != null).map(x => x.grid - x.pos); if (g.length) v = Math.max(...g); }
+      else { const want = k.slice(5).split('|'), cut = Math.min(10, rows.length), got = want.map(w => rows.find(x => _nmK(x.name) === w));
+        if (got.every(Boolean)) v = got.filter(x => x.pos != null && x.pos <= cut).length; } }
+    result = v == null ? 'void' : ((b.sel[1] === 'over') === (v > line) ? 'won' : 'lost');
+  }
   else if (b.market === 'ou' && !String(b.sel[0]).startsWith('fpos:')) {
     const v = b.sel[0] === 'margin' ? (race.winMarginByDiv || {})[b.div] : ['dnf', 'wgrid', 'gain', 'fin', 'flt'].includes(b.sel[0]) ? ((race.raceStatsByDiv || {})[b.div] || {})[b.sel[0]] : (race.winTimeByDiv || {})[b.div];
     const line = Number(b.sel[2]);
@@ -28984,7 +29005,7 @@ function _betOutcome(b, races) {
     const p = pos(String(b.sel[0]).slice(5)), line = Number(b.sel[2]);
     result = (p == null || !isFinite(line)) ? 'void' : ((b.sel[1] === 'over') === (p > line) ? 'won' : 'lost');
   }
-  else if (b.market === 'yn' && /^sp(fr|bk|ldr:)/.test(String(b.sel[0]))) {
+  else if (b.market === 'yn' && /^sp(fr|bk|ldr:|pole|g10|top3:)/.test(String(b.sel[0]))) {
     // Sprint specials — settled from the sprint classification (and its grid). No sprint rows → void.
     const rows = window._spRowsOf ? window._spRowsOf(race, b.div) : null, k = String(b.sel[0]);
     const nm = (x) => String(x || '').replace(/^\[[^\]]*\]\s*/, '').toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -28992,6 +29013,10 @@ function _betOutcome(b, races) {
     if (rows && rows.length) { const W = rows.find(x => x.pos === 1), N = rows.filter(x => x.grid).length || rows.length;
       if (k === 'spfr' && W && W.grid) yes = W.grid <= 2;
       else if (k === 'spbk' && W && W.grid) yes = W.grid > N / 2;
+      else if (k === 'sppole' && W && W.grid) yes = W.grid === 1;
+      else if (k === 'spg10' && rows.some(x => x.grid)) yes = rows.some(x => x.grid && x.pos != null && x.grid - x.pos >= 10);
+      else if (k.startsWith('sptop3:')) { const want = k.slice(7).split('|'), cut = Math.min(10, rows.length), got = want.map(w => rows.find(x => nm(x.name) === w));
+        if (got.every(Boolean) && !got.some(x => String(x.status || '') === 'DNS')) yes = got.every(x => x.pos != null && x.pos <= cut); }
       else if (k.startsWith('spldr:')) { const me = rows.find(x => nm(x.name) === k.slice(6)); if (me && String(me.status || '') !== 'DNS') yes = me.pos != null && me.pos <= 3; } }
     result = yes == null ? 'void' : ((b.sel[1] === 'yes') === yes ? 'won' : 'lost');
   }
@@ -29401,8 +29426,8 @@ window.renderBets = async function() {
       const cr = (races || []).filter(r => r && r.driverPoints && Object.keys(r.driverPoints).length);
       const st = (window.computeDriverChampStandings(cr, window._allDrivers && window._allDrivers.length ? window._allDrivers : field) || {})[div] || {};
       field.slice().sort((a, b) => ((st[a.id] || 0) - (st[b.id] || 0)) || String(b.name || '').localeCompare(String(a.name || ''))).forEach((d, i) => { _spGrid[d.id] = i + 1; });
-      const sk = oKey + '|sprint5|' + field.map(d => d.id + '@' + _spGrid[d.id]).join(',');
-      SP = window._betOddsCache[sk] = window._betOddsCache[sk] || _betSimSprint(field, _spGrid, 60000, sk);
+      const sk = oKey + '|sprint6|' + field.map(d => d.id + '@' + _spGrid[d.id]).join(',');
+      SP = window._betOddsCache[sk] = window._betOddsCache[sk] || _betSimSprint(field, _spGrid, 30000, sk);
     } catch (e) { SP = null; }
   }
   // Driver specials: DNF chance (each driver's own DNF rate, pulled towards the league average) and a
@@ -30014,21 +30039,19 @@ window.renderBets = async function() {
         ${(!isC && Object.keys(_spoonP).length) ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>🥄 Wooden spoon</span><small>Last classified finisher</small></div>
           ${field.filter(d => _spoonP[d.id] != null).slice().sort((a, b) => _spoonP[b.id] - _spoonP[a.id]).map(d => `<div class="bo-row">${photo(d)}<div class="bo-nm"><b>${esc(d.name)}</b><small>Finishes last of the classified</small></div>${oddsBtn('spoon', [d.id], d.name + ' wooden spoon in ' + div, finalOdds('spoon', [d.id], _betOdds(_spoonP[d.id])))}</div>`).join('')}</div>` : ''}
         </div><div class="bo-sec" data-sec="sprint"${_secHid('sprint')}>
-        ${(!isC && upcoming && upcoming.isSprint && field.length) ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>⚡ Sprint</span><span class="bo-cols"><i>WIN</i><i>PODIUM</i><i>TOP 5</i></span></div>
-          ${field.slice().sort((a, b) => (_spGrid[a.id] || 99) - (_spGrid[b.id] || 99)).map(d => `<div class="bo-row">${photo(d)}<div class="bo-nm"><b>${esc(d.name)}</b><small>${_spGrid[d.id] ? 'Reverse grid · starts P' + _spGrid[d.id] : 'Sprint race'}</small></div>${oddsBtn('spw', [d.id], d.name + ' to win the ' + div + ' sprint', finalOdds('spw', [d.id], _betOddsSprint((SP || P).win[d.id])))}${oddsBtn('spp', [d.id], d.name + ' sprint podium in ' + div, finalOdds('spp', [d.id], _betOddsSprint(((SP || P).pod || {})[d.id])))}${oddsBtn('sp5', [d.id], d.name + ' sprint top 5 in ' + div, finalOdds('sp5', [d.id], _betOddsSprint(((SP || P).top5 || {})[d.id])))}</div>`).join('')}</div>` : ''}
+        ${(!isC && upcoming && upcoming.isSprint && field.length) ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>⚡ Sprint</span><span class="bo-cols"><i>WIN</i><i>PODIUM</i></span></div>
+          ${field.slice().sort((a, b) => (_spGrid[a.id] || 99) - (_spGrid[b.id] || 99)).map(d => `<div class="bo-row">${photo(d)}<div class="bo-nm"><b>${esc(d.name)}</b><small>${_spGrid[d.id] ? 'Reverse grid · starts P' + _spGrid[d.id] : 'Sprint race'}</small></div>${oddsBtn('spw', [d.id], d.name + ' to win the ' + div + ' sprint', finalOdds('spw', [d.id], _betOddsSprint((SP || P).win[d.id])))}${oddsBtn('spp', [d.id], d.name + ' sprint podium in ' + div, finalOdds('spp', [d.id], _betOddsSprint(((SP || P).pod || {})[d.id])))}</div>`).join('')}</div>` : ''}
         ${(!isC && upcoming && upcoming.isSprint && SP && field.length >= 4) ? (() => {
           const N = field.length, ids = field.map(d => d.id), ex = (q) => 1 / (1 + (1 / Math.max(.001, Math.min(.999, q)) - 1) * SPRINT_PROFIT_CUT); // sprint edge
-          const frontP = ids.filter(id => (_spGrid[id] || 99) <= 2).reduce((a, id) => a + (SP.win[id] || 0), 0);
-          const backP = ids.filter(id => (_spGrid[id] || 0) > N / 2).reduce((a, id) => a + (SP.win[id] || 0), 0);
-          const ldr = field.slice().sort((a, b) => (_spGrid[b.id] || 0) - (_spGrid[a.id] || 0))[0];
-          const nm = (x) => String(x || '').replace(/^\[[^\]]*\]\s*/, '').toLowerCase().replace(/[^a-z0-9]/g, '');
-          const rows = [['spfr', 'Sprint won from the front row', 'The winner starts P1 or P2', frontP],
-                        ['spbk', 'Sprint won from the back half', 'The winner starts P' + (Math.floor(N / 2) + 1) + ' or lower', backP],
-                        ['spldr:' + nm(ldr.name), esc(ldr.name) + ' charges to the podium', 'Championship leader starts last (P' + N + ') — finishes top 3', SP.pod[ldr.id] || 0]];
-          return `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>⚡ Sprint specials</span><small>Reverse grid · yes / no</small></div>
-            ${rows.map(([k, t, sub, q]) => `<div class="bo-ou"><div><b>${t}</b><span class="bo-ou-line">${sub}</span></div>
-              <div class="bo-ou-b"><i>YES</i>${oddsBtn('yn', [k, 'yes'], div + ' sprint: ' + String(t).replace(/<[^>]+>/g, '').toLowerCase() + ': yes', _ouOdds('yn', [k, 'yes'], ex(q)))}</div>
-              <div class="bo-ou-b"><i>NO</i>${oddsBtn('yn', [k, 'no'], div + ' sprint: ' + String(t).replace(/<[^>]+>/g, '').toLowerCase() + ': no', _ouOdds('yn', [k, 'no'], ex(1 - q)))}</div></div>`).join('')}</div>`; })() : ''}
+          const L3 = (SP.lead || []).map(id => field.find(d => d.id === id)).filter(Boolean);
+          const ou = [['spwg', 'Winner\'s starting position', 'Over = the winner comes from further back', SP.ouWg, v => 'P' + v],
+                      ['spgain', 'Biggest climb in the sprint', 'Most places gained by any one driver', SP.ouGain, v => v + ' places'],
+                      ...(L3.length === 3 ? [['spl3:' + L3.map(d => _nmK(d.name)).join('|'), 'Title contenders in the points', L3.map(d => esc(d.name)).join(', ') + ' start at the back — how many finish top ' + Math.min(10, N) + '?', SP.ouLead, v => String(v)]] : [])].filter(x => x[3]);
+          if (!ou.length) return '';
+          return `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>⚡ Sprint specials</span><small>Reverse grid · over / under</small></div>
+            ${ou.map(([k, t, sub, o, fmt]) => { const Ls = String(o.line); return `<div class="bo-ou"><div><b>${t}</b><span class="bo-ou-line">LINE <em>${fmt(o.line)}</em> · ${sub}</span></div>
+              <div class="bo-ou-b"><i>OVER</i>${oddsBtn('ou', [k, 'over', Ls], div + ' sprint ' + String(t).replace(/<[^>]+>/g, '').toLowerCase() + ' over ' + o.line, _ouOdds('ou', [k, 'over', Ls], ex(o.po)))}</div>
+              <div class="bo-ou-b"><i>UNDER</i>${oddsBtn('ou', [k, 'under', Ls], div + ' sprint ' + String(t).replace(/<[^>]+>/g, '').toLowerCase() + ' under ' + o.line, _ouOdds('ou', [k, 'under', Ls], ex(1 - o.po)))}</div></div>`; }).join('')}</div>`; })() : ''}
         </div><div class="bo-sec" data-sec="fpos"${_secHid('fpos')}>
         ${(!isC && Object.keys(_fpos).length) ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>📍 Finishing position</span><small>Over = finishes lower (a DNF counts as over)</small></div>
           ${field.filter(d => _fpos[d.id]).map(d => { const o = _fpos[d.id], L = String(o.line); return `<div class="bo-ou"><div class="bo-ou-c">${photo(d)}<div><b>${esc(d.name)}</b><span class="bo-ou-line">LINE <em>P${o.line}</em></span></div></div>
