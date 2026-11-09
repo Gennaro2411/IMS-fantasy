@@ -34751,9 +34751,10 @@ async function _wfPuzzles() {
     Object.entries(byDiv).forEach(([dv, D]) => { const rows = []; for (let p = 1; p <= WF_N; p++) if (D.pos[p]) rows.push(D.pos[p]);
       if (rows.length < WF_N || new Set(rows.map(d => d.id)).size < WF_N) return;
       const k = S.s + '|' + _wfK(r.name) + '|' + dv; if (seen.has(k)) return; seen.add(k);
-      const grid = (r.raceGridByDiv || {})[D.raw] || {}, tm = r.driverTeamByDivision || {};
+      const grid = (r.raceGridByDiv || {})[D.raw] || (r.raceGridByDiv || {})[dv] || {}, tm = r.driverTeamByDivision || {}, tn = (r.teamByDivName || {})[D.raw] || (r.teamByDivName || {})[dv] || {};
+      const tOf = (d) => ((tm[d.id] || {})[D.raw]) || ((tm[d.id] || {})[dv]) || tn[_wfK(d.name)] || tn[_wfK(String(d.name).replace(/^\[[^\]]*\]\s*/, ''))] || (d.imsAlias && tn[_wfK(d.imsAlias)]) || '';
       list.push({ k, s: S.s, rn: r.raceNum || 0, track: r.name, dv, rows: rows.map(d => { const q = Number(grid[_wfK(d.name)] || grid[_wfK(String(d.name).replace(/^\[[^\]]*\]\s*/, ''))]) || 0;
-        return { id: d.id, name: d.name, photo: typeof driverPhoto === 'function' ? driverPhoto(d) : '', team: ((tm[d.id] || {})[D.raw]) || '', grid: q }; }) }); }); }));
+        return { id: d.id, name: d.name, photo: typeof driverPhoto === 'function' ? driverPhoto(d) : '', team: tOf(d), grid: q }; }) }); }); }));
   for (let i = list.length - 1; i >= 0; i--) if (!(list[i].s >= 4 && list[i].s <= 8)) list.splice(i, 1); // only Seasons 4–8
   list.sort((a, b) => a.k < b.k ? -1 : 1);
   window._wfP = { at: _now(), list }; return list; }
