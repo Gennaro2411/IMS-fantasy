@@ -28437,15 +28437,17 @@ window.betPickAllIn = function(key) {
 window._betWideCache = window._betWideCache || {};
 const _wideKey = (dv, market, st, side) => [(window._betCtx && window._betCtx.upcoming ? window._betCtx.upcoming.name : ''), dv, market, st, side].join('|');
 async function _betDryPick(dv, market, st, side) {
-  const prev = window._betDiv; let found = null;
-  window._betDry = true; window._betDiv = dv;
-  try { await window.renderBets();
-    const want = "betPick('" + market + "','" + st + ",", box = window._betDryEl;
-    const b = [...(box ? box.querySelectorAll('button.bo-odd') : [])].find(x => { const oc = x.getAttribute('onclick') || ''; return oc.startsWith(want) && (!side || oc.startsWith(want + side + ',') || oc.startsWith(want + side + "'")); });
+  let found = null; const dry = { div: dv };
+  // Snapshot the live tab's globals the render touches, and put them back afterwards.
+  const KEYS = ['_betCurOdds', '_betAutoOdds', '_betDivNow', '_betCtx', '_boostAll', '_betOuReg', '_betWmar', '_betPgap', '_betPenMean', '_betDnfMean', '_penRN'], keep = {}; KEYS.forEach(k => { keep[k] = window[k]; });
+  try { await window.renderBets(dry);
+    const want = "betPick('" + market + "','" + st, box = dry.el;
+    const b = [...(box ? box.querySelectorAll('button.bo-odd') : [])].find(x => { const oc = x.getAttribute('onclick') || '';
+      return side ? (oc.startsWith(want + ',' + side + ',') || oc.startsWith(want + ',' + side + "'")) : (oc.startsWith(want + "'") || oc.startsWith(want + ',')); });
     const m = b && (b.getAttribute('onclick') || '').match(/^betPick\('([^']*)','([^']*)',([\d.]+),'([\s\S]*)'\)$/);
     if (m) { const sel = m[2].split(','); found = { market: m[1], selCsv: m[2], sel, odds: Number(m[3]), label: m[4].replace(/\\'/g, "'"), line: market === 'ou' ? sel[2] : null }; }
   } catch (e) { console.warn('dry price', e); }
-  window._betDry = false; window._betDiv = prev; window._betDryEl = null;
+  finally { window._betDryNow = false; KEYS.forEach(k => { window[k] = keep[k]; }); }
   window._betWideCache[_wideKey(dv, market, st, side)] = found || { none: 1 };
   return found;
 }
@@ -29318,10 +29320,12 @@ function _betStartTicker() {
 }
 // Betting uses check-in status regardless of the viewer's "hide check-in ticks" setting.
 function _betChk(fn, d) { const h = window._hideCheckin; window._hideCheckin = false; try { return typeof fn === 'function' ? !!fn(d) : false; } finally { window._hideCheckin = h; } }
-window.renderBets = async function() {
+window.renderBets = async function(dry) {
   try { await window._fiaLoad(); if (!window._allDrivers) window._allDrivers = await dbGetAll('drivers').catch(() => []); } catch (e) {}
-  // Dry run (window._betDry): price a division into a detached box — nothing on screen changes.
-  const el = window._betDry ? (window._betDryEl = document.createElement('div')) : document.getElementById('bets-content');
+  // Dry run (dry = {div}): price that division into a detached box (dry.el) — nothing on screen changes, and
+  // nothing global (current division, live prices) is touched, so normal refreshes can run at the same time.
+  const _dry = dry && dry.div ? dry : null;
+  const el = _dry ? (_dry.el = document.createElement('div')) : document.getElementById('bets-content');
   if (!el) return;
   if (!currentUser || !currentUser.userId) { el.innerHTML = '<div class="card">' + emptyState('🎰', 'Log in to bet', 'Sign in to get your 1,000 free IM$.') + '</div>'; return; }
   const [drivers, races, schedule, teams, allCoins, _arcs, _cfgDoc, _ovDoc, _constrs, _qpDoc, _rsDoc] = await Promise.all([
@@ -29368,8 +29372,9 @@ window.renderBets = async function() {
   const upcoming = teamsLocked ? null : ((schedule || []).filter(r => r.lockTime > Date.now()).sort((a, b) => a.lockTime - b.lockTime)[0] || null);
   const divs = ((typeof divisionsForSeason === 'function') ? divisionsForSeason(window.currentSeason || window._reserveSeason || 8) : ['D0', 'D1', 'D2', 'D3', 'E3']).map(d => d === 'D4' ? 'E3' : d).concat('BOTT'); // S8+: D4 is E3
   const HUE = { D0: '#ffc800', D1: '#e8002d', D2: '#9b6fd4', D3: '#27f4d2', D4: '#2ecc71', E3: '#2ecc71', BOTT: '#ffa751' };
-  const div = (window._betDiv && divs.includes(window._betDiv)) ? window._betDiv : divs[0];
-  window._betDiv = div;
+  const div = _dry ? _dry.div : (window._betDiv && divs.includes(window._betDiv)) ? window._betDiv : divs[0];
+  if (!_dry) window._betDiv = div;
+  if (_dry) window._betDryNow = true;
   const hue = HUE[div] || '#7b7fe8';
   const _curS = window._reserveSeason || 8;
   const _prevArc = (window._betArchives || []).find(a => a.season === _curS - 1);
@@ -30062,7 +30067,7 @@ window.renderBets = async function() {
                   <span style="font-size:.78rem;color:var(--muted)">${esc(lnTxt)}</span>${w ? `<s style="font-size:.74rem;color:var(--muted)">${fmtOdds(w.was)}</s>` : ''}
                   <span style="margin-left:auto;display:flex;gap:6px;align-items:center">${allBtn}${btn}
 </span></div>`; };
-              const _rowsHtml = dvs.map(row).join(''); if (_miss.length && !window._betDry) setTimeout(() => window._betFillWide(_miss), 50);
+              const _rowsHtml = dvs.map(row).join(''); if (_miss.length && !_dry) setTimeout(() => window._betFillWide(_miss), 50);
               return `<div style="flex:1 1 100%;display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:8px">
                 <div style="display:flex;gap:3px;padding:3px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1)">${dvs.map(x => `<button class="bsel-pill" data-bkey="${esc(key)}" data-dv="${esc(x)}" onclick="boostSelDiv(this)" style="border:0;cursor:pointer;font:800 .74rem/1 'Barlow Condensed',sans-serif;letter-spacing:.8px;padding:5px 9px;border-radius:999px;${x === sel0 ? 'background:linear-gradient(135deg,#ffe259,#ffa751);color:#111' : 'background:transparent;color:var(--muted)'}">${esc(x)}</button>`).join('')}</div>
                 ${_rowsHtml}</div>`; })()}</div>`; }
