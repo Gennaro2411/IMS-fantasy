@@ -2694,29 +2694,28 @@
     .cp-reveal{position:relative;display:flex;align-items:center;justify-content:center;gap:14px;margin-top:16px;padding:12px;border-radius:16px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);animation:wdPop .5s both}.cp-reveal.win{background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.45)}.cp-reveal small{display:block;color:var(--muted);font-size:.75rem}.cp-reveal b{font-family:'Barlow Condensed',sans-serif;font-size:1.8rem}
     .wf-race{position:relative;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:8px}.wf-race b{font-family:'Barlow Condensed',sans-serif;font-size:1.6rem;font-weight:800}.wf-race span{width:100%;color:var(--muted);font-size:.8rem}
     .wf-list{position:relative;display:flex;flex-direction:column;gap:7px;margin:14px auto 0;max-width:460px}
-    .wf-row{--tc:#7dd3fc;display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;border-radius:14px;cursor:pointer;color:#fff;font:inherit;text-align:left;background:linear-gradient(90deg,color-mix(in srgb,var(--tc) 18%,rgba(255,255,255,.03)),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.12);border-left:4px solid var(--tc);transition:transform .15s,border-color .15s,box-shadow .15s}
-    .wf-row:not(:disabled):hover{transform:translateX(3px)}.wf-row:disabled{cursor:default}
+    .wf-row{--tc:#7dd3fc;display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;border-radius:14px;cursor:pointer;color:#fff;font:inherit;text-align:left;background:linear-gradient(90deg,color-mix(in srgb,var(--tc) 18%,rgba(255,255,255,.03)),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.12);border-left:4px solid var(--tc);transition:border-color .15s}
+    .wf-row:disabled{cursor:default}
     .wf-row.sel{border-color:#7dd3fc;box-shadow:0 0 0 2px rgba(125,211,252,.55),0 8px 22px rgba(56,189,248,.25);transform:scale(1.02)}
     .wf-row.lock,.wf-row.m-g{background:linear-gradient(90deg,rgba(34,197,94,.28),rgba(34,197,94,.06));border-color:rgba(34,197,94,.6)}.wf-row.m-y{border-color:rgba(250,204,21,.7);background:linear-gradient(90deg,rgba(250,204,21,.2),rgba(255,255,255,.02))}.wf-row.m-r{border-color:rgba(239,68,68,.55);background:linear-gradient(90deg,rgba(239,68,68,.18),rgba(255,255,255,.02))}
     .wf-p{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.35rem;width:34px;text-align:center;flex-shrink:0}
     .wf-nm{flex:1;min-width:0;display:flex;flex-direction:column}.wf-nm b{font-size:.95rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.wf-nm small{display:flex;align-items:center;gap:5px;color:var(--muted);font-size:.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.wf-nm small img{width:16px;height:16px;object-fit:contain}.wf-nm .wf-was{color:#fca5a5}
     .wf-ic{color:var(--muted);font-weight:900;width:20px;text-align:center}.wf-row.lock .wf-ic,.wf-row.m-g .wf-ic{color:#4ade80}.wf-row.m-r .wf-ic{color:#f87171}
     .wf-arena{overflow:hidden;background:radial-gradient(90% 60% at 50% -10%,rgba(239,68,68,.16),transparent 60%),radial-gradient(70% 50% at 100% 100%,rgba(56,189,248,.12),transparent 60%),linear-gradient(165deg,#0c1224,#120d22 55%,#07070d)}
-    .wf-arena::before{content:'';position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(90deg,rgba(255,255,255,.025) 0 1px,transparent 1px 44px);mask-image:linear-gradient(180deg,#000,transparent 70%)}
     .wf-arena .pt-qn{color:#fca5a5}.wf-arena.still{animation:none}
-    .wf-list{touch-action:pan-y}.wf-list.dragging{touch-action:none}.wf-list.dragging .wf-row:not(.drag){transition:transform .18s}
-    .wf-row{position:relative;overflow:hidden;min-height:58px;background:linear-gradient(90deg,color-mix(in srgb,var(--tc) 16%,rgba(14,16,30,.92)),rgba(14,16,30,.85) 55%);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.08);border-left:none;padding-left:0;user-select:none;-webkit-user-select:none}
-    .wf-row::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--tc);box-shadow:0 0 14px var(--tc)}
+    .wf-list .wf-row{touch-action:none}
+    .wf-row{position:relative;overflow:hidden;min-height:58px;background:linear-gradient(90deg,color-mix(in srgb,var(--tc) 16%,rgba(14,16,30,.92)),rgba(14,16,30,.85) 55%);border:1px solid rgba(255,255,255,.08);border-left:none;padding-left:0;user-select:none;-webkit-user-select:none}
+    .wf-row::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--tc)}
     .wf-row::after{content:'';position:absolute;inset:0;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.07) 50%,transparent 60%);transform:translateX(-100%);pointer-events:none}
-    .wf-row:not(:disabled):hover::after{transform:translateX(100%);transition:transform .7s}
+    
     .wf-p{display:flex;align-items:baseline;justify-content:center;width:46px;align-self:stretch;margin-left:4px;padding-top:12px;background:rgba(255,255,255,.04);clip-path:polygon(0 0,100% 0,82% 100%,0 100%);font-size:1.55rem;font-variant-numeric:tabular-nums}.wf-p i{font-style:normal;font-size:.7rem;color:var(--muted);margin-right:1px}
     .wf-row:nth-child(1) .wf-p{color:#fcd34d}.wf-row:nth-child(2) .wf-p{color:#e5e7eb}.wf-row:nth-child(3) .wf-p{color:#f0a76b}
     .wf-av{flex-shrink:0;border-radius:50%;box-shadow:0 0 0 2px color-mix(in srgb,var(--tc) 70%,transparent)}
     .wf-nm small span{overflow:hidden;text-overflow:ellipsis}.wf-grid{font-style:normal;font-size:.62rem;font-weight:800;letter-spacing:.8px;padding:2px 6px;border-radius:5px;background:rgba(125,211,252,.12);color:#7dd3fc;border:1px solid rgba(125,211,252,.25);flex-shrink:0}
-    .wf-row.drag{z-index:5;transition:none!important;box-shadow:0 18px 40px rgba(0,0,0,.6),0 0 0 2px #7dd3fc;cursor:grabbing}
-    .wf-row.tgt{box-shadow:inset 0 0 0 2px rgba(125,211,252,.7);transform:scale(.98)}
+    .wf-row.drag{z-index:5;will-change:transform;box-shadow:0 0 0 2px #7dd3fc;cursor:grabbing}
+    .wf-row.tgt{box-shadow:inset 0 0 0 2px rgba(125,211,252,.7)}
     .wf-row.rev{animation:wfRev .55s var(--d) both}
-    @keyframes wfRev{0%{transform:perspective(600px) rotateX(-90deg);filter:brightness(2)}60%{transform:perspective(600px) rotateX(12deg)}100%{transform:none;filter:none}}
+    @keyframes wfRev{0%{transform:perspective(600px) rotateX(-90deg);opacity:.4}60%{transform:perspective(600px) rotateX(12deg);opacity:1}100%{transform:none}}
     .wf-row.lock .wf-p,.wf-row.m-g .wf-p{color:#4ade80}
     .wf-gain{display:flex;flex-direction:column;align-items:flex-end;font-weight:900;font-size:.85rem;color:var(--muted);font-variant-numeric:tabular-nums}.wf-gain small{font-size:.6rem;font-weight:600;color:var(--muted)}.wf-gain.up{color:#4ade80}.wf-gain.dn{color:#f87171}
     .wf-arena>.wf-lights{position:absolute!important;width:auto!important;right:auto;margin:0;top:62px;left:50%;transform:translateX(-50%);display:flex;gap:6px;padding:6px 8px;border-radius:10px;background:#050507;box-shadow:0 6px 20px rgba(0,0,0,.6);z-index:3;animation:wfLtOut .4s 2.6s both}
@@ -2725,7 +2724,7 @@
     @keyframes wfLt{to{background:#ff2a2a;box-shadow:0 0 12px #ff2a2a,0 0 2px #fff inset}}
     @keyframes wfLtOut{to{opacity:0;transform:translate(-50%,-14px) scale(.9);visibility:hidden}}
     .wf-arena .wf-lights~*{animation:wfIn .5s 2.7s both}.wf-arena .wf-lights~.pt-qn{animation:none}
-    @keyframes wfIn{from{opacity:.25;filter:blur(2px)}to{opacity:1;filter:none}}
+    @keyframes wfIn{from{opacity:.25}to{opacity:1}}
     .wf-pod{position:relative;display:flex;justify-content:center;align-items:flex-end;gap:10px;margin:18px auto 4px;max-width:360px}
     .wf-pd{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;animation:wfPd .6s var(--pd) both}.wf-pd b{font-size:.78rem;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .wf-pd-av{position:relative}.wf-crown{position:absolute;top:-16px;right:-8px;font-size:1.3rem;animation:wdPop .5s .9s both}
@@ -34859,11 +34858,12 @@ function _wfDragInit() { const L = document.getElementById('wf-list'); if (!L ||
   L.addEventListener('pointerdown', (e) => { const row = e.target.closest('.wf-row'); if (!row || row.disabled || e.button > 0) return;
     const st = _wfCur(); if (!st || st.done || window._wfLocked) return; const P = _wfPz(st); if (!P) return; const fixed = _wfLockedAt(st, P);
     const rows = [...L.querySelectorAll('.wf-row')], from = +row.dataset.i, y0 = e.clientY, rects = rows.map(r => r.getBoundingClientRect()); let drag = false, to = from;
-    const mv = (ev) => { const dy = ev.clientY - y0; if (!drag) { if (Math.abs(dy) < 7) return; drag = true; window._wfSel = null; rows.forEach(r => r.classList.remove('sel')); row.classList.add('drag'); L.classList.add('dragging'); try { row.setPointerCapture(e.pointerId); } catch (x) {} }
-      ev.preventDefault(); row.style.transform = `translateY(${dy}px) scale(1.03)`; const c = rects[from].top + rects[from].height / 2 + dy;
+    let raf = 0, lastY = y0; const mv = (ev) => { if (drag) ev.preventDefault(); lastY = ev.clientY; if (raf) return; raf = requestAnimationFrame(() => { raf = 0; step(lastY); }); };
+    const step = (cy) => { const dy = cy - y0; if (!drag) { if (Math.abs(dy) < 7) return; drag = true; window._wfSel = null; rows.forEach(r => r.classList.remove('sel')); row.classList.add('drag'); L.classList.add('dragging'); try { row.setPointerCapture(e.pointerId); } catch (x) {} }
+      row.style.transform = `translateY(${dy}px)`; const c = rects[from].top + rects[from].height / 2 + dy;
       let t = rects.findIndex(r => c >= r.top && c < r.bottom + 7); if (t < 0) t = c < rects[0].top ? 0 : rows.length - 1; if (fixed(t)) t = to; to = t;
       rows.forEach((r, j) => { if (j === from) return; r.classList.toggle('tgt', j === to && to !== from); }); };
-    const up = () => { document.removeEventListener('pointermove', mv); document.removeEventListener('pointerup', up); document.removeEventListener('pointercancel', up);
+    const up = () => { cancelAnimationFrame(raf); document.removeEventListener('pointermove', mv); document.removeEventListener('pointerup', up); document.removeEventListener('pointercancel', up);
       if (!drag) return; L._wfNoTap = Date.now(); row.classList.remove('drag'); L.classList.remove('dragging'); rows.forEach(r => r.classList.remove('tgt'));
       if (to !== from && !fixed(to)) { [st.cur[from], st.cur[to]] = [st.cur[to], st.cur[from]]; if (_wfGetMode() === 'daily') _wfSave(st); try { _ptSnd.tick(); } catch (x) {} row.style.transform = ''; _wfList(); }
       else { row.animate && row.animate([{ transform: row.style.transform }, { transform: 'none' }], { duration: 250, easing: 'ease-out' }); row.style.transform = ''; } };
