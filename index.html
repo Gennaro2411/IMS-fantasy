@@ -2703,7 +2703,7 @@
     .wf-ic{color:var(--muted);font-weight:900;width:20px;text-align:center}.wf-row.lock .wf-ic,.wf-row.m-g .wf-ic{color:#4ade80}.wf-row.m-r .wf-ic{color:#f87171}
     .wf-arena{overflow:hidden;background:radial-gradient(90% 60% at 50% -10%,rgba(239,68,68,.16),transparent 60%),radial-gradient(70% 50% at 100% 100%,rgba(56,189,248,.12),transparent 60%),linear-gradient(165deg,#0c1224,#120d22 55%,#07070d)}
     .wf-arena::before{content:'';position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(90deg,rgba(255,255,255,.025) 0 1px,transparent 1px 44px);mask-image:linear-gradient(180deg,#000,transparent 70%)}
-    .wf-arena .pt-qn{color:#fca5a5}
+    .wf-arena .pt-qn{color:#fca5a5}.wf-arena.still{animation:none}
     .wf-list{touch-action:pan-y}.wf-list.dragging{touch-action:none}.wf-list.dragging .wf-row:not(.drag){transition:transform .18s}
     .wf-row{position:relative;overflow:hidden;min-height:58px;background:linear-gradient(90deg,color-mix(in srgb,var(--tc) 16%,rgba(14,16,30,.92)),rgba(14,16,30,.85) 55%);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.08);border-left:none;padding-left:0;user-select:none;-webkit-user-select:none}
     .wf-row::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--tc);box-shadow:0 0 14px var(--tc)}
@@ -34769,7 +34769,7 @@ const _wfPz = (st) => ((window._wfP && window._wfP.list) || []).find(p => p.k ==
 const _wfLockedAt = (st, P) => { const last = st.tries[st.tries.length - 1]; return (i) => !!last && last[i] === P.rows[i].id; };
 window.wfTap = function(i) { if (window._wfLocked) return; { const L = document.getElementById('wf-list'); if (L && L._wfNoTap && Date.now() - L._wfNoTap < 300) return; } const st = _wfCur(); if (!st || st.done) return; const P = _wfPz(st); if (!P || _wfLockedAt(st, P)(i)) return;
   const s = window._wfSel; if (s == null) { window._wfSel = i; } else if (s === i) { window._wfSel = null; } else { [st.cur[s], st.cur[i]] = [st.cur[i], st.cur[s]]; window._wfSel = null; if (_wfGetMode() === 'daily') _wfSave(st); try { _ptSnd.tick && _ptSnd.tick(); } catch (e) {} }
-  renderGames(); };
+  _wfList(); };
 window.wfSubmit = async function() { if (window._wfLocked) return; const st = _wfCur(); if (!st || st.done) return; const P = _wfPz(st); if (!P) return;
   st.tries.push(st.cur.slice()); window._wfSel = null; const ok = st.cur.every((id, i) => id === P.rows[i].id);
   if (ok) { st.done = true; st.won = true; } else if (st.tries.length >= WF_TRIES) st.done = true;
@@ -34823,8 +34823,9 @@ async function renderWFGame(el) {
         ${gain != null ? `<span class="wf-gain ${gain > 0 ? 'up' : gain < 0 ? 'dn' : ''}">${gain > 0 ? '▲' + gain : gain < 0 ? '▼' + -gain : '–'}<small>from P${d.grid}</small></span>` : ''}<span class="wf-ic">${lockd || (st.done && mk === 'g') ? '✓' : sel ? '⇅' : st.done ? '✕' : '<svg viewBox="0 0 10 16" width="10" height="16"><g fill="currentColor"><circle cx="2" cy="2" r="1.5"/><circle cx="8" cy="2" r="1.5"/><circle cx="2" cy="8" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="2" cy="14" r="1.5"/><circle cx="8" cy="14" r="1.5"/></g></svg>'}</span></button>`; };
     const podium = st.done ? `<div class="wf-pod">${[1, 0, 2].map(j => { const d = P.rows[j]; return `<div class="wf-pd p${j + 1}" style="--pd:${.15 + [1, 0, 2].indexOf(j) * .18}s"><div class="wf-pd-av">${_wdAv(d, j ? 52 : 66)}${j === 0 ? '<span class="wf-crown">🏆</span>' : ''}</div><b>${esc(String(d.name).replace(/^\[[^\]]*\]\s*/, ''))}</b><div class="wf-pd-step"><span>${j + 1}</span></div></div>`; }).join('')}</div>` : '';
     const lights = window._wfIntro !== st.pk + mode && !st.tries.length ? (window._wfIntro = st.pk + mode, `<div class="wf-lights" aria-hidden="true">${'<i><b></b><b></b></i>'.repeat(5)}</div>`) : '';
+    window._wfCard = card;
     const hist = st.tries.length ? `<div class="wf-hist">${st.tries.map(t => `<div>${t.map((id, i) => `<i class="m-${_wfMark(id, i, P)}"></i>`).join('')}</div>`).join('')}</div>` : '';
-    body += `<div class="pt-arena wf-arena">${lights}<div class="pt-qn">WHO FINISHED WHERE?</div>
+    body += `<div class="pt-arena wf-arena${window._wfShown === st.pk ? ' still' : ''}">${lights}<div class="pt-qn">WHO FINISHED WHERE?</div>
       <div class="wf-race">${typeof getRaceFlag === 'function' ? getRaceFlag(P.track) : ''}<b>${esc(P.track)}</b><span>Season ${P.s}${P.rn ? ' · Round ' + P.rn : ''} · ${esc(P.dv)}</span></div>
       <div class="pt-hint" style="margin-top:4px">${st.done ? (st.won ? `Nailed it in ${st.tries.length}!` : 'The real top 5') : window._wfSel != null ? 'Now tap the driver to swap with' : 'Drag the drivers into finishing order — or tap two to swap'}</div>
       ${podium}<div class="wf-list" id="wf-list">${show.map(card).join('')}</div>${hist}
@@ -34843,8 +34844,15 @@ async function renderWFGame(el) {
   // FLIP: rows glide from where they were to where they are now (swaps and drags animate instead of jumping).
   document.querySelectorAll('#wf-list .wf-row').forEach(r => { const o = _old[r.dataset.id]; if (o == null || !r.animate) return; const dy = o - r.getBoundingClientRect().top; if (Math.abs(dy) < 2) return;
     r.animate([{ transform: `translateY(${dy}px)` }, { transform: 'none' }], { duration: 380, easing: 'cubic-bezier(.2,.9,.25,1.15)' }); });
-  _wfDragInit();
+  if (st) window._wfShown = st.pk; _wfDragInit();
 }
+// Swaps only redraw the 5 rows (no full page rebuild, no flash, no scroll jump).
+function _wfList() { const L = document.getElementById('wf-list'), st = _wfCur(); if (!L || !st || !window._wfCard) return renderGames();
+  const old = {}; L.querySelectorAll('.wf-row').forEach(r => { old[r.dataset.id] = r.getBoundingClientRect().top; });
+  L.innerHTML = st.cur.map(window._wfCard).join('');
+  const h = document.querySelector('.wf-arena .pt-hint'); if (h && !st.done) h.textContent = window._wfSel != null ? 'Now tap the driver to swap with' : 'Drag the drivers into finishing order — or tap two to swap';
+  L.querySelectorAll('.wf-row').forEach(r => { const o = old[r.dataset.id]; if (o == null || !r.animate) return; const dy = o - r.getBoundingClientRect().top; if (Math.abs(dy) < 2) return;
+    r.animate([{ transform: `translateY(${dy}px)` }, { transform: 'none' }], { duration: 320, easing: 'cubic-bezier(.2,.9,.25,1.1)' }); }); }
 // Drag to reorder (mouse + touch). A short press without moving still counts as a tap (wfTap).
 function _wfDragInit() { const L = document.getElementById('wf-list'); if (!L || L._wfD) return; L._wfD = 1;
   L.addEventListener('pointerdown', (e) => { const row = e.target.closest('.wf-row'); if (!row || row.disabled || e.button > 0) return;
@@ -34856,7 +34864,7 @@ function _wfDragInit() { const L = document.getElementById('wf-list'); if (!L ||
       rows.forEach((r, j) => { if (j === from) return; r.classList.toggle('tgt', j === to && to !== from); }); };
     const up = () => { document.removeEventListener('pointermove', mv); document.removeEventListener('pointerup', up); document.removeEventListener('pointercancel', up);
       if (!drag) return; L._wfNoTap = Date.now(); row.classList.remove('drag'); L.classList.remove('dragging'); rows.forEach(r => r.classList.remove('tgt'));
-      if (to !== from && !fixed(to)) { [st.cur[from], st.cur[to]] = [st.cur[to], st.cur[from]]; if (_wfGetMode() === 'daily') _wfSave(st); try { _ptSnd.tick(); } catch (x) {} row.style.transform = ''; renderGames(); }
+      if (to !== from && !fixed(to)) { [st.cur[from], st.cur[to]] = [st.cur[to], st.cur[from]]; if (_wfGetMode() === 'daily') _wfSave(st); try { _ptSnd.tick(); } catch (x) {} row.style.transform = ''; _wfList(); }
       else { row.animate && row.animate([{ transform: row.style.transform }, { transform: 'none' }], { duration: 250, easing: 'ease-out' }); row.style.transform = ''; } };
     document.addEventListener('pointermove', mv, { passive: false }); document.addEventListener('pointerup', up); document.addEventListener('pointercancel', up); }); }
 // ===== CAREER PATH DUEL (race the reveal) =====
