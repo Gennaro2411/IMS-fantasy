@@ -28943,6 +28943,16 @@ window._bottSprintAdd = function(field, races, nDivs) {
   const tot = Object.values(avg).reduce((a, x) => a + x, 0) || 1, pool = 55 * Math.max(1, nDivs || 5), out = {};
   field.forEach(c => { out[c.id] = pool * (avg[c.id] / tot); }); return out;
 };
+// Older bet/boost labels for "title contenders in the points" didn't name the drivers — fill the names in.
+window._betNameLbl = function(label, market, sel) {
+  const k = String((sel && sel[0]) || ''); let t = String(label || '');
+  if (market === 'ou' && k.startsWith('spl3:') && !/\(/.test(t)) {
+    const nm = (x) => String(x || '').replace(/^\[[^\]]*\]\s*/, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const names = k.slice(5).split('|').map(key => { const d = (window._allDrivers || []).find(x => nm(x.name) === key); return d ? d.name : key; });
+    t = t.replace(/title contenders in the points/i, 'title contenders (' + names.join(', ') + ') in the sprint top 10').replace(/sprint title/i, 'title').replace(/sprint title contenders/i, 'title contenders');
+  }
+  return t;
+};
 window._raceCP = function(race) {
   if (!race || !race.constructorPoints) return {};
   if (race._rcp && race._rcpSrc === race.constructorPoints) return race._rcp;
@@ -30067,7 +30077,7 @@ window.renderBets = async function(dry) {
       return `<div class="bo-boosts">${grp.map(g => { const f = g.items[0].b, multi = g.items.length > 1, head = (g.items.find(x => x.b.head) || {}).b;
         const headHtml = head ? `<div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;font-size:1.05rem;letter-spacing:.3px;line-height:1.1;margin:2px 0 3px;background:linear-gradient(90deg,#ffe259,#ffa751);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">${esc(head.head)}</div>` : '';
         if (f.allDivs) { const bi = g.items[0].bi, pct = Math.round(((f.mult || 1) - 1) * 100), dvs = divs.filter(x => x !== 'BOTT' && !(f.excl || []).includes(x));
-          return `<div class="bo-boost" style="flex-wrap:wrap"><div class="bo-boost-l" style="flex:1 1 100%"><div class="bo-kicker">🚀 Boosted odds · every division</div>${headHtml}<b>${esc(plain(f.label).replace(/\s*\d+(?:\.\d+)?\s*$/, ''))}</b></div>
+          return `<div class="bo-boost" style="flex-wrap:wrap"><div class="bo-boost-l" style="flex:1 1 100%"><div class="bo-kicker">🚀 Boosted odds · every division</div>${headHtml}<b style="white-space:normal">${esc(window._betNameLbl(plain(f.label), f.market, f.sel).replace(/\s*\d+(?:\.\d+)?\s*$/, ''))}</b></div>
             ${(() => { const key = f.market + '|' + (f.sel || []).slice(0, 2).join('-'); window._boostSelDiv = window._boostSelDiv || {};
               const sel0 = dvs.includes(window._boostSelDiv[key]) ? window._boostSelDiv[key] : (dvs.includes(div) ? div : dvs[0]);
               const sd = String(f.sel[1] || ''), base = plain(f.label).replace(/\s*\d+(?:[.:]\d+)*\s*$/, '');
@@ -30091,7 +30101,7 @@ window.renderBets = async function(dry) {
                 <div style="display:flex;gap:3px;padding:3px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1)">${dvs.map(x => `<button class="bsel-pill" data-bkey="${esc(key)}" data-dv="${esc(x)}" onclick="boostSelDiv(this)" style="border:0;cursor:pointer;font:800 .74rem/1 'Barlow Condensed',sans-serif;letter-spacing:.8px;padding:5px 9px;border-radius:999px;${x === sel0 ? 'background:linear-gradient(135deg,#ffe259,#ffa751);color:#111' : 'background:transparent;color:var(--muted)'}">${esc(x)}</button>`).join('')}</div>
                 ${_rowsHtml}</div>`; })()}</div>`; }
         if (!multi) { const BOOST = f, bi = g.items[0].bi;
-          return `<div class="bo-boost"><div class="bo-boost-l"><div class="bo-kicker">🚀 Boosted odds · ${esc(BOOST.div)}</div>${headHtml}<b>${esc(BOOST.label)}</b>
+          return `<div class="bo-boost"><div class="bo-boost-l"><div class="bo-kicker">🚀 Boosted odds · ${esc(BOOST.div)}</div>${headHtml}<b style="white-space:normal">${esc(window._betNameLbl(BOOST.label, BOOST.market, BOOST.sel))}</b>
         <div class="bo-boost-o"><s>${fmtOdds(BOOST.was)}</s> → <em>${fmtOdds(BOOST.odds)}</em></div></div>
         <div class="bo-boost-r">${BOOST.div === div ? oddsBtn(BOOST.market, BOOST.sel, BOOST.label, BOOST.odds) : `<button class="bo-odd boosted" ${open ? '' : 'disabled'} onclick="betPickIn('${esc(BOOST.div)}','${BOOST.market}','${(BOOST.sel || []).join(',')}',${BOOST.odds},'${esc(BOOST.label).replace(/'/g, "\\'")}')">🚀 ${fmtOdds(BOOST.odds)}</button>`}
 </div></div>`; }
@@ -30161,12 +30171,12 @@ window.renderBets = async function(dry) {
           const ou = [['spwg', 'Winner\'s starting position', 'Over = the winner comes from further back', SP.ouWg, v => 'P' + v],
                       ['spgain', 'Biggest climb in the sprint', 'Most places gained by any one driver', SP.ouGain, v => v + ' places'],
                       ...[SP.poleId, ...(SP.lead || []).slice(0, 1)].filter(Boolean).map(id => { const d = field.find(x => x.id === id); return d && SP.ouPos && SP.ouPos[id] ? ['spfp:' + _nmK(d.name), esc(d.name) + '\'s sprint finish', (_spGrid[id] === 1 ? 'Starts on pole' : 'Championship leader, starts P' + _spGrid[id]) + ' · a DNF counts as over', SP.ouPos[id], v => 'P' + v] : null; }).filter(Boolean),
-                      ...(L3.length === 3 ? [['spl3:' + L3.map(d => _nmK(d.name)).join('|'), 'Title contenders in the points', L3.map(d => esc(d.name)).join(', ') + ' start at the back — how many finish top ' + Math.min(10, N) + '?', SP.ouLead, v => String(v)]] : [])].filter(x => x[3]);
+                      ...(L3.length === 3 ? [['spl3:' + L3.map(d => _nmK(d.name)).join('|'), 'Title contenders in the points', L3.map(d => esc(d.name)).join(', ') + ' start at the back — how many finish top ' + Math.min(10, N) + '?', SP.ouLead, v => String(v), 'title contenders (' + L3.map(d => d.name).join(', ') + ') in the sprint top ' + Math.min(10, N)]] : [])].filter(x => x[3]);
           if (!ou.length) return '';
           return `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>⚡ Sprint specials</span><small>Reverse grid · over / under</small></div>
-            ${ou.map(([k, t, sub, o, fmt]) => { const Ls = String(o.line); return `<div class="bo-ou"><div><b>${t}</b><span class="bo-ou-line">LINE <em>${fmt(o.line)}</em> · ${sub}</span></div>
-              <div class="bo-ou-b"><i>OVER</i>${oddsBtn('ou', [k, 'over', Ls], div + ' sprint ' + String(t).replace(/<[^>]+>/g, '').toLowerCase() + ' over ' + o.line, _ouOdds('ou', [k, 'over', Ls], ex(o.po)))}</div>
-              <div class="bo-ou-b"><i>UNDER</i>${oddsBtn('ou', [k, 'under', Ls], div + ' sprint ' + String(t).replace(/<[^>]+>/g, '').toLowerCase() + ' under ' + o.line, _ouOdds('ou', [k, 'under', Ls], ex(1 - o.po)))}</div></div>`; }).join('')}</div>
+            ${ou.map(([k, t, sub, o, fmt, lt]) => { const Ls = String(o.line), _lt = lt || String(t).replace(/<[^>]+>/g, '').toLowerCase(); return `<div class="bo-ou"><div><b>${t}</b><span class="bo-ou-line">LINE <em>${fmt(o.line)}</em> · ${sub}</span></div>
+              <div class="bo-ou-b"><i>OVER</i>${oddsBtn('ou', [k, 'over', Ls], div + ' sprint ' + _lt + ' over ' + o.line, _ouOdds('ou', [k, 'over', Ls], ex(o.po)))}</div>
+              <div class="bo-ou-b"><i>UNDER</i>${oddsBtn('ou', [k, 'under', Ls], div + ' sprint ' + _lt + ' under ' + o.line, _ouOdds('ou', [k, 'under', Ls], ex(1 - o.po)))}</div></div>`; }).join('')}</div>
             ${(SP.vs || []).length ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>⚡ Sprint head to head</span><small>Who finishes ahead · a DNF loses</small></div>
               ${SP.vs.map(({ a, c, p: q }) => { const A = field.find(d => d.id === a), C = field.find(d => d.id === c); if (!A || !C) return ''; const k = 'spvs:' + _nmK(A.name) + '|' + _nmK(C.name);
                 return `<div class="bo-ou"><div><b>${esc(A.name)} <span style="opacity:.6">vs</span> ${esc(C.name)}</b><span class="bo-ou-line">Start P${_spGrid[a]} vs P${_spGrid[c]}</span></div>
