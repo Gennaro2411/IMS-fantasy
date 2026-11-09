@@ -2751,6 +2751,16 @@
     .wf-row.ovt{z-index:3}.wf-row.ovt::before{width:8px;background:#4ade80}.wf-row.ovt .wf-p{color:#4ade80}.wf-row.lost .wf-p{color:#f87171}
     .wf-replay .wf-rp-lap{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1rem;letter-spacing:1px;color:#fff}.wf-replay .wf-rp-lap.warn{color:#fde047}.wf-replay .wf-rp-bar{display:block;height:3px;margin:5px 0;border-radius:2px;background:rgba(255,255,255,.1);overflow:hidden}.wf-replay .wf-rp-bar i{display:block;height:100%;background:linear-gradient(90deg,#ef4444,#fde047);transition:width .15s linear}.wf-replay .wf-rp-txt{display:block;letter-spacing:0;font-size:.78rem;color:#e5e7eb;min-height:1.2em}
     .wf-replay:has(.wf-rp-lap){width:100%;max-width:460px;cursor:default;border-style:solid;background:rgba(10,10,18,.9)}.wf-replay b{color:inherit}
+    .wfd-vs{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;margin-bottom:10px;padding:10px;border-radius:16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08)}
+    .wfd-side{display:flex;align-items:center;gap:8px;min-width:0;padding:6px 8px;border-radius:12px;transition:background .3s}.wfd-side:last-child{flex-direction:row-reverse;text-align:right}.wfd-side>div{display:flex;flex-direction:column;min-width:0}.wfd-side b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.wfd-side small{color:var(--muted);font-size:.72rem}
+    .wfd-side.win{background:rgba(74,222,128,.12);box-shadow:inset 0 0 0 1px rgba(74,222,128,.45)}.wfd-pts{font-family:'Barlow Condensed',sans-serif;font-size:1.5rem;color:#4ade80;line-height:1}
+    .wfd-x{font-family:'Barlow Condensed',sans-serif;font-weight:900;color:#f87171;letter-spacing:2px}
+    .wfd-wait{text-align:center}.wfd-code{font-family:'Barlow Condensed',sans-serif;font-size:2.6rem;font-weight:900;letter-spacing:10px;margin:6px 0 10px;color:#fde047}
+    .wfd-end{text-align:center;margin-top:14px}.wfd-res{font-family:'Barlow Condensed',sans-serif;font-size:2rem;font-weight:900;letter-spacing:2px}.wfd-res.w{color:#4ade80}.wfd-res.l{color:#f87171}.wfd-res.d{color:#fde047}
+    .wfh-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}.wfh-t{display:flex;flex-direction:column;align-items:center;padding:8px 4px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}.wfh-t b{font-family:'Barlow Condensed',sans-serif;font-size:1.4rem;line-height:1.1}.wfh-t small{font-size:.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}
+    .wfh-sub{margin-top:12px;font-size:.72rem;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+    .wfh-bars{display:flex;align-items:flex-end;gap:4px;height:96px;margin-top:6px}.wfh-bars>div{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:2px}.wfh-bars span{width:100%;border-radius:4px 4px 0 0;background:linear-gradient(180deg,#4ade80,#16a34a)}.wfh-bars span.x{background:linear-gradient(180deg,#f87171,#b91c1c)}.wfh-bars small{font-size:.58rem;color:var(--muted)}
+    .wfh-dist{display:flex;flex-direction:column;gap:4px;margin-top:6px}.wfh-dist>div{display:grid;grid-template-columns:72px 1fr 28px;align-items:center;gap:8px;font-size:.75rem}.wfh-dist small{color:var(--muted)}.wfh-dist span{height:12px;border-radius:6px;background:rgba(255,255,255,.05);overflow:hidden}.wfh-dist i{display:block;height:100%;background:#4ade80;border-radius:6px}.wfh-dist i.x{background:#f87171}.wfh-dist b{text-align:right}
     .wf-hist{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;margin-top:12px}.wf-hist div{display:flex;gap:4px}.wf-hist i{width:16px;height:16px;border-radius:4px}.wf-hist i.m-g{background:#22c55e}.wf-hist i.m-y{background:#facc15}.wf-hist i.m-r{background:#ef4444}
     @media (max-width:640px){.cp-step{width:96px}.cp-arr{display:none}}
     .ptb-row.cpb-row{grid-template-columns:28px minmax(0,1fr) 46px 50px 38px 42px 32px;gap:4px;align-items:center;padding:8px;font-size:.84rem;border-bottom:1px solid var(--border)}
@@ -33327,7 +33337,7 @@ async function _gameCoins(kind, amount) {
   } catch (e) { return 0; }
 }
 function _coinPop(n, kind) {
-  const lbl = { 'wf-daily': 'Daily Who Finished Where?', 'wf-win': 'Top 5 solved!', 'cn-hidden': 'Found a hidden group!', 'st-live': 'Called it like the stewards!', 'qs-win': 'Quali Shootout win!', 'qs-daily': 'Daily Shootout', 'st-daily': 'Daily Steward ruling', 'st-win': 'Matched the stewards!', 'duel-cn': 'Connections duel win', 'cn-daily': 'Daily Connections', 'cn-win': 'Connections solved!', 'wd-daily': 'Daily PaddockDle', 'gr-daily': 'Daily Grid', 'wd-win': 'Got the daily driver!', 'gr-win': 'Perfect 9/9 grid!', 'hl-daily': 'Daily Higher or Lower', 'pt-daily': 'Daily Pointless', 'pt-win': 'Pointless — 60 or under!', 'tq-daily': 'Daily Trivia', 'cp-daily': 'Daily Career Path', 'cp-win': 'Career Path in 3 or fewer!', 'tq-win': 'Trivia 8/10 or better!', 'hl-win': '8/10 or better!', 'duel-hl': 'Higher or Lower duel win', 'duel-pt': 'Pointless duel win', 'duel-tq': 'Trivia duel win', 'duel-cp': 'Career Path duel win', 'duel-wd': 'PaddockDle duel win', 'duel-gr': 'Grid duel win' }[kind] || 'Games';
+  const lbl = { 'duel-wf': 'Who Finished Where? duel win', 'wf-daily': 'Daily Who Finished Where?', 'wf-win': 'Top 5 solved!', 'cn-hidden': 'Found a hidden group!', 'st-live': 'Called it like the stewards!', 'qs-win': 'Quali Shootout win!', 'qs-daily': 'Daily Shootout', 'st-daily': 'Daily Steward ruling', 'st-win': 'Matched the stewards!', 'duel-cn': 'Connections duel win', 'cn-daily': 'Daily Connections', 'cn-win': 'Connections solved!', 'wd-daily': 'Daily PaddockDle', 'gr-daily': 'Daily Grid', 'wd-win': 'Got the daily driver!', 'gr-win': 'Perfect 9/9 grid!', 'hl-daily': 'Daily Higher or Lower', 'pt-daily': 'Daily Pointless', 'pt-win': 'Pointless — 60 or under!', 'tq-daily': 'Daily Trivia', 'cp-daily': 'Daily Career Path', 'cp-win': 'Career Path in 3 or fewer!', 'tq-win': 'Trivia 8/10 or better!', 'hl-win': '8/10 or better!', 'duel-hl': 'Higher or Lower duel win', 'duel-pt': 'Pointless duel win', 'duel-tq': 'Trivia duel win', 'duel-cp': 'Career Path duel win', 'duel-wd': 'PaddockDle duel win', 'duel-gr': 'Grid duel win' }[kind] || 'Games';
   const el = document.createElement('div'); el.className = 'coin-pop'; const nOpen = document.querySelectorAll('.coin-pop').length; if (nOpen) el.style.top = (84 + nOpen * 78) + 'px';
   el.innerHTML = `<span class="imc" style="font-size:1.6rem"></span><div><b>+${n} IM$</b><small>${lbl}</small></div>`;
   document.body.appendChild(el); setTimeout(() => el.classList.add('out'), 2600); setTimeout(() => el.remove(), 3200);
@@ -34784,7 +34794,7 @@ async function _wfPuzzles() {
   window._wfP = { at: _now(), list }; return list; }
 // Shuffle that never starts with anyone already in their right place.
 function _wfShuffle(ids, rnd) { for (let t = 0; t < 50; t++) { const a = ids.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } if (a.every((x, i) => x !== ids[i])) return a; } return ids.slice(1).concat(ids[0]); }
-function _wfState(mode, list) { if (!list.length) return null;
+function _wfState(mode, list) { if (!list.length) return null; if (mode === 'duel') return window._wfDu || null;
   if (mode === 'inf') { if (!window._wfInf) { const P = list[Math.floor(Math.random() * list.length)]; window._wfInf = { pk: P.k, cur: _wfShuffle(P.rows.map(x => x.id), Math.random), tries: [], done: false, won: false, h: [], t0: Date.now() }; } return window._wfInf; }
   const key = _dailyKey(); let st = _wfLoadSt(); if (st && st.key === key && list.some(p => p.k === st.pk)) return st;
   const rnd = _grRng(_wdHash('imswf' + key)), P = list[Math.floor(rnd() * list.length)];
@@ -34802,12 +34812,12 @@ const _wfMaxNow = (st) => Math.max(0, 50 + (WF_SOLVE[st.tries.length] || 0) + WF
 window.wfClue = function(c) { if (window._wfLocked) return; const st = _wfCur(); if (!st || st.done) return; const P = _wfPz(st); if (!P || !WF_CLUES[c]) return; st.h = st.h || []; if (st.h.includes(c)) return;
   st.h.push(c); if (!st.t0) st.t0 = Date.now();
   if (c === 'win') { const w = P.rows[0].id, at = st.cur.indexOf(w); if (at > 0) [st.cur[0], st.cur[at]] = [st.cur[at], st.cur[0]]; }
-  if (_wfGetMode() === 'daily') _wfSave(st); try { _ptSnd.ding(); } catch (e) {} renderGames(); };
-const _wfCur = () => _wfGetMode() === 'inf' ? window._wfInf : _wfLoadSt();
+  if (_wfGetMode() === 'daily') _wfSave(st); else if (_wfGetMode() === 'duel') _wfdSaveSt(st); try { _ptSnd.ding(); } catch (e) {} renderGames(); };
+const _wfCur = () => { const m = _wfGetMode(); return m === 'inf' ? window._wfInf : m === 'duel' ? window._wfDu : _wfLoadSt(); };
 const _wfPz = (st) => ((window._wfP && window._wfP.list) || []).find(p => p.k === st.pk);
 const _wfLockedAt = (st, P) => { const last = st.tries[st.tries.length - 1], w = (st.h || []).includes('win'); return (i) => (w && i === 0) || (!!last && last[i] === P.rows[i].id); };
 window.wfTap = function(i) { if (window._wfLocked) return; { const L = document.getElementById('wf-list'); if (L && L._wfNoTap && Date.now() - L._wfNoTap < 300) return; } const st = _wfCur(); if (!st || st.done) return; const P = _wfPz(st); if (!P || _wfLockedAt(st, P)(i)) return;
-  const s = window._wfSel; if (s == null) { window._wfSel = i; } else if (s === i) { window._wfSel = null; } else { [st.cur[s], st.cur[i]] = [st.cur[i], st.cur[s]]; window._wfSel = null; if (_wfGetMode() === 'daily') _wfSave(st); try { _ptSnd.tick && _ptSnd.tick(); } catch (e) {} }
+  const s = window._wfSel; if (s == null) { window._wfSel = i; } else if (s === i) { window._wfSel = null; } else { [st.cur[s], st.cur[i]] = [st.cur[i], st.cur[s]]; window._wfSel = null; if (_wfGetMode() === 'daily') _wfSave(st); else if (_wfGetMode() === 'duel') _wfdSaveSt(st); try { _ptSnd.tick && _ptSnd.tick(); } catch (e) {} }
   _wfList(); };
 window.wfSubmit = async function() { if (window._wfLocked) return; const st = _wfCur(); if (!st || st.done) return; const P = _wfPz(st); if (!P) return;
   st.tries.push(st.cur.slice()); window._wfSel = null; const ok = st.cur.every((id, i) => id === P.rows[i].id);
@@ -34819,12 +34829,14 @@ window.wfSubmit = async function() { if (window._wfLocked) return; const st = _w
   try { T.forEach((id, i) => setTimeout(() => { const m = _wfMark(id, i, P); m === 'g' ? _ptSnd.tone(880 + i * 110, 0, .12, 'triangle', .1) : m === 'y' ? _ptSnd.tone(520, 0, .1, 'triangle', .08) : _ptSnd.tick(true); }, 120 + i * 190)); } catch (e) {}
   setTimeout(() => { try { ok ? _ptSnd.pointless() : st.done ? _ptSnd.lose ? _ptSnd.lose() : _ptSnd.wrong() : _ptSnd.wrong(); } catch (e) {} }, 120 + WF_N * 190);
   renderGames();
+  if (_wfGetMode() === 'duel') { await _wfdReport(st, P); if (st.done) setTimeout(() => renderGames(), 300); return; }
   if (st.done) { if (st.won) setTimeout(() => { try { fireConfetti({ count: 90 }); } catch (e) {} }, 400); if (_wfGetMode() === 'daily') { await _wfRecord(st, P); window._wfLb = null; } } };
 window.wfAgain = function() { window._wfInf = null; window._wfSel = null; renderGames(); };
 async function _wfRecord(st, P) { const me = _wdMe(), id = _wdScoreId(me.uid), n = st.tries.length, right = st.cur.filter((x, i) => x === P.rows[i].id).length, pts = (_wfScore(st, P) || {}).total || 0;
   try { dbInvalidate('wordleScores'); const cur = await dbGet('wordleScores', id).catch(() => null) || {}; if (cur.wfDay === st.key) return;
     const streak = st.won ? (cur.wfDayPlain === _wdYesterdayKey() && cur.wfLastWon ? (cur.wfStreak || 0) + 1 : 1) : 0;
-    const doc = { uid: me.uid, name: me.name, points: cur.points || 0, wfDay: st.key, wfDayPlain: _wdDayKey(), wfLastWon: !!st.won, wfStreak: streak, wfDayTries: st.won ? n : 0, wfDayRight: right,
+    const hist = (cur.wfHist || []).concat([{ d: _wdDayKey(), p: pts, n: st.won ? n : 0 }]).slice(-60);
+    const doc = { wfHist: hist, wfMaxStreak: Math.max(cur.wfMaxStreak || 0, st.won ? (cur.wfDayPlain === _wdYesterdayKey() && cur.wfLastWon ? (cur.wfStreak || 0) + 1 : 1) : 0), uid: me.uid, name: me.name, points: cur.points || 0, wfDay: st.key, wfDayPlain: _wdDayKey(), wfLastWon: !!st.won, wfStreak: streak, wfDayTries: st.won ? n : 0, wfDayRight: right,
       wfDays: (cur.wfDays || 0) + 1, wfWins: (cur.wfWins || 0) + (st.won ? 1 : 0), wfTrySum: (cur.wfTrySum || 0) + (st.won ? n : 0), wfFirst: (cur.wfFirst || 0) + (st.won && n === 1 ? 1 : 0), wfDayPts: pts, wfPts: (cur.wfPts || 0) + pts, wfBest: Math.max(cur.wfBest || 0, pts) };
     await dbSet('wordleScores', id, doc); window._wfMine = Object.assign({}, cur, doc); } catch (e) {}
   await _gameCoins('wf-daily', 10); if (st.won && n <= 2) await _gameCoins('wf-win', 10); }
@@ -34833,6 +34845,7 @@ async function _wfLeaderboardHtml() {
   if (!window._wfLbRows || _now() - window._wfLbRows.at > 5 * 60e3) window._wfLbRows = { at: _now(), rows: await dbGetAll('wordleScores').catch(() => []) };
   let all = window._wfLbRows.rows.slice(); if (window._wfMine) { all = all.filter(r => !r || r.uid !== me); all.push(window._wfMine); }
   const rows = (await _gmNoTest(all)).filter(r => r && r.uid && (r.wfDays || 0) > 0);
+  const avg = (r) => r.wfWins ? r.wfTrySum / r.wfWins : 9;
   rows.sort((a, b) => (b.wfPts || 0) - (a.wfPts || 0) || (b.wfWins || 0) - (a.wfWins || 0) || (a.wfDays - b.wfDays));
   const mi = rows.findIndex(r => r.uid === me);
   const head = `<div class="ptb-row cpb-row ptb-head"><span>#</span><span>Player</span><span class="c">Today</span><span class="c">Points</span><span class="c">Solved</span><span class="c">Best</span><span class="c">🔥</span></div>`;
@@ -34845,12 +34858,16 @@ async function _wfLeaderboardHtml() {
 const _wfMark = (id, i, P) => { const at = P.rows.findIndex(x => x.id === id); return at === i ? 'g' : Math.abs(at - i) === 1 ? 'y' : 'r'; };
 window.wfShare = function() { const mode = _wfGetMode(), st = _wfCur(); if (!st || !st.done) return; const P = _wfPz(st); if (!P) return;
   const sq = st.tries.map(t => t.map((id, i) => ({ g: '🟩', y: '🟨', r: '🟥' })[_wfMark(id, i, P)]).join('')).join('\n');
-  const txt = `IMS Who Finished Where? ${mode === 'daily' ? '#' + _wfDayNum() : '∞'} · ${st.won ? st.tries.length + '/' + WF_TRIES : 'X/' + WF_TRIES} · ${(_wfScore(st, P) || {}).total || 0} pts${(st.h || []).length ? ' · ' + st.h.map(c => WF_CLUES[c][0]).join('') : ''}\nS${P.s} ${P.track} · ${P.dv}\n${sq}\nhttps://fantasy.ims-league.com`;
+  const txt = `IMS Who Finished Where? ${mode === 'daily' ? '#' + _wfDayNum() : mode === 'duel' ? '⚔️ Duel' : '∞'} · ${st.won ? st.tries.length + '/' + WF_TRIES : 'X/' + WF_TRIES} · ${(_wfScore(st, P) || {}).total || 0} pts${(st.h || []).length ? ' · ' + st.h.map(c => WF_CLUES[c][0]).join('') : ''}\nS${P.s} ${P.track} · ${P.dv}\n${sq}\nhttps://fantasy.ims-league.com`;
   if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) navigator.share({ text: txt }).catch(() => {}); else if (navigator.clipboard) navigator.clipboard.writeText(txt).then(() => { if (typeof showToast === 'function') showToast('📋 Copied — paste it in Discord!', 'success'); }).catch(() => prompt('Copy your result:', txt)); else prompt('Copy your result:', txt); };
 async function renderWFGame(el) {
   if (!window._wfLockAt || _now() - window._wfLockAt > 120e3) { const lk = await dbGet('settings', 'gamesLock').catch(() => null); window._gamesLock = (lk && lk.value) || {}; window._wfLockAt = _now(); }
   const list = await _wfPuzzles(), mode = _wfGetMode(); const locked = !!(window._gamesLock || {}).wf && !adminLoggedIn && !_gamesAccess(); window._wfLocked = locked;
-  const tabs = `<div class="wd-modes">${[['daily', '📅', 'DAILY'], ['inf', '∞', 'PRACTICE']].map(([m, i, l]) => `<button class="${mode === m ? 'on' : ''}" onclick="setWFMode('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>`;
+  const tabs = `<div class="wd-modes">${[['daily', '📅', 'DAILY'], ['inf', '∞', 'PRACTICE'], ['duel', '⚔️', 'DUEL']].map(([m, i, l]) => `<button class="${mode === m ? 'on' : ''}" onclick="setWFMode('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>`;
+  let duelTop = '', duelEnd = '';
+  if (mode === 'duel') { clearInterval(window._wdTick); if (locked) { el.innerHTML = `<div class="wd-wrap">${_wfHdr(tabs)}<div class="wd-panel" style="text-align:center">Duels open when the game is unlocked.</div></div>`; return; }
+    const r = await _wfDuelPrep(list, _wfHdr(tabs)); if (r.html != null) { el.innerHTML = `<div class="wd-wrap">${r.html}</div>`; return; } duelTop = r.top; duelEnd = r.end; }
+  else clearInterval(window._wfdPoll);
   const st = _wfState(mode, list), P = st ? _wfPz(st) : null;
   let body = `<div class="wd-top"><button class="wd-back" onclick="openGame('hub')" title="Back to Games">←</button><div class="wd-brand"><img src="icons/icon-192.png?v=3" alt="IMS"><span>WHO FINISHED <em>WHERE?</em></span></div><div class="wd-meta">${mode === 'daily' ? `<span class="wd-pill">#${_wfDayNum()}</span>` : ''}<span class="wd-pill">🎯 ${st ? st.tries.length : 0}/${WF_TRIES}</span>${typeof _ptSndBtn === 'function' ? _ptSndBtn() : ''}</div></div>
     ${(window._gamesLock || {}).wf ? `<div class="wd-lockbar">🔒 <b>Who Finished Where? is locked</b><span>${locked ? 'It\'ll open soon.' : 'Locked for players — you can still play.'}</span></div>` : ''}${tabs}`;
@@ -34877,19 +34894,21 @@ async function renderWFGame(el) {
       <span><i>Placings</i><b>+${sc.slot}</b></span>${sc.bonus ? `<span><i>Solved in ${st.tries.length}</i><b>+${sc.bonus}</b></span>` : ''}${sc.speed ? `<span><i>Speed · ${Math.floor(sc.ms / 60e3)}:${String(Math.floor(sc.ms / 1e3) % 60).padStart(2, '0')}</i><b>+${sc.speed}</b></span>` : ''}${sc.clue ? `<span class="neg"><i>Clues ${used.map(c => WF_CLUES[c][0]).join('')}</i><b>−${sc.clue}</b></span>` : ''}</div></div>` : '';
     const replayLbl = st.done && P.rows.some(d => d.grid) ? `<button class="wf-replay" id="wf-replay" onclick="wfReplay()">▶ <b>WATCH RACE REPLAY</b></button>` : '';
     const hist = st.tries.length ? `<div class="wf-hist">${st.tries.map(t => `<div>${t.map((id, i) => `<i class="m-${_wfMark(id, i, P)}"></i>`).join('')}</div>`).join('')}</div>` : '';
-    body += `<div class="pt-arena wf-arena${window._wfShown === st.pk ? ' still' : ''}">${lights}<div class="pt-qn">WHO FINISHED WHERE?</div>
+    body += duelTop + `<div class="pt-arena wf-arena${window._wfShown === st.pk ? ' still' : ''}">${lights}<div class="pt-qn">WHO FINISHED WHERE?</div>
       <div class="wf-race">${typeof getRaceFlag === 'function' ? getRaceFlag(P.track) : ''}<b>${esc(P.track)}</b><span>Season ${P.s}${P.rn ? ' · Round ' + P.rn : ''} · ${esc(P.dv)}</span></div>
       <div class="pt-hint" style="margin-top:4px">${st.done ? (st.won ? `Nailed it in ${st.tries.length}!` : 'The real top 5') : window._wfSel != null ? 'Now tap the driver to swap with' : 'Drag the drivers into finishing order — or tap two to swap'}</div>
       ${clues}${scoreBox}${podium}${replayLbl}<div class="wf-list" id="wf-list">${show.map(card).join('')}</div>${hist}
       ${st.done ? `<button class="pt-go" style="background:linear-gradient(135deg,#5865f2,#4752c4);color:#fff" onclick="wfShare()">📤 SHARE RESULT</button>
-        ${mode === 'inf' ? `<button class="pt-go" onclick="wfAgain()">PLAY AGAIN</button>` : `<div class="pt-next"><small>NEXT RACE IN</small><b id="pt-timer">--:--:--</b></div>`}`
+        ${mode === 'duel' ? '' : mode === 'inf' ? `<button class="pt-go" onclick="wfAgain()">PLAY AGAIN</button>` : `<div class="pt-next"><small>NEXT RACE IN</small><b id="pt-timer">--:--:--</b></div>`}`
       : `<button class="pt-go" onclick="wfSubmit()" ${locked ? 'disabled' : ''}>LOCK IN</button><div class="pt-hint">${WF_TRIES - st.tries.length} tr${WF_TRIES - st.tries.length === 1 ? 'y' : 'ies'} left · 🟩 right spot · 🟨 one place out · 🟥 further</div>`}</div>`; }
-  if (mode === 'daily') body += (st && st.done || !window._wfLb) ? (window._wfLb = await _wfLeaderboardHtml()) : window._wfLb;
+  body += duelEnd;
+  if (mode === 'daily') { body += (st && st.done || !window._wfLb) ? (window._wfLb = await _wfLeaderboardHtml()) : window._wfLb;
+    const meU = _wdMe().uid, myRow = window._wfMine || ((window._wfLbRows && window._wfLbRows.rows) || []).find(r => r && r.uid === meU); body += _wfHistHtml(myRow); }
   window._wfRev = null;
   const _old = {}; document.querySelectorAll('#wf-list .wf-row').forEach(r => { _old[r.dataset.id] = r.getBoundingClientRect().top; });
   el.innerHTML = `<div class="wd-wrap">${body}<div class="wd-info"><h3>How to play</h3><p>A real IMS race: the <b>top 5 finishers</b> of one division, shuffled. Each driver shows the team they raced for. <b>Drag</b> them into order (or tap two to swap), then <b>LOCK IN</b>. 🟩 right spot (it locks), 🟨 one place out, 🟥 further. <b>${WF_TRIES} tries.</b></p>
     <p><b>Scoring (out of 100)</b> — <b>10</b> per driver in the right spot, <b>4</b> if one place out, then <b>+30 / +20 / +10</b> for solving on try 1 / 2 / 3 and up to <b>+20</b> for speed. Stuck? Buy a clue — 🚦 pole sitter (−10), ⏱️ winning margin (−5), 🥇 reveal the winner (−15).</p>
-    <p><b>📅 Daily</b> — the same race for everyone. <b>∞ Practice</b> — unlimited, any race from any season.</p>
+    <p><b>📅 Daily</b> — the same race for everyone. <b>∞ Practice</b> — unlimited, any race from Seasons 4–8. <b>⚔️ Duel</b> — you and an opponent get the same race and shuffle; higher score wins (+5 IM$).</p>
     <p style="margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(247,207,85,.08);border:1px solid rgba(247,207,85,.35);font-size:.84rem"><span class="imc"></span> <b>Earn IM$:</b> play the daily for <b>+10 IM$</b>, solve it in <b>2 tries or fewer</b> for <b>another +10 IM$</b>. Log in to earn.</p></div></div>`;
   if (document.getElementById('pt-timer')) { const until = _now() + _wdMsToMidnight(); clearInterval(window._wdTick);
     const tk = () => { const t = document.getElementById('pt-timer'); if (!t) { clearInterval(window._wdTick); return; } const ms = until - _now(); if (ms <= 0) { clearInterval(window._wdTick); renderGames(); return; }
@@ -34978,6 +34997,96 @@ function _wfDragInit() { const L = document.getElementById('wf-list'); if (!L ||
       if (to !== from && !fixed(to)) { [st.cur[from], st.cur[to]] = [st.cur[to], st.cur[from]]; if (_wfGetMode() === 'daily') _wfSave(st); try { _ptSnd.tick(); } catch (x) {} row.style.transform = ''; _wfList(); }
       else { row.animate && row.animate([{ transform: row.style.transform }, { transform: 'none' }], { duration: 250, easing: 'ease-out' }); row.style.transform = ''; } };
     document.addEventListener('pointermove', mv, { passive: false }); document.addEventListener('pointerup', up); document.addEventListener('pointercancel', up); }); }
+// ===== WHO FINISHED WHERE? — DUEL =====
+// Same race, same shuffled start for both players. Each plays it out (3 tries, clues allowed), the higher score wins
+// (tie → solved, then faster). One lobby doc in wordleDuels; each player only writes its own fields.
+const _wfdKey = () => { try { return JSON.parse(localStorage.getItem('imsWfDuel') || 'null'); } catch (e) { return null; } };
+const _wfdSet = (v) => { try { v ? localStorage.setItem('imsWfDuel', JSON.stringify(v)) : localStorage.removeItem('imsWfDuel'); } catch (e) {} };
+const _wfdSaveSt = (st) => { try { localStorage.setItem('imsWfDuelSt', JSON.stringify(st)); } catch (e) {} };
+const _wfdLoadSt = () => { try { return JSON.parse(localStorage.getItem('imsWfDuelSt') || 'null'); } catch (e) { return null; } };
+function _wfdNew(list) { const P = list[Math.floor(Math.random() * list.length)]; return { pk: P.k, cur0: _wfShuffle(P.rows.map(x => x.id), Math.random) }; }
+window.wfDuelCreate = async function(pub) { if (window._wfLocked) return; try { await _clockSync(); } catch (e) {} const list = await _wfPuzzles(); if (!list.length) return customAlert('No races available yet.');
+  const me = _wdMe(); let code = _wdCode(); for (let i = 0; i < 4 && await dbGet('wordleDuels', code).catch(() => null); i++) code = _wdCode();
+  await dbSet('wordleDuels', code, Object.assign({ game: 'wf', public: !!pub, status: 'waiting', createdAt: _now(), hostSeen: _now(), round: 1,
+    hostUid: me.uid, hostName: me.name, hostAvatar: me.avatar || '', guestUid: '', guestName: '', guestAvatar: '' }, _wfdNew(list)));
+  _wfdSet({ code, role: 'host' }); window._wfDu = null; renderGames(); };
+window.wfDuelJoin = async function(code) { if (window._wfLocked) return; try { await _clockSync(); } catch (e) {} const msg = document.getElementById('wfd-msg'), say = (t) => { if (msg) msg.innerHTML = '<div class="alert alert-error">' + t + '</div>'; };
+  code = String(code || '').trim().toUpperCase(); if (!code) return say('Enter a lobby code.');
+  dbInvalidate('wordleDuels'); const l = await dbGet('wordleDuels', code).catch(() => null); if (!l || l.game !== 'wf') return say('No Who Finished Where? lobby with that code.');
+  const me = _wdMe(); if (l.hostUid === me.uid) { _wfdSet({ code, role: 'host' }); return renderGames(); }
+  if (l.guestUid === me.uid) { _wfdSet({ code, role: 'guest' }); return renderGames(); }
+  if (l.status !== 'waiting' || l.guestUid) return say('That duel has already started.');
+  if (_now() - (l.hostSeen || l.createdAt || 0) > 30e3) return say('That lobby has closed — the host left.');
+  await dbSet('wordleDuels', code, { guestUid: me.uid, guestName: me.name, guestAvatar: me.avatar || '', status: 'playing', startedAt: _now() + 2600 });
+  _wfdSet({ code, role: 'guest' }); window._wfDu = null; renderGames(); };
+window.wfDuelLeave = function() { const k = _wfdKey(), s = window._wfdLive || {}; const go = () => { clearInterval(window._wfdPoll); _wfdSet(null); window._wfDu = null;
+    if (k) { if (s.status === 'waiting' && k.role === 'host') dbDelete('wordleDuels', k.code).catch(() => {}); else if (s.status === 'playing' && !s.over) dbSet('wordleDuels', k.code, { [k.role + 'Quit']: true, [k.role + 'Left']: true }).catch(() => {}); else dbSet('wordleDuels', k.code, { [k.role + 'Left']: true }).catch(() => {}); }
+    setTimeout(() => renderGames(), 120); };
+  if (s.status === 'playing' && !s.over) return customConfirm('Leave the duel? You\'ll forfeit and your opponent wins.', go); go(); };
+window.wfDuelRematch = async function() { const k = _wfdKey(); if (!k) return; await dbSet('wordleDuels', k.code, { [k.role + 'Rematch']: true }); renderGames(); };
+// After each lock-in in a duel: tell the opponent how far you are; when finished, post your result.
+async function _wfdReport(st, P) { const k = _wfdKey(); if (!k || !st || st.code !== k.code) return; _wfdSaveSt(st);
+  const upd = { [k.role + 'T']: st.tries.length }; if (st.done) { const sc = _wfScore(st, P) || {}; upd[k.role + 'R'] = { pts: sc.total || 0, n: st.tries.length, won: !!st.won, ms: sc.ms || 0, h: (st.h || []).length, rd: st.round }; }
+  await dbSet('wordleDuels', k.code, upd).catch(() => {}); }
+function _wfdWinner(l) { const q = l.hostQuit ? 'host' : l.guestQuit ? 'guest' : ''; if (q) return q === 'host' ? 'guest' : 'host';
+  const a = l.hostR, b = l.guestR; if (!a || !b) return '';
+  return a.pts !== b.pts ? (a.pts > b.pts ? 'host' : 'guest') : a.won !== b.won ? (a.won ? 'host' : 'guest') : a.ms !== b.ms ? (a.ms < b.ms ? 'host' : 'guest') : 'draw'; }
+const _wfHdr = (tabs, pills) => `<div class="wd-top"><button class="wd-back" onclick="openGame('hub')" title="Back to Games">←</button><div class="wd-brand"><img src="icons/icon-192.png?v=3" alt="IMS"><span>WHO FINISHED <em>WHERE?</em></span></div><div class="wd-meta">${pills || ''}${typeof _ptSndBtn === 'function' ? _ptSndBtn() : ''}</div></div>${tabs}`;
+async function _wfDuelPrep(list, hdr) {
+  const me = _wdMe(), key = _wfdKey(); let lob = null;
+  if (key && key.code) { lob = _duelPre(key.code); if (!lob) { dbInvalidate('wordleDuels'); lob = await dbGet('wordleDuels', key.code).catch(() => null); } if (!lob || lob.game !== 'wf') { _wfdSet(null); window._wfDu = null; lob = null; } }
+  clearInterval(window._wfdPoll);
+  if (!lob) { window._wfdLive = null;
+    const all = await dbGetAll('wordleDuels', { fresh: true }).catch(() => []), now = _now();
+    const open = all.filter(l => l && l.game === 'wf' && l.public && l.status === 'waiting' && now - (l.hostSeen || l.createdAt || 0) < 30e3 && l.hostUid !== me.uid).sort((a, b) => b.createdAt - a.createdAt);
+    const lid = window._wfdPoll = setInterval(() => { if (window._wfdPoll !== lid || !document.getElementById('wfd-lobbies')) { clearInterval(lid); return; } if (!document.activeElement || document.activeElement.id !== 'wfd-join-code') renderGames(); }, 8000);
+    return { html: hdr + `<div class="wd-duel-grid">
+      <div class="wd-panel"><h4>⚔️ Start a duel</h4><p>You both get the <b>same race</b> with the same shuffled top 5. Play it out — <b>3 tries</b>, clues allowed — and the <b>higher score wins</b>. Level? Solving beats not solving, then the quicker player takes it.</p>
+        <div class="wd-btns"><button class="btn btn-primary" onclick="wfDuelCreate(true)">🌍 Public lobby</button><button class="btn btn-secondary" onclick="wfDuelCreate(false)">🔒 Private lobby</button></div>
+        <h4 style="margin-top:18px">🔑 Join with a code</h4>
+        <div class="wd-btns"><input id="wfd-join-code" type="text" maxlength="5" placeholder="CODE" style="text-transform:uppercase;letter-spacing:4px;font-weight:800;max-width:140px" onkeydown="if(event.key==='Enter')wfDuelJoin(this.value)"><button class="btn btn-secondary" onclick="wfDuelJoin(document.getElementById('wfd-join-code').value)">Join</button></div>
+        <div id="wfd-msg" style="margin-top:8px"></div></div>
+      <div class="wd-panel" id="wfd-lobbies"><h4>🌍 Open lobbies <small>${open.length}</small></h4>
+        ${open.length ? open.map(l => `<div class="wd-lob"><span style="display:inline-flex;align-items:center;gap:8px;min-width:0">${_wdAv({ name: l.hostName || 'Player', photo: l.hostAvatar || '' }, 30)}<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(l.hostName || 'Player')}</span></span><small>${Math.max(1, Math.round((now - l.createdAt) / 60e3))} min ago</small><button class="btn btn-primary btn-sm" onclick="wfDuelJoin('${esc(l.id)}')">Join</button></div>`).join('') : '<p class="text-muted" style="margin:6px 0 0">No open lobbies — start one and wait for someone to join.</p>'}</div></div>`
+      + await _h2hBoardHtml('h2hWf', 'Who Finished Where? H2H records') }; }
+  const role = key.role, opp = role === 'host' ? 'guest' : 'host', round = lob.round || 1;
+  const PL = (x) => ({ name: lob[x + 'Name'] || 'Player', photo: lob[x + 'Avatar'] || '' }), meP = PL(role), opP = PL(opp);
+  // Poll the lobby (one doc). Quick while the duel is live, slower once it's over (only rematch votes left to catch).
+  const sig = (l) => JSON.stringify([l.status, l.round, l.hostT, l.guestT, l.hostR, l.guestR, l.hostQuit, l.guestQuit, l.hostRematch, l.guestRematch, l.hostLeft, l.guestLeft, l.guestUid]);
+  const over0 = !!(lob.hostQuit || lob.guestQuit || (lob.hostR && lob.guestR)), s0 = sig(lob);
+  const pid = window._wfdPoll = setInterval(async () => { if (window._wfdPoll !== pid || window._games.view !== 'wf' || _wfGetMode() !== 'duel') { clearInterval(pid); return; } if (window._wfdBusy || window._wfRpOn) return; window._wfdBusy = true;
+    try { dbInvalidate('wordleDuels'); const l2 = await dbGet('wordleDuels', lob.id).catch(() => undefined); if (l2 === undefined) return; if (!l2) { _wfdSet(null); window._wfDu = null; renderGames(); return; }
+      if (l2.status === 'waiting' && role === 'host' && _now() - (l2.hostSeen || 0) > 10e3) dbSet('wordleDuels', lob.id, { hostSeen: _now() }).catch(() => {});
+      if (sig(l2) !== s0) { window._duelPrefetch = { id: lob.id, at: Date.now(), d: l2 }; renderGames(); } } finally { window._wfdBusy = false; } }, lob.status === 'waiting' ? 2500 : over0 ? 4000 : 2500);
+  if (lob.status === 'waiting') { window._wfdLive = { status: 'waiting' };
+    return { html: hdr + `<div class="wd-panel wfd-wait"><h4>⏳ Waiting for an opponent…</h4><p>Share this code:</p><div class="wfd-code">${esc(lob.id)}</div><p class="text-muted" style="font-size:.8rem">${lob.public ? 'Your lobby is also listed publicly.' : 'Private lobby — only people with the code can join.'}</p><button class="btn btn-secondary" onclick="wfDuelLeave()">Cancel</button></div>` }; }
+  if (!list.some(p => p.k === lob.pk)) return { html: hdr + `<div class="alert alert-warning">This duel's race isn't in your race list — refresh the app and rejoin.</div><button class="btn btn-secondary" onclick="wfDuelLeave()">Leave duel</button>` };
+  // My own run of this race (kept locally so a refresh doesn't lose it).
+  let st = window._wfDu; if (!st || st.code !== lob.id || st.round !== round) { const s2 = _wfdLoadSt(); st = s2 && s2.code === lob.id && s2.round === round ? s2 : { code: lob.id, round, pk: lob.pk, cur: (lob.cur0 || []).slice(), tries: [], h: [], t0: Math.max(lob.startedAt || 0, 0) || _now(), done: false, won: false }; window._wfDu = st; _wfdSaveSt(st); }
+  const quit = lob.hostQuit ? 'host' : lob.guestQuit ? 'guest' : '', over = !!(quit || (lob.hostR && lob.guestR)), win = over ? _wfdWinner(lob) : '', rk = lob.id + '_' + round;
+  window._wfdLive = { status: 'playing', over };
+  if (over && win === role && !_wdLS('wfdCoin_' + rk)) { _wdLS('wfdCoin_' + rk, 1); _gameCoins('duel-wf', 5); setTimeout(() => { try { fireConfetti({ count: 90 }); } catch (e) {} }, 300); }
+  if (over && win && win !== 'draw' && role === (quit ? win : 'host') && (lob.recR || 0) !== round && !_wdLS('wfdRec_' + rk)) { _wdLS('wfdRec_' + rk, 1); _duelRecordBoth(lob, round, win, quit, 'wfW', 'wfL', 'h2hWf'); }
+  if (over && role === 'host' && lob.hostRematch && lob.guestRematch && !lob.guestLeft) { await dbSet('wordleDuels', lob.id, Object.assign({ round: round + 1, startedAt: _now() + 2600, hostR: false, guestR: false, hostT: 0, guestT: 0, hostRematch: false, guestRematch: false, hostQuit: false, guestQuit: false, recR: 0 }, _wfdNew(list))); setTimeout(() => renderGames(), 150); }
+  const side = (who, p) => { const R = lob[who + 'R'], T = lob[who + 'T'] || 0, mine = who === role;
+    const stat = lob[who + 'Quit'] ? '<b style="color:#f87171">Forfeited</b>' : R ? `<b class="wfd-pts">${R.pts}</b><small>${R.won ? `solved in ${R.n}` : 'not solved'}${R.h ? ` · ${R.h} clue${R.h > 1 ? 's' : ''}` : ''}</small>` : `<small>${mine ? (st.done ? 'Finished' : `Try ${Math.min(WF_TRIES, st.tries.length + 1)}/${WF_TRIES}`) : T ? `Locked in ${T}×` : 'Thinking…'}</small>`;
+    return `<div class="wfd-side${over && win === who ? ' win' : ''}">${_wdAv(p, 38)}<div><b>${mine ? 'You' : esc(p.name)}</b>${stat}</div></div>`; };
+  const top = `<div class="wfd-vs">${side(role, meP)}<span class="wfd-x">VS</span>${side(opp, opP)}</div>`;
+  const end = over ? `<div class="wd-panel wfd-end"><div class="wfd-res ${win === role ? 'w' : win === 'draw' ? 'd' : 'l'}">${win === role ? '🏆 YOU WIN' : win === 'draw' ? '🤝 DRAW' : `${esc(opP.name)} WINS`}</div>
+      ${quit ? `<p class="text-muted">${quit === role ? 'You left the duel.' : esc(opP.name) + ' left the duel.'}</p>` : `<p class="text-muted">${lob[role + 'R'].pts} – ${lob[opp + 'R'].pts}${lob.hostR.pts === lob.guestR.pts ? ' · decided on ' + (lob.hostR.won !== lob.guestR.won ? 'solving' : 'time') : ''}</p>`}
+      <div class="wd-btns" style="justify-content:center">${lob[opp + 'Left'] ? `<span class="text-muted">${esc(opP.name)} has left.</span>` : lob[role + 'Rematch'] ? `<span class="text-muted">Rematch requested — waiting for ${esc(opP.name)}…</span>` : `<button class="btn btn-primary" onclick="wfDuelRematch()">🔁 Rematch${lob[opp + 'Rematch'] ? ' (they want one!)' : ''}</button>`}<button class="btn btn-secondary" onclick="wfDuelLeave()">Leave</button></div></div>`
+    : `<div style="text-align:center;margin-top:10px"><button class="btn btn-secondary btn-sm" onclick="wfDuelLeave()">Leave duel</button></div>`;
+  return { top, end }; }
+// ===== WHO FINISHED WHERE? — YOUR HISTORY =====
+function _wfHistHtml(r) { if (!r || !(r.wfDays > 0)) return '';
+  const H = (r.wfHist || []).slice(-14), solved = r.wfWins || 0, pct = Math.round(solved / r.wfDays * 100), avg = Math.round((r.wfPts || 0) / r.wfDays);
+  const dist = [1, 2, 3].map(n => (r.wfHist || []).filter(x => x.n === n).length).concat([(r.wfHist || []).filter(x => !x.n).length]), dmax = Math.max(1, ...dist);
+  const tile = (v, l) => `<div class="wfh-t"><b>${v}</b><small>${l}</small></div>`;
+  return `<div class="wd-lb wfh" style="margin-top:18px"><div class="wd-lb-h"><span>📈 Your history</span><small>${r.wfDays} race${r.wfDays === 1 ? '' : 's'} played</small></div>
+    <div class="wfh-tiles">${tile((r.wfPts || 0).toLocaleString(), 'Points')}${tile(avg, 'Avg score')}${tile(r.wfBest || 0, 'Best')}${tile(pct + '%', 'Solved')}${tile(r.wfStreak || 0, 'Streak')}${tile(r.wfMaxStreak || r.wfStreak || 0, 'Best streak')}</div>
+    ${H.length ? `<div class="wfh-sub">Last ${H.length} daily score${H.length === 1 ? '' : 's'}</div><div class="wfh-bars">${H.map(x => `<div title="${esc(x.d)} · ${x.p} pts"><span style="height:${Math.max(4, x.p)}%" class="${x.n ? '' : 'x'}"></span><small>${x.p}</small></div>`).join('')}</div>` : ''}
+    ${(r.wfHist || []).length ? `<div class="wfh-sub">Solved on</div><div class="wfh-dist">${['1st try', '2nd try', '3rd try', 'Not solved'].map((l, i) => `<div><small>${l}</small><span><i style="width:${dist[i] / dmax * 100}%" class="${i === 3 ? 'x' : ''}"></i></span><b>${dist[i]}</b></div>`).join('')}</div>` : '<p class="text-muted" style="font-size:.78rem;margin:8px 0 0">Your score chart starts from your next daily.</p>'}
+    ${(r.wfW || r.wfL) ? `<div class="wfh-sub">Duels: <b style="color:#4ade80">${r.wfW || 0} W</b> · <b style="color:#f87171">${r.wfL || 0} L</b></div>` : ''}</div>`; }
 // ===== CAREER PATH DUEL (race the reveal) =====
 // 5 drivers. Each round the career path reveals one season every 10 s (then nationality, appearances,
 // last race) for both players at once. 3 guesses each per round; the first correct guess takes the round:
