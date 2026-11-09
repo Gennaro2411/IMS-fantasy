@@ -2345,6 +2345,10 @@
     #page-bets .bo-boosts{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:6px;margin-bottom:10px} #page-bets .bo-boosts .bo-boost{margin-bottom:0}
     #page-bets .bo-boost{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;margin-bottom:10px;border-radius:11px;border:1px solid rgba(255,200,0,.55);background:linear-gradient(120deg,rgba(255,200,0,.18),rgba(255,120,0,.08) 60%,rgba(20,20,30,.4));box-shadow:0 0 12px rgba(255,190,0,.1)} #page-bets .bo-boost .bo-kicker{font-size:.52rem} #page-bets .bo-boost-l{min-width:0} #page-bets .bo-boost .btn-sm{padding:3px 7px;font-size:.66rem}
     #page-bets .bo-boost b{display:block;font-size:.76rem;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} #page-bets .bo-boost-o{margin-top:1px;font-size:.68rem;color:var(--muted)} #page-bets .bo-boost-o s{opacity:.7} #page-bets .bo-boost-o em{font-style:normal;font-weight:900;color:#ffc800;font-size:.8rem}
+    #page-bets .bo-odd.locked{opacity:.55;border-style:dashed;cursor:not-allowed} #page-bets .bo-secbar button{position:relative}
+    #page-bets .bo-secbar button.lk{opacity:.6} #page-bets .bo-lk{font-style:normal;font-size:.7rem;margin-left:4px}
+    #page-bets .bo-lkt{position:absolute;top:-7px;right:-7px;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:.62rem;background:#1b1b26;border:1px solid rgba(255,255,255,.18);box-shadow:0 2px 6px rgba(0,0,0,.5);cursor:pointer;opacity:.75}
+    #page-bets .bo-lkt:hover{opacity:1;border-color:#ffc800}
     #page-bets .bo-boost-r{display:flex;gap:5px;align-items:center;flex:0 0 auto} #page-bets .bo-odd.boosted{border-color:#ffc800;color:#ffc800;box-shadow:0 0 10px rgba(255,200,0,.25)}
     #page-bets .bo-ms-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:12px 14px} #page-bets .bo-ms-grid>div{padding:10px;border-radius:10px;background:var(--bcard2);border:1px solid var(--bline)}
     #page-bets .bo-ms-grid i{display:block;font-style:normal;font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)} #page-bets .bo-ms-grid b{display:block;font-size:1.25rem;margin:2px 0} #page-bets .bo-ms-grid small{font-size:.66rem;color:var(--muted)}
@@ -29337,6 +29341,7 @@ window.renderBets = async function(dry) {
   const el = _dry ? (_dry.el = document.createElement('div')) : document.getElementById('bets-content');
   if (!el) return;
   if (!currentUser || !currentUser.userId) { el.innerHTML = '<div class="card">' + emptyState('🎰', 'Log in to bet', 'Sign in to get your 1,000 free IM$.') + '</div>'; return; }
+  if (!_dry && Date.now() - (window._betLocksAt || 0) > 30000) { window._betLocksAt = Date.now(); dbGet('settings', 'betLocks').then(d => { const v = d && d.value ? d.value : null; const ch = JSON.stringify(v) !== JSON.stringify(window._betLocks || null); window._betLocks = v; if (ch) setTimeout(() => renderBets(), 0); }).catch(() => {}); }
   const [drivers, races, schedule, teams, allCoins, _arcs, _cfgDoc, _ovDoc, _constrs, _qpDoc, _rsDoc] = await Promise.all([
     dbGetAll('drivers').catch(() => []), dbGetAll('races').catch(() => []), dbGetAll('schedule').catch(() => []),
     dbGetAll('teams').catch(() => []), dbGetAll('coins').catch(() => []), dbGetAll('seasonArchives').catch(() => []),
@@ -29784,6 +29789,9 @@ window.renderBets = async function(dry) {
     if (!(Number(odds) >= BET_MIN_ODDS) && !(adminLoggedIn && window._betBoostMode)) return `<button class="bo-odd" disabled title="Too short to price (under ${BET_MIN_ODDS.toFixed(2)})">—</button>`;
     const on = (window._betLegs || []).some(l => l.key === div + '|' + key);
     window._betCurOdds[key] = odds;
+    const _lkd = window._betIsLocked(div, market, sel), _cat = window._betCatOf(market, sel);
+    if (adminLoggedIn && window._betLockMode && _cat) return `<button class="bo-odd${_lkd ? ' locked' : ''}" onclick="betLockToggle('${market}','${sel.join(',')}')" title="${_lkd ? 'Tap to unlock' : 'Tap to lock'}">${_lkd ? '🔒' : '🔓'} ${fmtOdds(odds)}</button>`;
+    if (_lkd) return `<button class="bo-odd locked" disabled title="Locked by the admins">🔒</button>`;
     const mineOpen = myBets.some(b => b.status === 'open' && upcoming && b.raceName === upcoming.name && b.div === div && b.market === market && (b.sel || []).join('-') === sel.join('-'));
     if (mineOpen) return `<button class="bo-odd backed" disabled title="You've already backed this — one bet per pick">✓ ${fmtOdds(odds)}</button>`;
     const _fn = (adminLoggedIn && window._betBoostMode) ? 'betSetBoost' : 'betPick';
@@ -30097,7 +30105,7 @@ window.renderBets = async function(dry) {
           const btns = f.allDivs ? divs.filter(x => x !== 'BOTT' && !(f.excl || []).includes(x)).map(x => `<button class="btn btn-secondary btn-sm" style="padding:2px 7px" onclick="betBoostExcl(${g.items[0].bi},'${esc(x)}')">✕ ${esc(x)}</button>`).join('') + `<button class="btn btn-secondary btn-sm" style="padding:2px 7px" onclick="betClearBoost(${g.items[0].bi})">✕ all</button>`
             : g.items.map(({ b, bi }) => `<button class="btn btn-secondary btn-sm" style="padding:2px 7px" onclick="betClearBoost(${bi})">✕ ${esc(b.div)}</button>`).join('');
           return `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span style="flex:1;min-width:140px">${nm}</span>${btns}</div>`; }).join('')}</div></details>` : ''); })() : ''}
-    ${adminLoggedIn && upcoming ? `<div style="margin:-4px 0 10px;text-align:right"><button class="btn btn-sm btn-secondary" style="margin-right:6px" onclick="betBoostTitleEdit()">✏️ Boosts headline</button><button class="btn btn-sm ${window._betBoostMode ? 'btn-primary' : 'btn-secondary'}" onclick="betBoostMode()">${window._betBoostMode ? '🚀 Boost mode ON — tap any price to boost it (tap here to cancel)' : '🚀 Set boosted odds'}</button></div>` : ''}
+    ${adminLoggedIn && upcoming ? `<div style="margin:-4px 0 10px;text-align:right"><button class="btn btn-sm ${window._betLockMode ? 'btn-primary' : 'btn-secondary'}" style="margin-right:6px" onclick="betLockMode()">${window._betLockMode ? '🔒 Lock mode ON — tap any price (tap here to finish)' : '🔒 Lock bets'}</button>${(window._betLockState().cats.length || window._betLockState().bets.length) ? `<button class="btn btn-sm btn-secondary" style="margin-right:6px" onclick="betLockClearAll()" title="${window._betLockState().cats.length} categories, ${window._betLockState().bets.length} single bets locked">🔓 Unlock all (${window._betLockState().cats.length + window._betLockState().bets.length})</button>` : ''}<button class="btn btn-sm btn-secondary" style="margin-right:6px" onclick="betBoostTitleEdit()">✏️ Boosts headline</button><button class="btn btn-sm ${window._betBoostMode ? 'btn-primary' : 'btn-secondary'}" onclick="betBoostMode()">${window._betBoostMode ? '🚀 Boost mode ON — tap any price to boost it (tap here to cancel)' : '🚀 Set boosted odds'}</button></div>` : ''}
     <div class="bo-grid">
       <div>
         <div class="bo-divs">${divs.map(d => `<button class="${d === div ? 'on' : ''}" style="--h:${HUE[d] || '#7b7fe8'}" onclick="betDiv('${d}')">${d}</button>`).join('')}
@@ -30116,7 +30124,9 @@ window.renderBets = async function(dry) {
             ['dnf', '💥', 'Driver to DNF', Object.keys(_dnfR).length > 0],
             ['pen', '⚖️', 'Time penalty', Object.keys(_penR).length > 0],
             ['tri', '🎰', 'Tricast', field.length >= 3]].filter(x => x[3]);
-          return B.length ? `<div class="bo-secbar" style="--h:${hue}">${B.map(([k, i, l]) => `<button class="${window._betSec === k ? 'on' : ''}" data-k="${k}" onclick="betSec('${k}')"><span>${i}</span>${l}</button>`).join('')}</div>` : ''; })()}
+          const _LS = window._betLockState();
+          return B.length ? `<div class="bo-secbar" style="--h:${hue}">${B.map(([k, i, l]) => { const lk = (_LS.cats || []).includes(k);
+            return `<button class="${window._betSec === k ? 'on' : ''}${lk ? ' lk' : ''}" data-k="${k}" onclick="betSec('${k}')"><span>${i}</span>${l}${lk ? '<em class="bo-lk">🔒</em>' : ''}${adminLoggedIn ? `<i class="bo-lkt" role="button" title="${lk ? 'Unlock' : 'Lock'} every ${esc(l)} bet (all divisions)" onclick="betLockCat(event,'${k}')">${lk ? '🔓' : '🔒'}</i>` : ''}</button>`; }).join('')}</div>` : ''; })()}
         <div class="bo-sec" data-sec="h2h"${_secHid('h2h')}>
         ${h2h ? `<div class="card bo-card" style="--h:${hue}"><div class="bo-card-h"><span>⚔️ Head to head</span>${isC ? '<small>Who scores more BOTT points</small>' : `<span class="bo-fmt"><button class="${_h2hQ ? '' : 'on'}" onclick="setH2hMode('race')">Race</button><button class="${_h2hQ ? 'on' : ''}" onclick="setH2hMode('quali')">Quali</button></span>`}</div><div class="bo-h2h-wrap">${h2h || '<div class="text-muted" style="padding:6px">Not enough qualifying laps to price these yet.</div>'}</div></div>` : ''}
         </div><div class="bo-sec" data-sec="spec"${_secHid('spec')}>
@@ -31029,7 +31039,32 @@ window.betSpecialPick = function(id, odds, title) {
 };
 window.betSpecialOdds = async function(id, cur) { const v = prompt('Boosted odds for this special (leave empty to go back to automatic 2×):', cur); if (v === null) return; const n = v.trim() === '' ? 0 : Number(v); if (n && !(n > 1)) return showToast('Enter decimal odds above 1.0', 'error');
   const d = await dbGet('settings', 'betSpecials').catch(() => null); const o = Object.assign({}, (d && d.value) || {}); if (n) o[id] = n; else delete o[id]; await dbSet('settings', 'betSpecials', { value: o }); window._betSpecialOdds = o; showToast(n ? '🎂 Special odds set to ' + n.toFixed(2) : '🎂 Back to automatic 2× odds', 'success'); renderBets(); };
+// ===== ADMIN BET LOCKS =====
+// settings/betLocks: { race, cats: ['sprint', …] (a whole category, every division), bets: ['D1|ou|spgain-over-12.5', …] }.
+// Race markets (win / podium / top 5 / pole) can't be locked here. Locks only apply to the round they were set for.
+window._betCatOf = (m, sel) => { const s0 = String((sel && sel[0]) || '');
+  if (['win', 'pod', 'top5', 'pole'].includes(m)) return null;
+  if (m === 'h2h' || m === 'qh2h') return 'h2h'; if (m === 'spoon') return 'spoon'; if (m === 'tri') return 'tri'; if (m === 'cou') return 'cou';
+  if (['spw', 'spp', 'sp5'].includes(m) || ((m === 'ou' || m === 'yn') && /^sp/.test(s0))) return 'sprint';
+  if (m === 'ou' && s0.startsWith('fpos:')) return 'fpos'; if (m === 'yn' && s0.startsWith('ddnf:')) return 'dnf'; if (m === 'yn' && s0.startsWith('dpen:')) return 'pen';
+  return 'spec'; };
+window._betLockState = () => { const L = window._betLocks, up = window._betCtx && window._betCtx.upcoming; return (L && up && L.race === up.name) ? L : { cats: [], bets: [] }; };
+window._betIsLocked = (dv, m, sel) => { const c = window._betCatOf(m, sel); if (!c) return false; const L = window._betLockState();
+  return (L.cats || []).includes(c) || (L.bets || []).includes(dv + '|' + m + '|' + (sel || []).join('-')); };
+async function _betLockSave(fn) {
+  const up = window._betCtx && window._betCtx.upcoming; if (!up) return;
+  const cur = window._betLockState(), L = { race: up.name, cats: [...(cur.cats || [])], bets: [...(cur.bets || [])] }; fn(L);
+  window._betLocks = L; await dbSet('settings', 'betLocks', { value: L }).catch(e => { if (typeof showToast === 'function') showToast('Lock failed: ' + e.message, 'error'); });
+  renderBets();
+}
+window.betLockCat = (ev, k) => { if (ev) { ev.stopPropagation(); ev.preventDefault(); } if (!adminLoggedIn) return;
+  _betLockSave(L => { L.cats = L.cats.includes(k) ? L.cats.filter(x => x !== k) : [...L.cats, k]; }); };
+window.betLockMode = () => { window._betLockMode = !window._betLockMode; window._betBoostMode = false; renderBets(); };
+window.betLockToggle = (market, selCsv) => { if (!adminLoggedIn) return; const key = window._betDiv + '|' + market + '|' + selCsv.split(',').join('-');
+  _betLockSave(L => { L.bets = L.bets.includes(key) ? L.bets.filter(x => x !== key) : [...L.bets, key]; }); };
+window.betLockClearAll = () => { if (!adminLoggedIn || !confirm('Unlock every locked bet and category?')) return; _betLockSave(L => { L.cats = []; L.bets = []; }); };
 window.betPick = function(market, selCsv, odds, label) {
+  if (window._betIsLocked(window._betDiv, market, String(selCsv).split(','))) { if (typeof showToast === 'function') showToast('🔒 This bet is locked by the admins.', 'error'); return; }
   if ((window._betLegs || []).some(l => l.market === 'special')) { if (typeof showToast === 'function') showToast('The special is a standalone bet — take it off your slip first.', 'error'); return; }
   const sel = selCsv.split(',');
   const div = window._betDiv;
@@ -31112,6 +31147,9 @@ window.betPlace = async function() {
   const useFree = !!(window._betUseFree && window._betFreeOk);
   const stake = useFree ? _betFreeStake() : parseInt((document.getElementById('bo-stake') || {}).value) || 0;
   if (!legs.length || !ctx.upcoming) return;
+  { const lk = await dbGet('settings', 'betLocks').catch(() => null); if (lk && lk.value) window._betLocks = lk.value;
+    const bad = legs.find(l => window._betIsLocked(l.div || (String(l.key || '').split('|')[0]), l.market, l.sel));
+    if (bad) return err('🔒 "' + esc(bad.label || 'A pick') + '" has been locked by the admins — take it off your slip.'); }
   if (useFree) { const why = _betFreeWhyNot(window._betUseFree, legs, legs.length > 1 ? (_bbPrice(legs).odds || 0) : legs.reduce((a, l) => a * l.odds, 1)); if (why) return err('Free bet ' + why + '.'); }
   const _lk = await dbGet('settings', 'teamsLocked').catch(() => null);
   if ((_lk && _lk.value) || ctx.upcoming.lockTime <= Date.now()) return err('Betting has closed for this round.');
