@@ -32656,6 +32656,28 @@ async function _stLoad(force) {
         (j.items || []).forEach(it => window._stUp.add(String(it.name || '').replace(/^fia\//, ''))); tok = j.nextPageToken || ''; } while (tok);
     } catch (e) {} }
   window._stInc.forEach(x => { const c = window._stClipMap && window._stClipMap.get(x.k); if (c) { x.clips = c.clips || []; x.files = c.files || []; x.def = c.def || []; } }); // the shipped clip list is always the latest
+  // Any clip incident missing from the saved list (e.g. the saved list is from an older/partial import) is rebuilt
+  // here from the shipped clip file + the imported steward verdicts, so every clip is always playable.
+  if (window._stClipMap && !window._stInc._clipFill) { try {
+    await window._fiaLoad(); const V = window._fiaV || [], have = new Set(window._stInc.map(x => x.k)), nk = (a) => _normName(a);
+    window._stClipMap.forEach(c => {
+      if (have.has(c.k) || !((c.clips || []).length || (c.files || []).length) || !c.desc || c.desc.trim().length < 5) return;
+      const inc = String(c.k).split('-').slice(3).join('-'), vs = V.filter(v => v.s === c.s && v.r === c.r && v.d === c.d && String(v.inc) === inc);
+      const cat = {}, sz = {}, det = {};
+      vs.forEach(v => { const t = Number(v.t), a = v.a;
+        const k1 = (v.dq || v.rb > 0) ? 5 : (isFinite(t) && t > 10) ? 4 : (isFinite(t) && t > 5) ? 3 : (isFinite(t) && t > 0) ? 2 : (v.pp > 0 || v.qb > 0) ? 1 : 0;
+        const k2 = (v.dq || v.rb > 0) ? 5 : (isFinite(t) && t > 10) ? 4 : (isFinite(t) && t > 5) ? 3 : (isFinite(t) && t > 0) ? 2 : v.qb > 0 ? 1 : v.pp > 0 ? 0 : -1;
+        cat[a] = Math.max(cat[a] || 0, k1); if (k2 >= 0) sz[a] = Math.max(sz[a] == null ? -1 : sz[a], k2);
+        const D = det[a] = det[a] || []; if (v.dq) D.push('DSQ'); else if (isFinite(t) && t > 0) D.push('+' + t + 's'); if (v.qb > 0) D.push(v.qb + ' quali ban' + (v.qb > 1 ? 's' : '')); if (v.rb > 0) D.push(v.rb + ' race ban' + (v.rb > 1 ? 's' : '')); if (v.pp > 0) D.push(v.pp + ' penalty pt' + (v.pp > 1 ? 's' : '')); });
+      const pa = Object.keys(cat), map = (n) => pa.find(a => nk(a) === nk(n)) || n;
+      const drv = [...new Set([...(c.drv || []).map(map), ...pa])].filter(Boolean).slice(0, 6); if (!drv.length) return;
+      window._stInc.push({ k: c.k, s: c.s, r: c.r, d: c.d, sess: c.sess || '', lap: c.lap || '', rep: c.rep || '', desc: String(c.desc).slice(0, 900), st: 'Archived', arch: 1,
+        ids: [c.repId].filter(Boolean), drv, o: drv.map(a => cat[a] != null ? cat[a] : null), od: drv.map(a => (det[a] || []).join(' · ')), sz: drv.map(a => sz[a] != null ? sz[a] : null),
+        did: drv.map(a => { const v = vs.find(x => x.a === a); return v && v.id ? v.id : ''; }), rid: String(c.repId || ''), rap: drv.map(() => null), rc: drv.map(() => null), rrc: null,
+        hasPen: pa.length > 0, at: 0, why: '', ch: '', th: '', clips: c.clips || [], files: c.files || [], def: c.def || [] });
+    });
+    window._stInc._clipFill = 1;
+  } catch (e) { console.warn('clip fill', e); } }
   const races = await dbGetAll('races').catch(() => []), curS = Number(window.currentSeason || window._reserveSeason) || 0;
   const played = (r) => r.driverPoints && Object.values(r.driverPoints).some(v => v > 0);
   // Settled = penalties already linked, or the round is "After verdicts", or a later round has results (stewards are done).
