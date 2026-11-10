@@ -2400,6 +2400,8 @@
     #page-market .mkt-row.is-mine::before{background:linear-gradient(180deg,#7c86ff,#ff5c8a)}
     #page-market .mkt-av,#page-market .mkt-av-in{border-radius:14px}
     #page-market .mkt-btn{border-radius:999px}#page-market .mkt-cmp{border-radius:50%}
+    #page-market .mkt-row.mkt-in{animation:mktIn .42s cubic-bezier(.2,.9,.25,1) both;animation-delay:calc(var(--mi) * 28ms)}
+    @keyframes mktIn{from{opacity:0;transform:translate3d(0,10px,0)}to{opacity:1;transform:none}}
     @media (max-width:520px){
       #page-market .mkt-row{flex-wrap:wrap}
       #page-market .mkt-actions{width:100%;justify-content:flex-end;margin-top:4px;padding-top:9px;border-top:1px dashed rgba(255,255,255,0.08)}
@@ -24386,6 +24388,8 @@ async function renderMarket(quiet) {
   } // end constructor market
 
   el.innerHTML = html;
+  // Tab / sort switch: the new list fades up row by row (first dozen only — the rest are below the fold).
+  if (quiet && !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) el.querySelectorAll('.mkt-row').forEach((r, i) => { if (i < 12) { r.style.setProperty('--mi', i); r.classList.add('mkt-in'); } });
   try { window._hxInit('page-market'); } catch (e) {}
   rtCycle(); // start the transfer wire slide (no-ops when there are no synced moves)
 }
