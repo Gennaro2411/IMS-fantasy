@@ -1094,7 +1094,7 @@
   .hh-act b{display:block;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.25rem;letter-spacing:.5px;text-transform:uppercase}
   .hh-act small{display:block;margin-top:3px;font-size:.7rem;color:#a7a2c2;line-height:1.3}
   /* ===== Home, below the next-race hero (hx-*) — IMS logo palette: indigo → violet → pink on black ===== */
-  #page-dashboard{--hx-i:#6f74e8;--hx-v:#a779e6;--hx-p:#f0487a;--hx-g:linear-gradient(100deg,#7c86ff,#b184e8 48%,#ff5c8a);--hx-line:rgba(255,255,255,.07)}
+  #page-dashboard,#page-results{--hx-i:#6f74e8;--hx-v:#a779e6;--hx-p:#f0487a;--hx-g:linear-gradient(100deg,#7c86ff,#b184e8 48%,#ff5c8a);--hx-line:rgba(255,255,255,.07)}
   .hx-h{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:34px 2px 14px}
   .hx-h small{display:flex;align-items:center;gap:8px;font:800 .6rem/1 system-ui,sans-serif;letter-spacing:3px;text-transform:uppercase;color:#8f95e0}
   .hx-h small::before{content:'';width:22px;height:2px;border-radius:2px;background:var(--hx-g)}
@@ -1242,6 +1242,54 @@
     .hx-tw-ft{flex-wrap:wrap;gap:12px 22px}.hx-tw-ft>span{margin:0;max-width:none;text-align:left;width:100%}
   }
   @media (prefers-reduced-motion:reduce){.hx-you-bar i,.hx-pu-dots i.n,.hx-tl-n.next .hx-tl-dot{animation:none}}
+  /* ===== Results page (rs-*) — same language as the home page ===== */
+  .rs-top{margin-top:4px;flex-wrap:wrap;align-items:center}
+  .rs-tabs{flex-wrap:wrap;border-radius:999px!important;padding:4px!important;background:rgba(255,255,255,.03)!important;border-color:rgba(255,255,255,.08)!important}
+  .rs-tabs .seg-btn{border-radius:999px;padding:8px 16px}.rs-tabs .seg-btn.active{background:linear-gradient(110deg,#6f74e8,#a779e6 55%,#f0487a);box-shadow:0 8px 20px -10px rgba(240,72,122,.9),inset 0 1px 0 rgba(255,255,255,.2)}
+  .rs-hero{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:24px;overflow:hidden;isolation:isolate;padding:26px 26px 24px;cursor:pointer;transition:transform .3s cubic-bezier(.2,.9,.25,1),box-shadow .3s}
+  .rs-hero:not(.rs-dh):hover{transform:translateY(-3px);box-shadow:0 34px 70px -36px rgba(167,121,230,.95)}
+  .rs-hero::before{content:'';position:absolute;inset:0;z-index:-2;background:radial-gradient(60% 120% at 0% 0%,rgba(111,116,232,.36),transparent 62%),radial-gradient(55% 100% at 100% 100%,rgba(240,72,122,.22),transparent 65%)}
+  .rs-hero-trk{position:absolute;left:34%;top:50%;width:min(46%,440px);max-height:120%;object-fit:contain;transform:translate(-10%,-50%) rotate(-6deg);z-index:-1;pointer-events:none;filter:invert(1) drop-shadow(0 0 8px rgba(167,121,230,.9));opacity:.2;transition:opacity .4s,transform .6s cubic-bezier(.2,.9,.25,1)}
+  .rs-hero:not(.rs-dh):hover .rs-hero-trk{opacity:.34;transform:translate(-10%,-50%) rotate(0) scale(1.05)}
+  .rs-hero.one{grid-template-columns:1fr}
+  .rs-hero-n{position:absolute;left:30%;bottom:-40px;z-index:-1;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;font-size:10rem;line-height:1;color:rgba(255,255,255,.035);pointer-events:none}
+  .rs-hero-l{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:12px;min-width:0}
+  .rs-k{display:inline-flex;align-items:center;gap:8px;font:800 .6rem/1 system-ui,sans-serif;letter-spacing:2.6px;text-transform:uppercase;color:#b9bcff}
+  .rs-k i{width:7px;height:7px;border-radius:50%;background:#ff5c8a;box-shadow:0 0 10px #ff5c8a}
+  .rs-hero h3{display:flex;align-items:center;gap:14px;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;text-transform:uppercase;font-size:clamp(2.6rem,9vw,4.6rem);line-height:.9;letter-spacing:-.5px;padding-right:.1em;text-shadow:0 6px 26px rgba(0,0,0,.55)}
+  .rs-flag{flex-shrink:0;font-style:normal;font-size:.5em;line-height:1}.rs-flag img{height:.8em;border-radius:4px;vertical-align:middle}
+  .rs-hero-tags{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.rs-hero-tags:empty{display:none}
+  .rs-hero-r{align-self:center;display:flex;flex-direction:column;gap:6px;min-width:0;padding:14px 14px 12px;border-radius:18px;background:rgba(8,7,16,.62);border:1px solid rgba(255,255,255,.08)}
+  .rs-hero-r>small{font:800 .56rem/1 system-ui,sans-serif;letter-spacing:2.2px;text-transform:uppercase;color:#8f95e0;margin-bottom:4px}
+  .rs-win{--h:#9b6fd4;display:flex;align-items:center;gap:10px;min-width:0;padding:6px 8px 6px 6px;border-radius:12px;background:linear-gradient(90deg,color-mix(in srgb,var(--h) 16%,transparent),transparent 70%)}
+  .rs-win>b{flex-shrink:0;min-width:34px;text-align:center;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;font-size:.95rem;line-height:1;padding:5px 7px;border-radius:7px;color:#0b0a14;background:var(--h)}
+  .rs-win-av{flex-shrink:0;display:grid;place-items:center;width:30px;height:30px;border-radius:50%;overflow:hidden;color:#8e88ab;background:#1c1830;box-shadow:0 0 0 2px color-mix(in srgb,var(--h) 65%,transparent)}.rs-win-av img{width:100%;height:100%;object-fit:cover;object-position:top center}.rs-win-av svg{width:15px;height:15px}
+  .rs-win u{flex:1;min-width:0;text-decoration:none;font-weight:700;font-size:.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rs-win em{flex-shrink:0;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:normal;font-size:1.15rem;line-height:1;color:#fff;font-variant-numeric:tabular-nums}.rs-win em i{font:700 .56rem/1 system-ui,sans-serif;font-style:normal;margin-left:3px;color:#8e88ab}
+  #page-results .rx-grid{grid-template-columns:repeat(auto-fill,minmax(250px,1fr));margin-top:0}
+  #page-results .rx-card{border-radius:22px;background:linear-gradient(160deg,#17142c,#0c0b15 70%);border-color:rgba(255,255,255,.07)}
+  #page-results .rx-card:hover{border-color:#7c86ff;box-shadow:0 22px 46px -22px rgba(124,134,255,.85)}
+  #page-results .rx-card.latest{border-color:rgba(240,72,122,.5);box-shadow:0 18px 40px -22px rgba(240,72,122,.7)}
+  #page-results .rx-card.latest .rx-track{filter:invert(1) drop-shadow(0 0 6px rgba(240,72,122,.9)) drop-shadow(0 0 16px rgba(167,121,230,.55))}
+  #page-results .rx-tag.new{color:#fff;background:linear-gradient(100deg,#7c86ff,#b184e8 50%,#ff5c8a)}
+  #page-results .rx-card:hover .rx-go{background:#7c86ff}
+  #page-results .rx-mvp-r em{color:#b9bcff}
+  .rs-std{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}.rs-std.one{grid-template-columns:1fr}.rs-std>.card{margin:0!important;min-width:0}
+  #page-results .rr-std-trk{opacity:.12}
+  #page-results .rr-std{border-radius:24px!important;border-color:rgba(255,255,255,.07)!important;background:radial-gradient(110% 50% at 100% 0%,color-mix(in srgb,var(--acc) 14%,transparent),transparent 60%),linear-gradient(170deg,#15122b,#0b0a14 72%)!important;box-shadow:0 26px 60px -38px rgba(90,94,201,.75)!important}
+  .rs-dtop{margin:2px 0 12px}
+  .rs-dh{cursor:default;grid-template-columns:1fr;gap:18px;margin-bottom:14px}.rs-dh .rs-hero-trk{left:auto;right:2%;transform:translateY(-50%) rotate(-6deg);opacity:.26}.rs-dh .rs-hero-n{left:auto;right:36%}
+  .rs-navs{display:flex;justify-content:space-between;gap:10px;padding-top:14px;border-top:1px solid rgba(255,255,255,.07)}
+  .rs-nav{display:inline-flex;align-items:center;gap:10px;min-width:0;cursor:pointer;color:#fff;font:inherit;text-align:left;padding:8px 14px 8px 10px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);transition:border-color .2s,background .2s,transform .2s}
+  .rs-nav.fwd{text-align:right;padding:8px 10px 8px 14px}.rs-nav:hover{border-color:#7c86ff;background:rgba(124,134,255,.12)}.rs-nav:not(.fwd):hover{transform:translateX(-3px)}.rs-nav.fwd:hover{transform:translateX(3px)}
+  .rs-nav i{font-style:normal;color:#b9bcff}.rs-nav span{min-width:0;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:1rem;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rs-nav small{display:block;font:800 .5rem/1 system-ui,sans-serif;letter-spacing:1.6px;text-transform:uppercase;color:#8e88ab;margin-bottom:4px}
+  .rs-dcard{border-radius:24px!important;background:linear-gradient(170deg,#15122b,#0b0a14 72%)!important;border-color:rgba(255,255,255,.07)!important}
+  @media (max-width:1080px){.rs-std{grid-template-columns:1fr}}
+  @media (max-width:760px){.rs-hero{grid-template-columns:1fr;gap:16px;padding:20px 18px 18px}.rs-hero-trk{left:auto;right:-8%;top:26%;width:70%;transform:translateY(-50%) rotate(-6deg)}.rs-hero:not(.rs-dh):hover .rs-hero-trk{transform:translateY(-50%) scale(1.04)}
+    .rs-hero-n,.rs-dh .rs-hero-n{font-size:7rem;left:auto;right:10px;bottom:auto;top:-12px}.rs-hero-l .hx-btn{width:100%}.rs-top .rs-tabs{width:100%}.rs-tabs .seg-btn{flex:1;padding:8px 10px}
+    #page-results .rx-grid{grid-template-columns:1fr 1fr;gap:9px}#page-results .rx-card{min-height:150px;padding:14px 12px 12px;border-radius:18px}#page-results .rx-name{font-size:1.35rem;margin:8px 0 10px}#page-results .rx-mvp{max-width:100%}#page-results .rx-num{font-size:3.6rem}
+    .rs-dh .rs-hero-trk{right:-6%;top:34%}.rs-nav{padding:8px 10px}.rs-nav span{font-size:.86rem;max-width:36vw}}
   @keyframes hhPan{from{transform:scale(1.08) translateX(-1.5%)}to{transform:scale(1.14) translateX(1.5%)}}
   @keyframes hhLines{from{background-position:0 0}to{background-position:-40px 0}}
   @keyframes hhGlow{0%,100%{opacity:.45}50%{opacity:.75}}
@@ -8823,7 +8871,7 @@ async function renderDashboard() {
   _loadDiscordInvite();
 }
 // Home page polish: sections rise in as you scroll to them (first time only per visit), numbers count up.
-window._hxInit = function() { const pg = document.getElementById('page-dashboard'); if (!pg) return;
+window._hxInit = function(pgId) { const pg = document.getElementById(pgId || 'page-dashboard'); if (!pg) return;
   const rm = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches), seen = window._hxSeen = window._hxSeen || {};
   const cu = (b) => { if (b._cu) return; b._cu = 1; const to = parseFloat(b.dataset.cu); if (!isFinite(to)) return; const dp = +b.dataset.dp || 0, pre = b.dataset.pre || '', suf = b.dataset.suf || '', from = isFinite(parseFloat(b.dataset.from)) ? parseFloat(b.dataset.from) : 0, t0 = performance.now();
     const f = (t) => { const k = Math.min(1, (t - t0) / 900), v = from + (to - from) * (1 - Math.pow(1 - k, 3)); b.textContent = pre + (k < 1 ? v.toFixed(dp) : to.toFixed(dp)) + suf; if (k < 1) requestAnimationFrame(f); }; requestAnimationFrame(f); };
@@ -25572,20 +25620,18 @@ async function renderResults() {
     const ts = r.updatedAt || r.createdAt || 0;
     return ts > latest ? ts : latest;
   }, 0);
-  let html = mostRecentTs
-    ? `<div style="font-size:.75rem;color:var(--muted);margin-bottom:12px">🔄 Results last updated <strong>${formatTimeAgo(mostRecentTs)}</strong></div>`
-    : '';
-
-  // Season tabs
+  // The round cards and the spotlight read driver names/photos from here, so it has to exist before they're built.
+  window._resultsData = { races: completedRaces, driverMap: Object.fromEntries(drivers.map(d=>[d.id,d])), constrs, seasonArchives, drivers };
+  // Page header: title, when results were last imported, and the season switcher.
   const hasPast = seasonArchives.length > 0;
-  if (hasPast) {
-    html += `<div class="seg" style="margin-bottom:16px;flex-wrap:wrap">
+  let html = `<div class="hx-h rs-top hx-rv" data-k="rsh"><div><small>${mostRecentTs ? 'Updated ' + formatTimeAgo(mostRecentTs) : 'Every round, every division'}</small><h2>Race <em>results</em></h2></div>
+    ${hasPast ? `<div class="seg rs-tabs">
       <button id="results-tab-current" class="seg-btn active" onclick="showResultsTab('current')">Season ${currentSeason}</button>
       ${seasonArchives.map(s => `<button id="results-tab-s${s.season}" class="seg-btn" onclick="showResultsTab('s${s.season}')">Season ${s.season}</button>`).join('')}
-    </div>`;
-  }
+    </div>` : ''}</div>`;
 
   html += `<div id="results-tab-content-current">`;
+  let _vb = '', _bott = '', _champ = ''; // verdict banner + the two standings cards, laid out together below the rounds
 
   if (!completedRaces.length) {
     html += seasonNotStartedCard(races, currentSeason);
@@ -25618,7 +25664,8 @@ async function renderResults() {
         window._bottClinchInfo = { racesLeft: _cal.size ? _remaining : Math.max(0, _at - _scoredNm.size), totalKnown: (_at > 0 || _cal.size > _scoredNm.size) };
       } catch(e) { window._bottClinchInfo = { racesLeft: 0, totalKnown: false }; }
       window._rxLatestName = ((completedRaces || [])[0] || {}).name || ''; // latest circuit drawn behind the standings headers
-      html += (window._verdictBanner ? window._verdictBanner(window._lbAllRaces && window._lbAllRaces.length ? window._lbAllRaces : completedRaces) : '') + buildBottStandings(constrRanked);
+      _vb = window._verdictBanner ? window._verdictBanner(window._lbAllRaces && window._lbAllRaces.length ? window._lbAllRaces : completedRaces) : '';
+      _bott = buildBottStandings(constrRanked);
     }
 
     // ===== DRIVER CHAMPIONSHIP STANDINGS — per division =====
@@ -25768,7 +25815,7 @@ async function renderResults() {
         } catch(e) { window._champRacesLeft = 0; window._champMaxPerRaceByDiv = {}; window._champConstrMaxPerRaceByDiv = {}; window._champMaxPerRaceDefault = 32; window._champCanClinch = false; }
         if (!window._champDiv || !champDivs.includes(window._champDiv)) window._champDiv = champDivs[0];
         if (window._champMode !== 'constructors') window._champMode = 'drivers';
-        html += `<div class="card rr-card rr-std" style="padding:0;overflow:hidden;--acc:#7b7fe8"><img class="rr-std-trk" src="icons/icon-512.png?v=3" alt="">
+        _champ = `<div class="card rr-card rr-std" style="padding:0;overflow:hidden;--acc:#7b7fe8"><img class="rr-std-trk" src="icons/icon-512.png?v=3" alt="">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px 8px;flex-wrap:wrap;background:linear-gradient(90deg,rgba(123,127,232,.18),transparent 75%)">
             <div class="rr-title"><b>Championship</b><span style="color:#7b7fe8">Standings</span></div>
             <div style="display:flex;gap:5px;flex-wrap:wrap">
@@ -25787,7 +25834,11 @@ async function renderResults() {
       }
     }
 
-    html += buildRaceList(completedRaces);
+    // Order: provisional-points notice, latest-round spotlight, every round, then the standings side by side.
+    const _nSc = completedRaces.length;
+    html += _vb + _rsHero(completedRaces[0], 'Latest round') + buildRaceList(completedRaces)
+      + ((_bott || _champ) ? `<div class="hx-h hx-rv" data-k="rsh2"><div><small>Season ${currentSeason} · after ${_nSc} round${_nSc === 1 ? '' : 's'}</small><h2>Championship <em>standings</em></h2></div></div>
+        <div class="rs-std${_bott && _champ ? '' : ' one'} hx-rv" data-k="rsstd">${_bott}${_champ}</div>` : '');
   }
   html += `</div>`;
 
@@ -25816,20 +25867,34 @@ async function renderResults() {
       .sort((a,b) => b.pts - a.pts);
 
     html += `<div id="results-tab-content-s${archive.season}" style="display:none">`;
-
+    html += archiveRaces.length ? _rsHero(archiveRaces[0], 'Season ' + archive.season + ' finale') + buildRaceList(archiveRaces, false) : '<div class="card"><p class="text-muted">No results found for this season.</p></div>';
     if (archiveConstrRanked.length) {
-      html += buildBottStandings(archiveConstrRanked, true);
+      html += `<div class="hx-h hx-rv" data-k="rsh3"><div><small>Season ${esc(String(archive.season))} · final table</small><h2>Final <em>standings</em></h2></div></div><div class="rs-std one hx-rv" data-k="rsstd2">${buildBottStandings(archiveConstrRanked, true)}</div>`;
     }
-
-    html += archiveRaces.length ? buildRaceList(archiveRaces, false) : '<div class="card"><p class="text-muted">No results found for this season.</p></div>';
     html += `</div>`;
   });
 
   el.innerHTML = html;
-
-  // Store data for detail view
-  window._resultsData = { races: completedRaces, driverMap: Object.fromEntries(drivers.map(d=>[d.id,d])), constrs, seasonArchives, drivers };
+  try { window._hxInit('page-results'); } catch (e) {}
 }
+// Spotlight card for one round: the circuit, the round, and who won each division. Opens the full classification.
+function _rsHero(race, kick) { if (!race) return '';
+  const dm = (window._resultsData && window._resultsData.driverMap) || {}, HUE = { D0: '#ffc800', D1: '#e8002d', D2: '#9b6fd4', D3: '#27f4d2', D4: '#2ecc71', E3: '#2ecc71' }, ORD = ['D0', 'D1', 'D2', 'D3', 'D4', 'D5', 'E1', 'E2', 'E3'];
+  // Winner per division: P1 on the classification where positions are stored, otherwise the top scorer.
+  const win = {};
+  Object.entries(race.driverPointsByDivision || {}).forEach(([id, by]) => Object.entries(by || {}).forEach(([dv, pts]) => { const p1 = Number(((race.positionByDivision || {})[id] || {})[dv]) === 1, sc = (p1 ? 1e6 : 0) + (Number(pts) || 0);
+    if (!win[dv] || sc > win[dv].sc) win[dv] = { id, sc, pts: Number(pts) || 0 }; }));
+  const rows = Object.keys(win).filter(dv => win[dv].pts > 0).sort((a, b) => (ORD.indexOf(a) + 99) % 99 - (ORD.indexOf(b) + 99) % 99 || a.localeCompare(b)).map(dv => { const w = win[dv], d = dm[w.id], nm = String((race.driverNames && race.driverNames[w.id]) || (d && d.name) || 'Driver').replace(/^\[[^\]]*\]\s*/, ''), ph = d ? driverPhoto(d) : '';
+    return `<div class="rs-win" style="--h:${HUE[dv] || '#9b6fd4'}"><b>${esc(dv)}</b><span class="rs-win-av">${ph ? `<img src="${esc(ph)}" alt="" loading="lazy" onerror="this.outerHTML=_ico('user')">` : _ico('user')}</span><u>${esc(nm)}</u><em>${w.pts}<i>pts</i></em></div>`; });
+  const out = (typeof getTrackOutlineUrl === 'function') ? getTrackOutlineUrl(race.name) : null, sp = (typeof _isSprintWeekend === 'function' && _isSprintWeekend(race));
+  return `<section class="hx-card hx-gb rs-hero${rows.length ? '' : ' one'} hx-rv" data-k="rshero" onclick="showRaceResults('${race.id}')">
+      ${out ? `<img class="rs-hero-trk" src="${out}" alt="" loading="lazy" onerror="this.remove()">` : ''}<span class="rs-hero-n">R${esc(String(race.raceNum || ''))}</span>
+      <div class="rs-hero-l"><small class="rs-k"><i></i>${esc(kick)}${race.raceNum ? ' · Round ' + esc(String(race.raceNum)) : ''}</small>
+        <h3><span class="rs-flag">${getRaceFlag(race.name)}</span>${esc(race.name)}</h3>
+        <div class="rs-hero-tags">${race.verdictsAt && window._raceVerdictPill ? window._raceVerdictPill(race) : ''}${sp ? '<span class="rx-tag sp">⚡ SPRINT WEEKEND</span>' : ''}</div>
+        <button class="hx-btn" onclick="event.stopPropagation();showRaceResults('${race.id}')">Full classification →</button></div>
+      ${rows.length ? `<div class="rs-hero-r"><small>Division winners</small>${rows.join('')}</div>` : ''}
+    </section>`; }
 
 window.showResultsTab = function(tab) {
   document.querySelectorAll('[id^="results-tab-content-"]').forEach(el => el.style.display = 'none');
@@ -26090,9 +26155,8 @@ function buildBottStandings(ranked, seasonOver) {
 }
 
 function buildRaceList(raceList, markLatest = true) {
-  let html = `<div class="card">
-    <div class="card-title"><div class="dot"></div>Select a Race</div>
-    <div class="rx-grid">`;
+  let html = `<div class="hx-h hx-rv" data-k="rsr"><div><small>${raceList.length} round${raceList.length === 1 ? '' : 's'} · tap one for the full result</small><h2>Every <em>round</em></h2></div></div>
+    <div class="rx-grid hx-rv" data-k="rsg">`;
   raceList.forEach(race => {
     // Top scorer preview across the whole field
     let topName = null, topPts = 0, topId = null;
@@ -26128,7 +26192,7 @@ function buildRaceList(raceList, markLatest = true) {
       <span class="rx-go">›</span>
     </div>`;
   });
-  html += `</div></div>
+  html += `</div>
   <style>
     .rx-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-top:10px}
     .rx-card{position:relative;overflow:hidden;cursor:pointer;min-height:168px;padding:16px 16px 14px;border-radius:20px;background:linear-gradient(150deg,#1a1430,#0e0c18 70%);border:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;justify-content:space-between;isolation:isolate;transition:transform .25s cubic-bezier(.2,1,.3,1),border-color .25s,box-shadow .25s}
@@ -26516,11 +26580,21 @@ window.showRaceResults = function(raceId, season) {
     return a.localeCompare(b);
   });
 
-  let html = `<div style="margin-bottom:12px">
-    <button onclick="renderResults()" style="background:none;border:none;color:var(--gold);cursor:pointer;font-size:.9rem;padding:0">← Back to races</button>
-  </div>
-  <div class="card">
-    <div class="card-title"><div class="dot"></div>Round ${race.raceNum} — ${getRaceFlag(race.name)} ${esc(race.name)}${window._raceVerdictPill ? ' ' + window._raceVerdictPill(race, true) : ''}${_isSprintWeekend(race) ? ' <span style="font-size:.62rem;letter-spacing:1.5px;color:#ffa751;border:1px solid rgba(255,167,81,0.5);border-radius:10px;padding:2px 8px;margin-left:6px">⚡ SPRINT WEEKEND</span>' : ''}</div>
+  // Header: the round on its circuit, plus previous / next round in the same season.
+  const _arcD = (seasonArchives || []).find(a => (a.races || []).some(r => r.id === raceId)) || null;
+  const _sibs = ((_arcD ? _arcD.races : races) || []).filter(r => r && r.driverPoints && Object.values(r.driverPoints).some(v => v > 0)).slice().sort((a, b) => (a.raceNum || 0) - (b.raceNum || 0));
+  const _ix = _sibs.findIndex(r => r.id === raceId), _pv = _ix > 0 ? _sibs[_ix - 1] : null, _nx = (_ix >= 0 && _ix < _sibs.length - 1) ? _sibs[_ix + 1] : null;
+  const _navB = (r, lbl, fwd) => r ? `<button class="rs-nav${fwd ? ' fwd' : ''}" onclick="showRaceResults('${r.id}'${_arcD ? ',' + (Number(_arcD.season) || 0) : ''})">${fwd ? '' : '<i>←</i>'}<span><small>${lbl}</small>${r.raceNum ? 'R' + esc(String(r.raceNum)) + ' · ' : ''}${esc(r.name)}</span>${fwd ? '<i>→</i>' : ''}</button>` : '<span></span>';
+  const _outD = (typeof getTrackOutlineUrl === 'function') ? getTrackOutlineUrl(race.name) : null;
+  let html = `<div class="rs-dtop"><button class="hx-more" onclick="renderResults()">← All rounds</button></div>
+  <section class="hx-card hx-gb rs-hero rs-dh">
+    ${_outD ? `<img class="rs-hero-trk" src="${_outD}" alt="" onerror="this.remove()">` : ''}<span class="rs-hero-n">R${esc(String(race.raceNum || ''))}</span>
+    <div class="rs-hero-l"><small class="rs-k"><i></i>${_raceSeason ? 'Season ' + _raceSeason + ' · ' : ''}Round ${esc(String(race.raceNum || '?'))}</small>
+      <h3><span class="rs-flag">${getRaceFlag(race.name)}</span>${esc(race.name)}</h3>
+      <div class="rs-hero-tags">${window._raceVerdictPill ? window._raceVerdictPill(race, true) : ''}${_isSprintWeekend(race) ? '<span class="rx-tag sp">⚡ SPRINT WEEKEND</span>' : ''}</div></div>
+    ${_pv || _nx ? `<div class="rs-navs">${_navB(_pv, 'Previous round')}${_navB(_nx, 'Next round', true)}</div>` : ''}
+  </section>
+  <div class="card rs-dcard">
     ${window._fiaVerdictsHtml ? window._fiaVerdictsHtml(_raceSeason, race.raceNum) : ''}
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px;margin-top:10px">`;
 
