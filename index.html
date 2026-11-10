@@ -22819,8 +22819,9 @@ window._marketKeepPlace = function() {
   });
 };
 window._renderMarketKeepPlace = function() {
-  try { Promise.resolve(renderMarket()).then(window._marketKeepPlace).catch(()=>{}); }
-  catch(e) { renderMarket(); }
+  // Quiet re-render: the current list stays on screen until the new one is ready (no loading flash, no jump).
+  try { Promise.resolve(renderMarket(true)).then(window._marketKeepPlace).catch(()=>{}); }
+  catch(e) { renderMarket(true); }
 };
 window.setMarketSort = function(mode) {
   if (mode !== 'team') _marketTeamFilter = 'ALL';  // leaving team sort clears the constructor filter
@@ -23799,10 +23800,10 @@ function rtCycle() {
   }
 }
 
-async function renderMarket() {
+async function renderMarket(quiet) {
   const el = document.getElementById('market-content');
   if (!PROJECT_ID) { el.innerHTML='<div class="alert alert-warning">Database not connected.</div>'; return; }
-  el.innerHTML='<div class="ims-loader"><div class="ims-loader-mark"><img src="icons/icon-192.png?v=3" alt=""></div><div class="ims-loader-text">Loading</div><div class="ims-loader-bar"></div></div>';
+  if (!(quiet && el.querySelector('.mkt-row, .mkt-toolbar'))) el.innerHTML='<div class="ims-loader"><div class="ims-loader-mark"><img src="icons/icon-192.png?v=3" alt=""></div><div class="ims-loader-text">Loading</div><div class="ims-loader-bar"></div></div>';
 
   const [allDrivers, constrs, teams, races, lockDoc, lastSyncedDoc, schedule, mktTransfers, hidePmDoc, rosterMoves] = await Promise.all([dbGetAll('drivers'), dbGetAll('constructors'), dbGetAll('teams'), dbGetAll('races'), dbGet('settings','teamsLocked'), dbGet('settings','lastSynced'), dbGetAll('schedule').catch(()=>[]), dbGetAll('transfers').catch(()=>[]), dbGet('settings','hidePriceMoves').catch(()=>null), dbGetAll('rosterMoves').catch(()=>[])]);
   window._marketRosterMoves = rosterMoves || []; _noteMoveIds(rosterMoves);
