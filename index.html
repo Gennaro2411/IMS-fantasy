@@ -1094,7 +1094,7 @@
   .hh-act b{display:block;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.25rem;letter-spacing:.5px;text-transform:uppercase}
   .hh-act small{display:block;margin-top:3px;font-size:.7rem;color:#a7a2c2;line-height:1.3}
   /* ===== Home, below the next-race hero (hx-*) — IMS logo palette: indigo → violet → pink on black ===== */
-  #page-dashboard,#page-results,#page-leaderboard{--hx-i:#6f74e8;--hx-v:#a779e6;--hx-p:#f0487a;--hx-g:linear-gradient(100deg,#7c86ff,#b184e8 48%,#ff5c8a);--hx-line:rgba(255,255,255,.07)}
+  #page-dashboard,#page-results,#page-leaderboard,#page-market{--hx-i:#6f74e8;--hx-v:#a779e6;--hx-p:#f0487a;--hx-g:linear-gradient(100deg,#7c86ff,#b184e8 48%,#ff5c8a);--hx-line:rgba(255,255,255,.07)}
   .hx-h{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:34px 2px 14px}
   .hx-h small{display:flex;align-items:center;gap:8px;font:800 .6rem/1 system-ui,sans-serif;letter-spacing:3px;text-transform:uppercase;color:#8f95e0}
   .hx-h small::before{content:'';width:22px;height:2px;border-radius:2px;background:var(--hx-g)}
@@ -2372,6 +2372,34 @@
     #page-market .mkt-btn.off{border:1px dashed rgba(255,255,255,0.18);background:transparent;color:rgba(255,255,255,0.28);cursor:not-allowed}
     #page-market .mkt-current{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-bottom:14px}
     #page-market .mkt-current > div{display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:10px;background:linear-gradient(135deg,rgba(232,0,45,0.12),rgba(255,255,255,0.02));border:1px solid rgba(232,0,45,0.35)}
+    /* ===== Modern pass — same language as the home page (IMS logo colours); layout unchanged ===== */
+    #page-market .mkt-hero{border-radius:24px!important;border-color:transparent!important;background:radial-gradient(60% 130% at 0% 0%,rgba(111,116,232,.34),transparent 62%),radial-gradient(50% 110% at 100% 100%,rgba(240,72,122,.2),transparent 65%),linear-gradient(170deg,#15122b,#0b0a14 72%)!important;box-shadow:0 26px 60px -38px rgba(90,94,201,.75)}
+    #page-market .mkt-kick{display:flex;align-items:center;gap:8px;font:800 .6rem/1 system-ui,sans-serif;letter-spacing:3px;text-transform:uppercase;color:#8f95e0}
+    #page-market .mkt-kick::before{content:'';width:22px;height:2px;border-radius:2px;background:linear-gradient(100deg,#7c86ff,#b184e8 48%,#ff5c8a)}
+    #page-market .mkt-h{margin-top:7px;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;text-transform:uppercase;font-size:clamp(1.7rem,5.6vw,2.4rem);line-height:.95;letter-spacing:.3px}
+    #page-market .mkt-h em{font-style:italic;padding-right:.14em;background:linear-gradient(100deg,#7c86ff,#b184e8 48%,#ff5c8a);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+    #page-market .mkt-lbl{letter-spacing:2px;color:#8e88ab}
+    #page-market .mkt-tile{position:relative;border-radius:16px;padding:13px 14px 12px;background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.07)}
+    #page-market .mkt-tile::before{content:'';position:absolute;left:14px;right:14px;top:0;height:2px;border-radius:2px;background:linear-gradient(90deg,#7c86ff,transparent)}
+    #page-market .mkt-tile:nth-child(2)::before{background:linear-gradient(90deg,#b184e8,transparent)}#page-market .mkt-tile:nth-child(3)::before{background:linear-gradient(90deg,#ff5c8a,transparent)}
+    #page-market .mkt-tile-val{font-size:1.9rem;font-variant-numeric:tabular-nums}
+    #page-market .mkt-chip{border-radius:14px}#page-market .mkt-chip:hover{transform:translateY(-3px);box-shadow:0 14px 26px -14px rgba(124,134,255,.9)}
+    #page-market .mkt-toolbar{border-radius:20px;padding:14px 16px;background:linear-gradient(170deg,#15122b,#0b0a14 72%);border-color:rgba(255,255,255,.07)}
+    #page-market .mkt-search{border-radius:999px;background:rgba(0,0,0,.28);border-color:rgba(255,255,255,.1)}
+    #page-market .mkt-search:focus{border-color:#7c86ff;box-shadow:0 0 0 3px rgba(124,134,255,.22)}
+    #page-market .mkt-seg{border-radius:18px;padding:4px;background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.08)}
+    #page-market .mkt-seg button{border-radius:999px;padding:6px 12px}
+    #page-market .mkt-seg button.on{color:#fff;background:linear-gradient(110deg,#6f74e8,#a779e6 55%,#f0487a);box-shadow:0 8px 18px -10px rgba(240,72,122,.9),inset 0 1px 0 rgba(255,255,255,.2)}
+    #page-market .mkt-listcard{border-radius:24px!important;background:linear-gradient(170deg,#15122b,#0b0a14 72%);border-color:rgba(255,255,255,.07);box-shadow:0 26px 60px -38px rgba(90,94,201,.75)}
+    #page-market .mkt-listcard .card-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;text-transform:uppercase;font-size:clamp(1.5rem,5vw,2rem);line-height:1;letter-spacing:.3px}
+    #page-market .mkt-listcard .card-title .dot{width:22px;height:3px;border-radius:2px;background:linear-gradient(100deg,#7c86ff,#b184e8 48%,#ff5c8a);box-shadow:none;animation:none}
+    #page-market .mkt-current > div{border-radius:12px;background:linear-gradient(135deg,rgba(240,72,122,.14),rgba(124,134,255,.05));border-color:rgba(240,72,122,.38)}
+    #page-market .mkt-row{border-radius:16px;transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}
+    #page-market .mkt-row:hover{transform:translateX(4px);box-shadow:0 14px 28px -18px rgba(124,134,255,.9)}
+    #page-market .mkt-row.is-mine{border-color:rgba(240,72,122,.6);background:linear-gradient(90deg,rgba(240,72,122,.16),rgba(124,134,255,.06) 60%,transparent)}
+    #page-market .mkt-row.is-mine::before{background:linear-gradient(180deg,#7c86ff,#ff5c8a)}
+    #page-market .mkt-av,#page-market .mkt-av-in{border-radius:14px}
+    #page-market .mkt-btn{border-radius:999px}#page-market .mkt-cmp{border-radius:50%}
     @media (max-width:520px){
       #page-market .mkt-row{flex-wrap:wrap}
       #page-market .mkt-actions{width:100%;justify-content:flex-end;margin-top:4px;padding-top:9px;border-top:1px dashed rgba(255,255,255,0.08)}
@@ -24046,13 +24074,13 @@ async function renderMarket() {
     const transfersTile = !myTeam ? '' : (heroWcActive
       ? `<div class="mkt-tile" style="border-color:rgba(243,156,18,0.35);background:rgba(243,156,18,0.07)"><div class="mkt-lbl">Transfers</div><div class="mkt-tile-val" style="color:#f39c12">🃏 Wildcard</div><div class="mkt-tile-sub">Unlimited this round</div></div>`
       : `<div class="mkt-tile"><div class="mkt-lbl">Free transfers</div><div class="mkt-tile-val" style="color:${freeTransfers>0?'#4ade80':'var(--red)'}">${freeTransfers}${freeTransfers>=3?' <span style="font-size:.75rem;letter-spacing:1px;color:var(--muted)">MAX</span>':''}</div><div class="mkt-tile-sub">${freeTransfers>0?'Banked for this round':'Extra moves cost points'}</div></div>`);
-    html += `<div class="card" style="padding:0;overflow:hidden;position:relative;background:radial-gradient(120% 140% at 0% 0%,rgba(123,79,191,0.22),transparent 55%),linear-gradient(135deg,#17111f 0%,#12121a 60%,#0e0e15 100%);border:1px solid rgba(123,79,191,0.4);border-radius:16px">
+    html += `<div class="card hx-gb mkt-hero hx-rv" data-k="mkhero" style="padding:0;overflow:hidden;position:relative;background:radial-gradient(120% 140% at 0% 0%,rgba(123,79,191,0.22),transparent 55%),linear-gradient(135deg,#17111f 0%,#12121a 60%,#0e0e15 100%);border:1px solid rgba(123,79,191,0.4);border-radius:16px">
       <div style="position:absolute;right:-10px;top:-34px;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:8rem;color:rgba(255,255,255,0.035);line-height:1;pointer-events:none">$</div>
       <div style="position:relative;padding:18px 20px 16px">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
           <div>
-            <div style="font-size:.6rem;font-weight:800;letter-spacing:2.5px;color:#b48cf0">🛒 TRANSFER MARKET</div>
-            <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.5rem;letter-spacing:.5px;margin-top:2px">Buy, sell &amp; swap</div>
+            <div class="mkt-kick">Transfer market</div>
+            <div class="mkt-h">Buy, sell &amp; <em>swap</em></div>
           </div>
           <div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end">
             ${locked ? statusPill('#e8002d','🔒','MARKET CLOSED — BACK NEXT WEEK') : deadlineHtml}
@@ -24254,7 +24282,7 @@ async function renderMarket() {
     window._marketCompareCtx = { drivers: drivers.map(d => ({...d, price: driverPrice(d)})), myFielded, myBudget };
     if (flat.length) {
       const sortLabel = SORTS.find(([m]) => m === _marketSort)[1].replace(/^\S+\s/, '');
-      html += `<div class="card" style="border-radius:16px">
+      html += `<div class="card mkt-listcard" style="border-radius:16px">
         <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap">
           <div class="card-title" style="margin:0"><div class="dot"></div>${(_marketSort==='team'&&_marketTeamFilter!=='ALL')?esc(_marketTeamFilter)+' Drivers':(_marketTab==='ALL'?'All Drivers':_marketTab+' Drivers')}</div>
           <span style="font-size:.66rem;color:var(--muted);font-weight:700">${flat.length} driver${flat.length!==1?'s':''} · sorted by ${sortLabel}</span>
@@ -24357,6 +24385,7 @@ async function renderMarket() {
   } // end constructor market
 
   el.innerHTML = html;
+  try { window._hxInit('page-market'); } catch (e) {}
   rtCycle(); // start the transfer wire slide (no-ops when there are no synced moves)
 }
 
