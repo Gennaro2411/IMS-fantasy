@@ -1094,7 +1094,7 @@
   .hh-act b{display:block;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.25rem;letter-spacing:.5px;text-transform:uppercase}
   .hh-act small{display:block;margin-top:3px;font-size:.7rem;color:#a7a2c2;line-height:1.3}
   /* ===== Home, below the next-race hero (hx-*) — IMS logo palette: indigo → violet → pink on black ===== */
-  #page-dashboard,#page-results,#page-leaderboard,#page-market{--hx-i:#6f74e8;--hx-v:#a779e6;--hx-p:#f0487a;--hx-g:linear-gradient(100deg,#7c86ff,#b184e8 48%,#ff5c8a);--hx-line:rgba(255,255,255,.07)}
+  #page-dashboard,#page-results,#page-leaderboard,#page-market,#page-predictions{--hx-i:#6f74e8;--hx-v:#a779e6;--hx-p:#f0487a;--hx-g:linear-gradient(100deg,#7c86ff,#b184e8 48%,#ff5c8a);--hx-line:rgba(255,255,255,.07)}
   .hx-h{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:34px 2px 14px}
   .hx-h small{display:flex;align-items:center;gap:8px;font:800 .6rem/1 system-ui,sans-serif;letter-spacing:3px;text-transform:uppercase;color:#8f95e0}
   .hx-h small::before{content:'';width:22px;height:2px;border-radius:2px;background:var(--hx-g)}
@@ -2317,6 +2317,137 @@
     #page-predictions #briefing-header > div,
     #page-predictions #track-history-section > .card,
     #page-predictions #ai-race-preview > .card{border-radius:16px}
+
+    /* ===== 2026 brand pass (IMS indigo / violet / pink) ===== */
+    #page-predictions{--bg1:#15122b;--bg2:#0b0a14}
+    #page-predictions .brf-sec{border-radius:24px;padding:22px;background:linear-gradient(170deg,var(--bg1),var(--bg2) 72%);border:1px solid var(--hx-line);box-shadow:0 26px 60px -38px rgba(90,94,201,.75)}
+    #page-predictions .brf-hero{border-radius:28px;padding:26px 28px 24px;margin-bottom:18px;border:none;background:radial-gradient(70% 110% at 100% 0%,rgba(240,72,122,.20),transparent 62%),radial-gradient(80% 120% at 0% 100%,rgba(111,116,232,.26),transparent 60%),linear-gradient(160deg,#17133a,#08070f 70%);box-shadow:0 34px 80px -44px rgba(124,134,255,.9)}
+    #page-predictions .brf-hero-lines{background:repeating-linear-gradient(115deg,rgba(255,255,255,.03) 0 1px,transparent 1px 26px);-webkit-mask:linear-gradient(90deg,transparent,#000 65%);mask:linear-gradient(90deg,transparent,#000 65%)}
+    #page-predictions .brf-hero-track{right:-10px;top:42%;width:420px;height:420px;opacity:.16;filter:brightness(0) invert(1);animation:brfFloat 9s ease-in-out infinite}
+    @keyframes brfFloat{0%,100%{transform:translateY(-50%) rotate(-4deg)}50%{transform:translateY(-53%) rotate(-1deg)}}
+    #page-predictions .brf-hero-n{position:absolute;right:18px;top:-30px;font:italic 900 15rem/1 'Barlow Condensed',sans-serif;letter-spacing:-6px;color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.07);pointer-events:none;user-select:none}
+    #page-predictions .brf-kicker{display:inline-flex;align-items:center;gap:8px;font:800 .6rem/1 system-ui,sans-serif;letter-spacing:3px;color:#a9aef5}
+    #page-predictions .brf-kicker::before{content:'';width:22px;height:2px;border-radius:2px;background:var(--hx-g)}
+    #page-predictions .brf-pill{display:inline-flex;align-items:center;gap:6px;font:800 .58rem/1 system-ui,sans-serif;letter-spacing:1.4px;text-transform:uppercase;border-radius:999px;padding:6px 11px;color:#7dffb0;background:rgba(46,204,113,.10);box-shadow:inset 0 0 0 1px rgba(46,204,113,.42)}
+    #page-predictions .brf-pill.lock{color:#ff9db7;background:rgba(240,72,122,.12);box-shadow:inset 0 0 0 1px rgba(240,72,122,.5)}
+    #page-predictions .brf-pill i{width:6px;height:6px;border-radius:50%;background:currentColor;animation:pulseDot 1.6s infinite}
+    #page-predictions .brf-chip{font:800 .58rem/1 system-ui,sans-serif;letter-spacing:1.4px;text-transform:uppercase;color:#d5d7f5;background:rgba(255,255,255,.05);border:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);padding:6px 11px}
+    #page-predictions .brf-flag{font-size:2.8rem;line-height:1;flex-shrink:0}
+    #page-predictions .brf-title{font-style:italic;font-size:clamp(2.6rem,9vw,5.2rem);line-height:.9;letter-spacing:.5px;padding-right:.12em;background:linear-gradient(100deg,#fff 20%,#c9ccff 55%,#ff9db7);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+    #page-predictions .brf-hero-sub{margin-top:10px;font-size:.84rem;color:#a8abc9;max-width:46ch;line-height:1.5}
+    #page-predictions .brf-cd{margin-top:22px;padding-top:18px;border-top:1px solid rgba(255,255,255,.08);align-items:center}
+    #page-predictions .brf-cd-box{min-width:70px;padding:11px 8px 9px;border-radius:16px;background:rgba(8,7,15,.72);border:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.10);backdrop-filter:none;-webkit-backdrop-filter:none}
+    #page-predictions .brf-cd-num{font-style:italic;font-size:2.5rem;padding-right:.06em;background:linear-gradient(180deg,#fff,#c3c6ff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+    #page-predictions .brf-cd-box:last-child .brf-cd-num{background:var(--hx-g);-webkit-background-clip:text;background-clip:text}
+    #page-predictions .brf-cd-lbl{letter-spacing:2px;color:#8f93b8}
+    #page-predictions .brf-divpill{font-style:italic;border-radius:8px;padding:2px 10px;background:color-mix(in srgb,var(--hue) 22%,transparent);border:1px solid color-mix(in srgb,var(--hue) 60%,transparent)}
+    /* at a glance */
+    #page-predictions .brf-glance{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-top:18px}
+    #page-predictions .brf-glance:empty{display:none}
+    #page-predictions .brf-gl{position:relative;text-align:left;font-family:inherit;color:inherit;cursor:pointer;border:none;border-radius:18px;padding:13px 14px 14px;background:rgba(8,7,15,.66);box-shadow:inset 0 0 0 1px rgba(255,255,255,.09);transition:transform .2s,box-shadow .2s;animation:brfGl .6s cubic-bezier(.2,.9,.25,1) both;animation-delay:calc(var(--i)*70ms)}
+    @keyframes brfGl{from{opacity:0;transform:translate3d(0,12px,0)}to{opacity:1;transform:none}}
+    #page-predictions .brf-gl:hover{transform:translateY(-2px);box-shadow:inset 0 0 0 1px #7c86ff}
+    #page-predictions .brf-gl{display:flex;flex-direction:column;justify-content:flex-start}
+    #page-predictions .brf-gl small{display:block;font:800 .54rem/1 system-ui,sans-serif;letter-spacing:2px;text-transform:uppercase;color:#8f93b8}
+    #page-predictions .brf-gl b{display:block;margin-top:7px;font:italic 900 1.9rem/1 'Barlow Condensed',sans-serif;color:#fff}
+    #page-predictions .brf-gl b i{font-size:1rem;color:#8f93b8;margin-left:2px}
+    #page-predictions .brf-gl span{display:block;margin-top:5px;font-size:.7rem;color:#a8abc9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    #page-predictions .brf-gl u{display:block;height:4px;margin-top:9px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden;text-decoration:none}
+    #page-predictions .brf-gl u::after{content:'';display:block;height:100%;width:100%;border-radius:4px;background:var(--hx-g);transform-origin:left;transform:scaleX(var(--p));animation:brfBar 1s cubic-bezier(.2,.9,.25,1) .25s both}
+    @keyframes brfBar{from{transform:scaleX(0)}}
+    #page-predictions .brf-gl.warn b{color:#ff9db7}#page-predictions .brf-gl.ok b{color:#7dffb0}
+    /* section headers */
+    #page-predictions .brf-h{gap:13px;margin-bottom:16px}
+    #page-predictions .brf-h-ic{position:relative;width:40px;height:40px;border-radius:13px;font-size:1.05rem;color:#c3c6ff;background:linear-gradient(160deg,#211c4a,#100e22);border:none;box-shadow:inset 0 0 0 1px rgba(124,134,255,.35)}
+    #page-predictions .brf-h-ic .ims-ico{width:19px;height:19px}
+    #page-predictions .brf-h-t{font-style:italic;font-size:1.5rem;letter-spacing:.3px;line-height:1}
+    #page-predictions .brf-h-t em{font-style:italic;padding-right:.14em;background:var(--hx-g);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+    #page-predictions .brf-h-s{font-size:.74rem;color:#9a9dbd;margin-top:4px}
+    /* weekend timeline */
+    #page-predictions .brf-tl{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+    #page-predictions .brf-tl-row{flex-direction:column;align-items:flex-start;gap:8px;padding:26px 14px 14px;border-radius:18px;background:rgba(255,255,255,.025);border:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.07);overflow:visible}
+    #page-predictions .brf-tl-row::before{left:14px;right:-10px;top:11px;bottom:auto;width:auto;height:2px;border-radius:2px;background:rgba(255,255,255,.09)}
+    #page-predictions .brf-tl-row:last-child::before{right:14px}
+    #page-predictions .brf-tl-row::after{content:'';position:absolute;left:14px;top:7px;width:10px;height:10px;border-radius:50%;background:var(--h);box-shadow:0 0 0 3px #0f0d1f}
+    #page-predictions .brf-tl-dayname{margin:0;font:800 .56rem/1 system-ui,sans-serif;letter-spacing:2.4px;color:#8f93b8}
+    #page-predictions .brf-tl-time{min-width:0;font-style:italic;font-size:1.9rem;line-height:.9;color:#fff}
+    #page-predictions .brf-tl-time small{font-size:.8rem;margin-left:3px;color:#8f93b8;font-style:normal;letter-spacing:1px}
+    #page-predictions .brf-tl-foot{display:flex;align-items:center;gap:8px;width:100%}
+    #page-predictions .brf-tl-state{margin-left:auto;font-size:.58rem;letter-spacing:1.6px}
+    #page-predictions .brf-tl-row.next,#page-predictions .brf-tl-row.live{background:linear-gradient(165deg,color-mix(in srgb,var(--h) 16%,transparent),rgba(255,255,255,.02) 70%);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--h) 55%,transparent)}
+    #page-predictions .brf-tl-row.done{opacity:.5}
+    #page-predictions .brf-tl-row.done::before{background:var(--hx-g);opacity:.7}
+    /* checklist */
+    #page-predictions .brf-checks{grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:10px}
+    #page-predictions .brf-check{gap:13px;padding:13px 14px;border-radius:16px;background:rgba(255,255,255,.025);border:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.07);transition:box-shadow .2s,transform .2s}
+    #page-predictions .brf-check:hover{transform:translateY(-1px);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ck) 55%,transparent)}
+    #page-predictions .brf-check::before{left:auto;right:12px;top:12px;bottom:auto;width:6px;height:6px;border-radius:50%}
+    #page-predictions .brf-check>span:last-child{padding-right:12px}
+    #page-predictions .brf-check-ic{width:36px;height:36px;border-radius:12px;background:color-mix(in srgb,var(--ck) 13%,transparent);border:none;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ck) 34%,transparent)}
+    /* expanders */
+    #page-predictions .brf-form>summary{padding:14px 16px;border-radius:18px;border:none;background:linear-gradient(100deg,rgba(111,116,232,.16),rgba(167,121,230,.08) 50%,rgba(240,72,122,.10));box-shadow:inset 0 0 0 1px rgba(124,134,255,.32);transition:box-shadow .2s}
+    #page-predictions .brf-form>summary:hover{background:linear-gradient(100deg,rgba(111,116,232,.24),rgba(167,121,230,.12) 50%,rgba(240,72,122,.16));box-shadow:inset 0 0 0 1px #7c86ff}
+    #page-predictions .brf-form>summary .brf-h{margin-bottom:0}
+    #page-predictions .brf-form>summary .brf-form-chev::before{font:900 .7rem/1 'Barlow Condensed',sans-serif;letter-spacing:1.4px;text-transform:uppercase;color:#fff;background:linear-gradient(110deg,#6f74e8,#a779e6 55%,#f0487a);padding:8px 13px;animation:none}
+    #page-predictions .brf-form[open]>summary .brf-form-chev::before{background:rgba(255,255,255,.1);color:#cfd3e6}
+    #page-predictions .brf-form>summary .brf-form-chev::after{color:#b184e8}
+    /* availability */
+    #page-predictions .brf-av{border-radius:18px;padding:15px 14px 14px;background:radial-gradient(120% 90% at 50% 0%,color-mix(in srgb,var(--hue) 11%,transparent),transparent 70%),rgba(255,255,255,.025);border:none;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--hue) 26%,transparent)}
+    #page-predictions .brf-av-div{font-style:italic;font-size:2rem}
+    #page-predictions .brf-ring{box-shadow:none}
+    #page-predictions .brf-ring-in{background:#12101f}
+    #page-predictions .brf-av-names{border-radius:12px;background:rgba(0,0,0,.28)}
+    /* track history */
+    #page-predictions #track-history-section>.card{border-radius:24px;border:1px solid var(--hx-line)!important;background:linear-gradient(170deg,var(--bg1),var(--bg2) 72%)!important;box-shadow:0 26px 60px -38px rgba(90,94,201,.75)}
+    #page-predictions .th-top{position:relative;padding:22px 22px 16px;background:radial-gradient(70% 140% at 100% 0%,rgba(167,121,230,.20),transparent 62%),radial-gradient(60% 120% at 0% 0%,rgba(111,116,232,.18),transparent 60%)}
+    #page-predictions .th-name{font:italic 900 clamp(1.7rem,5.4vw,2.3rem)/.95 'Barlow Condensed',sans-serif;text-transform:uppercase;margin:8px 0 3px}
+    #page-predictions .th-chip{font:800 .6rem/1 system-ui,sans-serif;letter-spacing:.6px;color:#d5d7f5;background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);border-radius:999px;padding:6px 11px}
+    #page-predictions .th-chip.g{color:#fff;background:linear-gradient(110deg,rgba(111,116,232,.5),rgba(240,72,122,.4));box-shadow:none}
+    #page-predictions .th-fact{font-size:.82rem;line-height:1.5;color:#dcdcf2;border-radius:14px;padding:11px 14px;margin-bottom:14px;background:linear-gradient(100deg,rgba(111,116,232,.14),rgba(240,72,122,.06));box-shadow:inset 0 0 0 1px rgba(124,134,255,.25)}
+    #page-predictions .th-grid{gap:10px}
+    #page-predictions .th-tile{border-radius:16px;padding:12px;background:linear-gradient(160deg,color-mix(in srgb,var(--c) 13%,transparent),rgba(255,255,255,.02) 70%);border:none;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 30%,transparent)}
+    #page-predictions .th-tile:hover{box-shadow:inset 0 0 0 1px var(--c)}
+    #page-predictions .th-glow{display:none}
+    #page-predictions .th-av{box-shadow:none}
+    #page-predictions .th-n{font-style:italic;font-size:1.5rem}
+    /* paddock post */
+    #page-predictions .brf-pv{position:relative;border-radius:24px;padding:22px;border:1px solid var(--hx-line);background:radial-gradient(80% 60% at 0% 0%,rgba(111,116,232,.16),transparent 60%),radial-gradient(60% 50% at 100% 0%,rgba(240,72,122,.10),transparent 60%),linear-gradient(170deg,var(--bg1),var(--bg2) 72%);box-shadow:0 26px 60px -38px rgba(90,94,201,.75)}
+    #page-predictions .brf-pv-regen{width:38px;height:38px;border-radius:12px;padding:0;background:rgba(255,255,255,.05);border:none;box-shadow:inset 0 0 0 1px rgba(124,134,255,.4);color:#c3c6ff}
+    #page-predictions .nw-cap{color:transparent;background:var(--hx-g);-webkit-background-clip:text;background-clip:text}
+    #page-predictions .nw-art{border-radius:20px;background:#0f0d1c;border:none;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--h) 28%,transparent);transition:transform .25s,box-shadow .25s}
+    #page-predictions .nw-art:hover{transform:translateY(-3px);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--h) 70%,transparent)}
+    #page-predictions .nw-av{box-shadow:none}
+    #page-predictions .nw-mid span{text-shadow:none}
+    #page-predictions .brf-pv-call{border-radius:18px;padding:15px 16px;background:linear-gradient(100deg,rgba(111,116,232,.2),rgba(167,121,230,.1) 50%,rgba(240,72,122,.16));border:none;box-shadow:inset 0 0 0 1px rgba(124,134,255,.35)}
+    /* empty */
+    #page-predictions .brf-none{position:relative;overflow:hidden;text-align:center;padding:64px 22px;border-radius:28px;background:radial-gradient(70% 110% at 50% 0%,rgba(111,116,232,.22),transparent 65%),linear-gradient(160deg,#17133a,#08070f 70%)}
+    #page-predictions .brf-none h2{font:italic 900 clamp(2rem,7vw,3rem)/.95 'Barlow Condensed',sans-serif;text-transform:uppercase;margin:14px 0 8px}
+    #page-predictions .brf-none h2 em{font-style:italic;padding-right:.14em;background:var(--hx-g);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+    #page-predictions .brf-none p{font-size:.88rem;color:#a8abc9;max-width:40ch;margin:0 auto 20px;line-height:1.55}
+    @media (max-width:700px){
+      #page-predictions .brf-sec,#page-predictions .brf-pv{padding:16px;border-radius:20px}
+      #page-predictions .brf-hero{padding:20px 18px 18px;border-radius:22px}
+      #page-predictions .brf-hero-n{font-size:9rem;right:6px;bottom:auto;top:-8px}
+      #page-predictions .brf-hero-track{width:260px;height:260px;right:-60px;top:26%}
+      #page-predictions .brf-flag{font-size:2.1rem}
+      #page-predictions .brf-cd-meta{width:100%}
+      #page-predictions .brf-cd-num{font-size:2rem}
+      #page-predictions .brf-glance{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+      #page-predictions .brf-gl{padding:11px 12px 12px;border-radius:15px}#page-predictions .brf-gl b{font-size:1.6rem}
+      #page-predictions .brf-h-t{font-size:1.3rem}
+      #page-predictions .brf-tl{grid-template-columns:1fr;gap:0}
+      #page-predictions .brf-tl-row{flex-direction:row;align-items:center;gap:12px;padding:13px 12px 13px 34px;border-radius:0;background:none!important;box-shadow:none!important;border-bottom:1px solid rgba(255,255,255,.06)}
+      #page-predictions .brf-tl-row:last-child{border-bottom:none}
+      #page-predictions .brf-tl-row::before{left:14px;right:auto;top:0;bottom:0;width:2px;height:auto}
+      #page-predictions .brf-tl-row:first-child::before{top:50%}#page-predictions .brf-tl-row:last-child::before{bottom:50%;right:auto}
+      #page-predictions .brf-tl-row::after{left:10px;top:50%;margin-top:-5px}
+      #page-predictions .brf-tl-dayname{width:34px}
+      #page-predictions .brf-tl-time{font-size:1.5rem;min-width:98px}
+      #page-predictions .brf-tl-foot{flex:1;width:auto}
+      #page-predictions .brf-form>summary{padding:12px}
+      #page-predictions .nw-mast{font-size:1.45rem!important}
+      #page-predictions .th-top{padding:18px 16px 12px}
+    }
   </style>
   <button class="page-refresh-btn" onclick="refreshCurrentPage(this)" title="Refresh">⟳</button>
   <div id="briefing-header"></div>
@@ -12629,11 +12760,13 @@ async function renderBriefingExtras() {
     const _hasUpcoming = _racesUp.some(r => !r.driverPoints || Object.keys(r.driverPoints).length === 0);
     if (!_hasUpcoming) {
       ['briefing-header','track-history-section','ai-race-preview'].forEach(id => { const n = document.getElementById(id); if (n) n.innerHTML = ''; });
-      el.innerHTML = `<div style="text-align:center;padding:48px 20px;color:var(--muted)">
-        <div style="font-size:2.4rem;margin-bottom:10px">🏁</div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.4rem;letter-spacing:1px;color:var(--text)">NO UPCOMING RACE</div>
-        <div style="font-size:.85rem;margin-top:6px">The briefing returns when the next round is scheduled.</div>
+      el.innerHTML = `<div class="brf-none hx-gb hx-rv" data-k="bfnone">
+        <span class="brf-kicker">Race briefing</span>
+        <h2>No upcoming <em>race</em></h2>
+        <p>The briefing returns when the next round is scheduled. Until then, relive the season so far.</p>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="hx-btn" onclick="showPage('results')">See results</button><button class="hx-btn ghost" onclick="showPage('leaderboard')">Leaderboard</button></div>
       </div>`;
+      if (window._hxInit) window._hxInit('page-predictions');
       return;
     }
   } catch(e) {}
@@ -12672,28 +12805,30 @@ async function renderBriefingExtras() {
         const flag = (typeof getRaceFlag==='function') ? getRaceFlag(up.name) : '🏁';
         const outlineH = (typeof getTrackOutlineUrl==='function') ? getTrackOutlineUrl(up.name) : null;
         const statusPill = locked
-          ? `<span style="font-size:.6rem;font-weight:800;letter-spacing:1px;color:#fff;background:var(--red);border-radius:20px;padding:4px 11px">🔒 TEAMS LOCKED</span>`
-          : `<span style="font-size:.6rem;font-weight:800;letter-spacing:1px;color:#0a0a0f;background:var(--green);border-radius:20px;padding:4px 11px">● EDITING OPEN</span>`;
+          ? `<span class="brf-pill lock">🔒 Teams locked</span>`
+          : `<span class="brf-pill"><i></i>Editing open</span>`;
         const _hue = nextSession ? (DIV_HUES[nextSession.div] || '#9b6fd4') : '#9b6fd4';
         const _seg = (id, lbl) => `<div class="brf-cd-box"><div class="brf-cd-num" id="${id}">--</div><div class="brf-cd-lbl">${lbl}</div></div>`;
         hdrEl.innerHTML = `
-          <div class="brf-hero" style="--hue:${_hue}">
+          <div class="brf-hero hx-gb hx-rv" data-k="bfhero" style="--hue:${_hue}">
             <div class="brf-hero-lines"></div>
             ${outlineH?`<div class="brf-hero-track" style="background-image:url('${outlineH}')"></div>`:''}
+            ${up.raceNum&&!outlineH?`<div class="brf-hero-n">R${String(up.raceNum).padStart(2,'0')}</div>`:''}
             <div style="position:relative;z-index:1">
-              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px">
-                <span class="brf-kicker">📋 Race briefing</span>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+                <span class="brf-kicker">Race briefing</span>
                 ${statusPill}
                 <span class="brf-chip">Round ${up.raceNum||'?'}${seasonN?' · Season '+seasonN:''}</span>
               </div>
               <div style="display:flex;align-items:center;gap:14px">
-                <span style="font-size:2.6rem;line-height:1;filter:drop-shadow(0 4px 10px rgba(0,0,0,.5))">${flag}</span>
+                <span class="brf-flag">${flag}</span>
                 <div class="brf-title">${esc(up.name)}</div>
               </div>
+              <div class="brf-hero-sub">${locked ? 'Teams are locked and the weekend is under way. Here is how the round is shaping up.' : 'Everything you need before lights out: session times, who is racing, and what your team still needs.'}</div>
               ${nextSession ? `
               <div class="brf-cd">
                 <div class="brf-cd-meta">
-                  <span class="brf-kicker" style="color:var(--hue)">⏱ Next session</span>
+                  <span class="brf-kicker">Next session</span>
                   <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
                     <span class="brf-divpill">${nextSession.div}</span>
                     <span style="font-size:.82rem;font-weight:700">${nextSession.local.day} · ${nextSession.local.time}</span>
@@ -12702,16 +12837,22 @@ async function renderBriefingExtras() {
                 <div class="brf-cd-boxes" id="briefing-countdown">
                   ${_seg('brf-cd-d','Days')}${_seg('brf-cd-h','Hrs')}${_seg('brf-cd-m','Min')}${_seg('brf-cd-s','Sec')}
                 </div>
-              </div>` : (locked ? `<div class="brf-cd" style="justify-content:center"><span style="font-weight:800;color:var(--gold)">🏁 Sessions underway — teams are locked</span></div>` : '')}
+              </div>` : (locked ? `<div class="brf-cd" style="justify-content:center"><span style="font-weight:800;color:#ff9db7">🏁 Sessions underway — teams are locked</span></div>` : '')}
+              <div class="brf-glance" id="brf-glance"></div>
             </div>
           </div>`;
+        if (window._hxInit) window._hxInit('page-predictions');
       } else { hdrEl.innerHTML = ''; }
     }
   } catch(e) {}
 
   const countdownHtml = '';  // the countdown now lives in the hero
 
-  const _secHead = (icon, title, sub, col) => `<div class="brf-h"><span class="brf-h-ic" style="--c:${col}">${icon}</span><div><div class="brf-h-t">${title}</div>${sub?`<div class="brf-h-s">${sub}</div>`:''}</div></div>`;
+  const _SH_ICO = { '📅':'flag', '📋':'clipboard', '📈':'chart', '✅':'user', '🟢':'user', '🔄':'swap' };
+  const _secHead = (icon, title, sub, col) => { const ic = (_SH_ICO[icon] && typeof window._ico === 'function') ? window._ico(_SH_ICO[icon]) : icon;
+    const tt = String(title).replace(/(\S+)\s*$/, '<em>$1</em>');
+    return `<div class="brf-h"><span class="brf-h-ic" style="--c:${col}">${ic}</span><div><div class="brf-h-t">${tt}</div>${sub?`<div class="brf-h-s">${sub}</div>`:''}</div></div>`; };
+  const _gl = {};
   const _anyLive = timings.some(t => t.local.when.getTime() <= nowMs && t.local.when.getTime() > nowMs - 3*3600000);
   const _dayGroups = [];
   timings.slice().sort((a,b)=>a.local.when-b.local.when).forEach(t => {
@@ -12721,8 +12862,7 @@ async function renderBriefingExtras() {
   });
   const fixturesHtml = _secHead('📅', "This round's fixtures", 'Your local time', '#4dabf7') + `
     <div class="brf-tl">
-      ${_dayGroups.map(g => `<div class="brf-tl-day">
-        <div class="brf-tl-dayname">${g.day}</div>
+      ${_dayGroups.map(g => `
         ${g.items.map(t => {
           const hue = DIV_HUES[t.div] || '#9b6fd4';
           const start = t.local.when.getTime();
@@ -12731,13 +12871,14 @@ async function renderBriefingExtras() {
           const isNext = !_anyLive && nextSession && nextSession.div === t.div;
           const state = live ? 'live' : isNext ? 'next' : done ? 'done' : '';
           return `<div class="brf-tl-row ${state}" style="--h:${hue}">
-            <span class="brf-tl-time">${t.local.time}</span>
-            <span class="brf-divpill" style="--hue:${hue}">${t.div}</span>
-            <span class="brf-tl-state">${live ? '<span class="brf-dot"></span>LIVE' : isNext ? '<span class="brf-dot"></span>NEXT' : done ? '✓ Done' : ''}</span>
+            <span class="brf-tl-dayname">${g.day}</span>
+            <span class="brf-tl-time">${String(t.local.time).replace(/\s?(AM|PM)$/i, '<small>$1</small>')}</span>
+            <span class="brf-tl-foot"><span class="brf-divpill" style="--hue:${hue}">${t.div}</span>
+            <span class="brf-tl-state">${live ? '<span class="brf-dot"></span>LIVE' : isNext ? '<span class="brf-dot"></span>NEXT' : done ? '✓ Done' : ''}</span></span>
           </div>`;
-        }).join('')}
-      </div>`).join('')}
+        }).join('')}`).join('')}
     </div>`;
+  _gl.sessions = timings.length; _gl.left = timings.filter(t => t.local.when.getTime() > nowMs).length;
 
   let attendanceHtml = '';
   // The attendance manifest (settings/attendance) is a single doc that lingers from the previous
@@ -12815,6 +12956,7 @@ async function renderBriefingExtras() {
           const pendList = divDrivers.filter(d => !inIds.has(d.id) && !outIds.has(d.id) && !bannedIds.has(d.id));
           const totalN = divDrivers.length;
           const pct = totalN ? Math.round(inList.length/totalN*100) : 0;
+          _gl.gridIn = (_gl.gridIn || 0) + inList.length; _gl.gridN = (_gl.gridN || 0) + totalN; _gl.gridOut = (_gl.gridOut || 0) + outList.length;
           const _chip = (uid, icon, n, col, list, label) => n ? `<div class="brf-av-chip" style="--c:${col}" onclick="(function(){var b=document.getElementById('${uid}');if(b)b.style.display=b.style.display==='none'?'block':'none';})()" title="${n} ${label}">${icon}<b>${n}</b></div>` : '';
           // One line per constructor (last season's BOTT order), team logo + name, then its drivers.
           const _names = (uid, list, label, col) => { if (!list.length) return '';
@@ -12916,6 +13058,7 @@ async function renderBriefingExtras() {
     if (myDrivers.length) {
       const myIn = myDrivers.filter(d => isDriverCheckedIn(d)).length;
       const allIn = myIn === myDrivers.length;
+      _gl.myIn = myIn; _gl.myN = myDrivers.length;
       items.push({
         icon: allIn ? '✅' : '🏁',
         txt: `<strong>${myIn}/${myDrivers.length}</strong> of your drivers are <strong>checked in</strong>${allIn ? ' — full lineup ready' : ' for this round'}`,
@@ -12958,6 +13101,7 @@ async function renderBriefingExtras() {
     if (locked) items.push({ icon:'🔒', txt:`Teams are <strong>locked</strong> for this round — no more changes`, col:'var(--muted)' });
     if (!items.length) items.push({ icon:'✅', txt:`Your team is looking good — captain set, no banned or absent drivers. You're ready.`, col:'#22c55e' });
 
+    _gl.warn = items.filter(it => /ff3b4e|ff8fab/.test(it.col)).length; _gl.team = true; _gl.ft = ft;
     checklistHtml = `
       ${(() => { const warn = items.filter(it => /ff3b4e|ff8fab/.test(it.col)).length; return _secHead('📋', 'Your team before lock', warn ? warn+' thing'+(warn>1?'s':'')+' to sort before lock' : 'Looking good — nothing urgent', warn ? '#ff8fab' : '#ffc800'); })()}
       <div class="brf-checks">
@@ -13075,10 +13219,20 @@ async function renderBriefingExtras() {
 
   el.innerHTML = `<div style="display:flex;flex-direction:column;gap:14px">
     ${countdownHtml?`<div>${countdownHtml.replace('margin-bottom:14px','')}</div>`:''}
-    ${fixturesHtml?`<div class="brf-sec">${fixturesHtml}</div>`:''}
-    ${checklistHtml?`<div class="brf-sec">${checklistHtml}</div>`:''}
-    ${attendanceHtml?`<div class="brf-sec" id="brf-avail">${attendanceHtml}</div>`:''}
+    ${fixturesHtml?`<div class="brf-sec hx-rv" data-k="bffix" id="brf-fix">${fixturesHtml}</div>`:''}
+    ${checklistHtml?`<div class="brf-sec hx-rv" data-k="bfchk" id="brf-check">${checklistHtml}</div>`:''}
+    ${attendanceHtml?`<div class="brf-sec hx-rv" data-k="bfav" id="brf-avail">${attendanceHtml}</div>`:''}
   </div>`;
+  // At a glance: the headline numbers, built only from data this page has already loaded.
+  try { const gEl = document.getElementById('brf-glance'); if (gEl) { const T = [];
+    const go = (id) => `document.getElementById('${id}')&&document.getElementById('${id}').scrollIntoView({behavior:'smooth',block:'start'})`;
+    if (_gl.team && _gl.myN && _gl.gridN) T.push(`<button class="brf-gl${_gl.myIn === _gl.myN ? ' ok' : ''}" onclick="${go('brf-check')}"><small>Your lineup</small><b>${_gl.myIn}<i>/${_gl.myN}</i></b><span>${_gl.myIn === _gl.myN ? 'All checked in' : 'checked in so far'}</span><u style="--p:${(_gl.myIn / _gl.myN).toFixed(3)}"></u></button>`);
+    if (_gl.team) T.push(`<button class="brf-gl ${_gl.warn ? 'warn' : 'ok'}" onclick="${go('brf-check')}"><small>Before lock</small><b>${_gl.warn ? _gl.warn : 'Ready'}</b><span>${_gl.warn ? 'thing' + (_gl.warn > 1 ? 's' : '') + ' to sort' : 'Nothing urgent'}</span></button>`);
+    if (_gl.gridN) T.push(`<button class="brf-gl" onclick="${go('brf-avail')}"><small>Grid checked in</small><b>${_gl.gridIn}<i>/${_gl.gridN}</i></b><span>${_gl.gridOut ? _gl.gridOut + ' sitting out' : 'No one out yet'}</span><u style="--p:${(_gl.gridIn / _gl.gridN).toFixed(3)}"></u></button>`);
+    if (_gl.sessions) T.push(`<button class="brf-gl" onclick="${go('brf-fix')}"><small>Sessions</small><b>${_gl.left}<i>/${_gl.sessions}</i></b><span>${_gl.left ? 'still to run' : 'All done'}</span></button>`);
+    if (!_gl.team && !currentUser) T.push(`<button class="brf-gl" onclick="showPage('home')"><small>Your team</small><b>Join</b><span>Build a team to get advice</span></button>`);
+    gEl.innerHTML = T.map((t, i) => t.replace('class="brf-gl', `style="--i:${i}" class="brf-gl`)).join(''); } } catch (e) {}
+  if (window._hxInit) window._hxInit('page-predictions');
 
   if (nextSession) {
     const target = nextSession.local.when.getTime();
@@ -13132,7 +13286,7 @@ async function renderTrackHistory(upcoming, allRaces, archives, drivers) {
 
   // Build the card — modern record tiles with a coloured accent, big number, and the holder.
   const tileColors = {
-    wins:'#ffc800', poles:'#9b6fd4', fls:'#27f4d2', podiums:'#ff8fab', app:'#4dabf7', pts:'#69db7c'
+    wins:'#ff5c8a', poles:'#b184e8', fls:'#7c86ff', podiums:'#b184e8', app:'#ff5c8a', pts:'#7c86ff'
   };
   const _thNorm = n => String(n||'').replace(/^\[[^\]]*\]\s*/, '').trim().toLowerCase();
   const _thN2 = n => (typeof _normName === 'function' ? _normName(_thNorm(n)) : _thNorm(n));
@@ -13171,7 +13325,7 @@ async function renderTrackHistory(upcoming, allRaces, archives, drivers) {
     .th-n small{font-size:.55rem;color:var(--muted);margin-left:2px;font-weight:700}
     .th-nm{font-size:.72rem;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
   </style>`;
-  const chip = (txt, gold) => `<span style="font-size:.62rem;font-weight:800;letter-spacing:.3px;background:${gold?'rgba(255,200,0,0.14)':'rgba(255,255,255,0.05)'};border:1px solid ${gold?'rgba(255,200,0,0.45)':'var(--border)'};color:${gold?'var(--gold)':'var(--text)'};border-radius:20px;padding:4px 11px">${txt}</span>`;
+  const chip = (txt, gold) => `<span class="th-chip${gold ? ' g' : ''}">${txt}</span>`;
   const factChips = `
     <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:9px">
       ${rec && rec.firstSeason ? chip('📅 Since S'+rec.firstSeason) : (facts && facts.opened ? chip('📅 Since '+facts.opened) : '')}
@@ -13183,21 +13337,21 @@ async function renderTrackHistory(upcoming, allRaces, archives, drivers) {
   const outline = getTrackOutlineUrl ? getTrackOutlineUrl(upcoming.name) : null;
 
   el.innerHTML = thCss + `
-    <div class="card" style="position:relative;overflow:hidden;padding:0;border:1px solid rgba(39,244,210,0.3);background:radial-gradient(120% 80% at 100% 0%,rgba(123,79,191,.16),transparent 60%),var(--surface)">
-      <div style="position:relative;padding:14px 16px 12px;background:linear-gradient(135deg, rgba(39,244,210,0.14), rgba(123,79,191,0.10) 60%, var(--surface) 100%)">
-        ${outline ? `<div style="position:absolute;top:50%;right:-30px;transform:translateY(-50%);width:240px;height:240px;background-image:url('${outline}');background-repeat:no-repeat;background-position:center;background-size:contain;opacity:0.22;filter:brightness(0) invert(1) drop-shadow(0 0 8px #27f4d2);pointer-events:none"></div>` : ''}
+    <div class="card hx-rv" data-k="bfth" style="position:relative;overflow:hidden;padding:0">
+      <div class="th-top">
+        ${outline ? `<div style="position:absolute;top:50%;right:-20px;transform:translateY(-50%);width:260px;height:260px;background-image:url('${outline}');background-repeat:no-repeat;background-position:center;background-size:contain;opacity:0.16;filter:brightness(0) invert(1);pointer-events:none"></div>` : ''}
         <div style="position:relative">
-          <div style="font-size:.58rem;font-weight:800;letter-spacing:2.5px;color:#27f4d2;margin-bottom:4px">📖 TRACK HISTORY</div>
-          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.7rem;line-height:1;margin-bottom:2px">${esc(facts ? facts.full : upcoming.name)}</div>
-          <div style="font-size:.8rem;color:var(--muted);margin-bottom:8px">${facts && facts.country ? esc(facts.country) : esc(upcoming.name)}</div>
+          <span class="brf-kicker">Track history</span>
+          <div class="th-name">${esc(facts ? facts.full : upcoming.name)}</div>
+          <div style="font-size:.8rem;color:#9a9dbd;margin-bottom:12px">${facts && facts.country ? esc(facts.country) : esc(upcoming.name)}</div>
           ${factChips}
-          ${facts ? `<p style="font-size:.85rem;line-height:1.5;margin:0">${esc(facts.blurb)}</p>` : ''}
+          ${facts ? `<p style="font-size:.88rem;line-height:1.55;margin:0;color:#dcdcf2;max-width:70ch">${esc(facts.blurb)}</p>` : ''}
         </div>
       </div>
-      <div style="padding:10px 16px 14px">
-        ${facts && facts.fact ? `<div style="font-size:.78rem;color:var(--text);background:var(--surface2);border-left:3px solid #27f4d2;border-radius:0 8px 8px 0;padding:7px 11px;margin-bottom:10px">💡 ${esc(facts.fact)}</div>` : ''}
+      <div style="padding:6px 22px 22px">
+        ${facts && facts.fact ? `<div class="th-fact">💡 ${esc(facts.fact)}</div>` : ''}
         ${editionCount ? `
-          <div style="font-size:.58rem;font-weight:800;letter-spacing:2px;color:var(--muted);margin-bottom:7px">🏆 ALL-TIME IMS RECORDS HERE</div>
+          <div class="brf-kicker" style="margin-bottom:12px">All-time IMS records here</div>
           <div class="th-grid">
             ${statTile('🥇','MOST WINS', mostWins, tileColors.wins)}
             ${statTile('🍾','MOST PODIUMS', mostPod, tileColors.podiums)}
@@ -13209,6 +13363,7 @@ async function renderTrackHistory(upcoming, allRaces, archives, drivers) {
         ` : `<div style="font-size:.82rem;color:var(--muted);text-align:center;padding:8px 0">🏁 First IMS running at this circuit — the record books open here.</div>`}
       </div>
     </div>`;
+  if (window._hxInit) window._hxInit('page-predictions');
 }
 
 
@@ -13257,11 +13412,12 @@ async function renderAiRacePreview() {
       if (k && k.startsWith('aiPreview_') && !k.startsWith(buildKey)) sessionStorage.removeItem(k);
     }
   } catch(e) {}
-  const cacheKey = buildKey + upcoming.id + '|nw2';
+  const cacheKey = buildKey + upcoming.id + '|nw3';
   const cached = window._forcePreviewRegen ? null : sessionStorage.getItem(cacheKey);
   window._forcePreviewRegen = false;
   if (cached) {
     el.innerHTML = cached;
+    if (window._hxInit) window._hxInit('page-predictions');
     return;
   }
 
@@ -13752,7 +13908,7 @@ ${isUpcoming
       ${rumourLine}
       <div class="brf-pv-call"><span class="brf-pv-call-ic">🔮</span><span>${outro}</span></div>`;
 
-    const html = `<div class="card brf-pv">
+    const html = `<div class="card brf-pv hx-rv" data-k="bfpv">
       <div class="brf-h" style="margin-bottom:12px">
         <span class="brf-h-ic" style="--c:#b48cf0">🎙️</span>
         <div style="flex:1;min-width:0"><div class="nw-mast">THE PADDOCK POST</div><div class="brf-h-s">${getRaceFlag(upcoming.name)} ${esc(upcoming.name)} · Round ${upcoming.raceNum} · Season ${currentSeason} · ${new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</div></div>
@@ -13762,6 +13918,7 @@ ${isUpcoming
     </div>`;
 
     el.innerHTML = html;
+    if (window._hxInit) window._hxInit('page-predictions');
     sessionStorage.setItem(cacheKey, html);
   } catch(e) {
     console.error('Race preview generation failed:', e);
