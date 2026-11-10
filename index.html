@@ -1094,7 +1094,7 @@
   .hh-act b{display:block;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.25rem;letter-spacing:.5px;text-transform:uppercase}
   .hh-act small{display:block;margin-top:3px;font-size:.7rem;color:#a7a2c2;line-height:1.3}
   /* ===== Home, below the next-race hero (hx-*) — IMS logo palette: indigo → violet → pink on black ===== */
-  #page-dashboard,#page-results{--hx-i:#6f74e8;--hx-v:#a779e6;--hx-p:#f0487a;--hx-g:linear-gradient(100deg,#7c86ff,#b184e8 48%,#ff5c8a);--hx-line:rgba(255,255,255,.07)}
+  #page-dashboard,#page-results,#page-leaderboard{--hx-i:#6f74e8;--hx-v:#a779e6;--hx-p:#f0487a;--hx-g:linear-gradient(100deg,#7c86ff,#b184e8 48%,#ff5c8a);--hx-line:rgba(255,255,255,.07)}
   .hx-h{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:34px 2px 14px}
   .hx-h small{display:flex;align-items:center;gap:8px;font:800 .6rem/1 system-ui,sans-serif;letter-spacing:3px;text-transform:uppercase;color:#8f95e0}
   .hx-h small::before{content:'';width:22px;height:2px;border-radius:2px;background:var(--hx-g)}
@@ -2069,10 +2069,6 @@
 
 <div id="page-leaderboard" class="page">
   <style>
-    #page-leaderboard > .card:first-of-type{border-radius:16px;background:radial-gradient(120% 90% at 0% 0%,rgba(123,79,191,0.16),transparent 55%),var(--surface);border:1px solid rgba(123,79,191,0.3)}
-    #page-leaderboard .lb-header{flex-wrap:wrap;gap:10px}
-    #page-leaderboard .lb-mode-btns{background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:3px;gap:3px}
-    #page-leaderboard .lb-mode-btns .seg-btn{border-radius:8px}
     #page-leaderboard .lbx-lbl{font-size:.56rem;font-weight:800;letter-spacing:1.6px;color:var(--muted);text-transform:uppercase;line-height:1}
     /* your-position strip */
     #page-leaderboard .lbx-me{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:11px 14px;margin-bottom:16px;border-radius:12px;border:1px solid rgba(232,0,45,0.35);background:linear-gradient(100deg,rgba(232,0,45,0.10),rgba(255,255,255,0.02) 70%);cursor:pointer;transition:border-color .15s ease}
@@ -2136,22 +2132,75 @@
       #page-leaderboard .lbp-name{font-size:.78rem}
       #page-leaderboard .lbr-bar{display:none}
     }
+    /* ===== Leaderboard — same language as the home and results pages (IMS logo colours) ===== */
+    #page-leaderboard .lb-main{margin-bottom:6px}
+    #page-leaderboard .lb-mode-btns{margin-left:0}
+    #page-leaderboard .lbx-lbl{letter-spacing:2.2px;color:#8f95e0}
+    #page-leaderboard .lbx-me{position:relative;gap:22px;padding:18px 22px;margin-bottom:18px;border-radius:22px;border:1px solid rgba(124,134,255,.38);background:radial-gradient(60% 140% at 0% 0%,rgba(111,116,232,.32),transparent 62%),radial-gradient(50% 120% at 100% 100%,rgba(240,72,122,.2),transparent 65%),linear-gradient(170deg,#15122b,#0b0a14 72%);box-shadow:0 26px 60px -38px rgba(90,94,201,.75);transition:border-color .2s,transform .25s}
+    #page-leaderboard .lbx-me:hover{border-color:#7c86ff;transform:translateY(-2px)}
+    #page-leaderboard .lbx-me-pos{font-style:italic;font-size:3.1rem;letter-spacing:-1px;padding-right:.08em;background:linear-gradient(175deg,#fff 30%,#b9bcff 62%,#ff8fb0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+    #page-leaderboard .lbx-me-pos span{font-style:normal;letter-spacing:0;-webkit-text-fill-color:#8e88ab}
+    #page-leaderboard .lbx-me-val{font-size:1.65rem;font-variant-numeric:tabular-nums}
+    #page-leaderboard .lbx-me .rank-delta{font-size:.8rem}
+    #page-leaderboard .lb-awards{border-radius:22px;background:linear-gradient(170deg,#15122b,#0b0a14 72%);border:1px solid rgba(255,255,255,.07)}
+    #page-leaderboard .lbp-wrap{grid-template-columns:1fr 1.14fr 1fr;gap:14px;margin:10px 0 20px}
+    #page-leaderboard .lbp{border-radius:24px;padding:24px 12px 20px;background:radial-gradient(120% 70% at 50% 0%,var(--pg),transparent 70%),linear-gradient(170deg,#17142c,#0c0b15);transition:transform .28s cubic-bezier(.2,.9,.25,1),box-shadow .25s}
+    #page-leaderboard .lbp::after{content:'';position:absolute;left:0;right:0;bottom:0;height:4px;background:var(--pm)}
+    #page-leaderboard .lbp:hover{transform:translateY(-6px);box-shadow:0 24px 44px -24px rgba(124,134,255,.9)}
+    #page-leaderboard .lbp.first{padding-top:36px;padding-bottom:28px;box-shadow:0 0 0 1px rgba(255,200,0,.18),0 26px 50px -26px rgba(255,190,60,.55)}
+    #page-leaderboard .lbp-medal{top:12px;left:12px;width:28px;height:28px;font-size:.95rem;font-style:italic}
+    #page-leaderboard .lbp-av{width:72px;height:72px}#page-leaderboard .lbp.first .lbp-av{width:92px;height:92px}
+    #page-leaderboard .lbp-name{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;text-transform:uppercase;font-size:1.25rem;line-height:1.05;letter-spacing:.3px}
+    #page-leaderboard .lbp.first .lbp-name{font-size:1.5rem}
+    #page-leaderboard .lbp-name{white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow-wrap:anywhere}
+    #page-leaderboard .lbp-pts{font-style:italic;font-size:2.2rem;font-variant-numeric:tabular-nums}#page-leaderboard .lbp.first .lbp-pts{font-size:3rem}
+    #page-leaderboard .lbp-pts small{font-style:normal}
+    #page-leaderboard .lb-row.lbr{border-radius:16px;padding:11px 16px;border:1px solid rgba(255,255,255,.06);background:linear-gradient(90deg,rgba(255,255,255,.04),rgba(255,255,255,.015));transition:transform .2s ease,border-color .2s ease,background .2s ease}
+    #page-leaderboard .lb-row.lbr:hover{transform:translateX(4px);border-color:rgba(124,134,255,.55);background:linear-gradient(90deg,rgba(124,134,255,.12),rgba(255,255,255,.02))}
+    #page-leaderboard .lb-row.lbr.me{border-color:rgba(240,72,122,.6);background:linear-gradient(90deg,rgba(240,72,122,.18),rgba(124,134,255,.07) 70%)}
+    #page-leaderboard .lbr-rank{font-style:italic;font-size:1.4rem;width:30px;color:#b9bcff}
+    #page-leaderboard .lbr-name{font-size:.95rem}
+    #page-leaderboard .lbr-bar > span{background:linear-gradient(90deg,var(--bar,#7c86ff),#b184e8 60%,#ff5c8a)}
+    #page-leaderboard .lbr-pts{font-style:italic;font-size:1.5rem;font-variant-numeric:tabular-nums}#page-leaderboard .lbr-pts small{font-style:normal}
+    #page-leaderboard .lbx-you{background:linear-gradient(100deg,#7c86ff,#ff5c8a);padding:2px 8px}
+    #page-leaderboard #lb-show-rest-btn{border-radius:999px;padding:11px 22px;letter-spacing:1.4px;color:#cfd2ff;background:rgba(124,134,255,.1);border:1px solid rgba(124,134,255,.3)}
+    #page-leaderboard #lb-show-rest-btn:hover{background:rgba(124,134,255,.2);border-color:#7c86ff}
+    #page-leaderboard .lb-hist{margin-top:30px;border-radius:24px;padding:22px 20px 20px;background:linear-gradient(170deg,#15122b,#0b0a14 72%);border:1px solid rgba(255,255,255,.07);box-shadow:0 26px 60px -38px rgba(90,94,201,.75)}
+    #page-leaderboard .lb-hist .card-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;text-transform:uppercase;font-size:clamp(1.5rem,5vw,2rem);line-height:1;letter-spacing:.3px;margin-bottom:16px}
+    #page-leaderboard .lb-hist .card-title .dot{width:22px;height:3px;border-radius:2px;background:linear-gradient(100deg,#7c86ff,#b184e8 48%,#ff5c8a);box-shadow:none;animation:none}
+    #page-leaderboard .lb-reel{display:block;width:100%;margin-top:14px;padding:13px 18px}
+    #page-leaderboard .lb-hist .seg{border-radius:999px;padding:4px;background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.08)}
+    #page-leaderboard .lb-hist .seg-btn{border-radius:999px;padding:7px 15px}
+    #page-leaderboard .lb-hist .seg-btn.active{background:linear-gradient(110deg,#6f74e8,#a779e6 55%,#f0487a);box-shadow:0 8px 20px -10px rgba(240,72,122,.9),inset 0 1px 0 rgba(255,255,255,.2)}
+    #page-leaderboard #leaderboard-content > .card:not(.lb-awards){border-radius:22px;background:linear-gradient(170deg,#15122b,#0b0a14 72%);border-color:rgba(255,255,255,.08);box-shadow:0 26px 60px -38px rgba(90,94,201,.75)}
+    @media (max-width:640px){
+      #page-leaderboard .lbx-me{gap:14px 18px;padding:15px 16px;border-radius:20px}#page-leaderboard .lbx-me-pos{font-size:2.5rem}#page-leaderboard .lbx-me-val{font-size:1.35rem}
+      #page-leaderboard .lb-row.lbr{border-radius:14px}#page-leaderboard .lbr-rank{font-size:1.2rem;width:24px}#page-leaderboard .lbr-pts{font-size:1.3rem}
+      #page-leaderboard .lb-hist{padding:18px 14px 16px;border-radius:20px}
+    }
+    @media (max-width:560px){
+      #page-leaderboard .lbp-wrap{gap:8px}#page-leaderboard .lbp{padding:18px 6px 14px;border-radius:18px}#page-leaderboard .lbp.first{padding-top:26px;padding-bottom:18px}
+      #page-leaderboard .lbp-av{width:50px;height:50px}#page-leaderboard .lbp.first .lbp-av{width:62px;height:62px}
+      #page-leaderboard .lbp-name{font-size:.92rem}#page-leaderboard .lbp.first .lbp-name{font-size:1.02rem}
+      #page-leaderboard .lbp-pts{font-size:1.5rem}#page-leaderboard .lbp.first .lbp-pts{font-size:1.95rem}
+      #page-leaderboard .lbp-medal{width:22px;height:22px;font-size:.78rem;top:8px;left:8px}
+    }
   </style>
   <button class="page-refresh-btn" onclick="refreshCurrentPage(this)" title="Refresh">⟳</button>
-  <div class="card">
-    <div class="card-title lb-header"><div class="dot"></div>Leaderboard
-      <div class="seg lb-mode-btns" style="margin-left:auto">
-        <button id="lb-pts-btn" class="seg-btn active" onclick="switchLeaderboard('points')">🏆 Points</button>
-        <button id="lb-val-btn" class="seg-btn" onclick="switchLeaderboard('value')">💰 Total Value</button>
-        <button id="lb-fz-btn" class="seg-btn" onclick="switchLeaderboard('fanzones')">📣 Fan Zones</button>
-      </div>
+  <div class="hx-h rs-top lb-top"><div><small>Fantasy championship</small><h2>Leader<em>board</em></h2></div>
+    <div class="seg lb-mode-btns rs-tabs">
+      <button id="lb-pts-btn" class="seg-btn active" onclick="switchLeaderboard('points')">🏆 Points</button>
+      <button id="lb-val-btn" class="seg-btn" onclick="switchLeaderboard('value')">💰 Total Value</button>
+      <button id="lb-fz-btn" class="seg-btn" onclick="switchLeaderboard('fanzones')">📣 Fan Zones</button>
     </div>
+  </div>
+  <div class="lb-main">
     <div id="leaderboard-content"><div class="ims-loader"><div class="ims-loader-mark"><img src="icons/icon-192.png?v=3" alt=""></div><div class="ims-loader-text">Loading</div><div class="ims-loader-bar"></div></div></div>
   </div>
-  <div class="card">
+  <div class="card lb-hist hx-rv" data-k="lbhist">
     <div class="card-title"><div class="dot"></div>Race Results History</div>
     <div id="race-history-content"></div>
-    <button class="btn btn-secondary" style="margin-top:10px;width:100%" onclick="playRoundReel()">▶ Play every round's winner reel</button>
+    <button class="hx-btn ghost lb-reel" onclick="playRoundReel()">▶ Play every round's winner reel</button>
   </div>
   <div id="archived-seasons-section"></div>
 </div>
@@ -14621,7 +14670,7 @@ async function renderLeaderboard() {
       { i: 2, cls: '',      m: 'linear-gradient(135deg,#f0b27a,#a45f2d)', g: 'rgba(205,127,50,0.16)',  b: 'rgba(205,127,50,0.40)' }
     ];
     const initialsOf = (s) => (s||'?').split(/[\s_.\-]+/).map(w=>(w.match(/[a-zA-Z0-9]/)||[''])[0]).join('').slice(0,2).toUpperCase() || '?';
-    const podiumHtml = ranked.length >= 3 ? '<div class="lbp-wrap">' + podiumCfg.map(cfg => {
+    const podiumHtml = ranked.length >= 3 ? '<div class="lbp-wrap hx-rv" data-k="lbpod">' + podiumCfg.map(cfg => {
       const t = ranked[cfg.i];
       if (!t) return '<div></div>';
       const isMe = currentUser && t.userId === currentUser.userId;
@@ -14724,7 +14773,7 @@ async function renderLeaderboard() {
         }).join('');
         // Duplicate the run so the marquee loops seamlessly, and slow it down for a calm drift.
         const dur = Math.max(18, wk.awards.length * 6);
-        awardsCard = `<div class="card" style="margin-bottom:14px;overflow:hidden">
+        awardsCard = `<div class="card lb-awards" style="margin-bottom:14px;overflow:hidden">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
             <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.1rem;letter-spacing:1px">🎖️ WEEKLY AWARDS</div>
             <span style="font-size:1rem">${(typeof getRaceFlag==='function'?getRaceFlag(wk.raceName):'')}</span>
@@ -14747,7 +14796,7 @@ async function renderLeaderboard() {
         const gap = Math.round(((lead.total||0) - (me.total||0)) * 10) / 10;
         const ahead = myIdx > 0 ? ranked[myIdx-1] : null;
         const toNext = ahead ? Math.round(((ahead.total||0) - (me.total||0)) * 10) / 10 : 0;
-        meStrip = `<div class="lbx-me" onclick="openPlayerProfile('${me.userId}')">
+        meStrip = `<div class="lbx-me hx-rv" data-k="lbme" onclick="openPlayerProfile('${me.userId}')">
           <div class="lbx-me-stat"><span class="lbx-lbl">Your position</span><span class="lbx-me-pos">P${myIdx+1}<span style="font-size:.95rem;color:var(--muted)"> / ${ranked.length}</span></span></div>
           <div style="width:1px;align-self:stretch;background:rgba(255,255,255,0.08)"></div>
           <div class="lbx-me-stat"><span class="lbx-lbl">${isValueMode?'Value':'Points'}</span><span class="lbx-me-val" style="color:var(--gold)">${fmt(me.total||0)}</span></div>
@@ -14757,12 +14806,13 @@ async function renderLeaderboard() {
         </div>`;
       }
     } catch(e) {}
-    document.getElementById('leaderboard-content').innerHTML = (window._verdictBanner ? window._verdictBanner(races) : '') + awardsCard + metricToggle + meStrip + (_lbHiddenNoCap ? '<div style="font-size:.78rem;color:var(--muted);text-align:center;margin:0 0 10px">Everyone is on 0 points so far — showing the ' + ranked.length + ' team' + (ranked.length !== 1 ? 's' : '') + ' with a captain picked (' + _lbHiddenNoCap + ' without one hidden until points come in).</div>' : '') + podiumHtml + '<div class="lbr-list">' + top10 + '</div>'
+    document.getElementById('leaderboard-content').innerHTML = (window._verdictBanner ? window._verdictBanner(races) : '') + awardsCard + metricToggle + meStrip + (_lbHiddenNoCap ? '<div style="font-size:.78rem;color:var(--muted);text-align:center;margin:0 0 10px">Everyone is on 0 points so far — showing the ' + ranked.length + ' team' + (ranked.length !== 1 ? 's' : '') + ' with a captain picked (' + _lbHiddenNoCap + ' without one hidden until points come in).</div>' : '') + podiumHtml + '<div class="lbr-list hx-rv" data-k="lblist">' + top10 + '</div>'
       + (rest ? '<div id="lb-rest" class="lbr-list" style="display:none;margin-top:6px">'+rest+'</div>'
                +'<div style="text-align:center;margin-top:12px">'
                +'<button class="btn btn-secondary" id="lb-show-rest-btn" onclick="toggleLbRest()">Show the rest ('+(ranked.length-10)+')</button>'
                +'</div>' : '');
 
+    try { window._hxInit('page-leaderboard'); } catch (e) {}
     // Cache data needed for player profile modals so we don't have to recompute on every click
     window._lbTeamsCache = teams;
     window._lbRacesCache = completedRaces;
@@ -15042,6 +15092,7 @@ async function renderLeaderboard() {
   // Past-season standings cards were removed from the leaderboard — the same information lives on the
   // Stats page. Clear the container so nothing renders here.
   if (archEl) archEl.innerHTML = '';
+  try { window._hxInit('page-leaderboard'); } catch (e) {}
   return;
   /* eslint-disable no-unreachable */
   const archives = await dbGetAll('archives').catch(() => []);
