@@ -2117,6 +2117,34 @@
     #page-my-team .mt-hbar i{display:block;height:100%;border-radius:4px;background:var(--hx-g);transform-origin:left;animation:mtBar .9s cubic-bezier(.2,.9,.25,1) both}
     #page-my-team .mt-hrow.best .mt-hbar i{background:linear-gradient(90deg,#ffe259,#ffa751)}
     @keyframes mtBar{from{transform:scaleX(0)}}
+    #page-my-team .mt-hgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+    #page-my-team .mt-hc{position:relative;overflow:hidden;isolation:isolate;min-height:156px;padding:15px 15px 14px;border-radius:20px;display:flex;flex-direction:column;justify-content:space-between;background:linear-gradient(160deg,#17142c,#0c0b15 70%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);transition:transform .25s cubic-bezier(.2,1,.3,1),box-shadow .25s;animation:mtHc .5s cubic-bezier(.2,.9,.25,1) both;animation-delay:calc(var(--i)*45ms)}
+    @keyframes mtHc{from{opacity:0;transform:translate3d(0,14px,0)}}
+    #page-my-team .mt-hc.tap{cursor:pointer}
+    #page-my-team .mt-hc.tap:hover{transform:translateY(-4px);box-shadow:inset 0 0 0 1px #7c86ff,0 22px 46px -24px rgba(124,134,255,.85)}
+    #page-my-team .mt-hc.best{background:linear-gradient(160deg,#2a2212,#0c0b15 70%);box-shadow:inset 0 0 0 1px rgba(255,200,0,.42)}
+    #page-my-team .mt-hc.act{box-shadow:inset 0 0 0 2px #ff5c8a}
+    #page-my-team .mt-hc-trk{position:absolute;right:-8px;top:46%;width:56%;max-height:86%;object-fit:contain;transform:translateY(-50%) rotate(-4deg);z-index:-1;filter:invert(1);opacity:.2;transition:transform .45s cubic-bezier(.2,1,.3,1),opacity .3s}
+    #page-my-team .mt-hc.tap:hover .mt-hc-trk{opacity:.38;transform:translateY(-50%) rotate(0) scale(1.06)}
+    #page-my-team .mt-hc-n{position:absolute;right:10px;bottom:-12px;z-index:-1;font:italic 900 4.6rem/1 'Barlow Condensed',sans-serif;color:rgba(255,255,255,.05);pointer-events:none}
+    #page-my-team .mt-hc-top{display:flex;align-items:center;gap:6px;min-height:26px}
+    #page-my-team .mt-hc-rd{font:800 .58rem/1 system-ui,sans-serif;letter-spacing:2.5px;color:#a69fc6}
+    #page-my-team .mt-hc-tag{font:900 .5rem/1 system-ui,sans-serif;letter-spacing:1.5px;padding:4px 7px;border-radius:999px}
+    #page-my-team .mt-hc-tag.best{color:#1a1205;background:linear-gradient(90deg,#ffe259,#ffa751)}
+    #page-my-team .mt-hc-tag.view{color:#fff;background:linear-gradient(100deg,#7c86ff,#b184e8 50%,#ff5c8a)}
+    #page-my-team .mt-hc-go{margin-left:auto;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;padding-bottom:2px;background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px rgba(255,255,255,.1);color:#fff;font-size:1rem;transition:background .25s,transform .25s}
+    #page-my-team .mt-hc.tap:hover .mt-hc-go{background:#7c86ff;transform:translateX(2px)}
+    #page-my-team .mt-hc-name{display:flex;align-items:center;gap:8px;margin:8px 0 10px;max-width:86%;font:italic 900 1.6rem/.95 'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.3px;color:#fff}
+    #page-my-team .mt-hc-name>span:last-child{min-width:0;overflow-wrap:anywhere}
+    #page-my-team .mt-hc-flag{font-size:1.2rem;font-style:normal;flex-shrink:0}
+    #page-my-team .mt-hc-bot{display:flex;align-items:flex-end;justify-content:space-between;gap:8px}
+    #page-my-team .mt-hc-pts{display:flex;align-items:baseline;gap:5px}
+    #page-my-team .mt-hc-pts b{font:italic 900 2.3rem/.9 'Barlow Condensed',sans-serif;color:var(--gold)}
+    #page-my-team .mt-hc-pts small{font-size:.62rem;color:var(--muted);margin-right:4px}
+    #page-my-team .mt-hc-cap{font:800 .6rem/1 system-ui,sans-serif;letter-spacing:.4px;color:var(--gold);padding:5px 8px;border-radius:999px;background:rgba(0,0,0,.4);box-shadow:inset 0 0 0 1px rgba(255,200,0,.3);white-space:nowrap;max-width:50%;overflow:hidden;text-overflow:ellipsis}
+    #page-my-team .mt-hc .mt-hbar{margin-top:10px}
+    #page-my-team .mt-hc.best .mt-hbar i{background:linear-gradient(90deg,#ffe259,#ffa751)}
+    @media (max-width:700px){#page-my-team .mt-hgrid{grid-template-columns:1fr 1fr;gap:9px}#page-my-team .mt-hc{min-height:140px;padding:13px 12px 12px;border-radius:17px}#page-my-team .mt-hc-name{font-size:1.3rem;max-width:100%}#page-my-team .mt-hc-pts b{font-size:1.9rem}#page-my-team .mt-hc-n{font-size:3.4rem}#page-my-team .mt-hc-go{display:none}}
     #page-my-team .mt-hpts{font:italic 900 1.5rem/1 'Barlow Condensed',sans-serif;color:var(--gold)}
     #page-my-team .mt-hpts span{font:400 .62rem/1 system-ui,sans-serif;color:var(--muted)}
     #page-my-team .mt-total{display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding:14px 16px;border-radius:18px;background:linear-gradient(100deg,rgba(111,116,232,.16),rgba(167,121,230,.08) 50%,rgba(240,72,122,.12));box-shadow:inset 0 0 0 1px rgba(124,134,255,.3)}
@@ -12231,6 +12259,7 @@ async function renderMyTeam() {
     window._myHistTotal = histSeason === liveSeasonNum ? null : { s: histSeason, pts: histRows.reduce((a, x) => a + (Number(x.rp) || 0), 0) };
     const histMax = Math.max(1, ...histRows.map(x => x.rp));
     const histBest = Math.max(...histRows.map(x => x.rp));
+    html += '<div class="mt-hgrid">';
     histRows.forEach((x, idx) => {
       const { r, rp } = x;
       // The captain shown per race must come from that race's snapshot when one exists (the live
@@ -12253,24 +12282,20 @@ async function renderMyTeam() {
       const rowActive = viewingLastRace && viewedRace && viewedRace.id === r.id;
       const rowBorder = rowActive ? 'var(--gold)' : (isBest ? 'rgba(255,200,0,0.35)' : 'var(--border)');
       const rowBg = rowActive ? 'rgba(255,200,0,0.10)' : (isBest ? 'linear-gradient(90deg,rgba(255,200,0,0.07),var(--surface2) 70%)' : 'var(--surface2)');
-      html += `<div class="mt-hrow${rowViewable ? ' tap' : ''}${rowActive ? ' act' : isBest ? ' best' : ''}" ${rowViewable ? `onclick="viewMyTeamRace('${r.id}')" title="View your locked-in team from ${esc(r.name)}"` : ''}>
-        ${(() => { const o = getTrackOutlineUrl(r.name); return o ? `<img src="${o}" style="position:absolute;right:64px;top:50%;transform:translateY(-50%);height:170%;max-width:30%;object-fit:contain;filter:invert(1);opacity:.07;pointer-events:none">` : ""; })()}
-        <span style="font-size:1.05rem;flex-shrink:0">${getRaceFlag(r.name)}</span>
-        <div style="flex:1;min-width:0">
-          <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
-            <span style="font-weight:700;font-size:.86rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(r.name)}</span>
-            <span style="font-size:.58rem;font-weight:800;color:var(--muted);border:1px solid rgba(255,255,255,0.15);border-radius:3px;padding:0 5px">R${r.raceNum}</span>
-            ${isBest?'<span style="font-size:.58rem;font-weight:800;color:var(--gold);border:1px solid rgba(255,200,0,0.5);border-radius:3px;padding:0 5px">⭐ BEST</span>':''}
-            ${capDriver?'<span style="font-size:.62rem;font-weight:700;color:var(--gold)">★ '+esc(capDriver.name.split(' ').pop())+'</span>':''}
-          </div>
-          <div class="mt-hbar"><i style="width:${pct}%"></i></div>
+      const _o = getTrackOutlineUrl(r.name);
+      html += `<div class="mt-hc${rowViewable ? ' tap' : ''}${rowActive ? ' act' : ''}${isBest ? ' best' : ''}" style="--i:${Math.min(idx, 8)}" ${rowViewable ? `onclick="viewMyTeamRace('${r.id}')" title="View your locked-in team from ${esc(r.name)}"` : ''}>
+        ${_o ? `<img class="mt-hc-trk" src="${_o}" alt="" loading="lazy" onerror="this.remove()">` : ''}
+        <div class="mt-hc-n">R${esc(String(r.raceNum || ''))}</div>
+        <div class="mt-hc-top"><span class="mt-hc-rd">ROUND ${esc(String(r.raceNum || '?'))}</span>${isBest ? '<span class="mt-hc-tag best">BEST</span>' : ''}${rowActive ? '<span class="mt-hc-tag view">VIEWING</span>' : ''}${rowViewable ? '<span class="mt-hc-go">›</span>' : ''}</div>
+        <div class="mt-hc-name"><span class="mt-hc-flag">${getRaceFlag(r.name)}</span><span>${esc(r.name)}</span></div>
+        <div class="mt-hc-bot">
+          <div class="mt-hc-pts"><b>${rp}</b><small>pts</small>${deltaStr}</div>
+          ${capDriver ? '<span class="mt-hc-cap">★ ' + esc(capDriver.name.split(' ').pop()) + '</span>' : ''}
         </div>
-        <div style="text-align:right;flex-shrink:0">
-          <div class="mt-hpts">${rp} <span>pts</span></div>
-          <div style="margin-top:2px">${deltaStr}</div>
-        </div>
+        <div class="mt-hbar"><i style="width:${pct}%"></i></div>
       </div>`;
     });
+    html += '</div>';
   }
   { const _ht = window._myHistTotal, _tp = _ht ? Math.round(_ht.pts) : totalPts; window._myHistTotal = null;
   html += '<div class="mt-total">'
