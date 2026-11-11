@@ -733,6 +733,63 @@
   .toast.success{border-color:rgba(46,204,113,.5);}
   .toast.error{border-color:rgba(232,0,45,.5);}
   /* Profile modal entrance: GPU-only (transform + opacity), no blur filters, so it stays smooth on phones. */
+  /* ===== Driver profile: IMS brand pass + insights ===== */
+  #driver-modal{background:rgba(4,3,10,.78)!important}
+  #driver-modal-inner{background:linear-gradient(175deg,#15122b,#0b0a14 38%,#09080f)!important;box-shadow:0 0 0 1px rgba(124,134,255,.28),0 -10px 50px rgba(0,0,0,.55)!important}
+  #driver-modal-content .dm-head{background:radial-gradient(70% 140% at 100% 0%,rgba(240,72,122,.22),transparent 62%),radial-gradient(80% 150% at 0% 0%,rgba(111,116,232,.32),transparent 60%),linear-gradient(160deg,#1b1640,#0d0b1a)!important;border-radius:inherit!important}
+  #driver-modal-content .dm-head>div:nth-child(2){background:linear-gradient(90deg,#6f74e8,#a779e6 50%,#f0487a)!important;height:3px!important}
+  #driver-modal-content .dm-grid-layer{display:none}
+  #driver-modal-content .dm-grid:not(.dm-head){background:rgba(255,255,255,.028)!important;border:none!important;border-radius:14px!important;box-shadow:inset 0 0 0 1px rgba(124,134,255,.2)}
+  #driver-modal-content .dm-photo{border:none!important;border-radius:16px!important;padding:2px;background:linear-gradient(135deg,#6f74e8,#a779e6 50%,#f0487a)!important}
+  #driver-modal-content .dm-photo>*{border-radius:14px;overflow:hidden}
+  #driver-modal-content .dm-name{font-style:italic;font-size:2rem!important;letter-spacing:.3px;text-transform:uppercase}
+  .dmi{padding:18px 20px 6px;border-bottom:1px solid rgba(255,255,255,.07)}
+  .dmi-h small,.dmi-ch small{display:flex;align-items:center;gap:8px;font:800 .56rem/1 system-ui,sans-serif;letter-spacing:2.6px;text-transform:uppercase;color:#a9aef5}
+  .dmi-h small::before{content:'';width:20px;height:2px;border-radius:2px;background:linear-gradient(100deg,#7c86ff,#b184e8 48%,#ff5c8a)}
+  .dmi-h h3{margin:7px 0 14px;font:italic 900 1.75rem/.95 'Barlow Condensed',sans-serif;text-transform:uppercase;color:#fff}
+  .dmi em{font-style:italic;padding-right:.12em;background:linear-gradient(100deg,#7c86ff,#b184e8 48%,#ff5c8a);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .dmi-ks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px}
+  .dmi-k{position:relative;overflow:hidden;padding:11px 12px 10px;border-radius:14px;background:rgba(255,255,255,.028);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+  .dmi-k::before{content:'';position:absolute;left:12px;right:12px;top:0;height:2px;border-radius:2px;background:linear-gradient(90deg,#6f74e8,#a779e6,#f0487a);opacity:.7}
+  .dmi-k b{display:block;font:italic 900 1.55rem/1 'Barlow Condensed',sans-serif;color:#fff}
+  .dmi-k span{display:block;margin-top:4px;font:800 .54rem/1.2 system-ui,sans-serif;letter-spacing:1.4px;text-transform:uppercase;color:#a9aef5}
+  .dmi-k small{display:block;margin-top:2px;font-size:.62rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dmi-grid{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:12px}
+  .dmi-c{padding:13px 14px 10px;border-radius:18px;background:linear-gradient(170deg,rgba(124,134,255,.08),rgba(255,255,255,.015) 70%);box-shadow:inset 0 0 0 1px rgba(124,134,255,.2)}
+  .dmi-ch h4{margin:5px 0 6px;font:italic 900 1.2rem/1 'Barlow Condensed',sans-serif;text-transform:uppercase;color:#fff}
+  .dmi-svg{display:block;width:100%;height:auto;overflow:visible}
+  .dmi-svg text{font:700 8px system-ui,sans-serif;fill:#8f93b8}
+  .dmi-gl{stroke:rgba(255,255,255,.07);stroke-width:1}
+  .dmi-avg{stroke:#fff;stroke-opacity:.45;stroke-dasharray:3 4}.dmi-svg .dmi-avgt{fill:#d5d7f5;font-size:7.5px}
+  .dmi-bar{transform-box:fill-box;transform-origin:bottom;animation:dmiUp .7s cubic-bezier(.2,.9,.25,1) both;animation-delay:var(--d)}
+  @keyframes dmiUp{from{transform:scaleY(0)}}
+  .dmi-line{fill:none;stroke:url(#dmiG);stroke:#b184e8;stroke-width:2.4;stroke-linejoin:round;stroke-linecap:round}
+  .dmi-f{fill:#0d0b1a;stroke:#b184e8;stroke-width:2.2}.dmi-f.p{stroke:#ff5c8a}.dmi-f.w{fill:#ffd24a;stroke:#ffd24a}
+  .dmi-q{fill:#7c86ff;fill-opacity:.4;stroke:#7c86ff;stroke-width:1}
+  .dmi-svg .dmi-dnf{fill:#ff5c8a;font-weight:900;font-size:7px}
+  .dmi-svg .dmi-cv{fill:#fff;font-size:9px;font-weight:900}
+  .dmi-key{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:6px;font-size:.62rem;color:var(--muted)}
+  .dmi-key span{display:inline-flex;align-items:center;gap:5px}.dmi-key i{width:9px;height:9px;border-radius:50%;display:inline-block}
+  .dmi-key i.f{border:2px solid #b184e8}.dmi-key i.q{background:rgba(124,134,255,.45);border:1px solid #7c86ff}.dmi-key i.up{width:12px;height:2px;border-radius:2px;background:#4ade80}.dmi-key i.dn{width:12px;height:2px;border-radius:2px;background:#ff8f6b}
+  .dmi-donut{display:flex;align-items:center;gap:16px;padding:4px 0 6px}
+  .dmi-donut svg{width:118px;flex:none}
+  .dmi-arc{animation:dmiArc .9s cubic-bezier(.2,.9,.25,1) both}@keyframes dmiArc{from{stroke-dasharray:0 999}}
+  .dmi-dn{font:italic 900 24px 'Barlow Condensed',sans-serif;fill:#fff}.dmi-dl{font:800 7px system-ui,sans-serif;letter-spacing:1.5px;fill:#8f93b8}
+  .dmi-leg{flex:1;display:flex;flex-direction:column;gap:6px;min-width:0}
+  .dmi-leg div{display:flex;align-items:center;gap:8px;font-size:.78rem;color:#d5d7f5}
+  .dmi-leg i{width:10px;height:10px;border-radius:3px;flex:none}
+  .dmi-leg b{margin-left:auto;font:italic 900 1.05rem/1 'Barlow Condensed',sans-serif;color:#fff}
+  .dmi-none{padding:20px 0;text-align:center;font-size:.8rem;color:var(--muted)}
+  @media (min-width:760px){
+    #driver-modal{align-items:center!important}
+    #driver-modal-inner{max-width:900px!important;max-height:92vh!important;border-radius:26px!important}
+    #driver-modal-content .dm-photo{width:120px!important;height:146px!important}
+    #driver-modal-content .dm-name{font-size:2.6rem!important}
+    .dmi{padding:22px 26px 8px}
+    .dmi-ks{grid-template-columns:repeat(6,minmax(0,1fr))}
+    .dmi-grid{grid-template-columns:1fr 1fr}
+  }
+  @media (prefers-reduced-motion:reduce){.dmi-bar,.dmi-arc{animation:none}}
   #driver-modal{animation:dmFade .22s ease-out both}
   #driver-modal-inner{animation:dmRise .32s cubic-bezier(.2,.9,.3,1.05) both;will-change:transform,opacity;box-shadow:0 0 0 1px rgba(123,127,232,.22),0 -8px 30px rgba(0,0,0,.4)}
   #driver-modal-content.dm-in{animation:dmUp .25s ease-out both}
@@ -20786,6 +20843,7 @@ window.openDriverModal = async function(driverId) {
   const formGuideHtml = `<div id="dm-form-guide" style="display:flex;align-items:center;gap:6px;margin-top:8px">${window._buildDriverFormHtml(_initialFormDiv)}</div>`;
 
   function raceListHtml(raceList, filterDiv) {
+    const _col = [];
     if (!raceList.length) return '<p class="text-muted">No results.</p>';
     const DIV_HUES = { D0:'#ffc800', D1:'#e8002d', D2:'#9b6fd4', D3:'#27f4d2', D4:'#2ecc71', E3:'#2ecc71' };
     // All divisions this driver scored in for a race (usually one; two if they doubled up that round).
@@ -20887,6 +20945,7 @@ window.openDriverModal = async function(driverId) {
         const qChip = qPos
           ? `<span class="dm-qchip${qPos === 1 ? ' pole' : ''}" title="Qualified P${qPos}">Q${qPos}</span>${(finPos && !st) ? `<span class="dm-qarrow" style="color:${qPos > finPos ? '#4ade80' : qPos < finPos ? '#ff8f6b' : 'var(--muted)'}">${qPos > finPos ? '▲' + (qPos - finPos) : qPos < finPos ? '▼' + (finPos - qPos) : '→'}</span>` : ''}`
           : '';
+        _col.push({ rn: race.raceNum, name: race.name, div, pts: Number(pts) || 0, fin: (finPos && !st) ? finPos : null, q: qPos || null, st: st || null });
         // Sprint result (any season incl. archived S6 sprint weekends) — matched by name from sprintByDiv.
         const _spR = (() => { const arr = window._spRowsOf ? window._spRowsOf(race, div) : null; if (!arr) return null; const k = _nq(String(driver.name || '').replace(/^\[[^\]]*\]\s*/, ''));
           return arr.find(x => window._nmIs({ name: x.name, canon: x.alias }, driver) || _nq(String(x.name || '').replace(/^\[[^\]]*\]\s*/, '')) === k) || null; })();
@@ -20922,6 +20981,7 @@ window.openDriverModal = async function(driverId) {
         </div>`); }
       });
     });
+    raceListHtml._last = _col;
     return rows.join('');
   }
 
@@ -21277,6 +21337,7 @@ window.openDriverModal = async function(driverId) {
       const ps = (pastSeasons || []).find(x => Number(x.season) === Number(vs)), rl = document.getElementById('dm-content-s' + vs);
       if (ps && rl) rl.innerHTML = raceListHtml(ps.races, which === 'all' ? null : which);
       window._setResultsTitle(vs, which);
+      if (window._dmPaintInsights) window._dmPaintInsights(vs, which === 'all' ? null : which);
       return;
     }
     const stats = which === 'all' ? window._profileSummary.all : window._profileSummary.byDiv[which];
@@ -21293,6 +21354,7 @@ window.openDriverModal = async function(driverId) {
     const rl = document.getElementById('dm-content-s' + currentSeason);
     if (rl) rl.innerHTML = raceListHtml(completedRaces, which === 'all' ? null : which);
     if (window._setResultsTitle) window._setResultsTitle(currentSeason, which);
+    if (window._dmPaintInsights) window._dmPaintInsights(currentSeason, which === 'all' ? null : which);
     // Form guide follows the selected division too.
     const fg = document.getElementById('dm-form-guide');
     if (fg && window._buildDriverFormHtml) fg.innerHTML = window._buildDriverFormHtml(which === 'all' ? null : which);
@@ -21308,14 +21370,87 @@ window.openDriverModal = async function(driverId) {
   const summaryTabs = `<div id="profile-summary-tabs" style="display:${divsRaced.length >= 2 ? 'flex' : 'none'};gap:6px;margin-bottom:10px;flex-wrap:wrap">${divsRaced.length >= 2 ? window._psumTabsInner(divsRaced, _defaultView) : ''}</div>`;
   window._psumCurDivs = divsRaced; window._psumCurDef = _defaultView;
 
+  // ===== Insights: KPIs + charts built from the rows the results list already computes (no extra reads) =====
+  const _dmCareer = (() => { const out = (pastSeasons || []).map(ps => { const ss = window._profileSeasonSummaries && window._profileSeasonSummaries[ps.season]; return { s: Number(ps.season), pts: Math.round((ss && typeof ss.totalPts === 'number') ? ss.totalPts : ps.totalPts) }; });
+    out.push({ s: Number(currentSeason), pts: Math.round(((window._profileSummary || {}).all || {}).totalPts || 0), cur: true }); return out.sort((a, b) => a.s - b.s); })();
+  window._dmInsightsFor = function(season, div) {
+    const isCur = Number(season) === Number(currentSeason);
+    const list = isCur ? completedRaces : (((pastSeasons || []).find(x => Number(x.season) === Number(season)) || {}).races || []);
+    try { raceListHtml(list, div || null); } catch (e) { return ''; }
+    const R = (raceListHtml._last || []).slice().reverse();
+    if (!R.length) return '';
+    const fin = R.filter(r => r.fin), pts = R.map(r => r.pts);
+    const avg = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0;
+    const avgFin = fin.length ? avg(fin.map(r => r.fin)) : null, best = fin.length ? Math.min(...fin.map(r => r.fin)) : null;
+    const gArr = R.filter(r => r.fin && r.q).map(r => r.q - r.fin), gained = gArr.length ? avg(gArr) : null;
+    const top5 = R.length ? Math.round(100 * fin.filter(r => r.fin <= 5).length / R.length) : 0;
+    const mu = avg(pts), sd = Math.sqrt(avg(pts.map(v => (v - mu) ** 2)));
+    const l3 = avg(pts.slice(-3)), formD = R.length >= 4 ? l3 - mu : null;
+    const dnfs = R.filter(r => r.st && /DNF|DNS|DSQ/.test(r.st)).length;
+    const kpi = (v, l, sub, c) => `<div class="dmi-k"><b${c ? ` style="color:${c}"` : ''}>${v}</b><span>${l}</span>${sub ? `<small>${sub}</small>` : ''}</div>`;
+    const kpis = kpi(avgFin != null ? 'P' + avgFin.toFixed(1) : '–', 'Avg finish', fin.length + ' classified')
+      + kpi(best ? 'P' + best : '–', 'Best finish', best === 1 ? 'Race winner' : '')
+      + kpi(top5 + '%', 'Top 5 rate', fin.filter(r => r.fin <= 5).length + ' of ' + R.length)
+      + kpi(gained == null ? '–' : (gained > 0 ? '+' : '') + gained.toFixed(1), 'Places / race', 'grid to flag', gained == null ? null : gained > 0 ? '#4ade80' : gained < 0 ? '#ff8f6b' : null)
+      + kpi('±' + sd.toFixed(1), 'Consistency', sd <= mu * .35 ? 'Very steady' : sd >= mu * .7 ? 'Boom or bust' : 'Points swing')
+      + kpi(formD == null ? '–' : (formD >= 0 ? '▲ ' : '▼ ') + Math.abs(formD).toFixed(1), 'Form', 'last 3 vs avg', formD == null ? null : formD >= 0 ? '#4ade80' : '#ff8f6b');
+    const W = 320, H = 150, PL = 26, PR = 8, PT = 12, PB = 22, iw = W - PL - PR, ih = H - PT - PB, n = R.length;
+    const xs = i => PL + (n === 1 ? iw / 2 : (iw * (i + .5)) / n);
+    const lbl = (i) => (n <= 12 || i % Math.ceil(n / 12) === 0) ? `<text x="${xs(i)}" y="${H - 6}" text-anchor="middle">R${R[i].rn || i + 1}</text>` : '';
+    // 1) points per round
+    const pMax = Math.max(5, ...pts), bw = Math.max(4, Math.min(26, iw / n * .62)), bestI = pts.indexOf(Math.max(...pts));
+    const yP = v => PT + ih - (v / pMax) * ih;
+    const g1 = `<svg viewBox="0 0 ${W} ${H}" class="dmi-svg"><defs><linearGradient id="dmiG" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#6f74e8"/><stop offset=".55" stop-color="#a779e6"/><stop offset="1" stop-color="#f0487a"/></linearGradient><linearGradient id="dmiGold" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ffa751"/><stop offset="1" stop-color="#ffe259"/></linearGradient></defs>
+      ${[0, .5, 1].map(f => `<line x1="${PL}" x2="${W - PR}" y1="${yP(pMax * f)}" y2="${yP(pMax * f)}" class="dmi-gl"/><text x="${PL - 5}" y="${yP(pMax * f) + 3}" text-anchor="end">${Math.round(pMax * f)}</text>`).join('')}
+      ${R.map((r, i) => `<rect class="dmi-bar" style="--d:${i * 40}ms" x="${xs(i) - bw / 2}" y="${yP(r.pts)}" width="${bw}" height="${Math.max(1.5, PT + ih - yP(r.pts))}" rx="${Math.min(4, bw / 3)}" fill="url(#${i === bestI ? 'dmiGold' : 'dmiG'})"><title>${esc(r.name)}: ${r.pts} pts</title></rect>`).join('')}
+      <line x1="${PL}" x2="${W - PR}" y1="${yP(mu)}" y2="${yP(mu)}" class="dmi-avg"/><text x="${W - PR}" y="${yP(mu) - 4}" text-anchor="end" class="dmi-avgt">avg ${mu.toFixed(1)}</text>
+      ${R.map((r, i) => lbl(i)).join('')}</svg>`;
+    // 2) finish vs quali (P1 at the top)
+    const posAll = R.flatMap(r => [r.fin, r.q]).filter(Boolean), pM = Math.max(5, ...posAll);
+    const yQ = v => PT + ((v - 1) / Math.max(1, pM - 1)) * ih;
+    const segs = []; let cur = [];
+    R.forEach((r, i) => { if (r.fin) cur.push(`${xs(i)},${yQ(r.fin)}`); else if (cur.length) { segs.push(cur); cur = []; } }); if (cur.length) segs.push(cur);
+    const g2 = posAll.length ? `<svg viewBox="0 0 ${W} ${H}" class="dmi-svg">
+      ${[1, Math.round((1 + pM) / 2), pM].map(v => `<line x1="${PL}" x2="${W - PR}" y1="${yQ(v)}" y2="${yQ(v)}" class="dmi-gl"/><text x="${PL - 5}" y="${yQ(v) + 3}" text-anchor="end">P${v}</text>`).join('')}
+      ${R.map((r, i) => r.fin && r.q && r.q !== r.fin ? `<line x1="${xs(i)}" x2="${xs(i)}" y1="${yQ(r.q)}" y2="${yQ(r.fin)}" stroke="${r.q > r.fin ? '#4ade80' : '#ff8f6b'}" stroke-width="2" stroke-opacity=".55" stroke-dasharray="2 3"/>` : '').join('')}
+      ${segs.map(sg => `<polyline points="${sg.join(' ')}" class="dmi-line"/>`).join('')}
+      ${R.map((r, i) => r.q ? `<circle cx="${xs(i)}" cy="${yQ(r.q)}" r="3.2" class="dmi-q"><title>${esc(r.name)}: qualified P${r.q}</title></circle>` : '').join('')}
+      ${R.map((r, i) => r.fin ? `<circle cx="${xs(i)}" cy="${yQ(r.fin)}" r="4.2" class="dmi-f${r.fin === 1 ? ' w' : r.fin <= 3 ? ' p' : ''}"><title>${esc(r.name)}: finished P${r.fin}</title></circle>` : r.st ? `<text x="${xs(i)}" y="${PT + ih}" text-anchor="middle" class="dmi-dnf">${esc(r.st)}</text>` : '').join('')}
+      ${R.map((r, i) => lbl(i)).join('')}</svg>` : '<div class="dmi-none">No classified finishes recorded yet.</div>';
+    // 3) results breakdown donut
+    const B = [['Wins', fin.filter(r => r.fin === 1).length, '#ffd24a'], ['Podiums', fin.filter(r => r.fin === 2 || r.fin === 3).length, '#b184e8'], ['Top 10', fin.filter(r => r.fin > 3 && r.fin <= 10).length, '#7c86ff'], ['Outside', fin.filter(r => r.fin > 10).length + R.filter(r => !r.fin && !r.st).length, '#3a3858'], ['DNF/DSQ', dnfs, '#ff5c8a']].filter(b => b[1] > 0);
+    const tot = B.reduce((a, b) => a + b[1], 0) || 1, C = 2 * Math.PI * 42; let off = 0;
+    const g3 = `<div class="dmi-donut"><svg viewBox="0 0 110 110"><circle cx="55" cy="55" r="42" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="13"/>
+      ${B.map(b => { const L = C * b[1] / tot, el = `<circle cx="55" cy="55" r="42" fill="none" stroke="${b[2]}" stroke-width="13" stroke-dasharray="${Math.max(0, L - 2)} ${C}" stroke-dashoffset="${-off}" transform="rotate(-90 55 55)" class="dmi-arc"/>`; off += L; return el; }).join('')}
+      <text x="55" y="53" text-anchor="middle" class="dmi-dn">${R.length}</text><text x="55" y="68" text-anchor="middle" class="dmi-dl">RACES</text></svg>
+      <div class="dmi-leg">${B.map(b => `<div><i style="background:${b[2]}"></i><span>${b[0]}</span><b>${b[1]}</b></div>`).join('')}</div></div>`;
+    // 4) career points by season
+    const cM = Math.max(1, ..._dmCareer.map(c => c.pts)), cw = Math.min(46, iw / Math.max(1, _dmCareer.length) * .6);
+    const xc = i => PL + (iw * (i + .5)) / _dmCareer.length, yC = v => PT + ih - (v / cM) * ih;
+    const g4 = `<svg viewBox="0 0 ${W} ${H}" class="dmi-svg">
+      <line x1="${PL}" x2="${W - PR}" y1="${PT + ih}" y2="${PT + ih}" class="dmi-gl"/>
+      ${_dmCareer.map((c, i) => `<rect class="dmi-bar" style="--d:${i * 60}ms" x="${xc(i) - cw / 2}" y="${yC(c.pts)}" width="${cw}" height="${Math.max(1.5, PT + ih - yC(c.pts))}" rx="5" fill="${Number(c.s) === Number(season) ? 'url(#dmiG)' : 'rgba(124,134,255,.28)'}"/><text x="${xc(i)}" y="${yC(c.pts) - 5}" text-anchor="middle" class="dmi-cv">${c.pts}</text><text x="${xc(i)}" y="${H - 6}" text-anchor="middle">S${c.s}${c.cur ? ' · now' : ''}</text>`).join('')}</svg>`;
+    const card = (k, t, body, wide) => `<div class="dmi-c${wide ? ' w' : ''}"><div class="dmi-ch"><small>${k}</small><h4>${t}</h4></div>${body}</div>`;
+    return `<div class="dmi">
+      <div class="dmi-h"><small>Season ${season}${div ? ' · ' + esc(div) : ''} insights</small><h3>Performance <em>data</em></h3></div>
+      <div class="dmi-ks">${kpis}</div>
+      <div class="dmi-grid">
+        ${card('Round by round', 'Points <em>scored</em>', g1)}
+        ${card('Where they started and finished', 'Grid <em>&amp; flag</em>', g2 + (posAll.length ? '<div class="dmi-key"><span><i class="f"></i>Finish</span><span><i class="q"></i>Qualified</span><span><i class="up"></i>Places gained</span><span><i class="dn"></i>Places lost</span></div>' : ''))}
+        ${card('How the races ended', 'Results <em>mix</em>', g3)}
+        ${_dmCareer.length > 1 ? card('Every IMS season', 'Career <em>points</em>', g4) : ''}
+      </div></div>`;
+  };
+  window._dmPaintInsights = function(season, div) { const el = document.getElementById('dm-insights'); if (el) { try { el.innerHTML = window._dmInsightsFor(season, div); } catch (e) { el.innerHTML = ''; } } };
+
   let html = `
-    <div class="dm-grid" style="position:relative;background:${headerBg};padding:0;border-radius:16px 16px 0 0;overflow:hidden">
+    <div class="dm-grid dm-head" style="position:relative;background:${headerBg};padding:0;border-radius:16px 16px 0 0;overflow:hidden">
       <div class="dm-grid-layer" style="--acc:${dmAccent}"></div>
       <div style="height:4px;background:linear-gradient(90deg,${dmAccent},transparent 80%)"></div>
       <div style="position:relative;padding:16px 20px 0">
       <button onclick="closeDriverModal()" style="position:absolute;top:12px;right:12px;background:rgba(255,255,255,0.1);border:none;color:#fff;font-size:1.2rem;width:32px;height:32px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>
       <div style="display:flex;align-items:flex-end;gap:16px">
-        <div style="width:90px;height:110px;border-radius:8px;overflow:hidden;background:var(--surface);border:2px solid ${dmAccent}55;flex-shrink:0">
+        <div class="dm-photo" style="width:90px;height:110px;border-radius:8px;overflow:hidden;background:var(--surface);border:2px solid ${dmAccent}55;flex-shrink:0">
           ${(() => {
             const _dp = driverPhoto(driver);
             const _init = (driver.name||'?').split(/\s+/).map(w=>w[0]).join('').replace(/[^a-zA-Z0-9]/g,'').slice(0,2).toUpperCase() || '?';
@@ -21330,7 +21465,7 @@ window.openDriverModal = async function(driverId) {
         </div>
         <div style="padding-bottom:12px;min-width:0">
           <span id="dm-team-logo">${isReserve ? reserveBadgeSvg(20) : (teamLogo ? `<img src="${esc(teamLogo)}" style="height:18px;object-fit:contain;margin-bottom:4px;display:block">` : '')}</span>
-          <div class="kh-font" style="font-weight:900;font-size:1.6rem;line-height:1;display:flex;align-items:center;gap:8px">${esc(driver.name)}${(() => { const W = window._wordleData; if (!W || !W.stats) return '';
+          <div class="kh-font dm-name" style="font-weight:900;font-size:1.6rem;line-height:1;display:flex;align-items:center;gap:8px">${esc(driver.name)}${(() => { const W = window._wordleData; if (!W || !W.stats) return '';
             const nk = s => searchFold(String(s || '').replace(/\[[^\]]*\]/g, ''));
             const k = (driver.discordId && W.idToKey && W.idToKey[String(driver.discordId)]) || nk(driver.name); const st = W.stats[k] || W.stats[nk(driver.name)];
             const nat = typeof _natFix === 'function' ? _natFix(driver.name, st && st.nat) : (st && st.nat); if (!nat) return '';
@@ -21368,6 +21503,7 @@ window.openDriverModal = async function(driverId) {
       ${summaryTabs}
       <div id="profile-summary-swap">${summaryDivHtml(_defaultView === 'all' ? window._profileSummary.all : window._profileSummary.byDiv[_defaultView], _defaultView === 'all' ? null : _defaultView)}</div>
     </div>
+    <div id="dm-insights">${(() => { try { return window._dmInsightsFor(currentSeason, _defaultView === 'all' ? null : _defaultView); } catch (e) { console.warn('dm insights', e); return ''; } })()}</div>
     <div style="padding:16px 20px;display:grid;grid-template-columns:1fr 1fr;gap:10px;border-bottom:1px solid var(--border)">
       <div class="dm-grid" style="background:linear-gradient(150deg, ${dmAccent}24, var(--surface2) 75%);border:1px solid ${dmAccent}33;border-radius:8px;padding:12px"><div class="dm-grid-layer" style="--acc:${dmAccent}"></div>
         <div id="dm-price-label" style="font-size:.7rem;color:var(--muted);margin-bottom:2px">Price</div>
@@ -21823,6 +21959,7 @@ window.switchModalTab = function(tab) {
         if (s) swap.innerHTML = window.renderArchivedSummary ? window.renderArchivedSummary(s, seasonNum) : '';
         else swap.innerHTML = '<div style="padding:14px;color:var(--muted);font-size:.8rem;text-align:center">No saved summary for this season.</div>';
       }
+      if (window._dmPaintInsights) window._dmPaintInsights(seasonNum, null);
     }
   } catch(e) {}
 };
