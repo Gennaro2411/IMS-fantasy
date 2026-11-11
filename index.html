@@ -735,14 +735,31 @@
   /* Profile modal entrance: GPU-only (transform + opacity), no blur filters, so it stays smooth on phones. */
   /* ===== Driver profile: IMS brand pass + insights ===== */
   #driver-modal{background:rgba(4,3,10,.78)!important}
-  #driver-modal-inner{background:linear-gradient(175deg,#15122b,#0b0a14 38%,#09080f)!important;box-shadow:0 0 0 1px rgba(124,134,255,.28),0 -10px 50px rgba(0,0,0,.55)!important}
-  #driver-modal-content .dm-head{background:radial-gradient(70% 140% at 100% 0%,rgba(240,72,122,.22),transparent 62%),radial-gradient(80% 150% at 0% 0%,rgba(111,116,232,.32),transparent 60%),linear-gradient(160deg,#1b1640,#0d0b1a)!important;border-radius:inherit!important}
-  #driver-modal-content .dm-head>div:nth-child(2){background:linear-gradient(90deg,#6f74e8,#a779e6 50%,#f0487a)!important;height:3px!important}
+  #driver-modal-inner{--ta:var(--team-scroll,#7c86ff);background:radial-gradient(120% 34% at 50% 0%,color-mix(in srgb,var(--ta) 16%,transparent),transparent 70%),linear-gradient(175deg,#15122b,#0b0a14 38%,#09080f)!important;box-shadow:0 0 0 1px color-mix(in srgb,var(--ta) 40%,rgba(124,134,255,.3)),0 -10px 50px rgba(0,0,0,.55)!important}
+  #driver-modal-content .dm-head{background:radial-gradient(75% 150% at 100% 0%,color-mix(in srgb,var(--ta) 46%,transparent),transparent 64%),radial-gradient(80% 150% at 0% 0%,rgba(111,116,232,.30),transparent 60%),linear-gradient(160deg,#1b1640,#0d0b1a)!important;border-radius:inherit!important}
+  /* team-colour pattern: slanted speed bars that thin out, plus a fine chevron weave */
+  #driver-modal-content .dm-head::before{content:'';position:absolute;inset:0;z-index:0;pointer-events:none;background:
+      linear-gradient(115deg,transparent 0 58%,color-mix(in srgb,var(--ta) 34%,transparent) 58% 62%,transparent 62% 65%,color-mix(in srgb,var(--ta) 26%,transparent) 65% 68%,transparent 68% 72%,color-mix(in srgb,var(--ta) 18%,transparent) 72% 74%,transparent 74% 79%,color-mix(in srgb,var(--ta) 12%,transparent) 79% 80.5%,transparent 80.5%),
+      repeating-linear-gradient(115deg,color-mix(in srgb,var(--ta) 20%,transparent) 0 1px,transparent 1px 13px),
+      repeating-linear-gradient(-115deg,rgba(255,255,255,.035) 0 1px,transparent 1px 13px);
+    -webkit-mask:linear-gradient(90deg,transparent 12%,#000 70%);mask:linear-gradient(90deg,transparent 12%,#000 70%)}
+  #driver-modal-content .dm-head>div:nth-child(2){background:linear-gradient(90deg,var(--ta),#a779e6 55%,#f0487a)!important;height:3px!important}
   #driver-modal-content .dm-grid-layer{display:none}
-  #driver-modal-content .dm-grid:not(.dm-head){background:rgba(255,255,255,.028)!important;border:none!important;border-radius:14px!important;box-shadow:inset 0 0 0 1px rgba(124,134,255,.2)}
-  #driver-modal-content .dm-photo{border:none!important;border-radius:16px!important;padding:2px;background:linear-gradient(135deg,#6f74e8,#a779e6 50%,#f0487a)!important}
+  #driver-modal-content .dm-grid:not(.dm-head){background:linear-gradient(150deg,color-mix(in srgb,var(--ta) 13%,transparent),rgba(255,255,255,.02) 62%)!important;border:none!important;border-radius:14px!important;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ta) 30%,rgba(124,134,255,.22))}
+  #driver-modal-content .dm-grid:not(.dm-head)::after{content:'';position:absolute;right:0;top:0;bottom:0;width:46%;pointer-events:none;background:repeating-linear-gradient(115deg,color-mix(in srgb,var(--ta) 16%,transparent) 0 1px,transparent 1px 9px);-webkit-mask:linear-gradient(90deg,transparent,#000);mask:linear-gradient(90deg,transparent,#000);opacity:.7}
+  #driver-modal-content .dm-photo{border:none!important;border-radius:16px!important;padding:2px;background:linear-gradient(135deg,var(--ta),#a779e6 55%,#f0487a)!important}
   #driver-modal-content .dm-photo>*{border-radius:14px;overflow:hidden}
   #driver-modal-content .dm-name{font-style:italic;font-size:2rem!important;letter-spacing:.3px;text-transform:uppercase}
+  #driver-modal-content .dm-flag{display:inline-flex;align-items:center}
+  #driver-modal-content .dm-flag:empty{display:none}
+  #driver-modal-content .dm-flag img{height:15px!important;width:auto!important;border-radius:3px}
+  #driver-modal-content .dm-team{display:inline-flex;align-items:center;gap:7px;padding:4px 10px 4px 8px;border-radius:999px;color:#fff;font-weight:700;font-size:.78rem;background:color-mix(in srgb,var(--ta) 20%,rgba(8,7,15,.6));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ta) 55%,transparent)}
+  #driver-modal-content #dm-team-logo{display:inline-flex;align-items:center}
+  #driver-modal-content #dm-team-logo:empty{display:none}
+  #driver-modal-content #dm-team-logo img,#driver-modal-content #dm-team-logo svg{display:block!important;height:16px!important;margin:0!important}
+  #driver-modal-content .dm-flag{padding-left:7px;border-left:1px solid rgba(255,255,255,.24)}
+  .dmi-c{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ta,#7c86ff) 26%,rgba(124,134,255,.2))!important}
+  .dmi-k::before{background:linear-gradient(90deg,var(--ta,#6f74e8),#a779e6,#f0487a)!important}
   .dmi{padding:18px 20px 6px;border-bottom:1px solid rgba(255,255,255,.07)}
   .dmi-h small,.dmi-ch small{display:flex;align-items:center;gap:8px;font:800 .56rem/1 system-ui,sans-serif;letter-spacing:2.6px;text-transform:uppercase;color:#a9aef5}
   .dmi-h small::before{content:'';width:20px;height:2px;border-radius:2px;background:linear-gradient(100deg,#7c86ff,#b184e8 48%,#ff5c8a)}
@@ -21467,15 +21484,14 @@ window.openDriverModal = async function(driverId) {
           })()}
         </div>
         <div style="padding-bottom:12px;min-width:0">
-          <span id="dm-team-logo">${isReserve ? reserveBadgeSvg(20) : (teamLogo ? `<img src="${esc(teamLogo)}" style="height:18px;object-fit:contain;margin-bottom:4px;display:block">` : '')}</span>
-          <div class="kh-font dm-name" style="font-weight:900;font-size:1.6rem;line-height:1;display:flex;align-items:center;gap:8px">${esc(driver.name)}${(() => { const W = window._wordleData; if (!W || !W.stats) return '';
+          <div class="kh-font dm-name" style="font-weight:900;font-size:1.6rem;line-height:1;display:flex;align-items:center;gap:8px">${esc(driver.name)}</div>
+          <div style="color:var(--muted);font-size:.8rem;margin-top:2px;display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span id="dm-team-div" style="color:#fff;background:${dmAccent}33;border:1px solid ${dmAccent}66;border-radius:4px;padding:0 5px;font-size:.68rem;font-weight:800">${driver.division}</span><span class="dm-team"><span id="dm-team-logo">${isReserve ? reserveBadgeSvg(20) : (teamLogo ? `<img src="${esc(teamLogo)}" style="height:18px;object-fit:contain;margin-bottom:4px;display:block">` : '')}</span><span id="dm-team-name">${isReserve ? `<span style="color:${RESERVE_PURPLE};font-weight:800">Reserve</span>` : esc(driver.team||'')}</span><span class="dm-flag">${(() => { const W = window._wordleData; if (!W || !W.stats) return '';
             const nk = s => searchFold(String(s || '').replace(/\[[^\]]*\]/g, ''));
             const k = (driver.discordId && W.idToKey && W.idToKey[String(driver.discordId)]) || nk(driver.name); const st = W.stats[k] || W.stats[nk(driver.name)];
             const nat = typeof _natFix === 'function' ? _natFix(driver.name, st && st.nat) : (st && st.nat); if (!nat) return '';
             const flag = typeof natFlagImg === 'function' ? natFlagImg(nat, 26) : '';
             return flag ? flag
-              : `<span title="Nationality" style="font-family:inherit;font-size:.72rem;font-weight:700;color:var(--muted);background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:2px 8px">${esc(nat)}</span>`; })()}</div>
-          <div style="color:var(--muted);font-size:.8rem;margin-top:2px;display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span id="dm-team-div" style="color:#fff;background:${dmAccent}33;border:1px solid ${dmAccent}66;border-radius:4px;padding:0 5px;font-size:.68rem;font-weight:800">${driver.division}</span> · <span id="dm-team-name">${isReserve ? `<span style="color:${RESERVE_PURPLE};font-weight:800">Reserve</span>` : esc(driver.team||'')}</span></div>
+              : `<span title="Nationality" style="font-family:inherit;font-size:.72rem;font-weight:700;color:var(--muted);background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:2px 8px">${esc(nat)}</span>`; })()}</span></span></div>
           ${formGuideHtml}
         </div>
       </div>
@@ -21499,15 +21515,14 @@ window.openDriverModal = async function(driverId) {
         .dm-sp.active small{color:#fff;opacity:.85}
       </style><div class="dm-sbar">${pill(currentSeason, curPts, driver.team && !/^reserve$/i.test(driver.team) ? driver.team : '', true)}${pastSeasons.map(se => { const _ss = window._profileSeasonSummaries && window._profileSeasonSummaries[se.season]; const _tp = (_ss && typeof _ss.totalPts === 'number') ? _ss.totalPts : se.totalPts; return pill(se.season, _tp, (tb[se.season] || {}).team || '', false); }).join('')}</div>`;
     })() : ''}
-    <div style="padding:14px 20px;border-bottom:1px solid var(--border)">
+    <div style="padding:14px 20px 10px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <div id="profile-summary-header" style="font-size:.6rem;font-weight:800;letter-spacing:2px;color:var(--muted)">SEASON ${currentSeason} SUMMARY</div>
       </div>
       ${summaryTabs}
       <div id="profile-summary-swap">${summaryDivHtml(_defaultView === 'all' ? window._profileSummary.all : window._profileSummary.byDiv[_defaultView], _defaultView === 'all' ? null : _defaultView)}</div>
     </div>
-    <div id="dm-insights">${(() => { try { return window._dmInsightsFor(currentSeason, _defaultView === 'all' ? null : _defaultView); } catch (e) { console.warn('dm insights', e); return ''; } })()}</div>
-    <div style="padding:16px 20px;display:grid;grid-template-columns:1fr 1fr;gap:10px;border-bottom:1px solid var(--border)">
+    <div class="dm-po" style="padding:0 20px 16px;display:grid;grid-template-columns:1fr 1fr;gap:10px;border-bottom:1px solid var(--border)">
       <div class="dm-grid" style="background:linear-gradient(150deg, ${dmAccent}24, var(--surface2) 75%);border:1px solid ${dmAccent}33;border-radius:8px;padding:12px"><div class="dm-grid-layer" style="--acc:${dmAccent}"></div>
         <div id="dm-price-label" style="font-size:.7rem;color:var(--muted);margin-bottom:2px">Price</div>
         <div id="dm-price-val" style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.4rem">$${price.toFixed(1)}M</div>
@@ -21517,6 +21532,7 @@ window.openDriverModal = async function(driverId) {
         <div id="dm-own-val" style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.4rem">${ownershipPct}%</div>
       </div>
     </div>
+    <div id="dm-insights">${(() => { try { return window._dmInsightsFor(currentSeason, _defaultView === 'all' ? null : _defaultView); } catch (e) { console.warn('dm insights', e); return ''; } })()}</div>
     <div id="dm-live-only">
     <div style="padding:16px 20px 0">
       ${(() => {
