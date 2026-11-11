@@ -3731,7 +3731,8 @@
     .pp-nm small{display:flex;align-items:center;gap:4px;font-size:.66rem;color:var(--muted);white-space:nowrap;overflow:hidden}.pp-nm small img{width:14px;height:14px;object-fit:contain}
     .pp-cl small{font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:#a5a9d6}
     .pp-cl em{font-style:normal;font-size:.66rem;color:#4ade80}
-    .pp-ic{flex:none;font-size:1.05rem}
+    .pp-ic{flex:none;font-size:1.05rem;width:22px;display:flex;justify-content:center}.pp-ic img,.pp-ic>*{max-width:22px!important;max-height:16px!important;width:auto!important;height:auto!important}
+    .pp-cl b{white-space:normal;line-height:1.15;overflow-wrap:anywhere}
     .pp-hist{display:flex;flex-direction:column;gap:4px;margin:8px auto;align-items:center}
     .pp-hist div{display:flex;align-items:center;gap:3px;font-size:.7rem;color:var(--muted)}.pp-hist span{width:42px}
     .pp-hist i{width:14px;height:14px;border-radius:4px;background:rgba(255,255,255,.1)}.pp-hist i.g{background:#4ade80}.pp-hist b{margin-left:6px;color:#fff}
@@ -33718,7 +33719,7 @@ window.renderGames = async function() {
       ['st', '⚖️', 'Steward Simulator', 'Real IMS incidents. Guilty or not guilty? Compare with the stewards.', 'You be the judge', '#7c86ff', '#ff5c8a'],
       ['qs', '⏱️', 'Quali Shootout', 'Predict each division\'s pole time. Closest wins 500 IM$, spot on wins 5,000.', 'Win IM$', '#ffb020', '#ff5c8a'],
       ['wf', '🏁', 'Who Finished Where?', 'A real IMS race, top 5 shuffled. Put them back in order in 3 tries.', 'Daily · Practice · Duels', '#b184e8', '#6f74e8'],
-      ['pp', '🔗', 'Pit Lane Pairs', '7 drivers, 7 clues. Match each driver to their team, old team or teammate.', 'Daily · Practice', '#27f4d2', '#7c86ff'],
+      ['pp', '🔗', 'Pit Lane Pairs', '7 drivers, 7 clues: teams, teammates, stats and more. Match them all up.', 'Daily · Practice', '#27f4d2', '#7c86ff'],
     ];
     el.innerHTML = `<div class="xs-hero hx-gb hx-rv" data-k="gmhero"><div class="xs-ghost">${G.length}</div>
         <span class="xs-k">Games</span><h1>Play the <em>paddock</em></h1>
@@ -36184,29 +36185,51 @@ const PP_N = 7, PP_TRIES = 3, PP_SOLVE = [30, 20, 10];
 const PP_COL = ['#7c86ff', '#ff5c8a', '#27f4d2', '#ffb020', '#b184e8', '#4ade80', '#38bdf8'];
 const _ppGetMode = () => window._ppMode || 'daily';
 window.setPPMode = function(m) { window._ppMode = m; window._ppSel = null; renderGames(); };
-const _ppLoadSt = () => { try { return JSON.parse(localStorage.getItem('imsPpDaily') || 'null'); } catch (e) { return null; } };
-const _ppSave = (st) => { try { localStorage.setItem('imsPpDaily', JSON.stringify(st)); } catch (e) {} };
+const _ppLoadSt = () => { try { return JSON.parse(localStorage.getItem('imsPpDaily2') || 'null'); } catch (e) { return null; } };
+const _ppSave = (st) => { try { localStorage.setItem('imsPpDaily2', JSON.stringify(st)); } catch (e) {} };
 const _ppDayNum = () => { const p = _wdDayKey().split('/'); return Math.max(1, Math.round((Date.UTC(+p[2], +p[1] - 1, +p[0]) - Date.UTC(2026, 10, 10)) / 864e5)); };
 async function _ppPool() {
   if (window._ppPoolC && _now() - window._ppPoolC.at < 10 * 60e3) return window._ppPoolC.list;
-  const { gridPool } = await _wdLoad();
-  const list = (gridPool || []).filter(p => p && p.id && p.name && !p.res && p.team && p.team !== '—' && !/^reserve$/i.test(p.team)).sort((a, b) => a.id < b.id ? -1 : 1);
+  const { gridPool } = await _wdLoad(); const drv = await dbGetAll('drivers').catch(() => []), elo = {}; drv.forEach(d => { if (d && d.id) elo[d.id] = Number(d.currentElo || d.elo) || 0; });
+  const list = (gridPool || []).filter(p => p && p.id && p.name && (p.st || 0) > 0).map(p => Object.assign({}, p, { elo: elo[p.id] || 0 }));
+  // Top 100 by ELO (points as the tie-break) — most of each puzzle comes from here.
+  list.slice().sort((a, b) => (b.elo - a.elo) || ((b.p || 0) - (a.p || 0))).forEach((p, i) => { p.rk = i + 1; });
+  list.sort((a, b) => a.id < b.id ? -1 : 1);
   window._ppPoolC = { at: _now(), list }; return list; }
 const _ppNm = (s) => String(s || '').replace(/^\[[^\]]*\]\s*/, '');
-// Build a puzzle: 7 drivers from 7 different teams, each with a clue only they fit.
+const _ppCh = (p) => typeof p.ch === 'number' ? p.ch : (p.ch || []).length;
+// Team-seasons a driver really raced: a season on their career path + 3 or more races for that team.
+const _ppStints = (p) => { const o = new Set(); (p.cp || []).forEach(x => { const k = _wdNorm(x[1]); if (k && ((p.tn || {})[k] || 0) >= 3) o.add(x[0] + '|' + k); }); return o; };
+// Build a puzzle: 7 drivers (mostly top 100), each with a clue that fits only them.
 function _ppBuild(pool, rnd) {
-  const byTeam = {}; pool.forEach(p => { const k = _wdNorm(p.team); (byTeam[k] = byTeam[k] || []).push(p); });
-  for (let t = 0; t < 40; t++) {
-    const teams = Object.keys(byTeam); for (let i = teams.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [teams[i], teams[j]] = [teams[j], teams[i]]; }
-    if (teams.length < PP_N) return null;
-    const pick = teams.slice(0, PP_N).map(k => { const a = byTeam[k]; return a[Math.floor(rnd() * a.length)]; });
-    const clues = pick.map((d, i) => { const ck = _wdNorm(d.team), opts = [{ t: 'team', ic: '🏎️', k: 'Races for', v: d.team }];
-      const mates = byTeam[ck].filter(x => x.id !== d.id); if (mates.length) { const m = mates[Math.floor(rnd() * mates.length)]; opts.push({ t: 'mate', ic: '🤝', k: 'Teammate of', v: _ppNm(m.name) }, { t: 'mate', ic: '🤝', k: 'Teammate of', v: _ppNm(m.name) }); }
-      Object.entries(d.th || {}).forEach(([k, nm]) => { if (k === ck || !nm) return; if (pick.some((o, j) => j !== i && (_wdNorm(o.team) === k || (o.th || {})[k]))) return; opts.push({ t: 'ex', ic: '🕰️', k: 'Used to race for', v: nm }, { t: 'ex', ic: '🕰️', k: 'Used to race for', v: nm }); });
-      return Object.assign({ a: d.id }, opts[Math.floor(rnd() * opts.length)]); });
-    if (clues.filter(c => c.t === 'team').length > 4) continue; // keep it a mix
-    const ord = clues.map((_, i) => i); for (let i = ord.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [ord[i], ord[j]] = [ord[j], ord[i]]; }
-    return { ds: pick.map(d => d.id), cl: ord.map(i => clues[i]) }; }
+  const top = pool.filter(p => p.rk <= 100), rest = pool.filter(p => p.rk > 100); if (pool.length < PP_N) return null;
+  const st = new Map(pool.map(p => [p.id, _ppStints(p)])), byStint = {}; pool.forEach(p => st.get(p.id).forEach(k => { (byStint[k] = byStint[k] || []).push(p); }));
+  const pickOne = (A) => A[Math.floor(rnd() * A.length)];
+  for (let t = 0; t < 400; t++) {
+    const pick = [], used = new Set(); while (pick.length < PP_N) { const A = (rnd() < .9 && top.length >= PP_N) || !rest.length ? top : rest, d = pickOne(A); if (d && !used.has(d.id)) { used.add(d.id); pick.push(d); } }
+    const only = (d, f) => pick.every(o => o === d ? f(o) : !f(o)); // clue fits d and nobody else of the 7
+    const most = (d, f, lbl, ic) => { const v = f(d); return v > 0 && pick.every(o => o === d || f(o) < v) ? { t: 'most', ic, k: 'Most of the seven', v: lbl + ' · ' + v.toLocaleString() } : null; };
+    const cands = pick.map(d => { const c = [], ck = _wdNorm(d.team), real = d.team && d.team !== '—' && !/^reserve$/i.test(d.team);
+      if (real && only(d, o => _wdNorm(o.team) === ck)) c.push({ t: 'team', ic: '🏎️', k: 'Races for', v: d.team });
+      Object.entries(d.tn || {}).forEach(([k, n]) => { if (n < 3 || k === ck) return; const nm = (d.th || {})[k] || ((d.cp || []).find(x => _wdNorm(x[1]) === k) || [])[1]; if (nm && only(d, o => ((o.tn || {})[k] || 0) >= 3 || _wdNorm(o.team) === k)) c.push({ t: 'ex', ic: '🕰️', k: 'Used to race for', v: nm }); });
+      const mates = new Map(); st.get(d.id).forEach(k => (byStint[k] || []).forEach(m => { if (m.id !== d.id && !used.has(m.id)) mates.set(m.id, [m, k]); }));
+      mates.forEach(([m, k]) => { if (only(d, o => st.get(o.id).has(k))) { const cur = real && _wdNorm(m.team) === ck && k.endsWith('|' + ck); c.push({ t: 'mate', ic: '🤝', k: cur ? 'Teammate of' : 'Former teammate of', v: _ppNm(m.name) }); } });
+      if (d.nat && only(d, o => o.nat === d.nat)) c.push({ t: 'nat', ic: typeof _wdFlag === 'function' ? _wdFlag(d.nat) : '🌍', k: 'Nationality', v: d.nat, raw: 1 });
+      if (d.div && only(d, o => o.div === d.div)) c.push({ t: 'div', ic: '🏁', k: 'Races in', v: d.div });
+      if (d.fs && only(d, o => o.fs === d.fs)) c.push({ t: 'fs', ic: '📅', k: 'IMS debut', v: 'Season ' + d.fs });
+      if (_ppCh(d) && only(d, o => _ppCh(o) > 0)) c.push({ t: 'ch', ic: '👑', k: 'The only', v: 'IMS champion' });
+      if ((d.w || 0) > 0 && only(d, o => (o.w || 0) === d.w)) c.push({ t: 'w', ic: '🥇', k: 'Career wins', v: String(d.w) });
+      if ((d.pl || 0) > 0 && only(d, o => (o.pl || 0) === d.pl)) c.push({ t: 'pl', ic: '🚦', k: 'Career poles', v: String(d.pl) });
+      if (!(d.w > 0) && only(d, o => !(o.w > 0))) c.push({ t: 'w0', ic: '🫥', k: 'The only one with', v: 'No wins yet' });
+      [most(d, o => o.pd || 0, 'Podiums', '🍾'), most(d, o => o.st || 0, 'Race starts', '🔁'), most(d, o => o.p || 0, 'Career points', '💯'), most(d, o => o.elo || 0, 'Highest ELO', '📈'), most(d, o => o.w || 0, 'Wins', '🏆'), most(d, o => o.pl || 0, 'Poles', '⚡')].forEach(x => x && c.push(x));
+      return c; });
+    if (cands.some(c => !c.length)) continue;
+    // Pick one clue each, rarest drivers first, spreading the clue types (max 2 of a kind).
+    const ord = pick.map((_, i) => i).sort((a, b) => cands[a].length - cands[b].length), cnt = {}, clues = []; let ok = true;
+    ord.forEach(i => { const c = cands[i].filter(x => (cnt[x.t] || 0) < 2); if (!c.length) { ok = false; return; } const fresh = c.filter(x => !cnt[x.t]), x = pickOne(fresh.length ? fresh : c); cnt[x.t] = (cnt[x.t] || 0) + 1; clues[i] = Object.assign({ a: pick[i].id }, x); });
+    if (!ok) continue;
+    const o2 = clues.map((_, i) => i); for (let i = o2.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [o2[i], o2[j]] = [o2[j], o2[i]]; }
+    return { ds: pick.map(d => d.id), cl: o2.map(i => clues[i]) }; }
   return null; }
 function _ppState(mode, pool) {
   if (mode === 'inf') { if (!window._ppInf) { const P = _ppBuild(pool, Math.random); if (!P) return null; window._ppInf = Object.assign(P, { pr: {}, ok: {}, tries: [], done: false, won: false, t0: Date.now() }); } return window._ppInf; }
@@ -36285,7 +36308,7 @@ async function renderPPGame(el) {
   const st = _ppState(mode, pool);
   let body = `<div class="wd-top"><button class="wd-back" onclick="openGame('hub')" title="Back to Games">←</button><div class="wd-brand"><img src="icons/icon-192.png?v=3" alt="IMS"><span>PIT LANE <em>PAIRS</em></span></div><div class="wd-meta">${mode === 'daily' ? `<span class="wd-pill">#${_ppDayNum()}</span>` : ''}<span class="wd-pill">🎯 ${st ? st.tries.length : 0}/${PP_TRIES}</span>${typeof _ptSndBtn === 'function' ? _ptSndBtn() : ''}</div></div>
     ${(window._gamesLock || {}).pp ? `<div class="wd-lockbar">🔒 <b>Pit Lane Pairs is locked</b><span>${locked ? 'It\'ll open soon.' : 'Locked for players — you can still play.'}</span></div>` : ''}${tabs}`;
-  if (!st) body += '<div class="alert alert-warning">Not enough drivers on different teams to build a puzzle yet.</div>';
+  if (!st) body += '<div class="alert alert-warning">Not enough driver data to build a puzzle yet.</div>';
   else { const sc = st.done ? _ppScore(st) : null, n = Object.keys(st.pr).length;
     const hist = st.tries.length ? `<div class="pp-hist">${st.tries.map((r, i) => `<div><span>Try ${i + 1}</span>${'<i class="g"></i>'.repeat(r)}${'<i></i>'.repeat(PP_N - r)}<b>${r}/${PP_N}</b></div>`).join('')}</div>` : '';
     body += `<div class="pt-arena pp-arena"><div class="pt-qn">PIT LANE PAIRS</div>
@@ -36296,7 +36319,7 @@ async function renderPPGame(el) {
         ${mode === 'inf' ? `<button class="pt-go" onclick="ppAgain()">PLAY AGAIN</button>` : `<div class="pt-next"><small>NEXT PUZZLE IN</small><b id="pt-timer">--:--:--</b></div>`}`
       : `<button class="pt-go" id="pp-go" onclick="ppSubmit()" ${n < PP_N || locked ? 'disabled' : ''}>${n < PP_N ? `PAIR ALL 7 · ${n}/${PP_N}` : 'LOCK IN'}</button><div class="pt-hint">${PP_TRIES - st.tries.length} tr${PP_TRIES - st.tries.length === 1 ? 'y' : 'ies'} left · right pairs lock in green · <a href="#" onclick="ppClear();return false" style="color:#b184e8">clear</a></div>`}</div>`; }
   if (mode === 'daily') body += (st && st.done || !window._ppLb) ? (window._ppLb = await _ppLeaderboardHtml()) : window._ppLb;
-  el.innerHTML = `<div class="wd-wrap">${body}<div class="wd-info"><h3>How to play</h3><p><b>7 drivers, 7 clues.</b> Every clue fits exactly one driver: 🏎️ the team they race for, 🕰️ a team they used to race for, or 🤝 a teammate. Tap a driver, then the clue that fits. Pair all seven, then <b>LOCK IN</b>. Right pairs lock in green, wrong ones come back. <b>${PP_TRIES} tries.</b></p>
+  el.innerHTML = `<div class="wd-wrap">${body}<div class="wd-info"><h3>How to play</h3><p><b>7 drivers, 7 clues.</b> Mostly drivers from the top 100. Every clue fits exactly one of the seven: 🏎️ current team, 🕰️ an old team (3+ races), 🤝 a teammate (3+ races together in the same season), nationality, division, debut season, wins, poles, champion, or who has the most podiums / starts / points. Tap a driver, then the clue that fits. Pair all seven, then <b>LOCK IN</b>. Right pairs lock in green, wrong ones come back. <b>${PP_TRIES} tries.</b></p>
     <p><b>Scoring (out of 100)</b> — <b>10</b> per right pair, plus <b>+30 / +20 / +10</b> for solving on try 1 / 2 / 3.</p>
     <p><b>📅 Daily</b> — the same puzzle for everyone. <b>∞ Practice</b> — unlimited.</p>
     <p style="margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(247,207,85,.08);border:1px solid rgba(247,207,85,.35);font-size:.84rem"><span class="imc"></span> <b>Earn IM$:</b> play the daily for <b>+10 IM$</b>, solve it in <b>2 tries or fewer</b> for <b>another +10 IM$</b>. Log in to earn.</p></div></div>`;
