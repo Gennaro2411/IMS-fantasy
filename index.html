@@ -1094,7 +1094,7 @@
   .hh-act b{display:block;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.25rem;letter-spacing:.5px;text-transform:uppercase}
   .hh-act small{display:block;margin-top:3px;font-size:.7rem;color:#a7a2c2;line-height:1.3}
   /* ===== Home, below the next-race hero (hx-*) — IMS logo palette: indigo → violet → pink on black ===== */
-  #page-dashboard,#page-results,#page-leaderboard,#page-market,#page-predictions,#page-my-team{--hx-i:#6f74e8;--hx-v:#a779e6;--hx-p:#f0487a;--hx-g:linear-gradient(100deg,#7c86ff,#b184e8 48%,#ff5c8a);--hx-line:rgba(255,255,255,.07)}
+  #page-dashboard,#page-results,#page-leaderboard,#page-market,#page-predictions,#page-my-team,#page-extra,#page-social{--hx-i:#6f74e8;--hx-v:#a779e6;--hx-p:#f0487a;--hx-g:linear-gradient(100deg,#7c86ff,#b184e8 48%,#ff5c8a);--hx-line:rgba(255,255,255,.07)}
   .hx-h{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:34px 2px 14px}
   .hx-h small{display:flex;align-items:center;gap:8px;font:800 .6rem/1 system-ui,sans-serif;letter-spacing:3px;text-transform:uppercase;color:#8f95e0}
   .hx-h small::before{content:'';width:22px;height:2px;border-radius:2px;background:var(--hx-g)}
@@ -2959,44 +2959,67 @@
     .extra-card{position:relative;overflow:hidden;border-left:3px solid var(--xcol,#9b6fd4);margin-top:0 !important}
     .extra-card .card-title .dot{background:var(--xcol,#9b6fd4);box-shadow:0 0 8px var(--xcol,#9b6fd4)}
     .extra-card::after{content:var(--xemoji,'');position:absolute;right:-6px;bottom:-18px;font-size:5rem;opacity:.05;pointer-events:none;line-height:1}
+    /* ===== 2026 brand pass: Extra + Social ===== */
+    .xs-hero{position:relative;overflow:hidden;border-radius:28px;padding:28px 28px 26px;margin-bottom:18px;background:radial-gradient(70% 110% at 100% 0%,rgba(240,72,122,.20),transparent 62%),radial-gradient(80% 120% at 0% 100%,rgba(111,116,232,.28),transparent 60%),linear-gradient(160deg,#17133a,#08070f 70%);box-shadow:0 34px 80px -44px rgba(124,134,255,.9)}
+    .xs-hero::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(115deg,rgba(255,255,255,.03) 0 1px,transparent 1px 26px);-webkit-mask:linear-gradient(90deg,transparent,#000 65%);mask:linear-gradient(90deg,transparent,#000 65%);pointer-events:none}
+    .xs-hero>*{position:relative}
+    .xs-k{display:inline-flex;align-items:center;gap:8px;font:800 .6rem/1 system-ui,sans-serif;letter-spacing:3px;text-transform:uppercase;color:#a9aef5}
+    .xs-k::before{content:'';width:22px;height:2px;border-radius:2px;background:var(--hx-g)}
+    .xs-hero h1{margin:12px 0 0;font:italic 900 clamp(2.3rem,8vw,4.2rem)/.9 'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.3px;color:#fff}
+    .xs-hero h1 em{font-style:italic;padding-right:.12em;background:var(--hx-g);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+    .xs-hero p{margin:12px 0 0;font-size:.88rem;line-height:1.55;color:#a8abc9;max-width:52ch}
+    .xs-ghost{position:absolute!important;right:14px;top:-34px;font:italic 900 13rem/1 'Barlow Condensed',sans-serif;color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.07);pointer-events:none;user-select:none}
+    #page-extra .extra-card,#page-social .social-card{border:1px solid var(--hx-line);border-left:1px solid var(--hx-line);border-radius:24px;padding:22px;background:linear-gradient(170deg,#15122b,#0b0a14 72%);box-shadow:0 26px 60px -38px rgba(90,94,201,.75)}
+    #page-extra .extra-card::after,#page-social .social-card::after{display:none}
+    #page-extra .extra-card,#page-social .social-card{margin-bottom:0}
+    .xs-h{display:flex;align-items:center;gap:13px;margin-bottom:14px}
+    .xs-ic{flex:none;width:44px;height:44px;border-radius:14px;display:grid;place-items:center;color:#c3c6ff;background:linear-gradient(160deg,#211c4a,#100e22);box-shadow:inset 0 0 0 1px rgba(124,134,255,.35)}
+    .xs-ic svg{width:21px;height:21px}
+    .xs-h h3{margin:0;font:italic 900 clamp(1.35rem,4.6vw,1.7rem)/1 'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.3px;color:#fff}
+    .xs-h h3 em{font-style:italic;padding-right:.14em;background:var(--hx-g);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+    .xs-h p{margin:4px 0 0;font-size:.78rem;line-height:1.45;color:#9a9dbd}
+    .xs-h>div{flex:1;min-width:0}
+    #page-extra .btn,#page-social .social-card .btn{border-radius:999px;font:900 .82rem/1 'Barlow Condensed',sans-serif;letter-spacing:1.6px;text-transform:uppercase;padding:11px 18px}
+    #page-extra .btn-primary{border:none;color:#fff;background:linear-gradient(110deg,#6f74e8,#a779e6 55%,#f0487a);box-shadow:0 10px 24px -10px rgba(167,121,230,.9);transition:transform .2s,box-shadow .2s}
+    #page-extra .btn-primary:hover{transform:translateY(-2px);box-shadow:0 14px 28px -10px rgba(240,72,122,.8)}
+    #page-extra .btn-secondary{border:none;color:#fff;background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+    #page-extra .btn-secondary:hover{box-shadow:inset 0 0 0 1px #7c86ff}
+    #page-extra .btn-sm{padding:8px 13px;font-size:.72rem}
+    #page-extra input[type=text]{border-radius:14px}
+    #page-extra .extra-card{transition:box-shadow .25s}
+    #page-extra .extra-card:hover{box-shadow:0 26px 60px -34px rgba(124,134,255,.95)}
+    @media (max-width:700px){.xs-hero{padding:22px 18px 20px;border-radius:22px}.xs-ghost{font-size:8rem;top:-14px}#page-extra .extra-card,#page-social .social-card{padding:16px;border-radius:20px}}
   </style>
-  <div class="card" style="padding:0;overflow:hidden;position:relative;background:linear-gradient(120deg,#1a0f2e 0%,#12121c 60%,#0d0d14 100%);border:1px solid rgba(123,79,191,0.45);margin-bottom:16px">
-    <div style="position:absolute;right:-10px;top:-30px;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:7rem;color:rgba(255,255,255,0.04);line-height:1;pointer-events:none">✦</div>
-    <div style="position:relative;padding:18px 20px 16px">
-      <div style="font-size:.62rem;font-weight:800;letter-spacing:2.5px;color:#9b6fd4">✨ EXTRAS</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.7rem;line-height:1.1;margin-top:3px">RECAPS, HISTORY & LEAGUE TOOLS</div>
-      <div style="font-size:.78rem;color:var(--muted);margin-top:4px">Your season story, your transfer trail, and ways to shape the league.</div>
-    </div>
+  <div class="xs-hero hx-gb hx-rv" data-k="exhero">
+    <div class="xs-ghost">+</div>
+    <span class="xs-k">Extras</span>
+    <h1>Your season, <em>your say</em></h1>
+    <p>Your season story, your transfer trail, and ways to shape the league.</p>
   </div>
   <div class="extra-grid">
-  <div class="card extra-card" style="--xcol:#ffc800;--xemoji:'🏁';grid-column:1 / -1">
-    <div class="card-title"><div class="dot"></div>🏁 My Season Recap</div>
-    <p class="text-muted" style="margin-bottom:16px">A summary of your season so far.</p>
+  <div class="card extra-card hx-rv" style="--xcol:#ffc800;--xemoji:'🏁';grid-column:1 / -1">
+    <div class="xs-h"><span class="xs-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4"/><path d="M5 4h13l-2.5 4.5L18 13H5"/></svg></span><div><h3>My season <em>recap</em></h3><p>A summary of your season so far.</p></div></div>
     <button class="btn btn-primary" onclick="renderSeasonRecap()">📊 Generate Recap</button>
     <div id="season-recap-content" style="margin-top:16px"></div>
   </div>
-  <div class="card extra-card" style="--xcol:#27f4d2;--xemoji:'🔄'">
-    <div class="card-title"><div class="dot"></div>🔄 Transfer History <button class="btn btn-secondary btn-sm" style="margin-left:auto;font-size:.75rem" onclick="renderTransferHistory()">↻ Refresh</button></div>
-    <p class="text-muted" style="margin-bottom:16px">All your transfers this season.</p>
+  <div class="card extra-card hx-rv" style="--xcol:#27f4d2;--xemoji:'🔄'">
+    <div class="xs-h"><span class="xs-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h14l-3-3"/><path d="M20 16H6l3 3"/></svg></span><div><h3>Transfer <em>history</em></h3><p>All your transfers this season.</p></div><button class="btn btn-secondary btn-sm" onclick="renderTransferHistory()">↻ Refresh</button></div>
     <div id="transfer-history-content"><button class="btn btn-secondary" onclick="renderTransferHistory()">📋 Load History</button></div>
   </div>
-  <div class="card extra-card" style="--xcol:#8ec5fc;--xemoji:'🗺'">
-    <div class="card-title"><div class="dot"></div>🗺 App Tour</div>
-    <p class="text-muted" style="margin-bottom:12px">New to IMS Fantasy or want a refresher? Take the guided tour — or open ❓ in the nav for the full how-it-works guide.</p>
+  <div class="card extra-card hx-rv" style="--xcol:#8ec5fc;--xemoji:'🗺'">
+    <div class="xs-h"><span class="xs-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg></span><div><h3>App <em>tour</em></h3><p>New to IMS Fantasy or want a refresher? Take the guided tour — or open ❓ in the nav for the full how-it-works guide.</p></div></div>
     <button class="btn btn-secondary" onclick="showTour()">▶ Start Tour</button>
   </div>
-  <div class="card extra-card" style="--xcol:#9b6fd4;--xemoji:'💬';grid-column:1 / -1">
-    <div class="card-title"><div class="dot"></div>💬 Suggestions Box</div>
-    <p class="text-muted" style="margin-bottom:12px">Got an idea for the league? Post it here — others can reply and upvote.</p>
+  <div class="card extra-card hx-rv" style="--xcol:#9b6fd4;--xemoji:'💬';grid-column:1 / -1">
+    <div class="xs-h"><span class="xs-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg></span><div><h3>Suggestions <em>box</em></h3><p>Got an idea for the league? Post it here — others can reply and upvote.</p></div></div>
     <div style="display:flex;gap:8px;margin-bottom:12px">
       <input type="text" id="suggestion-input" placeholder="Type your suggestion..." style="flex:1">
       <button class="btn btn-primary" onclick="postSuggestion()">Post</button>
     </div>
     <div id="suggestions-list"><div class="ims-loader"><div class="ims-loader-mark"><img src="icons/icon-192.png?v=3" alt=""></div><div class="ims-loader-text">Loading</div><div class="ims-loader-bar"></div></div></div>
   </div>
-  <div class="card extra-card" style="--xcol:#ff5470;--xemoji:'📸';grid-column:1 / -1">
-<div class="card-title"><div class="dot"></div>📸 Request Driver Photo</div>
-    <p class="text-muted" style="margin-bottom:16px">Want a photo on your driver card? Submit your in-game name and a valid image URL below and the admin will review it.</p>
+  <div class="card extra-card hx-rv" style="--xcol:#ff5470;--xemoji:'📸';grid-column:1 / -1">
+<div class="xs-h"><span class="xs-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></span><div><h3>Request driver <em>photo</em></h3><p>Want a photo on your driver card? Submit your in-game name and a valid image URL below and the admin will review it.</p></div></div>
     <div class="form-group">
       <label>Your In-Game Name</label>
       <input type="text" id="photo-req-name" placeholder="e.g. Babba">
@@ -3032,32 +3055,123 @@
     .social-card{position:relative;overflow:hidden;border-left:3px solid var(--xcol,#9b6fd4);margin-top:0 !important}
     .social-card .card-title .dot{background:var(--xcol,#9b6fd4);box-shadow:0 0 8px var(--xcol,#9b6fd4)}
     .social-card::after{content:var(--xemoji,'');position:absolute;right:-6px;bottom:-18px;font-size:5rem;opacity:.05;pointer-events:none;line-height:1}
+    /* follow tiles */
+    .sf-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:22px}
+    .sf{--c:#7c86ff;--c2:#b184e8;position:relative;overflow:hidden;isolation:isolate;display:flex;flex-direction:column;min-height:228px;padding:20px 20px 18px;border-radius:26px;text-decoration:none;color:#fff;cursor:pointer;background:linear-gradient(165deg,color-mix(in srgb,var(--c) 30%,#0c0b15) 0%,#0c0b15 62%);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 45%,transparent),0 26px 60px -40px var(--c);transition:transform .3s cubic-bezier(.2,1,.3,1),box-shadow .3s}
+    .sf::before{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(135deg,var(--c),var(--c2));opacity:0;transition:opacity .35s}
+    .sf::after{content:'';position:absolute;top:-60%;bottom:-60%;left:-40%;width:34%;z-index:-1;background:linear-gradient(90deg,transparent,rgba(255,255,255,.16),transparent);transform:translate3d(0,0,0) rotate(18deg);animation:sfShine 5.5s ease-in-out infinite;animation-delay:calc(var(--i)*.55s)}
+    @keyframes sfShine{0%,62%{transform:translate3d(0,0,0) rotate(18deg)}100%{transform:translate3d(620%,0,0) rotate(18deg)}}
+    .sf:hover{transform:translateY(-7px);box-shadow:inset 0 0 0 1px var(--c),0 34px 60px -30px var(--c)}
+    .sf:hover::before{opacity:.92}
+    .sf:active{transform:translateY(-2px) scale(.985)}
+    .sf-ghost{position:absolute;right:-18px;bottom:-26px;z-index:-1;width:170px;height:170px;color:var(--c);opacity:.16;transform:rotate(-12deg);transition:transform .5s cubic-bezier(.2,1,.3,1),opacity .3s,color .3s}
+    .sf-ghost svg{width:100%;height:100%}
+    .sf:hover .sf-ghost{transform:rotate(0) scale(1.12);opacity:.28;color:#fff}
+    .sf-top{display:flex;align-items:center;gap:10px}
+    .sf-ic{width:52px;height:52px;border-radius:17px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,var(--c),var(--c2));box-shadow:0 12px 24px -12px var(--c);transition:transform .35s cubic-bezier(.2,1.5,.4,1),background .3s,color .3s}
+    .sf-ic svg{width:26px;height:26px}
+    .sf:hover .sf-ic{transform:scale(1.1) rotate(-6deg);background:#fff;color:var(--c)}
+    .sf-tag{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font:800 .54rem/1 system-ui,sans-serif;letter-spacing:1.6px;text-transform:uppercase;padding:6px 10px;border-radius:999px;background:rgba(0,0,0,.38);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+    .sf-tag i{width:6px;height:6px;border-radius:50%;background:var(--c);animation:pulseDot 1.6s infinite}
+    .sf:hover .sf-tag i{background:#fff}
+    .sf-name{margin-top:16px;font:italic 900 clamp(1.9rem,5vw,2.4rem)/.92 'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.3px}
+    .sf-at{margin-top:4px;font:700 .74rem/1.2 system-ui,sans-serif;color:color-mix(in srgb,var(--c) 55%,#fff);transition:color .3s}
+    .sf:hover .sf-at{color:#fff}
+    .sf-txt{margin-top:9px;font-size:.82rem;line-height:1.45;color:#c9cbe4;transition:color .3s}
+    .sf:hover .sf-txt{color:#fff}
+    .sf-cta{margin-top:auto;padding-top:14px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .sf-cta b{font:900 .84rem/1 'Barlow Condensed',sans-serif;letter-spacing:1.8px;text-transform:uppercase;padding:11px 17px;border-radius:999px;color:#fff;background:linear-gradient(135deg,var(--c),var(--c2));transition:background .3s,color .3s}
+    .sf:hover .sf-cta b{background:#fff;color:#0c0b15}
+    .sf-cta span{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-size:1.05rem;background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,.16);transition:transform .3s cubic-bezier(.2,1,.3,1),background .3s}
+    .sf:hover .sf-cta span{transform:translate3d(4px,-4px,0);background:rgba(0,0,0,.3)}
+    .sf.dark:hover .sf-cta b{color:#0c0b15}
+    .sf.dark:hover,.sf.dark:hover .sf-txt,.sf.dark:hover .sf-at{color:#08110b}
+    .sf.dark:hover .sf-ghost{color:#08110b}
+    #page-social .sf-sech{margin:6px 2px 14px}
+    #page-social .social-card.yt{background:linear-gradient(120deg,rgba(255,0,51,.16),#0b0a14 60%)!important}
+    #page-social .social-card.sp{background:linear-gradient(120deg,rgba(29,185,84,.16),#0b0a14 60%)!important}
+    #page-social .social-card.tw{background:linear-gradient(160deg,rgba(145,70,255,.2),#0b0a14 62%)}
+    #page-social .social-card.dc{background:linear-gradient(160deg,rgba(88,101,242,.22),#0b0a14 62%)}
+    #page-social .xs-ic{color:#fff;background:linear-gradient(135deg,var(--xcol),color-mix(in srgb,var(--xcol) 55%,#000));box-shadow:none}
+    #page-social .social-card.sp .xs-ic{color:#06130a}
+    #page-social .sn-how{border-radius:16px;padding:14px 16px;margin-bottom:14px;background:rgba(255,255,255,.03);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);font-size:.82rem;color:#a8abc9;line-height:1.9}
+    #page-social .sn-how a{color:var(--gold)}
+    @media (max-width:900px){.sf-grid{grid-template-columns:1fr 1fr}}
+    @media (max-width:560px){.sf-grid{grid-template-columns:1fr;gap:11px}.sf{min-height:0;padding:16px 16px 15px;border-radius:22px}.sf-name{margin-top:12px;font-size:1.9rem}.sf-ghost{width:140px;height:140px}}
+    @media (prefers-reduced-motion:reduce){.sf::after,.sf-tag i{animation:none}}
   </style>
-  <div class="card" style="padding:0;overflow:hidden;position:relative;background:linear-gradient(120deg,#0f1e2e 0%,#12121c 60%,#0d0d14 100%);border:1px solid rgba(88,101,242,0.45);margin-bottom:16px">
-    <div style="position:absolute;right:-10px;top:-30px;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:7rem;color:rgba(255,255,255,0.04);line-height:1;pointer-events:none">❋</div>
-    <div style="position:relative;padding:18px 20px 16px">
-      <div style="font-size:.62rem;font-weight:800;letter-spacing:2.5px;color:#7a8cff">🌐 COMMUNITY</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.7rem;line-height:1.1;margin-top:3px">STREAMS, REPLAYS, DISCORD & ALERTS</div>
-      <div style="font-size:.78rem;color:var(--muted);margin-top:4px">Where the league lives between race weekends.</div>
-      <a href="https://ims-league.com/" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;margin-top:12px;padding:9px 14px;border-radius:10px;text-decoration:none;color:#fff;font-weight:700;font-size:.85rem;background:linear-gradient(135deg,rgba(122,140,255,.28),rgba(122,140,255,.08));border:1px solid rgba(122,140,255,.55)">🏁 Official IMS website <span style="opacity:.7;font-weight:400">ims-league.com ↗</span></a>
-    </div>
+  <div class="xs-hero hx-gb hx-rv" data-k="sohero">
+    <div class="xs-ghost">@</div>
+    <span class="xs-k">Community</span>
+    <h1>Follow the <em>grid</em></h1>
+    <p>Where the league lives between race weekends. Pick your channels and don't miss a lap.</p>
   </div>
+  <div class="sf-grid hx-rv" data-k="sofol">
+    <a class="sf" href="https://www.youtube.com/@i-m-s-26" target="_blank" rel="noopener" style="--c:#ff0033;--c2:#ff5c5c;--i:0">
+      <div class="sf-ghost"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg></div>
+      <div class="sf-top"><span class="sf-ic"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg></span><span class="sf-tag"><i></i>Full races</span></div>
+      <div class="sf-name">YouTube</div>
+      <div class="sf-at">@i-m-s-26</div>
+      <div class="sf-txt">Every round in full, plus highlights and the best overtakes. Never miss a race again.</div>
+      <div class="sf-cta"><b>Subscribe</b><span>↗</span></div>
+    </a>
+    <a class="sf" href="https://twitch.tv/IMSttv26" target="_blank" rel="noopener" style="--c:#9146ff;--c2:#c08bff;--i:1">
+      <div class="sf-ghost"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="2.5" fill="currentColor"/><path d="M7.5 7.5a6.4 6.4 0 0 0 0 9"/><path d="M16.5 7.5a6.4 6.4 0 0 1 0 9"/><path d="M4.5 4.5a10.6 10.6 0 0 0 0 15"/><path d="M19.5 4.5a10.6 10.6 0 0 1 0 15"/></svg></div>
+      <div class="sf-top"><span class="sf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="2.5" fill="currentColor"/><path d="M7.5 7.5a6.4 6.4 0 0 0 0 9"/><path d="M16.5 7.5a6.4 6.4 0 0 1 0 9"/><path d="M4.5 4.5a10.6 10.6 0 0 0 0 15"/><path d="M19.5 4.5a10.6 10.6 0 0 1 0 15"/></svg></span><span class="sf-tag"><i></i>Race nights live</span></div>
+      <div class="sf-name">Twitch</div>
+      <div class="sf-at">IMSttv26</div>
+      <div class="sf-txt">Watch the lights go out as it happens and be in chat when it all kicks off.</div>
+      <div class="sf-cta"><b>Follow</b><span>↗</span></div>
+    </a>
+    <a class="sf" href="#" onclick="document.getElementById('sc-discord').scrollIntoView({behavior:'smooth',block:'center'});return false" style="--c:#5865f2;--c2:#8f99ff;--i:2">
+      <div class="sf-ghost"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="9" r="3.2"/><path d="M3 19a6 6 0 0 1 12 0"/><circle cx="17" cy="8" r="2.4"/><path d="M16 13.5a5 5 0 0 1 5 5"/></svg></div>
+      <div class="sf-top"><span class="sf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="9" r="3.2"/><path d="M3 19a6 6 0 0 1 12 0"/><circle cx="17" cy="8" r="2.4"/><path d="M16 13.5a5 5 0 0 1 5 5"/></svg></span><span class="sf-tag"><i></i>The paddock</span></div>
+      <div class="sf-name">Discord</div>
+      <div class="sf-at">IMS server</div>
+      <div class="sf-txt">Where the league actually lives: banter, stewards, sign-ups and race-night voice.</div>
+      <div class="sf-cta"><b>See who is online</b><span>↗</span></div>
+    </a>
+    <a class="sf dark" href="https://open.spotify.com/playlist/75mgSqpCN5UnDA397fohKx" target="_blank" rel="noopener" style="--c:#1db954;--c2:#6ef09a;--i:3">
+      <div class="sf-ghost"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg></div>
+      <div class="sf-top"><span class="sf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg></span><span class="sf-tag"><i></i>Race-day playlist</span></div>
+      <div class="sf-name">Spotify</div>
+      <div class="sf-at">IMS Radio</div>
+      <div class="sf-txt">The official soundtrack for the grid walk, the drive home and everything between.</div>
+      <div class="sf-cta"><b>Listen</b><span>↗</span></div>
+    </a>
+    <a class="sf" href="https://ims-league.com/" target="_blank" rel="noopener" style="--c:#7c86ff;--c2:#ff5c8a;--i:4">
+      <div class="sf-ghost"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18"/></svg></div>
+      <div class="sf-top"><span class="sf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18"/></svg></span><span class="sf-tag"><i></i>Official site</span></div>
+      <div class="sf-name">IMS League</div>
+      <div class="sf-at">ims-league.com</div>
+      <div class="sf-txt">Standings, calendar, rules and how to get a seat on the grid.</div>
+      <div class="sf-cta"><b>Visit</b><span>↗</span></div>
+    </a>
+    <a class="sf dark" href="https://ntfy.sh/ims-fantasy-alerts" target="_blank" rel="noopener" style="--c:#ffb020;--c2:#ffe259;--i:5">
+      <div class="sf-ghost"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg></div>
+      <div class="sf-top"><span class="sf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg></span><span class="sf-tag"><i></i>Never miss a result</span></div>
+      <div class="sf-name">Alerts</div>
+      <div class="sf-at">ims-fantasy-alerts</div>
+      <div class="sf-txt">A ping the moment results drop, prices move or transfers open.</div>
+      <div class="sf-cta"><b>Turn on</b><span>↗</span></div>
+    </a>
+  </div>
+  <div class="hx-h sf-sech"><div><small>Right here</small><h2>Watch, listen <em>&amp; chat</em></h2></div></div>
   <div class="social-grid">
-  <div class="card social-card" style="--xcol:#ffc800;--xemoji:'🔔';grid-column:1 / -1">
-    <div class="card-title"><div class="dot"></div>🔔 Push Notifications</div>
-    <p class="text-muted" style="margin-bottom:12px">Get notified when race results drop, transfers open, and more.</p>
-    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:12px">
-      <div style="font-size:.85rem;margin-bottom:8px"><strong>How to subscribe:</strong></div>
-      <div style="font-size:.8rem;color:var(--muted);line-height:1.8">
+  <div class="card social-card hx-rv" style="--xcol:#ffb020;grid-column:1 / -1">
+    <div class="xs-h"><span class="xs-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg></span><div><h3>Push <em>notifications</em></h3><p>Get notified when race results drop, transfers open, and more.</p></div></div>
+    <div class="sn-how">
+      <div style="font-size:.85rem;margin-bottom:4px;color:#fff"><strong>How to subscribe:</strong></div>
+      <div>
         📱 <strong>iPhone:</strong> Install the <a href="https://apps.apple.com/app/ntfy/id1625396347" target="_blank" style="color:var(--gold)">ntfy app</a>, then subscribe to <strong>ims-fantasy-alerts</strong><br>
         🤖 <strong>Android:</strong> Install the <a href="https://play.google.com/store/apps/details?id=io.heckel.ntfy" target="_blank" style="color:var(--gold)">ntfy app</a>, then subscribe to <strong>ims-fantasy-alerts</strong><br>
         🌐 <strong>Web:</strong> Visit <a href="https://ntfy.sh/ims-fantasy-alerts" target="_blank" style="color:var(--gold)">ntfy.sh/ims-fantasy-alerts</a>
       </div>
     </div>
-    <a href="https://ntfy.sh/ims-fantasy-alerts" target="_blank" class="btn btn-primary" style="text-decoration:none;display:inline-block">🔔 Subscribe Now</a>
+    <a href="https://ntfy.sh/ims-fantasy-alerts" target="_blank" class="hx-btn" style="text-decoration:none;display:inline-block">Subscribe now</a>
   </div>
-  <div class="card social-card" style="--xcol:#ff0033;--xemoji:'▶';grid-column:1 / -1;background:linear-gradient(120deg,rgba(255,0,51,0.12),var(--surface) 60%)">
-    <div class="card-title"><div class="dot"></div>▶️ IMS on YouTube</div>
+  <div class="card social-card yt hx-rv" style="--xcol:#ff0033;grid-column:1 / -1">
+    <div class="xs-h"><span class="xs-ic"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg></span><div><h3>IMS on <em>YouTube</em></h3></div></div>
     <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
       <div style="width:64px;height:46px;border-radius:12px;background:#ff0033;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 6px 18px rgba(255,0,51,.35)"><div style="width:0;height:0;border-left:18px solid #fff;border-top:11px solid transparent;border-bottom:11px solid transparent;margin-left:4px"></div></div>
       <div style="flex:1;min-width:200px">
@@ -3067,28 +3181,24 @@
       <a href="https://www.youtube.com/@i-m-s-26" target="_blank" rel="noopener" class="btn" style="text-decoration:none;background:#ff0033;color:#fff;border-color:#ff0033;font-weight:700;white-space:nowrap">▶ Watch on YouTube</a>
     </div>
   </div>
-  <div class="card social-card" style="--xcol:#1db954;--xemoji:'♫';grid-column:1 / -1;background:linear-gradient(120deg,rgba(29,185,84,0.12),var(--surface) 60%)">
-    <div class="card-title"><div class="dot"></div>🎧 IMS Radio on Spotify</div>
+  <div class="card social-card sp hx-rv" style="--xcol:#1db954;grid-column:1 / -1">
+    <div class="xs-h"><span class="xs-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg></span><div><h3>IMS Radio on <em>Spotify</em></h3></div></div>
     <iframe src="https://open.spotify.com/embed/playlist/75mgSqpCN5UnDA397fohKx?utm_source=generator&theme=0" width="100%" height="352" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" style="border-radius:12px;display:block"></iframe>
     <a href="https://open.spotify.com/playlist/75mgSqpCN5UnDA397fohKx" target="_blank" rel="noopener" class="btn" style="margin-top:10px;text-decoration:none;background:#1db954;color:#000;border-color:#1db954;font-weight:700;display:inline-block">Open in Spotify</a>
   </div>
-  <div class="card social-card" style="--xcol:#9146ff;--xemoji:'🟣'">
+  <div class="card social-card tw hx-rv" style="--xcol:#9146ff">
     <style>
       #twitch-box.tw-theatre{position:fixed;inset:0;z-index:5000;background:#000;display:flex;align-items:center;justify-content:center;border-radius:0}
       #twitch-box.tw-theatre iframe{width:100vw !important;height:100vh !important;border-radius:0 !important;max-width:none !important}
       body:has(#twitch-box.tw-theatre) #tw-expand-btn{position:fixed;top:14px;right:16px;z-index:5001;width:38px;height:38px;font-size:1rem;background:rgba(0,0,0,0.75)}
     </style>
-    <div class="card-title"><div class="dot"></div>🟣 IMS Live
-      <button id="tw-expand-btn" onclick="toggleTwitchTheatre()" title="Theatre mode" style="margin-left:auto;width:26px;height:26px;border-radius:6px;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:.72rem;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;z-index:6">⛶</button>
-    </div>
-    <p class="text-muted" style="margin-bottom:12px">Watch the live stream directly here.</p>
+    <div class="xs-h"><span class="xs-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="2.5" fill="currentColor"/><path d="M7.5 7.5a6.4 6.4 0 0 0 0 9"/><path d="M16.5 7.5a6.4 6.4 0 0 1 0 9"/><path d="M4.5 4.5a10.6 10.6 0 0 0 0 15"/><path d="M19.5 4.5a10.6 10.6 0 0 1 0 15"/></svg></span><div><h3>IMS <em>live</em></h3><p>Watch the live stream directly here.</p></div><button id="tw-expand-btn" onclick="toggleTwitchTheatre()" title="Theatre mode" style="margin-left:auto;width:26px;height:26px;border-radius:6px;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:.72rem;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;z-index:6">⛶</button></div>
     <div id="twitch-box" style="display:flex;justify-content:center">
       <iframe src="https://player.twitch.tv/?channel=IMSttv26&parent=fantasy.ims-league.com" width="350" height="197" allowfullscreen frameborder="0" style="border-radius:8px;max-width:100%"></iframe>
     </div>
   </div>
-  <div class="card social-card" style="--xcol:#5865f2;--xemoji:'💬'">
-    <div class="card-title"><div class="dot"></div>💬 IMS Discord</div>
-    <p class="text-muted" style="margin-bottom:12px">See who's online and jump into the server.</p>
+  <div class="card social-card dc hx-rv" id="sc-discord" style="--xcol:#5865f2">
+    <div class="xs-h"><span class="xs-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="9" r="3.2"/><path d="M3 19a6 6 0 0 1 12 0"/><circle cx="17" cy="8" r="2.4"/><path d="M16 13.5a5 5 0 0 1 5 5"/></svg></span><div><h3>IMS <em>Discord</em></h3><p>See who's online and jump into the server.</p></div></div>
     <div style="display:flex;justify-content:center">
       <iframe src="https://discord.com/widget?id=935925682079408178&theme=dark" width="350" height="500" allowtransparency="true" frameborder="0" sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts" style="border-radius:8px;max-width:100%"></iframe>
     </div>
@@ -8580,6 +8690,7 @@ window.showPage = function(page) {
   showPageLoader(_pageNames[page] || 'page');
   (async () => {
     try {
+      if (page==='extra' || page==='social') { try { window._hxInit('page-' + page); } catch(e) {} }
       if (page==='extra') { renderDiscordLinkCard(); await renderSuggestions(); const f=document.getElementById('photo-url-feedback'); if(f) f.innerHTML=''; const p=document.getElementById('photo-req-preview'); if(p) p.style.display='none'; }
       else if (page==='results') await renderResults();
       else if (page==='history') await renderHistory();
