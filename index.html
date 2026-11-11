@@ -31939,14 +31939,48 @@ window.buildQualiPace_marker = true;
 window.betHist = function(k) { window._betHistFilter = k; window._betHistPage = 1; renderBets(); };
 window.betHistPage = function(n) { window._betHistPage = n; renderBets(); };
 window.betDiv = function(d) { window._betDiv = d; renderBets(); };
-// Re-rendering the Bets page replaces all of its markup; keep the reader where they were instead of
-// letting the page jump (hold the old height while it rebuilds, then put the scroll position back).
+// Smooth Bets re-renders: renderBets builds the whole page as HTML on every tap. Instead of swapping the
+// page out (which redraws everything and makes it jump), it now renders into a hidden copy and only the
+// parts that actually changed are patched onto the live page. Buttons, images and scroll stay put.
+window._morphInto = function(live, next) {
+  const keyOf = (n) => n.nodeType === 1 ? (n.getAttribute('id') || '') : '';
+  const syncAttrs = (a, b) => {
+    for (const at of [...a.attributes]) if (!b.hasAttribute(at.name)) a.removeAttribute(at.name);
+    for (const at of [...b.attributes]) if (a.getAttribute(at.name) !== at.value) a.setAttribute(at.name, at.value);
+    const tg = a.tagName;
+    if ((tg === 'INPUT' || tg === 'TEXTAREA') && document.activeElement !== a) { if (a.type === 'checkbox' || a.type === 'radio') a.checked = b.checked; else if (a.value !== b.value) a.value = b.value; }
+    if (tg === 'SELECT' && document.activeElement !== a) a.value = b.value;
+    if (tg === 'DETAILS') a.open = b.open;
+  };
+  const kids = (a, b) => {
+    const an = [...a.childNodes], bn = [...b.childNodes];
+    bn.forEach((y, i) => { const x = an[i];
+      if (!x) { a.appendChild(y); return; }
+      if (x.nodeType !== y.nodeType || (x.nodeType === 1 && (x.tagName !== y.tagName || keyOf(x) !== keyOf(y)))) { a.replaceChild(y, x); return; }
+      if (x.nodeType !== 1) { if (x.nodeValue !== y.nodeValue) x.nodeValue = y.nodeValue; return; }
+      syncAttrs(x, y); kids(x, y); });
+    for (let i = an.length - 1; i >= bn.length; i--) if (an[i].parentNode === a) a.removeChild(an[i]);
+  };
+  kids(live, next);
+};
 (function() { const _rb = window.renderBets; if (!_rb || _rb._keepPlace) return;
+  let busy = null, again = false;
   const wrapped = async function(dry) { if (dry && dry.div) return _rb.apply(this, arguments);
-    const bc = document.getElementById('bets-content'), y = window.scrollY;
-    if (bc && bc.offsetHeight) bc.style.minHeight = bc.offsetHeight + 'px';
-    try { return await _rb.apply(this, arguments); }
-    finally { if (bc) bc.style.minHeight = ''; } };
+    // One render at a time: taps during a render queue a single fresh render afterwards.
+    if (busy) { again = true; return busy; }
+    busy = (async () => { try { do { again = false; await one(); } while (again); } finally { busy = null; } })();
+    return busy; };
+  const one = async function() {
+    const live = document.getElementById('bets-content');
+    // First paint (or nothing there yet): render normally.
+    if (!live || !live.firstElementChild || window._betNoMorph) return _rb.call(window);
+    const stage = document.createElement('div'); stage.style.display = 'none';
+    live.id = 'bets-content-live'; stage.id = 'bets-content'; live.after(stage);
+    try { const r = await _rb.call(window);
+      stage.id = ''; live.id = 'bets-content';
+      try { window._morphInto(live, stage); } catch (e) { console.warn('bets morph failed, full swap', e); live.innerHTML = stage.innerHTML; }
+      return r;
+    } finally { stage.remove(); live.id = 'bets-content'; } };
   wrapped._keepPlace = true; window.renderBets = wrapped; })();
 // Picks that can't sit on the same accumulator: a tricast with another race pick on one of its 3 drivers, two different winners (or two top-constructors) in
 // the same division, both sides of one head-to-head, or a driver's win AND top 5 (top 5 is implied).
