@@ -1864,16 +1864,21 @@
     .wl-lvl b{font-size:.74rem;letter-spacing:.02em;color:#fff;font-style:italic;font-weight:900}
     .wl-next{max-width:280px;margin:10px auto 0;padding:8px 12px 6px;border-radius:12px;background:rgba(11,10,20,.78)}.wl-next>div{height:5px;border-radius:5px;background:rgba(255,255,255,.12);overflow:hidden}.wl-next i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,#f7cf55,#f0487a)}
     .wl-next small{display:block;margin-top:4px;font-size:.66rem;color:#c9cbe8;text-shadow:0 1px 3px #000}.wl-next small b{color:#ffe083}
-    .wl-hero.lv0{box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}.wl-hero.lv6{box-shadow:inset 0 0 0 2px rgba(247,207,85,.85),0 0 40px -6px rgba(247,207,85,.7);animation:wlGlow 2.4s ease-in-out infinite}
+    .wl-hero.lv0{box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}.wl-hero.lv6{box-shadow:inset 0 0 0 1px rgba(247,207,85,.7),0 0 34px -8px rgba(247,207,85,.55)}
+    .wl-hero.lv7{box-shadow:inset 0 0 0 2px rgba(247,207,85,.85),0 0 40px -6px rgba(247,207,85,.7);animation:wlGlow 2.4s ease-in-out infinite}
+    .wl-orbit{transform-box:view-box;transform-origin:200px 400px;animation:wlOrb 70s linear infinite}@keyframes wlOrb{to{transform:rotate(360deg)}}
+    .wl-rocket{animation:wlRkt 9s ease-in-out infinite}@keyframes wlRkt{0%{transform:translate(-40px,60px)}60%,100%{transform:translate(420px,-120px)}}
+    .wl-moon{animation:wlSpd 6s ease-in-out infinite}
+    .wl-shoot{opacity:0;animation:wlSht 6s ease-in infinite}@keyframes wlSht{0%{opacity:0;transform:translate(-30px,-10px)}4%{opacity:1}10%,100%{opacity:0;transform:translate(40px,14px)}}
     @keyframes wlGlow{50%{box-shadow:inset 0 0 0 2px #fff3b8,0 0 60px -2px rgba(247,207,85,.95)}}
-    .wl-hero.lv6 .wl-bal b{font-size:3.1rem}
+    .wl-hero.lv7 .wl-bal b{font-size:3.1rem}
     .wl-tw{transform-box:fill-box;transform-origin:center;animation:wlTw 2.6s ease-in-out infinite}
     @keyframes wlTw{0%,100%{opacity:.15;transform:scale(.6)}50%{opacity:1;transform:scale(1)}}
     .wl-fall{animation:wlFall 3.4s linear infinite}
     @keyframes wlFall{from{transform:translateY(0)}to{transform:translateY(250px)}}
     .wl-spider{animation:wlSpd 4.5s ease-in-out infinite}
     @keyframes wlSpd{0%,100%{transform:translateY(-8px)}50%{transform:translateY(14px)}}
-    @media (prefers-reduced-motion:reduce){.wl-tw,.wl-fall,.wl-spider,.wl-hero.lv6{animation:none}}
+    @media (prefers-reduced-motion:reduce){.wl-tw,.wl-fall,.wl-spider,.wl-hero.lv7,.wl-orbit,.wl-rocket,.wl-moon,.wl-shoot{animation:none}}
     @media (prefers-reduced-motion:reduce){.wl-coin .imc{animation:none}}
     @media (prefers-reduced-motion:reduce){#hdr-music.playing .hm-eq i,.hdr-search-results{animation:none}}
   </style>
@@ -8713,7 +8718,7 @@ window.refreshCurrentPage = async function(btn) {
 const _wlFmt = (n) => Math.round(n || 0).toLocaleString();
 const _wlShort = (n) => { n = Math.round(n || 0); return Math.abs(n) >= 1e6 ? (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M' : Math.abs(n) >= 1e4 ? (n / 1e3).toFixed(1).replace(/\.0$/, '') + 'k' : n.toLocaleString(); };
 // The vault behind the balance: the more IM$ you hold, the fuller it gets (7 levels, and it keeps growing inside each level).
-const WL_TIERS = [[0, 'Bare vault', 'Just dust and a spider'], [150, 'Loose change', 'A few coins on the floor'], [2000, 'Starter stash', 'The first stacks are up'], [10000, 'Stacking up', 'Gold bars have arrived'], [50000, 'Loaded', 'Bars, bags and tall stacks'], [250000, 'Treasure room', 'Gems on top of the gold'], [1000000, 'Millionaire\'s vault', 'The vault can\'t hold it all']];
+const WL_TIERS = [[0, 'Bare vault', 'Just dust and a spider'], [150, 'Loose change', 'A few coins on the floor'], [1000, 'Starter stash', 'The first stacks are up'], [5000, 'Stacking up', 'Gold bars have arrived'], [20000, 'Loaded', 'Bars, bags and tall stacks'], [50000, 'Treasure room', 'Gems on top of the gold'], [100000, 'Overflowing', 'The vault can\'t hold it all'], [1000000, 'Planet IM$', 'A vault was never going to be enough']];
 function _wlVault(bal) { bal = Math.max(0, Number(bal) || 0);
   let L = 0; WL_TIERS.forEach((t, i) => { if (bal >= t[0]) L = i; });
   const nx = WL_TIERS[L + 1], f = nx ? (bal - WL_TIERS[L][0]) / (nx[0] - WL_TIERS[L][0]) : Math.min(1, (bal - 1e6) / 9e6);
@@ -8726,6 +8731,22 @@ function _wlVault(bal) { bal = Math.max(0, Number(bal) || 0);
   const gem = (x, y, c) => `<path d="M${x} ${y - 7}l6 5-6 9-6-9z" fill="${c}" stroke="#fff" stroke-width=".5" opacity=".95"/><path d="M${x - 6} ${y - 2}h12" stroke="#fff" stroke-width=".4" opacity=".6"/>`;
   const bag = (x) => `<path d="M${x - 11} ${FL + 3}q-6-20 6-27h10q12 7 6 27z" fill="#6b4a1a" stroke="#3d2a0c"/><path d="M${x - 5} ${FL - 24}l-3-6h16l-3 6z" fill="#8a6224"/><text x="${x}" y="${FL - 5}" font-size="11" font-weight="900" text-anchor="middle" fill="#f7cf55">$</text>`;
   const star = (x, y, z, d) => `<path class="wl-tw" style="animation-delay:${d}s" d="M${x} ${y - z}l${z * .28} ${z * .72} ${z * .72} ${z * .28}-${z * .72} ${z * .28}-${z * .28} ${z * .72}-${z * .28}-${z * .72}-${z * .72}-${z * .28} ${z * .72}-${z * .28}z" fill="#fff7cf"/>`;
+  if (L === 7) { // 1M+: forget the vault — you own a gold planet.
+    o.push(`<rect width="${W}" height="230" fill="url(#wls)"/><ellipse cx="70" cy="120" rx="150" ry="70" fill="url(#wln1)" opacity=".55"/><ellipse cx="350" cy="150" rx="140" ry="80" fill="url(#wln2)" opacity=".5"/>`);
+    for (let i = 0; i < 90; i++) { const x = rnd() * W, y = rnd() * 200, r = .4 + rnd() * 1.1; o.push(i % 6 ? `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(2)}" fill="#fff" opacity="${(.3 + rnd() * .6).toFixed(2)}"/>` : star(x, y, 2.5 + rnd() * 3, (rnd() * 3).toFixed(2))); }
+    [[30, 96, 3.1], [300, 88, 4.4], [150, 104, 5.6]].forEach(([x, y, d]) => o.push(`<path class="wl-shoot" style="animation-delay:${d}s" d="M${x} ${y}l46 16" stroke="#fff7cf" stroke-width="1.3" stroke-linecap="round"/>`));
+    // Ringed gold planet + coin moon
+    o.push(`<g><ellipse cx="338" cy="118" rx="40" ry="9" fill="none" stroke="#f7cf55" stroke-width="3" opacity=".55" transform="rotate(-18 338 118)"/><circle cx="338" cy="118" r="20" fill="url(#wlp)"/><path d="M299 131a40 9 -18 0 0 78 -26" fill="none" stroke="#ffe083" stroke-width="3" opacity=".9"/>${[0, 1, 2, 3, 4].map(i => coin(304 + i * 17, 129 - i * 5.6, 3.2)).join('')}</g>`,
+      `<g class="wl-moon"><circle cx="58" cy="112" r="13" fill="url(#wlc)" stroke="#7a5507"/><circle cx="58" cy="112" r="9.5" fill="none" stroke="#8c6309" stroke-width=".8"/><text x="58" y="116.5" font-size="12" font-weight="900" text-anchor="middle" fill="#8c6309">$</text></g>`);
+    // The planet itself: a horizon of solid gold, with coins orbiting it
+    const PY = 400, PR = 232; o.push(`<circle cx="200" cy="${PY}" r="${PR + 14}" fill="url(#wlg)" opacity=".5"/><g class="wl-orbit">${Array.from({ length: 26 }, (_, i) => { const a = i * Math.PI * 2 / 26; return coin(200 + (PR + 22) * Math.cos(a), PY + (PR + 22) * Math.sin(a), 5.5); }).join('')}</g>`,
+      `<circle cx="200" cy="${PY}" r="${PR}" fill="url(#wlp)" stroke="#fff3b8" stroke-width="1.6"/>`);
+    for (let i = 0; i < 110; i++) { const a = -Math.PI / 2 + (rnd() - .5) * 1.9, d = PR - 4 - rnd() * 70, x = 200 + d * Math.cos(a), y = PY + d * Math.sin(a); if (y < 228) o.push(coin(x, y, 5 + rnd() * 4)); }
+    [-150, -118, -86, 86, 118, 150].forEach((dx, i) => { const y = PY - Math.sqrt(PR * PR - dx * dx); let h = ''; for (let k = 0; k < 4 + (i * 3) % 6 + Math.round(f * 4); k++) h += coin(200 + dx, y - k * 4.2, 8); o.push(h); });
+    o.push(`<path d="M70 ${PY - 190}v-40" stroke="#e8e8ff" stroke-width="1.6"/><path d="M70 ${PY - 230}h28l-5 7.5 5 7.5h-28z" fill="url(#wlf)"/><text x="82" y="${PY - 219.5}" font-size="7.5" font-weight="900" text-anchor="middle" fill="#fff">IM$</text>`,
+      `<text x="300" y="${PY - 204}" font-size="20">👑</text><g class="wl-rocket"><text x="20" y="150" font-size="22">🚀</text></g>`);
+    const svg7 = `<svg class="wl-vault" viewBox="0 0 ${W} 230" preserveAspectRatio="xMidYMax slice" aria-hidden="true"><defs><linearGradient id="wlc" x1="0" x2="1"><stop offset="0" stop-color="#d9a21c"/><stop offset=".45" stop-color="#fff3b8"/><stop offset="1" stop-color="#d9a21c"/></linearGradient><linearGradient id="wls" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#05030f"/><stop offset=".6" stop-color="#140c33"/><stop offset="1" stop-color="#2a1245"/></linearGradient><radialGradient id="wln1"><stop offset="0" stop-color="#7c86ff"/><stop offset="1" stop-color="#7c86ff" stop-opacity="0"/></radialGradient><radialGradient id="wln2"><stop offset="0" stop-color="#ff5c8a"/><stop offset="1" stop-color="#ff5c8a" stop-opacity="0"/></radialGradient><radialGradient id="wlp" cx=".4" cy=".25" r=".9"><stop offset="0" stop-color="#fff3b8"/><stop offset=".35" stop-color="#f7cf55"/><stop offset="1" stop-color="#8c6309"/></radialGradient><radialGradient id="wlg"><stop offset=".8" stop-color="#f7cf55" stop-opacity="0"/><stop offset=".94" stop-color="#f7cf55" stop-opacity=".7"/><stop offset="1" stop-color="#f7cf55" stop-opacity="0"/></radialGradient><linearGradient id="wlf" x1="0" x2="1"><stop offset="0" stop-color="#6f74e8"/><stop offset="1" stop-color="#f0487a"/></linearGradient></defs>${o.join('')}</svg>`;
+    return { svg: svg7, L, name: WL_TIERS[L][1], note: WL_TIERS[L][2], f: 1, next: 0, nextName: '' }; }
   // Back wall: steel panels, rivets and the big round door.
   for (let x = 0; x <= W; x += 50) o.push(`<path d="M${x} 0v230" stroke="rgba(255,255,255,.05)"/>`);
   for (let x = 25; x < W; x += 50) for (const y of [14, 120]) o.push(`<circle cx="${x}" cy="${y}" r="1.6" fill="rgba(255,255,255,.12)"/>`);
@@ -8736,18 +8757,17 @@ function _wlVault(bal) { bal = Math.max(0, Number(bal) || 0);
       `<g class="wl-spider"><path d="M318 0v52" stroke="rgba(255,255,255,.3)" stroke-width=".7"/><text x="309" y="66" font-size="16">🕷️</text></g>`);
     if (bal > 0) o.push(coin(92, FL, 9)); if (bal >= 75) o.push(coin(300, FL + 1, 9));
     [[60, 1], [150, 2], [250, 1.4], [340, 1.8]].forEach(([x, r]) => o.push(`<circle cx="${x}" cy="${FL + 1}" r="${r}" fill="rgba(255,255,255,.12)"/>`)); }
-  else { const mound = L >= 5 ? (L === 6 ? 78 - f * 34 : 178 - f * 26) : 0;
+  else { const mound = L >= 5 ? (L === 6 ? 96 - f * 30 : 178 - f * 26) : 0;
     if (mound) { const dip = L === 6 ? 218 : 240; o.push(`<path d="M0 230V${mound}Q200 ${dip} ${W} ${mound}V230z" fill="url(#wlm)"/>`);
-      const n = L === 6 ? 210 : 60; for (let i = 0; i < n; i++) { const x = rnd() * W, t = x / W, top = (1 - t) * (1 - t) * mound + 2 * (1 - t) * t * dip + t * t * mound, y = top + 5 + rnd() * (FL - top); if (y < FL + 6) o.push(coin(x, y, 7 + rnd() * 3)); } }
+      const n = L === 6 ? 150 : 60; for (let i = 0; i < n; i++) { const x = rnd() * W, t = x / W, top = (1 - t) * (1 - t) * mound + 2 * (1 - t) * t * dip + t * t * mound, y = top + 5 + rnd() * (FL - top); if (y < FL + 6) o.push(coin(x, y, 7 + rnd() * 3)); } }
     const NS = [0, 3, 7, 11, 15, 19, 22][L], HB = [0, 2, 5, 8, 11, 14, 18][L] * (.65 + .35 * f) + (L === 1 ? f * 2 : 0);
     const xs = Array.from({ length: NS }, (_, i) => 14 + (i + .5) * ((W - 28) / NS) + (rnd() - .5) * 6);
     if (L >= 3) o.push(pyr(L >= 5 ? 22 : 40, Math.min(5, L - 1)), L >= 4 ? pyr(W - 40 - 29 * Math.min(4, L - 2), Math.min(4, L - 2)) : '');
     xs.forEach(x => { const e = Math.abs(x - 200) / 200, n = Math.max(1, Math.round(HB * (.3 + .7 * e) * (.75 + rnd() * .5))); o.push(stack(x, n, 9.5)); });
     if (L >= 4) o.push(bag(118), L >= 5 ? bag(292) : '');
     if (L >= 5) [[150, FL - 2, '#27f4d2'], [262, FL - 1, '#ff5c8a'], [206, FL + 2, '#7c86ff'], [70, FL - 30, '#27f4d2'], [338, FL - 34, '#ff5c8a']].slice(0, L === 6 ? 5 : 3).forEach(g => o.push(gem(...g)));
-    for (let i = 0; i < [0, 0, 2, 4, 6, 9, 26][L]; i++) o.push(star(20 + rnd() * 360, FL - 6 - rnd() * (30 + L * 18), 3 + rnd() * 3, (rnd() * 3).toFixed(2)));
-    if (L === 6) { o.push(`<text x="186" y="${FL - 2}" font-size="26">👑</text>`); [[40, 150, '#7c86ff'], [362, 144, '#27f4d2'], [24, 110, '#ff5c8a'], [378, 104, '#7c86ff']].forEach(g => o.push(gem(...g))); o.push(`<text x="30" y="${FL - 34}" font-size="20">🏆</text><text x="346" y="${FL - 36}" font-size="20">💎</text>`);
-      for (let i = 0; i < 22; i++) { const x = 20 + rnd() * 360; o.push(`<g class="wl-fall" style="animation-delay:${(rnd() * 4).toFixed(2)}s;animation-duration:${(2.6 + rnd() * 2).toFixed(2)}s">${coin(x, -12, 7)}</g>`); } } }
+    for (let i = 0; i < [0, 0, 2, 4, 6, 9, 14][L]; i++) o.push(star(20 + rnd() * 360, FL - 6 - rnd() * (30 + L * 18), 3 + rnd() * 3, (rnd() * 3).toFixed(2)));
+    if (L === 6) { o.push(`<text x="186" y="${FL - 2}" font-size="26">👑</text>`); for (let i = 0; i < 9; i++) { const x = 20 + rnd() * 360; o.push(`<g class="wl-fall" style="animation-delay:${(rnd() * 4).toFixed(2)}s;animation-duration:${(2.6 + rnd() * 2).toFixed(2)}s">${coin(x, -12, 7)}</g>`); } } }
   const svg = `<svg class="wl-vault" viewBox="0 0 ${W} 230" preserveAspectRatio="xMidYMax slice" aria-hidden="true"><defs><linearGradient id="wlc" x1="0" x2="1"><stop offset="0" stop-color="#d9a21c"/><stop offset=".45" stop-color="#fff3b8"/><stop offset="1" stop-color="#d9a21c"/></linearGradient><linearGradient id="wlb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe083"/><stop offset="1" stop-color="#b8860b"/></linearGradient><linearGradient id="wlm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0aa25"/><stop offset="1" stop-color="#6e4c07"/></linearGradient><radialGradient id="wlg"><stop offset="0" stop-color="#f7cf55"/><stop offset="1" stop-color="#f7cf55" stop-opacity="0"/></radialGradient></defs>${o.join('')}</svg>`;
   return { svg, L, name: WL_TIERS[L][1], note: WL_TIERS[L][2], f, next: nx ? nx[0] - bal : 0, nextName: nx ? nx[1] : '' }; }
 window._wlPill = async function() { const el = document.getElementById('wallet-amt'); if (!el || typeof currentUser === 'undefined' || !currentUser || !currentUser.userId) return;
@@ -8776,9 +8796,9 @@ window.openWallet = async function() {
   const row = (a) => `<div class="wl-row ${a.cls}"><span class="wl-ri">${a.ic}</span><span class="wl-rt"><b>${esc(a.h)}</b><small>${esc(a.s)}${a.t ? ' · ' + when(a.t) : ''}</small></span>${a.est ? '<span class="wl-rd up">✓</span>' : ''}<span style="${a.est ? 'display:none' : ''}" class="wl-rd ${a.open ? 'open' : a.d > 0 ? 'up' : a.d < 0 ? 'dn' : ''}">${a.open ? '−' + _wlFmt(-a.d) : a.d > 0 ? '+' + _wlFmt(a.d) : a.d < 0 ? '−' + _wlFmt(-a.d) : '±0'}</span></div>`;
   const ge = c.gameEarned || 0, tot = Math.max(1, (c.won || 0) + ge);
   const V = _wlVault(c.balance);
-  B.innerHTML = `<div class="wl-hero lv${V.L}">${V.svg}<div class="wl-scrim"></div><span class="wl-lvl">VAULT LV ${V.L + 1}<b>${V.name}</b></span><div class="wl-coin"><span class="imc"></span></div><div class="wl-bal"><small>Balance</small><b id="wl-bal" data-to="${Math.round(c.balance || 0)}">0</b><span>IM$</span></div>
+  B.innerHTML = `<div class="wl-hero lv${V.L}">${V.svg}<div class="wl-scrim"></div><span class="wl-lvl">${V.L === 7 ? 'BEYOND THE VAULT' : 'VAULT LV ' + (V.L + 1)}<b>${V.name}</b></span><div class="wl-coin"><span class="imc"></span></div><div class="wl-bal"><small>Balance</small><b id="wl-bal" data-to="${Math.round(c.balance || 0)}">0</b><span>IM$</span></div>
       <div class="wl-sub"><span>🎟️ <b>${_wlFmt(staked)}</b> in play</span>${toWin ? `<span>🎯 up to <b>${_wlFmt(toWin)}</b> to win</span>` : ''}</div>
-      <div class="wl-next"><div><i style="width:${Math.max(3, V.f * 100)}%"></i></div><small>${V.next ? `<b>${_wlFmt(V.next)}</b> IM$ to “${V.nextName}”` : 'Top level. ' + V.note}</small></div></div>
+      <div class="wl-next"><div><i style="width:${Math.max(3, V.f * 100)}%"></i></div><small>${V.next ? `<b>${_wlFmt(V.next)}</b> IM$ to “${V.nextName}”` : V.note}</small></div></div>
     <div class="wl-kpis"><div><small>Bet profit</small><b class="${net > 0 ? 'up' : net < 0 ? 'dn' : ''}">${net > 0 ? '+' : net < 0 ? '−' : ''}${_wlFmt(Math.abs(net))}</b></div><div><small>Won from games</small><b class="up">+${_wlFmt(ge)}</b></div>
       <div><small>Bet record</small><b>${won.length}<i>W</i> ${lost.length}<i>L</i></b>${rate != null ? `<em>${rate}% hit rate</em>` : ''}</div><div><small>Biggest win</small><b>${best ? '+' + _wlFmt(best) : '—'}</b></div></div>
     <div class="wl-split"><div class="wl-sh"><span>Where your winnings came from</span></div><div class="wl-bar"><i style="width:${(c.won || 0) / tot * 100}%"></i><b style="width:${ge / tot * 100}%"></b></div>
