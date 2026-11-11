@@ -1586,6 +1586,7 @@
     <audio id="bg-music" preload="auto"></audio>
     <button id="music-play-btn" onclick="toggleMusic()" title="Play / pause music">▶</button>
     <button onclick="nextTrack()" title="Skip to next track">⏭</button>
+    <span class="hm-eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
   </div>
   <div class="hdr-search">
     <span class="hdr-search-icon">🔍</span>
@@ -1626,6 +1627,72 @@
     .nav-icon-btn:hover{color:var(--gold);border-color:rgba(255,200,0,0.5);background:rgba(255,200,0,0.08);transform:translateY(-1px)}
     #logout-btn.nav-text-btn{background:none;border:none;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:.85rem;letter-spacing:2px;text-transform:uppercase;cursor:pointer;padding:4px 2px;transition:color .15s ease;vertical-align:middle}
     #logout-btn.nav-text-btn:hover{color:var(--red)}
+    /* ===== 2026 brand pass: header, nav, search, music, utilities, mobile bar ===== */
+    header{background:linear-gradient(180deg,#110f22,#0b0a14);border-bottom:none;padding:0 26px;box-shadow:0 18px 40px -30px rgba(90,94,201,.9)}
+    header::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,#6f74e8,#a779e6 50%,#f0487a);pointer-events:none}
+    header > .logo{padding:11px 0 9px}
+    .logo img{height:50px!important;width:50px!important;padding:2px;background:linear-gradient(135deg,#6f74e8,#a779e6 50%,#f0487a);box-sizing:border-box;transition:transform .3s cubic-bezier(.2,1.5,.4,1)}
+    .logo:hover img{transform:scale(1.08) rotate(-6deg)}
+    header > #hdr-music{margin-left:14px;gap:4px;padding:4px 10px 4px 4px;border:none;border-radius:999px;background:rgba(255,255,255,.035);box-shadow:inset 0 0 0 1px rgba(124,134,255,.34)}
+    header > #hdr-music button{width:30px;height:30px;padding:0;display:grid;place-items:center;font-size:.72rem;color:#c3c6ff;border-radius:50%;transition:background .2s,color .2s,transform .15s}
+    header > #hdr-music #music-play-btn{color:#fff;text-shadow:none;background:linear-gradient(135deg,#6f74e8,#a779e6 55%,#f0487a);box-shadow:0 8px 18px -8px rgba(167,121,230,.9)}
+    header > #hdr-music button:hover{background:rgba(124,134,255,.26);color:#fff}
+    header > #hdr-music #music-play-btn:hover{background:linear-gradient(135deg,#7c86ff,#b184e8 55%,#ff5c8a);transform:scale(1.07)}
+    .hm-eq{display:flex;align-items:flex-end;gap:2px;height:14px;margin-left:4px}
+    .hm-eq i{width:3px;height:100%;border-radius:2px;background:linear-gradient(180deg,#ff5c8a,#7c86ff);transform-origin:bottom;transform:scaleY(.22);opacity:.45}
+    #hdr-music.playing .hm-eq i{opacity:1;animation:hmEq 1s ease-in-out infinite}
+    #hdr-music.playing .hm-eq i:nth-child(2){animation-duration:.74s;animation-delay:-.3s}
+    #hdr-music.playing .hm-eq i:nth-child(3){animation-duration:1.18s;animation-delay:-.55s}
+    #hdr-music.playing .hm-eq i:nth-child(4){animation-duration:.86s;animation-delay:-.15s}
+    @keyframes hmEq{0%,100%{transform:scaleY(.25)}50%{transform:scaleY(1)}}
+    header > .hdr-search{margin:0 20px}
+    #global-search{padding:11px 44px 11px 40px;border-radius:999px;border:none;background:rgba(255,255,255,.035);box-shadow:inset 0 0 0 1px rgba(255,255,255,.1);font-size:.86rem;transition:box-shadow .2s,background .2s}
+    #global-search::placeholder{color:#7f83a8}
+    #global-search:hover{box-shadow:inset 0 0 0 1px rgba(124,134,255,.45)}
+    #global-search:focus{border:none;background:rgba(124,134,255,.08);box-shadow:inset 0 0 0 1.5px #7c86ff,0 0 0 4px rgba(124,134,255,.16)}
+    .hdr-search-icon{left:15px;opacity:.75}
+    .hdr-search-kbd{right:12px;border-radius:7px;padding:3px 7px;color:#a9aef5;background:rgba(124,134,255,.12);border:none;box-shadow:inset 0 0 0 1px rgba(124,134,255,.3)}
+    .hdr-search-results{top:calc(100% + 10px);border:none;border-radius:20px;padding:8px;background:linear-gradient(170deg,#17142c,#0c0b15 72%);box-shadow:inset 0 0 0 1px rgba(124,134,255,.34),0 30px 60px -20px rgba(0,0,0,.85);animation:gsIn .18s cubic-bezier(.2,.9,.25,1)}
+    @keyframes gsIn{from{opacity:0;transform:translate3d(0,-6px,0)}}
+    .gs-group{display:flex;align-items:center;gap:8px;font:800 .54rem/1 system-ui,sans-serif;letter-spacing:2.6px;color:#a9aef5;padding:10px 10px 6px}
+    .gs-group::before{content:'';width:16px;height:2px;border-radius:2px;background:linear-gradient(100deg,#7c86ff,#b184e8 48%,#ff5c8a)}
+    .gs-item{padding:9px 10px;border-radius:12px;transition:background .15s,transform .15s}
+    .gs-item:hover{background:linear-gradient(90deg,rgba(124,134,255,.2),rgba(240,72,122,.06));transform:translateX(3px)}
+    .gs-avatar{width:30px;height:30px;box-shadow:0 0 0 1px rgba(124,134,255,.4)}
+    nav{gap:2px;border-top:1px solid rgba(255,255,255,.06);padding:6px 0 8px}
+    nav button{position:relative;font-size:.9rem;letter-spacing:1px;padding:8px 12px;border-radius:999px;border-bottom:none;color:#8f93b8;transition:color .2s,background .2s}
+    nav button:hover{color:#fff;background:rgba(255,255,255,.05)}
+    nav button.active{color:#fff;border-bottom:none;border-radius:999px;background:linear-gradient(110deg,rgba(111,116,232,.34),rgba(167,121,230,.22) 55%,rgba(240,72,122,.26));box-shadow:inset 0 0 0 1px rgba(124,134,255,.5)}
+    nav button.active::after{content:'';position:absolute;left:14px;right:14px;bottom:-8px;height:2px;border-radius:2px;background:linear-gradient(90deg,#7c86ff,#ff5c8a)}
+    .admin-badge{border-radius:999px;padding:4px 10px;font:800 .56rem/1 system-ui,sans-serif;letter-spacing:1.6px;background:linear-gradient(110deg,#6f74e8,#a779e6 55%,#f0487a)}
+    header > span{border-left-color:rgba(255,255,255,.08)!important;gap:8px!important}
+    .nav-icon-btn{width:36px;height:36px;border:none;background:rgba(255,255,255,.035);box-shadow:inset 0 0 0 1px rgba(255,255,255,.1);color:#c3c6ff;transition:box-shadow .2s,background .2s,transform .2s,color .2s}
+    .nav-icon-btn:hover{color:#fff;border:none;background:rgba(124,134,255,.18);box-shadow:inset 0 0 0 1px #7c86ff;transform:translateY(-2px)}
+    #logout-btn.nav-text-btn{font-size:.76rem;letter-spacing:1.8px;font-weight:900;color:#d5d7f5;padding:10px 15px;border-radius:999px;background:rgba(255,255,255,.035);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);transition:box-shadow .2s,color .2s,background .2s}
+    #logout-btn.nav-text-btn:hover{color:#fff;background:rgba(240,72,122,.16);box-shadow:inset 0 0 0 1px #f0487a}
+    .page-refresh-btn{border:none;background:#12101f;color:#c3c6ff;box-shadow:inset 0 0 0 1px rgba(124,134,255,.4),0 10px 24px -8px rgba(0,0,0,.8)}
+    .page-refresh-btn:hover{color:#fff;border:none;background:#1b1838;box-shadow:inset 0 0 0 1px #7c86ff,0 10px 24px -8px rgba(124,134,255,.7)}
+    @media (max-width:700px){
+      header{padding:0 14px}
+      .logo img{height:42px!important;width:42px!important}
+      header > #hdr-music{margin-left:8px;padding:3px}.hm-eq{display:none}
+      header > #hdr-music button{width:28px;height:28px}
+      header > span{margin-left:6px!important;padding-left:8px!important;gap:5px!important}
+      .nav-icon-btn{width:32px;height:32px}
+      #logout-btn.nav-text-btn{padding:9px 10px;font-size:.68rem;letter-spacing:1.2px}
+      #mobile-nav{background:linear-gradient(180deg,#110f22,#0b0a14);border-top:none;padding:7px 6px calc(7px + env(safe-area-inset-bottom));gap:2px;box-shadow:0 -18px 40px -24px rgba(90,94,201,.9)}
+      #mobile-nav::before{content:'';position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,#6f74e8,#a779e6 50%,#f0487a)}
+      #mobile-nav button{position:relative;border-radius:16px;color:#8f93b8;letter-spacing:.8px;transition:color .2s,background .2s}
+      #mobile-nav button .mn-icon{transition:transform .3s cubic-bezier(.2,1.5,.4,1)}
+      #mobile-nav button.active{color:#fff;background:linear-gradient(160deg,rgba(111,116,232,.36),rgba(240,72,122,.2));box-shadow:inset 0 0 0 1px rgba(124,134,255,.5)}
+      #mobile-nav button.active .mn-icon{transform:translateY(-2px) scale(1.12)}
+      #mobile-more-sheet{background:linear-gradient(175deg,#17142c,#0b0a14 70%);border-top:none;border-radius:26px 26px 0 0;padding:22px 16px calc(84px + env(safe-area-inset-bottom));box-shadow:inset 0 1px 0 rgba(124,134,255,.5),0 -20px 50px rgba(0,0,0,.7);transition:transform .32s cubic-bezier(.2,.9,.25,1)}
+      #mobile-more-sheet::before{content:'';position:absolute;left:50%;top:9px;width:42px;height:4px;margin-left:-21px;border-radius:4px;background:rgba(255,255,255,.2)}
+      #mobile-more-sheet .sheet-btn{border:none;border-radius:18px;min-height:74px;background:linear-gradient(165deg,#1b1838,#0f0d1c 75%);box-shadow:inset 0 0 0 1px rgba(124,134,255,.26);font-weight:900;font-style:italic;font-size:.82rem;transition:transform .15s,box-shadow .15s}
+      #mobile-more-sheet .sheet-btn:active{transform:scale(.96);box-shadow:inset 0 0 0 1px #7c86ff}
+      #mobile-sheet-backdrop{background:rgba(4,3,10,.72)}
+    }
+    @media (prefers-reduced-motion:reduce){#hdr-music.playing .hm-eq i,.hdr-search-results{animation:none}}
   </style>
   <span style="display:inline-flex;align-items:center;gap:7px;margin-left:12px;padding-left:12px;border-left:1px solid rgba(255,255,255,0.10)">
     <button id="bug-btn" class="nav-icon-btn" onclick="openPatchNotes()" title="Patch notes">📋</button>
@@ -32480,7 +32547,7 @@ window.adminRemoveSong = async function(url) {
 };
 for (let i = _musicOrder.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [_musicOrder[i], _musicOrder[j]] = [_musicOrder[j], _musicOrder[i]]; }
 let musicTrackIdx = 0;
-function _setPlayIcon(playing) { const b = document.getElementById('music-play-btn'); if (b) b.textContent = playing ? '⏸' : '▶'; }
+function _setPlayIcon(playing) { const b = document.getElementById('music-play-btn'); if (b) b.textContent = playing ? '⏸' : '▶'; const h = document.getElementById('hdr-music'); if (h) h.classList.toggle('playing', !!playing); }
 // Music must never play on the login screen — block all play attempts while the login overlay is up
 // (or nobody's logged in). If a login overlay appears, pause anything already playing.
 function _musicBlocked() {
