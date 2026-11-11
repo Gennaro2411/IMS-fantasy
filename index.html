@@ -1855,6 +1855,23 @@
     .wl-row.won .wl-ri,.wl-row.cashed .wl-ri{background:rgba(74,222,128,.15)}.wl-row.lost .wl-ri{background:rgba(248,113,113,.14);color:#f87171;font-weight:900}.wl-row.game .wl-ri{background:rgba(247,207,85,.14)}
     .wl-rt{flex:1;min-width:0;display:flex;flex-direction:column}.wl-rt b{font-size:.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.wl-rt small{font-size:.68rem;color:#8b8fb8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .wl-rd{flex:none;font-weight:900;font-size:.86rem;font-variant-numeric:tabular-nums;color:#a5a9d6}.wl-rd.up{color:#4ade80}.wl-rd.dn{color:#f87171}.wl-rd.open{color:#ffb020}
+    .wl-hero{padding-bottom:96px!important}.wl-hero::after{display:none}
+    .wl-vault{position:absolute;inset:0;width:100%;height:100%;z-index:0}
+    .wl-scrim{position:absolute;inset:0;z-index:0;background:radial-gradient(58% 62% at 50% 40%,rgba(11,10,20,.82),rgba(11,10,20,.45) 60%,transparent 85%)}
+    .wl-hero>.wl-coin,.wl-hero>.wl-bal,.wl-hero>.wl-sub,.wl-hero>.wl-next{position:relative;z-index:1}
+    .wl-bal b{filter:drop-shadow(0 2px 6px rgba(0,0,0,.7))}
+    .wl-lvl{position:absolute;z-index:1;left:12px;top:12px;display:flex;flex-direction:column;align-items:flex-start;padding:5px 10px;border-radius:10px;font-size:.54rem;font-weight:800;letter-spacing:.16em;color:#d8c48a;background:rgba(11,10,20,.72);box-shadow:inset 0 0 0 1px rgba(247,207,85,.3)}
+    .wl-lvl b{font-size:.74rem;letter-spacing:.02em;color:#fff;font-style:italic;font-weight:900}
+    .wl-next{max-width:260px;margin:10px auto 0}.wl-next>div{height:5px;border-radius:5px;background:rgba(255,255,255,.12);overflow:hidden}.wl-next i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,#f7cf55,#f0487a)}
+    .wl-next small{display:block;margin-top:4px;font-size:.66rem;color:#c9cbe8;text-shadow:0 1px 3px #000}.wl-next small b{color:#ffe083}
+    .wl-hero.lv0{box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}.wl-hero.lv6{box-shadow:inset 0 0 0 1px rgba(247,207,85,.7),0 0 34px -8px rgba(247,207,85,.55)}
+    .wl-tw{transform-box:fill-box;transform-origin:center;animation:wlTw 2.6s ease-in-out infinite}
+    @keyframes wlTw{0%,100%{opacity:.15;transform:scale(.6)}50%{opacity:1;transform:scale(1)}}
+    .wl-fall{animation:wlFall 3.4s linear infinite}
+    @keyframes wlFall{from{transform:translateY(0)}to{transform:translateY(250px)}}
+    .wl-spider{animation:wlSpd 4.5s ease-in-out infinite}
+    @keyframes wlSpd{0%,100%{transform:translateY(-8px)}50%{transform:translateY(14px)}}
+    @media (prefers-reduced-motion:reduce){.wl-tw,.wl-fall,.wl-spider{animation:none}}
     @media (prefers-reduced-motion:reduce){.wl-coin .imc{animation:none}}
     @media (prefers-reduced-motion:reduce){#hdr-music.playing .hm-eq i,.hdr-search-results{animation:none}}
   </style>
@@ -8693,6 +8710,43 @@ window.refreshCurrentPage = async function(btn) {
 // ===== IM$ WALLET =====
 const _wlFmt = (n) => Math.round(n || 0).toLocaleString();
 const _wlShort = (n) => { n = Math.round(n || 0); return Math.abs(n) >= 1e6 ? (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M' : Math.abs(n) >= 1e4 ? (n / 1e3).toFixed(1).replace(/\.0$/, '') + 'k' : n.toLocaleString(); };
+// The vault behind the balance: the more IM$ you hold, the fuller it gets (7 levels, and it keeps growing inside each level).
+const WL_TIERS = [[0, 'Bare vault', 'Just dust and a spider'], [150, 'Loose change', 'A few coins on the floor'], [1000, 'Starter stash', 'The first stacks are up'], [5000, 'Stacking up', 'Gold bars have arrived'], [20000, 'Loaded', 'Bars, bags and tall stacks'], [50000, 'Treasure room', 'Gems on top of the gold'], [100000, 'Overflowing', 'The vault can\'t hold it all']];
+function _wlVault(bal) { bal = Math.max(0, Number(bal) || 0);
+  let L = 0; WL_TIERS.forEach((t, i) => { if (bal >= t[0]) L = i; });
+  const nx = WL_TIERS[L + 1], f = nx ? (bal - WL_TIERS[L][0]) / (nx[0] - WL_TIERS[L][0]) : Math.min(1, (bal - 1e5) / 9e5);
+  let sd = 7 + L * 13; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  const W = 400, FL = 214, o = [];
+  const coin = (x, y, r) => `<ellipse cx="${x}" cy="${y + 2.4}" rx="${r}" ry="${r * .36}" fill="#8c6309"/><ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r * .36}" fill="url(#wlc)" stroke="#7a5507" stroke-width=".5"/>`;
+  const stack = (x, n, r) => { let h = ''; for (let i = 0; i < n; i++) h += coin(x + (rnd() - .5) * 1.6, FL - i * 4.2, r); return h; };
+  const bar = (x, y) => `<path d="M${x} ${y}h28l-4-9h-20z" fill="url(#wlb)" stroke="#7a5507" stroke-width=".6"/><path d="M${x + 5} ${y - 8}h18" stroke="#fff3b8" stroke-width="1" opacity=".7"/>`;
+  const pyr = (x, rows) => { let h = ''; for (let r = 0; r < rows; r++) for (let i = 0; i < rows - r; i++) h += bar(x + i * 29 + r * 14.5, FL + 3 - r * 9.5); return h; };
+  const gem = (x, y, c) => `<path d="M${x} ${y - 7}l6 5-6 9-6-9z" fill="${c}" stroke="#fff" stroke-width=".5" opacity=".95"/><path d="M${x - 6} ${y - 2}h12" stroke="#fff" stroke-width=".4" opacity=".6"/>`;
+  const bag = (x) => `<path d="M${x - 11} ${FL + 3}q-6-20 6-27h10q12 7 6 27z" fill="#6b4a1a" stroke="#3d2a0c"/><path d="M${x - 5} ${FL - 24}l-3-6h16l-3 6z" fill="#8a6224"/><text x="${x}" y="${FL - 5}" font-size="11" font-weight="900" text-anchor="middle" fill="#f7cf55">$</text>`;
+  const star = (x, y, z, d) => `<path class="wl-tw" style="animation-delay:${d}s" d="M${x} ${y - z}l${z * .28} ${z * .72} ${z * .72} ${z * .28}-${z * .72} ${z * .28}-${z * .28} ${z * .72}-${z * .28}-${z * .72}-${z * .72}-${z * .28} ${z * .72}-${z * .28}z" fill="#fff7cf"/>`;
+  // Back wall: steel panels, rivets and the big round door.
+  for (let x = 0; x <= W; x += 50) o.push(`<path d="M${x} 0v230" stroke="rgba(255,255,255,.05)"/>`);
+  for (let x = 25; x < W; x += 50) for (const y of [14, 120]) o.push(`<circle cx="${x}" cy="${y}" r="1.6" fill="rgba(255,255,255,.12)"/>`);
+  o.push(`<g opacity="${.5 - L * .04}" fill="none" stroke="rgba(190,196,255,.22)"><circle cx="200" cy="96" r="78" stroke-width="5"/><circle cx="200" cy="96" r="64" stroke-width="1.5"/><circle cx="200" cy="96" r="20" stroke-width="3"/>${[0, 45, 90, 135].map(a => `<path d="M200 22v148" stroke-width="2.5" transform="rotate(${a} 200 96)"/>`).join('')}${Array.from({ length: 12 }, (_, i) => `<circle cx="${200 + 71 * Math.cos(i * Math.PI / 6)}" cy="${96 + 71 * Math.sin(i * Math.PI / 6)}" r="2" fill="rgba(190,196,255,.3)" stroke="none"/>`).join('')}</g>`);
+  o.push(`<rect x="0" y="${FL + 4}" width="${W}" height="20" fill="rgba(0,0,0,.45)"/><path d="M0 ${FL + 4}h${W}" stroke="rgba(255,255,255,.1)"/>`);
+  o.push(`<ellipse cx="200" cy="${FL + 6}" rx="${120 + L * 30}" ry="${30 + L * 14}" fill="url(#wlg)" opacity="${Math.min(.85, .08 + L * .13)}"/>`);
+  if (L === 0) { o.push(`<text x="4" y="30" font-size="34" opacity=".5">🕸️</text><text x="352" y="30" font-size="30" opacity=".35" transform="scale(-1,1) translate(-752,0)">🕸️</text>`,
+      `<g class="wl-spider"><path d="M318 0v52" stroke="rgba(255,255,255,.3)" stroke-width=".7"/><text x="309" y="66" font-size="16">🕷️</text></g>`);
+    if (bal > 0) o.push(coin(92, FL, 9)); if (bal >= 75) o.push(coin(300, FL + 1, 9));
+    [[60, 1], [150, 2], [250, 1.4], [340, 1.8]].forEach(([x, r]) => o.push(`<circle cx="${x}" cy="${FL + 1}" r="${r}" fill="rgba(255,255,255,.12)"/>`)); }
+  else { const mound = L >= 5 ? (L === 6 ? 96 - f * 30 : 178 - f * 26) : 0;
+    if (mound) { const dip = L === 6 ? 218 : 240; o.push(`<path d="M0 230V${mound}Q200 ${dip} ${W} ${mound}V230z" fill="url(#wlm)"/>`);
+      const n = L === 6 ? 150 : 60; for (let i = 0; i < n; i++) { const x = rnd() * W, t = x / W, top = (1 - t) * (1 - t) * mound + 2 * (1 - t) * t * dip + t * t * mound, y = top + 5 + rnd() * (FL - top); if (y < FL + 6) o.push(coin(x, y, 7 + rnd() * 3)); } }
+    const NS = [0, 3, 7, 11, 15, 19, 22][L], HB = [0, 2, 5, 8, 11, 14, 18][L] * (.65 + .35 * f) + (L === 1 ? f * 2 : 0);
+    const xs = Array.from({ length: NS }, (_, i) => 14 + (i + .5) * ((W - 28) / NS) + (rnd() - .5) * 6);
+    if (L >= 3) o.push(pyr(L >= 5 ? 22 : 40, Math.min(5, L - 1)), L >= 4 ? pyr(W - 40 - 29 * Math.min(4, L - 2), Math.min(4, L - 2)) : '');
+    xs.forEach(x => { const e = Math.abs(x - 200) / 200, n = Math.max(1, Math.round(HB * (.3 + .7 * e) * (.75 + rnd() * .5))); o.push(stack(x, n, 9.5)); });
+    if (L >= 4) o.push(bag(118), L >= 5 ? bag(292) : '');
+    if (L >= 5) [[150, FL - 2, '#27f4d2'], [262, FL - 1, '#ff5c8a'], [206, FL + 2, '#7c86ff'], [70, FL - 30, '#27f4d2'], [338, FL - 34, '#ff5c8a']].slice(0, L === 6 ? 5 : 3).forEach(g => o.push(gem(...g)));
+    for (let i = 0; i < [0, 0, 2, 4, 6, 9, 14][L]; i++) o.push(star(20 + rnd() * 360, FL - 6 - rnd() * (30 + L * 18), 3 + rnd() * 3, (rnd() * 3).toFixed(2)));
+    if (L === 6) { o.push(`<text x="186" y="${FL - 2}" font-size="26">👑</text>`); for (let i = 0; i < 9; i++) { const x = 20 + rnd() * 360; o.push(`<g class="wl-fall" style="animation-delay:${(rnd() * 4).toFixed(2)}s;animation-duration:${(2.6 + rnd() * 2).toFixed(2)}s">${coin(x, -12, 7)}</g>`); } } }
+  const svg = `<svg class="wl-vault" viewBox="0 0 ${W} 230" preserveAspectRatio="xMidYMax slice" aria-hidden="true"><defs><linearGradient id="wlc" x1="0" x2="1"><stop offset="0" stop-color="#d9a21c"/><stop offset=".45" stop-color="#fff3b8"/><stop offset="1" stop-color="#d9a21c"/></linearGradient><linearGradient id="wlb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe083"/><stop offset="1" stop-color="#b8860b"/></linearGradient><linearGradient id="wlm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0aa25"/><stop offset="1" stop-color="#6e4c07"/></linearGradient><radialGradient id="wlg"><stop offset="0" stop-color="#f7cf55"/><stop offset="1" stop-color="#f7cf55" stop-opacity="0"/></radialGradient></defs>${o.join('')}</svg>`;
+  return { svg, L, name: WL_TIERS[L][1], note: WL_TIERS[L][2], f, next: nx ? nx[0] - bal : 0, nextName: nx ? nx[1] : '' }; }
 window._wlPill = async function() { const el = document.getElementById('wallet-amt'); if (!el || typeof currentUser === 'undefined' || !currentUser || !currentUser.userId) return;
   try { const c = await dbGet('coins', currentUser.userId).catch(() => null); el.textContent = _wlShort(c ? c.balance : BET_START_COINS); } catch (e) {} };
 const WL_GAMES = { wd: ['🟩', 'PaddockDle'], gr: ['🔢', 'PaddockDle Grid'], hl: ['⬆️', 'Higher or Lower'], cn: ['🧩', 'Connections'], pt: ['🎯', 'Pointless'], tq: ['🧠', 'Trivia'], cp: ['🛣️', 'Career Path'], st: ['⚖️', 'Steward Simulator'], qs: ['⏱️', 'Quali Shootout'], wf: ['🏁', 'Who Finished Where?'], pp: ['🔗', 'Pit Lane Pairs'] };
@@ -8718,8 +8772,10 @@ window.openWallet = async function() {
   const when = (t) => { if (!t) return ''; const s = (Date.now() - t) / 1e3; return s < 3600 ? Math.max(1, Math.round(s / 60)) + 'm ago' : s < 86400 ? Math.round(s / 3600) + 'h ago' : s < 7 * 86400 ? Math.round(s / 86400) + 'd ago' : new Date(t).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }); };
   const row = (a) => `<div class="wl-row ${a.cls}"><span class="wl-ri">${a.ic}</span><span class="wl-rt"><b>${esc(a.h)}</b><small>${esc(a.s)}${a.t ? ' · ' + when(a.t) : ''}</small></span>${a.est ? '<span class="wl-rd up">✓</span>' : ''}<span style="${a.est ? 'display:none' : ''}" class="wl-rd ${a.open ? 'open' : a.d > 0 ? 'up' : a.d < 0 ? 'dn' : ''}">${a.open ? '−' + _wlFmt(-a.d) : a.d > 0 ? '+' + _wlFmt(a.d) : a.d < 0 ? '−' + _wlFmt(-a.d) : '±0'}</span></div>`;
   const ge = c.gameEarned || 0, tot = Math.max(1, (c.won || 0) + ge);
-  B.innerHTML = `<div class="wl-hero"><div class="wl-coin"><span class="imc"></span></div><div class="wl-bal"><small>Balance</small><b id="wl-bal" data-to="${Math.round(c.balance || 0)}">0</b><span>IM$</span></div>
-      <div class="wl-sub"><span>🎟️ <b>${_wlFmt(staked)}</b> in play</span>${toWin ? `<span>🎯 up to <b>${_wlFmt(toWin)}</b> to win</span>` : ''}</div></div>
+  const V = _wlVault(c.balance);
+  B.innerHTML = `<div class="wl-hero lv${V.L}">${V.svg}<div class="wl-scrim"></div><span class="wl-lvl">VAULT LV ${V.L + 1}<b>${V.name}</b></span><div class="wl-coin"><span class="imc"></span></div><div class="wl-bal"><small>Balance</small><b id="wl-bal" data-to="${Math.round(c.balance || 0)}">0</b><span>IM$</span></div>
+      <div class="wl-sub"><span>🎟️ <b>${_wlFmt(staked)}</b> in play</span>${toWin ? `<span>🎯 up to <b>${_wlFmt(toWin)}</b> to win</span>` : ''}</div>
+      <div class="wl-next"><div><i style="width:${Math.max(3, V.f * 100)}%"></i></div><small>${V.next ? `<b>${_wlFmt(V.next)}</b> IM$ to “${V.nextName}”` : 'Top level. ' + V.note}</small></div></div>
     <div class="wl-kpis"><div><small>Bet profit</small><b class="${net > 0 ? 'up' : net < 0 ? 'dn' : ''}">${net > 0 ? '+' : net < 0 ? '−' : ''}${_wlFmt(Math.abs(net))}</b></div><div><small>Won from games</small><b class="up">+${_wlFmt(ge)}</b></div>
       <div><small>Bet record</small><b>${won.length}<i>W</i> ${lost.length}<i>L</i></b>${rate != null ? `<em>${rate}% hit rate</em>` : ''}</div><div><small>Biggest win</small><b>${best ? '+' + _wlFmt(best) : '—'}</b></div></div>
     <div class="wl-split"><div class="wl-sh"><span>Where your winnings came from</span></div><div class="wl-bar"><i style="width:${(c.won || 0) / tot * 100}%"></i><b style="width:${ge / tot * 100}%"></b></div>
