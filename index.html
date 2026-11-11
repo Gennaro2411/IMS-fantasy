@@ -2887,6 +2887,65 @@
     @keyframes boPulse{0%,100%{opacity:1}50%{opacity:.25}}
     @media (prefers-reduced-motion:reduce){#page-bets .bo-tk-run{animation:none}}
     @media (max-width:860px){ #page-bets .bo-grid > div{min-width:0} #page-bets .bo-divs{flex-wrap:nowrap;overflow-x:auto} #page-bets .bo-divs > button{flex-shrink:0} #page-bets .bo-fmt{flex-shrink:0} #page-bets .bo-card-h > span:first-child{font-size:.8rem} #page-bets .bo-legs{max-height:84px} #page-bets .bo-slip{padding:12px;background:linear-gradient(160deg,#262a55,#14141f 65%)} #page-bets .bo-nm small{max-width:34vw} #page-bets .bo-grid{grid-template-columns:1fr} #page-bets .bo-side{position:static} #page-bets .bo-slip{position:fixed;left:10px;right:10px;bottom:calc(64px + env(safe-area-inset-bottom,0px));z-index:950} #page-bets .bo-title{font-size:2rem} #page-bets .bo-wallet{width:100%} #page-bets .bo-odd{width:46px;font-size:.84rem;padding:8px 0} #page-bets .bo-cols i{width:46px;font-size:.48rem;letter-spacing:.06em} #page-bets .bo-odd-x{width:46px} #page-bets .bo-row .bo-ph{width:30px;height:30px} #page-bets .bo-row{gap:8px;padding:10px 10px} #page-bets .bo-cols{gap:8px} #page-bets .bo-divs > button{padding:8px 12px} }
+    /* ===== 2026 brand pass (IMS indigo / violet / pink) — styling only, no markup or logic changes ===== */
+    #page-bets{--bp:#6f74e8;--bp2:#7c86ff;--bp3:#a9aef5;--bline:rgba(255,255,255,.07);--bcard:#110f20;--bcard2:#191630;--hx-g:linear-gradient(100deg,#7c86ff,#b184e8 48%,#ff5c8a);--hx-b:linear-gradient(110deg,#6f74e8,#a779e6 55%,#f0487a)}
+    #page-bets .bo-hero{padding:28px 28px 26px;border-radius:28px;margin-bottom:14px;border:none;background:radial-gradient(70% 110% at 100% 0%,rgba(240,72,122,.20),transparent 62%),radial-gradient(80% 120% at 0% 100%,rgba(111,116,232,.28),transparent 60%),linear-gradient(160deg,#17133a,#08070f 70%);box-shadow:0 34px 80px -44px rgba(124,134,255,.9);animation:boIn .6s cubic-bezier(.2,.9,.25,1) both}
+    @keyframes boIn{from{opacity:0;transform:translate3d(0,16px,0)}}
+    #page-bets .bo-hero::before{content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;background:linear-gradient(120deg,#6f74e8,#a779e6 45%,#f0487a);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;opacity:.8}
+    #page-bets .bo-hero::after{inset:0;right:0;top:0;width:auto;height:auto;border-radius:0;border:none;box-shadow:none;background:repeating-linear-gradient(115deg,rgba(255,255,255,.03) 0 1px,transparent 1px 26px);-webkit-mask:linear-gradient(90deg,transparent,#000 65%);mask:linear-gradient(90deg,transparent,#000 65%)}
+    #page-bets .bo-hero>*{position:relative;z-index:1}
+    #page-bets .bo-kicker{display:inline-flex;align-items:center;gap:8px;font:800 .6rem/1 system-ui,sans-serif;letter-spacing:3px;color:#a9aef5}
+    #page-bets .bo-kicker::before{content:'';width:22px;height:2px;border-radius:2px;background:var(--hx-g)}
+    #page-bets .bo-title{font-style:italic;font-size:clamp(2.6rem,9vw,4.6rem);line-height:.9;margin-top:10px;padding-right:.12em;background:linear-gradient(100deg,#fff 20%,#c9ccff 55%,#ff9db7);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+    #page-bets .bo-sub{font-size:.82rem;color:#a8abc9;margin-top:8px}
+    #page-bets .bo-wallet{min-width:210px;border:none;border-radius:20px;padding:15px 18px;background:rgba(8,7,15,.78);box-shadow:inset 0 0 0 1px rgba(124,134,255,.38);backdrop-filter:none;-webkit-backdrop-filter:none}
+    #page-bets .bo-wallet .bo-kicker::before{display:none}
+    #page-bets .bo-bal{font-style:italic;font-size:2.7rem}
+    #page-bets .bo-ticker{border-radius:14px}
+    #page-bets .bo-disclaimer{margin:2px 0 18px}
+    #page-bets .bo-divs{padding:5px;border-radius:999px;background:rgba(255,255,255,.03);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);border:none}
+    #page-bets .bo-divs>button{border-radius:999px;font-style:italic;transition:color .2s,background .2s}
+    #page-bets .bo-divs>button.on{background:var(--hx-b);box-shadow:0 10px 22px -10px rgba(167,121,230,.9)}
+    #page-bets .bo-divs>button.on::after{display:none}
+    #page-bets .bo-fmt{border-radius:999px}#page-bets .bo-fmt button.on{background:rgba(124,134,255,.3)}
+    #page-bets .bo-card{border-radius:22px;border:1px solid var(--bline);background:linear-gradient(170deg,#15122b,#0b0a14 72%);box-shadow:0 26px 60px -38px rgba(90,94,201,.75)}
+    #page-bets .bo-card-h{padding:16px 18px;font-style:italic;font-weight:900;font-size:1.15rem;letter-spacing:.5px;background:linear-gradient(90deg,rgba(111,116,232,.2),rgba(240,72,122,.05) 70%,transparent)}
+    #page-bets .bo-card-h small{font-style:normal}
+    #page-bets .bo-row{padding:11px 18px}
+    #page-bets .bo-row:hover{background:linear-gradient(90deg,rgba(124,134,255,.09),transparent 80%)}
+    #page-bets .bo-st,#page-bets .bo-hstats div{background:#110f20}
+    #page-bets .bo-st b,#page-bets .bo-hstats b{font-style:italic;font-size:1.5rem}
+    #page-bets .bo-odd{border-radius:12px;border:none;background:rgba(255,255,255,.04);box-shadow:inset 0 0 0 1px rgba(124,134,255,.24);font-style:italic;transition:transform .15s,box-shadow .15s,background .15s}
+    #page-bets .bo-odd:hover:not(:disabled){background:rgba(124,134,255,.18);box-shadow:inset 0 0 0 1px #7c86ff;transform:translateY(-2px)}
+    #page-bets .bo-odd.on{background:var(--hx-b);box-shadow:0 10px 22px -10px rgba(240,72,122,.85)}
+    #page-bets .bo-odd.backed{background:rgba(74,222,128,.12);box-shadow:inset 0 0 0 1px rgba(74,222,128,.5)}
+    #page-bets .bo-odd.boosted{box-shadow:inset 0 0 0 1px #ffc800}
+    #page-bets .bo-odd.locked{box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+    #page-bets .bo-htabs button{border-radius:999px;padding:6px 11px}#page-bets .bo-htabs button.on{background:var(--hx-b)}
+    #page-bets .bo-pager>button,#page-bets .bo-pager span button{border-radius:999px}
+    #page-bets .bo-secbar button{border:none;border-radius:24px;background:linear-gradient(165deg,#17142c,#0c0b15 70%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);font-style:italic;font-weight:900;transition:transform .25s cubic-bezier(.2,1,.3,1),box-shadow .25s}
+    #page-bets .bo-secbar button:hover{transform:translateY(-4px);box-shadow:inset 0 0 0 1px #7c86ff,0 22px 46px -24px rgba(124,134,255,.85)}
+    #page-bets .bo-secbar button.on{background:linear-gradient(165deg,rgba(111,116,232,.34),rgba(240,72,122,.14));box-shadow:inset 0 0 0 1px #7c86ff}
+    #page-bets .bo-secbar button span{background:linear-gradient(160deg,#211c4a,#100e22);box-shadow:inset 0 0 0 1px rgba(124,134,255,.35)}
+    #page-bets .bo-secbar button.on span{background:var(--hx-b);color:#fff}
+    #page-bets .bo-h2h{border-radius:18px}
+    #page-bets .bo-vs{background:var(--hx-b);color:#fff;font-style:italic}
+    #page-bets .bo-slip{border-radius:22px;padding:18px;border:none;background:radial-gradient(90% 70% at 0% 0%,rgba(111,116,232,.34),transparent 62%),radial-gradient(70% 60% at 100% 100%,rgba(240,72,122,.16),transparent 62%),#0f0d1f;box-shadow:inset 0 0 0 1px rgba(124,134,255,.5),0 26px 60px -30px rgba(90,94,201,.9)}
+    #page-bets .bo-slip .btn-primary{border-radius:999px;padding:13px;font:900 1rem/1 'Barlow Condensed',sans-serif;letter-spacing:1.6px;text-transform:uppercase;background:var(--hx-b);box-shadow:0 12px 26px -10px rgba(240,72,122,.8)}
+    #page-bets .bo-slip-n{background:var(--hx-b)}
+    #page-bets .bo-slip-row input,#page-bets .bo-slip-row button{border-radius:12px}
+    #page-bets .bo-leg{border-radius:14px}
+    #page-bets .bo-bet::before{background:var(--hx-g)}
+    #page-bets .bo-bet.won::before{background:#4ade80}#page-bets .bo-bet.lost::before{background:#e8002d}#page-bets .bo-bet.void::before{background:var(--muted)}
+    #page-bets .bo-lb.me{background:linear-gradient(90deg,rgba(124,134,255,.2),rgba(240,72,122,.06) 80%)}
+    #page-bets .bo-lb-c{font-style:italic;font-size:1.05rem}
+    #page-bets .bo-tk-live{background:var(--hx-b)}
+    @media (max-width:700px){
+      #page-bets .bo-hero{padding:22px 18px 20px;border-radius:22px}
+      #page-bets .bo-wallet{width:100%}
+      #page-bets .bo-card{border-radius:20px}
+      #page-bets .bo-divs{border-radius:18px}
+    }
   </style>
   <div id="bets-content"></div>
 </div>
@@ -24752,13 +24811,42 @@ window.confirmTransfer = async function(oldDriverId, newDriverId, div, teamId, c
 window._signedPopup = function(id, name, isConstructor) {
   const ent = isConstructor ? (window._allConstrs || []).find(x => x.id === id) : (window._allDrivers || []).find(x => x.id === id);
   const pic = ent ? (isConstructor ? (ent.logo || '') : (typeof driverPhoto === 'function' ? driverPhoto(ent) : '')) : '';
-  const body = `<div style="text-align:center;padding:6px 4px 2px">
-    <div class="sg-pic" style="width:96px;height:96px;margin:4px auto 12px;border-radius:${isConstructor?'18px':'50%'};overflow:hidden;background:var(--surface3);border:3px solid #4ade80;box-shadow:0 0 24px rgba(74,222,128,.5);display:flex;align-items:center;justify-content:center">${pic ? `<img src="${esc(pic)}" style="width:100%;height:100%;object-fit:${isConstructor?'contain':'cover'};object-position:top center">` : '<span style="font-size:2rem;color:var(--muted)">?</span>'}</div>
-    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.5rem;letter-spacing:1px;color:#4ade80">CONGRATULATIONS!</div>
-    <div style="font-size:1rem;margin-top:4px">You have signed <strong>${esc(name || 'your new signing')}</strong></div>
-    <div style="display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap">
-      <button class="btn btn-secondary" onclick="document.getElementById('modal-overlay').classList.add('hidden')">Carry on shopping</button>
-      <button class="btn btn-primary" onclick="document.getElementById('modal-overlay').classList.add('hidden');showPage('my-team')">Go to My Team</button>
+  const tm = ent && !isConstructor && ent.team && !/^reserve$/i.test(ent.team) ? ent.team : '';
+  const lg = tm && typeof getTeamLogo === 'function' ? getTeamLogo(tm) : '';
+  const pr = ent ? (isConstructor ? (typeof constructorPrice === 'function' ? constructorPrice(ent) : null) : (typeof driverPrice === 'function' ? driverPrice(ent) : null)) : null;
+  const chips = [ent && !isConstructor && ent.division ? esc(ent.division) : '', tm ? (lg ? `<img src="${esc(lg)}" alt="" onerror="this.remove()">` : '') + esc(tm) : '', typeof pr === 'number' && isFinite(pr) ? '$' + pr.toFixed(1) + 'M' : ''].filter(Boolean);
+  const body = `<style>
+    .sg-wrap{position:relative;overflow:hidden;text-align:center;margin:-4px -2px -2px;padding:26px 16px 18px;border-radius:22px;background:radial-gradient(70% 60% at 50% 0%,rgba(124,134,255,.34),transparent 70%),radial-gradient(60% 50% at 100% 100%,rgba(240,72,122,.2),transparent 70%),linear-gradient(170deg,#17133a,#08070f 75%)}
+    .sg-wrap::after{content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;background:linear-gradient(120deg,#6f74e8,#a779e6 45%,#f0487a);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
+    .sg-lines{position:absolute;inset:0;background:repeating-linear-gradient(115deg,rgba(255,255,255,.035) 0 1px,transparent 1px 24px);-webkit-mask:linear-gradient(180deg,#000,transparent 70%);mask:linear-gradient(180deg,#000,transparent 70%);pointer-events:none}
+    .sg-wrap>*:not(.sg-lines){position:relative}
+    .sg-k{display:inline-flex;align-items:center;gap:8px;font:800 .58rem/1 system-ui,sans-serif;letter-spacing:3px;text-transform:uppercase;color:#a9aef5;animation:sgUp .5s .05s both}
+    .sg-k::before,.sg-k::after{content:'';width:18px;height:2px;border-radius:2px;background:linear-gradient(100deg,#7c86ff,#b184e8 48%,#ff5c8a)}
+    .sg-ring{width:118px;height:118px;margin:16px auto 14px;padding:3px;border-radius:50%;background:conic-gradient(from 210deg,#6f74e8,#a779e6,#f0487a,#6f74e8);animation:sgPop .6s cubic-bezier(.2,1.4,.4,1) both}
+    .sg-ring.sq{border-radius:26px}
+    .sg-pic{width:100%;height:100%;border-radius:inherit;overflow:hidden;background:#12101f;display:flex;align-items:center;justify-content:center;font:900 2rem 'Barlow Condensed',sans-serif;color:#8f93b8}
+    .sg-pic img{width:100%;height:100%;object-fit:cover;object-position:top center}.sg-ring.sq .sg-pic img{object-fit:contain;padding:14px}
+    .sg-h{font:italic 900 clamp(1.45rem,6.6vw,2.2rem)/.95 'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.3px;padding-right:.1em;background:linear-gradient(100deg,#7c86ff,#b184e8 48%,#ff5c8a);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:sgUp .5s .15s both}
+    .sg-s{margin-top:8px;font-size:.9rem;color:#a8abc9;animation:sgUp .5s .22s both}
+    .sg-n{margin-top:2px;font:italic 900 clamp(1.6rem,7vw,2.1rem)/1 'Barlow Condensed',sans-serif;text-transform:uppercase;color:#fff;overflow-wrap:anywhere;animation:sgUp .5s .28s both}
+    .sg-chips{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:12px;animation:sgUp .5s .34s both}
+    .sg-chips span{display:inline-flex;align-items:center;gap:6px;font:800 .62rem/1 system-ui,sans-serif;letter-spacing:.8px;color:#d5d7f5;padding:6px 11px;border-radius:999px;background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+    .sg-chips img{height:13px;width:20px;object-fit:contain}
+    .sg-btns{display:flex;gap:10px;justify-content:center;margin-top:20px;flex-wrap:wrap;animation:sgUp .5s .42s both}
+    .sg-btns .hx-btn{flex:1 1 130px;padding:13px 10px;white-space:nowrap;font-size:.78rem;letter-spacing:1.2px}
+    @keyframes sgUp{from{opacity:0;transform:translate3d(0,10px,0)}}
+    @keyframes sgPop{from{opacity:0;transform:scale(.6)}}
+    @media (prefers-reduced-motion:reduce){.sg-wrap *{animation:none!important}}
+  </style><div class="sg-wrap"><div class="sg-lines"></div>
+    <div class="sg-k">Welcome to the team</div>
+    <div class="sg-ring${isConstructor ? ' sq' : ''}"><div class="sg-pic">${pic ? `<img src="${esc(pic)}" alt="" onerror="this.outerHTML='?'">` : '?'}</div></div>
+    <div class="sg-h">Congratulations!</div>
+    <div class="sg-s">You have signed</div>
+    <div class="sg-n">${esc(name || 'your new signing')}</div>
+    ${chips.length ? `<div class="sg-chips">${chips.map(c => `<span>${c}</span>`).join('')}</div>` : ''}
+    <div class="sg-btns">
+      <button class="hx-btn ghost" onclick="document.getElementById('modal-overlay').classList.add('hidden')">Carry on shopping</button>
+      <button class="hx-btn" onclick="document.getElementById('modal-overlay').classList.add('hidden');showPage('my-team')">Go to My Team</button>
     </div></div>`;
   document.getElementById('modal-title').innerHTML = isConstructor ? 'New constructor' : 'New signing';
   document.getElementById('modal-body').innerHTML = body;
