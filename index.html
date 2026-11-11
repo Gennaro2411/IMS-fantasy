@@ -1828,10 +1828,39 @@
       #mobile-more-sheet .sheet-btn:active{transform:scale(.96);box-shadow:inset 0 0 0 1px #7c86ff}
       #mobile-sheet-backdrop{background:rgba(4,3,10,.72)}
     }
+    .hdr-wallet{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 12px 0 6px;border-radius:999px;border:none;cursor:pointer;font:inherit;color:#ffe083;font-weight:800;font-size:.82rem;background:linear-gradient(170deg,#2a2210,#140f05 80%) padding-box,linear-gradient(110deg,#f7cf55,#d9a21c 50%,#f0487a) border-box;border:1px solid transparent;box-shadow:0 4px 16px -8px rgba(247,207,85,.6);transition:transform .15s,box-shadow .15s}
+    .hdr-wallet .imc{font-size:1.4rem}.hdr-wallet:hover{transform:translateY(-1px);box-shadow:0 6px 20px -6px rgba(247,207,85,.7)}
+    @media (max-width:640px){.hdr-wallet{height:32px;padding:0 9px 0 4px;font-size:.74rem}.hdr-wallet .imc{font-size:1.2rem}}
+    .wl-load{padding:26px;text-align:center;color:var(--muted)}
+    .wl-hero{position:relative;overflow:hidden;border-radius:20px;padding:22px 20px 18px;text-align:center;background:radial-gradient(80% 90% at 50% 0%,rgba(247,207,85,.22),transparent 60%),radial-gradient(60% 60% at 100% 100%,rgba(240,72,122,.18),transparent 70%),linear-gradient(170deg,#1c1730,#0b0a14 80%);box-shadow:inset 0 0 0 1px rgba(247,207,85,.28)}
+    .wl-hero::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(115deg,rgba(255,255,255,.025) 0 2px,transparent 2px 14px);pointer-events:none}
+    .wl-coin{font-size:3.4rem;line-height:1;filter:drop-shadow(0 8px 18px rgba(247,207,85,.45))}.wl-coin .imc{animation:wlSpin 3.2s ease-in-out infinite}
+    @keyframes wlSpin{0%,70%,100%{transform:rotateY(0)}85%{transform:rotateY(180deg)}}
+    .wl-bal{margin-top:8px;display:flex;flex-direction:column;align-items:center}.wl-bal small{font-size:.62rem;font-weight:800;letter-spacing:.22em;text-transform:uppercase;color:#d8c48a}
+    .wl-bal b{font-family:'Titillium Web',sans-serif;font-weight:900;font-size:2.8rem;line-height:1;background:linear-gradient(180deg,#fff7cf,#f7cf55 55%,#d9a21c);-webkit-background-clip:text;background-clip:text;color:transparent;font-variant-numeric:tabular-nums}
+    .wl-bal span{font-size:.72rem;font-weight:800;letter-spacing:.14em;color:#f7cf55;margin-top:2px}
+    .wl-sub{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin-top:12px}.wl-sub span{font-size:.74rem;padding:5px 10px;border-radius:999px;background:rgba(255,255,255,.06);color:#c9cbe8}.wl-sub b{color:#fff}
+    .wl-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+    .wl-kpis>div{padding:11px 10px;border-radius:14px;background:linear-gradient(170deg,#15122b,#0b0a14 80%);box-shadow:inset 0 0 0 1px rgba(124,134,255,.2);display:flex;flex-direction:column;gap:3px}
+    .wl-kpis small{font-size:.58rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8b8fb8}.wl-kpis b{font-size:1.1rem;font-weight:900;color:#fff}.wl-kpis b i{font-style:normal;font-size:.66rem;color:#8b8fb8;margin-left:1px}.wl-kpis em{font-style:normal;font-size:.62rem;color:#a5a9d6}
+    .wl-kpis .up{color:#4ade80}.wl-kpis .dn{color:#f87171}
+    @media (max-width:560px){.wl-kpis{grid-template-columns:repeat(2,1fr)}}
+    .wl-split{margin-top:14px}.wl-sh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px}.wl-sh span{font-size:.66rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;background:linear-gradient(100deg,#7c86ff,#ff5c8a);-webkit-background-clip:text;background-clip:text;color:transparent}.wl-sh small{font-size:.66rem;color:#8b8fb8}
+    .wl-bar{display:flex;height:9px;border-radius:9px;overflow:hidden;background:rgba(255,255,255,.07)}.wl-bar i{background:linear-gradient(90deg,#6f74e8,#a779e6)}.wl-bar b{background:linear-gradient(90deg,#f0487a,#ffb020)}
+    .wl-leg{display:flex;gap:14px;margin-top:6px;font-size:.7rem;color:#a5a9d6}.wl-leg i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}.wl-leg i.a{background:#a779e6}.wl-leg i.b{background:#ff7a5c}
+    .wl-acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}.wl-acts .hx-btn{justify-content:center}
+    .wl-list{display:flex;flex-direction:column;gap:6px;max-height:340px;overflow:auto;padding-right:2px}
+    .wl-row{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:12px;background:rgba(255,255,255,.03);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
+    .wl-ri{flex:none;width:32px;height:32px;border-radius:10px;display:grid;place-items:center;font-size:.95rem;background:rgba(124,134,255,.14)}
+    .wl-row.won .wl-ri,.wl-row.cashed .wl-ri{background:rgba(74,222,128,.15)}.wl-row.lost .wl-ri{background:rgba(248,113,113,.14);color:#f87171;font-weight:900}.wl-row.game .wl-ri{background:rgba(247,207,85,.14)}
+    .wl-rt{flex:1;min-width:0;display:flex;flex-direction:column}.wl-rt b{font-size:.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.wl-rt small{font-size:.68rem;color:#8b8fb8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .wl-rd{flex:none;font-weight:900;font-size:.86rem;font-variant-numeric:tabular-nums;color:#a5a9d6}.wl-rd.up{color:#4ade80}.wl-rd.dn{color:#f87171}.wl-rd.open{color:#ffb020}
+    @media (prefers-reduced-motion:reduce){.wl-coin .imc{animation:none}}
     @media (prefers-reduced-motion:reduce){#hdr-music.playing .hm-eq i,.hdr-search-results{animation:none}}
   </style>
   <span style="display:inline-flex;align-items:center;gap:7px;margin-left:12px;padding-left:12px;border-left:1px solid rgba(255,255,255,0.10)">
     <button id="help-btn" class="nav-icon-btn" onclick="openHelpModal()" title="How it all works">❓</button>
+    <button id="wallet-btn" class="hdr-wallet" onclick="openWallet()" style="display:none" title="IM$ wallet"><span class="imc"></span><b id="wallet-amt">—</b></button>
     <button id="settings-btn" class="nav-icon-btn" onclick="openSettingsModal()" style="display:none" title="Settings">⚙</button>
     <button id="logout-btn" class="nav-text-btn" onclick="logoutUser()" style="display:none">Logout</button>
   </span>
@@ -2147,6 +2176,12 @@
       </div>
       <div id="rename-team-msg" style="margin-top:10px;font-size:.8rem"></div>
     </div>
+  </div>
+</div>
+<div id="wallet-modal" class="modal-overlay hidden" onclick="if(event.target===this)closeWallet()">
+  <div class="modal xm wl-modal" style="max-width:620px">
+    <div class="modal-title xm-title"><div><small>Your account</small><h2>IM$ <em>wallet</em></h2></div><button class="modal-close" onclick="closeWallet()">✕</button></div>
+    <div id="wallet-body"><div class="wl-load">Loading…</div></div>
   </div>
 </div>
 <div id="settings-modal" class="modal-overlay hidden" onclick="if(event.target===this)closeSettingsModal()">
@@ -7415,7 +7450,7 @@ function forceSignOutDeleted() {
   _clearSession('account deleted — confirmed missing (alive check)');
   try { localStorage.removeItem('imsMyTeamDocId'); } catch(e){}
   try { document.getElementById('logout-btn').style.display = 'none'; } catch(e){}
-  try { document.getElementById('settings-btn').style.display = 'none'; } catch(e){}
+  try { document.getElementById('settings-btn').style.display = 'none'; try { document.getElementById('wallet-btn').style.display = 'none'; } catch(e){} } catch(e){}
   try { closeSettingsModal(); } catch(e){}
   if (typeof showToast === 'function') showToast('This account no longer exists — you have been signed out.', 'error');
   try { showLoginOverlay(); } catch(e){}
@@ -7666,7 +7701,7 @@ async function handleDiscordCallback() {
         _saveSession(currentUser);
         document.getElementById('login-overlay').style.display = 'none';
         document.getElementById('logout-btn').style.display = '';
-  try { document.getElementById('settings-btn').style.display = ''; } catch(e){}
+  try { document.getElementById('settings-btn').style.display = ''; try { document.getElementById('wallet-btn').style.display = ''; window._wlPill && window._wlPill(); } catch(e){} } catch(e){}
         renderDashboard();
         renderHome();
         renderMyTeam();
@@ -7807,7 +7842,7 @@ function completeLogin(team, isNew = false) {
   _saveSession(currentUser);
   document.getElementById('login-overlay').style.display = 'none';
   document.getElementById('logout-btn').style.display = '';
-  try { document.getElementById('settings-btn').style.display = ''; } catch(e){}
+  try { document.getElementById('settings-btn').style.display = ''; try { document.getElementById('wallet-btn').style.display = ''; window._wlPill && window._wlPill(); } catch(e){} } catch(e){}
   renderDashboard();
   (window.requestIdleCallback || ((f) => setTimeout(f, 1200)))(() => { try { renderHome(); renderMyTeam(); } catch (e) {} }); // off-screen pages: build when idle
   hideAppSplash();
@@ -8654,6 +8689,46 @@ window.refreshCurrentPage = async function(btn) {
     if (typeof showToast === 'function') showToast(msg, 'error');
   }
 };
+
+// ===== IM$ WALLET =====
+const _wlFmt = (n) => Math.round(n || 0).toLocaleString();
+const _wlShort = (n) => { n = Math.round(n || 0); return Math.abs(n) >= 1e6 ? (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M' : Math.abs(n) >= 1e4 ? (n / 1e3).toFixed(1).replace(/\.0$/, '') + 'k' : n.toLocaleString(); };
+window._wlPill = async function() { const el = document.getElementById('wallet-amt'); if (!el || typeof currentUser === 'undefined' || !currentUser || !currentUser.userId) return;
+  try { const c = await dbGet('coins', currentUser.userId).catch(() => null); el.textContent = _wlShort(c ? c.balance : BET_START_COINS); } catch (e) {} };
+const WL_GAMES = { wd: ['🟩', 'PaddockDle'], gr: ['🔢', 'PaddockDle Grid'], hl: ['⬆️', 'Higher or Lower'], cn: ['🧩', 'Connections'], pt: ['🎯', 'Pointless'], tq: ['🧠', 'Trivia'], cp: ['🛣️', 'Career Path'], st: ['⚖️', 'Steward Simulator'], qs: ['⏱️', 'Quali Shootout'], wf: ['🏁', 'Who Finished Where?'], pp: ['🔗', 'Pit Lane Pairs'] };
+window.closeWallet = function() { document.getElementById('wallet-modal').classList.add('hidden'); };
+window.openWallet = async function() {
+  const M = document.getElementById('wallet-modal'), B = document.getElementById('wallet-body'); if (!M || !B) return; M.classList.remove('hidden');
+  if (typeof currentUser === 'undefined' || !currentUser || !currentUser.userId) { B.innerHTML = '<div class="wl-load">Log in to see your wallet.</div>'; return; }
+  const uid = currentUser.userId;
+  const [c, all] = await Promise.all([_betLoadCoins(uid).catch(() => ({ balance: 0 })), dbGetAll('bets').catch(() => [])]);
+  const bets = all.filter(b => b && b.userId === uid && !b.fromAcca).sort((a, b) => (b.settledAt || b.createdAt || 0) - (a.settledAt || a.createdAt || 0));
+  const open = bets.filter(b => b.status === 'open'), staked = open.reduce((a, b) => a + (b.free ? 0 : b.stake || 0), 0), toWin = open.reduce((a, b) => a + (Number(b.potential || b.toWin || (b.stake || 0) * (b.odds || 0)) || 0), 0);
+  const won = bets.filter(b => b.status === 'won'), lost = bets.filter(b => b.status === 'lost');
+  const net = bets.reduce((a, b) => a + (b.status === 'won' || b.status === 'cashed' ? (Number(b.payout) || 0) - (b.free ? 0 : b.stake || 0) : b.status === 'lost' ? -(b.free ? 0 : b.stake || 0) : 0), 0);
+  const best = won.reduce((m, b) => Math.max(m, (Number(b.payout) || 0) - (b.free ? 0 : b.stake || 0)), 0), rate = won.length + lost.length ? Math.round(won.length / (won.length + lost.length) * 100) : null;
+  // Activity: bets + game rewards, newest first.
+  const act = [];
+  bets.slice(0, 25).forEach(b => { const st = b.status, sk = b.free ? 0 : b.stake || 0, d = st === 'won' || st === 'cashed' ? (Number(b.payout) || 0) - sk : st === 'lost' ? -sk : st === 'void' ? 0 : -sk;
+    act.push({ t: b.settledAt || b.createdAt || 0, ic: st === 'won' ? '🏆' : st === 'lost' ? '✕' : st === 'open' ? '🎟️' : st === 'cashed' ? '💸' : '↩️', cls: st, h: b.label || 'Bet', s: [b.raceName, st === 'open' ? 'In play · ' + _wlFmt(sk) + ' staked' + (b.free ? ' (free bet)' : '') : st === 'void' ? 'Refunded' : st === 'cashed' ? 'Cashed out' : st === 'won' ? 'Won' : 'Lost'].filter(Boolean).join(' · '), d, open: st === 'open' }); });
+  Object.entries(c.gameRewards || {}).forEach(([k, v]) => { const g = WL_GAMES[String(k).split('-')[0]]; if (!g) return; const tag = /-win$/.test(k) ? 'Solve bonus' : /-daily$/.test(k) ? 'Daily played' : /-hidden$/.test(k) ? 'Hidden bonus' : 'Game reward';
+    if (Array.isArray(v)) v.forEach(x => x && act.push({ t: x.t || 0, ic: g[0], cls: 'game', h: g[1], s: tag, d: x.a || 0 }));
+    else if (typeof v === 'string') { const m = v.match(/^(\d+)\/(\d+)\/(\d{4})/); act.push({ t: m ? Date.UTC(+m[3], +m[2] - 1, +m[1], 12) : 0, ic: g[0], cls: 'game', h: g[1], s: tag + (m ? '' : ''), d: 10, est: 1 }); } });
+  act.sort((a, b) => b.t - a.t);
+  const when = (t) => { if (!t) return ''; const s = (Date.now() - t) / 1e3; return s < 3600 ? Math.max(1, Math.round(s / 60)) + 'm ago' : s < 86400 ? Math.round(s / 3600) + 'h ago' : s < 7 * 86400 ? Math.round(s / 86400) + 'd ago' : new Date(t).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }); };
+  const row = (a) => `<div class="wl-row ${a.cls}"><span class="wl-ri">${a.ic}</span><span class="wl-rt"><b>${esc(a.h)}</b><small>${esc(a.s)}${a.t ? ' · ' + when(a.t) : ''}</small></span>${a.est ? '<span class="wl-rd up">✓</span>' : ''}<span style="${a.est ? 'display:none' : ''}" class="wl-rd ${a.open ? 'open' : a.d > 0 ? 'up' : a.d < 0 ? 'dn' : ''}">${a.open ? '−' + _wlFmt(-a.d) : a.d > 0 ? '+' + _wlFmt(a.d) : a.d < 0 ? '−' + _wlFmt(-a.d) : '±0'}</span></div>`;
+  const ge = c.gameEarned || 0, tot = Math.max(1, (c.won || 0) + ge);
+  B.innerHTML = `<div class="wl-hero"><div class="wl-coin"><span class="imc"></span></div><div class="wl-bal"><small>Balance</small><b id="wl-bal" data-to="${Math.round(c.balance || 0)}">0</b><span>IM$</span></div>
+      <div class="wl-sub"><span>🎟️ <b>${_wlFmt(staked)}</b> in play</span>${toWin ? `<span>🎯 up to <b>${_wlFmt(toWin)}</b> to win</span>` : ''}</div></div>
+    <div class="wl-kpis"><div><small>Bet profit</small><b class="${net > 0 ? 'up' : net < 0 ? 'dn' : ''}">${net > 0 ? '+' : net < 0 ? '−' : ''}${_wlFmt(Math.abs(net))}</b></div><div><small>Won from games</small><b class="up">+${_wlFmt(ge)}</b></div>
+      <div><small>Bet record</small><b>${won.length}<i>W</i> ${lost.length}<i>L</i></b>${rate != null ? `<em>${rate}% hit rate</em>` : ''}</div><div><small>Biggest win</small><b>${best ? '+' + _wlFmt(best) : '—'}</b></div></div>
+    <div class="wl-split"><div class="wl-sh"><span>Where your winnings came from</span></div><div class="wl-bar"><i style="width:${(c.won || 0) / tot * 100}%"></i><b style="width:${ge / tot * 100}%"></b></div>
+      <div class="wl-leg"><span><i class="a"></i>Bets ${_wlFmt(c.won || 0)}</span><span><i class="b"></i>Games ${_wlFmt(ge)}</span></div></div>
+    <div class="wl-acts"><button class="hx-btn" onclick="closeWallet();showPage('bets')">🎟️ Place a bet</button><button class="hx-btn ghost" onclick="closeWallet();showPage('games')">🎮 Earn in games</button></div>
+    <div class="wl-sh" style="margin-top:16px"><span>Recent activity</span><small>${act.length ? Math.min(act.length, 20) + ' latest' : ''}</small></div>
+    <div class="wl-list">${act.length ? act.slice(0, 20).map(row).join('') : '<div class="wl-load">Nothing yet. Place a bet or play a daily game to get started.</div>'}</div>`;
+  const el = document.getElementById('wl-bal'), to = +el.dataset.to || 0, t0 = performance.now(); const f = (t) => { const q = Math.min(1, (t - t0) / 900); el.textContent = Math.round(to * (1 - Math.pow(1 - q, 3))).toLocaleString(); if (q < 1) requestAnimationFrame(f); }; requestAnimationFrame(f);
+  const pill = document.getElementById('wallet-amt'); if (pill) pill.textContent = _wlShort(c.balance); };
 window.openHelpModal = function() { document.getElementById('help-modal').classList.remove('hidden'); };
 window.closeHelpModal = function() { document.getElementById('help-modal').classList.add('hidden'); };
 window.openSettingsModal = async function() {
@@ -8781,7 +8856,7 @@ window.logoutUser = function() {
     _clearSession('pressed Log out');
     try { localStorage.removeItem('imsMyTeamDocId'); } catch(e){}
     document.getElementById('logout-btn').style.display = 'none';
-  try { document.getElementById('settings-btn').style.display = 'none'; } catch(e){}
+  try { document.getElementById('settings-btn').style.display = 'none'; try { document.getElementById('wallet-btn').style.display = 'none'; } catch(e){} } catch(e){}
     showLoginOverlay();
   }, 'Log Out');
 };
@@ -8938,7 +9013,7 @@ async function init() {
       _saveSession(currentUser); // refresh the month-long sign-in every time the app opens
       try { const ov = document.getElementById('login-overlay'); if (ov) ov.style.display = 'none'; } catch (e) {} // in case anything showed it while start-up was slow
       document.getElementById('logout-btn').style.display = '';
-  try { document.getElementById('settings-btn').style.display = ''; } catch(e){}
+  try { document.getElementById('settings-btn').style.display = ''; try { document.getElementById('wallet-btn').style.display = ''; window._wlPill && window._wlPill(); } catch(e){} } catch(e){}
     } catch(e) {}
   }
   // Validate the restored session against the database — if the team was deleted (e.g. by an
@@ -8966,7 +9041,7 @@ async function init() {
           currentUser = null;
           _clearSession('account not found on app open (team doc 404)');
           try { document.getElementById('logout-btn').style.display = 'none'; } catch(e){}
-          try { document.getElementById('settings-btn').style.display = 'none'; } catch(e){}
+          try { document.getElementById('settings-btn').style.display = 'none'; try { document.getElementById('wallet-btn').style.display = 'none'; } catch(e){} } catch(e){}
         }
       }
     } catch(e) { /* offline / fetch failed — leave session as-is rather than lock them out */ }
@@ -27089,7 +27164,7 @@ window.settingsDeleteTeam = function() {
     currentUser = null;
     _clearSession('deleted own account');
     try { document.getElementById('logout-btn').style.display = 'none'; } catch(e){}
-    try { document.getElementById('settings-btn').style.display = 'none'; } catch(e){}
+    try { document.getElementById('settings-btn').style.display = 'none'; try { document.getElementById('wallet-btn').style.display = 'none'; } catch(e){} } catch(e){}
     closeSettingsModal();
     showLoginOverlay();
   });
