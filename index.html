@@ -1867,6 +1867,8 @@
     .wl-hero.lv0{box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}.wl-hero.lv6{box-shadow:inset 0 0 0 1px rgba(247,207,85,.7),0 0 34px -8px rgba(247,207,85,.55)}
     .wl-hero.lv7,.wl-hero.lv8{box-shadow:inset 0 0 0 1.5px rgba(247,207,85,.8),0 0 36px -8px rgba(247,207,85,.6)}
     .wl-beam{animation:wlBeam 7s ease-in-out infinite}.wl-beam.b2{animation-delay:-3.5s}@keyframes wlBeam{0%,100%{transform:rotate(-9deg)}50%{transform:rotate(9deg)}}
+    .wl-svan{transform:translate(110px,58px);animation:wlSvan 18s ease-in-out infinite}@keyframes wlSvan{0%,100%{transform:translate(110px,58px)}50%{transform:translate(170px,44px)}}
+    .wl-svan-r{filter:drop-shadow(0 0 4px rgba(200,180,255,.6));animation:wlSvr 14s linear infinite}@keyframes wlSvr{to{transform:rotate(360deg)}}
     .wl-truck{animation:wlDrv 11s linear infinite}@keyframes wlDrv{from{transform:translateX(420px)}to{transform:translateX(-40px)}}
     .wl-heli{animation:wlHeli 12s ease-in-out infinite}@keyframes wlHeli{0%,100%{transform:translate(0,0)}50%{transform:translate(120px,-14px)}}
     .wl-yacht{animation:wlSail 26s linear infinite}@keyframes wlSail{from{transform:translateX(-30px)}to{transform:translateX(430px)}}
@@ -1884,7 +1886,7 @@
     @keyframes wlFall{from{transform:translateY(0)}to{transform:translateY(250px)}}
     .wl-spider{animation:wlSpd 4.5s ease-in-out infinite}
     @keyframes wlSpd{0%,100%{transform:translateY(-8px)}50%{transform:translateY(14px)}}
-    @media (prefers-reduced-motion:reduce){.wl-tw,.wl-fall,.wl-spider,.wl-hero.lv9,.wl-beam,.wl-truck,.wl-heli,.wl-yacht,.wl-gull,.wl-orbit,.wl-rocket,.wl-moon,.wl-shoot{animation:none}}
+    @media (prefers-reduced-motion:reduce){.wl-tw,.wl-fall,.wl-spider,.wl-hero.lv9,.wl-beam,.wl-truck,.wl-heli,.wl-svan,.wl-svan-r,.wl-yacht,.wl-gull,.wl-orbit,.wl-rocket,.wl-moon,.wl-shoot{animation:none}}
     @media (prefers-reduced-motion:reduce){.wl-coin .imc{animation:none}}
     @media (prefers-reduced-motion:reduce){#hdr-music.playing .hm-eq i,.hdr-search-results{animation:none}}
   </style>
@@ -8758,7 +8760,7 @@ function _wlVault(bal) { bal = Math.max(0, Number(bal) || 0);
       bld(88, 28, 62 + f * 22, 1), `<path d="M102 ${FL - 58 - f * 22}v-14" stroke="#ffe083" stroke-width="1.3"/>`, bld(120, 20, 40 + f * 12, 1));
     o.push(`<rect x="0" y="${FL + 4}" width="${W}" height="26" fill="#0a0818"/><path d="M0 ${FL + 4}h${W}" stroke="#f7cf55" stroke-width="1" opacity=".5"/><path d="M0 ${FL + 15}h${W}" stroke="#f7cf55" stroke-width="1" stroke-dasharray="10 9" opacity=".35"/><ellipse cx="200" cy="${FL + 8}" rx="230" ry="26" fill="url(#wlg)" opacity=".4"/>`);
     [150, 168, 244, 262, 326].forEach((x, i) => o.push(stack(x, 4 + (i * 3) % 5 + Math.round(f * 4), 8)));
-    o.push(ibag(188, 1.1, 0), ibag(222, 1.25, 0), `<g class="wl-heli"><text x="120" y="118" font-size="17">🚁</text></g><g class="wl-truck"><text x="0" y="${FL + 16}" font-size="17">🚚</text></g>`);
+    o.push(ibag(188, 1.1, 0), ibag(222, 1.25, 0), `<g class="wl-heli"><text x="120" y="118" font-size="17">🚁</text></g><g class="wl-truck">${window._VAN ? `<image href="${window._VAN}" x="0" y="${FL - 4}" width="46" height="18"/>` : ''}</g>`);
     for (let i = 0; i < 8; i++) o.push(star(20 + rnd() * 360, 90 + rnd() * 100, 3 + rnd() * 3, (rnd() * 3).toFixed(2)));
     return scene(`<linearGradient id="wlsk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#070418"/><stop offset=".7" stop-color="#1c1447"/><stop offset="1" stop-color="#4a1f5e"/></linearGradient><radialGradient id="wlbg" cx=".35" cy=".3" r=".9"><stop offset="0" stop-color="#9a6f2c"/><stop offset="1" stop-color="#4a3210"/></radialGradient>`); }
   if (L === 8) { // 500k+: your own island made of gold, at sunset.
@@ -8792,7 +8794,7 @@ function _wlVault(bal) { bal = Math.max(0, Number(bal) || 0);
     for (let i = 0; i < 110; i++) { const a = -Math.PI / 2 + (rnd() - .5) * 1.9, d = PR - 4 - rnd() * 70, x = 200 + d * Math.cos(a), y = PY + d * Math.sin(a); if (y < 228) o.push(coin(x, y, 5 + rnd() * 4)); }
     [-150, -118, -86, 86, 118, 150].forEach((dx, i) => { const y = PY - Math.sqrt(PR * PR - dx * dx); let h = ''; for (let k = 0; k < 4 + (i * 3) % 6 + Math.round(f * 4); k++) h += coin(200 + dx, y - k * 4.2, 8); o.push(h); });
     o.push(`<path d="M70 ${PY - 190}v-40" stroke="#e8e8ff" stroke-width="1.6"/><path d="M70 ${PY - 230}h28l-5 7.5 5 7.5h-28z" fill="url(#wlf)"/><text x="82" y="${PY - 219.5}" font-size="7.5" font-weight="900" text-anchor="middle" fill="#fff">IM$</text>`,
-      `<text x="300" y="${PY - 204}" font-size="20">👑</text><g class="wl-rocket"><text x="20" y="150" font-size="22">🚀</text></g>`);
+      `<text x="300" y="${PY - 204}" font-size="20">👑</text><g class="wl-rocket"><text x="20" y="150" font-size="22">🚀</text></g>`, window._VAN ? `<g class="wl-svan"><g class="wl-svan-r"><image href="${window._VAN}" x="-22" y="-9" width="44" height="17"/></g></g>` : '');
     const svg7 = `<svg class="wl-vault" viewBox="0 0 ${W} 230" preserveAspectRatio="xMidYMax slice" aria-hidden="true"><defs><linearGradient id="wlc" x1="0" x2="1"><stop offset="0" stop-color="#d9a21c"/><stop offset=".45" stop-color="#fff3b8"/><stop offset="1" stop-color="#d9a21c"/></linearGradient><linearGradient id="wls" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#05030f"/><stop offset=".6" stop-color="#140c33"/><stop offset="1" stop-color="#2a1245"/></linearGradient><radialGradient id="wln1"><stop offset="0" stop-color="#7c86ff"/><stop offset="1" stop-color="#7c86ff" stop-opacity="0"/></radialGradient><radialGradient id="wln2"><stop offset="0" stop-color="#ff5c8a"/><stop offset="1" stop-color="#ff5c8a" stop-opacity="0"/></radialGradient><radialGradient id="wlp" cx=".4" cy=".25" r=".9"><stop offset="0" stop-color="#fff3b8"/><stop offset=".35" stop-color="#f7cf55"/><stop offset="1" stop-color="#8c6309"/></radialGradient><radialGradient id="wlg"><stop offset=".8" stop-color="#f7cf55" stop-opacity="0"/><stop offset=".94" stop-color="#f7cf55" stop-opacity=".7"/><stop offset="1" stop-color="#f7cf55" stop-opacity="0"/></radialGradient><linearGradient id="wlf" x1="0" x2="1"><stop offset="0" stop-color="#6f74e8"/><stop offset="1" stop-color="#f0487a"/></linearGradient></defs>${o.join('')}</svg>`;
     return { svg: svg7, L, name: WL_TIERS[L][1], note: WL_TIERS[L][2], f: 1, next: 0, nextName: '' }; }
   // Back wall: steel panels, rivets and the big round door.
