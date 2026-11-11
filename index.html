@@ -802,6 +802,52 @@
   .lb-hist .lh-row .btn:hover{background:rgba(124,134,255,.18);box-shadow:inset 0 0 0 1px #7c86ff}
   @media (max-width:600px){.lh-champ{gap:10px;padding:14px}.lh-champ div[style*="font-size:1.3rem"]{font-size:1.3rem!important}.lh-champ span[style*="font-size:1.4rem"]{font-size:1.5rem!important}.lh-champ .champ-cup{width:52px!important}}
   @media (max-width:600px){.lh-row{flex-wrap:wrap;padding:13px 13px 12px;gap:10px}.lh-row>div:last-child:not(:nth-child(2)){width:100%;justify-content:space-between}.lh-trk{right:-10px;max-width:46%}.lh-name{font-size:1.2rem}}
+  /* ===== Team profile: IMS brand pass + insights ===== */
+  #modal-overlay.mo-tp{background:rgba(4,3,10,.8)}
+  #modal-overlay.mo-tp .modal{padding:20px!important;border:none;border-radius:26px;background:linear-gradient(175deg,#15122b,#0b0a14 40%,#09080f);box-shadow:inset 0 0 0 1px rgba(124,134,255,.3),0 40px 90px -30px rgba(0,0,0,.9);scrollbar-width:thin;scrollbar-color:#6f74e8 transparent}
+  #modal-overlay.mo-tp .modal-title{position:absolute;top:14px;right:14px;z-index:5;margin:0}
+  #modal-overlay.mo-tp .modal{position:relative}
+  #modal-overlay.mo-tp .modal-close{width:36px;height:36px;border-radius:50%;border:none;display:grid;place-items:center;color:#fff;background:rgba(8,7,15,.6);box-shadow:inset 0 0 0 1px rgba(255,255,255,.18);cursor:pointer}
+  .tp-head{margin:-20px -20px 18px!important;padding:26px 22px 22px!important;border-bottom:none!important;border-radius:26px 26px 0 0;background:radial-gradient(60% 150% at 100% 0%,color-mix(in srgb,var(--tc) 46%,transparent),transparent 64%),radial-gradient(80% 150% at 0% 0%,rgba(111,116,232,.32),transparent 60%),linear-gradient(160deg,#1b1640,#0d0b1a)!important}
+  .tp-head::before{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,transparent 0 58%,color-mix(in srgb,var(--tc) 34%,transparent) 58% 62%,transparent 62% 65%,color-mix(in srgb,var(--tc) 26%,transparent) 65% 68%,transparent 68% 72%,color-mix(in srgb,var(--tc) 18%,transparent) 72% 74%,transparent 74%),repeating-linear-gradient(115deg,color-mix(in srgb,var(--tc) 20%,transparent) 0 1px,transparent 1px 13px),repeating-linear-gradient(-115deg,rgba(255,255,255,.035) 0 1px,transparent 1px 13px);-webkit-mask:linear-gradient(90deg,transparent 12%,#000 70%);mask:linear-gradient(90deg,transparent 12%,#000 70%)}
+  .tp-head::after{content:'';position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,var(--tc),#a779e6 55%,#f0487a)}
+  .tp-kick{display:flex;align-items:center;gap:8px;font:800 .56rem/1 system-ui,sans-serif;letter-spacing:3px;text-transform:uppercase;color:#a9aef5;margin-bottom:6px}
+  .tp-kick::before{content:'';width:20px;height:2px;border-radius:2px;background:linear-gradient(100deg,#7c86ff,#b184e8 48%,#ff5c8a)}
+  .tp-name{font-style:italic;font-size:clamp(1.8rem,6vw,2.6rem)!important;line-height:.95!important;text-transform:uppercase;letter-spacing:.3px;overflow-wrap:anywhere}
+  .tp-pts{border:none!important;border-radius:20px!important;background:#0b0a14!important;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--tc) 40%,rgba(124,134,255,.34))}
+  .tp-pts div[style*="font-size:3rem"]{font-style:italic;font-size:3.6rem!important}
+  .tp-tile{border:none!important;border-radius:18px!important;background:linear-gradient(150deg,color-mix(in srgb,var(--tc) 10%,transparent),rgba(255,255,255,.022) 70%)!important;box-shadow:inset 0 0 0 1px rgba(124,134,255,.22)}
+  .tp-tile>div[style*="font-size:1.75rem"]{font-style:italic;font-size:2rem!important}
+  .tp-traj svg{border:none!important;border-radius:16px!important;background:rgba(255,255,255,.028)!important;box-shadow:inset 0 0 0 1px rgba(124,134,255,.2)}
+  .tp-ins{padding:6px 0 4px!important;border-bottom:none!important;margin-top:8px}
+  .tp .dmi-ks{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .tp-bars{display:flex;flex-direction:column;gap:9px;padding:6px 0 4px}
+  .tp-bar{display:grid;grid-template-columns:minmax(0,34%) 1fr auto;align-items:center;gap:10px;cursor:pointer}
+  .tp-bar-n{font-size:.8rem;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tp-bar-n small{font:800 .52rem/1 system-ui,sans-serif;letter-spacing:1px;color:#a9aef5;margin-right:6px}
+  .tp-bar-t{height:10px;border-radius:999px;background:rgba(255,255,255,.06);overflow:hidden}
+  .tp-bar-t i{display:block;height:100%;border-radius:999px;transform-origin:left;transform:scaleX(var(--p));animation:tpBar .8s cubic-bezier(.2,.9,.25,1) both;animation-delay:var(--d)}
+  @keyframes tpBar{from{transform:scaleX(0)}}
+  .tp-bar b{font:italic 900 1.05rem/1 'Barlow Condensed',sans-serif;color:#fff;min-width:28px;text-align:right}
+  .tp-bar:hover .tp-bar-n{color:#c3c6ff}
+  .tp-lbl{display:flex;align-items:center;gap:8px;font:800 .56rem/1 system-ui,sans-serif;letter-spacing:2.6px;text-transform:uppercase;color:#a9aef5;margin:14px 0 10px}
+  .tp-lbl::before{content:'';width:20px;height:2px;border-radius:2px;background:linear-gradient(100deg,#7c86ff,#b184e8 48%,#ff5c8a)}
+  .tp-hrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 13px;border-radius:14px;margin-bottom:6px;background:rgba(255,255,255,.028);box-shadow:inset 0 0 0 1px rgba(255,255,255,.07)}
+  .tp-hrow>div{display:flex;align-items:center;gap:9px;min-width:0}
+  .tp-hrow small{font:800 .54rem/1 system-ui,sans-serif;letter-spacing:1.6px;color:#a69fc6}
+  .tp-hrow b{font:italic 900 1.1rem/1 'Barlow Condensed',sans-serif;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tp-hrow>span{font:italic 900 1.2rem/1 'Barlow Condensed',sans-serif;color:var(--gold);white-space:nowrap}
+  .tp-hrow>span i{font:400 .62rem/1 system-ui,sans-serif;color:var(--muted)}
+  @media (min-width:760px){
+    #modal-overlay.mo-tp .modal{max-width:880px!important;padding:26px!important;max-height:92vh}
+    .tp-head{margin:-26px -26px 20px!important;padding:32px 28px 26px!important}
+    .tp-tiles{grid-template-columns:repeat(4,1fr)!important}
+    .tp .dmi-ks{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .tp .dmi-grid{grid-template-columns:1.25fr 1fr 1fr}
+    .tp-traj svg{max-height:230px}
+    .tp .dmi-donut{gap:10px}.tp .dmi-donut svg{width:96px}
+  }
+  @media (prefers-reduced-motion:reduce){.tp-bar-t i{animation:none}}
   /* ===== Driver profile: IMS brand pass + insights ===== */
   #driver-modal{background:rgba(4,3,10,.78)!important}
   #driver-modal-inner{--ta:var(--team-scroll,#7c86ff);background:radial-gradient(120% 34% at 50% 0%,color-mix(in srgb,var(--ta) 16%,transparent),transparent 70%),linear-gradient(175deg,#15122b,#0b0a14 38%,#09080f)!important;box-shadow:0 0 0 1px color-mix(in srgb,var(--ta) 40%,rgba(124,134,255,.3)),0 -10px 50px rgba(0,0,0,.55)!important}
@@ -28967,15 +29013,61 @@ window.openPlayerProfile = async function(userId, big) {
     fzRank = sorted.findIndex(([cid]) => cid === fz.id) + 1;
   }
 
-  const body = `
-    <div style="margin:${big?'-28px -32px 20px':'-20px -20px 16px'};padding:${big?'32px 32px':'22px 20px'};position:relative;overflow:hidden;border-bottom:1px solid ${fzAccent ? fzAccent+'55' : 'var(--border)'};display:flex;align-items:center;gap:${big?'20px':'14px'};background:${fzAccent
+  // ===== Insights (built from numbers this profile already has — no extra reads) =====
+  const _tpInsights = (() => { try {
+    if (!teamRacePtsFn || !completedRaces.length) return '';
+    const per = completedRaces.map(race => { const all = teams.map(x => teamRacePtsFn(x, race)).sort((a, b) => b - a); const mine = teamRacePtsFn(t, race);
+      return { rn: race.raceNum, name: race.name, pts: mine, avg: all.reduce((a, b) => a + b, 0) / Math.max(1, all.length), pos: all.indexOf(mine) + 1, n: all.length }; });
+    const avg = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0;
+    const pts = per.map(r => r.pts), mu = avg(pts), sd = Math.sqrt(avg(pts.map(v => (v - mu) ** 2))), lg = avg(per.map(r => r.avg));
+    const cur = trajectory.length ? trajectory[trajectory.length - 1].rank : null, bestRank = trajectory.length ? Math.min(...trajectory.map(x => x.rank)) : null;
+    const wins = per.filter(r => r.pos === 1 && r.pts > 0).length, pods = per.filter(r => r.pos <= 3 && r.pts > 0).length, beat = per.filter(r => r.pts > r.avg).length;
+    const l3 = avg(pts.slice(-3)), formD = per.length >= 4 ? l3 - mu : null;
+    const sortedTot = teams.map(x => teamTotalFn ? teamTotalFn(x) : 0).sort((a, b) => b - a), leader = sortedTot[0] || 0, gap = Math.round((leader - seasonTotal) * 10) / 10;
+    const kpi = (v, l, sub, c) => `<div class="dmi-k"><b${c ? ` style="color:${c}"` : ''}>${v}</b><span>${l}</span>${sub ? `<small>${sub}</small>` : ''}</div>`;
+    const kpis = kpi(cur ? 'P' + cur : '–', 'League rank', 'of ' + teams.length + ' teams')
+      + kpi(gap > 0 ? '-' + gap : 'Leader', 'Gap to P1', gap > 0 ? 'points behind' : 'top of the table', gap > 0 ? null : '#ffd24a')
+      + kpi(mu.toFixed(1), 'Avg / round', 'league avg ' + lg.toFixed(1), mu >= lg ? '#4ade80' : '#ff8f6b')
+      + kpi(beat + '/' + per.length, 'Beat the field', 'rounds above average')
+      + kpi(wins, wins === 1 ? 'Round win' : 'Round wins', pods + ' top-3 finish' + (pods === 1 ? '' : 'es'), wins ? '#ffd24a' : null)
+      + kpi(bestRank ? 'P' + bestRank : '–', 'Best rank', 'highest this season')
+      + kpi('±' + sd.toFixed(1), 'Consistency', sd <= mu * .25 ? 'Very steady' : sd >= mu * .5 ? 'Up and down' : 'Points swing')
+      + kpi(formD == null ? '–' : (formD >= 0 ? '▲ ' : '▼ ') + Math.abs(formD).toFixed(1), 'Form', 'last 3 vs avg', formD == null ? null : formD >= 0 ? '#4ade80' : '#ff8f6b');
+    const W = 320, H = 150, PL = 26, PR = 8, PT = 12, PB = 22, iw = W - PL - PR, ih = H - PT - PB, n = per.length;
+    const xs = i => PL + (iw * (i + .5)) / n, pMax = Math.max(10, ...pts, ...per.map(r => r.avg)), yP = v => PT + ih - (Math.max(0, v) / pMax) * ih, bw = Math.max(4, Math.min(26, iw / n * .6)), bestI = pts.indexOf(Math.max(...pts));
+    const lbl = (i) => (n <= 12 || i % Math.ceil(n / 12) === 0) ? `<text x="${xs(i)}" y="${H - 6}" text-anchor="middle">R${per[i].rn || i + 1}</text>` : '';
+    const g1 = `<svg viewBox="0 0 ${W} ${H}" class="dmi-svg"><defs><linearGradient id="tpG" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#6f74e8"/><stop offset=".55" stop-color="#a779e6"/><stop offset="1" stop-color="#f0487a"/></linearGradient><linearGradient id="tpGold" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ffa751"/><stop offset="1" stop-color="#ffe259"/></linearGradient></defs>
+      ${[0, .5, 1].map(f => `<line x1="${PL}" x2="${W - PR}" y1="${yP(pMax * f)}" y2="${yP(pMax * f)}" class="dmi-gl"/><text x="${PL - 5}" y="${yP(pMax * f) + 3}" text-anchor="end">${Math.round(pMax * f)}</text>`).join('')}
+      ${per.map((r, i) => `<rect class="dmi-bar" style="--d:${i * 40}ms" x="${xs(i) - bw / 2}" y="${yP(r.pts)}" width="${bw}" height="${Math.max(1.5, PT + ih - yP(r.pts))}" rx="${Math.min(4, bw / 3)}" fill="url(#${i === bestI ? 'tpGold' : 'tpG'})"><title>${esc(r.name)}: ${r.pts} pts (league avg ${r.avg.toFixed(1)})</title></rect>`).join('')}
+      <polyline points="${per.map((r, i) => xs(i) + ',' + yP(r.avg)).join(' ')}" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="1.6" stroke-dasharray="3 4"/>
+      ${per.map((r, i) => lbl(i)).join('')}</svg><div class="dmi-key"><span><i class="f" style="border-color:#b184e8;border-radius:3px"></i>This team</span><span><i class="up" style="background:#fff"></i>League average</span></div>`;
+    // who scores the points
+    const cons = Object.entries(driverContribution).map(([id, p]) => ({ d: allDrivers.find(x => x.id === id), p })).filter(x => x.d && x.p > 0).sort((a, b) => b.p - a.p).slice(0, 6), cMax = Math.max(1, ...cons.map(c => c.p)), cTot = cons.reduce((a, c) => a + c.p, 0) || 1;
+    const g2 = cons.length ? `<div class="tp-bars">${cons.map((c, i) => { const tc = (typeof getTeamCardColour === 'function' && getTeamCardColour(c.d.team)) || null;
+      return `<div class="tp-bar" onclick="closeModal();openDriverModal('${c.d.id}')" title="Open ${esc(c.d.name)}'s profile"><span class="tp-bar-n"><small>${esc(c.d.division || '')}</small>${esc(c.d.name)}</span><span class="tp-bar-t"><i style="--p:${(c.p / cMax).toFixed(3)};--d:${i * 60}ms;background:linear-gradient(90deg,${tc ? tc.accent : '#7c86ff'},#b184e8)"></i></span><b>${Math.round(c.p)}</b></div>`; }).join('')}</div>` : '<div class="dmi-none">No driver points yet.</div>';
+    // round finishes ring
+    const B = [['Round wins', wins, '#ffd24a'], ['Top 3', pods - wins, '#b184e8'], ['Top half', per.filter(r => r.pos > 3 && r.pos <= r.n / 2).length, '#7c86ff'], ['Bottom half', per.filter(r => r.pos > 3 && r.pos > r.n / 2).length, '#3a3858']].filter(b => b[1] > 0);
+    const tot = B.reduce((a, b) => a + b[1], 0) || 1, C = 2 * Math.PI * 42; let off = 0;
+    const g3 = `<div class="dmi-donut"><svg viewBox="0 0 110 110"><circle cx="55" cy="55" r="42" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="13"/>
+      ${B.map(b => { const L = C * b[1] / tot, el = `<circle cx="55" cy="55" r="42" fill="none" stroke="${b[2]}" stroke-width="13" stroke-dasharray="${Math.max(0, L - 2)} ${C}" stroke-dashoffset="${-off}" transform="rotate(-90 55 55)" class="dmi-arc"/>`; off += L; return el; }).join('')}
+      <text x="55" y="53" text-anchor="middle" class="dmi-dn">${per.length}</text><text x="55" y="68" text-anchor="middle" class="dmi-dl">ROUNDS</text></svg>
+      <div class="dmi-leg">${B.map(b => `<div><i style="background:${b[2]}"></i><span>${b[0]}</span><b>${b[1]}</b></div>`).join('')}</div></div>`;
+    const card = (k, tt, body) => `<div class="dmi-c"><div class="dmi-ch"><small>${k}</small><h4>${tt}</h4></div>${body}</div>`;
+    return `<div class="dmi tp-ins"><div class="dmi-h"><small>Season insights</small><h3>Performance <em>data</em></h3></div>
+      <div class="dmi-ks">${kpis}</div>
+      <div class="dmi-grid">${card('Round by round', 'Points <em>vs the league</em>', g1)}${card('Who scores the points', 'Top <em>contributors</em>', g2)}${card('Where each round finished', 'Round <em>finishes</em>', g3)}</div></div>`;
+  } catch (e) { console.warn('team insights', e); return ''; } })();
+
+  const body = `<div class="tp" style="--tc:${fzAccent || '#7c86ff'}">
+    <div class="tp-head" style="margin:${big?'-28px -32px 20px':'-20px -20px 16px'};padding:${big?'32px 32px':'22px 20px'};position:relative;overflow:hidden;border-bottom:1px solid ${fzAccent ? fzAccent+'55' : 'var(--border)'};display:flex;align-items:center;gap:${big?'20px':'14px'};background:${fzAccent
       ? `linear-gradient(135deg, ${fzAccent}33, ${fzAccent}0d 55%, rgba(123,79,191,0.10))`
       : 'linear-gradient(135deg, rgba(255,215,0,0.12), rgba(123,79,191,0.12))'}">
       ${fzAccent ? `<div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,${fzAccent},${fzAccent}33 70%,transparent)"></div>` : ''}
       ${fz && fz.logo ? `<img src="${esc(fz.logo)}" alt="" style="position:absolute;right:-14px;bottom:-14px;height:${big?'132px':'96px'};opacity:.10;pointer-events:none;object-fit:contain">` : ''}
       ${initialsAvatar(t.teamName, big?76:52, 'border-radius:'+(big?'20px':'14px')+';box-shadow:0 2px 8px rgba(0,0,0,0.3);' + (fzAccent ? 'border:2px solid '+fzAccent+';' : ''), null, t.discordAvatar)}
       <div style="min-width:0;position:relative">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:${big?'2rem':'1.35rem'};line-height:1.1">${esc(t.teamName)}</div>
+        <div class="tp-kick">Team profile</div>
+        <div class="tp-name" style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:${big?'2rem':'1.35rem'};line-height:1.1">${esc(t.teamName)}</div>
         <div style="color:var(--muted);font-size:${big?'1rem':'.85rem'};margin-top:2px">${esc(t.playerName)}</div>
         ${fz ? `<div style="display:inline-flex;align-items:center;gap:6px;margin-top:7px;background:${fzAccent}22;border:1px solid ${fzAccent}66;border-radius:20px;padding:3px 10px 3px 6px">
           ${fz.logo ? `<img src="${esc(fz.logo)}" style="height:13px;max-width:26px;object-fit:contain">` : '<span style="font-size:.8rem">🏎</span>'}
@@ -29018,7 +29110,7 @@ window.openPlayerProfile = async function(userId, big) {
     })() : ''}
     ${_curRace ? (() => {
       const _outline = getTrackOutlineUrl(_curRace.name);
-      return `<div style="position:relative;margin-bottom:14px;padding:16px 18px;border-radius:14px;background:linear-gradient(135deg, rgba(155,111,212,0.18), var(--surface2) 75%);border:1px solid rgba(155,111,212,0.4);text-align:center;overflow:hidden">
+      return `<div class="tp-pts" style="position:relative;margin-bottom:14px;padding:16px 18px;border-radius:14px;background:linear-gradient(135deg, rgba(155,111,212,0.18), var(--surface2) 75%);border:1px solid rgba(155,111,212,0.4);text-align:center;overflow:hidden">
       ${_outline ? `<div style="position:absolute;inset:0;background-image:url('${_outline}');background-repeat:no-repeat;background-position:center;background-size:contain;opacity:0.10;pointer-events:none;filter:brightness(0) invert(1)"></div>` : ''}
       <div style="position:relative">
         <div style="font-size:.6rem;font-weight:800;letter-spacing:2px;color:var(--muted)">${_curRaceScored ? 'POINTS' : 'CURRENT ROUND'} — ${esc((_curRace.name||'').toUpperCase())}</div>
@@ -29027,7 +29119,7 @@ window.openPlayerProfile = async function(userId, big) {
       </div>
     </div>`;
     })() : ''}
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+    <div class="tp-tiles" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
       ${(() => {
       // Trophy pills: mark the points box if this player has ever been champion, and the value box if
       // they've ever finished a season with the highest team value.
@@ -29052,7 +29144,7 @@ window.openPlayerProfile = async function(userId, big) {
         { icon:'👑', label:'TOP DRIVER', accent:'#ffd24a', value: topDriver ? esc(topDriver.name) : '—', sub: topDriver ? topDriverPts+' pts this season' : 'No picks yet', small:true },
         { icon: profitLoss>=0?'📈':'📉', label:'PROFIT / LOSS', accent: profitLoss>0?'#4caf50':profitLoss<0?'#ff5470':'#8a90a6', value:`${profitLoss>0?'+':''}${formatM(profitLoss)}`, sub: profitLoss>=0?'In profit':'In the red', valueColor: profitLoss>0?'#4caf50':profitLoss<0?'#ff5470':'var(--muted)', badge: valBadge },
       ].map(c => `
-        <div style="position:relative;padding:13px 13px 12px;border-radius:12px;background:linear-gradient(150deg, ${c.accent}14, var(--surface2) 60%);border:1px solid ${c.accent}33;overflow:hidden">
+        <div class="tp-tile" style="position:relative;padding:13px 13px 12px;border-radius:12px;background:linear-gradient(150deg, ${c.accent}14, var(--surface2) 60%);border:1px solid ${c.accent}33;overflow:hidden">
           <div style="position:absolute;top:-6px;right:-2px;font-size:2.4rem;opacity:0.12">${c.icon}</div>
           ${c.badge ? `<div title="${esc(c.badge.tip)}" style="position:absolute;top:8px;right:8px;display:flex;align-items:center;gap:2px;background:rgba(0,0,0,0.35);border:1px solid ${c.accent}55;border-radius:20px;padding:1px 6px 1px 4px;font-size:.72rem;line-height:1;z-index:1">${c.badge.emoji}${c.badge.count>1?`<span style="font-size:.6rem;font-weight:800;color:var(--text)">${c.badge.count}</span>`:''}</div>` : ''}
           <div style="display:flex;align-items:center;gap:5px;font-size:.58rem;color:var(--muted);letter-spacing:1.2px;font-weight:800">${c.label}</div>
@@ -29174,9 +29266,9 @@ window.openPlayerProfile = async function(userId, big) {
       const trend = rankMoved > 0 ? `<span style="color:#2ecc71">▲ up ${rankMoved}</span>`
         : rankMoved < 0 ? `<span style="color:var(--red)">▼ down ${Math.abs(rankMoved)}</span>`
         : `<span style="color:var(--muted)">— held</span>`;
-      return `<div style="margin-bottom:16px">
+      return `<div class="tp-traj" style="margin-bottom:16px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-          <div style="font-size:.68rem;color:var(--muted);letter-spacing:1.5px;font-weight:800">📈 SEASON TRAJECTORY</div>
+          <div class="tp-lbl" style="margin:0">Season trajectory</div>
           <div style="font-size:.68rem;font-weight:800">${trend} <span style="color:var(--muted)">· now P${last.rank}</span></div>
         </div>
         <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;background:var(--surface2);border:1px solid var(--border);border-radius:8px">
@@ -29192,19 +29284,20 @@ window.openPlayerProfile = async function(userId, big) {
         </div>
       </div>`;
     })()}
-    <div>
-      <div style="font-size:.68rem;color:var(--muted);letter-spacing:1.5px;font-weight:800;margin-bottom:8px">RACE HISTORY</div>
-      <div style="max-height:240px;overflow-y:auto">
+    ${_tpInsights}
+    <div class="tp-hist">
+      <div class="tp-lbl">Race history</div>
+      <div style="max-height:300px;overflow-y:auto">
         ${raceHistory.length ? raceHistory.map(r =>
-          `<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 2px;border-bottom:1px solid var(--border)">
-            <div style="display:flex;align-items:center;gap:8px;font-size:.85rem">${getRaceFlag(r.name)}<span style="color:var(--muted)">R${r.raceNum}</span><span>${esc(r.name)}</span></div>
-            <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;color:var(--gold)">${r.pts} pts</span>
+          `<div class="tp-hrow">
+            <div>${getRaceFlag(r.name)}<small>R${r.raceNum}</small><b>${esc(r.name)}</b></div>
+            <span>${r.pts} <i>pts</i></span>
           </div>`
         ).join('') : '<p class="text-muted" style="font-size:.85rem">No races scored yet.</p>'}
       </div>
     </div>
     <div style="margin-top:16px">
-      <button class="btn btn-primary" style="width:100%" onclick='window.generateShareCard(${JSON.stringify({
+      <button class="hx-btn" style="width:100%;padding:14px" onclick='window.generateShareCard(${JSON.stringify({
         teamName: t.teamName, playerName: t.playerName, seasonTotal, bestScore,
         playerAvatar: t.discordAvatar || null,
         bestRaceName: bestRace ? bestRace.name : null,
@@ -29216,9 +29309,10 @@ window.openPlayerProfile = async function(userId, big) {
         profitLoss, trophyCount: myTrophies.length, racesScored: completedRaces.length
       }).replace(/'/g, "&apos;")})'>📤 Share as Image</button>
     </div>
-  `;
+  </div>`;
 
   openModal('', body, !!big);
+  try { document.getElementById('modal-overlay').classList.add('mo-tp'); } catch (e) {}
   // Smooth entrance for the profile: backdrop fades/blurs in, the card rises and settles, sections cascade in.
   const ov = document.getElementById('modal-overlay'); if (ov) { ov.classList.remove('mo-prof', 'mo-closing'); void ov.offsetWidth; ov.classList.add('mo-prof'); }
 };
@@ -29423,7 +29517,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 window.openModal = function(title, body, wide) {
-  { const _o = document.getElementById('modal-overlay'); if (_o) { _o.classList.remove('mo-prof', 'mo-closing'); clearTimeout(window._moT); } }
+  { const _o = document.getElementById('modal-overlay'); if (_o) { _o.classList.remove('mo-prof', 'mo-closing', 'mo-tp'); clearTimeout(window._moT); } }
   document.getElementById('modal-title').innerHTML=title+' <button class="modal-close" onclick="closeModal()">✕</button>';
   document.getElementById('modal-body').innerHTML=body;
   // Wide mode — used by the full-size team profile opened from the My Team avatar
