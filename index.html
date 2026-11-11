@@ -2978,7 +2978,7 @@
     #page-bets .bo-ticker{border-radius:14px}
     #page-bets .bo-disclaimer{margin:2px 0 18px}
     #page-bets .bo-divs{padding:5px;border-radius:999px;background:rgba(255,255,255,.03);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);border:none}
-    #page-bets .bo-divs>button{border-radius:999px;font-style:italic;transition:color .2s,background .2s}
+    #page-bets .bo-divs>button{border-radius:999px;font-style:italic;transition:none}
     #page-bets .bo-divs>button.on{background:var(--hx-b);box-shadow:0 10px 22px -10px rgba(167,121,230,.9)}
     #page-bets .bo-divs>button.on::after{display:none}
     #page-bets .bo-fmt{border-radius:999px}#page-bets .bo-fmt button.on{background:rgba(124,134,255,.3)}
@@ -2989,16 +2989,17 @@
     #page-bets .bo-row:hover{background:linear-gradient(90deg,rgba(124,134,255,.09),transparent 80%)}
     #page-bets .bo-st,#page-bets .bo-hstats div{background:#110f20}
     #page-bets .bo-st b,#page-bets .bo-hstats b{font-style:italic;font-size:1.5rem}
-    #page-bets .bo-odd{border-radius:12px;border:none;background:rgba(255,255,255,.04);box-shadow:inset 0 0 0 1px rgba(124,134,255,.24);transition:transform .15s,box-shadow .15s,background .15s}
-    #page-bets .bo-odd:hover:not(:disabled){background:rgba(124,134,255,.18);box-shadow:inset 0 0 0 1px #7c86ff;transform:translateY(-2px)}
+    #page-bets .bo-odd{border-radius:12px;border:none;background:rgba(255,255,255,.04);box-shadow:inset 0 0 0 1px rgba(124,134,255,.24);transition:none}
+    #page-bets .bo-odd:hover:not(:disabled){background:rgba(124,134,255,.18);box-shadow:inset 0 0 0 1px #7c86ff;transform:none}
+    #page-bets .bo-odd:active:not(:disabled){transform:none}
     #page-bets .bo-odd.on{background:var(--hx-b);box-shadow:0 10px 22px -10px rgba(240,72,122,.85)}
     #page-bets .bo-odd.backed{background:rgba(74,222,128,.12);box-shadow:inset 0 0 0 1px rgba(74,222,128,.5)}
     #page-bets .bo-odd.boosted{box-shadow:inset 0 0 0 1px #ffc800}
     #page-bets .bo-odd.locked{box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
     #page-bets .bo-htabs button{border-radius:999px;padding:6px 11px}#page-bets .bo-htabs button.on{background:var(--hx-b)}
     #page-bets .bo-pager>button,#page-bets .bo-pager span button{border-radius:999px}
-    #page-bets .bo-secbar button{border:none;border-radius:24px;background:linear-gradient(165deg,#17142c,#0c0b15 70%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);font-style:italic;font-weight:900;transition:transform .25s cubic-bezier(.2,1,.3,1),box-shadow .25s}
-    #page-bets .bo-secbar button:hover{transform:translateY(-4px);box-shadow:inset 0 0 0 1px #7c86ff,0 22px 46px -24px rgba(124,134,255,.85)}
+    #page-bets .bo-secbar button{border:none;border-radius:24px;background:linear-gradient(165deg,#17142c,#0c0b15 70%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);font-style:italic;font-weight:900;transition:none}
+    #page-bets .bo-secbar button:hover{transform:none;box-shadow:inset 0 0 0 1px #7c86ff}
     #page-bets .bo-secbar button.on{background:linear-gradient(165deg,rgba(111,116,232,.34),rgba(240,72,122,.14));box-shadow:inset 0 0 0 1px #7c86ff}
     #page-bets .bo-secbar button span{background:linear-gradient(160deg,#211c4a,#100e22);box-shadow:inset 0 0 0 1px rgba(124,134,255,.35)}
     #page-bets .bo-secbar button.on span{background:var(--hx-b);color:#fff}
@@ -31945,7 +31946,7 @@ window.betDiv = function(d) { window._betDiv = d; renderBets(); };
     const bc = document.getElementById('bets-content'), y = window.scrollY;
     if (bc && bc.offsetHeight) bc.style.minHeight = bc.offsetHeight + 'px';
     try { return await _rb.apply(this, arguments); }
-    finally { if (bc) { bc.style.minHeight = ''; const pg = document.getElementById('page-bets'); if (pg && pg.classList.contains('active') && Math.abs(window.scrollY - y) > 2) window.scrollTo(0, y); } } };
+    finally { if (bc) bc.style.minHeight = ''; } };
   wrapped._keepPlace = true; window.renderBets = wrapped; })();
 // Picks that can't sit on the same accumulator: a tricast with another race pick on one of its 3 drivers, two different winners (or two top-constructors) in
 // the same division, both sides of one head-to-head, or a driver's win AND top 5 (top 5 is implied).
