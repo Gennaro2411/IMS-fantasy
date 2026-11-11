@@ -3714,6 +3714,28 @@
     .wf-ic{color:var(--muted);font-weight:900;width:20px;text-align:center}.wf-row.lock .wf-ic,.wf-row.m-g .wf-ic{color:#4ade80}.wf-row.m-r .wf-ic{color:#f87171}
     .wf-arena{overflow:hidden;background:radial-gradient(90% 60% at 50% -10%,rgba(239,68,68,.16),transparent 60%),radial-gradient(70% 50% at 100% 100%,rgba(56,189,248,.12),transparent 60%),linear-gradient(165deg,#0c1224,#120d22 55%,#07070d)}
     .wf-arena .pt-qn{color:#fca5a5}.wf-arena.still{animation:none}
+    .pp-board{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 6px;text-align:left}
+    .pp-col{display:flex;flex-direction:column;gap:6px;min-width:0}
+    .pp-ch{font:800 .62rem/1 inherit;letter-spacing:.14em;color:#b184e8;padding:0 4px 2px}
+    .pp-d,.pp-c{--pc:rgba(255,255,255,.14);position:relative;display:flex;align-items:center;gap:8px;min-height:54px;padding:6px 8px;border-radius:12px;font:inherit;color:#fff;text-align:left;cursor:pointer;background:linear-gradient(170deg,#15122b,#0b0a14 80%);border:1px solid rgba(255,255,255,.1);transition:border-color .15s,background-color .15s,box-shadow .15s;min-width:0}
+    .pp-d.on,.pp-c.on{border-color:var(--pc);background:linear-gradient(170deg,color-mix(in srgb,var(--pc) 22%,#15122b),#0b0a14 85%)}
+    .pp-d.sel,.pp-c.sel{border-color:#ff5c8a;box-shadow:0 0 0 2px rgba(255,92,138,.45)}
+    .pp-d.ok,.pp-c.ok{border-color:#4ade80;background:linear-gradient(170deg,rgba(74,222,128,.2),#0b0a14 85%);cursor:default}
+    .pp-d.pop,.pp-c.pop{animation:ppPop .45s ease}
+    @keyframes ppPop{40%{transform:scale(1.04)}}
+    .pp-dot{flex:none;width:9px;height:9px;border-radius:50%;background:var(--pc);opacity:0}
+    .pp-d.on .pp-dot,.pp-c.on .pp-dot{opacity:1}.pp-d.ok .pp-dot,.pp-c.ok .pp-dot{background:#4ade80}
+    .pp-d .pp-dot{margin-left:auto}
+    .pp-av{flex:none}.pp-nm,.pp-cl{display:flex;flex-direction:column;min-width:0}
+    .pp-nm b,.pp-cl b{font-size:.82rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .pp-nm small{display:flex;align-items:center;gap:4px;font-size:.66rem;color:var(--muted);white-space:nowrap;overflow:hidden}.pp-nm small img{width:14px;height:14px;object-fit:contain}
+    .pp-cl small{font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:#a5a9d6}
+    .pp-cl em{font-style:normal;font-size:.66rem;color:#4ade80}
+    .pp-ic{flex:none;font-size:1.05rem}
+    .pp-hist{display:flex;flex-direction:column;gap:4px;margin:8px auto;align-items:center}
+    .pp-hist div{display:flex;align-items:center;gap:3px;font-size:.7rem;color:var(--muted)}.pp-hist span{width:42px}
+    .pp-hist i{width:14px;height:14px;border-radius:4px;background:rgba(255,255,255,.1)}.pp-hist i.g{background:#4ade80}.pp-hist b{margin-left:6px;color:#fff}
+    @media (max-width:420px){.pp-d,.pp-c{padding:6px;gap:6px}.pp-nm b,.pp-cl b{font-size:.76rem}.pp-av img,.pp-av>*{width:28px!important;height:28px!important}}
     .wf-list .wf-row{touch-action:none}
     .wf-row{position:relative;overflow:hidden;min-height:58px;background:linear-gradient(90deg,color-mix(in srgb,var(--tc) 16%,rgba(14,16,30,.92)),rgba(14,16,30,.85) 55%);border:1px solid rgba(255,255,255,.08);border-left:none;padding-left:0;user-select:none;-webkit-user-select:none}
     .wf-row::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--tc)}
@@ -33680,6 +33702,7 @@ window.renderGames = async function() {
   if (window._games.view === 'st') { clearInterval(window._wdDuelPoll); return renderSTGame(el); }
   if (window._games.view === 'wf') { clearInterval(window._wdDuelPoll); return renderWFGame(el); }
   if (window._games.view === 'qs') { clearInterval(window._wdDuelPoll); return renderQSGame(el); }
+  if (window._games.view === 'pp') { clearInterval(window._wdDuelPoll); return renderPPGame(el); }
   if (window._games.view !== 'wordle') {
     clearInterval(window._wdDuelPoll);
     { const lk = await dbGet('settings', 'gamesLock').catch(() => null); window._gamesLock = (lk && lk.value) || {}; }
@@ -33695,6 +33718,7 @@ window.renderGames = async function() {
       ['st', '⚖️', 'Steward Simulator', 'Real IMS incidents. Guilty or not guilty? Compare with the stewards.', 'You be the judge', '#7c86ff', '#ff5c8a'],
       ['qs', '⏱️', 'Quali Shootout', 'Predict each division\'s pole time. Closest wins 500 IM$, spot on wins 5,000.', 'Win IM$', '#ffb020', '#ff5c8a'],
       ['wf', '🏁', 'Who Finished Where?', 'A real IMS race, top 5 shuffled. Put them back in order in 3 tries.', 'Daily · Practice · Duels', '#b184e8', '#6f74e8'],
+      ['pp', '🔗', 'Pit Lane Pairs', '7 drivers, 7 clues. Match each driver to their team, old team or teammate.', 'Daily · Practice', '#27f4d2', '#7c86ff'],
     ];
     el.innerHTML = `<div class="xs-hero hx-gb hx-rv" data-k="gmhero"><div class="xs-ghost">${G.length}</div>
         <span class="xs-k">Games</span><h1>Play the <em>paddock</em></h1>
@@ -34669,7 +34693,7 @@ async function renderQSGame(el) {
 }
 
 // ---- Admin: lock / unlock games ----
-const GAMES_LIST = [['wordle', '🟩', 'IMS PaddockDle'], ['grid', '🔢', 'IMS PaddockDle Grid'], ['hl', '⬆️', 'IMS Higher or Lower'], ['cn', '🧩', 'IMS Connections'], ['pt', '🎯', 'IMS Pointless'], ['tq', '🧠', 'IMS Trivia'], ['cp', '🛣️', 'IMS Career Path'], ['st', '⚖️', 'IMS Steward Simulator'], ['wf', '🏁', 'IMS Who Finished Where?'], ['qs', '⏱️', 'IMS Quali Shootout']];
+const GAMES_LIST = [['wordle', '🟩', 'IMS PaddockDle'], ['grid', '🔢', 'IMS PaddockDle Grid'], ['hl', '⬆️', 'IMS Higher or Lower'], ['cn', '🧩', 'IMS Connections'], ['pt', '🎯', 'IMS Pointless'], ['tq', '🧠', 'IMS Trivia'], ['cp', '🛣️', 'IMS Career Path'], ['st', '⚖️', 'IMS Steward Simulator'], ['wf', '🏁', 'IMS Who Finished Where?'], ['qs', '⏱️', 'IMS Quali Shootout'], ['pp', '🔗', 'IMS Pit Lane Pairs']];
 window.renderAdminGames = async function() {
   const box = document.getElementById('admin-games-locks'); if (!box) return;
   const lk = await dbGet('settings', 'gamesLock').catch(() => null); const L = (lk && lk.value) || {};
@@ -34729,7 +34753,7 @@ async function _gameCoins(kind, amount) {
   if (typeof currentUser === 'undefined' || !currentUser || !currentUser.userId) return 0; // guests don't earn IM$
   try { const c = await _betLoadCoins(currentUser.userId); const now = Date.now(); const g = c.gameRewards || {};
     let give = 0;
-    if (/^(wd|gr|hl|cn|pt|tq|cp|st|qs|wf)-(daily|win|hidden)$/.test(kind)) { const day = _wdDayKey() + (_wdSalt() ? '#' + _wdSalt() : ''); if (g[kind] === day) return 0; g[kind] = day; give = amount; }
+    if (/^(wd|gr|hl|cn|pt|tq|cp|st|qs|wf|pp)-(daily|win|hidden)$/.test(kind)) { const day = _wdDayKey() + (_wdSalt() ? '#' + _wdSalt() : ''); if (g[kind] === day) return 0; g[kind] = day; give = amount; }
     else { const log = (g[kind] || []).filter(x => now - x.t < 864e5); const used = log.reduce((a, x) => a + x.a, 0); give = Math.max(0, Math.min(amount, 25 - used));
       if (!give) { g[kind] = log; return 0; } log.push({ t: now, a: give }); g[kind] = log; }
     c.balance = (c.balance || 0) + give; c.gameRewards = g; c.gameEarned = (c.gameEarned || 0) + give;
@@ -36153,6 +36177,132 @@ async function renderCPGame(el) {
       t.textContent = [Math.floor(ms / 36e5), Math.floor(ms / 6e4) % 60, Math.floor(ms / 1e3) % 60].map(x => String(x).padStart(2, '0')).join(':'); }; tk(); window._wdTick = setInterval(tk, 1000); }
   const inp = document.getElementById('cp-input'); if (inp && !('ontouchstart' in window)) inp.focus();
 }
+// ===== PIT LANE PAIRS =====
+// 7 drivers, 7 clues (their team, an old team, or a teammate). Tap a driver, then the clue that fits.
+// Pair all seven, LOCK IN: right pairs lock green, wrong ones come back. 3 tries, score out of 100.
+const PP_N = 7, PP_TRIES = 3, PP_SOLVE = [30, 20, 10];
+const PP_COL = ['#7c86ff', '#ff5c8a', '#27f4d2', '#ffb020', '#b184e8', '#4ade80', '#38bdf8'];
+const _ppGetMode = () => window._ppMode || 'daily';
+window.setPPMode = function(m) { window._ppMode = m; window._ppSel = null; renderGames(); };
+const _ppLoadSt = () => { try { return JSON.parse(localStorage.getItem('imsPpDaily') || 'null'); } catch (e) { return null; } };
+const _ppSave = (st) => { try { localStorage.setItem('imsPpDaily', JSON.stringify(st)); } catch (e) {} };
+const _ppDayNum = () => { const p = _wdDayKey().split('/'); return Math.max(1, Math.round((Date.UTC(+p[2], +p[1] - 1, +p[0]) - Date.UTC(2026, 10, 10)) / 864e5)); };
+async function _ppPool() {
+  if (window._ppPoolC && _now() - window._ppPoolC.at < 10 * 60e3) return window._ppPoolC.list;
+  const { gridPool } = await _wdLoad();
+  const list = (gridPool || []).filter(p => p && p.id && p.name && !p.res && p.team && p.team !== '—' && !/^reserve$/i.test(p.team)).sort((a, b) => a.id < b.id ? -1 : 1);
+  window._ppPoolC = { at: _now(), list }; return list; }
+const _ppNm = (s) => String(s || '').replace(/^\[[^\]]*\]\s*/, '');
+// Build a puzzle: 7 drivers from 7 different teams, each with a clue only they fit.
+function _ppBuild(pool, rnd) {
+  const byTeam = {}; pool.forEach(p => { const k = _wdNorm(p.team); (byTeam[k] = byTeam[k] || []).push(p); });
+  for (let t = 0; t < 40; t++) {
+    const teams = Object.keys(byTeam); for (let i = teams.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [teams[i], teams[j]] = [teams[j], teams[i]]; }
+    if (teams.length < PP_N) return null;
+    const pick = teams.slice(0, PP_N).map(k => { const a = byTeam[k]; return a[Math.floor(rnd() * a.length)]; });
+    const clues = pick.map((d, i) => { const ck = _wdNorm(d.team), opts = [{ t: 'team', ic: '🏎️', k: 'Races for', v: d.team }];
+      const mates = byTeam[ck].filter(x => x.id !== d.id); if (mates.length) { const m = mates[Math.floor(rnd() * mates.length)]; opts.push({ t: 'mate', ic: '🤝', k: 'Teammate of', v: _ppNm(m.name) }, { t: 'mate', ic: '🤝', k: 'Teammate of', v: _ppNm(m.name) }); }
+      Object.entries(d.th || {}).forEach(([k, nm]) => { if (k === ck || !nm) return; if (pick.some((o, j) => j !== i && (_wdNorm(o.team) === k || (o.th || {})[k]))) return; opts.push({ t: 'ex', ic: '🕰️', k: 'Used to race for', v: nm }, { t: 'ex', ic: '🕰️', k: 'Used to race for', v: nm }); });
+      return Object.assign({ a: d.id }, opts[Math.floor(rnd() * opts.length)]); });
+    if (clues.filter(c => c.t === 'team').length > 4) continue; // keep it a mix
+    const ord = clues.map((_, i) => i); for (let i = ord.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [ord[i], ord[j]] = [ord[j], ord[i]]; }
+    return { ds: pick.map(d => d.id), cl: ord.map(i => clues[i]) }; }
+  return null; }
+function _ppState(mode, pool) {
+  if (mode === 'inf') { if (!window._ppInf) { const P = _ppBuild(pool, Math.random); if (!P) return null; window._ppInf = Object.assign(P, { pr: {}, ok: {}, tries: [], done: false, won: false, t0: Date.now() }); } return window._ppInf; }
+  const key = _dailyKey(); let st = _ppLoadSt(); if (st && st.key === key && st.ds && st.ds.every(id => pool.some(p => p.id === id))) return st;
+  const P = _ppBuild(pool, _grRng(_wdHash('imspp' + key))); if (!P) return null;
+  st = Object.assign(P, { key, pr: {}, ok: {}, tries: [], done: false, won: false, t0: Date.now() }); _ppSave(st); return st; }
+const _ppCur = () => _ppGetMode() === 'inf' ? window._ppInf : _ppLoadSt();
+const _ppPersist = (st) => { if (_ppGetMode() === 'daily') _ppSave(st); };
+const _ppRight = (st) => Object.keys(st.ok || {}).length;
+const _ppScore = (st) => { const r = _ppRight(st), bonus = st.won ? PP_SOLVE[st.tries.length - 1] || 0 : 0; return { r, pairs: r * 10, bonus, total: r * 10 + bonus }; };
+// pr: driverId -> clue index. Tap a driver, then a clue (or the other way round).
+window.ppTap = function(kind, v) { if (window._ppLocked) return; const st = _ppCur(); if (!st || st.done) return;
+  if (kind === 'd' && st.ok[v]) return; if (kind === 'c' && Object.keys(st.ok).some(id => st.pr[id] === v)) return;
+  const s = window._ppSel;
+  if (!s || s.k === kind) { // start (or switch) a selection; tapping a paired item un-pairs it
+    if (s && s.k === kind && s.v === v) { window._ppSel = null; }
+    else if (kind === 'd' && st.pr[v] != null && !s) { delete st.pr[v]; window._ppSel = { k: 'd', v }; }
+    else if (kind === 'c' && !s) { const id = Object.keys(st.pr).find(x => st.pr[x] === v); if (id) delete st.pr[id]; window._ppSel = { k: 'c', v }; }
+    else window._ppSel = { k: kind, v };
+  } else { const id = kind === 'd' ? v : s.v, ci = kind === 'c' ? v : s.v;
+    Object.keys(st.pr).forEach(x => { if (st.pr[x] === ci) delete st.pr[x]; }); st.pr[id] = ci; window._ppSel = null; try { _ptSnd.tick && _ptSnd.tick(); } catch (e) {} }
+  _ppPersist(st); _ppPaint(); };
+window.ppSubmit = async function() { if (window._ppLocked) return; const st = _ppCur(); if (!st || st.done || Object.keys(st.pr).length < PP_N) return;
+  let hit = 0; st.ds.forEach(id => { const c = st.cl[st.pr[id]]; if (c && c.a === id) { st.ok[id] = 1; hit++; } else delete st.pr[id]; });
+  st.tries.push(_ppRight(st)); window._ppSel = null; window._ppFlash = Date.now();
+  if (_ppRight(st) === PP_N) { st.done = true; st.won = true; } else if (st.tries.length >= PP_TRIES) st.done = true;
+  if (st.done) st.t1 = Date.now(); _ppPersist(st);
+  try { st.won ? _ptSnd.pointless() : hit ? _ptSnd.ding() : _ptSnd.wrong(); } catch (e) {}
+  renderGames();
+  if (st.done) { if (st.won) setTimeout(() => { try { fireConfetti({ count: 90 }); } catch (e) {} }, 300); if (_ppGetMode() === 'daily') { await _ppRecord(st); window._ppLb = null; } } };
+window.ppAgain = function() { window._ppInf = null; window._ppSel = null; renderGames(); };
+window.ppClear = function() { const st = _ppCur(); if (!st || st.done) return; Object.keys(st.pr).forEach(id => { if (!st.ok[id]) delete st.pr[id]; }); window._ppSel = null; _ppPersist(st); _ppPaint(); };
+async function _ppRecord(st) { const me = _wdMe(), id = _wdScoreId(me.uid), n = st.tries.length, pts = _ppScore(st).total;
+  try { dbInvalidate('wordleScores'); const cur = await dbGet('wordleScores', id).catch(() => null) || {}; if (cur.ppDay === st.key) return;
+    const streak = st.won ? (cur.ppDayPlain === _wdYesterdayKey() && cur.ppLastWon ? (cur.ppStreak || 0) + 1 : 1) : 0;
+    const doc = { uid: me.uid, name: me.name, points: cur.points || 0, ppDay: st.key, ppDayPlain: _wdDayKey(), ppLastWon: !!st.won, ppStreak: streak, ppMaxStreak: Math.max(cur.ppMaxStreak || 0, streak),
+      ppDays: (cur.ppDays || 0) + 1, ppWins: (cur.ppWins || 0) + (st.won ? 1 : 0), ppDayTries: st.won ? n : 0, ppDayPts: pts, ppPts: (cur.ppPts || 0) + pts, ppBest: Math.max(cur.ppBest || 0, pts) };
+    await dbSet('wordleScores', id, doc); window._ppMine = Object.assign({}, cur, doc); } catch (e) {}
+  await _gameCoins('pp-daily', 10); if (st.won && n <= 2) await _gameCoins('pp-win', 10); }
+async function _ppLeaderboardHtml() { const me = _wdMe().uid, day = _dailyKey();
+  if (!window._ppLbRows || _now() - window._ppLbRows.at > 5 * 60e3) window._ppLbRows = { at: _now(), rows: await dbGetAll('wordleScores').catch(() => []) };
+  let all = window._ppLbRows.rows.slice(); if (window._ppMine) { all = all.filter(r => !r || r.uid !== me); all.push(window._ppMine); }
+  const rows = (await _gmNoTest(all)).filter(r => r && r.uid && (r.ppDays || 0) > 0);
+  rows.sort((a, b) => (b.ppPts || 0) - (a.ppPts || 0) || (b.ppWins || 0) - (a.ppWins || 0) || (a.ppDays - b.ppDays));
+  const mi = rows.findIndex(r => r.uid === me);
+  const head = `<div class="ptb-row cpb-row ptb-head"><span>#</span><span>Player</span><span class="c">Today</span><span class="c">Points</span><span class="c">Solved</span><span class="c">Best</span><span class="c">🔥</span></div>`;
+  const line = (r, i) => { const k = (r.ppDayPlain === _wdDayKey() || r.ppDayPlain === _wdYesterdayKey()) ? (r.ppStreak || 0) : 0;
+    return `<div class="ptb-row cpb-row${r.uid === me ? ' me' : ''}${i < 3 ? ' top' : ''}"><span class="pos">${['🥇', '🥈', '🥉'][i] || i + 1}</span><span class="nm">${esc(r.name || 'Player')}<small>${r.ppDays} played</small></span>
+      <span class="c">${r.ppDay === day ? `<b style="color:${r.ppDayTries ? '#4ade80' : '#f87171'}">${r.ppDayPts != null ? r.ppDayPts : '✓'}</b>` : '<span class="text-muted">—</span>'}</span><span class="c best">${(r.ppPts || 0).toLocaleString()}</span><span class="c">${r.ppWins || 0}</span><span class="c pz">${r.ppBest || '—'}</span><span class="c" style="color:${k ? '#fb923c' : 'var(--muted)'};font-weight:${k ? 800 : 400}">${k}</span></div>`; };
+  return `<div class="wd-lb" style="margin-top:18px"><div class="wd-lb-h"><span>🏆 All-time leaderboard</span><small>Most points all-time</small></div>
+    ${rows.length ? head + rows.slice(0, 15).map(line).join('') + (mi >= 15 ? '<div style="text-align:center;color:var(--muted)">⋯</div>' + line(rows[mi], mi) : '') : '<p class="text-muted" style="margin:6px 0 0">Nobody has played yet.</p>'}
+    <div class="hlb-key"><b>Today</b> today's points (red = not solved) · <b>Points</b> all-time total · <b>Solved</b> puzzles solved · <b>Best</b> best day · 🔥 solve streak</div></div>`; }
+window.ppShare = function() { const st = _ppCur(); if (!st || !st.done) return; const mode = _ppGetMode();
+  const sq = st.tries.map(r => '🟩'.repeat(r) + '⬛'.repeat(PP_N - r)).join('\n');
+  const txt = `IMS Pit Lane Pairs ${mode === 'daily' ? '#' + _ppDayNum() : '∞'} · ${st.won ? st.tries.length + '/' + PP_TRIES : 'X/' + PP_TRIES} · ${_ppScore(st).total} pts\n${sq}\nhttps://fantasy.ims-league.com`;
+  if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) navigator.share({ text: txt }).catch(() => {}); else if (navigator.clipboard) navigator.clipboard.writeText(txt).then(() => { if (typeof showToast === 'function') showToast('📋 Copied — paste it in Discord!', 'success'); }).catch(() => prompt('Copy your result:', txt)); else prompt('Copy your result:', txt); };
+// The board: drivers on the left, clues on the right. Paired items share a colour.
+function _ppBoard(st) { const pool = (window._ppPoolC && window._ppPoolC.list) || [], D = (id) => pool.find(p => p.id === id) || { id, name: '?', team: '' };
+  const sel = window._ppSel, colOf = {}, ci2d = {}; st.ds.forEach((id, i) => { colOf[id] = PP_COL[i]; if (st.pr[id] != null) ci2d[st.pr[id]] = id; });
+  const fl = window._ppFlash && Date.now() - window._ppFlash < 1500;
+  const drv = st.ds.map(id => { const d = D(id), on = st.pr[id] != null, ok = !!st.ok[id] || st.done && st.cl[st.pr[id]] && st.cl[st.pr[id]].a === id;
+    const lg = !st.done ? '' : (typeof getTeamLogo === 'function' ? getTeamLogo(d.team) : '');
+    return `<button class="pp-d${on ? ' on' : ''}${ok ? ' ok' : ''}${sel && sel.k === 'd' && sel.v === id ? ' sel' : ''}${ok && fl ? ' pop' : ''}" style="--pc:${colOf[id]}" onclick="ppTap('d','${esc(id)}')" ${st.done ? 'disabled' : ''}>
+      <span class="pp-av">${_wdAv(d, 34)}</span><span class="pp-nm"><b>${esc(_ppNm(d.name))}</b>${st.done ? `<small>${lg ? `<img src="${esc(lg)}" alt="">` : ''}${esc(d.team)}</small>` : ''}</span><i class="pp-dot"></i></button>`; }).join('');
+  const cls = st.cl.map((c, i) => { const id = st.done ? c.a : ci2d[i], ok = id && (st.ok[id] || st.done);
+    return `<button class="pp-c t-${c.t}${id ? ' on' : ''}${ok ? ' ok' : ''}${sel && sel.k === 'c' && sel.v === i ? ' sel' : ''}${ok && fl ? ' pop' : ''}" style="${id ? '--pc:' + colOf[id] : ''}" onclick="ppTap('c',${i})" ${st.done ? 'disabled' : ''}>
+      <i class="pp-dot"></i><span class="pp-ic">${c.ic}</span><span class="pp-cl"><small>${c.k}</small><b>${esc(c.v)}</b>${st.done ? `<em>${esc(_ppNm(D(c.a).name))}</em>` : ''}</span></button>`; }).join('');
+  return `<div class="pp-board"><div class="pp-col"><div class="pp-ch">DRIVERS</div>${drv}</div><div class="pp-col"><div class="pp-ch">CLUES</div>${cls}</div></div>`; }
+function _ppPaint() { const b = document.getElementById('pp-wrap'), st = _ppCur(); if (!b || !st) return renderGames();
+  b.innerHTML = _ppBoard(st); const n = Object.keys(st.pr).length, go = document.getElementById('pp-go'); if (go) { go.disabled = n < PP_N || !!window._ppLocked; go.textContent = n < PP_N ? `PAIR ALL 7 · ${n}/${PP_N}` : 'LOCK IN'; }
+  const h = document.getElementById('pp-hint'); if (h) h.textContent = window._ppSel ? (window._ppSel.k === 'd' ? 'Now tap the clue that fits them' : 'Now tap the driver it belongs to') : 'Tap a driver, then the clue that fits'; }
+async function renderPPGame(el) {
+  if (!window._ppLockAt || _now() - window._ppLockAt > 120e3) { const lk = await dbGet('settings', 'gamesLock').catch(() => null); window._gamesLock = (lk && lk.value) || {}; window._ppLockAt = _now(); }
+  const pool = await _ppPool(), mode = _ppGetMode(), locked = !!(window._gamesLock || {}).pp && !adminLoggedIn && !_gamesAccess(); window._ppLocked = locked;
+  const tabs = `<div class="wd-modes">${[['daily', '📅', 'DAILY'], ['inf', '∞', 'PRACTICE']].map(([m, i, l]) => `<button class="${mode === m ? 'on' : ''}" onclick="setPPMode('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>`;
+  const st = _ppState(mode, pool);
+  let body = `<div class="wd-top"><button class="wd-back" onclick="openGame('hub')" title="Back to Games">←</button><div class="wd-brand"><img src="icons/icon-192.png?v=3" alt="IMS"><span>PIT LANE <em>PAIRS</em></span></div><div class="wd-meta">${mode === 'daily' ? `<span class="wd-pill">#${_ppDayNum()}</span>` : ''}<span class="wd-pill">🎯 ${st ? st.tries.length : 0}/${PP_TRIES}</span>${typeof _ptSndBtn === 'function' ? _ptSndBtn() : ''}</div></div>
+    ${(window._gamesLock || {}).pp ? `<div class="wd-lockbar">🔒 <b>Pit Lane Pairs is locked</b><span>${locked ? 'It\'ll open soon.' : 'Locked for players — you can still play.'}</span></div>` : ''}${tabs}`;
+  if (!st) body += '<div class="alert alert-warning">Not enough drivers on different teams to build a puzzle yet.</div>';
+  else { const sc = st.done ? _ppScore(st) : null, n = Object.keys(st.pr).length;
+    const hist = st.tries.length ? `<div class="pp-hist">${st.tries.map((r, i) => `<div><span>Try ${i + 1}</span>${'<i class="g"></i>'.repeat(r)}${'<i></i>'.repeat(PP_N - r)}<b>${r}/${PP_N}</b></div>`).join('')}</div>` : '';
+    body += `<div class="pt-arena pp-arena"><div class="pt-qn">PIT LANE PAIRS</div>
+      <div class="pt-hint" id="pp-hint" style="margin-top:4px">${st.done ? (st.won ? `All seven paired in ${st.tries.length}!` : 'The right pairs') : 'Tap a driver, then the clue that fits'}</div>
+      ${sc ? `<div class="wf-score"><div class="wf-score-big"><small>SCORE</small><b>${sc.total}</b></div><div class="wf-score-br"><span><i>Pairs · ${sc.r}/${PP_N}</i><b>+${sc.pairs}</b></span>${sc.bonus ? `<span><i>Solved in ${st.tries.length}</i><b>+${sc.bonus}</b></span>` : ''}</div></div>` : ''}
+      <div id="pp-wrap">${_ppBoard(st)}</div>${hist}
+      ${st.done ? `<button class="pt-go" style="background:linear-gradient(135deg,#5865f2,#4752c4);color:#fff" onclick="ppShare()">📤 SHARE RESULT</button>
+        ${mode === 'inf' ? `<button class="pt-go" onclick="ppAgain()">PLAY AGAIN</button>` : `<div class="pt-next"><small>NEXT PUZZLE IN</small><b id="pt-timer">--:--:--</b></div>`}`
+      : `<button class="pt-go" id="pp-go" onclick="ppSubmit()" ${n < PP_N || locked ? 'disabled' : ''}>${n < PP_N ? `PAIR ALL 7 · ${n}/${PP_N}` : 'LOCK IN'}</button><div class="pt-hint">${PP_TRIES - st.tries.length} tr${PP_TRIES - st.tries.length === 1 ? 'y' : 'ies'} left · right pairs lock in green · <a href="#" onclick="ppClear();return false" style="color:#b184e8">clear</a></div>`}</div>`; }
+  if (mode === 'daily') body += (st && st.done || !window._ppLb) ? (window._ppLb = await _ppLeaderboardHtml()) : window._ppLb;
+  el.innerHTML = `<div class="wd-wrap">${body}<div class="wd-info"><h3>How to play</h3><p><b>7 drivers, 7 clues.</b> Every clue fits exactly one driver: 🏎️ the team they race for, 🕰️ a team they used to race for, or 🤝 a teammate. Tap a driver, then the clue that fits. Pair all seven, then <b>LOCK IN</b>. Right pairs lock in green, wrong ones come back. <b>${PP_TRIES} tries.</b></p>
+    <p><b>Scoring (out of 100)</b> — <b>10</b> per right pair, plus <b>+30 / +20 / +10</b> for solving on try 1 / 2 / 3.</p>
+    <p><b>📅 Daily</b> — the same puzzle for everyone. <b>∞ Practice</b> — unlimited.</p>
+    <p style="margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(247,207,85,.08);border:1px solid rgba(247,207,85,.35);font-size:.84rem"><span class="imc"></span> <b>Earn IM$:</b> play the daily for <b>+10 IM$</b>, solve it in <b>2 tries or fewer</b> for <b>another +10 IM$</b>. Log in to earn.</p></div></div>`;
+  if (document.getElementById('pt-timer')) { const until = _now() + _wdMsToMidnight(); clearInterval(window._wdTick);
+    const tk = () => { const t = document.getElementById('pt-timer'); if (!t) { clearInterval(window._wdTick); return; } const ms = until - _now(); if (ms <= 0) { clearInterval(window._wdTick); renderGames(); return; }
+      t.textContent = [Math.floor(ms / 36e5), Math.floor(ms / 6e4) % 60, Math.floor(ms / 1e3) % 60].map(x => String(x).padStart(2, '0')).join(':'); }; tk(); window._wdTick = setInterval(tk, 1000); } }
 // ===== WHO FINISHED WHERE? =====
 // A real IMS race: the top 5 finishers of one division, shuffled. Tap two drivers to swap them, then
 // lock in. Green = right spot (stays locked), amber = one place out, red = further. 3 tries.
