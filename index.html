@@ -1094,7 +1094,7 @@
   .hh-act b{display:block;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.25rem;letter-spacing:.5px;text-transform:uppercase}
   .hh-act small{display:block;margin-top:3px;font-size:.7rem;color:#a7a2c2;line-height:1.3}
   /* ===== Home, below the next-race hero (hx-*) — IMS logo palette: indigo → violet → pink on black ===== */
-  #page-dashboard,#page-results,#page-leaderboard,#page-market,#page-predictions,#page-my-team,#page-extra,#page-social{--hx-i:#6f74e8;--hx-v:#a779e6;--hx-p:#f0487a;--hx-g:linear-gradient(100deg,#7c86ff,#b184e8 48%,#ff5c8a);--hx-line:rgba(255,255,255,.07)}
+  #page-dashboard,#page-results,#page-leaderboard,#page-market,#page-predictions,#page-my-team,#page-extra,#page-social,#page-games{--hx-i:#6f74e8;--hx-v:#a779e6;--hx-p:#f0487a;--hx-g:linear-gradient(100deg,#7c86ff,#b184e8 48%,#ff5c8a);--hx-line:rgba(255,255,255,.07)}
   .hx-h{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:34px 2px 14px}
   .hx-h small{display:flex;align-items:center;gap:8px;font:800 .6rem/1 system-ui,sans-serif;letter-spacing:3px;text-transform:uppercase;color:#8f95e0}
   .hx-h small::before{content:'';width:22px;height:2px;border-radius:2px;background:var(--hx-g)}
@@ -3208,6 +3208,33 @@
 
 <div id="page-games" class="page">
   <style>
+    /* ===== 2026 brand pass: games hub ===== */
+    .gh-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+    .gh{--c:#7c86ff;--c2:#b184e8;position:relative;overflow:hidden;isolation:isolate;display:flex;flex-direction:column;align-items:flex-start;text-align:left;min-height:212px;padding:18px 18px 16px;border:none;border-radius:24px;color:#fff;font-family:inherit;cursor:pointer;background:linear-gradient(165deg,color-mix(in srgb,var(--c) 24%,#0c0b15) 0%,#0c0b15 62%);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 40%,transparent),0 26px 60px -42px var(--c);transition:transform .3s cubic-bezier(.2,1,.3,1),box-shadow .3s;animation:ghIn .5s cubic-bezier(.2,.9,.25,1) both;animation-delay:calc(var(--i)*40ms)}
+    @keyframes ghIn{from{opacity:0;transform:translate3d(0,16px,0)}}
+    .gh::before{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(135deg,var(--c),var(--c2));opacity:0;transition:opacity .35s}
+    .gh:hover{transform:translateY(-6px);box-shadow:inset 0 0 0 1px var(--c),0 32px 60px -30px var(--c)}
+    .gh:hover::before{opacity:.9}
+    .gh:active{transform:translateY(-2px) scale(.985)}
+    .gh-n{position:absolute;right:10px;bottom:-22px;z-index:-1;font:italic 900 7rem/1 'Barlow Condensed',sans-serif;color:rgba(255,255,255,.055);pointer-events:none;transition:transform .5s cubic-bezier(.2,1,.3,1),color .3s}
+    .gh:hover .gh-n{transform:translate3d(-6px,-8px,0) scale(1.06);color:rgba(255,255,255,.16)}
+    .gh-top{display:flex;align-items:center;gap:10px;width:100%}
+    .gh-ic{width:50px;height:50px;border-radius:16px;display:grid;place-items:center;font-size:1.55rem;background:rgba(8,7,15,.55);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 55%,transparent);transition:transform .35s cubic-bezier(.2,1.5,.4,1)}
+    .gh:hover .gh-ic{transform:scale(1.1) rotate(-6deg)}
+    .gh-tag{margin-left:auto;font:800 .54rem/1 system-ui,sans-serif;letter-spacing:1.5px;text-transform:uppercase;padding:6px 10px;border-radius:999px;background:rgba(0,0,0,.38);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14);white-space:nowrap}
+    .gh-name{margin-top:14px;font:italic 900 clamp(1.6rem,4.6vw,1.95rem)/.95 'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.3px}
+    .gh-tx{margin-top:7px;font-size:.8rem;line-height:1.45;color:#c3c5e0;max-width:34ch;transition:color .3s}
+    .gh:hover .gh-tx{color:#fff}
+    .gh-cta{margin-top:auto;padding-top:14px;display:flex;align-items:center;gap:8px}
+    .gh-cta i{font:900 .8rem/1 'Barlow Condensed',sans-serif;font-style:normal;letter-spacing:1.8px;text-transform:uppercase;padding:10px 16px;border-radius:999px;background:linear-gradient(135deg,var(--c),var(--c2));transition:background .3s,color .3s}
+    .gh:hover .gh-cta i{background:#fff;color:#0c0b15}
+    .gh-cta em{font-style:normal;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,.16);transition:transform .3s cubic-bezier(.2,1,.3,1)}
+    .gh:hover .gh-cta em{transform:translateX(5px)}
+    .gh.gm-locked{filter:saturate(.35);opacity:.8}
+    .gh.gh-soon{cursor:default;opacity:.5;box-shadow:inset 0 0 0 1px rgba(255,255,255,.1)}
+    .gh.gh-soon:hover{transform:none}.gh.gh-soon:hover::before{opacity:0}
+    @media (max-width:600px){.gh-grid{grid-template-columns:1fr 1fr;gap:9px}.gh{min-height:178px;padding:13px 12px 12px;border-radius:19px}.gh-ic{width:40px;height:40px;border-radius:13px;font-size:1.25rem}.gh-tag{display:none}.gh-name{margin-top:10px;font-size:1.3rem}.gh-tx{font-size:.7rem;line-height:1.35}.gh-cta em{display:none}.gh-cta i{padding:8px 13px;font-size:.72rem}.gh-n{font-size:4.6rem;bottom:-12px}}
+    @media (prefers-reduced-motion:reduce){.gh{animation:none}}
     .gm-hero{margin-bottom:16px}.gm-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:2rem;letter-spacing:2px}
     .gm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
     .gm-bubble{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:20px;border-radius:18px;border:1px solid rgba(46,204,113,0.45);background:linear-gradient(150deg,rgba(46,204,113,0.16),var(--surface2) 70%);color:#fff;text-align:left;cursor:pointer;transition:transform .15s ease,box-shadow .15s ease}
@@ -33156,18 +33183,29 @@ window.renderGames = async function() {
     clearInterval(window._wdDuelPoll);
     { const lk = await dbGet('settings', 'gamesLock').catch(() => null); window._gamesLock = (lk && lk.value) || {}; }
     const wLocked = !!window._gamesLock.wordle;
-    el.innerHTML = `<div class="gm-hero"><div class="gm-title">GAMES</div><div class="text-muted" style="font-size:.85rem">Quick games built on IMS league data.</div></div>
-      <div class="gm-grid"><button class="gm-bubble${wLocked ? ' gm-locked' : ''}" onclick="openGame('wordle')"><span class="gm-ico">${wLocked ? '🔒' : '🟩'}</span><b>IMS PADDOCKDLE${wLocked ? ' <span class="gm-lock-tag">LOCKED</span>' : ''}</b><small>Guess the IMS driver from their nationality, division, team, BOTTs, points and wins. Daily, Infinite and 1v1 Duels.</small></button>
-      ${(() => { const gl = !!window._gamesLock.grid; return `<button class="gm-bubble${gl ? ' gm-locked' : ''}" onclick="openGame('grid')"><span class="gm-ico">${gl ? '🔒' : '🔢'}</span><b>IMS PADDOCKDLE GRID${gl ? ' <span class="gm-lock-tag">LOCKED</span>' : ''}</b><small>Fill a 3×3 grid with IMS drivers who fit both the row and column — nationality, team history, BOTTs, wins and more.</small></button>`; })()}
-      ${(() => { const hl = !!window._gamesLock.hl; return `<button class="gm-bubble${hl ? ' gm-locked' : ''}" onclick="openGame('hl')"><span class="gm-ico">${hl ? '🔒' : '⬆️'}</span><b>IMS HIGHER OR LOWER${hl ? ' <span class="gm-lock-tag">LOCKED</span>' : ''}</b><small>10 questions: two IMS drivers, one stat — starts, wins, podiums, poles, points or BOTTs. Higher or lower?</small></button>`; })()}
-      ${(() => { const cl = !!window._gamesLock.cn; return `<button class="gm-bubble${cl ? ' gm-locked' : ''}" onclick="openGame('cn')"><span class="gm-ico">${cl ? '🔒' : '🧩'}</span><b>IMS CONNECTIONS${cl ? ' <span class="gm-lock-tag">LOCKED</span>' : ''}</b><small>16 IMS drivers, 4 hidden groups. Find the four drivers who share a team, nationality, title or stat — 4 mistakes and you're out.</small></button>`; })()}
-      ${(() => { const pl = !!window._gamesLock.pt; return `<button class="gm-bubble${pl ? ' gm-locked' : ''}" onclick="openGame('pt')"><span class="gm-ico">${pl ? '🔒' : '🎯'}</span><b>IMS POINTLESS${pl ? ' <span class="gm-lock-tag">LOCKED</span>' : ''}</b><small>3 questions. Name the IMS drivers with the least appearances who fit — the fewer appearances, the fewer points. Lowest total wins.</small></button>`; })()}
-      ${(() => { const tl = !!window._gamesLock.tq; return `<button class="gm-bubble${tl ? ' gm-locked' : ''}" onclick="openGame('tq')"><span class="gm-ico">${tl ? '🔒' : '🧠'}</span><b>IMS TRIVIA${tl ? ' <span class="gm-lock-tag">LOCKED</span>' : ''}</b><small>10 quick questions on IMS history — wins, poles, teams, nationalities and track records. How well do you know the league?</small></button>`; })()}
-      ${(() => { const cl2 = !!window._gamesLock.cp; return `<button class="gm-bubble${cl2 ? ' gm-locked' : ''}" onclick="openGame('cp')"><span class="gm-ico">${cl2 ? '🔒' : '🛣️'}</span><b>IMS CAREER PATH${cl2 ? ' <span class="gm-lock-tag">LOCKED</span>' : ''}</b><small>A driver's team history, season by season. Guess who — every wrong guess reveals the next season.</small></button>`; })()}
-      ${(() => { const sl = !!window._gamesLock.st; return `<button class="gm-bubble${sl ? ' gm-locked' : ''}" onclick="openGame('st')"><span class="gm-ico">${sl ? '🔒' : '⚖️'}</span><b>IMS STEWARD SIMULATOR${sl ? ' <span class="gm-lock-tag">LOCKED</span>' : ''}</b><small>Real IMS incidents. Read the report — guilty or not guilty? Then see how you compare with the stewards and everyone else.</small></button>`; })()}
-      ${(() => { const ql = !!window._gamesLock.qs; return `<button class="gm-bubble${ql ? ' gm-locked' : ''}" onclick="openGame('qs')"><span class="gm-ico">${ql ? '🔒' : '⏱️'}</span><b>IMS QUALI SHOOTOUT${ql ? ' <span class="gm-lock-tag">LOCKED</span>' : ''}</b><small>Predict each division's pole time to the thousandth before quali. Closest wins 500 IM$ — spot on wins 5,000.</small></button>`; })()}
-      ${(() => { const fl = !!window._gamesLock.wf; return `<button class="gm-bubble${fl ? ' gm-locked' : ''}" onclick="openGame('wf')"><span class="gm-ico">${fl ? '🔒' : '🏁'}</span><b>IMS WHO FINISHED WHERE?${fl ? ' <span class="gm-lock-tag">LOCKED</span>' : ''}</b><small>A real IMS race, top 5 shuffled. Put them back in finishing order in 3 tries.</small></button>`; })()}
-      <div class="gm-bubble gm-soon"><span class="gm-ico">🔒</span><b>MORE SOON</b><small>New games on the way.</small></div></div>`;
+    const G = [
+      ['wordle', '🟩', 'PaddockDle', 'Guess the IMS driver from their nationality, division, team, BOTTs, points and wins.', 'Daily · Infinite · Duels', '#2ecc71', '#7c86ff'],
+      ['grid', '🔢', 'PaddockDle Grid', 'Fill a 3×3 grid with drivers who fit both the row and the column.', 'Daily puzzle', '#7c86ff', '#b184e8'],
+      ['hl', '⬆️', 'Higher or Lower', 'Two drivers, one stat. Ten questions: higher or lower?', 'Quick fire', '#b184e8', '#ff5c8a'],
+      ['cn', '🧩', 'Connections', '16 drivers, 4 hidden groups. Four mistakes and you are out.', 'Daily puzzle', '#ff5c8a', '#ffa751'],
+      ['pt', '🎯', 'Pointless', 'Name the drivers nobody else will. Lowest total wins.', '3 questions', '#6f74e8', '#27f4d2'],
+      ['tq', '🧠', 'Trivia', 'Ten quick questions on IMS history. How well do you know the league?', 'Quick fire', '#a779e6', '#7c86ff'],
+      ['cp', '🛣️', 'Career Path', 'A driver\'s team history, season by season. Every wrong guess reveals more.', 'Daily · Duels', '#f0487a', '#b184e8'],
+      ['st', '⚖️', 'Steward Simulator', 'Real IMS incidents. Guilty or not guilty? Compare with the stewards.', 'You be the judge', '#7c86ff', '#ff5c8a'],
+      ['qs', '⏱️', 'Quali Shootout', 'Predict each division\'s pole time. Closest wins 500 IM$, spot on wins 5,000.', 'Win IM$', '#ffb020', '#ff5c8a'],
+      ['wf', '🏁', 'Who Finished Where?', 'A real IMS race, top 5 shuffled. Put them back in order in 3 tries.', 'Daily · Practice · Duels', '#b184e8', '#6f74e8'],
+    ];
+    el.innerHTML = `<div class="xs-hero hx-gb hx-rv" data-k="gmhero"><div class="xs-ghost">${G.length}</div>
+        <span class="xs-k">Games</span><h1>Play the <em>paddock</em></h1>
+        <p>${G.length} quick games built on real IMS league data. New puzzles every day, and duels when you want a fight.</p></div>
+      <div class="gh-grid">${G.map(([id, ico, nm, tx, tag, c, c2], i) => { const lk = !!window._gamesLock[id];
+        return `<button class="gh${lk ? ' gm-locked' : ''}" style="--c:${c};--c2:${c2};--i:${i}" onclick="openGame('${id}')">
+          <span class="gh-n">${String(i + 1).padStart(2, '0')}</span>
+          <span class="gh-top"><span class="gh-ic">${lk ? '🔒' : ico}</span><span class="gh-tag">${lk ? 'Locked' : tag}</span></span>
+          <b class="gh-name">${nm}</b><small class="gh-tx">${tx}</small>
+          <span class="gh-cta"><i>${lk ? 'Take a look' : 'Play'}</i><em>→</em></span></button>`; }).join('')}
+        <div class="gh gh-soon" style="--c:#555;--c2:#333;--i:${G.length}"><span class="gh-n">+</span><span class="gh-top"><span class="gh-ic">🔒</span><span class="gh-tag">Coming up</span></span><b class="gh-name">More soon</b><small class="gh-tx">New games on the way.</small></div></div>`;
+    if (window._hxInit) window._hxInit('page-games');
     return;
   }
   // In a live duel, reuse driver data loaded in the last 2 minutes — reloading everything on every opponent move made moves show up late.
