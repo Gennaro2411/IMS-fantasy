@@ -2946,7 +2946,7 @@
     @media (max-width:860px){ #page-bets .bo-grid > div{min-width:0} #page-bets .bo-divs{flex-wrap:nowrap;overflow-x:auto} #page-bets .bo-divs > button{flex-shrink:0} #page-bets .bo-fmt{flex-shrink:0} #page-bets .bo-card-h > span:first-child{font-size:.8rem} #page-bets .bo-legs{max-height:84px} #page-bets .bo-slip{padding:12px;background:linear-gradient(160deg,#262a55,#14141f 65%)} #page-bets .bo-nm small{max-width:34vw} #page-bets .bo-grid{grid-template-columns:1fr} #page-bets .bo-side{position:static} #page-bets .bo-slip{position:fixed;left:10px;right:10px;bottom:calc(64px + env(safe-area-inset-bottom,0px));z-index:950} #page-bets .bo-title{font-size:2rem} #page-bets .bo-wallet{width:100%} #page-bets .bo-odd{width:46px;font-size:.84rem;padding:8px 0} #page-bets .bo-cols i{width:46px;font-size:.48rem;letter-spacing:.06em} #page-bets .bo-odd-x{width:46px} #page-bets .bo-row .bo-ph{width:30px;height:30px} #page-bets .bo-row{gap:8px;padding:10px 10px} #page-bets .bo-cols{gap:8px} #page-bets .bo-divs > button{padding:8px 12px} }
     /* ===== 2026 brand pass (IMS indigo / violet / pink) — styling only, no markup or logic changes ===== */
     #page-bets{--bp:#6f74e8;--bp2:#7c86ff;--bp3:#a9aef5;--bline:rgba(255,255,255,.07);--bcard:#110f20;--bcard2:#191630;--hx-g:linear-gradient(100deg,#7c86ff,#b184e8 48%,#ff5c8a);--hx-b:linear-gradient(110deg,#6f74e8,#a779e6 55%,#f0487a)}
-    #page-bets .bo-hero{padding:28px 28px 26px;border-radius:28px;margin-bottom:14px;border:none;background:radial-gradient(70% 110% at 100% 0%,rgba(240,72,122,.20),transparent 62%),radial-gradient(80% 120% at 0% 100%,rgba(111,116,232,.28),transparent 60%),linear-gradient(160deg,#17133a,#08070f 70%);box-shadow:0 34px 80px -44px rgba(124,134,255,.9);animation:boIn .6s cubic-bezier(.2,.9,.25,1) both}
+    #page-bets .bo-hero{padding:28px 28px 26px;border-radius:28px;margin-bottom:14px;border:none;background:radial-gradient(70% 110% at 100% 0%,rgba(240,72,122,.20),transparent 62%),radial-gradient(80% 120% at 0% 100%,rgba(111,116,232,.28),transparent 60%),linear-gradient(160deg,#17133a,#08070f 70%);box-shadow:0 34px 80px -44px rgba(124,134,255,.9)}
     @keyframes boIn{from{opacity:0;transform:translate3d(0,16px,0)}}
     #page-bets .bo-hero::before{content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;background:linear-gradient(120deg,#6f74e8,#a779e6 45%,#f0487a);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;opacity:.8}
     #page-bets .bo-hero::after{inset:0;right:0;top:0;width:auto;height:auto;border-radius:0;border:none;box-shadow:none;background:repeating-linear-gradient(115deg,rgba(255,255,255,.03) 0 1px,transparent 1px 26px);-webkit-mask:linear-gradient(90deg,transparent,#000 65%);mask:linear-gradient(90deg,transparent,#000 65%)}
@@ -3004,7 +3004,7 @@
       #page-bets .bo-divs{border-radius:18px}
     }
   </style>
-  <div id="bets-content"></div>
+  <div id="bets-content" style="overflow-anchor:none"></div>
 </div>
 <div id="page-extra" class="page">
   <style>
@@ -16731,6 +16731,8 @@ window.loadDbFile = async function() {
     });
     const rounds = Array.from(seenTracks.entries()).map(([track, round]) => [round, track]);
     msg.innerHTML = '<div class="alert alert-success">✔ Database loaded — '+rounds.length+' track(s) found.</div>';
+    // Keep seats in step with the bible every time a .db is loaded (seats only — ELOs and prices untouched).
+    try { await window.syncRosterOnlyFromDb(); msg.insertAdjacentHTML('beforeend', '<div class="alert" style="margin-top:8px;font-size:.8rem">👥 Rosters synced automatically</div>'); } catch (e) { console.warn('auto roster sync failed', e); }
 
     let html = '<div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">';
     rounds.forEach(([round, track]) => {
@@ -18058,6 +18060,7 @@ window.importDbRound = async function(roundNo, trackName) {
     try { if (typeof buildWordleData === 'function') { await buildWordleData(null); window._grLoadCache = null; window._wdLoadCache = null; msg.insertAdjacentHTML('beforeend', '<div class="alert" style="margin-top:8px;font-size:.8rem">🟩 Games stats (PaddockDle, Grid, Higher or Lower) updated.</div>'); } } catch(e) { console.warn('auto games stats failed', e); }
     try { await computeAndCacheTrackRecords(); msg.insertAdjacentHTML('beforeend', '<div class="alert" style="margin-top:8px;font-size:.8rem">🏁 Track records updated</div>'); } catch (e) { console.log('track records skipped:', e); }
     try { if (typeof buildQualiPace === 'function') { await buildQualiPace(null, true); msg.insertAdjacentHTML('beforeend', '<div class="alert" style="margin-top:8px;font-size:.8rem">⏱ Quali pace updated for pole betting.</div>'); } } catch(e) { console.warn('auto quali pace failed', e); }
+    try { await window.syncRosterOnlyFromDb(); msg.insertAdjacentHTML('beforeend', '<div class="alert" style="margin-top:8px;font-size:.8rem">👥 Rosters synced from the .db</div>'); } catch (e) { console.warn('auto roster sync failed', e); }
 
   } catch(e) {
     msg.innerHTML = '<div class="alert alert-error">Import error: ' + esc(e.message) + '</div>';
@@ -31919,6 +31922,15 @@ window.buildQualiPace_marker = true;
 window.betHist = function(k) { window._betHistFilter = k; window._betHistPage = 1; renderBets(); };
 window.betHistPage = function(n) { window._betHistPage = n; renderBets(); };
 window.betDiv = function(d) { window._betDiv = d; renderBets(); };
+// Re-rendering the Bets page replaces all of its markup; keep the reader where they were instead of
+// letting the page jump (hold the old height while it rebuilds, then put the scroll position back).
+(function() { const _rb = window.renderBets; if (!_rb || _rb._keepPlace) return;
+  const wrapped = async function(dry) { if (dry && dry.div) return _rb.apply(this, arguments);
+    const bc = document.getElementById('bets-content'), y = window.scrollY;
+    if (bc && bc.offsetHeight) bc.style.minHeight = bc.offsetHeight + 'px';
+    try { return await _rb.apply(this, arguments); }
+    finally { if (bc) { bc.style.minHeight = ''; const pg = document.getElementById('page-bets'); if (pg && pg.classList.contains('active') && Math.abs(window.scrollY - y) > 2) window.scrollTo(0, y); } } };
+  wrapped._keepPlace = true; window.renderBets = wrapped; })();
 // Picks that can't sit on the same accumulator: a tricast with another race pick on one of its 3 drivers, two different winners (or two top-constructors) in
 // the same division, both sides of one head-to-head, or a driver's win AND top 5 (top 5 is implied).
 
