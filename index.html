@@ -3733,6 +3733,30 @@
     .pp-cl em{font-style:normal;font-size:.66rem;color:#4ade80}
     .pp-ic{flex:none;font-size:1.05rem;width:22px;display:flex;justify-content:center}.pp-ic img,.pp-ic>*{max-width:22px!important;max-height:16px!important;width:auto!important;height:auto!important}
     .pp-cl b{white-space:normal;line-height:1.15;overflow-wrap:anywhere}
+    /* Pit Lane Pairs — IMS look */
+    .pp-arena{background:radial-gradient(120% 60% at 0% 0%,rgba(124,134,255,.16),transparent 60%),radial-gradient(90% 50% at 100% 100%,rgba(255,92,138,.13),transparent 60%),linear-gradient(170deg,#15122b,#0b0a14 72%)!important;border:1px solid rgba(177,132,232,.28)!important}
+    .pp-hero{text-align:center;margin-bottom:2px}.pp-k{font-size:.62rem;font-weight:800;letter-spacing:.24em;color:#a5a9d6}
+    .pp-ttl{font-family:'Titillium Web',sans-serif;font-style:italic;font-weight:900;font-size:1.7rem;letter-spacing:.02em;line-height:1.1;color:#fff}.pp-ttl em{background:linear-gradient(100deg,#7c86ff,#b184e8 48%,#ff5c8a);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .pp-prog{position:relative;height:6px;border-radius:6px;background:rgba(255,255,255,.07);overflow:hidden;margin:12px 2px 0}.pp-prog i,.pp-prog b{position:absolute;left:0;top:0;bottom:0;border-radius:6px;transition:width .35s ease}.pp-prog i{background:linear-gradient(90deg,#6f74e8,#a779e6 55%,#f0487a)}.pp-prog b{background:#4ade80}
+    .pp-ch{display:flex;justify-content:space-between;align-items:baseline}.pp-ch span{background:linear-gradient(100deg,#7c86ff,#ff5c8a);-webkit-background-clip:text;background-clip:text;color:transparent}.pp-ch em{font-style:normal;font-weight:700;font-size:.6rem;letter-spacing:.04em;color:#8b8fb8}
+    .pp-d,.pp-c{border-radius:14px;overflow:hidden}
+    .pp-d::before,.pp-c::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--pc);opacity:0;transition:opacity .15s}
+    .pp-d.on::before,.pp-c.on::before,.pp-d.ok::before,.pp-c.ok::before{opacity:1}.pp-d.ok::before,.pp-c.ok::before{background:#4ade80}
+    .pp-d .pp-av{border-radius:50%;padding:2px;background:linear-gradient(135deg,#7c86ff,#b184e8,#ff5c8a)}.pp-d .pp-av>*{display:block;border-radius:50%}
+    .pp-d.sel,.pp-c.sel{border-color:transparent;background:linear-gradient(170deg,#221a3e,#0b0a14 85%) padding-box,linear-gradient(110deg,#6f74e8,#a779e6 55%,#f0487a) border-box;box-shadow:0 6px 22px -8px rgba(240,72,122,.6);transform:translateY(-1px)}
+    .pp-d:not(:disabled):hover,.pp-c:not(:disabled):hover{border-color:rgba(177,132,232,.55)}
+    .pp-dot{width:20px;height:20px;display:grid;place-items:center;font:800 .62rem/1 inherit;font-style:normal;color:#0b0a14;opacity:1;background:rgba(255,255,255,.06);border:1px dashed rgba(255,255,255,.18)}
+    .pp-d.on .pp-dot,.pp-c.on .pp-dot{border:none;background:var(--pc);box-shadow:0 0 12px -2px var(--pc)}
+    .pp-d.ok .pp-dot,.pp-c.ok .pp-dot{border:none;background:#4ade80;box-shadow:0 0 12px -2px #4ade80}
+    .pp-ic{width:30px;height:30px;border-radius:9px;align-items:center;background:rgba(124,134,255,.14);border:1px solid rgba(124,134,255,.25)}
+    .pp-c.t-team .pp-ic,.pp-c.t-ex .pp-ic{background:rgba(255,92,138,.13);border-color:rgba(255,92,138,.28)}
+    .pp-c.t-mate .pp-ic{background:rgba(39,244,210,.12);border-color:rgba(39,244,210,.28)}
+    .pp-c.t-most .pp-ic,.pp-c.t-w .pp-ic,.pp-c.t-pl .pp-ic,.pp-c.t-ch .pp-ic,.pp-c.t-w0 .pp-ic{background:rgba(255,176,32,.13);border-color:rgba(255,176,32,.3)}
+    .pp-d.bad,.pp-c.bad{animation:ppShake .45s ease;border-color:#f87171!important}
+    @keyframes ppShake{20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}
+    .pp-arena #pp-go:not(:disabled){background:linear-gradient(110deg,#6f74e8,#a779e6 55%,#f0487a);color:#fff;box-shadow:0 10px 28px -10px rgba(240,72,122,.7)}
+    .pp-arena #pp-go:disabled{opacity:.55}
+    .pp-hist i.g{background:linear-gradient(135deg,#4ade80,#27f4d2)}
     .pp-hist{display:flex;flex-direction:column;gap:4px;margin:8px auto;align-items:center}
     .pp-hist div{display:flex;align-items:center;gap:3px;font-size:.7rem;color:var(--muted)}.pp-hist span{width:42px}
     .pp-hist i{width:14px;height:14px;border-radius:4px;background:rgba(255,255,255,.1)}.pp-hist i.g{background:#4ade80}.pp-hist b{margin-left:6px;color:#fff}
@@ -36253,7 +36277,7 @@ window.ppTap = function(kind, v) { if (window._ppLocked) return; const st = _ppC
     Object.keys(st.pr).forEach(x => { if (st.pr[x] === ci) delete st.pr[x]; }); st.pr[id] = ci; window._ppSel = null; try { _ptSnd.tick && _ptSnd.tick(); } catch (e) {} }
   _ppPersist(st); _ppPaint(); };
 window.ppSubmit = async function() { if (window._ppLocked) return; const st = _ppCur(); if (!st || st.done || Object.keys(st.pr).length < PP_N) return;
-  let hit = 0; st.ds.forEach(id => { const c = st.cl[st.pr[id]]; if (c && c.a === id) { st.ok[id] = 1; hit++; } else delete st.pr[id]; });
+  let hit = 0; window._ppBad = {}; st.ds.forEach(id => { const c = st.cl[st.pr[id]]; if (c && c.a === id) { if (!st.ok[id]) window._ppNew = Object.assign(window._ppNew || {}, { [id]: 1 }); st.ok[id] = 1; hit++; } else { window._ppBad[id] = 1; window._ppBad['c' + st.pr[id]] = 1; delete st.pr[id]; } });
   st.tries.push(_ppRight(st)); window._ppSel = null; window._ppFlash = Date.now();
   if (_ppRight(st) === PP_N) { st.done = true; st.won = true; } else if (st.tries.length >= PP_TRIES) st.done = true;
   if (st.done) st.t1 = Date.now(); _ppPersist(st);
@@ -36288,16 +36312,17 @@ window.ppShare = function() { const st = _ppCur(); if (!st || !st.done) return; 
   if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) navigator.share({ text: txt }).catch(() => {}); else if (navigator.clipboard) navigator.clipboard.writeText(txt).then(() => { if (typeof showToast === 'function') showToast('📋 Copied — paste it in Discord!', 'success'); }).catch(() => prompt('Copy your result:', txt)); else prompt('Copy your result:', txt); };
 // The board: drivers on the left, clues on the right. Paired items share a colour.
 function _ppBoard(st) { const pool = (window._ppPoolC && window._ppPoolC.list) || [], D = (id) => pool.find(p => p.id === id) || { id, name: '?', team: '' };
-  const sel = window._ppSel, colOf = {}, ci2d = {}; st.ds.forEach((id, i) => { colOf[id] = PP_COL[i]; if (st.pr[id] != null) ci2d[st.pr[id]] = id; });
+  const sel = window._ppSel, colOf = {}, ltr = {}, ci2d = {}; st.ds.forEach((id, i) => { colOf[id] = PP_COL[i]; ltr[id] = 'ABCDEFG'[i]; if (st.pr[id] != null) ci2d[st.pr[id]] = id; });
   const fl = window._ppFlash && Date.now() - window._ppFlash < 1500;
   const drv = st.ds.map(id => { const d = D(id), on = st.pr[id] != null, ok = !!st.ok[id] || st.done && st.cl[st.pr[id]] && st.cl[st.pr[id]].a === id;
     const lg = !st.done ? '' : (typeof getTeamLogo === 'function' ? getTeamLogo(d.team) : '');
-    return `<button class="pp-d${on ? ' on' : ''}${ok ? ' ok' : ''}${sel && sel.k === 'd' && sel.v === id ? ' sel' : ''}${ok && fl ? ' pop' : ''}" style="--pc:${colOf[id]}" onclick="ppTap('d','${esc(id)}')" ${st.done ? 'disabled' : ''}>
-      <span class="pp-av">${_wdAv(d, 34)}</span><span class="pp-nm"><b>${esc(_ppNm(d.name))}</b>${st.done ? `<small>${lg ? `<img src="${esc(lg)}" alt="">` : ''}${esc(d.team)}</small>` : ''}</span><i class="pp-dot"></i></button>`; }).join('');
+    return `<button class="pp-d${on ? ' on' : ''}${ok ? ' ok' : ''}${fl && (window._ppBad || {})[id] ? ' bad' : ''}${sel && sel.k === 'd' && sel.v === id ? ' sel' : ''}${ok && fl ? ' pop' : ''}" style="--pc:${colOf[id]}" onclick="ppTap('d','${esc(id)}')" ${st.done ? 'disabled' : ''}>
+      <span class="pp-av">${_wdAv(d, 34)}</span><span class="pp-nm"><b>${esc(_ppNm(d.name))}</b>${st.done ? `<small>${lg ? `<img src="${esc(lg)}" alt="">` : ''}${esc(d.team)}</small>` : ''}</span><i class="pp-dot">${ok ? '✓' : on ? ltr[id] : ''}</i></button>`; }).join('');
   const cls = st.cl.map((c, i) => { const id = st.done ? c.a : ci2d[i], ok = id && (st.ok[id] || st.done);
-    return `<button class="pp-c t-${c.t}${id ? ' on' : ''}${ok ? ' ok' : ''}${sel && sel.k === 'c' && sel.v === i ? ' sel' : ''}${ok && fl ? ' pop' : ''}" style="${id ? '--pc:' + colOf[id] : ''}" onclick="ppTap('c',${i})" ${st.done ? 'disabled' : ''}>
-      <i class="pp-dot"></i><span class="pp-ic">${c.ic}</span><span class="pp-cl"><small>${c.k}</small><b>${esc(c.v)}</b>${st.done ? `<em>${esc(_ppNm(D(c.a).name))}</em>` : ''}</span></button>`; }).join('');
-  return `<div class="pp-board"><div class="pp-col"><div class="pp-ch">DRIVERS</div>${drv}</div><div class="pp-col"><div class="pp-ch">CLUES</div>${cls}</div></div>`; }
+    return `<button class="pp-c t-${c.t}${id ? ' on' : ''}${ok ? ' ok' : ''}${fl && (window._ppBad || {})['c' + i] ? ' bad' : ''}${sel && sel.k === 'c' && sel.v === i ? ' sel' : ''}${ok && fl ? ' pop' : ''}" style="${id ? '--pc:' + colOf[id] : ''}" onclick="ppTap('c',${i})" ${st.done ? 'disabled' : ''}>
+      <i class="pp-dot">${ok ? '✓' : id ? ltr[id] : ''}</i><span class="pp-ic">${c.ic}</span><span class="pp-cl"><small>${c.k}</small><b>${esc(c.v)}</b>${st.done ? `<em>${esc(_ppNm(D(c.a).name))}</em>` : ''}</span></button>`; }).join('');
+  const np = Object.keys(st.pr).length, nk = Object.keys(st.ok).length;
+  return `<div class="pp-prog"><i style="width:${np / PP_N * 100}%"></i><b style="width:${nk / PP_N * 100}%"></b></div><div class="pp-board"><div class="pp-col"><div class="pp-ch"><span>DRIVERS</span><em>${np}/${PP_N} paired</em></div>${drv}</div><div class="pp-col"><div class="pp-ch"><span>CLUES</span><em>${nk} locked</em></div>${cls}</div></div>`; }
 function _ppPaint() { const b = document.getElementById('pp-wrap'), st = _ppCur(); if (!b || !st) return renderGames();
   b.innerHTML = _ppBoard(st); const n = Object.keys(st.pr).length, go = document.getElementById('pp-go'); if (go) { go.disabled = n < PP_N || !!window._ppLocked; go.textContent = n < PP_N ? `PAIR ALL 7 · ${n}/${PP_N}` : 'LOCK IN'; }
   const h = document.getElementById('pp-hint'); if (h) h.textContent = window._ppSel ? (window._ppSel.k === 'd' ? 'Now tap the clue that fits them' : 'Now tap the driver it belongs to') : 'Tap a driver, then the clue that fits'; }
@@ -36311,7 +36336,7 @@ async function renderPPGame(el) {
   if (!st) body += '<div class="alert alert-warning">Not enough driver data to build a puzzle yet.</div>';
   else { const sc = st.done ? _ppScore(st) : null, n = Object.keys(st.pr).length;
     const hist = st.tries.length ? `<div class="pp-hist">${st.tries.map((r, i) => `<div><span>Try ${i + 1}</span>${'<i class="g"></i>'.repeat(r)}${'<i></i>'.repeat(PP_N - r)}<b>${r}/${PP_N}</b></div>`).join('')}</div>` : '';
-    body += `<div class="pt-arena pp-arena"><div class="pt-qn">PIT LANE PAIRS</div>
+    body += `<div class="pt-arena pp-arena"><div class="pp-hero"><span class="pp-k">MATCH THE PADDOCK</span><div class="pp-ttl">PIT LANE <em>PAIRS</em></div></div>
       <div class="pt-hint" id="pp-hint" style="margin-top:4px">${st.done ? (st.won ? `All seven paired in ${st.tries.length}!` : 'The right pairs') : 'Tap a driver, then the clue that fits'}</div>
       ${sc ? `<div class="wf-score"><div class="wf-score-big"><small>SCORE</small><b>${sc.total}</b></div><div class="wf-score-br"><span><i>Pairs · ${sc.r}/${PP_N}</i><b>+${sc.pairs}</b></span>${sc.bonus ? `<span><i>Solved in ${st.tries.length}</i><b>+${sc.bonus}</b></span>` : ''}</div></div>` : ''}
       <div id="pp-wrap">${_ppBoard(st)}</div>${hist}
