@@ -1862,16 +1862,18 @@
     .wl-bal b{filter:drop-shadow(0 2px 6px rgba(0,0,0,.7))}
     .wl-lvl{position:absolute;z-index:1;left:12px;top:12px;display:flex;flex-direction:column;align-items:flex-start;padding:5px 10px;border-radius:10px;font-size:.54rem;font-weight:800;letter-spacing:.16em;color:#d8c48a;background:rgba(11,10,20,.72);box-shadow:inset 0 0 0 1px rgba(247,207,85,.3)}
     .wl-lvl b{font-size:.74rem;letter-spacing:.02em;color:#fff;font-style:italic;font-weight:900}
-    .wl-next{max-width:260px;margin:10px auto 0}.wl-next>div{height:5px;border-radius:5px;background:rgba(255,255,255,.12);overflow:hidden}.wl-next i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,#f7cf55,#f0487a)}
+    .wl-next{max-width:280px;margin:10px auto 0;padding:8px 12px 6px;border-radius:12px;background:rgba(11,10,20,.78)}.wl-next>div{height:5px;border-radius:5px;background:rgba(255,255,255,.12);overflow:hidden}.wl-next i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,#f7cf55,#f0487a)}
     .wl-next small{display:block;margin-top:4px;font-size:.66rem;color:#c9cbe8;text-shadow:0 1px 3px #000}.wl-next small b{color:#ffe083}
-    .wl-hero.lv0{box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}.wl-hero.lv6{box-shadow:inset 0 0 0 1px rgba(247,207,85,.7),0 0 34px -8px rgba(247,207,85,.55)}
+    .wl-hero.lv0{box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}.wl-hero.lv6{box-shadow:inset 0 0 0 2px rgba(247,207,85,.85),0 0 40px -6px rgba(247,207,85,.7);animation:wlGlow 2.4s ease-in-out infinite}
+    @keyframes wlGlow{50%{box-shadow:inset 0 0 0 2px #fff3b8,0 0 60px -2px rgba(247,207,85,.95)}}
+    .wl-hero.lv6 .wl-bal b{font-size:3.1rem}
     .wl-tw{transform-box:fill-box;transform-origin:center;animation:wlTw 2.6s ease-in-out infinite}
     @keyframes wlTw{0%,100%{opacity:.15;transform:scale(.6)}50%{opacity:1;transform:scale(1)}}
     .wl-fall{animation:wlFall 3.4s linear infinite}
     @keyframes wlFall{from{transform:translateY(0)}to{transform:translateY(250px)}}
     .wl-spider{animation:wlSpd 4.5s ease-in-out infinite}
     @keyframes wlSpd{0%,100%{transform:translateY(-8px)}50%{transform:translateY(14px)}}
-    @media (prefers-reduced-motion:reduce){.wl-tw,.wl-fall,.wl-spider{animation:none}}
+    @media (prefers-reduced-motion:reduce){.wl-tw,.wl-fall,.wl-spider,.wl-hero.lv6{animation:none}}
     @media (prefers-reduced-motion:reduce){.wl-coin .imc{animation:none}}
     @media (prefers-reduced-motion:reduce){#hdr-music.playing .hm-eq i,.hdr-search-results{animation:none}}
   </style>
@@ -8711,10 +8713,10 @@ window.refreshCurrentPage = async function(btn) {
 const _wlFmt = (n) => Math.round(n || 0).toLocaleString();
 const _wlShort = (n) => { n = Math.round(n || 0); return Math.abs(n) >= 1e6 ? (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M' : Math.abs(n) >= 1e4 ? (n / 1e3).toFixed(1).replace(/\.0$/, '') + 'k' : n.toLocaleString(); };
 // The vault behind the balance: the more IM$ you hold, the fuller it gets (7 levels, and it keeps growing inside each level).
-const WL_TIERS = [[0, 'Bare vault', 'Just dust and a spider'], [150, 'Loose change', 'A few coins on the floor'], [1000, 'Starter stash', 'The first stacks are up'], [5000, 'Stacking up', 'Gold bars have arrived'], [20000, 'Loaded', 'Bars, bags and tall stacks'], [50000, 'Treasure room', 'Gems on top of the gold'], [100000, 'Overflowing', 'The vault can\'t hold it all']];
+const WL_TIERS = [[0, 'Bare vault', 'Just dust and a spider'], [150, 'Loose change', 'A few coins on the floor'], [2000, 'Starter stash', 'The first stacks are up'], [10000, 'Stacking up', 'Gold bars have arrived'], [50000, 'Loaded', 'Bars, bags and tall stacks'], [250000, 'Treasure room', 'Gems on top of the gold'], [1000000, 'Millionaire\'s vault', 'The vault can\'t hold it all']];
 function _wlVault(bal) { bal = Math.max(0, Number(bal) || 0);
   let L = 0; WL_TIERS.forEach((t, i) => { if (bal >= t[0]) L = i; });
-  const nx = WL_TIERS[L + 1], f = nx ? (bal - WL_TIERS[L][0]) / (nx[0] - WL_TIERS[L][0]) : Math.min(1, (bal - 1e5) / 9e5);
+  const nx = WL_TIERS[L + 1], f = nx ? (bal - WL_TIERS[L][0]) / (nx[0] - WL_TIERS[L][0]) : Math.min(1, (bal - 1e6) / 9e6);
   let sd = 7 + L * 13; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
   const W = 400, FL = 214, o = [];
   const coin = (x, y, r) => `<ellipse cx="${x}" cy="${y + 2.4}" rx="${r}" ry="${r * .36}" fill="#8c6309"/><ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r * .36}" fill="url(#wlc)" stroke="#7a5507" stroke-width=".5"/>`;
@@ -8734,17 +8736,18 @@ function _wlVault(bal) { bal = Math.max(0, Number(bal) || 0);
       `<g class="wl-spider"><path d="M318 0v52" stroke="rgba(255,255,255,.3)" stroke-width=".7"/><text x="309" y="66" font-size="16">🕷️</text></g>`);
     if (bal > 0) o.push(coin(92, FL, 9)); if (bal >= 75) o.push(coin(300, FL + 1, 9));
     [[60, 1], [150, 2], [250, 1.4], [340, 1.8]].forEach(([x, r]) => o.push(`<circle cx="${x}" cy="${FL + 1}" r="${r}" fill="rgba(255,255,255,.12)"/>`)); }
-  else { const mound = L >= 5 ? (L === 6 ? 96 - f * 30 : 178 - f * 26) : 0;
+  else { const mound = L >= 5 ? (L === 6 ? 78 - f * 34 : 178 - f * 26) : 0;
     if (mound) { const dip = L === 6 ? 218 : 240; o.push(`<path d="M0 230V${mound}Q200 ${dip} ${W} ${mound}V230z" fill="url(#wlm)"/>`);
-      const n = L === 6 ? 150 : 60; for (let i = 0; i < n; i++) { const x = rnd() * W, t = x / W, top = (1 - t) * (1 - t) * mound + 2 * (1 - t) * t * dip + t * t * mound, y = top + 5 + rnd() * (FL - top); if (y < FL + 6) o.push(coin(x, y, 7 + rnd() * 3)); } }
+      const n = L === 6 ? 210 : 60; for (let i = 0; i < n; i++) { const x = rnd() * W, t = x / W, top = (1 - t) * (1 - t) * mound + 2 * (1 - t) * t * dip + t * t * mound, y = top + 5 + rnd() * (FL - top); if (y < FL + 6) o.push(coin(x, y, 7 + rnd() * 3)); } }
     const NS = [0, 3, 7, 11, 15, 19, 22][L], HB = [0, 2, 5, 8, 11, 14, 18][L] * (.65 + .35 * f) + (L === 1 ? f * 2 : 0);
     const xs = Array.from({ length: NS }, (_, i) => 14 + (i + .5) * ((W - 28) / NS) + (rnd() - .5) * 6);
     if (L >= 3) o.push(pyr(L >= 5 ? 22 : 40, Math.min(5, L - 1)), L >= 4 ? pyr(W - 40 - 29 * Math.min(4, L - 2), Math.min(4, L - 2)) : '');
     xs.forEach(x => { const e = Math.abs(x - 200) / 200, n = Math.max(1, Math.round(HB * (.3 + .7 * e) * (.75 + rnd() * .5))); o.push(stack(x, n, 9.5)); });
     if (L >= 4) o.push(bag(118), L >= 5 ? bag(292) : '');
     if (L >= 5) [[150, FL - 2, '#27f4d2'], [262, FL - 1, '#ff5c8a'], [206, FL + 2, '#7c86ff'], [70, FL - 30, '#27f4d2'], [338, FL - 34, '#ff5c8a']].slice(0, L === 6 ? 5 : 3).forEach(g => o.push(gem(...g)));
-    for (let i = 0; i < [0, 0, 2, 4, 6, 9, 14][L]; i++) o.push(star(20 + rnd() * 360, FL - 6 - rnd() * (30 + L * 18), 3 + rnd() * 3, (rnd() * 3).toFixed(2)));
-    if (L === 6) { o.push(`<text x="186" y="${FL - 2}" font-size="26">👑</text>`); for (let i = 0; i < 9; i++) { const x = 20 + rnd() * 360; o.push(`<g class="wl-fall" style="animation-delay:${(rnd() * 4).toFixed(2)}s;animation-duration:${(2.6 + rnd() * 2).toFixed(2)}s">${coin(x, -12, 7)}</g>`); } } }
+    for (let i = 0; i < [0, 0, 2, 4, 6, 9, 26][L]; i++) o.push(star(20 + rnd() * 360, FL - 6 - rnd() * (30 + L * 18), 3 + rnd() * 3, (rnd() * 3).toFixed(2)));
+    if (L === 6) { o.push(`<text x="186" y="${FL - 2}" font-size="26">👑</text>`); [[40, 150, '#7c86ff'], [362, 144, '#27f4d2'], [24, 110, '#ff5c8a'], [378, 104, '#7c86ff']].forEach(g => o.push(gem(...g))); o.push(`<text x="30" y="${FL - 34}" font-size="20">🏆</text><text x="346" y="${FL - 36}" font-size="20">💎</text>`);
+      for (let i = 0; i < 22; i++) { const x = 20 + rnd() * 360; o.push(`<g class="wl-fall" style="animation-delay:${(rnd() * 4).toFixed(2)}s;animation-duration:${(2.6 + rnd() * 2).toFixed(2)}s">${coin(x, -12, 7)}</g>`); } } }
   const svg = `<svg class="wl-vault" viewBox="0 0 ${W} 230" preserveAspectRatio="xMidYMax slice" aria-hidden="true"><defs><linearGradient id="wlc" x1="0" x2="1"><stop offset="0" stop-color="#d9a21c"/><stop offset=".45" stop-color="#fff3b8"/><stop offset="1" stop-color="#d9a21c"/></linearGradient><linearGradient id="wlb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe083"/><stop offset="1" stop-color="#b8860b"/></linearGradient><linearGradient id="wlm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0aa25"/><stop offset="1" stop-color="#6e4c07"/></linearGradient><radialGradient id="wlg"><stop offset="0" stop-color="#f7cf55"/><stop offset="1" stop-color="#f7cf55" stop-opacity="0"/></radialGradient></defs>${o.join('')}</svg>`;
   return { svg, L, name: WL_TIERS[L][1], note: WL_TIERS[L][2], f, next: nx ? nx[0] - bal : 0, nextName: nx ? nx[1] : '' }; }
 window._wlPill = async function() { const el = document.getElementById('wallet-amt'); if (!el || typeof currentUser === 'undefined' || !currentUser || !currentUser.userId) return;
