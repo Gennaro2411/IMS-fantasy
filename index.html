@@ -3008,6 +3008,13 @@
     #page-bets .bo-slip{border-radius:22px;padding:18px;border:none;background:radial-gradient(90% 70% at 0% 0%,rgba(111,116,232,.34),transparent 62%),radial-gradient(70% 60% at 100% 100%,rgba(240,72,122,.16),transparent 62%),#0f0d1f;box-shadow:inset 0 0 0 1px rgba(124,134,255,.5),0 26px 60px -30px rgba(90,94,201,.9)}
     #page-bets .bo-slip .btn-primary{border-radius:999px;padding:13px;font:900 1rem/1 'Barlow Condensed',sans-serif;letter-spacing:1.6px;text-transform:uppercase;background:var(--hx-b);box-shadow:0 12px 26px -10px rgba(240,72,122,.8)}
     #page-bets .bo-slip-n{background:var(--hx-b)}
+    /* smooth taps: nodes now persist between renders, so colour changes can ease and new bits fade in */
+    #page-bets .bo-odd,#page-bets .bo-divs>button,#page-bets .bo-secbar button,#page-bets .bo-htabs button,#page-bets .bo-fmt button{transition:background-color .18s ease,background .18s ease,box-shadow .18s ease,color .18s ease}
+    #page-bets .bo-slip{animation:boSlip .26s cubic-bezier(.2,.9,.25,1) both}
+    @keyframes boSlip{from{opacity:0;transform:translate3d(0,14px,0)}}
+    #page-bets .bo-leg{animation:boLeg .22s ease-out both}
+    @keyframes boLeg{from{opacity:0;transform:translate3d(0,-6px,0)}}
+    @media (prefers-reduced-motion:reduce){#page-bets .bo-slip,#page-bets .bo-leg{animation:none}}
     #page-bets .bo-slip-row input,#page-bets .bo-slip-row button{border-radius:12px}
     #page-bets .bo-leg{border-radius:14px}
     #page-bets .bo-bet::before{background:var(--hx-g)}
