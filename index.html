@@ -21957,7 +21957,7 @@ window.openDriverModal = async function(driverId) {
     </div>
     ${hasPast ? (() => {
       const tb = window._profileTeamBySeason || {};
-      const pill = (se, pts, team, on) => { const c = team && typeof getTeamCardColour === 'function' ? getTeamCardColour(team) : null, A = (c && c.accent) || dmAccent, lg = team && typeof getTeamLogo === 'function' ? getTeamLogo(team) : '';
+      const pill = (se, pts, team, on) => { const rsv = team === 'Reserve', c = !rsv && team && typeof getTeamCardColour === 'function' ? getTeamCardColour(team) : null, A = rsv ? RESERVE_PURPLE : (c && c.accent) || dmAccent, lg = !rsv && team && typeof getTeamLogo === 'function' ? getTeamLogo(team) : '';
         return `<button id="dm-tab-s${se}" class="dm-sp${on ? ' active' : ''}" style="--a:${A}" onclick="switchModalTab('s${se}')">${lg ? `<img src="${esc(lg)}" alt="">` : ''}<span><b>S${se}</b><small>${team ? esc(team) + ' · ' : ''}${pts} pts</small></span></button>`; };
       const curPts = `<span id="dm-season-pts">${(window._profileSummary && window._profileSummary.all || {totalPts:totalPts}).totalPts}</span>`;
       return `<style>
@@ -21971,7 +21971,7 @@ window.openDriverModal = async function(driverId) {
         .dm-sp b{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.05rem;letter-spacing:.5px;line-height:1}
         .dm-sp small{display:block;font-size:.6rem;font-weight:700;color:var(--muted);white-space:nowrap}
         .dm-sp.active small{color:#fff;opacity:.85}
-      </style><div class="dm-sbar">${pill(currentSeason, curPts, driver.team && !/^reserve$/i.test(driver.team) ? driver.team : '', true)}${pastSeasons.map(se => { const _ss = window._profileSeasonSummaries && window._profileSeasonSummaries[se.season]; const _tp = (_ss && typeof _ss.totalPts === 'number') ? _ss.totalPts : se.totalPts; return pill(se.season, _tp, (tb[se.season] || {}).team || '', false); }).join('')}</div>`;
+      </style><div class="dm-sbar">${pill(currentSeason, curPts, isReserveDriver(driver) || /^reserve$/i.test(driver.team || '') ? 'Reserve' : (driver.team || ''), true)}${pastSeasons.map(se => { const _ss = window._profileSeasonSummaries && window._profileSeasonSummaries[se.season]; const _tp = (_ss && typeof _ss.totalPts === 'number') ? _ss.totalPts : se.totalPts; return pill(se.season, _tp, (tb[se.season] || {}).team || '', false); }).join('')}</div>`;
     })() : ''}
     <div style="padding:14px 20px 10px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
