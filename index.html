@@ -23560,7 +23560,7 @@ window._driverPointTotals = {};
 window._divisionAvgPts = {};
 
 // Global ownership map — populated by render functions that have teams data
-window.BUILD_TAG = "s8-ui-refresh-27sep";
+window.BUILD_TAG = "bets-smooth-11nov";
 window._ownershipPct = {}; // driverId -> ownership percentage (0-100)
 
 // Known logos for constructors that were deleted from the live list (e.g. Haas, Mercedes removed for
@@ -31981,14 +31981,21 @@ window._morphInto = function(live, next) {
     const live = document.getElementById('bets-content');
     // First paint (or nothing there yet): render normally.
     if (!live || !live.firstElementChild || window._betNoMorph) return _rb.call(window);
+    // Keep whatever was just tapped (or the division bar) at the same spot on screen, even if
+    // content above it grows or shrinks in this render or in the follow-up boost pricing render.
+    const pg = document.getElementById('page-bets'), A0 = window._betAnchor;
+    const A = (A0 && live.contains(A0)) ? A0 : live.querySelector('.bo-divs');
+    const t0 = A ? A.getBoundingClientRect().top : null;
     const stage = document.createElement('div'); stage.style.display = 'none';
     live.id = 'bets-content-live'; stage.id = 'bets-content'; live.after(stage);
     try { const r = await _rb.call(window);
       stage.id = ''; live.id = 'bets-content';
       try { window._morphInto(live, stage); } catch (e) { console.warn('bets morph failed, full swap', e); live.innerHTML = stage.innerHTML; }
+      try { if (A && t0 != null && live.contains(A) && pg && pg.classList.contains('active')) { const d = A.getBoundingClientRect().top - t0; if (Math.abs(d) > 1) window.scrollBy(0, d); } } catch (e) {}
       return r;
     } finally { stage.remove(); live.id = 'bets-content'; } };
   wrapped._keepPlace = true; window.renderBets = wrapped; })();
+document.addEventListener('pointerdown', (e) => { const bc = document.getElementById('bets-content'); if (bc && bc.contains(e.target)) window._betAnchor = e.target.closest('button,select,input,.bo-row,.bo-card') || e.target; }, true);
 // Picks that can't sit on the same accumulator: a tricast with another race pick on one of its 3 drivers, two different winners (or two top-constructors) in
 // the same division, both sides of one head-to-head, or a driver's win AND top 5 (top 5 is implied).
 
