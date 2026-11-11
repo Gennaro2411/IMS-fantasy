@@ -1094,7 +1094,7 @@
   .hh-act b{display:block;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.25rem;letter-spacing:.5px;text-transform:uppercase}
   .hh-act small{display:block;margin-top:3px;font-size:.7rem;color:#a7a2c2;line-height:1.3}
   /* ===== Home, below the next-race hero (hx-*) — IMS logo palette: indigo → violet → pink on black ===== */
-  #page-dashboard,#page-results,#page-leaderboard,#page-market,#page-predictions{--hx-i:#6f74e8;--hx-v:#a779e6;--hx-p:#f0487a;--hx-g:linear-gradient(100deg,#7c86ff,#b184e8 48%,#ff5c8a);--hx-line:rgba(255,255,255,.07)}
+  #page-dashboard,#page-results,#page-leaderboard,#page-market,#page-predictions,#page-my-team{--hx-i:#6f74e8;--hx-v:#a779e6;--hx-p:#f0487a;--hx-g:linear-gradient(100deg,#7c86ff,#b184e8 48%,#ff5c8a);--hx-line:rgba(255,255,255,.07)}
   .hx-h{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:34px 2px 14px}
   .hx-h small{display:flex;align-items:center;gap:8px;font:800 .6rem/1 system-ui,sans-serif;letter-spacing:3px;text-transform:uppercase;color:#8f95e0}
   .hx-h small::before{content:'';width:22px;height:2px;border-radius:2px;background:var(--hx-g)}
@@ -2062,6 +2062,72 @@
     #page-my-team .mt-stats-toggle{border-color:rgba(123,127,232,.35);color:#a0a4ff}
     #page-my-team .set-cap-btn{transition:background .15s ease,color .15s ease,border-color .15s ease}
     #page-my-team .set-cap-btn:not(.is-cap):hover{background:rgba(255,200,0,0.10)!important;border-color:rgba(255,200,0,0.45)!important;color:var(--gold)!important}
+    /* ===== 2026 brand pass (IMS indigo / violet / pink) — same layout, new finish ===== */
+    #page-my-team .card{position:relative;border-radius:24px;border:1px solid var(--hx-line);box-shadow:0 26px 60px -38px rgba(90,94,201,.75)}
+    #page-my-team .card:not(.mt-teamcard){padding:22px;background:linear-gradient(170deg,#15122b,#0b0a14 72%);border-color:var(--hx-line)}
+    #page-my-team .mt-teamcard:not(.mt-fz){background:linear-gradient(170deg,#15122b,#0b0a14 60%)!important;border-color:transparent!important}
+    #page-my-team .mt-teamcard:not(.mt-fz)>.mt-banner{background:radial-gradient(70% 120% at 100% 0%,rgba(240,72,122,.18),transparent 62%),radial-gradient(80% 130% at 0% 0%,rgba(111,116,232,.28),transparent 60%)!important;border-bottom-color:rgba(255,255,255,.07)!important}
+    #page-my-team .mt-banner{padding:22px 22px 20px!important}
+    #page-my-team .mt-kick{display:flex;align-items:center;gap:8px;font:800 .58rem/1 system-ui,sans-serif;letter-spacing:3px;text-transform:uppercase;color:#a9aef5;margin-bottom:7px}
+    #page-my-team .mt-kick::before{content:'';width:22px;height:2px;border-radius:2px;background:var(--hx-g)}
+    #page-my-team .mt-name{font:italic 900 clamp(1.9rem,6.4vw,2.9rem)/.92 'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.3px;padding-right:.12em;background:linear-gradient(100deg,#fff 25%,#c9ccff 60%,#ff9db7);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+    #page-my-team .mt-who{font-size:.8rem;color:#a8abc9;margin-top:5px}
+    #page-my-team .mt-ava{padding:2px;border-radius:19px;background:linear-gradient(135deg,#6f74e8,#a779e6 50%,#f0487a)}
+    #page-my-team .mt-ava>*:first-child{display:block}
+    #page-my-team .mt-hero-pts{margin-top:18px;border-radius:20px;border:none;background:#0b0a14;box-shadow:inset 0 0 0 1px rgba(124,134,255,.34);padding:18px 16px 18px}
+    #page-my-team .mt-hero-pts .mt-lbl{font-size:.58rem;letter-spacing:3px}
+    #page-my-team #total-pts-display{font-size:3.7rem}
+    @media (max-width:520px){ #page-my-team #total-pts-display{font-size:2.9rem} }
+    #page-my-team .mt-lbl{color:#9a9ee6;letter-spacing:2.2px}
+    #page-my-team .mt-stats-toggle{width:40px;height:24px;border-color:rgba(124,134,255,.35);color:#a9aef5}
+    #page-my-team .mt-tile,#page-my-team .mt-tile:nth-child(3n+2),#page-my-team .mt-tile:nth-child(3n){position:relative;overflow:hidden;border:none;border-radius:18px;padding:14px 13px 13px;background:rgba(255,255,255,.028);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);transition:transform .2s,box-shadow .2s}
+    #page-my-team .mt-tile::before{content:'';position:absolute;left:14px;right:14px;top:0;height:2px;border-radius:2px;background:var(--hx-g);opacity:.75}
+    #page-my-team .mt-tile:hover{transform:translateY(-2px);box-shadow:inset 0 0 0 1px rgba(124,134,255,.55)}
+    #page-my-team .mt-tile-val{font-style:italic;font-size:2rem;line-height:1.05}
+    #page-my-team .mt-tag.lg{font-style:italic;font-size:1.6rem;border-radius:12px;box-shadow:none}
+    #page-my-team .mt-vs{margin-top:12px!important;border:none!important;border-radius:18px!important;background:rgba(255,255,255,.028)!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+    #page-my-team .mt-body{padding:20px 22px 22px!important}
+    #page-my-team .mt-chips{gap:10px!important;margin-bottom:16px!important}
+    #page-my-team .mt-chips>div{border-radius:18px!important}
+    #page-my-team .mt-chips .btn{border-radius:999px;font:900 .74rem/1 'Barlow Condensed',sans-serif!important;letter-spacing:1.6px;text-transform:uppercase;padding:8px 16px!important;min-height:0!important;margin-top:6px!important}
+    #page-my-team .mt-caphint{display:flex;align-items:center;justify-content:center;gap:12px;font-size:.84rem!important;color:#a8abc9!important;margin-bottom:16px!important}
+    #page-my-team .mt-caphint::before,#page-my-team .mt-caphint::after{content:'';flex:1;max-width:120px;height:1px;background:linear-gradient(90deg,transparent,rgba(124,134,255,.5))}
+    #page-my-team .mt-caphint::after{transform:scaleX(-1)}
+    #page-my-team .mt-driver-row>*,#page-my-team .mt-hov{border-radius:18px!important}
+    #page-my-team .set-cap-btn{border-radius:999px!important}
+    #page-my-team .mt-form-link{padding:14px 16px;border-radius:18px;border:none;background:linear-gradient(100deg,rgba(111,116,232,.18),rgba(167,121,230,.09) 50%,rgba(240,72,122,.12));box-shadow:inset 0 0 0 1px rgba(124,134,255,.34);transition:transform .2s,box-shadow .2s}
+    #page-my-team .mt-form-link:hover{transform:translateY(-2px);box-shadow:inset 0 0 0 1px #7c86ff}
+    #page-my-team .mt-fl-ic{width:40px;height:40px;border-radius:13px;color:#c3c6ff;background:linear-gradient(160deg,#211c4a,#100e22);box-shadow:inset 0 0 0 1px rgba(124,134,255,.35)}
+    #page-my-team .mt-fl-tx b{font:italic 900 1.2rem/1.05 'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.3px}
+    #page-my-team .mt-fl-tx small{margin-top:3px;color:#9a9dbd}
+    #page-my-team .mt-fl-go{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:#fff;background:linear-gradient(110deg,#6f74e8,#a779e6 55%,#f0487a);padding-bottom:2px;flex:none}
+    #page-my-team .mt-sec{font:italic 900 clamp(1.5rem,5vw,2rem)/.95 'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.3px;color:#fff}
+    #page-my-team .mt-sec em{font-style:italic;padding-right:.14em;background:var(--hx-g);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+    #page-my-team .hx-h{margin:0 0 16px}
+    #page-my-team .mt-pill{font:800 .6rem/1 system-ui,sans-serif;letter-spacing:1.4px;padding:8px 13px;border-radius:999px;cursor:pointer;border:none;background:rgba(255,255,255,.04);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);color:#9a9dbd;transition:box-shadow .2s,color .2s}
+    #page-my-team .mt-pill:hover{color:#fff;box-shadow:inset 0 0 0 1px #7c86ff}
+    #page-my-team .mt-pill.on{color:#fff;background:linear-gradient(110deg,#6f74e8,#a779e6 55%,#f0487a);box-shadow:none}
+    #page-my-team .mt-hint{display:flex;align-items:center;gap:9px;font-size:.8rem;color:#dcdcf2;border-radius:14px;padding:10px 13px;margin-bottom:14px;background:linear-gradient(100deg,rgba(111,116,232,.14),rgba(240,72,122,.06));box-shadow:inset 0 0 0 1px rgba(124,134,255,.25)}
+    #page-my-team .mt-hrow{position:relative;overflow:hidden;display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;margin-bottom:8px;background:rgba(255,255,255,.028);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);transition:transform .2s,box-shadow .2s}
+    #page-my-team .mt-hrow.tap{cursor:pointer}
+    #page-my-team .mt-hrow.tap:hover{transform:translateX(3px);box-shadow:inset 0 0 0 1px rgba(124,134,255,.6)}
+    #page-my-team .mt-hrow.best{background:linear-gradient(90deg,rgba(255,200,0,.09),rgba(255,255,255,.02) 70%);box-shadow:inset 0 0 0 1px rgba(255,200,0,.38)}
+    #page-my-team .mt-hrow.act{background:linear-gradient(90deg,rgba(111,116,232,.24),rgba(240,72,122,.10));box-shadow:inset 0 0 0 1px #7c86ff}
+    #page-my-team .mt-hbar{height:4px;border-radius:4px;background:rgba(255,255,255,.07);margin-top:7px;overflow:hidden}
+    #page-my-team .mt-hbar i{display:block;height:100%;border-radius:4px;background:var(--hx-g);transform-origin:left;animation:mtBar .9s cubic-bezier(.2,.9,.25,1) both}
+    #page-my-team .mt-hrow.best .mt-hbar i{background:linear-gradient(90deg,#ffe259,#ffa751)}
+    @keyframes mtBar{from{transform:scaleX(0)}}
+    #page-my-team .mt-hpts{font:italic 900 1.5rem/1 'Barlow Condensed',sans-serif;color:var(--gold)}
+    #page-my-team .mt-hpts span{font:400 .62rem/1 system-ui,sans-serif;color:var(--muted)}
+    #page-my-team .mt-total{display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding:14px 16px;border-radius:18px;background:linear-gradient(100deg,rgba(111,116,232,.16),rgba(167,121,230,.08) 50%,rgba(240,72,122,.12));box-shadow:inset 0 0 0 1px rgba(124,134,255,.3)}
+    #page-my-team .mt-total small{font:800 .58rem/1.3 system-ui,sans-serif;letter-spacing:2.4px;text-transform:uppercase;color:#a9aef5}
+    #page-my-team .mt-total .f1-pts{font-style:italic;font-size:2.2rem!important;line-height:1}
+    @media (max-width:700px){
+      #page-my-team .card{border-radius:20px}#page-my-team .card:not(.mt-teamcard){padding:16px}
+      #page-my-team .mt-banner{padding:18px 16px 16px!important}#page-my-team .mt-body{padding:16px!important}
+      #page-my-team .mt-caphint::before,#page-my-team .mt-caphint::after{display:none}
+      #page-my-team .mt-sec{font-size:1.35rem;white-space:nowrap}
+    }
   </style>
   <button class="page-refresh-btn" onclick="refreshCurrentPage(this)" title="Refresh">⟳</button>
   <div id="my-team-content"></div>
@@ -11484,20 +11550,21 @@ async function renderMyTeam() {
     : 'radial-gradient(120% 140% at 0% 0%,rgba(123,79,191,0.22),transparent 55%),linear-gradient(135deg,#17111f 0%,#12121a 60%,#0e0e15 100%)';
   const _bannerBorder = _fzCol ? _fzCol.accent : 'rgba(123,79,191,0.35)';
   const _sprintNext = viewingLastRace ? null : await window.myTeamSprintNext();
-  let html = (_adminBanner || '') + '<div class="card mt-teamcard" style="padding:0;overflow:hidden'+(_fzCol ? ';border-color:'+_fzCol.accent+'66;background:linear-gradient(180deg,'+_fzCol.accent+'14,var(--surface) 55%)' : ';background:radial-gradient(120% 90% at 0% 0%,rgba(90,94,201,.16),transparent 55%),var(--surface);border-color:rgba(123,127,232,.28)')+'">'
+  let html = (_adminBanner || '') + '<div class="card mt-teamcard hx-rv'+(_fzCol?' mt-fz':' hx-gb')+'" data-k="mtcard" style="padding:0;overflow:hidden'+(_fzCol ? ';border-color:'+_fzCol.accent+'66;background:linear-gradient(180deg,'+_fzCol.accent+'14,var(--surface) 55%)' : ';background:radial-gradient(120% 90% at 0% 0%,rgba(90,94,201,.16),transparent 55%),var(--surface);border-color:rgba(123,127,232,.28)')+'">'
     // Identity banner: avatar, team name, player, edit — with value + latest points as stats
-    + '<div style="position:relative;overflow:hidden;background:'+_bannerBg+';border-bottom:1px solid '+_bannerBorder+';padding:18px 18px 16px">'
+    + '<div class="mt-banner" style="position:relative;overflow:hidden;background:'+_bannerBg+';border-bottom:1px solid '+_bannerBorder+';padding:18px 18px 16px">'
     + (_fzCol ? '<div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,'+_fzCol.accent+',transparent 85%)"></div>'
       + (_fzLogo ? '<img src="'+esc(_fzLogo)+'" alt="" onerror="this.remove()" style="position:absolute;right:-10px;top:-14px;height:120px;max-width:40%;object-fit:contain;opacity:.13;pointer-events:none;transform:rotate(-8deg)">' : '')
       : '')
     + '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">'
-    + '<div onclick="openPlayerProfile(\''+myTeam.userId+'\', true)" title="View your team profile" style="cursor:pointer;position:relative;display:inline-block" onmouseover="this.style.transform=\'scale(1.05)\'" onmouseout="this.style.transform=\'\'" >'
+    + '<div onclick="openPlayerProfile(\''+myTeam.userId+'\', true)" title="View your team profile" class="mt-ava" style="cursor:pointer;position:relative;display:inline-block" onmouseover="this.style.transform=\'scale(1.05)\'" onmouseout="this.style.transform=\'\'" >'
       + initialsAvatar(myTeam.teamName, 54, 'border-radius:16px;box-shadow:0 3px 12px rgba(0,0,0,0.4);transition:transform .15s ease;', null, myTeam.discordAvatar)
       + '<span style="position:absolute;right:-3px;bottom:-3px;width:18px;height:18px;border-radius:50%;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.6rem">👤</span>'
       + '</div>'
     + '<div style="flex:1;min-width:150px">'
-    + '<div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:900;font-size:1.7rem;line-height:1;text-transform:uppercase;letter-spacing:.5px">'+esc(myTeam.teamName)+'</div>'
-    + '<div style="font-size:.8rem;color:var(--muted);margin-top:3px">'+esc(myTeam.playerName)+'</div>'
+    + '<div class="mt-kick">My team</div>'
+    + '<div class="mt-name">'+esc(myTeam.teamName)+'</div>'
+    + '<div class="mt-who">'+esc(myTeam.playerName)+'</div>'
     + '</div>'
     + (viewingLastRace
         ? '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">'
@@ -11539,7 +11606,7 @@ async function renderMyTeam() {
           + '<div class="mt-tile"><div class="mt-lbl">Free transfers</div><div class="mt-tile-val" style="color:'+(_ft>0?'#4ade80':'var(--red)')+'">'+_ft+(_ft>=3?' <span style="font-size:.75rem;letter-spacing:1px;color:var(--muted)">MAX</span>':'')+'</div><div class="mt-tile-sub">'+(_ft>0?'Banked':'Extra moves cost points')+'</div></div>'
           + '</div>';
       })()
-    + '<div style="'+(_beatAvg?'margin-top:10px;background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:10px 14px 12px':'')+'">'
+    + '<div'+(_beatAvg?' class="mt-vs"':'')+' style="'+(_beatAvg?'margin-top:10px;background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:10px 14px 12px':'')+'">'
     + (_beatAvg ? (() => {
         const b = _beatAvg;
         const above = b.mine >= b.avg;
@@ -11563,11 +11630,11 @@ async function renderMyTeam() {
       })() : '')
     + '</div>'
     + '</div>'
-    + '<div style="padding:16px 18px 18px">'
+    + '<div class="mt-body" style="padding:16px 18px 18px">'
     + (removedDivs.length > 0
       ? `<div class="alert alert-error" style="margin-bottom:14px">⚠️ ${removedDivs.length > 1 ? 'Some of your drivers have' : 'One of your drivers has'} been removed from the league roster (${removedDivs.join(', ')}). You've been refunded $${refundTotal.toFixed(1)}M. Please go to <a href="#" onclick="showPage('home')" style="color:var(--red)">Edit Team</a> to pick a replacement.</div>`
       : '')
-    + `<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+    + `<div class="mt-chips" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
         <div style="flex:1;min-width:130px;padding:0;border-radius:12px;overflow:hidden;border:1px solid ${tcActiveThisRace?'#9b59b6':tcUsed?'var(--border)':'rgba(155,89,182,0.45)'};background:${tcActiveThisRace?'rgba(155,89,182,0.16)':tcUsed?'var(--surface2)':'linear-gradient(160deg,rgba(155,89,182,0.10),var(--surface2) 75%)'};text-align:center;position:relative;transition:transform .15s ease" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''"><div style="height:3px;background:linear-gradient(90deg,#9b59b6,transparent 85%)"></div><div style="position:absolute;right:-4px;bottom:-10px;font-size:2.6rem;opacity:.07;pointer-events:none">🚀</div><div style="padding:10px;position:relative">
           <div style="font-size:.75rem;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;color:${tcUsed&&!tcActiveThisRace?'var(--muted)':'#ce93d8'}">🚀 TRIPLE CAPTAIN</div>
           <div style="font-size:.7rem;color:var(--muted);margin:2px 0">${_snapView?(tcActiveThisRace?'✓ PLAYED THIS ROUND':'Not played'):tcActiveThisRace?'ACTIVE THIS RACE':tcUsed?'USED':chipsBlocked?'Locked':wcActiveThisRace?'Unavailable this round':gaActiveThisRace?'Unavailable this round':'Available'}</div>
@@ -11591,11 +11658,11 @@ async function renderMyTeam() {
     + '<button class="btn btn-primary btn-sm" onclick="saveProfileEdit(\''+myTeam.id+'\')">Save Changes</button>'
     + '<div id="edit-profile-msg" style="margin-top:8px"></div>'
     + '</div>'
-    + '<p style="color:var(--muted);font-size:.85rem;margin-bottom:14px;text-align:center">'
+    + '<p class="mt-caphint" style="color:var(--muted);font-size:.85rem;margin-bottom:14px;text-align:center"><span>'
     + (locked ? '🔒 Captain is locked for this round'
                : (latest ? 'Pick a captain for <strong>'+esc(latest.name)+'</strong> — their points count <strong style="color:var(--gold)">'+(tcActiveThisRace?'3×':'2×')+'</strong> this race only'
                          : 'Pick a captain — their points count <strong style="color:var(--gold)">2×</strong> for that race'))
-    + '</p>';
+    + '</span></p>';
 
   // Snapshot notice + Race History picker
   if (viewingLastRace) {
@@ -12087,10 +12154,10 @@ async function renderMyTeam() {
       <div class="rb-plank"></div><div class="rb-legs"><i></i><i></i></div>
       <div class="rb-cap">${_usedN ? _usedN + ' used · ' + left + ' left' : 'Bench empty · all ' + total + ' tokens available'}</div>
     </div>`;
-    html += `<div class="card">
+    html += `<div class="card hx-rv" data-k="mtres">
       <div onclick="toggleReserveDrop(this)" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none">
         <div style="display:flex;align-items:center;gap:8px">
-          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.15rem;letter-spacing:1px">🔄 RESERVE DRIVERS</div>
+          <div class="mt-sec">Reserve <em>drivers</em></div>
           <span class="res-drop-arrow" style="color:var(--muted);font-size:.8rem;transition:transform .2s ease">▼</span>
         </div>
         <div style="display:flex;align-items:center;gap:6px" title="${left} of ${total} reserve tokens left this season">${pips}<span style="font-size:.74rem;color:var(--muted);margin-left:2px;font-weight:700">${left}/${total}</span></div>
@@ -12104,7 +12171,7 @@ async function renderMyTeam() {
     if (!_snapView) html += `<button class="mt-form-link" style="--c:#27f4d2;margin:-4px 0 16px" onclick="openReservesIn()"><span class="mt-fl-ic">🔄</span><span class="mt-fl-tx"><b>Reserves stepping in</b><small>Who's sitting out this round and the reserves covering</small></span><span class="mt-fl-go">›</span></button>`;
   } catch(e) { console.warn('reserve card failed', e); }
 
-  html += '<div class="card"><div class="card-title"><div class="dot"></div>Race History</div>';
+  html += '<div class="card hx-rv" data-k="mthist"><div class="hx-h"><div><small>Round by round</small><h2>Race <em>history</em></h2></div></div>';
   if (!races.length) html += '<p class="text-muted">No races recorded yet.</p>';
   else {
     // Build per-driver points across races (oldest first). Only include rounds that have actually
@@ -12125,7 +12192,7 @@ async function renderMyTeam() {
     const graphData = JSON.stringify({ lines: driverLines, labels, colours }).replace(/"/g,'&quot;');
 
     html += `<div style="margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn btn-secondary btn-sm" onclick="toggleDriverGraph(this)" data-graph='${graphData}' style="margin-bottom:10px">📈 Show Points Trend</button>
+      <button class="hx-btn ghost" onclick="toggleDriverGraph(this)" data-graph='${graphData}' style="margin-bottom:10px">📈 Show Points Trend</button>
       <div id="driver-graph-container" style="display:none;width:100%">
         <div id="driver-graph-legend" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"></div>
         <canvas id="driver-graph-canvas" style="width:100%;max-height:260px"></canvas>
@@ -12136,11 +12203,11 @@ async function renderMyTeam() {
     // a player can load. Clicking a row loads that race's locked-in team, read-only.
     if (archivedSeasons.length) {
       html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">'
-        + '<button onclick="setMyTeamHistSeason('+liveSeasonNum+')" style="font-size:.62rem;font-weight:800;letter-spacing:1px;padding:4px 11px;border-radius:6px;cursor:pointer;border:1px solid '+(histSeason===liveSeasonNum?'rgba(90,94,201,0.6)':'rgba(255,255,255,0.12)')+';background:'+(histSeason===liveSeasonNum?'rgba(90,94,201,0.18)':'transparent')+';color:'+(histSeason===liveSeasonNum?'#8f95e0':'var(--muted)')+'">SEASON '+liveSeasonNum+' (LIVE)</button>'
-        + archivedSeasons.map(s => '<button onclick="setMyTeamHistSeason('+s+')" style="font-size:.62rem;font-weight:800;letter-spacing:1px;padding:4px 11px;border-radius:6px;cursor:pointer;border:1px solid '+(histSeason==s?'rgba(90,94,201,0.6)':'rgba(255,255,255,0.12)')+';background:'+(histSeason==s?'rgba(90,94,201,0.18)':'transparent')+';color:'+(histSeason==s?'#8f95e0':'var(--muted)')+'">SEASON '+s+'</button>').join('')
+        + '<button onclick="setMyTeamHistSeason('+liveSeasonNum+')" class="mt-pill'+(histSeason===liveSeasonNum?' on':'')+'">SEASON '+liveSeasonNum+' (LIVE)</button>'
+        + archivedSeasons.map(s => '<button onclick="setMyTeamHistSeason('+s+')" class="mt-pill'+(histSeason==s?' on':'')+'">SEASON '+s+'</button>').join('')
         + '</div>';
     }
-    html += '<div style="display:flex;align-items:center;gap:7px;font-size:.8rem;color:var(--text);background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:8px;padding:8px 11px;margin-bottom:12px"><span style="font-size:.95rem">👆</span><span>Tap a race to view the team you locked in for it'
+    html += '<div class="mt-hint"><span style="font-size:.95rem">👆</span><span>Tap a race to view the team you locked in for it'
       + (viewingLastRace ? ' — <button onclick="setMyTeamView(\'current\')" style="font-size:.8rem;font-weight:800;color:var(--gold);background:none;border:none;cursor:pointer;padding:0;text-decoration:underline">back to '+esc((latest?latest.name:'current')).toUpperCase()+'</button>' : '')
       + '</span></div>';
     // Modernised history rows: flag, round pill, captain chip, best-race highlight,
@@ -12186,7 +12253,7 @@ async function renderMyTeam() {
       const rowActive = viewingLastRace && viewedRace && viewedRace.id === r.id;
       const rowBorder = rowActive ? 'var(--gold)' : (isBest ? 'rgba(255,200,0,0.35)' : 'var(--border)');
       const rowBg = rowActive ? 'rgba(255,200,0,0.10)' : (isBest ? 'linear-gradient(90deg,rgba(255,200,0,0.07),var(--surface2) 70%)' : 'var(--surface2)');
-      html += `<div ${rowViewable ? `onclick="viewMyTeamRace('${r.id}')" title="View your locked-in team from ${esc(r.name)}" style="cursor:pointer;` : `style="`}position:relative;overflow:hidden;display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:8px;margin-bottom:6px;border:1px solid ${rowBorder};border-left:3px solid ${rowActive?'var(--gold)':accent};background:${rowBg}">
+      html += `<div class="mt-hrow${rowViewable ? ' tap' : ''}${rowActive ? ' act' : isBest ? ' best' : ''}" ${rowViewable ? `onclick="viewMyTeamRace('${r.id}')" title="View your locked-in team from ${esc(r.name)}"` : ''}>
         ${(() => { const o = getTrackOutlineUrl(r.name); return o ? `<img src="${o}" style="position:absolute;right:64px;top:50%;transform:translateY(-50%);height:170%;max-width:30%;object-fit:contain;filter:invert(1);opacity:.07;pointer-events:none">` : ""; })()}
         <span style="font-size:1.05rem;flex-shrink:0">${getRaceFlag(r.name)}</span>
         <div style="flex:1;min-width:0">
@@ -12196,26 +12263,27 @@ async function renderMyTeam() {
             ${isBest?'<span style="font-size:.58rem;font-weight:800;color:var(--gold);border:1px solid rgba(255,200,0,0.5);border-radius:3px;padding:0 5px">⭐ BEST</span>':''}
             ${capDriver?'<span style="font-size:.62rem;font-weight:700;color:var(--gold)">★ '+esc(capDriver.name.split(' ').pop())+'</span>':''}
           </div>
-          <div style="height:3px;border-radius:3px;background:rgba(255,255,255,0.06);margin-top:5px;overflow:hidden"><div style="height:100%;width:${pct}%;border-radius:3px;background:linear-gradient(90deg,${isBest?'var(--gold)':'#9b6fd4'},${isBest?'rgba(255,200,0,0.35)':'rgba(155,111,212,0.35)'})"></div></div>
+          <div class="mt-hbar"><i style="width:${pct}%"></i></div>
         </div>
         <div style="text-align:right;flex-shrink:0">
-          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.15rem;color:var(--gold);line-height:1">${rp} <span style="font-size:.62rem;font-weight:400;color:var(--muted)">pts</span></div>
+          <div class="mt-hpts">${rp} <span>pts</span></div>
           <div style="margin-top:2px">${deltaStr}</div>
         </div>
       </div>`;
     });
   }
   { const _ht = window._myHistTotal, _tp = _ht ? Math.round(_ht.pts) : totalPts; window._myHistTotal = null;
-  html += '<hr class="divider"><div class="flex justify-between align-center">'
-    + '<span class="text-muted">Total Points (' + (_ht ? 'Season ' + _ht.s + ', all races' : 'all races') + ')</span>'
+  html += '<div class="mt-total">'
+    + '<small>Total points<br>' + (_ht ? 'Season ' + _ht.s + ', all races' : 'all races') + '</small>'
     + '<span class="f1-pts" style="font-size:1.5rem" data-countup="'+_tp+'">'+_tp+'</span></div></div>'; }
 
 
   // ===== TROPHY CABINET CARD =====
   window._priceForRace = null; // cards are built — don't let other pages show this round's moves
-  html += `<div class="card">${window.renderTrophyShelf(_trophyList, { title: '🏆 TROPHY CABINET' })}</div>`;
+  html += `<div class="card hx-rv" data-k="mttro">${window.renderTrophyShelf(_trophyList, { title: '🏆 TROPHY CABINET' })}</div>`;
 
   el.innerHTML = divMoveBanner + html;
+  if (window._hxInit) window._hxInit('page-my-team');
   try { window._deEmoji(el); } catch(e) {}
   try { window._fillPlacePhotos(el); } catch(e) {}
   if (window._wcSwap) { const _sw = window._wcSwap; window._wcSwap = null; setTimeout(() => window._wcSwapRun && window._wcSwapRun(_sw), 120); }
