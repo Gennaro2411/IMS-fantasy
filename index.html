@@ -2520,6 +2520,35 @@
     .et-view-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:10px 12px;border:none;border-radius:9px;cursor:pointer;font-family:inherit;font-size:.9rem;font-weight:600;color:#a3a3b8;background:transparent;transition:background .2s,color .2s,box-shadow .2s}
     .et-view-btn:hover{color:#fff;background:rgba(255,255,255,0.05)}
     .et-view-btn.on{color:#111;font-weight:700;background:linear-gradient(135deg,#ffe259,#ffa751);box-shadow:0 2px 10px rgba(255,190,60,0.3)}
+    /* ===== 2026 brand pass: Edit Team (layout unchanged) ===== */
+    #page-home{--hx-g:linear-gradient(100deg,#7c86ff,#b184e8 48%,#ff5c8a)}
+    #page-home .et-bar{border:none!important;border-radius:20px!important;padding:12px 18px!important;background:linear-gradient(170deg,#15122b,#0b0a14 80%)!important;box-shadow:inset 0 0 0 1px rgba(124,134,255,.3),0 18px 40px -26px rgba(90,94,201,.9)}
+    #page-home .et-bar>div[style*="width:1px"]{background:rgba(124,134,255,.25)!important}
+    #page-home .et-main{position:relative;border:none!important;border-radius:26px!important;background:radial-gradient(70% 40% at 100% 0%,rgba(240,72,122,.12),transparent 62%),radial-gradient(80% 45% at 0% 0%,rgba(111,116,232,.2),transparent 60%),linear-gradient(170deg,#15122b,#0b0a14 45%)!important;box-shadow:inset 0 0 0 1px rgba(124,134,255,.26),0 30px 70px -40px rgba(90,94,201,.85)}
+    #page-home .et-main::before{content:'';position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,#6f74e8,#a779e6 50%,#f0487a);z-index:2}
+    #page-home .et-head{padding:22px 22px 18px!important;border-bottom-color:rgba(255,255,255,.07)!important}
+    #page-home .et-kick{display:flex;align-items:center;gap:8px;font:800 .58rem/1 system-ui,sans-serif;letter-spacing:3px;text-transform:uppercase;color:#a9aef5;margin-bottom:8px}
+    #page-home .et-kick::before{content:'';width:22px;height:2px;border-radius:2px;background:var(--hx-g)}
+    #page-home .et-h{font:italic 900 clamp(2rem,6.4vw,2.9rem)/.92 'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.3px;color:#fff}
+    #page-home .et-h em{font-style:italic;padding-right:.12em;background:var(--hx-g);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+    #page-home #et-driver-search{border:none!important;border-radius:999px!important;padding:11px 16px!important;background:rgba(255,255,255,.035)!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.1);transition:box-shadow .2s}
+    #page-home #et-driver-search:focus{outline:none;box-shadow:inset 0 0 0 1.5px #7c86ff,0 0 0 4px rgba(124,134,255,.15)}
+    #page-home #et-driver-search-results{border:none!important;border-radius:16px!important;margin-top:6px;background:linear-gradient(170deg,#17142c,#0c0b15 72%)!important;box-shadow:inset 0 0 0 1px rgba(124,134,255,.34),0 24px 50px -16px rgba(0,0,0,.85)}
+    #page-home .et-seg{border:none;border-radius:999px;padding:5px;background:rgba(255,255,255,.03);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+    #page-home .et-view-btn{border-radius:999px;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:1rem;letter-spacing:1.2px;text-transform:uppercase;font-style:italic}
+    #page-home .et-view-btn.on{color:#fff;background:linear-gradient(110deg,#6f74e8,#a779e6 55%,#f0487a);box-shadow:0 10px 22px -10px rgba(167,121,230,.9)}
+    #page-home .et-lbl{display:flex;align-items:center;gap:8px;font:800 .58rem/1 system-ui,sans-serif!important;letter-spacing:2.6px!important;color:#a9aef5!important}
+    #page-home .et-lbl::before{content:'';width:18px;height:2px;border-radius:2px;background:var(--hx-g)}
+    #page-home .et-team-tab{border-radius:14px!important}
+    #page-home .cpk{border-radius:18px}
+    #page-home .et-acts .btn{border-radius:999px;font:900 .86rem/1 'Barlow Condensed',sans-serif;letter-spacing:1.6px;text-transform:uppercase;padding:13px 22px}
+    #page-home .et-acts .btn-primary{border:none;color:#fff;background:linear-gradient(110deg,#6f74e8,#a779e6 55%,#f0487a);box-shadow:0 12px 26px -10px rgba(240,72,122,.8)}
+    #page-home .et-acts .btn-primary:hover{filter:brightness(1.08)}
+    #page-home .et-acts .btn-secondary{border:none;color:#fff;background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+    #page-home .et-acts .btn-secondary:hover{box-shadow:inset 0 0 0 1px #7c86ff}
+    #page-home #et-profile-panel>.card,#page-home #et-profile-panel{border-radius:22px}
+    @media (max-width:700px){#page-home .et-head{padding:18px 16px 14px!important}}
+
     #page-predictions .brf-av-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;align-items:start}#page-predictions .brf-av{min-width:0;overflow-wrap:anywhere}
     #page-predictions .brf-av{border-radius:14px;padding:13px 12px 12px;background:radial-gradient(120% 90% at 50% 0%,color-mix(in srgb,var(--hue) 14%,transparent),transparent 70%),var(--surface2);border:1px solid color-mix(in srgb,var(--hue) 30%,transparent)}
     #page-predictions .brf-av-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
@@ -10254,7 +10283,7 @@ async function renderTeamBuilder(existingTeam, locked, allTeams) {
   }
 
   tbs.innerHTML = `
-    <div id="et-sticky-budget" style="position:sticky;top:var(--et-sticky-top,96px);z-index:50;background:rgba(19,19,26,0.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:12px;padding:10px 16px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:12px;box-shadow:0 6px 18px rgba(0,0,0,0.35)">
+    <div id="et-sticky-budget" class="et-bar" style="position:sticky;top:var(--et-sticky-top,96px);z-index:50;background:rgba(19,19,26,0.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:12px;padding:10px 16px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:12px;box-shadow:0 6px 18px rgba(0,0,0,0.35)">
       <div style="display:flex;flex-direction:column;align-items:flex-start">
         <div style="font-size:.56rem;font-weight:800;letter-spacing:1.6px;color:var(--muted);text-transform:uppercase;line-height:1;margin-bottom:5px">Budget left</div>
         <div id="et-sticky-credits" style="display:inline-block;font-family:'Barlow Condensed',sans-serif;font-weight:900;color:#111;background:linear-gradient(135deg,#ffe259,#ffa751);border-radius:8px;box-shadow:0 2px 10px rgba(255,190,60,0.35);line-height:1.1;white-space:nowrap;letter-spacing:.3px;font-size:1.3rem;padding:3px 11px">${formatM(myBudget)}</div>
@@ -10270,11 +10299,12 @@ async function renderTeamBuilder(existingTeam, locked, allTeams) {
       </div>
     </div>
     <div id="et-layout-grid" style="display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start">
-    <div class="card" style="padding:0;overflow:hidden">
+    <div class="card et-main" style="padding:0;overflow:hidden">
       <!-- Header -->
-      <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+      <div class="et-head" style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
         <div>
-          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.8rem;letter-spacing:1px">${existingTeam?'Edit Team':'Build Team'} <span style="color:var(--muted);font-weight:400;font-size:1rem">· ${esc(currentUser.name)}</span></div>
+          <div class="et-kick">${esc(currentUser.name)}'s squad</div>
+          <div class="et-h">${existingTeam?'Edit <em>team</em>':'Build <em>team</em>'}</div>
           ${existingTeam ? `<div style="font-size:.78rem;margin-top:2px;color:${(existingTeam.freeTransfers||0)>0?'#4caf50':'var(--red)'}">
             ${(existingTeam.freeTransfers||0)>0 ? `✅ ${existingTeam.freeTransfers} free transfer${existingTeam.freeTransfers!==1?'s':''} banked${existingTeam.freeTransfers>=3?' (MAX)':''}` : '❌ No free transfers'}
           </div>` : ''}
@@ -10310,14 +10340,14 @@ async function renderTeamBuilder(existingTeam, locked, allTeams) {
             <div class="et-strip-fade"></div>
           </div>
           <div style="min-height:200px">
-            <div style="font-size:.7rem;font-weight:800;letter-spacing:2px;color:var(--muted);margin-bottom:8px" id="et-active-team-label">${esc(initialTeam).toUpperCase()}</div>
+            <div class="et-lbl" style="font-size:.7rem;font-weight:800;letter-spacing:2px;color:var(--muted);margin-bottom:8px" id="et-active-team-label">${esc(initialTeam).toUpperCase()}</div>
             <div id="et-team-panels">${allTeamPanelsHtml}</div>
           </div>
         </div>
 
         <!-- Constructor -->
         <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:16px">
-          <div style="font-size:.7rem;font-weight:800;letter-spacing:2px;color:var(--muted);margin-bottom:6px">CONSTRUCTOR</div>
+          <div class="et-lbl" style="font-size:.7rem;font-weight:800;letter-spacing:2px;color:var(--muted);margin-bottom:6px">CONSTRUCTOR</div>
           <div class="cpk-grid">
             ${constrs.length ? constrs.slice().filter(c => !window.isReserveConstr(c)).sort((a,b)=>teamSortKey(a.name)-teamSortKey(b.name)).map(c => {
               const sel = existing['CONSTRUCTOR']===c.id;
@@ -10336,7 +10366,7 @@ async function renderTeamBuilder(existingTeam, locked, allTeams) {
         </div>
 
         <!-- Actions -->
-        <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
+        <div class="et-acts" style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
           <button class="btn btn-primary" onclick="submitTeam()"${locked?' disabled':''}>
             ${existingTeam?'Update Team →':'Submit Team →'}
           </button>
