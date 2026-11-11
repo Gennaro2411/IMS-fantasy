@@ -802,6 +802,31 @@
   .lb-hist .lh-row .btn:hover{background:rgba(124,134,255,.18);box-shadow:inset 0 0 0 1px #7c86ff}
   @media (max-width:600px){.lh-champ{gap:10px;padding:14px}.lh-champ div[style*="font-size:1.3rem"]{font-size:1.3rem!important}.lh-champ span[style*="font-size:1.4rem"]{font-size:1.5rem!important}.lh-champ .champ-cup{width:52px!important}}
   @media (max-width:600px){.lh-row{flex-wrap:wrap;padding:13px 13px 12px;gap:10px}.lh-row>div:last-child:not(:nth-child(2)){width:100%;justify-content:space-between}.lh-trk{right:-10px;max-width:46%}.lh-name{font-size:1.2rem}}
+  /* ===== Pop-ups: IMS brand pass (confirm / alert + every standard modal) ===== */
+  #confirm-overlay{background:rgba(4,3,10,.82)!important}
+  #confirm-overlay .cf-box{position:relative;overflow:hidden;width:100%;max-width:420px;padding:26px 24px 22px;border-radius:26px;background:radial-gradient(80% 60% at 100% 0%,rgba(240,72,122,.16),transparent 62%),radial-gradient(90% 70% at 0% 0%,rgba(111,116,232,.28),transparent 60%),linear-gradient(175deg,#17142c,#0b0a14 70%);box-shadow:inset 0 0 0 1px rgba(124,134,255,.34),0 40px 90px -30px rgba(0,0,0,.9);animation:cfIn .24s cubic-bezier(.2,.9,.25,1) both}
+  #confirm-overlay .cf-box::before{content:'';position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,#6f74e8,#a779e6 50%,#f0487a)}
+  @keyframes cfIn{from{opacity:0;transform:translate3d(0,14px,0) scale(.97)}}
+  #confirm-overlay .cf-k{display:flex;align-items:center;gap:8px;font:800 .56rem/1 system-ui,sans-serif;letter-spacing:3px;text-transform:uppercase;color:#a9aef5;margin-bottom:12px}
+  #confirm-overlay .cf-k::before{content:'';width:20px;height:2px;border-radius:2px;background:linear-gradient(100deg,#7c86ff,#b184e8 48%,#ff5c8a)}
+  #confirm-msg{font:600 .98rem/1.55 system-ui,-apple-system,'Segoe UI',sans-serif;color:#e4e6fa;margin-bottom:20px;white-space:pre-line}
+  #confirm-overlay .cf-btns{display:flex;gap:10px;flex-wrap:wrap}
+  #confirm-overlay .cf-btns .btn{white-space:nowrap;flex:1 1 140px;min-height:46px;border:none;border-radius:999px;font:900 .86rem/1 'Barlow Condensed',sans-serif;letter-spacing:1.6px;text-transform:uppercase;padding:13px 18px;transition:transform .15s,box-shadow .2s,background .2s}
+  #confirm-overlay #confirm-yes-btn{color:#fff;background:linear-gradient(110deg,#6f74e8,#a779e6 55%,#f0487a);box-shadow:0 12px 26px -10px rgba(240,72,122,.8)}
+  #confirm-overlay #confirm-yes-btn:hover{filter:brightness(1.08)}
+  #confirm-overlay #confirm-no-btn{color:#d5d7f5;background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+  #confirm-overlay #confirm-no-btn:hover{color:#fff;box-shadow:inset 0 0 0 1px #7c86ff}
+  #confirm-overlay .cf-btns .btn:active{transform:scale(.97)}
+  /* standard modals (openModal and the other pop-ups) */
+  .modal-overlay{background:rgba(4,3,10,.8)}
+  .modal-overlay .modal:not(.xm){border:none;border-radius:24px;background:linear-gradient(175deg,#16132a,#0b0a14 55%,#09080f);box-shadow:inset 0 0 0 1px rgba(124,134,255,.28),0 40px 90px -30px rgba(0,0,0,.9);scrollbar-width:thin;scrollbar-color:#6f74e8 transparent}
+  .modal-overlay .modal:not(.xm) .modal-close{width:34px;height:34px;border-radius:50%;border:none;display:inline-grid;place-items:center;color:#d5d7f5;background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14);cursor:pointer;transition:background .2s,box-shadow .2s,transform .2s}
+  .modal-overlay .modal:not(.xm) .modal-close:hover{color:#fff;background:rgba(240,72,122,.18);box-shadow:inset 0 0 0 1px #f0487a;transform:rotate(90deg)}
+  .modal-overlay .modal:not(.xm) .modal-title{font-style:italic;text-transform:uppercase;letter-spacing:.5px}
+  .modal-overlay .modal:not(.xm) .btn{border-radius:999px}
+  .modal-overlay .modal:not(.xm) .btn-primary{border:none;color:#fff;background:linear-gradient(110deg,#6f74e8,#a779e6 55%,#f0487a);box-shadow:0 10px 24px -10px rgba(167,121,230,.9)}
+  .modal-overlay .modal:not(.xm) .btn-secondary{border:none;color:#fff;background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+  @media (prefers-reduced-motion:reduce){#confirm-overlay .cf-box{animation:none}}
   /* ===== Team profile: IMS brand pass + insights ===== */
   #modal-overlay.mo-tp{background:rgba(4,3,10,.8)}
   #modal-overlay.mo-tp .modal{padding:20px!important;border:none;border-radius:26px;background:linear-gradient(175deg,#15122b,#0b0a14 40%,#09080f);box-shadow:inset 0 0 0 1px rgba(124,134,255,.3),0 40px 90px -30px rgba(0,0,0,.9);scrollbar-width:thin;scrollbar-color:#6f74e8 transparent}
@@ -4764,9 +4789,10 @@
 </div>
 
 <div id="confirm-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:100000;align-items:center;justify-content:center;padding:20px;">
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:28px;width:100%;max-width:360px;">
-    <div id="confirm-msg" style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.2rem;letter-spacing:1px;margin-bottom:16px;">Are you sure?</div>
-    <div style="display:flex;gap:10px;">
+  <div class="cf-box">
+    <div class="cf-k">Please confirm</div>
+    <div id="confirm-msg">Are you sure?</div>
+    <div class="cf-btns">
       <button class="btn btn-primary" id="confirm-yes-btn">Yes, Delete</button>
       <button class="btn btn-secondary" id="confirm-no-btn" onclick="document.getElementById('confirm-overlay').style.display='none'">Cancel</button>
     </div>
@@ -28175,7 +28201,7 @@ window.customConfirm = function(msg, onYes, yesLabel, onNo) {
   const _m = String(msg || '').toLowerCase();
   yesBtn.textContent = yesLabel || (/\bdelete|remove|wipe\b/.test(_m) ? 'Yes, Delete' : /forfeit|leave|quit/.test(_m) ? 'Yes, leave' : /give up/.test(_m) ? 'Yes, give up' : /skip/.test(_m) ? 'Yes, skip' : /reset/.test(_m) ? 'Yes, reset' : 'Yes');
   yesBtn.onclick=()=>{ o.style.display='none'; yesBtn.textContent='Yes, Delete'; onYes(); };
-  o.style.display='flex';
+  o.style.display='flex'; { const k = o.querySelector('.cf-k'); if (k) k.textContent = 'Please confirm'; }
 };
 window.closeSeasonCabinet = function() {
   const m = document.getElementById('season-cabinet-modal');
@@ -28758,7 +28784,7 @@ window.customAlert = function(msg) {
   yesBtn.textContent='OK';
   yesBtn.onclick=()=>{ o.style.display='none'; yesBtn.textContent='Yes'; if (noBtn) noBtn.style.display=''; };
   if (noBtn) noBtn.style.display='none';
-  o.style.display='flex';
+  o.style.display='flex'; { const k = o.querySelector('.cf-k'); if (k) k.textContent = 'Heads up'; }
 };
 // Shared helper: a driver's points in a specific division for a specific race — only counts
 // their result in that division slot, never a cross-division summed total (matches the same
