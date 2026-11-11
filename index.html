@@ -3781,6 +3781,34 @@
     .wf-ic{color:var(--muted);font-weight:900;width:20px;text-align:center}.wf-row.lock .wf-ic,.wf-row.m-g .wf-ic{color:#4ade80}.wf-row.m-r .wf-ic{color:#f87171}
     .wf-arena{overflow:hidden;background:radial-gradient(90% 60% at 50% -10%,rgba(239,68,68,.16),transparent 60%),radial-gradient(70% 50% at 100% 100%,rgba(56,189,248,.12),transparent 60%),linear-gradient(165deg,#0c1224,#120d22 55%,#07070d)}
     .wf-arena .pt-qn{color:#fca5a5}.wf-arena.still{animation:none}
+    .ma-ad{display:flex;align-items:center;gap:14px;width:100%;margin:0 0 12px;padding:13px 16px;border-radius:16px;cursor:pointer;text-align:left;color:#fff;font:inherit;border:1px solid transparent;background:linear-gradient(110deg,#1c1336,#120c22 60%,#2a0f24) padding-box,linear-gradient(110deg,#6f74e8,#a779e6 55%,#f0487a) border-box;box-shadow:0 10px 30px -14px rgba(240,72,122,.6)}
+    .ma-ad-reels{flex:none;width:52px;height:52px;border-radius:14px;display:grid;place-items:center;font-size:1.9rem;background:radial-gradient(circle at 35% 30%,#3a2a6e,#140f2a);box-shadow:inset 0 0 0 1px rgba(247,207,85,.4)}.ma-ad-reels i{font-style:normal;animation:maWig 2.6s ease-in-out infinite}
+    @keyframes maWig{0%,80%,100%{transform:rotate(0)}85%{transform:rotate(-12deg)}90%{transform:rotate(10deg)}95%{transform:rotate(-5deg)}}
+    .ma-ad-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.ma-ad-t small{font-size:.6rem;font-weight:800;letter-spacing:.18em;background:linear-gradient(100deg,#7c86ff,#ff5c8a);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .ma-ad-t b{font-family:'Barlow Condensed',sans-serif;font-size:1.22rem;letter-spacing:.5px;line-height:1.1}.ma-ad-t span{font-size:.74rem;color:var(--muted)}
+    .ma-ad-go{flex:none;padding:8px 14px;border-radius:10px;font-weight:900;font-size:.8rem;letter-spacing:1px;background:linear-gradient(110deg,#6f74e8,#a779e6 55%,#f0487a)}
+    @media (max-width:520px){.ma-ad-go{display:none}}
+    .ma-ov{position:fixed;inset:0;z-index:10050;display:grid;place-items:center;padding:16px;background:rgba(5,4,12,.78);opacity:0;transition:opacity .18s}.ma-ov.in{opacity:1}
+    .ma-box{position:relative;width:min(560px,100%);max-height:92vh;overflow:auto;padding:22px 18px 16px;border-radius:22px;text-align:center;background:radial-gradient(90% 60% at 50% 0%,rgba(167,121,230,.22),transparent 60%),linear-gradient(170deg,#15122b,#0b0a14 75%);box-shadow:inset 0 0 0 1px rgba(177,132,232,.35),0 30px 80px -20px #000;transform:translateY(10px) scale(.98);transition:transform .2s}.ma-ov.in .ma-box{transform:none}
+    .ma-x{position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:#fff;cursor:pointer}
+    .ma-k{font-size:.6rem;font-weight:800;letter-spacing:.24em;color:#a5a9d6}.ma-ttl{font-family:'Titillium Web',sans-serif;font-style:italic;font-weight:900;font-size:1.9rem;line-height:1.1}.ma-ttl em{background:linear-gradient(100deg,#7c86ff,#b184e8 48%,#ff5c8a);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .ma-sub{font-size:.76rem;color:var(--muted);margin-top:2px}
+    .ma-legs{display:inline-flex;gap:4px;margin:12px 0;padding:4px;border-radius:12px;background:rgba(255,255,255,.05)}.ma-legs button{border:none;cursor:pointer;font:inherit;font-weight:800;font-size:.78rem;color:#a5a9d6;background:none;padding:7px 14px;border-radius:9px}.ma-legs button.on{color:#fff;background:linear-gradient(110deg,#6f74e8,#a779e6 55%,#f0487a)}
+    .ma-mach{position:relative;padding:16px 12px;border-radius:18px;background:linear-gradient(180deg,#2a1f4a,#120c22);box-shadow:inset 0 0 0 2px rgba(247,207,85,.55),inset 0 0 30px rgba(0,0,0,.6),0 0 30px -10px rgba(247,207,85,.4)}
+    .ma-lights{position:absolute;inset:5px;display:flex;justify-content:space-between;pointer-events:none}.ma-lights i{width:5px;height:5px;border-radius:50%;background:#f7cf55;box-shadow:0 0 6px #f7cf55;animation:maLt 1.2s steps(1) infinite}.ma-lights i:nth-child(odd){animation-delay:.6s}
+    @keyframes maLt{50%{opacity:.25}}
+    .ma-reels{display:flex;flex-direction:column;gap:7px}
+    .ma-reel{border-radius:12px;padding:2px;background:linear-gradient(110deg,rgba(124,134,255,.35),rgba(255,92,138,.35));transition:background .2s}.ma-reel.hit{background:linear-gradient(110deg,#f7cf55,#f0487a)}
+    .ma-win{height:64px;overflow:hidden;border-radius:10px;background:linear-gradient(180deg,#05040c,#1a1530 50%,#05040c);position:relative}
+    .ma-win::before,.ma-win::after{content:'';position:absolute;left:0;right:0;height:14px;z-index:1;pointer-events:none}.ma-win::before{top:0;background:linear-gradient(#05040c,transparent)}.ma-win::after{bottom:0;background:linear-gradient(transparent,#05040c)}
+    .ma-strip{will-change:transform}.ma-strip.go{transform:translateY(var(--to));transition:transform var(--d) cubic-bezier(.15,.7,.2,1.04)}
+    .ma-cell{height:64px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 14px;text-align:left}.ma-cell small{font-size:.8rem;font-weight:700;color:#e6e7ff;line-height:1.2;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+    .ma-cell b{flex:none;font-weight:900;font-size:1.05rem;color:#f7cf55;font-variant-numeric:tabular-nums}.ma-cell.q{justify-content:center}.ma-cell.q b{font-size:1.6rem;color:rgba(247,207,85,.35)}
+    .ma-tot{display:flex;justify-content:space-between;align-items:center;margin:12px 2px 0;padding:11px 14px;border-radius:12px;background:rgba(247,207,85,.08);box-shadow:inset 0 0 0 1px rgba(247,207,85,.3)}.ma-tot span{font-size:.66rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#d8c48a}.ma-tot b{font-family:'Titillium Web',sans-serif;font-weight:900;font-size:1.6rem;color:#ffe083}
+    .ma-tot.pop b{animation:ppPop .5s ease}
+    .ma-acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.ma-acts .hx-btn{justify-content:center}.ma-acts .hx-btn:disabled{opacity:.45;cursor:default}
+    .ma-fine{font-size:.66rem;color:#6f7299;margin-top:10px}
+    @media (prefers-reduced-motion:reduce){.ma-ad-reels i,.ma-lights i{animation:none}}
     .pp-board{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 6px;text-align:left}
     .pp-col{display:flex;flex-direction:column;gap:6px;min-width:0}
     .pp-ch{font:800 .62rem/1 inherit;letter-spacing:.14em;color:#b184e8;padding:0 4px 2px}
@@ -31148,7 +31176,7 @@ window.renderBets = async function(dry) {
     const tot = _openHere.filter(b => b.market === market).reduce((x, b) => x + (b.stake || 0), 0);
     return tot ? _dyn(auto, _stakeOn(market, key) / tot, (probs[sel[0]] || 0) / sumP, tot) : auto;
   };
-  window._betCurOdds = {};
+  window._betCurOdds = {}; window._betReg = { div: window._betDiv, open: false, list: [] };
   // Price as the market sees it WITHOUT this player's own money — used for cash-out, so your own
   // bet shortening the odds can't be cashed out for an instant profit. Other players' money counts.
   window._betCashOdds = (market, sel, auto) => { const keep = _openHere; _openHere = _openAll.filter(b => b.userId !== me); try { return finalOdds(market, sel, auto); } finally { _openHere = keep; } };
@@ -31449,6 +31477,7 @@ window.renderBets = async function(dry) {
     const mineOpen = myBets.some(b => b.status === 'open' && upcoming && b.raceName === upcoming.name && b.div === div && b.market === market && (b.sel || []).join('-') === sel.join('-'));
     if (mineOpen) return `<button class="bo-odd backed" disabled title="You've already backed this — one bet per pick">✓ ${fmtOdds(odds)}</button>`;
     const _fn = (adminLoggedIn && window._betBoostMode) ? 'betSetBoost' : 'betPick';
+    if (open && _fn === 'betPick' && window._betReg) { window._betReg.open = true; window._betReg.list.push({ market, sel: sel.slice(), odds: Number(odds), label }); }
     return `<button class="bo-odd${on ? ' on' : ''}${_isBoost(market, sel) ? ' boosted' : ''}" ${open || _fn === 'betSetBoost' ? '' : 'disabled'} onclick="${_fn}('${market}','${sel.join(',')}',${odds},'${esc(label).replace(/'/g, "\\'")}')">${_isBoost(market, sel) ? '🚀 ' : ''}${fmtOdds(odds)}</button>`;
   };
   // Race winner + top 5
@@ -31667,6 +31696,7 @@ window.renderBets = async function(dry) {
         ${canRefill ? `<button class="btn btn-secondary btn-sm" style="margin-top:6px" onclick="betRefill()">⛽ Pit stop refill +${BET_REFILL_COINS}</button>` : ''}</div>
     </div>
     <div class="bo-ticker" id="bo-ticker">${_betTickerHtml(window._betAllBets || [], teamBy)}</div>
+    ${upcoming ? `<button class="ma-ad" onclick="maOpen()"><span class="ma-ad-reels"><i>🎰</i></span><span class="ma-ad-t"><small>NEW · MYSTERY ACCA</small><b>Spin the reels, get a random acca</b><span>3, 4 or 5 legs picked at random from today's ${esc(div)} markets</span></span><span class="ma-ad-go">SPIN →</span></button>` : ''}
     ${(upcoming && (upcoming.isSprint || (window._isSprintWeekend && window._isSprintWeekend(upcoming)))) ? `<button class="bo-sprint-ad rh-charged-ad" onclick="window._betSec=null;betSec('sprint');const el=document.querySelector('#page-bets .bo-sec[data-sec=sprint]');if(el)el.scrollIntoView({behavior:'smooth',block:'start'})">
       ${window.sprintZapSvg(4, 50, 10)}${window.sprintTagHtml('Reverse grid')}
       <span class="bo-sprint-ad-txt"><span>${esc(String(upcoming.name).replace(/\s*\(sprint\)\s*/i, ''))} · SPRINT BETS OPEN</span><b>Bet on the sprint — the leaders start <i>last</i></b><small>Sprint winner &amp; podium in every division · grid is the championship in reverse</small></span>
@@ -32770,6 +32800,52 @@ window.betLockMode = () => { window._betLockMode = !window._betLockMode; window.
 window.betLockToggle = (market, selCsv) => { if (!adminLoggedIn) return; const key = window._betDiv + '|' + market + '|' + selCsv.split(',').join('-');
   _betLockSave(L => { L.bets = L.bets.includes(key) ? L.bets.filter(x => x !== key) : [...L.bets, key]; }); };
 window.betLockClearAll = () => { if (!adminLoggedIn || !confirm('Unlock every locked bet and category?')) return; _betLockSave(L => { L.cats = []; L.bets = []; }); };
+// ===== MYSTERY ACCA (bet builder roulette) =====
+// Spins 3–5 reels; each lands on a random open pick from the division on screen (one per market, no repeats).
+// Picks come from the same odds buttons the page just drew, so locks, backed bets and prices all match.
+window._maN = window._maN || 4;
+function _maPool() { const R = window._betReg || { list: [] }, seen = new Set();
+  return R.list.filter(x => x.odds >= 1.3 && x.odds <= 9 && !seen.has(x.market + ':' + x.sel.join('-')) && seen.add(x.market + ':' + x.sel.join('-'))); }
+function _maDraw(n) { const P = _maPool(), byM = {}; P.forEach(x => (byM[x.market] = byM[x.market] || []).push(x));
+  const ms = Object.keys(byM).sort(() => Math.random() - .5), out = [], usedSel = new Set();
+  for (const m of ms) { if (out.length >= n) break; const c = byM[m].filter(x => !x.sel.some(id => usedSel.has(id))); if (!c.length) continue; const x = c[Math.floor(Math.random() * c.length)]; out.push(x); x.sel.forEach(id => usedSel.add(id)); }
+  return out; }
+window.maClose = function() { const m = document.getElementById('ma-modal'); if (m) { m.classList.remove('in'); setTimeout(() => m.remove(), 180); } };
+window.maOpen = function() {
+  if (!_maPool().length) { if (typeof showToast === 'function') showToast('No open markets in this division right now.', 'error'); return; }
+  document.getElementById('ma-modal')?.remove();
+  const m = document.createElement('div'); m.id = 'ma-modal'; m.className = 'ma-ov'; m.onclick = (e) => { if (e.target === m) maClose(); };
+  m.innerHTML = `<div class="ma-box"><button class="ma-x" onclick="maClose()">✕</button><div class="ma-k">BET BUILDER ROULETTE</div><div class="ma-ttl">MYSTERY <em>ACCA</em></div>
+    <div class="ma-sub">${esc(window._betDiv || '')} · pick how many legs, then pull the lever</div>
+    <div class="ma-legs">${[3, 4, 5].map(n => `<button data-n="${n}" class="${window._maN === n ? 'on' : ''}" onclick="maSetN(${n})">${n} legs</button>`).join('')}</div>
+    <div class="ma-mach"><div class="ma-lights">${'<i></i>'.repeat(14)}</div><div class="ma-reels" id="ma-reels"></div></div>
+    <div class="ma-tot" id="ma-tot"><span>Total odds</span><b>?</b></div>
+    <div class="ma-acts"><button class="hx-btn" id="ma-spin" onclick="maSpin()">🎰 SPIN</button><button class="hx-btn ghost" id="ma-take" onclick="maTake()" disabled>Add to slip</button></div>
+    <div class="ma-fine">Odds are the normal prices on the page. Linked picks are re-priced together on your slip.</div></div>`;
+  document.body.appendChild(m); requestAnimationFrame(() => m.classList.add('in')); window._maRes = null; _maIdle(); };
+window.maSetN = function(n) { if (window._maSpin) return; window._maN = n; document.querySelectorAll('#ma-modal .ma-legs button').forEach(b => b.classList.toggle('on', +b.dataset.n === n)); window._maRes = null; _maIdle(); };
+function _maIdle() { const R = document.getElementById('ma-reels'); if (!R) return;
+  R.innerHTML = Array.from({ length: window._maN }, (_, i) => `<div class="ma-reel"><div class="ma-win"><div class="ma-strip"><div class="ma-cell q"><b>?</b></div></div></div></div>`).join('');
+  document.querySelector('#ma-tot b').textContent = '?'; document.getElementById('ma-take').disabled = true; }
+const _maCell = (x) => `<div class="ma-cell"><small>${esc(x.label)}</small><b>${fmtOdds(x.odds)}</b></div>`;
+window.maSpin = function() { if (window._maSpin) return; const res = _maDraw(window._maN);
+  if (res.length < 2) { if (typeof showToast === 'function') showToast('Not enough different markets open to build an acca.', 'error'); return; }
+  window._maSpin = true; window._maRes = res; const P = _maPool(), R = document.getElementById('ma-reels'), H = 64;
+  document.getElementById('ma-spin').disabled = true; document.getElementById('ma-take').disabled = true; document.querySelector('#ma-tot b').textContent = '…';
+  R.innerHTML = res.map((x, i) => { const n = 14 + i * 5, filler = Array.from({ length: n }, () => P[Math.floor(Math.random() * P.length)]);
+    return `<div class="ma-reel"><div class="ma-win"><div class="ma-strip" style="--h:${H}px;--to:${-(n) * H}px;--d:${1.3 + i * .45}s">${filler.map(_maCell).join('')}${_maCell(x)}</div></div></div>`; }).join('');
+  try { _ptSnd.tick && _ptSnd.tick(); } catch (e) {}
+  R.querySelectorAll('.ma-strip').forEach((el, i) => { requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('go')));
+    el.addEventListener('transitionend', () => { el.closest('.ma-reel').classList.add('hit'); try { _ptSnd.ding && _ptSnd.ding(); } catch (e) {}
+      if (i === res.length - 1) { const tot = res.reduce((a, x) => a * x.odds, 1); const b = document.querySelector('#ma-tot b'); if (b) b.textContent = fmtOdds(Math.round(tot * 100) / 100);
+        document.getElementById('ma-tot').classList.add('pop'); window._maSpin = false; document.getElementById('ma-spin').disabled = false; document.getElementById('ma-spin').textContent = '🎰 SPIN AGAIN'; document.getElementById('ma-take').disabled = false;
+        if (tot >= 20) { try { fireConfetti({ count: 70 }); } catch (e) {} } } }, { once: true }); }); };
+window.maTake = function() { const res = window._maRes; if (!res || window._maSpin) return; const div = window._betDiv;
+  if ((window._betLegs || []).some(l => l.market === 'special')) window._betLegs = [];
+  const legs = window._betLegs = (window._betLegs || []).filter(l => l.div !== div || !res.some(x => x.market === l.market));
+  res.forEach(x => { const key = div + '|' + x.market + ':' + x.sel.join('-'); if (!legs.some(l => l.key === key) && legs.length < 10) legs.push({ key, div, market: x.market, sel: x.sel.slice(), odds: x.odds, label: x.label }); });
+  maClose(); renderBets(); if (typeof showToast === 'function') showToast('🎰 Mystery acca added to your slip — set your stake and place it.', 'success');
+  setTimeout(() => { const el = document.getElementById('bo-stake') || document.querySelector('#page-bets .bo-slip'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 300); };
 window.betPick = function(market, selCsv, odds, label) {
   if (window._betIsLocked(window._betDiv, market, String(selCsv).split(','))) { if (typeof showToast === 'function') showToast('🔒 This bet is locked by the admins.', 'error'); return; }
   if ((window._betLegs || []).some(l => l.market === 'special')) { if (typeof showToast === 'function') showToast('The special is a standalone bet — take it off your slip first.', 'error'); return; }
