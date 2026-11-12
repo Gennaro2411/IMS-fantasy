@@ -36820,18 +36820,18 @@ async function renderCPGame(el) {
 const CK_TIERS = [ // highest first
   { id: 'dia', n: 'Diamond', lo: 92, sell: r => 5000 + (r - 92) * 2500 },
   { id: 'rg', n: 'Rare Gold', lo: 83, sell: r => 1050 + (r - 83) * 60 },
-  { id: 'ug', n: 'Gold', lo: 75, sell: r => 190 + (r - 75) * 12 },
-  { id: 'rs', n: 'Rare Silver', lo: 70, sell: r => 520 + (r - 70) * 60 },
-  { id: 'us', n: 'Silver', lo: 60, sell: r => 60 + (r - 60) * 8 },
-  { id: 'rb', n: 'Rare Bronze', lo: 50, sell: r => 260 + (r - 50) * 15 },
+  { id: 'ug', n: 'Gold', lo: 70, sell: r => 190 + (r - 70) * 12 },
+  { id: 'rs', n: 'Rare Silver', lo: 65, sell: r => 510 + (r - 65) * 25 },
+  { id: 'us', n: 'Silver', lo: 55, sell: r => 60 + (r - 55) * 8 },
+  { id: 'rb', n: 'Rare Bronze', lo: 47, sell: r => 255 + (r - 47) * 8 },
   { id: 'ub', n: 'Bronze', lo: 0, sell: r => 20 + Math.max(0, r - 40) * 2 } ];
 const CK_T = {}; CK_TIERS.forEach(t => CK_T[t.id] = t);
 const _ckTier = (r) => CK_TIERS.find(t => r >= t.lo);
 const _ckSellV = (c) => Math.round(_ckTier(c.r).sell(c.r));
 // odds = chance of each card in the pack being that rarity (must add up to 1)
-const CK_PACKS = { bronze: { n: 'Bronze Pack', price: 250, odds: [['ub', .85], ['rb', .15]], c: '#b4703a', c2: '#5e3516' },
-  silver: { n: 'Silver Pack', price: 500, odds: [['us', .87], ['rs', .13]], c: '#c9d2dc', c2: '#6b7684' },
-  gold: { n: 'Gold Pack', price: 1000, odds: [['ug', .927], ['rg', .07], ['dia', .003]], c: '#f7cf55', c2: '#9a6a0c' } };
+const CK_PACKS = { bronze: { n: 'Bronze Pack', price: 250, odds: [['ub', .8], ['rb', .2]], c: '#b4703a', c2: '#5e3516' },
+  silver: { n: 'Silver Pack', price: 500, odds: [['us', .84], ['rs', .16]], c: '#c9d2dc', c2: '#6b7684' },
+  gold: { n: 'Gold Pack', price: 1000, odds: [['ug', .907], ['rg', .09], ['dia', .003]], c: '#f7cf55', c2: '#9a6a0c' } };
 const CK_N = 3, CK_FEED_MIN = 83, CK_DAY_MAX = 10;
 const _ckDay = () => { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
 const _ckLeft = (K, id) => adminLoggedIn ? Infinity : CK_DAY_MAX - ((K && K.day && K.day.d === _ckDay() && K.day[id]) || 0);
@@ -36980,7 +36980,7 @@ async function renderCardsGame(el) {
       <div class="ck-stats"><div><small>Card index</small><b>${dexN} / ${pool.list.length}</b></div><div><small>Completed</small><b>${pool.list.length ? Math.floor(dexN / pool.list.length * 1000) / 10 : 0}%</b></div></div>
       <div class="ck-grid">${L.map(x => _ckCard(x, { n: inv[x.k] || 0, cls: dex[x.k] ? '' : 'dim' })).join('')}</div><div class="ck-fine">Your card index — every card in the game. Once you've packed a card it stays unlocked here, even after you sell it. Cards you've never packed are dimmed.${pool.hasT5 ? '' : ' <b style="color:#ffb020">Top 5 counts are estimated until the league database is loaded again.</b>'}</div>`; }
   el.innerHTML = `<div class="wd-wrap ck-wrap">${body}<div class="wd-info"><h3>How IMS Cards work</h3><p>Every driver in the IMS database is a card. A card's <b>rating</b> comes from the driver's <b>wins, podiums, top 5s and points</b> — division doesn't matter — and <b>drivers' champions</b> get a big boost. Ratings update as new results come in, so a card you own can go up or down.</p>
-    <p><b>Rarities:</b> Diamond 92+ · Rare Gold 83–91 · Gold 75–82 · Rare Silver 70–74 · Silver 60–69 · Rare Bronze 50–59 · Bronze under 50.</p>
+    <p><b>Rarities:</b> Diamond 92+ · Rare Gold 83–91 · Gold 70–82 · Rare Silver 65–69 · Silver 55–64 · Rare Bronze 47–54 · Bronze under 47.</p>
     <p><b>Packs:</b> Bronze ${CK_PACKS.bronze.price}, Silver ${CK_PACKS.silver.price}, Gold ${CK_PACKS.gold.price.toLocaleString()} IM$. Keep cards in your collection or sell them for IM$ at any time.</p></div></div>`; }
 async function _gmNoTestCoins(rows) { try { const ids = await _gmTestIds(), me = _wdMe().uid; return (rows || []).filter(r => r && (r.userId === me || !ids.has(r.userId))); } catch (e) { return rows || []; } }
 // ===== PIT LANE PAIRS =====
