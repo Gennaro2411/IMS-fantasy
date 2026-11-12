@@ -3990,7 +3990,9 @@
     .set-ck{margin-top:16px;padding:14px;border-radius:16px;background:rgba(247,207,85,.06);box-shadow:inset 0 0 0 1px rgba(247,207,85,.35)}.set-ck-h{font-weight:900;font-size:.95rem}.set-ck-h small{font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:#ffb020;margin-left:6px}.set-ck p{font-size:.8rem;color:#a5a9d6;margin:6px 0 10px}
     @media (max-width:640px){.ck-shop{grid-template-columns:1fr}.ck-sp{flex-direction:row;flex-wrap:wrap;justify-content:center}.ck-sp .ckp{width:104px;height:146px;margin:0}.ck-sp .ckp-body b{font-size:1.05rem}.ck-sp .ck-odds{flex:1;min-width:150px}.ck-stats{grid-template-columns:1fr 1fr}.ck-row{gap:6px}.ck-pb{grid-template-columns:1fr}.ck-acts{grid-template-columns:1fr}.ck-dt{grid-template-columns:1fr}.ck-dt>.ck{max-width:200px;margin:0 auto}.ck-grid{grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:7px}.ck-vr{grid-template-columns:12px 1.2fr .7fr 1.2fr}.ck-vr span:nth-of-type(2){display:none}}
     @media (prefers-reduced-motion:reduce){.ck-pk .ckp,.ck-pk p,.ck.t-rg .ck-in::before,.ck.t-dia .ck-in::before,.ck-rv.hot .ck-back{animation:none}}
-    .pp-board{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 6px;text-align:left}
+    .ck-dup{display:inline-block;padding:2px 7px;border-radius:6px;font:800 .62rem/1.3 system-ui,sans-serif;letter-spacing:.1em;color:#fff;background:#f0487a;vertical-align:1px}.ck-dup.new{background:#22c55e}.ck-pick{position:relative}.ck-dup-tag{position:absolute;top:-8px;left:50%;transform:translateX(-50%);z-index:3;box-shadow:0 4px 12px -4px #000}
+.ck-oos{padding:11px 10px;border-radius:12px;text-align:center;font-weight:800;font-size:.8rem;color:#ff8aa8;background:rgba(240,72,122,.1);border:1px solid rgba(240,72,122,.4)}.ck-left{display:block;text-align:center;margin-top:6px;font-size:.7rem;color:#9a9cc0}
+.pp-board{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 6px;text-align:left}
     .pp-col{display:flex;flex-direction:column;gap:6px;min-width:0}
     .pp-ch{font:800 .62rem/1 inherit;letter-spacing:.14em;color:#b184e8;padding:0 4px 2px}
     .pp-d,.pp-c{--pc:rgba(255,255,255,.14);position:relative;display:flex;align-items:center;gap:8px;min-height:54px;padding:6px 8px;border-radius:12px;font:inherit;color:#fff;text-align:left;cursor:pointer;background:linear-gradient(170deg,#15122b,#0b0a14 80%);border:1px solid rgba(255,255,255,.1);transition:border-color .15s,background-color .15s,box-shadow .15s;min-width:0}
@@ -36817,8 +36819,8 @@ async function renderCPGame(el) {
 // Hidden from everyone except the admin until settings/gamesLock.cardsOpen is switched on.
 const CK_TIERS = [ // highest first
   { id: 'dia', n: 'Diamond', lo: 92, sell: r => 5000 + (r - 92) * 2500 },
-  { id: 'rg', n: 'Rare Gold', lo: 83, sell: r => 1050 + (r - 83) * 150 },
-  { id: 'ug', n: 'Gold', lo: 75, sell: r => 100 + (r - 75) * 20 },
+  { id: 'rg', n: 'Rare Gold', lo: 83, sell: r => 1050 + (r - 83) * 60 },
+  { id: 'ug', n: 'Gold', lo: 75, sell: r => 190 + (r - 75) * 12 },
   { id: 'rs', n: 'Rare Silver', lo: 70, sell: r => 520 + (r - 70) * 60 },
   { id: 'us', n: 'Silver', lo: 60, sell: r => 60 + (r - 60) * 8 },
   { id: 'rb', n: 'Rare Bronze', lo: 50, sell: r => 260 + (r - 50) * 15 },
@@ -36829,8 +36831,10 @@ const _ckSellV = (c) => Math.round(_ckTier(c.r).sell(c.r));
 // odds = chance of each card in the pack being that rarity (must add up to 1)
 const CK_PACKS = { bronze: { n: 'Bronze Pack', price: 250, odds: [['ub', .85], ['rb', .15]], c: '#b4703a', c2: '#5e3516' },
   silver: { n: 'Silver Pack', price: 500, odds: [['us', .87], ['rs', .13]], c: '#c9d2dc', c2: '#6b7684' },
-  gold: { n: 'Gold Pack', price: 1000, odds: [['ug', .887], ['rg', .11], ['dia', .003]], c: '#f7cf55', c2: '#9a6a0c' } };
-const CK_N = 3, CK_FEED_MIN = 83;
+  gold: { n: 'Gold Pack', price: 1000, odds: [['ug', .927], ['rg', .07], ['dia', .003]], c: '#f7cf55', c2: '#9a6a0c' } };
+const CK_N = 3, CK_FEED_MIN = 83, CK_DAY_MAX = 10;
+const _ckDay = () => { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
+const _ckLeft = (K, id) => adminLoggedIn ? Infinity : CK_DAY_MAX - ((K && K.day && K.day.d === _ckDay() && K.day[id]) || 0);
 const _ckCan = () => !!(adminLoggedIn || (window._gamesLock || {}).cardsOpen);
 // Rating: score → 40..91 on a curve, +5 for being a champion (+1 per extra title, max +2), capped at 96.
 function _ckRate(w, pd, t5, p, ch) { const sc = 6 * w + 3 * pd + 1.5 * t5 + p / 20; let r = 40 + 51 * (1 - Math.exp(-sc / 90)); if (ch > 0) r += 5 + Math.min(2, ch - 1); return { r: Math.min(96, Math.round(r)), sc }; }
@@ -36873,12 +36877,13 @@ window.ckBuy = async function(id) { if (!_ckCan() || window._ckBusy) return; con
   if (typeof currentUser === 'undefined' || !currentUser || !currentUser.userId) return showToast('Log in to buy packs.', 'error');
   window._ckBusy = true;
   try { const pool = await _ckPool(), c = await _betLoadCoins(currentUser.userId);
+    if (_ckLeft(c.cards, id) <= 0) { window._ckBusy = false; renderGames(); return showToast('Sorry! This card pack is out of stock', 'error'); }
     if ((c.balance || 0) < P.price) { window._ckBusy = false; return showToast('You need ' + P.price.toLocaleString() + ' IM$ for a ' + P.n + '.', 'error'); }
     const got = []; for (let i = 0; i < CK_N; i++) { const x = _ckRoll(id, pool); if (x) got.push(x); }
     if (got.length < CK_N) { window._ckBusy = false; return showToast('Not enough cards in the pool for that pack yet.', 'error'); }
     got.sort((a, b) => a.r - b.r || a.sc - b.sc); // worst first, best last
     c.balance -= P.price; const K = c.cards = c.cards || { inv: {} }; K.inv = K.inv || {};
-    K.dex = K.dex || {}; Object.keys(K.inv).forEach(k => { if (K.inv[k] > 0) K.dex[k] = 1; }); got.forEach(x => { K.inv[x.k] = (K.inv[x.k] || 0) + 1; K.dex[x.k] = 1; }); K.packs = (K.packs || 0) + 1; K.spent = (K.spent || 0) + P.price;
+    K.dex = K.dex || {}; Object.keys(K.inv).forEach(k => { if (K.inv[k] > 0) K.dex[k] = 1; }); got.forEach((x, i) => { got[i] = x = Object.assign({}, x, { dup: !!(K.inv[x.k] > 0 || K.dex[x.k]) }); K.inv[x.k] = (K.inv[x.k] || 0) + 1; K.dex[x.k] = 1; }); K.packs = (K.packs || 0) + 1; if (!K.day || K.day.d !== _ckDay()) K.day = { d: _ckDay() }; K.day[id] = (K.day[id] || 0) + 1; K.spent = (K.spent || 0) + P.price;
     K.log = (K.log || []).concat([{ t: Date.now(), p: id, f: P.price }]).slice(-300); // pack spend log (for the book, like spin fees)
     const big = got.filter(x => x.r >= CK_FEED_MIN); if (big.length) c.cardPulls = (c.cardPulls || []).concat(big.map(x => ({ k: x.k, n: x.n, r: x.r, t: Date.now(), p: id, by: _wdMe().name }))).slice(-40);
     await dbSet('coins', currentUser.userId, c); _ckSetPill(c); window._ckFeed = null;
@@ -36901,12 +36906,12 @@ window.ckFlip = function() { const f = document.getElementById('ck-flip'), R = w
   const c = R.got[R.i]; f.classList.add('on'); f.parentElement.classList.add('shown');
   try { c.r >= 83 ? _ptSnd.pointless() : c.r >= 60 ? _ptSnd.ding() : _ptSnd.tick && _ptSnd.tick(); } catch (e) {}
   if (c.r >= 83) { try { fireConfetti({ count: c.r >= 92 ? 160 : 80 }); } catch (e) {} }
-  const b = document.getElementById('ck-rvb'); if (b) b.innerHTML = `<b>${CK_T[c.t].n}</b> · worth <i class="imc"></i> ${_ckSellV(c).toLocaleString()} · tap for ${R.i === R.got.length - 1 ? 'your pack' : 'the next card'}`; };
+  const b = document.getElementById('ck-rvb'); if (b) b.innerHTML = `${c.dup ? '<span class="ck-dup">DUPLICATE</span> ' : '<span class="ck-dup new">NEW</span> '}<b>${CK_T[c.t].n}</b> · worth <i class="imc"></i> ${_ckSellV(c).toLocaleString()} · tap for ${R.i === R.got.length - 1 ? 'your pack' : 'the next card'}`; };
 function _ckSummary() { const R = window._ckRv, st = document.getElementById('ck-stage'); if (!R || !st) return; const P = CK_PACKS[R.id];
   const tot = R.got.reduce((a, c) => a + _ckSellV(c), 0), selN = Object.keys(R.sell).length, selV = R.got.reduce((a, c, i) => a + (R.sell[i] ? _ckSellV(c) : 0), 0);
   st.innerHTML = `<div class="ck-sum"><div class="ck-k">${P.n} opened</div><div class="ck-ttl">YOUR <em>CARDS</em></div>
     <div class="ck-sub">Pack value <b>${tot.toLocaleString()} IM$</b> · you paid ${P.price.toLocaleString()} IM$ · <span class="${tot >= P.price ? 'up' : 'dn'}">${tot >= P.price ? '+' : '−'}${Math.abs(tot - P.price).toLocaleString()}</span></div>
-    <div class="ck-row">${R.got.map((c, i) => `<div class="ck-pick${R.sell[i] ? ' sell' : ''}">${_ckCard(c)}<div class="ck-pb"><button class="${R.sell[i] ? '' : 'on'}" onclick="ckMark(${i},0)">Keep</button><button class="${R.sell[i] ? 'on s' : ''}" onclick="ckMark(${i},1)">Sell <i class="imc"></i> ${_ckSellV(c).toLocaleString()}</button></div></div>`).join('')}</div>
+    <div class="ck-row">${R.got.map((c, i) => `<div class="ck-pick${R.sell[i] ? ' sell' : ''}">${c.dup ? '<span class="ck-dup ck-dup-tag">DUPLICATE</span>' : ''}${_ckCard(c)}<div class="ck-pb"><button class="${R.sell[i] ? '' : 'on'}" onclick="ckMark(${i},0)">Keep</button><button class="${R.sell[i] ? 'on s' : ''}" onclick="ckMark(${i},1)">Sell <i class="imc"></i> ${_ckSellV(c).toLocaleString()}</button></div></div>`).join('')}</div>
     <div class="ck-acts"><button class="hx-btn" onclick="ckDone()">${selN ? `Sell ${selN} for ${selV.toLocaleString()} IM$${selN < R.got.length ? ' · keep the rest' : ''}` : 'Keep all 3'}</button>
       <button class="hx-btn ghost" onclick="ckMark(-1,1)">Quick sell all · ${tot.toLocaleString()} IM$</button></div>
     <div class="ck-fine">Kept cards go to your collection. You can sell them from there any time.</div></div>`; }
@@ -36956,10 +36961,10 @@ async function renderCardsGame(el) {
     <div class="wd-modes">${[['shop', '🛒', 'SHOP'], ['col', '🗂️', `COLLECTION${ownN ? ' · ' + ownN : ''}`], ['feed', '🔥', 'BIG PULLS'], ['all', '📖', 'CARD INDEX']].map(([m, i, l]) => `<button class="${tab === m ? 'on' : ''}" onclick="ckTab('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>`;
   if (!me) body += '<div class="alert alert-warning">Log in to your team to buy packs.</div>';
   if (tab === 'shop') { const pct = (x) => (x * 100 >= 1 ? Math.round(x * 100) : (x * 100).toFixed(2).replace(/0$/, '')) + '%';
-    body += `<div class="ck-shop">${Object.entries(CK_PACKS).map(([id, P]) => { const can = c && (c.balance || 0) >= P.price;
+    body += `<div class="ck-shop">${Object.entries(CK_PACKS).map(([id, P]) => { const left = _ckLeft(K, id), oos = left <= 0, can = c && !oos && (c.balance || 0) >= P.price;
       return `<div class="ck-sp" style="--c:${P.c};--c2:${P.c2}">${_ckPackArt(id)}<b class="ck-sp-n">${P.n}</b>
         <div class="ck-odds">${P.odds.map(([t, pr]) => `<span class="t-${t}"><i></i>${CK_T[t].n}<b>${pct(pr)}</b></span>`).join('')}</div>
-        <button class="hx-btn" onclick="ckBuy('${id}')" ${can ? '' : 'disabled'}><i class="imc"></i> ${P.price.toLocaleString()}${can ? '' : ' · not enough'}</button></div>`; }).join('')}</div>
+        ${oos ? `<div class="ck-oos">Sorry! This card pack is out of stock</div>` : `<button class="hx-btn" onclick="ckBuy('${id}')" ${can ? '' : 'disabled'}><i class="imc"></i> ${P.price.toLocaleString()}${can ? '' : ' · not enough'}</button>${left !== Infinity ? `<small class="ck-left">${left} of ${CK_DAY_MAX} left today</small>` : ''}`}</div>`; }).join('')}</div>
       <div class="ck-note">Each pack has <b>${CK_N} cards</b>, revealed worst to best. The percentages are the chance of <b>each card</b> being that rarity, and inside a rarity the lower-rated drivers are much more common. Most packs are worth less than they cost — the win is packing a rare card with a big sell value.</div>
       <div class="ck-vals"><div class="wl-sh"><span>Sell values</span><small>${pool.list.length} drivers in the pool</small></div>${CK_TIERS.map(t => { const n = pool.list.filter(x => x.t === t.id), hi = t.id === 'dia' ? 96 : CK_TIERS[CK_TIERS.indexOf(t) - 1].lo - 1, lo = Math.max(t.lo, 40);
         return `<div class="ck-vr t-${t.id}"><i></i><b>${t.n}</b><span>${t.id === 'ub' ? 'under 50' : lo + '–' + hi}</span><span>${n.length} card${n.length === 1 ? '' : 's'}</span><em>${Math.round(t.sell(lo)).toLocaleString()}–${Math.round(t.sell(hi)).toLocaleString()} IM$</em></div>`; }).join('')}</div>`; }
