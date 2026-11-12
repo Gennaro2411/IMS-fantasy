@@ -3995,7 +3995,7 @@
 .ck-gpb{width:min(420px,100%);padding:22px 18px;border-radius:20px;background:linear-gradient(170deg,#15122b,#0b0a14 72%);border:1px solid rgba(177,132,232,.35);text-align:center;box-shadow:0 30px 80px -30px #000}
 .ck-gpl{display:grid;gap:8px;margin:16px 0}.ck-gpi{display:flex;align-items:center;gap:12px;text-align:left;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}.ck-gpi i{flex:none;width:30px;height:40px;border-radius:5px;background:linear-gradient(160deg,var(--c),var(--c2));box-shadow:0 6px 14px -6px #000}.ck-gpi b{display:block;color:#fff}.ck-gpi small{color:#c9cbe8;font-size:.8rem}
 .ck-gfrom{text-align:center;font-size:.8rem;color:#e7e8ff;margin:4px 0 10px}.ck-gfrom small{display:block;color:#9a9cc0;font-size:.68rem;margin-top:2px}
-.ck-gift{margin-top:18px;padding:14px;border-radius:14px;border:1px dashed rgba(239,68,68,.5);display:grid;gap:8px}.ck-gift select,.ck-gift input{width:100%;padding:10px;border-radius:10px;background:#0e0c1a;color:#fff;border:1px solid rgba(255,255,255,.14);font:inherit}.ck-g-row{display:grid;grid-template-columns:1fr 80px;gap:8px}
+.ck-gift{margin-top:18px;padding:14px;border-radius:14px;border:1px dashed rgba(239,68,68,.5);display:grid;gap:8px}.ck-gift select,.ck-gift input{width:100%;padding:10px;border-radius:10px;background:#0e0c1a;color:#fff;border:1px solid rgba(255,255,255,.14);font:inherit}.ck-g-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.ck-g-row label{display:grid;gap:6px;justify-items:center;padding:10px 6px;border-radius:10px;background:rgba(255,255,255,.04);font-size:.78rem;font-weight:700;color:#fff}.ck-g-row label i{width:22px;height:30px;border-radius:4px;background:linear-gradient(160deg,var(--c),var(--c2))}.ck-g-row input{text-align:center;padding:8px!important}
 .ck-oos{padding:11px 10px;border-radius:12px;text-align:center;font-weight:800;font-size:.8rem;color:#ff8aa8;background:rgba(240,72,122,.1);border:1px solid rgba(240,72,122,.4)}.ck-left{display:block;text-align:center;margin-top:6px;font-size:.7rem;color:#9a9cc0}
 .pp-board{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 6px;text-align:left}
     .pp-col{display:flex;flex-direction:column;gap:6px;min-width:0}
@@ -36912,9 +36912,11 @@ window._ckGiftPop = async function(c) { const G = (c && c.cards && c.cards.gifts
 window._ckGiftSeen = async function(go) { document.getElementById('ck-gp')?.remove();
   try { const c = await _betLoadCoins(currentUser.userId); (c.cards && c.cards.gifts || []).forEach(g => g.s = 1); await dbSet('coins', currentUser.userId, c); } catch (e) {}
   if (go) { window._ckTab = 'packs'; try { await showPage('games'); } catch (e) {} openGame('cards'); } };
-window.ckGiftUI = async function() { const u = document.getElementById('ck-g-u'), pk = document.getElementById('ck-g-p'), nt = document.getElementById('ck-g-n'), qn = document.getElementById('ck-g-q'); if (!u || !u.value) return showToast('Pick a player.', 'error');
-  const ids = u.value === '*' ? [...u.options].map(o => o.value).filter(v => v && v !== '*') : [u.value], q = Math.max(1, Math.min(20, parseInt(qn.value, 10) || 1)), lbl = u.value === '*' ? 'every player (' + ids.length + ')' : u.options[u.selectedIndex].text;
-  customConfirm(`Give ${q} × ${CK_PACKS[pk.value].n} to ${esc(lbl)}?`, async () => { let n = 0; for (const id of ids) { for (let i = 0; i < q; i++) if (await ckGift(id, pk.value, nt.value || 'Gift from IMS')) n++; }
+window.ckGiftUI = async function() { const u = document.getElementById('ck-g-u'), nt = document.getElementById('ck-g-n'); if (!u || !u.value) return showToast('Pick a player.', 'error');
+  const qs = Object.keys(CK_PACKS).map(id => [id, Math.max(0, Math.min(20, parseInt((document.getElementById('ck-g-q-' + id) || {}).value, 10) || 0))]).filter(x => x[1] > 0);
+  if (!qs.length) return showToast('Add at least one pack.', 'error');
+  const ids = u.value === '*' ? [...u.options].map(o => o.value).filter(v => v && v !== '*') : [u.value], lbl = u.value === '*' ? 'every player (' + ids.length + ')' : u.options[u.selectedIndex].text;
+  customConfirm(`Give ${qs.map(([id, q]) => q + ' × ' + CK_PACKS[id].n).join(', ')} to ${esc(lbl)}?`, async () => { let n = 0; for (const id of ids) { for (const [pk, q] of qs) for (let i = 0; i < q; i++) if (await ckGift(id, pk, nt.value || 'Gift from IMS')) n++; }
     showToast('🎁 Sent ' + n + ' pack' + (n === 1 ? '' : 's') + '.', 'success'); renderGames(); }, 'Send'); };
 function _ckReveal(id, got, gift) { document.getElementById('ck-ov')?.remove(); const o = document.createElement('div'); o.id = 'ck-ov'; o.className = 'ck-ov';
   window._ckRv = { id, got, i: -1, sell: {}, gift: !!gift };
@@ -37002,7 +37004,7 @@ async function renderCardsGame(el) {
     if (adminLoggedIn) { const tms = (await dbGetAll('teams').catch(() => [])).filter(t => t && t.userId).sort((a, b) => String(a.teamName || a.playerName).localeCompare(String(b.teamName || b.playerName)));
       body += `<div class="ck-gift"><div class="wl-sh"><span>🛠️ Give packs</span><small>only you can see this</small></div>
         <select id="ck-g-u"><option value="">Pick a player…</option><option value="*">Everyone</option>${tms.map(t => `<option value="${esc(t.userId)}">${esc(t.teamName || t.playerName || t.userId)}</option>`).join('')}</select>
-        <div class="ck-g-row"><select id="ck-g-p">${Object.entries(CK_PACKS).map(([id, P]) => `<option value="${id}">${P.n}</option>`).join('')}</select><input id="ck-g-q" type="number" min="1" max="20" value="1"></div>
+        <div class="ck-g-row">${Object.entries(CK_PACKS).map(([id, P]) => `<label style="--c:${P.c};--c2:${P.c2}"><i></i>${P.n.replace(' Pack', '')}<input id="ck-g-q-${id}" type="number" min="0" max="20" value="0"></label>`).join('')}</div>
         <input id="ck-g-n" maxlength="60" placeholder="Message, e.g. Race winner reward"><button class="hx-btn" onclick="ckGiftUI()">🎁 Send packs</button></div>`; } }
   else if (tab === 'col') { own.sort((a, b) => b.c.r - a.c.r || b.c.sc - a.c.sc);
     body += `<div class="ck-stats"><div><small>Cards</small><b>${ownN}</b></div><div><small>Collection value</small><b>${ownV.toLocaleString()}</b></div><div><small>Packs opened</small><b>${K.packs || 0}</b></div><div><small>Spent / sold</small><b>${(K.spent || 0).toLocaleString()} / ${(K.sold || 0).toLocaleString()}</b></div></div>
