@@ -11896,6 +11896,15 @@ window._wcRun = function () {
     a.onfinish = () => { a.cancel(); ba.forEach(x => x.cancel()); if (back) back.remove(); c.classList.remove('wc-flip'); c.style.zIndex = ''; c.style.transform = ''; };
   });
 };
+// Team a driver was signed to at a moment in time, from the roster-move log ('Reserve' if they'd been released).
+// Returns null when the log has nothing before that time (caller then falls back to their current team).
+window._rmTeamAt = function(driver, when) { const L = window._rmLog; const t = Number(when) || 0; if (!t) return null;
+  if (!L) { if (!window._rmLogLoading) { window._rmLogLoading = 1; dbGetAll('rosterMoves').then(rows => { window._rmLog = rows || []; try { const pg = document.getElementById('page-my-team'); if (pg && pg.classList.contains('active')) renderMyTeam(); } catch (e) {} }).catch(() => { window._rmLog = []; }); } return null; }
+  const did = String(driver.discordId || ''), nm = String(driver.name || '').toLowerCase().replace(/^\[[^\]]*\]\s*/, '').trim();
+  const mine = L.filter(m => m && ((did && String(m.driverDiscordId || '') === did) || String(m.driver || '').toLowerCase().trim() === nm) && (m.timestamp || 0) <= t).sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+  if (!mine.length) return null; const last = mine[mine.length - 1];
+  if (/^(signed|moved division)$/i.test(last.action || '')) return last.toTeam || (mine.slice().reverse().find(x => x.toTeam) || {}).toTeam || null;
+  return 'Reserve'; };
 async function renderMyTeam() {
   window._wcN = 0; window._wcDecided = false;
   const el = document.getElementById('my-team-content');
@@ -12820,7 +12829,9 @@ async function renderMyTeam() {
     // Team for the race being shown (a past round shows the team they drove for THAT race).
     const _rTeam = (() => { try { const r = pointsRace; if (!r) return null; const m = r.driverTeamByDivision && r.driverTeamByDivision[dId];
       if (m && m[div]) return m[div]; const nk = String(driver.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-      return (r.teamByDivName && r.teamByDivName[div] && r.teamByDivName[div][nk]) || null; } catch(e) { return null; } })();
+      const bn = r.teamByDivName && r.teamByDivName[div] && r.teamByDivName[div][nk]; if (bn) return bn;
+      // Didn't race that round: show the team they were signed to at the time (from the roster-move log), not today's team.
+      return window._rmTeamAt ? window._rmTeamAt(driver, r.lockTime) : null; } catch(e) { return null; } })();
     const _tName = _rTeam || driver.team;
     const teamCol = getTeamCardColour(_tName);
     const teamLogo = getTeamLogo(_tName);
