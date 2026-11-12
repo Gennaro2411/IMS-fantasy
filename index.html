@@ -12820,7 +12820,10 @@ async function renderMyTeam() {
     // Team for the race being shown (a past round shows the team they drove for THAT race).
     const _rTeam = (() => { try { const r = pointsRace; if (!r) return null; const m = r.driverTeamByDivision && r.driverTeamByDivision[dId];
       if (m && m[div]) return m[div]; const nk = String(driver.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-      return (r.teamByDivName && r.teamByDivName[div] && r.teamByDivName[div][nk]) || null; } catch(e) { return null; } })();
+      const byName = r.teamByDivName && r.teamByDivName[div] && r.teamByDivName[div][nk]; if (byName) return byName;
+      // Didn't race this division that round (e.g. a reserve came in) — use the team they did race for in another division.
+      const other = m && Object.entries(m).find(([dv, tn]) => !/^A/i.test(dv) && tn && !/^reserve$/i.test(String(tn).trim())); if (other) return other[1];
+      const byNameAny = r.teamByDivName && Object.values(r.teamByDivName).map(x => x && x[nk]).find(Boolean); return byNameAny || null; } catch(e) { return null; } })();
     const _tName = _rTeam || driver.team;
     const teamCol = getTeamCardColour(_tName);
     const teamLogo = getTeamLogo(_tName);
