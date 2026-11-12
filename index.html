@@ -31700,7 +31700,7 @@ window.renderBets = async function(dry) {
         ${canRefill ? `<button class="btn btn-secondary btn-sm" style="margin-top:6px" onclick="betRefill()">⛽ Pit stop refill +${BET_REFILL_COINS}</button>` : ''}</div>
     </div>
     <div class="bo-ticker" id="bo-ticker">${_betTickerHtml(window._betAllBets || [], teamBy)}</div>
-    ${upcoming ? `<button class="ma-ad" onclick="maOpen()"><span class="ma-ad-reels"><i>🎰</i></span><span class="ma-ad-t"><small>NEW · MYSTERY ACCA</small><b>Spin for a random acca — odds boosted ×1.25</b><span>3 to 6 random legs from today's ${esc(div)} markets · 100 IM$ a spin</span></span><span class="ma-ad-go">SPIN →</span></button>` : ''}
+    ${upcoming ? `<button class="ma-ad" onclick="maOpen()"><span class="ma-ad-reels"><i>🎰</i></span><span class="ma-ad-t"><small>NEW · MYSTERY ACCA</small><b>Spin for a random acca — odds boosted ×1.5</b><span>3 to 6 random legs from today's ${esc(div)} markets · 100 IM$ a spin</span></span><span class="ma-ad-go">SPIN →</span></button>` : ''}
     ${(upcoming && (upcoming.isSprint || (window._isSprintWeekend && window._isSprintWeekend(upcoming)))) ? `<button class="bo-sprint-ad rh-charged-ad" onclick="window._betSec=null;betSec('sprint');const el=document.querySelector('#page-bets .bo-sec[data-sec=sprint]');if(el)el.scrollIntoView({behavior:'smooth',block:'start'})">
       ${window.sprintZapSvg(4, 50, 10)}${window.sprintTagHtml('Reverse grid')}
       <span class="bo-sprint-ad-txt"><span>${esc(String(upcoming.name).replace(/\s*\(sprint\)\s*/i, ''))} · SPRINT BETS OPEN</span><b>Bet on the sprint — the leaders start <i>last</i></b><small>Sprint winner &amp; podium in every division · grid is the championship in reverse</small></span>
@@ -32807,7 +32807,7 @@ window.betLockClearAll = () => { if (!adminLoggedIn || !confirm('Unlock every lo
 // ===== MYSTERY ACCA (bet builder roulette) =====
 // Spins 3–5 reels; each lands on a random open pick from the division on screen (one per market, no repeats).
 // Picks come from the same odds buttons the page just drew, so locks, backed bets and prices all match.
-const MA_FEE = 100, MA_BOOST = 1.25;
+const MA_FEE = 100, MA_BOOST = 1.5;
 // Spin fee: 100 IM$ for the first spin of the race week, +100 for every spin after that (resets each round).
 const _maFee = (c) => { const r = window._betCtx && window._betCtx.upcoming && window._betCtx.upcoming.name; return MA_FEE * (1 + (c && c.maRace === r ? (c.maSpins || 0) : 0)); };
 // Is the slip exactly the mystery acca that was spun? (only then does it get the 1.25× boost)
