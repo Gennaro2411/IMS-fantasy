@@ -3039,7 +3039,7 @@
     #page-my-team .mt-dc:not(.cap-glow):not(.cap-glow-tc):not(.rsv-in){border-color:color-mix(in srgb,var(--tc) 50%,rgba(255,255,255,.08))!important}
     #page-my-team .mt-dc .mt-dc-st{border-radius:18px 18px 0 0!important}
     #page-my-team .mt-dc:not(.cap-glow):not(.cap-glow-tc) .mt-dc-st{background:linear-gradient(90deg,var(--tc),#a779e6 50%,#f0487a 82%,transparent)!important}
-    #page-my-team .mt-dc:has(.mt-pts-block) .mt-dc-wm{right:92px}
+    #page-my-team .mt-dc-wm.pts{right:92px}
     #page-my-team .mt-dc-wm{position:absolute;right:12px;top:16px;height:44px;max-width:26%;object-fit:contain;opacity:.2;pointer-events:none}
     #page-my-team .mt-dc-ph{width:54px!important;height:62px!important;border-radius:14px!important;box-shadow:0 0 0 1.5px color-mix(in srgb,var(--tc) 65%,transparent),0 10px 22px -14px var(--tc)}
     #page-my-team .mt-dc-ph>div:first-child{border-radius:14px!important}
@@ -3048,7 +3048,7 @@
     #page-my-team .mt-dc-lg{height:14px!important}
     #page-my-team .mt-dc-id{display:flex;align-items:center;gap:6px;margin-bottom:3px;min-height:14px}
     #page-my-team .mt-dc-fl:empty{display:none}#page-my-team .mt-dc-fl{display:inline-flex;align-items:center}#page-my-team .mt-dc-fl img{height:12px!important;width:auto!important;border-radius:2px;display:block}
-    @media (max-width:520px){#page-my-team .mt-dc-wm,#page-my-team .mt-dc:has(.mt-pts-block) .mt-dc-wm{right:10px;top:12px;height:34px}}
+    @media (max-width:520px){#page-my-team .mt-dc-wm,#page-my-team .mt-dc-wm.pts{right:10px;top:12px;height:34px}}
     /* Captain: same card language, in gold (triple captain keeps its own look) */
     #page-my-team .mt-dc.cap-glow{background:linear-gradient(180deg,rgba(255,255,255,.035),transparent 45%),linear-gradient(105deg,color-mix(in srgb,#ffc800 48%,#1a1408),color-mix(in srgb,#ffc800 22%,#151008) 52%,color-mix(in srgb,#ffc800 9%,#0e0c12) 92%)!important}
     #page-my-team .mt-dc.cap-glow .mt-dc-st{background:linear-gradient(90deg,#fff3b8,#ffc800 35%,#ffa751 75%,transparent)!important}
@@ -12862,7 +12862,7 @@ async function renderMyTeam() {
     }
     // Team-colour identity stripe across the top of the card
     html += '<div class="mt-dc-st" style="height:3px;border-radius:12px 12px 0 0;background:linear-gradient(90deg,'+stripeCol+',transparent 85%)"></div>';
-    if (teamLogo && !isCap) html += '<img class="mt-dc-wm" src="'+teamLogo+'" alt="" onerror="this.remove()">';
+    if (teamLogo && !isCap) html += '<img class="mt-dc-wm'+(displayPts !== null ? ' pts' : '')+'" src="'+teamLogo+'" alt="" loading="lazy" decoding="async" onerror="this.remove()">';
     html += '<div class="mt-card-row" style="padding:10px 10px 0;display:flex;gap:10px;align-items:center">';
     // Looking back at a past round: today's check-ins and race bans don't belong to that race — hide them.
     const _pastView = (typeof _snapView !== 'undefined') && !!_snapView;
