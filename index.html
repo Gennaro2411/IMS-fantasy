@@ -3904,7 +3904,7 @@
     .ck-in{position:relative;height:100%;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;background:radial-gradient(120% 70% at 80% 0,rgba(255,255,255,.2),transparent 55%),linear-gradient(165deg,var(--a),var(--b) 78%)}
     .ck-in::before{content:'';position:absolute;inset:0;background:linear-gradient(115deg,transparent 38%,rgba(255,255,255,.13) 46%,transparent 54%);pointer-events:none}
     .ck-top{flex:1;min-height:0;display:flex;gap:4%;padding:7% 6% 0}
-    .ck-rt{flex:none;width:30%;display:flex;flex-direction:column;align-items:center;gap:3px}
+    .ck-rt{flex:none;width:30%;display:flex;flex-direction:column;align-items:center;gap:3px}.ck-cr{display:flex;align-items:center;gap:1px;font-size:9cqw;line-height:1;margin-top:1px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}.ck-cr i{font:900 5cqw/1 system-ui,sans-serif;font-style:normal;color:#ffd75e}
     .ck-rt b{font-weight:900;font-style:italic;font-size:26cqw;line-height:.9;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.45)}
     .ck-rt small{font:800 5.4cqw/1.05 system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;text-align:center;opacity:.9}
     .ck-fl img{width:17cqw!important;height:auto!important;border-radius:2px;display:block;margin-top:3px}.ck-lg{width:17cqw;height:12cqw;object-fit:contain;margin-top:2px}
@@ -36992,9 +36992,9 @@ const _ckIni = (n) => String(n || '?').replace(/[^A-Za-z0-9 ]/g, '').trim().spli
 function _ckCard(c, o) { o = o || {}; const T = CK_T[c.t], lg = c.team && typeof getTeamLogo === 'function' ? getTeamLogo(c.team) : '', fl = c.nat && typeof natFlagImg === 'function' ? natFlagImg(c.nat, 22) : '';
   const S = c.sp && CK_SP[c.sp];
   return `<div class="ck t-${c.t}${S ? ' sp sp-' + c.sp : ''}${o.cls ? ' ' + o.cls : ''}"${o.on ? ` onclick="${o.on}"` : ''}>
-    <div class="ck-in">${S ? `<i class="ck-spfx"></i>` : ''}<div class="ck-top"><div class="ck-rt"><b>${c.r}</b><small>${S ? S.s : T.n}</small>${fl ? `<span class="ck-fl">${fl}</span>` : ''}${lg ? `<img class="ck-lg" src="${esc(lg)}" alt="" onerror="this.remove()">` : ''}</div>
+    <div class="ck-in">${S ? `<i class="ck-spfx"></i>` : ''}<div class="ck-top"><div class="ck-rt"><b>${c.r}</b><small>${S ? S.s : T.n}</small>${fl ? `<span class="ck-fl">${fl}</span>` : ''}${lg ? `<img class="ck-lg" src="${esc(lg)}" alt="" onerror="this.remove()">` : ''}${c.ch ? `<span class="ck-cr" title="Drivers' champion${c.ch > 1 ? ' ×' + c.ch : ''}">👑${c.ch > 1 ? `<i>×${c.ch}</i>` : ''}</span>` : ''}</div>
       <div class="ck-ph">${c.ph ? `<img src="${esc(c.ph)}" alt="" loading="lazy" onerror="this.outerHTML='<i>${_ckIni(c.n)}</i>'">` : `<i>${_ckIni(c.n)}</i>`}</div></div>
-    ${S ? `<div class="ck-spb">${S.i} ${c.spn ? esc(c.spn) : S.n}</div>` : ''}<div class="ck-nm">${c.ch ? '<em title="Drivers\' champion">👑</em>' : ''}${esc(c.n)}</div>
+    ${S ? `<div class="ck-spb">${S.i} ${c.spn ? esc(c.spn) : S.n}</div>` : ''}<div class="ck-nm">${esc(c.n)}</div>
     <div class="ck-st"><span><b>${c.w}</b>WIN</span><span><b>${c.pd}</b>POD</span><span><b>${c.t5}</b>TOP5</span><span><b>${c.p >= 1000 ? (c.p / 1000).toFixed(1) + 'k' : c.p}</b>PTS</span></div>
     ${o.n > 1 ? `<span class="ck-x">×${o.n}</span>` : ''}</div></div>`; }
 const _ckPackArt = (id, sm) => { const P = CK_PACKS[id]; return `<div class="ckp${sm ? ' sm' : ''}${P.cls ? ' ckp-' + P.cls : ''}" style="--c:${P.c};--c2:${P.c2}"><i class="ckp-crimp"></i><div class="ckp-body">${P.teamPack && P.logo ? `<img class="ckp-tl" src="${esc(P.logo)}" alt="" onerror="this.src='icons/icon-192.png?v=3';this.className=''"><img class="ckp-ims" src="icons/icon-192.png?v=3" alt="IMS">` : '<img src="icons/icon-192.png?v=3" alt="IMS">'}<b>${P.teamPack && P.tn ? esc(P.tn) : P.n.replace(' Pack', '')}</b><small>PACK · ${CK_N} CARDS</small></div><i class="ckp-crimp b"></i></div>`; };
