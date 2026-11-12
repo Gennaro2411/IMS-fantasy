@@ -3045,6 +3045,10 @@
     #page-my-team .mt-dc-nm{font:italic 900 1.14rem/1.05 'Barlow Condensed',sans-serif!important;text-transform:uppercase;letter-spacing:.3px;padding-right:2px}
     #page-my-team .mt-dc-div{border-radius:999px!important;padding:2px 8px!important;border:none!important;background:color-mix(in srgb,var(--tc) 55%,#15122b)!important;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--tc) 80%,#fff)}
     #page-my-team .mt-dc-lg{height:14px!important}
+    #page-my-team .mt-cc{border-radius:18px!important;border-color:color-mix(in srgb,var(--tc) 85%,#fff)!important;background:repeating-linear-gradient(115deg,rgba(255,255,255,.055) 0 2px,transparent 2px 15px),linear-gradient(100deg,color-mix(in srgb,var(--tc) 62%,#15122b),color-mix(in srgb,var(--tc) 30%,#100e1f) 50%,color-mix(in srgb,var(--tc) 16%,#0d0b19))!important}
+    #page-my-team .mt-cc .mt-dc-st{background:linear-gradient(90deg,var(--tc),#a779e6 50%,#f0487a 82%,transparent)!important}
+    #page-my-team .mt-cc-lg{width:68px!important;height:52px!important;border-radius:14px!important;padding:6px;border:none!important;background:rgba(8,7,15,.5)!important;box-shadow:0 0 0 1.5px color-mix(in srgb,var(--tc) 70%,#fff)}
+    #page-my-team .mt-cc .mt-dc-nm{font-size:1.3rem!important;margin-top:3px}
     @media (max-width:520px){#page-my-team .mt-dc-nm{font-size:.98rem!important}#page-my-team .mt-dc-ph{width:48px!important;height:56px!important}#page-market .mkt-name>span:not(.mkt-pill){font-size:1.04rem}}
     /* Market rows — same treatment */
     #page-market .mkt-row{border-radius:18px;padding:12px 14px 12px 17px;border-color:color-mix(in srgb,var(--mk-acc,#7c86ff) 75%,rgba(255,255,255,.1));background:repeating-linear-gradient(115deg,rgba(255,255,255,.05) 0 2px,transparent 2px 15px),linear-gradient(100deg,color-mix(in srgb,var(--mk-acc,#7c86ff) 58%,#15122b),color-mix(in srgb,var(--mk-acc,#7c86ff) 26%,#100e1f) 45%,color-mix(in srgb,var(--mk-acc,#7c86ff) 12%,#0d0b19))}
@@ -12954,14 +12958,14 @@ async function renderMyTeam() {
     const cAccentMt = cTeamCol ? cTeamCol.accent : '#666677';
     const cBgMt = cTeamCol ? `linear-gradient(160deg, ${cTeamCol.bg.replace('0.08','0.18')}, var(--surface2) 70%)` : 'var(--surface2)';
     const _wcC = !!window._wcNow; window._wcNow = false;
-    html += '<div data-div="CONSTRUCTOR" class="mt-hov'+(_wcC?' wc-flip':'')+'" data-logo="'+esc(constr.logo || (typeof getTeamLogo==='function' ? getTeamLogo(constr.name) : '') || '')+'" style="border-radius:14px;border:1px solid '+(cTeamCol?cTeamCol.border:'var(--border)')+';background:'+cBgMt+';cursor:pointer;margin-bottom:16px;position:relative;overflow:hidden" onclick="openConstructorModal(\''+constr.id+'\')">';
+    html += '<div data-div="CONSTRUCTOR" class="mt-hov mt-cc'+(_wcC?' wc-flip':'')+'" data-logo="'+esc(constr.logo || (typeof getTeamLogo==='function' ? getTeamLogo(constr.name) : '') || '')+'" style="--tc:'+cAccentMt+';border-radius:14px;border:1px solid '+(cTeamCol?cTeamCol.border:'var(--border)')+';background:'+cBgMt+';cursor:pointer;margin-bottom:16px;position:relative;overflow:hidden" onclick="openConstructorModal(\''+constr.id+'\')">';
     if (_wcC) html += '<div class="wc-back" style="position:absolute;inset:0;z-index:99"><div class="wc-face"><b class="wc-c tl">IMS</b><div class="wc-oval"><img src="icons/icon-192.png?v=3" alt="" onerror="this.remove()"><small>WILDCARD</small></div><b class="wc-c br">IMS</b></div></div>';
-    html += '<div style="height:3px;background:linear-gradient(90deg,'+cAccentMt+',transparent 85%)"></div>';
+    html += '<div class="mt-dc-st" style="height:3px;background:linear-gradient(90deg,'+cAccentMt+',transparent 85%)"></div>';
     html += '<div style="display:flex;align-items:center;gap:12px;padding:10px 14px 12px;position:relative">';
-    html += '<div style="width:44px;height:44px;border-radius:8px;border:1px solid '+cAccentMt+'55;display:flex;align-items:center;justify-content:center;background:var(--surface);flex-shrink:0">';
+    html += '<div class="mt-cc-lg" style="width:44px;height:44px;border-radius:8px;border:1px solid '+cAccentMt+'55;display:flex;align-items:center;justify-content:center;background:var(--surface);flex-shrink:0">';
     html += constr.logo ? '<img src="'+esc(constr.logo)+'" style="width:100%;height:100%;object-fit:contain" onerror="this.parentElement.innerHTML=\'🏎\'">':'🏎';
-    html += '</div><div style="flex:1"><div style="font-size:.56rem;font-weight:800;letter-spacing:.5px;color:#fff;background:'+cAccentMt+'33;border:1px solid '+cAccentMt+'66;border-radius:4px;padding:1px 5px;display:inline-block">CONSTRUCTOR</div>';
-    html += '<div style="font-weight:700;font-size:.95rem">'+esc(constr.name)+'</div>';
+    html += '</div><div style="flex:1"><div style="font-size:.56rem;font-weight:800;letter-spacing:.5px;color:#fff;background:'+cAccentMt+'33;border:1px solid '+cAccentMt+'66;border-radius:4px;padding:1px 5px;display:inline-block" class="mt-dc-div">CONSTRUCTOR</div>';
+    html += '<div class="mt-dc-nm" style="font-weight:700;font-size:.95rem">'+esc(constr.name)+'</div>';
     html += '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px">'+(cPrice!==null?'<span class="mt-tag sm">$'+cPrice.toFixed(1)+'M</span>':'')+(cPriceChangeStr||'')+'</div>';
     html += '</div>';
     if (cpts !== null) html += '<div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:900;font-size:1.4rem;color:var(--gold);text-align:right;flex-shrink:0"><span data-countup="'+cpts+'">'+cpts+'</span><span style="font-size:.6rem;color:var(--muted);display:block">pts</span></div>';
