@@ -36925,7 +36925,7 @@ window.ckBuy = async function(id, gi) { if (!_ckCan() || window._ckBusy) return;
     if (got.length < CK_N) { window._ckBusy = false; return showToast('Not enough cards in the pool for that pack yet.', 'error'); }
     const _ord = x => x.sp ? 1 : x.t === 'dia' ? 2 : 0; got.sort((a, b) => _ord(a) - _ord(b) || a.r - b.r || a.sc - b.sc); // worst first; specials last unless a Diamond follows
     if (!gift) c.balance -= P.price; const K = c.cards = c.cards || { inv: {} }; if (gift) { K.gifts.splice(gi, 1); K.giftsOpened = (K.giftsOpened || 0) + 1; } K.inv = K.inv || {};
-    K.dex = K.dex || {}; Object.keys(K.inv).forEach(k => { if (K.inv[k] > 0) K.dex[k] = 1; }); got.forEach((x, i) => { got[i] = x = Object.assign({}, x, { dup: !!(K.inv[x.k] > 0 || K.dex[x.k]) }); K.inv[x.k] = (K.inv[x.k] || 0) + 1; K.dex[x.k] = 1; }); K.packs = (K.packs || 0) + 1; if (!gift) { if (!K.day || K.day.d !== _ckDay()) K.day = { d: _ckDay() }; K.day[id] = (K.day[id] || 0) + 1; K.spent = (K.spent || 0) + P.price;
+    K.dex = K.dex || {}; Object.keys(K.inv).forEach(k => { if (K.inv[k] > 0) K.dex[k] = 1; }); got.forEach((x, i) => { got[i] = x = Object.assign({}, x, { dup: K.inv[x.k] > 0, nw: !K.dex[x.k] }); K.inv[x.k] = (K.inv[x.k] || 0) + 1; K.dex[x.k] = 1; }); K.packs = (K.packs || 0) + 1; if (!gift) { if (!K.day || K.day.d !== _ckDay()) K.day = { d: _ckDay() }; K.day[id] = (K.day[id] || 0) + 1; K.spent = (K.spent || 0) + P.price;
     K.log = (K.log || []).concat([{ t: Date.now(), p: id, f: P.price }]).slice(-300); } // pack spend log (for the book, like spin fees)
     const big = got.filter(x => x.r >= CK_FEED_MIN); if (big.length) c.cardPulls = (c.cardPulls || []).concat(big.map(x => ({ k: x.k, n: x.n, r: x.r, t: Date.now(), p: id, by: _wdMe().name }))).slice(-40);
     await dbSet('coins', currentUser.userId, c); _ckSetPill(c); window._ckFeed = null;
@@ -36992,7 +36992,7 @@ window.ckNext = function() { const R = window._ckRv, st = document.getElementByI
   if (R.i >= R.got.length) return _ckSummary();
   const c = R.got[R.i], last = R.i === R.got.length - 1, hot = c.r >= 70;
   st.innerHTML = `<div class="ck-rv${last ? ' last' : ''}${hot ? ' hot' : ''} t-${c.t}" onclick="ckFlip()"><div class="ck-cnt">Card ${R.i + 1} of ${R.got.length}${last ? ' · the best one' : ''}</div>
-    <div class="ck-flip" id="ck-flip"><div class="ck-back t-${c.t}"><img src="icons/icon-192.png?v=3" alt=""><b>${last ? 'BEST CARD' : 'TAP TO REVEAL'}</b></div><div class="ck-front">${c.dup ? '<span class="ck-dup ck-dup-tag">DUPLICATE</span>' : '<span class="ck-dup new ck-dup-tag">NEW</span>'}${_ckCard(c)}</div></div>
+    <div class="ck-flip" id="ck-flip"><div class="ck-back t-${c.t}"><img src="icons/icon-192.png?v=3" alt=""><b>${last ? 'BEST CARD' : 'TAP TO REVEAL'}</b></div><div class="ck-front">${c.dup ? '<span class="ck-dup ck-dup-tag">DUPLICATE</span>' : c.nw ? '<span class="ck-dup new ck-dup-tag">NEW</span>' : ''}${_ckCard(c)}</div></div>
     <div class="ck-rvb" id="ck-rvb">Tap the card</div></div>`; };
 window.ckFlip = function() { const f = document.getElementById('ck-flip'), R = window._ckRv; if (!f || !R) return; if (f.classList.contains('on')) return ckNext();
   const c = R.got[R.i]; f.classList.add('on'); f.parentElement.classList.add('shown');
@@ -37003,7 +37003,7 @@ function _ckSummary() { const R = window._ckRv, st = document.getElementById('ck
   const tot = R.got.reduce((a, c) => a + _ckSellV(c), 0), selN = Object.keys(R.sell).length, selV = R.got.reduce((a, c, i) => a + (R.sell[i] ? _ckSellV(c) : 0), 0);
   st.innerHTML = `<div class="ck-sum"><div class="ck-k">${P.n} opened</div><div class="ck-ttl">YOUR <em>CARDS</em></div>
     <div class="ck-sub">Pack value <b>${tot.toLocaleString()} IM$</b> ${R.gift ? '· 🎁 free pack' : `· you paid ${P.price.toLocaleString()} IM$ · <span class="${tot >= P.price ? 'up' : 'dn'}">${tot >= P.price ? '+' : '−'}${Math.abs(tot - P.price).toLocaleString()}</span>`}</div>
-    <div class="ck-row">${R.got.map((c, i) => `<div class="ck-pick${R.sell[i] ? ' sell' : ''}">${c.dup ? '<span class="ck-dup ck-dup-tag">DUPLICATE</span>' : '<span class="ck-dup new ck-dup-tag">NEW</span>'}${_ckCard(c)}<div class="ck-pb"><button class="${R.sell[i] ? '' : 'on'}" onclick="ckMark(${i},0)">Keep</button><button class="${R.sell[i] ? 'on s' : ''}" onclick="ckMark(${i},1)">Sell <i class="imc"></i> ${_ckSellV(c).toLocaleString()}</button></div></div>`).join('')}</div>
+    <div class="ck-row">${R.got.map((c, i) => `<div class="ck-pick${R.sell[i] ? ' sell' : ''}">${c.dup ? '<span class="ck-dup ck-dup-tag">DUPLICATE</span>' : c.nw ? '<span class="ck-dup new ck-dup-tag">NEW</span>' : ''}${_ckCard(c)}<div class="ck-pb"><button class="${R.sell[i] ? '' : 'on'}" onclick="ckMark(${i},0)">Keep</button><button class="${R.sell[i] ? 'on s' : ''}" onclick="ckMark(${i},1)">Sell <i class="imc"></i> ${_ckSellV(c).toLocaleString()}</button></div></div>`).join('')}</div>
     <div class="ck-acts"><button class="hx-btn" onclick="ckDone()">${selN ? `Sell ${selN} for ${selV.toLocaleString()} IM$${selN < R.got.length ? ' · keep the rest' : ''}` : 'Keep all 3'}</button>
       <button class="hx-btn ghost" onclick="ckMark(-1,1)">Quick sell all · ${tot.toLocaleString()} IM$</button></div>
     <div class="ck-fine">Kept cards go to your collection. You can sell them from there any time.</div></div>`; }
