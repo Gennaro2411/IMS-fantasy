@@ -3807,6 +3807,9 @@
     .ma-tot{display:flex;justify-content:space-between;align-items:center;margin:12px 2px 0;padding:11px 14px;border-radius:12px;background:rgba(247,207,85,.08);box-shadow:inset 0 0 0 1px rgba(247,207,85,.3)}.ma-tot span{font-size:.66rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#d8c48a}.ma-tot b{font-family:'Titillium Web',sans-serif;font-weight:900;font-size:1.6rem;color:#ffe083}
     .ma-tot.pop b{animation:ppPop .5s ease}
     .ma-acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.ma-acts .hx-btn{justify-content:center}.ma-acts .hx-btn:disabled{opacity:.45;cursor:default}
+    .ma-info{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;background:none;padding:0}.ma-info span{font-size:.74rem;padding:6px 11px;border-radius:999px;background:rgba(255,255,255,.06);color:#c9cbe8;display:inline-flex;align-items:center;gap:4px}.ma-info b{color:#ffe083}
+    .ma-was{font-size:.9rem;color:#8b8fb8;text-decoration:line-through;margin-right:4px}
+    .ma-slipb{margin:4px 0 6px;padding:7px 10px;border-radius:10px;font-size:.76rem;background:linear-gradient(110deg,rgba(111,116,232,.2),rgba(240,72,122,.2));box-shadow:inset 0 0 0 1px rgba(177,132,232,.4)}.ma-slipb s{color:#8b8fb8;margin-left:4px}
     .ma-fine{font-size:.66rem;color:#6f7299;margin-top:10px}
     @media (prefers-reduced-motion:reduce){.ma-ad-reels i,.ma-lights i{animation:none}}
     .pp-board{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 6px;text-align:left}
@@ -8752,6 +8755,7 @@ window.refreshCurrentPage = async function(btn) {
 
 // ===== IM$ WALLET =====
 const _wlFmt = (n) => Math.round(n || 0).toLocaleString();
+window._wlShort = (n) => _wlShort(n);
 const _wlShort = (n) => { n = Math.round(n || 0); return Math.abs(n) >= 1e6 ? (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M' : Math.abs(n) >= 1e4 ? (n / 1e3).toFixed(1).replace(/\.0$/, '') + 'k' : n.toLocaleString(); };
 // The vault behind the balance: the more IM$ you hold, the fuller it gets (7 levels, and it keeps growing inside each level).
 const WL_TIERS = [[0, 'Bare vault', 'Just dust and a spider'], [150, 'Loose change', 'A few coins on the floor'], [1000, 'Starter stash', 'The first stacks are up'], [5000, 'Stacking up', 'Gold bars have arrived'], [20000, 'Loaded', 'Bars, bags and tall stacks'], [50000, 'Treasure room', 'Gems on top of the gold'], [100000, 'Overflowing', 'The vault can\'t hold it all'], [250000, 'Gold Tower', 'The vault got its own skyscraper'], [500000, 'Treasure Island', 'Your own island, made of gold'], [1000000, 'Planet IM$', 'A vault was never going to be enough']];
@@ -31670,13 +31674,13 @@ window.renderBets = async function(dry) {
   const _foldName = (n) => n === 1 ? 'Single' : n === 2 ? 'Double' : n === 3 ? 'Treble' : n + '-Fold';
   const _clash = _betLegClashes(_legs);
   const _bb = _legs.length > 1 ? _bbPrice(_legs) : null;
-  const _combOdds = _bb && !_bb.impossible ? _bb.odds : Math.round(_legs.reduce((a, l) => a * l.odds, 1) * 100) / 100;
+  const _maOn = window._maIsSlip && window._maIsSlip(_legs), _combOdds0 = _bb && !_bb.impossible ? _bb.odds : Math.round(_legs.reduce((a, l) => a * l.odds, 1) * 100) / 100, _combOdds = _maOn ? Math.round(_combOdds0 * MA_BOOST * 100) / 100 : _combOdds0;
   const _bbNote = (_bb && _bb.capped && !_bb.impossible ? `<div class="bo-bb">🧢 <b>Max odds reached</b> — multis are capped at ${fmtOdds(BET_MAX_MULTI)}.</div>` : '') + (_bb && _bb.impossible ? `<div class="bo-bb bad">⛔ These picks can't all happen in the same race — remove one.</div>` : _bb && _bb.factor > 1.02 ? `<div class="bo-bb">🧩 <b>Bet builder price</b> — linked picks in ${_bb.groups.filter(g => g.factor > 1.02).map(g => esc(g.div)).join(', ')} priced together <span>(${fmtOdds(_bb.raw)} if they were unrelated)</span></div>` : '');
   const _stk0 = Math.min(window._betStake || 50, coins.balance);
   const slipHtml = _legs.length ? `<div class="bo-slip">
       <div class="bo-slip-h"><span>Bet slip · <b style="color:#fff">${_foldName(_legs.length)}</b> <i class="bo-slip-n">${_legs.length}</i></span><button onclick="betClearSlip()" title="Clear slip">✕</button></div>
       <div class="bo-legs">${_legs.map(l => `<div class="bo-leg${_clash.has(l.key) ? ' clash' : ''}"><div><b>${esc(l.label)}</b><small>${esc(l.div)}${_clash.has(l.key) ? (legs => { const c = _betCanon(l); return c && legs.some(o => o !== l && _betCanon(o) === c) ? ' · ⚠ same outcome as another pick' : ' · ⚠ can\'t combine with another pick'; })(_legs) : ''}</small></div><span>${fmtOdds(l.odds)}</span><button onclick="betRemoveLeg('${l.key}')" title="Remove">✕</button></div>`).join('')}</div>
-      ${_bbNote}<div class="bo-slip-o">${_legs.length > 1 ? 'Combined odds' : 'Odds'} <b>${fmtOdds(_combOdds)}</b> · <span style="font-size:.7rem">${_legs.length > 1 ? 'every pick must come in' : 'locked in when you place'}</span></div>
+      ${_bbNote}${_maOn ? `<div class="ma-slipb">🎰 <b>Mystery Acca</b> · ×${MA_BOOST} boost <s>${fmtOdds(_combOdds0)}</s></div>` : ''}<div class="bo-slip-o">${_legs.length > 1 ? 'Combined odds' : 'Odds'} <b>${fmtOdds(_combOdds)}</b> · <span style="font-size:.7rem">${_legs.length > 1 ? 'every pick must come in' : 'locked in when you place'}</span></div>
       ${_haveFree ? `<div class="bo-free" style="display:block"><div style="margin-bottom:6px">🎁 <b>Use a free bet</b> <span style="font-size:.72rem;opacity:.75">(you keep the winnings, not the stake)</span></div><div style="display:flex;gap:6px;flex-wrap:wrap">${['odds', 'acca'].map(k => { const why = _betFreeWhyNot(k, _legs, _combOdds), on = window._betUseFree === k;
           return `<button class="btn btn-sm ${on ? 'btn-primary' : 'btn-secondary'}" style="flex:1;min-width:140px${why ? ';opacity:.5' : ''}" ${why ? 'disabled title="' + why + '"' : ''} onclick="window._betUseFree=${on ? 'false' : `'${k}'`};renderBets()">${BET_FREE_OPTS[k].stake} <i class="imc"></i> ${k === 'odds' ? 'odds 2.5+' : '3+ leg acca, odds 5+'}${why ? `<br><small>${why}</small>` : ''}</button>`; }).join('')}</div></div>` : ''}
       <div class="bo-slip-row"${window._betUseFree ? ' style="opacity:.4;pointer-events:none"' : ''}><input id="bo-stake" type="number" min="${BET_MIN_STAKE}" max="${coins.balance}" value="${_stk0}" oninput="betStakeInput()">
@@ -31696,7 +31700,7 @@ window.renderBets = async function(dry) {
         ${canRefill ? `<button class="btn btn-secondary btn-sm" style="margin-top:6px" onclick="betRefill()">⛽ Pit stop refill +${BET_REFILL_COINS}</button>` : ''}</div>
     </div>
     <div class="bo-ticker" id="bo-ticker">${_betTickerHtml(window._betAllBets || [], teamBy)}</div>
-    ${upcoming ? `<button class="ma-ad" onclick="maOpen()"><span class="ma-ad-reels"><i>🎰</i></span><span class="ma-ad-t"><small>NEW · MYSTERY ACCA</small><b>Spin the reels, get a random acca</b><span>3, 4 or 5 legs picked at random from today's ${esc(div)} markets</span></span><span class="ma-ad-go">SPIN →</span></button>` : ''}
+    ${upcoming ? `<button class="ma-ad" onclick="maOpen()"><span class="ma-ad-reels"><i>🎰</i></span><span class="ma-ad-t"><small>NEW · MYSTERY ACCA</small><b>Spin for a random acca — odds boosted ×1.25</b><span>3 to 6 random legs from today's ${esc(div)} markets · 100 IM$ a spin</span></span><span class="ma-ad-go">SPIN →</span></button>` : ''}
     ${(upcoming && (upcoming.isSprint || (window._isSprintWeekend && window._isSprintWeekend(upcoming)))) ? `<button class="bo-sprint-ad rh-charged-ad" onclick="window._betSec=null;betSec('sprint');const el=document.querySelector('#page-bets .bo-sec[data-sec=sprint]');if(el)el.scrollIntoView({behavior:'smooth',block:'start'})">
       ${window.sprintZapSvg(4, 50, 10)}${window.sprintTagHtml('Reverse grid')}
       <span class="bo-sprint-ad-txt"><span>${esc(String(upcoming.name).replace(/\s*\(sprint\)\s*/i, ''))} · SPRINT BETS OPEN</span><b>Bet on the sprint — the leaders start <i>last</i></b><small>Sprint winner &amp; podium in every division · grid is the championship in reverse</small></span>
@@ -32803,7 +32807,12 @@ window.betLockClearAll = () => { if (!adminLoggedIn || !confirm('Unlock every lo
 // ===== MYSTERY ACCA (bet builder roulette) =====
 // Spins 3–5 reels; each lands on a random open pick from the division on screen (one per market, no repeats).
 // Picks come from the same odds buttons the page just drew, so locks, backed bets and prices all match.
-window._maN = window._maN || 4;
+const MA_FEE = 100, MA_BOOST = 1.25;
+// Spin fee: 100 IM$ for the first spin of the race week, +100 for every spin after that (resets each round).
+const _maFee = (c) => { const r = window._betCtx && window._betCtx.upcoming && window._betCtx.upcoming.name; return MA_FEE * (1 + (c && c.maRace === r ? (c.maSpins || 0) : 0)); };
+// Is the slip exactly the mystery acca that was spun? (only then does it get the 1.25× boost)
+window._maIsSlip = function(legs) { const m = window._maSlip, r = window._betCtx && window._betCtx.upcoming && window._betCtx.upcoming.name;
+  if (!m || m.race !== r || !legs || legs.length !== m.keys.length) return false; const k = new Set(legs.map(l => l.key)); return m.keys.every(x => k.has(x)); };
 function _maPool() { const R = window._betReg || { list: [] }, seen = new Set();
   return R.list.filter(x => x.odds >= 1.3 && x.odds <= 9 && !seen.has(x.market + ':' + x.sel.join('-')) && seen.add(x.market + ':' + x.sel.join('-'))); }
 function _maDraw(n) { const P = _maPool(), byM = {}; P.forEach(x => (byM[x.market] = byM[x.market] || []).push(x));
@@ -32816,35 +32825,44 @@ window.maOpen = function() {
   document.getElementById('ma-modal')?.remove();
   const m = document.createElement('div'); m.id = 'ma-modal'; m.className = 'ma-ov'; m.onclick = (e) => { if (e.target === m) maClose(); };
   m.innerHTML = `<div class="ma-box"><button class="ma-x" onclick="maClose()">✕</button><div class="ma-k">BET BUILDER ROULETTE</div><div class="ma-ttl">MYSTERY <em>ACCA</em></div>
-    <div class="ma-sub">${esc(window._betDiv || '')} · pick how many legs, then pull the lever</div>
-    <div class="ma-legs">${[3, 4, 5].map(n => `<button data-n="${n}" class="${window._maN === n ? 'on' : ''}" onclick="maSetN(${n})">${n} legs</button>`).join('')}</div>
+    <div class="ma-sub">${esc(window._betDiv || '')} · 3 to 6 random legs · odds boosted ×${MA_BOOST}</div>
+    <div class="ma-legs ma-info"><span>🎰 Spin cost <b id="ma-fee">…</b> <i class="imc"></i></span><span>🚀 <b>×${MA_BOOST}</b> boost</span><span>💰 You have <b id="ma-bal">…</b></span></div>
     <div class="ma-mach"><div class="ma-lights">${'<i></i>'.repeat(14)}</div><div class="ma-reels" id="ma-reels"></div></div>
     <div class="ma-tot" id="ma-tot"><span>Total odds</span><b>?</b></div>
-    <div class="ma-acts"><button class="hx-btn" id="ma-spin" onclick="maSpin()">🎰 SPIN</button><button class="hx-btn ghost" id="ma-take" onclick="maTake()" disabled>Add to slip</button></div>
-    <div class="ma-fine">Odds are the normal prices on the page. Linked picks are re-priced together on your slip.</div></div>`;
-  document.body.appendChild(m); requestAnimationFrame(() => m.classList.add('in')); window._maRes = null; _maIdle(); };
-window.maSetN = function(n) { if (window._maSpin) return; window._maN = n; document.querySelectorAll('#ma-modal .ma-legs button').forEach(b => b.classList.toggle('on', +b.dataset.n === n)); window._maRes = null; _maIdle(); };
+    <div class="ma-acts"><button class="hx-btn" id="ma-spin" onclick="maSpin()" disabled>🎰 SPIN</button><button class="hx-btn ghost" id="ma-take" onclick="maTake()" disabled>Add to slip</button></div>
+    <div class="ma-fine">The spin cost is paid each spin and isn't refunded. It starts at ${MA_FEE} and goes up by ${MA_FEE} with every spin this race week. The ×${MA_BOOST} boost applies when you place the acca exactly as spun (linked picks are re-priced together first).</div></div>`;
+  document.body.appendChild(m); requestAnimationFrame(() => m.classList.add('in')); window._maRes = null; window._maN = 4; _maIdle(); _maFeeUi(); };
+async function _maFeeUi() { if (typeof currentUser === 'undefined' || !currentUser || !currentUser.userId) { const b = document.getElementById('ma-spin'); if (b) { b.textContent = 'Log in to spin'; b.disabled = true; } return; }
+  const c = await _betLoadCoins(currentUser.userId).catch(() => null); if (!c) return; const fee = _maFee(c), f = document.getElementById('ma-fee'), bl = document.getElementById('ma-bal'), b = document.getElementById('ma-spin'); if (!f) return;
+  f.textContent = fee.toLocaleString(); bl.textContent = Math.round(c.balance || 0).toLocaleString(); if (!window._maSpin) { b.disabled = (c.balance || 0) < fee; b.textContent = (c.balance || 0) < fee ? 'Not enough IM$' : (window._maRes ? '🎰 SPIN AGAIN · ' : '🎰 SPIN · ') + fee.toLocaleString(); } }
+window._maUnusedSetN = function(n) { if (window._maSpin) return; window._maN = n; document.querySelectorAll('#ma-modal .ma-legs button').forEach(b => b.classList.toggle('on', +b.dataset.n === n)); window._maRes = null; _maIdle(); };
 function _maIdle() { const R = document.getElementById('ma-reels'); if (!R) return;
   R.innerHTML = Array.from({ length: window._maN }, (_, i) => `<div class="ma-reel"><div class="ma-win"><div class="ma-strip"><div class="ma-cell q"><b>?</b></div></div></div></div>`).join('');
   document.querySelector('#ma-tot b').textContent = '?'; document.getElementById('ma-take').disabled = true; }
 const _maCell = (x) => `<div class="ma-cell"><small>${esc(x.label)}</small><b>${fmtOdds(x.odds)}</b></div>`;
-window.maSpin = function() { if (window._maSpin) return; const res = _maDraw(window._maN);
-  if (res.length < 2) { if (typeof showToast === 'function') showToast('Not enough different markets open to build an acca.', 'error'); return; }
-  window._maSpin = true; window._maRes = res; const P = _maPool(), R = document.getElementById('ma-reels'), H = 64;
+window.maSpin = async function() { if (window._maSpin || typeof currentUser === 'undefined' || !currentUser) return; window._maSpin = true;
+  const want = 3 + Math.floor(Math.random() * 4), res = _maDraw(want);
+  if (res.length < 3) { window._maSpin = false; if (typeof showToast === 'function') showToast('Not enough different markets open to build an acca.', 'error'); return; }
+  try { const c = await _betLoadCoins(currentUser.userId), fee = _maFee(c), r = window._betCtx.upcoming.name;
+    if ((c.balance || 0) < fee) { window._maSpin = false; _maFeeUi(); if (typeof showToast === 'function') showToast('You need ' + fee + ' IM$ to spin.', 'error'); return; }
+    c.balance -= fee; c.maSpins = (c.maRace === r ? (c.maSpins || 0) : 0) + 1; c.maRace = r; c.maSpent = (c.maSpent || 0) + fee; await dbSet('coins', currentUser.userId, c);
+    const pill = document.getElementById('wallet-amt'); if (pill && window._wlShort) pill.textContent = _wlShort(c.balance);
+  } catch (e) { window._maSpin = false; if (typeof showToast === 'function') showToast('Couldn\'t take the spin cost — try again.', 'error'); return; }
+  window._maN = res.length; window._maRes = res; const P = _maPool(), R = document.getElementById('ma-reels'), H = 64;
   document.getElementById('ma-spin').disabled = true; document.getElementById('ma-take').disabled = true; document.querySelector('#ma-tot b').textContent = '…';
   R.innerHTML = res.map((x, i) => { const n = 14 + i * 5, filler = Array.from({ length: n }, () => P[Math.floor(Math.random() * P.length)]);
     return `<div class="ma-reel"><div class="ma-win"><div class="ma-strip" style="--h:${H}px;--to:${-(n) * H}px;--d:${1.3 + i * .45}s">${filler.map(_maCell).join('')}${_maCell(x)}</div></div></div>`; }).join('');
   try { _ptSnd.tick && _ptSnd.tick(); } catch (e) {}
   R.querySelectorAll('.ma-strip').forEach((el, i) => { requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('go')));
     el.addEventListener('transitionend', () => { el.closest('.ma-reel').classList.add('hit'); try { _ptSnd.ding && _ptSnd.ding(); } catch (e) {}
-      if (i === res.length - 1) { const tot = res.reduce((a, x) => a * x.odds, 1); const b = document.querySelector('#ma-tot b'); if (b) b.textContent = fmtOdds(Math.round(tot * 100) / 100);
-        document.getElementById('ma-tot').classList.add('pop'); window._maSpin = false; document.getElementById('ma-spin').disabled = false; document.getElementById('ma-spin').textContent = '🎰 SPIN AGAIN'; document.getElementById('ma-take').disabled = false;
+      if (i === res.length - 1) { const tot = res.reduce((a, x) => a * x.odds, 1) * MA_BOOST; const b = document.querySelector('#ma-tot b'); if (b) b.innerHTML = `<small class="ma-was">${fmtOdds(Math.round(tot / MA_BOOST * 100) / 100)}</small> 🚀 ${fmtOdds(Math.round(tot * 100) / 100)}`;
+        document.getElementById('ma-tot').classList.add('pop'); window._maSpin = false; _maFeeUi(); document.getElementById('ma-take').disabled = false;
         if (tot >= 20) { try { fireConfetti({ count: 70 }); } catch (e) {} } } }, { once: true }); }); };
 window.maTake = function() { const res = window._maRes; if (!res || window._maSpin) return; const div = window._betDiv;
   if ((window._betLegs || []).some(l => l.market === 'special')) window._betLegs = [];
-  const legs = window._betLegs = (window._betLegs || []).filter(l => l.div !== div || !res.some(x => x.market === l.market));
-  res.forEach(x => { const key = div + '|' + x.market + ':' + x.sel.join('-'); if (!legs.some(l => l.key === key) && legs.length < 10) legs.push({ key, div, market: x.market, sel: x.sel.slice(), odds: x.odds, label: x.label }); });
-  maClose(); renderBets(); if (typeof showToast === 'function') showToast('🎰 Mystery acca added to your slip — set your stake and place it.', 'success');
+    window._betLegs = []; const L2 = window._betLegs; res.forEach(x => { const key = div + '|' + x.market + ':' + x.sel.join('-'); L2.push({ key, div, market: x.market, sel: x.sel.slice(), odds: x.odds, label: x.label }); });
+  window._maSlip = { race: window._betCtx.upcoming.name, keys: L2.map(l => l.key) }; window._betUseFree = false;
+  maClose(); renderBets(); if (typeof showToast === 'function') showToast('🎰 Mystery acca on your slip with the ×' + MA_BOOST + ' boost — set your stake and place it.', 'success');
   setTimeout(() => { const el = document.getElementById('bo-stake') || document.querySelector('#page-bets .bo-slip'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 300); };
 window.betPick = function(market, selCsv, odds, label) {
   if (window._betIsLocked(window._betDiv, market, String(selCsv).split(','))) { if (typeof showToast === 'function') showToast('🔒 This bet is locked by the admins.', 'error'); return; }
@@ -32970,15 +32988,17 @@ window.betPlace = async function() {
     const _bbp = _bbPrice(legs); if (_bbp.impossible) return err('These picks can\'t all happen in the same race — remove one.');
     odds = _bbp.odds;
     const n = legs.length; label = n === 2 ? 'Double' : n === 3 ? 'Treble' : n + '-Fold';
+    const _ma = window._maIsSlip && window._maIsSlip(legs), _lm = _ma ? Math.pow(MA_BOOST, 1 / n) : 1, _base = odds; if (_ma) { odds = Math.round(odds * MA_BOOST * 100) / 100; label = '🎰 Mystery ' + label; }
     doc = { id, userId: currentUser.userId, raceName: ctx.upcoming.name, div: 'ACCA', market: 'acca', sel: [], label, odds, stake, status: 'open', placedAt: Date.now(),
-      legs: legs.map(l => ({ div: l.div, market: l.market, sel: l.sel, selNames: l.sel.map(x => (window._betNames || {})[x] || null), odds: l.odds, label: l.label })) };
+      legs: legs.map(l => ({ div: l.div, market: l.market, sel: l.sel, selNames: l.sel.map(x => (window._betNames || {})[x] || null), odds: Math.round(l.odds * _lm * 1000) / 1000, label: l.label })) };
+    if (_ma) { doc.mystery = 1; doc.baseOdds = _base; }
   }
   if (useFree) { doc.free = true; doc.label = '🎁 ' + doc.label; label = doc.label; }
   await dbSet('bets', id, doc);
   if (useFree) { if (coins.freeBetGifts > 0) { coins.freeBetGifts--; doc.gifted = true; await dbSet('bets', id, doc); } else coins.freeBetUsed = ctx.upcoming.name; window._betUseFree = false; } else { coins.balance -= stake; coins.staked = (coins.staked || 0) + stake; }
   coins.betsPlaced = (coins.betsPlaced || 0) + 1;
   await dbSet('coins', currentUser.userId, coins);
-  window._betLegs = [];
+  window._betLegs = []; window._maSlip = null;
   if (typeof showToast === 'function') showToast('🎟 ' + label + ' placed @ ' + fmtOdds(odds), 'success');
   renderBets();
 };
