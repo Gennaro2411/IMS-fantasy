@@ -36817,23 +36817,26 @@ async function renderCPGame(el) {
 // Hidden from everyone except the admin until settings/gamesLock.cardsOpen is switched on.
 const CK_TIERS = [ // highest first
   { id: 'dia', n: 'Diamond', lo: 92, sell: r => 5000 + (r - 92) * 2500 },
-  { id: 'rg', n: 'Rare Gold', lo: 83, sell: r => 700 + (r - 83) * 200 },
+  { id: 'rg', n: 'Rare Gold', lo: 83, sell: r => 1050 + (r - 83) * 150 },
   { id: 'ug', n: 'Gold', lo: 75, sell: r => 100 + (r - 75) * 20 },
-  { id: 'rs', n: 'Rare Silver', lo: 70, sell: r => 220 + (r - 70) * 50 },
+  { id: 'rs', n: 'Rare Silver', lo: 70, sell: r => 520 + (r - 70) * 60 },
   { id: 'us', n: 'Silver', lo: 60, sell: r => 60 + (r - 60) * 8 },
-  { id: 'rb', n: 'Rare Bronze', lo: 50, sell: r => 100 + (r - 50) * 15 },
+  { id: 'rb', n: 'Rare Bronze', lo: 50, sell: r => 260 + (r - 50) * 15 },
   { id: 'ub', n: 'Bronze', lo: 0, sell: r => 20 + Math.max(0, r - 40) * 2 } ];
 const CK_T = {}; CK_TIERS.forEach(t => CK_T[t.id] = t);
 const _ckTier = (r) => CK_TIERS.find(t => r >= t.lo);
 const _ckSellV = (c) => Math.round(_ckTier(c.r).sell(c.r));
 // odds = chance of each card in the pack being that rarity (must add up to 1)
-const CK_PACKS = { bronze: { n: 'Bronze Pack', price: 250, odds: [['ub', .82], ['rb', .18]], c: '#b4703a', c2: '#5e3516' },
-  silver: { n: 'Silver Pack', price: 500, odds: [['us', .88], ['rs', .12]], c: '#c9d2dc', c2: '#6b7684' },
-  gold: { n: 'Gold Pack', price: 1000, odds: [['ug', .9375], ['rg', .06], ['dia', .0025]], c: '#f7cf55', c2: '#9a6a0c' } };
+const CK_PACKS = { bronze: { n: 'Bronze Pack', price: 250, odds: [['ub', .94], ['rb', .06]], c: '#b4703a', c2: '#5e3516' },
+  silver: { n: 'Silver Pack', price: 500, odds: [['us', .95], ['rs', .05]], c: '#c9d2dc', c2: '#6b7684' },
+  gold: { n: 'Gold Pack', price: 1000, odds: [['ug', .9575], ['rg', .04], ['dia', .0025]], c: '#f7cf55', c2: '#9a6a0c' } };
 const CK_N = 3, CK_FEED_MIN = 83;
 const _ckCan = () => !!(adminLoggedIn || (window._gamesLock || {}).cardsOpen);
 // Rating: score → 40..91 on a curve, +5 for being a champion (+1 per extra title, max +2), capped at 96.
 function _ckRate(w, pd, t5, p, ch) { const sc = 6 * w + 3 * pd + 1.5 * t5 + p / 20; let r = 40 + 51 * (1 - Math.exp(-sc / 90)); if (ch > 0) r += 5 + Math.min(2, ch - 1); return { r: Math.min(96, Math.round(r)), sc }; }
+// Last team the driver raced FULL TIME for (latest season in s.cs; most starts that season).
+function _ckLastFT(s) { const cs = s && s.cs; if (!cs) return ''; const sn = Object.keys(cs).map(Number).filter(n => n && Object.keys(cs[n] || {}).length).sort((a, b) => b - a)[0]; if (!sn) return '';
+  const e = Object.values(cs[sn]).filter(x => x && x.name && !/^reserve$/i.test(x.name)).sort((a, b) => (b.n || 0) - (a.n || 0))[0]; return e ? e.name : ''; }
 async function _ckPool() {
   if (window._ckPoolC && _now() - window._ckPoolC.at < 10 * 60e3) return window._ckPoolC;
   if (!window._wordleData) { const d = await dbGet('settings', 'wordleData').catch(() => null); window._wordleData = window._wdDecode(d && d.value); }
@@ -36845,7 +36848,7 @@ async function _ckPool() {
     const w = s.w || 0, p = Math.round(s.p || 0), pd = Math.max((b ? b[2] || 0 : 0) + (s.pd8 || 0), s.pdA || 0, w);
     const t5 = Math.max(s.t5 != null ? s.t5 : Math.round(pd * 1.6), pd), ch = Math.max(s.ch || 0, chBy[k] || 0), R = _ckRate(w, pd, t5, p, ch);
     const c = { k, n: String((d && d.name) || s.n).replace(/^\[[^\]]*\]\s*/, ''), w, pd, t5, p, ch, r: R.r, sc: R.sc, nat: (typeof _natFix === 'function' ? _natFix(s.n, s.nat) : s.nat) || '',
-      team: d && !d.isReserve && d.team && !/^reserve$/i.test(d.team) ? d.team : '', did: d ? d.id : '', ph: d ? (driverPhoto(d) || '') : '' };
+      team: (d && !d.isReserve && d.team && !/^reserve$/i.test(d.team) ? d.team : '') || _ckLastFT(s), did: d ? d.id : '', ph: d ? (driverPhoto(d) || '') : '' };
     c.t = _ckTier(c.r).id; list.push(c); by[k] = c; });
   list.sort((a, b) => b.r - a.r || b.sc - a.sc);
   return (window._ckPoolC = { at: _now(), list, by, hasT5: Object.values(W.stats || {}).some(s => s && s.t5 != null) }); }
@@ -36876,7 +36879,7 @@ window.ckBuy = async function(id) { if (!_ckCan() || window._ckBusy) return; con
     if (got.length < CK_N) { window._ckBusy = false; return showToast('Not enough cards in the pool for that pack yet.', 'error'); }
     got.sort((a, b) => a.r - b.r || a.sc - b.sc); // worst first, best last
     c.balance -= P.price; const K = c.cards = c.cards || { inv: {} }; K.inv = K.inv || {};
-    got.forEach(x => { K.inv[x.k] = (K.inv[x.k] || 0) + 1; }); K.packs = (K.packs || 0) + 1; K.spent = (K.spent || 0) + P.price;
+    K.dex = K.dex || {}; Object.keys(K.inv).forEach(k => { if (K.inv[k] > 0) K.dex[k] = 1; }); got.forEach(x => { K.inv[x.k] = (K.inv[x.k] || 0) + 1; K.dex[x.k] = 1; }); K.packs = (K.packs || 0) + 1; K.spent = (K.spent || 0) + P.price;
     K.log = (K.log || []).concat([{ t: Date.now(), p: id, f: P.price }]).slice(-300); // pack spend log (for the book, like spin fees)
     const big = got.filter(x => x.r >= CK_FEED_MIN); if (big.length) c.cardPulls = (c.cardPulls || []).concat(big.map(x => ({ k: x.k, n: x.n, r: x.r, t: Date.now(), p: id, by: _wdMe().name }))).slice(-40);
     await dbSet('coins', currentUser.userId, c); _ckSetPill(c); window._ckFeed = null;
@@ -36951,7 +36954,7 @@ async function renderCardsGame(el) {
   const open = !!(window._gamesLock || {}).cardsOpen;
   let body = `<div class="wd-top"><button class="wd-back" onclick="openGame('hub')" title="Back to Games">←</button><div class="wd-brand"><img src="icons/icon-192.png?v=3" alt="IMS"><span>IMS <em>CARDS</em></span></div><div class="wd-meta"><span class="wd-pill"><i class="imc"></i> ${c ? Math.round(c.balance || 0).toLocaleString() : '—'}</span></div></div>
     ${adminLoggedIn ? `<div class="ck-adm"><span>${open ? '🟢 <b>Open to everyone</b>' : '🔒 <b>Only you can see this</b> — players can\'t see IMS Cards yet'}</span><button onclick="ckSetOpen(${open ? 'false' : 'true'})">${open ? 'Hide from players' : 'Let everyone see it'}</button></div>` : ''}
-    <div class="wd-modes">${[['shop', '🛒', 'SHOP'], ['col', '🗂️', `COLLECTION${ownN ? ' · ' + ownN : ''}`], ['feed', '🔥', 'BIG PULLS'], ['all', '📖', 'ALL CARDS']].map(([m, i, l]) => `<button class="${tab === m ? 'on' : ''}" onclick="ckTab('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>`;
+    <div class="wd-modes">${[['shop', '🛒', 'SHOP'], ['col', '🗂️', `COLLECTION${ownN ? ' · ' + ownN : ''}`], ['feed', '🔥', 'BIG PULLS'], ['all', '📖', 'CARD INDEX']].map(([m, i, l]) => `<button class="${tab === m ? 'on' : ''}" onclick="ckTab('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>`;
   if (!me) body += '<div class="alert alert-warning">Log in to your team to buy packs.</div>';
   if (tab === 'shop') { const pct = (x) => (x * 100 >= 1 ? Math.round(x * 100) : (x * 100).toFixed(2).replace(/0$/, '')) + '%';
     body += `<div class="ck-shop">${Object.entries(CK_PACKS).map(([id, P]) => { const can = c && (c.balance || 0) >= P.price;
@@ -36968,9 +36971,10 @@ async function renderCardsGame(el) {
     const rows = window._ckFeed.rows, ago = (t) => { const s = (Date.now() - t) / 1e3; return s < 3600 ? Math.max(1, Math.round(s / 60)) + 'm ago' : s < 86400 ? Math.round(s / 3600) + 'h ago' : Math.round(s / 86400) + 'd ago'; };
     body += `<div class="ck-feed"><div class="wl-sh"><span>Everyone's ${CK_FEED_MIN}+ rated pulls</span><small>newest first</small></div>${rows.length ? rows.map(p => { const card = pool.by[p.k], r = card ? card.r : p.r, t = _ckTier(Math.max(r, p.r)).id;
       return `<div class="ck-fr t-${t}"><b class="ck-fr-r">${p.r}</b><span class="ck-fr-t"><b>${esc(card ? card.n : p.n)}</b><small>${CK_T[t].n} · packed by <u>${esc(p.by || 'a player')}</u> from a ${(CK_PACKS[p.p] || {}).n || 'pack'}</small></span><em>${ago(p.t)}</em></div>`; }).join('') : '<div class="ck-empty">Nobody has packed an 83+ yet. Be the first.</div>'}</div>`; }
-  else { const f = window._ckAllT || 'top', L = f === 'top' ? pool.list.slice(0, 60) : pool.list.filter(x => x.t === f).slice(0, 120);
+  else { const dex = Object.assign({}, K.dex || {}); Object.keys(inv).forEach(k => { if (inv[k] > 0) dex[k] = 1; }); const dexN = pool.list.filter(x => dex[x.k]).length, f = window._ckAllT || 'top', L = f === 'top' ? pool.list.slice(0, 60) : pool.list.filter(x => x.t === f).slice(0, 120);
     body += `<div class="ck-fil">${[['top', 'Top 60']].concat(CK_TIERS.map(t => [t.id, t.n])).map(([id, n]) => `<button class="${f === id ? 'on' : ''}" onclick="window._ckAllT='${id}';renderGames()">${n}</button>`).join('')}</div>
-      <div class="ck-grid">${L.map(x => _ckCard(x, { n: inv[x.k] || 0, cls: inv[x.k] ? '' : 'dim' })).join('')}</div><div class="ck-fine">Every card in the game. Cards you don't own are dimmed.${pool.hasT5 ? '' : ' <b style="color:#ffb020">Top 5 counts are estimated until the league database is loaded again.</b>'}</div>`; }
+      <div class="ck-stats"><div><small>Card index</small><b>${dexN} / ${pool.list.length}</b></div><div><small>Completed</small><b>${pool.list.length ? Math.floor(dexN / pool.list.length * 1000) / 10 : 0}%</b></div></div>
+      <div class="ck-grid">${L.map(x => _ckCard(x, { n: inv[x.k] || 0, cls: dex[x.k] ? '' : 'dim' })).join('')}</div><div class="ck-fine">Your card index — every card in the game. Once you've packed a card it stays unlocked here, even after you sell it. Cards you've never packed are dimmed.${pool.hasT5 ? '' : ' <b style="color:#ffb020">Top 5 counts are estimated until the league database is loaded again.</b>'}</div>`; }
   el.innerHTML = `<div class="wd-wrap ck-wrap">${body}<div class="wd-info"><h3>How IMS Cards work</h3><p>Every driver in the IMS database is a card. A card's <b>rating</b> comes from the driver's <b>wins, podiums, top 5s and points</b> — division doesn't matter — and <b>drivers' champions</b> get a big boost. Ratings update as new results come in, so a card you own can go up or down.</p>
     <p><b>Rarities:</b> Diamond 92+ · Rare Gold 83–91 · Gold 75–82 · Rare Silver 70–74 · Silver 60–69 · Rare Bronze 50–59 · Bronze under 50.</p>
     <p><b>Packs:</b> Bronze ${CK_PACKS.bronze.price}, Silver ${CK_PACKS.silver.price}, Gold ${CK_PACKS.gold.price.toLocaleString()} IM$. Keep cards in your collection or sell them for IM$ at any time.</p></div></div>`; }
