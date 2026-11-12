@@ -1785,6 +1785,7 @@
     <button onclick="showPage('extra')">Extra</button>
     <button onclick="showPage('social')">Social</button>
     <button onclick="showPage('games')">Games</button>
+    <button id="nav-cards-btn" onclick="showPage('cards')" style="display:none">Cards</button>
     <button id="nav-admin-btn" onclick="showPage('admin')" style="display:none">Admin</button>
   </nav>
   <div id="admin-indicator" class="admin-badge" style="display:none">ADMIN</div>
@@ -1946,6 +1947,7 @@
     <button class="sheet-btn" onclick="mobileGo('extra')"><span style="font-size:1.3rem">🧩</span>Extra</button>
     <button class="sheet-btn" onclick="mobileGo('social')"><span style="font-size:1.3rem">💬</span>Social</button>
     <button class="sheet-btn" onclick="mobileGo('games')"><span style="font-size:1.3rem">🎮</span>Games</button>
+    <button id="mobile-cards-btn" class="sheet-btn" onclick="mobileGo('cards')" style="display:none"><span style="font-size:1.3rem">🃏</span>Cards</button>
     <button id="mobile-admin-btn" class="sheet-btn" onclick="mobileGo('admin')" style="display:none"><span style="font-size:1.3rem">🔧</span>Admin</button>
   </div>
 </div>
@@ -4023,7 +4025,7 @@ body.ck-lock>header,body.ck-lock>main,body.ck-lock #mobile-nav{visibility:hidden
     @media (max-width:640px){.ck-shop{grid-template-columns:1fr}.ck-sp{flex-direction:row;flex-wrap:wrap;justify-content:center}.ck-sp .ckp{width:104px;height:146px;margin:0}.ck-sp .ckp-body b{font-size:1.05rem}.ck-sp .ck-odds{flex:1;min-width:150px}.ck-stats{grid-template-columns:1fr 1fr}.ck-row{gap:6px}.ck-pb{grid-template-columns:1fr}.ck-acts{grid-template-columns:1fr}.ck-dt{grid-template-columns:1fr}.ck-dt>.ck{max-width:200px;margin:0 auto}.ck-grid{grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:7px}.ck-vr{grid-template-columns:12px 1.2fr .7fr 1.2fr}.ck-vr span:nth-of-type(2){display:none}}
     @media (prefers-reduced-motion:reduce){.ck-pk .ckp,.ck-pk p,.ck.t-rg .ck-in::before,.ck.t-dia .ck-in::before,.ck-rv.hot .ck-back{animation:none}}
     .ck-dup{display:inline-block;padding:2px 7px;border-radius:6px;font:800 .62rem/1.3 system-ui,sans-serif;letter-spacing:.1em;color:#fff;background:#f0487a;vertical-align:1px}.ck-dup.new{background:#22c55e}.ck-pick{position:relative}.ck-front .ck-dup-tag{top:-11px;font-size:.75rem;padding:3px 10px}.ck-dup-tag{position:absolute;top:-8px;left:50%;transform:translateX(-50%);z-index:3;box-shadow:0 4px 12px -4px #000}
-.ck-wrap .wd-modes{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;width:100%}.ck-wrap .wd-modes button{min-width:0;padding:7px 2px!important;font-size:.66rem!important;letter-spacing:.3px!important;line-height:1.15;flex-direction:column;white-space:normal;overflow-wrap:normal}.ck-wrap .wd-modes button span{display:block}
+
 .ck-gpb{width:min(420px,100%);padding:22px 18px;border-radius:20px;background:linear-gradient(170deg,#15122b,#0b0a14 72%);border:1px solid rgba(177,132,232,.35);text-align:center;box-shadow:0 30px 80px -30px #000}
 .ck-gpl{display:grid;gap:8px;margin:16px 0}.ck-gpi{display:flex;align-items:center;gap:12px;text-align:left;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}.ck-gpi i{flex:none;width:30px;height:40px;border-radius:5px;background:linear-gradient(160deg,var(--c),var(--c2));box-shadow:0 6px 14px -6px #000}.ck-gpi b{display:block;color:#fff}.ck-gpi small{color:#c9cbe8;font-size:.8rem}
 .ck-gfrom{text-align:center;font-size:.8rem;color:#e7e8ff;margin:4px 0 10px}.ck-gfrom small{display:block;color:#9a9cc0;font-size:.68rem;margin-top:2px}
@@ -4044,6 +4046,29 @@ body.ck-lock>header,body.ck-lock>main,body.ck-lock #mobile-nav{visibility:hidden
 .gmm-im{position:absolute;right:-12px;bottom:-4px;display:flex;align-items:center;gap:2px;padding:2px 5px;border-radius:8px;background:#0b0a14;border:1px solid #f5cf5a;font:900 .6rem system-ui,sans-serif;color:#ffd75e}.gmm-ok{position:absolute;top:-6px;right:-8px;width:18px;height:18px;border-radius:50%;background:#22c55e;color:#fff;font:900 .7rem/18px system-ui;box-shadow:0 0 0 2px #0b0a14}
 .gmm-t b{display:block;font:800 .72rem/1.1 system-ui,sans-serif;color:#fff}.gmm-t small{display:block;margin-top:2px;font-size:.6rem;line-height:1.2;color:#9a9cc0;overflow-wrap:anywhere}
 .gmm-next{font-size:.85rem;color:#e7e8ff}.gmm-next small{display:block;margin-top:4px;color:#9a9cc0;font-size:.72rem}
+.ckx{max-width:1120px;margin:0 auto;padding-bottom:30px}
+.ckx-hero{position:relative;overflow:hidden;isolation:isolate;display:grid;grid-template-columns:1fr auto;align-items:center;gap:20px;margin:6px 0 16px;padding:30px 30px 26px;border-radius:28px;background:radial-gradient(90% 120% at 100% 0,rgba(240,72,122,.22),transparent 55%),radial-gradient(80% 120% at 0 100%,rgba(111,116,232,.28),transparent 60%),linear-gradient(165deg,#17132f,#0b0a14 70%);box-shadow:inset 0 0 0 1px rgba(124,134,255,.28),0 30px 70px -45px #6f74e8}
+.ckx-hero::before{content:'';position:absolute;inset:0;z-index:-1;background:repeating-linear-gradient(115deg,rgba(255,255,255,.025) 0 2px,transparent 2px 14px)}
+.ckx-ht{order:-1;min-width:0}
+.ckx-k{display:inline-block;padding:5px 11px;border-radius:999px;font:800 .66rem/1 system-ui,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#fff;background:linear-gradient(110deg,#6f74e8,#a779e6 55%,#f0487a)}
+.ckx-ht h1{margin:12px 0 6px;font:italic 900 clamp(2.1rem,5vw,3.4rem)/.95 'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.5px;color:#fff}
+.ckx-ht h1 em{font-style:inherit;background:linear-gradient(100deg,#7c86ff,#b184e8 50%,#ff5c8a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.ckx-ht p{margin:0;max-width:520px;color:#b9bcdc;font-size:.92rem;line-height:1.5}
+.ckx-kpi{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:18px;max-width:600px}
+.ckx-kpi div{padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.04);box-shadow:inset 0 0 0 1px rgba(255,255,255,.07)}
+.ckx-kpi small{display:block;font:700 .6rem/1 system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#9a9cc0}
+.ckx-kpi b{display:flex;align-items:center;gap:5px;margin-top:6px;font:900 1.35rem/1 'Barlow Condensed',sans-serif;color:#fff;white-space:nowrap}.ckx-kpi b i:not(.imc){font-style:normal;font-size:.85rem;color:#9a9cc0}
+.ckx-fan{position:relative;width:300px;height:250px;margin-right:10px}
+.ckx-fc{position:absolute;top:0;left:50%;width:140px;transform:translateX(-50%) rotate(calc((var(--i) - 1) * 9deg)) translateX(calc((var(--i) - 1) * 40px));transform-origin:50% 140%;filter:drop-shadow(0 18px 24px rgba(0,0,0,.55))}
+.ckx-fc:nth-child(3){z-index:2}
+.ckx .wd-modes{display:flex;width:100%;box-sizing:border-box;gap:4px;padding:5px;margin:0 0 16px;border-radius:16px;background:rgba(255,255,255,.035);box-shadow:inset 0 0 0 1px rgba(255,255,255,.07);overflow-x:auto;scrollbar-width:none}
+.ckx .wd-modes::-webkit-scrollbar{display:none}
+.ckx .wd-modes button{flex:1 0 auto;display:flex;align-items:center;justify-content:center;gap:7px;padding:11px 14px!important;border:none;border-radius:12px;background:none;color:#9a9cc0;font:800 .74rem/1 system-ui,sans-serif!important;letter-spacing:.08em!important;cursor:pointer;transition:background .2s,color .2s;white-space:nowrap}
+.ckx .wd-modes button:hover{color:#fff;background:rgba(255,255,255,.05)}
+.ckx .wd-modes button.on,.ckx .wd-modes button.active{color:#fff;background:linear-gradient(110deg,rgba(111,116,232,.55),rgba(167,121,230,.45) 55%,rgba(240,72,122,.4));box-shadow:inset 0 0 0 1px rgba(177,132,232,.6),0 8px 22px -12px #a779e6}
+.ckx .ck-sp{border-radius:22px;background:linear-gradient(170deg,color-mix(in srgb,var(--c) 14%,#15122b),#0b0a14 72%);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 35%,transparent),0 24px 50px -38px var(--c)}
+.ckx-locked{display:grid;gap:6px;place-items:center;padding:70px 20px;text-align:center;color:#9a9cc0}.ckx-locked b{color:#fff;font-size:1.1rem}
+@media (max-width:760px){.ckx-hero{grid-template-columns:1fr;padding:22px 18px 18px;border-radius:22px}.ckx-fan{display:none}.ckx-kpi{grid-template-columns:repeat(2,minmax(0,1fr))}.ckx .wd-modes{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));overflow:visible}.ckx .wd-modes button{flex-direction:column;gap:4px;min-width:0;padding:9px 2px!important;font-size:.58rem!important;letter-spacing:.02em!important;white-space:normal;text-align:center;line-height:1.15}}
 .ck-oos{padding:11px 10px;border-radius:12px;text-align:center;font-weight:800;font-size:.8rem;color:#ff8aa8;background:rgba(240,72,122,.1);border:1px solid rgba(240,72,122,.4)}.ck-left{display:block;text-align:center;margin-top:6px;font-size:.7rem;color:#9a9cc0}
 .pp-board{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 6px;text-align:left}
     .pp-col{display:flex;flex-direction:column;gap:6px;min-width:0}
@@ -4421,6 +4446,10 @@ body.ck-lock>header,body.ck-lock>main,body.ck-lock #mobile-nav{visibility:hidden
     @media (max-width:600px){.wd-brand span{font-size:1.25rem;letter-spacing:2px}.wd-brand img{height:32px}}
   </style>
   <div id="games-content"></div>
+</div>
+
+<div id="page-cards" class="page">
+  <div id="cards-content"></div>
 </div>
 <div id="page-admin" class="page">
   <div id="admin-login-section" class="card">
@@ -8972,6 +9001,7 @@ window.refreshCurrentPage = async function(btn) {
     else if (id === 'page-history') await renderHistory();
     else if (id === 'page-market') await renderMarket();
     else if (id === 'page-games') await renderGames();
+    else if (id === 'page-cards') await renderCards();
     else if (id === 'page-home') await renderHome();
     else if (id === 'page-predictions') { window._forcePreviewRegen = true; await Promise.all([renderBriefingExtras(), renderTrackHistoryForPage(), renderAiRacePreview()]); }
     if (typeof showToast === 'function') showToast('Refreshed', 'success');
@@ -9544,9 +9574,9 @@ window.showPage = function(page) {
   const _target = document.getElementById('page-'+page);
   if (!_target) { console.warn('showPage: no element for page-'+page); return; }
   _target.classList.add('active');
-  document.querySelectorAll('nav button').forEach((b,i) => b.classList.toggle('active', ['dashboard','home','my-team','leaderboard','results','history','predictions','market','bets','extra','social','games','admin'][i]===page));
+  document.querySelectorAll('nav button').forEach((b,i) => b.classList.toggle('active', ['dashboard','home','my-team','leaderboard','results','history','predictions','market','bets','extra','social','games','cards','admin'][i]===page));
   // Mobile bottom nav — highlight matching tab; "More" lights up for pages living in the sheet
-  const morePages = ['home','results','history','predictions','bets','extra','social','games','admin'];
+  const morePages = ['home','results','history','predictions','bets','extra','social','games','cards','admin'];
   document.querySelectorAll('#mobile-nav button').forEach(b => {
     const p = b.getAttribute('data-page');
     b.classList.toggle('active', p === page || (p === '__more' && morePages.includes(page)));
@@ -9576,6 +9606,7 @@ window.showPage = function(page) {
       else if (page==='market') await renderMarket();
       else if (page==='bets') await renderBets();
       else if (page==='games') await renderGames();
+      else if (page==='cards') await renderCards();
       else if (page==='admin') await renderAdmin();
       if (page !== 'bets' && typeof window._betBgSettle === 'function') window._betBgSettle();
     } catch(e) { console.warn('page render error', e); }
@@ -34388,7 +34419,7 @@ window.renderGames = async function() {
   if (window._games.view === 'wf') { clearInterval(window._wdDuelPoll); return renderWFGame(el); }
   if (window._games.view === 'qs') { clearInterval(window._wdDuelPoll); return renderQSGame(el); }
   if (window._games.view === 'pp') { clearInterval(window._wdDuelPoll); return renderPPGame(el); }
-  if (window._games.view === 'cards') { clearInterval(window._wdDuelPoll); { const lk = await dbGet('settings', 'gamesLock').catch(() => null); window._gamesLock = (lk && lk.value) || {}; } return renderCardsGame(el); }
+  if (window._games.view === 'cards') { window._games.view = 'hub'; setTimeout(() => showPage('cards'), 0); }
   if (window._games.view !== 'wordle') {
     clearInterval(window._wdDuelPoll);
     { const lk = await dbGet('settings', 'gamesLock').catch(() => null); window._gamesLock = (lk && lk.value) || {}; }
@@ -34407,7 +34438,6 @@ window.renderGames = async function() {
       ['pp', '🔗', 'Pit Lane Pairs', '7 drivers, 7 clues: teams, teammates, stats and more. Match them all up.', 'Daily · Practice', '#27f4d2', '#7c86ff'],
     ];
     // IMS Card Packs: admin-only until switched on in Settings.
-    if (_ckCan()) G.push(['cards', '🃏', 'IMS Card Packs', 'Open packs, collect every IMS driver, and sell cards for IM$.', window._gamesLock.cardsOpen ? 'Collect · Sell' : 'Admin only', '#f7cf55', '#f0487a']);
     el.innerHTML = `<div class="xs-hero hx-gb hx-rv" data-k="gmhero"><div class="xs-ghost">${G.length}</div>
         <span class="xs-k">Games</span><h1>Play the <em>paddock</em></h1>
         <p>${G.length} quick games built on real IMS league data. New puzzles every day, and duels when you want a fight.</p></div>
@@ -36916,7 +36946,7 @@ const _ckToMidnight = () => { const o = _ckUK(); return Math.max(0, 86400 - (+o.
 function _ckTeamToday(pool) { const n = {}; pool.list.forEach(c => { if (!c.sp && c.cur) n[c.cur] = (n[c.cur] || 0) + 1; }); const T = Object.keys(n).filter(t => n[t] >= 3).sort(); if (!T.length) return '';
   const d = _ckDay().split('-').map(Number), day = Math.floor(Date.UTC(d[0], d[1] - 1, d[2]) / 864e5); return T[(day * 7 + 3) % T.length]; }
 const _ckClock = () => { const t = Math.ceil(_ckToMidnight() / 1000), z = n => String(n).padStart(2, '0'); return `${z(Math.floor(t / 3600))}:${z(Math.floor(t % 3600 / 60))}:${z(t % 60)}`; };
-setInterval(() => { const el = document.getElementById('ck-clock'); if (!el) return; const was = el.dataset.day || (el.dataset.day = _ckDay()); if (_ckDay() !== was) { el.dataset.day = _ckDay(); if (!document.getElementById('ck-ov')) renderGames(); return; } el.textContent = _ckClock(); }, 1000);
+setInterval(() => { const el = document.getElementById('ck-clock'); if (!el) return; const was = el.dataset.day || (el.dataset.day = _ckDay()); if (_ckDay() !== was) { el.dataset.day = _ckDay(); if (!document.getElementById('ck-ov')) _ckRender(); return; } el.textContent = _ckClock(); }, 1000);
 function _ckTeamSync(pool) { const P = CK_PACKS.team, t = _ckTeamToday(pool); P.tn = t; let col = '#6f74e8', logo = ''; try { const tc = getTeamCardColour(t); col = (tc && tc.accent) || col; logo = getTeamLogo(t) || ''; } catch (e) {} P.c = col; P.c2 = `color-mix(in srgb, ${col} 35%, #07060f)`; P.logo = logo;
   // Price follows the team's line-up: ~92% of the pack's expected sell value, rounded to 50 (min 250).
   const L = pool.list.filter(c => !c.sp && c.cur === t); if (L.length) { const lo = Math.min(...L.map(c => c.r)), w = L.map(c => Math.exp(-(c.r - lo) * .07)), W = w.reduce((a, b) => a + b, 0), ev = L.reduce((a, c, i) => a + w[i] * _ckSellV(c), 0) / W;
@@ -36970,15 +37000,15 @@ function _ckCard(c, o) { o = o || {}; const T = CK_T[c.t], lg = c.team && typeof
 const _ckPackArt = (id, sm) => { const P = CK_PACKS[id]; return `<div class="ckp${sm ? ' sm' : ''}${P.cls ? ' ckp-' + P.cls : ''}" style="--c:${P.c};--c2:${P.c2}"><i class="ckp-crimp"></i><div class="ckp-body">${P.teamPack && P.logo ? `<img class="ckp-tl" src="${esc(P.logo)}" alt="" onerror="this.src='icons/icon-192.png?v=3';this.className=''"><img class="ckp-ims" src="icons/icon-192.png?v=3" alt="IMS">` : '<img src="icons/icon-192.png?v=3" alt="IMS">'}<b>${P.teamPack && P.tn ? esc(P.tn) : P.n.replace(' Pack', '')}</b><small>PACK · ${CK_N} CARDS</small></div><i class="ckp-crimp b"></i></div>`; };
 const _ckInv = (c) => (c && c.cards && c.cards.inv) || {};
 const _ckSetPill = (c) => { const pill = document.getElementById('wallet-amt'); if (pill && window._wlShort) pill.textContent = window._wlShort(c.balance); };
-window.ckTab = function(t) { window._ckTab = t; renderGames(); };
+window.ckTab = function(t) { window._ckTab = t; _ckRender(); };
 // ---- Buy + open ----
 // gi = index into c.cards.gifts → opens a gifted/reward pack: free, no daily limit.
 window.ckBuy = async function(id, gi) { if (!_ckCan() || window._ckBusy) return; const P = CK_PACKS[id]; if (!P) return; const gift = gi != null;
   if (typeof currentUser === 'undefined' || !currentUser || !currentUser.userId) return showToast('Log in to buy packs.', 'error');
   window._ckBusy = true;
   try { const pool = await _ckPool(), c = await _betLoadCoins(currentUser.userId);
-    if (gift && !(c.cards && c.cards.gifts && c.cards.gifts[gi] && c.cards.gifts[gi].p === id)) { window._ckBusy = false; renderGames(); return showToast('That pack has already been opened.', 'error'); }
-    if (!gift && _ckLeft(c.cards, id) <= 0) { window._ckBusy = false; renderGames(); return showToast('Sorry! This card pack is out of stock', 'error'); }
+    if (gift && !(c.cards && c.cards.gifts && c.cards.gifts[gi] && c.cards.gifts[gi].p === id)) { window._ckBusy = false; _ckRender(); return showToast('That pack has already been opened.', 'error'); }
+    if (!gift && _ckLeft(c.cards, id) <= 0) { window._ckBusy = false; _ckRender(); return showToast('Sorry! This card pack is out of stock', 'error'); }
     if (!gift && (c.balance || 0) < P.price) { window._ckBusy = false; return showToast('You need ' + P.price.toLocaleString() + ' IM$ for a ' + P.n + '.', 'error'); }
     if (P.teamPack) _ckTeamSync(pool); const got = []; for (let i = 0; i < CK_N; i++) { const x = _ckRoll(P.slots ? P.slots[i] : id, pool); if (x) got.push(x); }
     if (got.length < CK_N) { window._ckBusy = false; return showToast('Not enough cards in the pool for that pack yet.', 'error'); }
@@ -37012,7 +37042,7 @@ window._ckGiftPop = async function(c) { const G = (c && c.cards && c.cards.gifts
   setInterval(chk, 60e3); document.addEventListener('visibilitychange', () => { if (!document.hidden) chk(); }); window._ckGiftChk = chk; })();
 window._ckGiftSeen = async function(go) { document.getElementById('ck-gp')?.remove();
   try { const c = await _betLoadCoins(currentUser.userId); (c.cards && c.cards.gifts || []).forEach(g => g.s = 1); await dbSet('coins', currentUser.userId, c); } catch (e) {}
-  if (go) { window._ckTab = 'packs'; try { await showPage('games'); } catch (e) {} openGame('cards'); } };
+  if (go) { window._ckTab = 'packs'; try { await showPage('cards'); } catch (e) {} } };
 // ── Admin: special cards (DOTD / TOTS / Champion). Stored in settings/ckSpecials {list:[{id,k,ty,r,note,t}]}.
 function _ckSpAdmin(pool) { const base = pool.list.filter(x => !x.sp).slice().sort((a, b) => a.n.localeCompare(b.n)), sp = pool.list.filter(x => x.sp);
   return `<div class="ck-spadm"><div class="wl-sh"><span>🛠️ Create a special card</span><small>only you can see this</small></div>
@@ -37031,10 +37061,10 @@ function _ckChampMissing(pool) { const have = new Set(pool.list.filter(x => x.sp
 window.ckSpAllChamps = async function() { if (!adminLoggedIn) return; window._ckPoolC = null; const pool = await _ckPool(), miss = _ckChampMissing(pool); if (!miss.length) return showToast('Every champion already has a champion card.', 'success');
   customConfirm(`Create ${miss.length} champion cards (one per champion)? Starting rating = normal rating +2, +1 if they won a D1/E1 title, +2 for each extra title (75–99). Multi-champions are labelled e.g. "3× Champion". You can change each one after.`, async () => {
     const sd = await dbGet('settings', 'ckSpecials').catch(() => null), t = Date.now(), list = ((sd && sd.value && sd.value.list) || []).concat(miss.map((m, i) => ({ id: (t + i).toString(36), k: m.k, ty: 'champ', r: m.r, note: m.note.slice(0, 30), t })));
-    await dbSet('settings', 'ckSpecials', { value: { list } }); window._ckPoolC = null; showToast('👑 ' + miss.length + ' champion cards created.', 'success'); window._ckAllT = 'sp'; renderGames(); }, 'Create'); };
+    await dbSet('settings', 'ckSpecials', { value: { list } }); window._ckPoolC = null; showToast('👑 ' + miss.length + ' champion cards created.', 'success'); window._ckAllT = 'sp'; _ckRender(); }, 'Create'); };
 window.ckSpRate = async function(id) { if (!adminLoggedIn) return; const v = parseInt((document.getElementById('ck-spr-' + id) || {}).value, 10); if (!(v >= 40 && v <= 99)) return showToast('Rating must be 40–99.', 'error');
   const sd = await dbGet('settings', 'ckSpecials').catch(() => null), list = ((sd && sd.value && sd.value.list) || []); const x = list.find(y => y.id === id); if (!x) return; x.r = v;
-  await dbSet('settings', 'ckSpecials', { value: { list } }); window._ckPoolC = null; showToast('Rating saved: ' + v, 'success'); renderGames(); };
+  await dbSet('settings', 'ckSpecials', { value: { list } }); window._ckPoolC = null; showToast('Rating saved: ' + v, 'success'); _ckRender(); };
 window.ckSpFind = function(q) { const sel = document.getElementById('ck-sp-k'); if (!sel) return; q = String(q || '').toLowerCase(); let first = null;
   [...sel.options].forEach(o => { const m = !q || o.text.toLowerCase().includes(q); o.hidden = !m; if (m && !first) first = o; }); if (first && sel.selectedOptions[0] && sel.selectedOptions[0].hidden) sel.value = first.value; ckSpPrev(); };
 window.ckSpPrev = async function() { const pool = await _ckPool(), k = (document.getElementById('ck-sp-k') || {}).value, b = pool.by[k], el = document.getElementById('ck-sp-prev'); if (!b || !el) return;
@@ -37044,16 +37074,16 @@ window.ckSpAdd = async function() { if (!adminLoggedIn) return; const k = docume
   if (!k || !CK_SP[ty]) return showToast('Pick a driver and type.', 'error'); if (!(r >= 40 && r <= 99)) return showToast('Set a rating between 40 and 99.', 'error');
   const pool = await _ckPool(), b = pool.by[k]; customConfirm(`Create a ${r} ${CK_SP[ty].n} card for ${esc(b ? b.n : k)}?`, async () => {
     const sd = await dbGet('settings', 'ckSpecials').catch(() => null), list = ((sd && sd.value && sd.value.list) || []).concat([{ id: Date.now().toString(36), k, ty, r, note, t: Date.now() }]);
-    await dbSet('settings', 'ckSpecials', { value: { list } }); window._ckPoolC = null; showToast('✨ Special card created.', 'success'); window._ckAllT = 'sp'; renderGames(); }, 'Create'); };
+    await dbSet('settings', 'ckSpecials', { value: { list } }); window._ckPoolC = null; showToast('✨ Special card created.', 'success'); window._ckAllT = 'sp'; _ckRender(); }, 'Create'); };
 window.ckSpDel = function(id) { if (!adminLoggedIn) return; customConfirm('Delete this special card? Players who own it will lose it from their collection.', async () => {
     const sd = await dbGet('settings', 'ckSpecials').catch(() => null), list = ((sd && sd.value && sd.value.list) || []).filter(x => x.id !== id);
-    await dbSet('settings', 'ckSpecials', { value: { list } }); window._ckPoolC = null; showToast('Deleted.', 'success'); renderGames(); }, 'Delete'); };
+    await dbSet('settings', 'ckSpecials', { value: { list } }); window._ckPoolC = null; showToast('Deleted.', 'success'); _ckRender(); }, 'Delete'); };
 window.ckGiftUI = async function() { const u = document.getElementById('ck-g-u'), nt = document.getElementById('ck-g-n'); if (!u || !u.value) return showToast('Pick a player.', 'error');
   const qs = Object.keys(CK_PACKS).map(id => [id, Math.max(0, Math.min(20, parseInt((document.getElementById('ck-g-q-' + id) || {}).value, 10) || 0))]).filter(x => x[1] > 0);
   if (!qs.length) return showToast('Add at least one pack.', 'error');
   const ids = u.value === '*' ? [...u.options].map(o => o.value).filter(v => v && v !== '*') : [u.value], lbl = u.value === '*' ? 'every player (' + ids.length + ')' : u.options[u.selectedIndex].text;
   customConfirm(`Give ${qs.map(([id, q]) => q + ' × ' + CK_PACKS[id].n).join(', ')} to ${esc(lbl)}?`, async () => { const L = []; qs.forEach(([pk, q]) => { for (let i = 0; i < q; i++) L.push(pk); }); let n = 0; for (const id of ids) n += await ckGift(id, L, nt.value || 'Gift from IMS');
-    showToast('🎁 Sent ' + n + ' pack' + (n === 1 ? '' : 's') + '.', 'success'); renderGames(); }, 'Send'); };
+    showToast('🎁 Sent ' + n + ' pack' + (n === 1 ? '' : 's') + '.', 'success'); _ckRender(); }, 'Send'); };
 function _ckReveal(id, got, gift) { document.getElementById('ck-ov')?.remove(); const o = document.createElement('div'); o.id = 'ck-ov'; o.className = 'ck-ov';
   window._ckRv = { id, got, i: -1, sell: {}, gift: !!gift };
   o.innerHTML = `<div class="ck-stage" id="ck-stage"><div class="ck-pk" id="ck-pk" onclick="ckRip()">${_ckPackArt(id)}<p>Tap the pack to open it</p></div></div>`;
@@ -37084,7 +37114,7 @@ function _ckSummary() { const R = window._ckRv, st = document.getElementById('ck
 window.ckMark = function(i, s) { const R = window._ckRv; if (!R) return; if (i < 0) R.got.forEach((_, j) => R.sell[j] = 1); else if (s) R.sell[i] = 1; else delete R.sell[i]; _ckSummary(); };
 window.ckDone = async function() { const R = window._ckRv; if (!R || window._ckBusy) return; const idx = Object.keys(R.sell).map(Number);
   if (idx.length) { window._ckBusy = true; const cnt = {}; idx.forEach(i => { const k = R.got[i].k; cnt[k] = (cnt[k] || 0) + 1; }); const ok = await _ckSellMany(cnt); window._ckBusy = false; if (!ok) return; }
-  const o = document.getElementById('ck-ov'); document.body.classList.remove('ck-lock'); if (o) { o.classList.remove('in'); setTimeout(() => o.remove(), 200); } window._ckRv = null; renderGames(); };
+  const o = document.getElementById('ck-ov'); document.body.classList.remove('ck-lock'); if (o) { o.classList.remove('in'); setTimeout(() => o.remove(), 200); } window._ckRv = null; _ckRender(); };
 // Sell copies: { driverKey: howMany }. Prices are today's sell value for each card.
 async function _ckSellMany(cnt) { try { const pool = await _ckPool(), c = await _betLoadCoins(currentUser.userId), inv = _ckInv(c); let gain = 0, n = 0;
     Object.entries(cnt).forEach(([k, q]) => { const card = pool.by[k], have = inv[k] || 0, s = Math.min(q, have); if (!card || s <= 0) return; inv[k] = have - s; if (!inv[k]) delete inv[k]; gain += _ckSellV(card) * s; n += s; });
@@ -37102,13 +37132,13 @@ window.ckDetail = async function(k) { const pool = await _ckPool(), card = pool.
       <div class="ck-acts" style="grid-template-columns:1fr">${have ? `<button class="hx-btn" onclick="ckQuick('${k}',1)">Quick sell 1 · ${v.toLocaleString()} IM$</button>${have > 1 ? `<button class="hx-btn ghost" onclick="ckQuick('${k}',${have - 1})">Sell duplicates (${have - 1}) · ${(v * (have - 1)).toLocaleString()} IM$</button>` : ''}` : ''}
         ${card.did ? `<button class="hx-btn ghost" onclick="document.getElementById('ck-dt').remove();openDriverModal('${card.did}')">Open driver profile</button>` : ''}</div></div></div>`;
   document.body.appendChild(o); };
-window.ckQuick = function(k, n) { customConfirm(`Sell ${n} cop${n === 1 ? 'y' : 'ies'} of this card? You can't undo this.`, async () => { if (await _ckSellMany({ [k]: n })) { document.getElementById('ck-dt')?.remove(); renderGames(); } }, 'Sell'); };
+window.ckQuick = function(k, n) { customConfirm(`Sell ${n} cop${n === 1 ? 'y' : 'ies'} of this card? You can't undo this.`, async () => { if (await _ckSellMany({ [k]: n })) { document.getElementById('ck-dt')?.remove(); _ckRender(); } }, 'Sell'); };
 // ---- Admin: let everyone in ----
 window.ckSetOpen = function(on) { if (!adminLoggedIn) return;
   customConfirm(on ? 'Open IMS Card Packs to EVERYONE? All players will see the shop and can spend IM$ on packs.' : 'Hide IMS Card Packs from players again? (Their cards and IM$ stay as they are.)', async () => {
     const lk = await dbGet('settings', 'gamesLock').catch(() => null); const L = Object.assign({}, (lk && lk.value) || {}); L.cardsOpen = !!on;
     await dbSet('settings', 'gamesLock', { value: L }); window._gamesLock = L; showToast(on ? 'Card Packs are now open to everyone.' : 'Card Packs are hidden from players.', 'success');
-    _ckSettingsBlock(); if (window._games && window._games.view === 'cards') renderGames(); }, on ? 'Yes, open it' : 'Hide it'); };
+    _ckSettingsBlock(); _ckRender(); }, on ? 'Yes, open it' : 'Hide it'); };
 function _ckSettingsBlock() { try { const m = document.querySelector('#settings-modal .modal'); if (!m) return; document.getElementById('set-ck')?.remove(); if (!adminLoggedIn) return;
     const on = !!(window._gamesLock || {}).cardsOpen, d = document.createElement('div'); d.id = 'set-ck'; d.className = 'set-ck';
     d.innerHTML = `<div class="set-ck-h">🃏 IMS Card Packs <small>admin only</small></div><p>${on ? '<b style="color:#4ade80">Open to everyone.</b> All players can see the card shop.' : '<b style="color:#ffb020">Hidden.</b> Only you (admin) can see the card shop in Games.'}</p>
@@ -37116,13 +37146,23 @@ function _ckSettingsBlock() { try { const m = document.querySelector('#settings-
 { const _o = window.openSettingsModal; if (typeof _o === 'function' && !_o._ck) { const w = async function() { const r = await _o.apply(this, arguments);
     try { if (adminLoggedIn) { const lk = await dbGet('settings', 'gamesLock').catch(() => null); window._gamesLock = (lk && lk.value) || {}; } _ckSettingsBlock(); } catch (e) {} return r; }; w._ck = 1; window.openSettingsModal = w; } }
 // ---- Page ----
+// IMS Cards is its own page (#page-cards). _ckRender re-draws it when it's showing.
+function _ckRender() { const pg = document.getElementById('page-cards'); if (pg && pg.classList.contains('active')) return renderCards(); }
+async function _ckLockLoad() { const lk = await dbGet('settings', 'gamesLock').catch(() => null); window._gamesLock = (lk && lk.value) || {}; _ckNavSync(); }
+function _ckNavSync() { const on = _ckCan(); ['nav-cards-btn', 'mobile-cards-btn'].forEach(id => { const b = document.getElementById(id); if (b) b.style.display = on ? '' : 'none'; }); }
+setTimeout(() => { _ckLockLoad(); setInterval(_ckNavSync, 4000); }, 2500);
+async function renderCards() { const el = document.getElementById('cards-content'); if (!el) return; await _ckLockLoad();
+  if (!_ckCan()) { el.innerHTML = '<div class="ckx-locked"><b>🔒 IMS Cards is coming soon</b><span>Check back later.</span></div>'; return; }
+  return renderCardsGame(el); }
 async function renderCardsGame(el) {
-  if (!_ckCan()) { window._games.view = 'hub'; return renderGames(); }
   const tab = window._ckTab || 'shop', me = typeof currentUser !== 'undefined' && currentUser && currentUser.userId;
   const [pool, c] = await Promise.all([_ckPool(), me ? _betLoadCoins(me).catch(() => null) : null]); const inv = _ckInv(c), K = (c && c.cards) || {};
   const own = Object.entries(inv).filter(([k, n]) => n > 0 && pool.by[k]).map(([k, n]) => ({ c: pool.by[k], n })), ownN = own.reduce((a, x) => a + x.n, 0), ownV = own.reduce((a, x) => a + _ckSellV(x.c) * x.n, 0);
   const open = !!(window._gamesLock || {}).cardsOpen;
-  let body = `<div class="wd-top"><button class="wd-back" onclick="openGame('hub')" title="Back to Games">←</button><div class="wd-brand"><img src="icons/icon-192.png?v=3" alt="IMS"><span>IMS <em>CARDS</em></span></div><div class="wd-meta"><span class="wd-pill"><i class="imc"></i> ${c ? Math.round(c.balance || 0).toLocaleString() : '—'}</span></div></div>
+  const dexN = (() => { const d = Object.assign({}, K.dex || {}); Object.keys(inv).forEach(k => { if (inv[k] > 0) d[k] = 1; }); return pool.list.filter(x => d[x.k]).length; })();
+  let body = `<div class="ckx-hero"><div class="ckx-fan">${[...pool.list].filter(x => !x.sp).slice(0, 3).reverse().map((x, i) => `<div class="ckx-fc" style="--i:${i}">${_ckCard(x)}</div>`).join('')}</div>
+    <div class="ckx-ht"><span class="ckx-k">IMS Cards</span><h1>Collect the <em>grid</em></h1><p>Every driver in IMS history is a card. Open packs, chase Diamonds and specials, and build your collection.</p>
+    <div class="ckx-kpi"><div><small>Balance</small><b><i class="imc"></i> ${c ? Math.round(c.balance || 0).toLocaleString() : '—'}</b></div><div><small>My cards</small><b>${ownN}</b></div><div><small>Collection value</small><b>${ownV.toLocaleString()}</b></div><div><small>Card index</small><b>${dexN}<i>/${pool.list.length}</i></b></div></div></div></div>
     ${adminLoggedIn ? `<div class="ck-adm"><span>${open ? '🟢 <b>Open to everyone</b>' : '🔒 <b>Only you can see this</b> — players can\'t see IMS Cards yet'}</span><button onclick="ckSetOpen(${open ? 'false' : 'true'})">${open ? 'Hide from players' : 'Let everyone see it'}</button></div>` : ''}
     <div class="wd-modes">${[['shop', '🛒', 'SHOP'], ['packs', '🎁', `MY PACKS${(K.gifts || []).length ? ' · ' + K.gifts.length : ''}`], ['col', '🗂️', `MY CARDS${ownN ? ' · ' + ownN : ''}`], ['feed', '🔥', 'BIG PULLS'], ['all', '📖', 'CARD INDEX']].map(([m, i, l]) => `<button class="${tab === m ? 'on' : ''}" onclick="ckTab('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>`;
   if (!me) body += '<div class="alert alert-warning">Log in to your team to buy packs.</div>';
@@ -37152,11 +37192,11 @@ async function renderCardsGame(el) {
     body += `<div class="ck-feed"><div class="wl-sh"><span>Everyone's ${CK_FEED_MIN}+ rated pulls</span><small>newest first</small></div>${rows.length ? rows.map(p => { const card = pool.by[p.k], r = card ? card.r : p.r, t = _ckTier(Math.max(r, p.r)).id;
       return `<div class="ck-fr t-${t}"><b class="ck-fr-r">${p.r}</b><span class="ck-fr-t"><b>${esc(card ? card.n : p.n)}</b><small>${card && card.sp ? '✨ Special' : CK_T[t].n} · packed by <u>${esc(p.by || 'a player')}</u> from a ${(CK_PACKS[p.p] || {}).n || 'pack'}</small></span><em>${ago(p.t)}</em></div>`; }).join('') : '<div class="ck-empty">Nobody has packed an 83+ yet. Be the first.</div>'}</div>`; }
   else { const dex = Object.assign({}, K.dex || {}); Object.keys(inv).forEach(k => { if (inv[k] > 0) dex[k] = 1; }); const dexN = pool.list.filter(x => dex[x.k]).length, f = window._ckAllT || 'top', L = f === 'top' ? pool.list.slice(0, 60) : f === 'sp' ? pool.list.filter(x => x.sp) : pool.list.filter(x => x.t === f && !x.sp).slice(0, 120);
-    body += `<div class="ck-fil">${[['top', 'Top 60'], ['sp', '✨ Special']].concat(CK_TIERS.map(t => [t.id, t.n])).map(([id, n]) => `<button class="${f === id ? 'on' : ''}" onclick="window._ckAllT='${id}';renderGames()">${n}</button>`).join('')}</div>
+    body += `<div class="ck-fil">${[['top', 'Top 60'], ['sp', '✨ Special']].concat(CK_TIERS.map(t => [t.id, t.n])).map(([id, n]) => `<button class="${f === id ? 'on' : ''}" onclick="window._ckAllT='${id}';_ckRender()">${n}</button>`).join('')}</div>
       <div class="ck-stats"><div><small>Card index</small><b>${dexN} / ${pool.list.length}</b></div><div><small>Completed</small><b>${pool.list.length ? Math.floor(dexN / pool.list.length * 1000) / 10 : 0}%</b></div></div>
       <div class="ck-grid">${L.map(x => _ckCard(x, { n: inv[x.k] || 0, cls: dex[x.k] ? '' : 'dim' })).join('')}</div><div class="ck-fine">Your card index — every card in the game. Once you've packed a card it stays unlocked here, even after you sell it. Cards you've never packed are dimmed.${f === 'sp' && !L.length ? ' No special cards yet.' : ''}${pool.hasT5 ? '' : ' <b style="color:#ffb020">Top 5 counts are estimated until the league database is loaded again.</b>'}</div>`;
     if (adminLoggedIn) body += _ckSpAdmin(pool); }
-  el.innerHTML = `<div class="wd-wrap ck-wrap">${body}<div class="wd-info"><h3>How IMS Cards work</h3><p>Every driver in the IMS database is a card. A card's <b>rating</b> comes from the driver's <b>wins, podiums, top 5s and points</b> — division doesn't matter — and <b>drivers' champions</b> get a big boost. Ratings update as new results come in, so a card you own can go up or down.</p>
+  el.innerHTML = `<div class="ck-wrap ckx">${body}<div class="wd-info"><h3>How IMS Cards work</h3><p>Every driver in the IMS database is a card. A card's <b>rating</b> comes from the driver's <b>wins, podiums, top 5s and points</b> — division doesn't matter — and <b>drivers' champions</b> get a big boost. Ratings update as new results come in, so a card you own can go up or down.</p>
     <p><b>Rarities:</b> Diamond 92+ · Rare Gold 83–91 · Gold 70–82 · Rare Silver 65–69 · Silver 55–64 · Rare Bronze 47–54 · Bronze under 47.</p>
     <p><b>Packs:</b> Bronze ${CK_PACKS.bronze.price}, Silver ${CK_PACKS.silver.price}, Gold ${CK_PACKS.gold.price.toLocaleString()}, Mixed Drivers ${CK_PACKS.mixed.price} (one card each on Bronze, Silver and Gold odds), Supersonic Gold ${CK_PACKS.supersonic.price.toLocaleString()} (far better Rare Gold, Diamond and special odds) IM$. Keep cards in your collection or sell them for IM$ at any time.</p></div></div>`; }
 async function _gmNoTestCoins(rows) { try { const ids = await _gmTestIds(), me = _wdMe().uid; return (rows || []).filter(r => r && (r.userId === me || !ids.has(r.userId))); } catch (e) { return rows || []; } }
