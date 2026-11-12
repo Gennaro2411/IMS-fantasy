@@ -36834,9 +36834,8 @@ const CK_N = 3, CK_FEED_MIN = 83;
 const _ckCan = () => !!(adminLoggedIn || (window._gamesLock || {}).cardsOpen);
 // Rating: score → 40..91 on a curve, +5 for being a champion (+1 per extra title, max +2), capped at 96.
 function _ckRate(w, pd, t5, p, ch) { const sc = 6 * w + 3 * pd + 1.5 * t5 + p / 20; let r = 40 + 51 * (1 - Math.exp(-sc / 90)); if (ch > 0) r += 5 + Math.min(2, ch - 1); return { r: Math.min(96, Math.round(r)), sc }; }
-// Last team the driver raced FULL TIME for (latest season in s.cs; most starts that season).
-function _ckLastFT(s) { const cs = s && s.cs; if (!cs) return ''; const sn = Object.keys(cs).map(Number).filter(n => n && Object.keys(cs[n] || {}).length).sort((a, b) => b - a)[0]; if (!sn) return '';
-  const e = Object.values(cs[sn]).filter(x => x && x.name && !/^reserve$/i.test(x.name)).sort((a, b) => (b.n || 0) - (a.n || 0))[0]; return e ? e.name : ''; }
+// Last team the driver raced FULL TIME for (s.cp = full-time stints in order, oldest first).
+function _ckLastFT(s) { const cp = (s && s.cp) || []; for (let i = cp.length - 1; i >= 0; i--) { const t = cp[i] && cp[i][1]; if (t && !/^reserve$/i.test(t)) return t; } return ''; }
 async function _ckPool() {
   if (window._ckPoolC && _now() - window._ckPoolC.at < 10 * 60e3) return window._ckPoolC;
   if (!window._wordleData) { const d = await dbGet('settings', 'wordleData').catch(() => null); window._wordleData = window._wdDecode(d && d.value); }
