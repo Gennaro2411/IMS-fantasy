@@ -36871,7 +36871,7 @@ const CK_PACKS = { bronze: { n: 'Bronze Pack', price: 250, sp: { dotd: .0025, to
   gold: { n: 'Gold Pack', price: 1000, sp: { dotd: .01, tots: .007, champ: .002 }, odds: [['ug', .957], ['rg', .04], ['dia', .003]], c: '#f7cf55', c2: '#9a6a0c' },
   // Mixed: one card from each pack's odds (slots). Supersonic: boosted gold odds and specials.
   mixed: { n: 'Mixed Drivers Pack', price: 650, slots: ['bronze', 'silver', 'gold'], c: '#c9d2dc', c2: '#9a6a0c', cls: 'mix' },
-  supersonic: { n: 'Supersonic Gold Pack', price: 2500, sp: { dotd: .03, tots: .02, champ: .006 }, odds: [['ug', .74], ['rg', .24], ['dia', .02]], c: '#ffe27a', c2: '#ff5e00', cls: 'ss' } };
+  supersonic: { n: 'Supersonic Gold Pack', price: 2500, sp: { dotd: .03, tots: .02, champ: .006 }, odds: [['ug', .752], ['rg', .24], ['dia', .008]], c: '#ffe27a', c2: '#ff5e00', cls: 'ss' } };
 const CK_N = 3, CK_FEED_MIN = 83, CK_DAY_MAX = 10, CK_SP_SELL = r => 1000 + Math.max(0, r - 60) * 100, CK_CHAMP_SELL = r => Math.round(1000 * Math.exp(Math.max(0, r - 60) * Math.log(100) / 39) / 100) * 100; // champions: 1k at 60 → ~100k at 99 // special cards: 1,000 base, +100 per rating point above 60
 // Special card types. s = short label under the rating, n = banner text.
 const CK_SP = { dotd: { n: 'Driver of the Day', s: 'DOTD', i: '🔥' }, tots: { n: 'Team of the Season', s: 'TOTS', i: '⭐' }, champ: { n: 'Champion', s: 'CHAMP', i: '👑' } };
