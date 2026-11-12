@@ -31181,7 +31181,7 @@ window.renderBets = async function(dry) {
     const tot = _openHere.filter(b => b.market === market).reduce((x, b) => x + (b.stake || 0), 0);
     return tot ? _dyn(auto, _stakeOn(market, key) / tot, (probs[sel[0]] || 0) / sumP, tot) : auto;
   };
-  window._betCurOdds = {}; window._betReg = { div: window._betDiv, open: false, list: [] };
+  window._betCurOdds = {}; window._betReg = { div, open: false, list: [] }; (window._betRegs = window._betRegs || {})[div] = window._betReg;
   // Price as the market sees it WITHOUT this player's own money — used for cash-out, so your own
   // bet shortening the odds can't be cashed out for an instant profit. Other players' money counts.
   window._betCashOdds = (market, sel, auto) => { const keep = _openHere; _openHere = _openAll.filter(b => b.userId !== me); try { return finalOdds(market, sel, auto); } finally { _openHere = keep; } };
@@ -31482,7 +31482,7 @@ window.renderBets = async function(dry) {
     const mineOpen = myBets.some(b => b.status === 'open' && upcoming && b.raceName === upcoming.name && b.div === div && b.market === market && (b.sel || []).join('-') === sel.join('-'));
     if (mineOpen) return `<button class="bo-odd backed" disabled title="You've already backed this — one bet per pick">✓ ${fmtOdds(odds)}</button>`;
     const _fn = (adminLoggedIn && window._betBoostMode) ? 'betSetBoost' : 'betPick';
-    if (open && _fn === 'betPick' && window._betReg) { window._betReg.open = true; window._betReg.list.push({ market, sel: sel.slice(), odds: Number(odds), label }); }
+    if (open && _fn === 'betPick' && window._betReg) { window._betReg.open = true; window._betReg.list.push({ div, market, sel: sel.slice(), odds: Number(odds), label }); }
     return `<button class="bo-odd${on ? ' on' : ''}${_isBoost(market, sel) ? ' boosted' : ''}" ${open || _fn === 'betSetBoost' ? '' : 'disabled'} onclick="${_fn}('${market}','${sel.join(',')}',${odds},'${esc(label).replace(/'/g, "\\'")}')">${_isBoost(market, sel) ? '🚀 ' : ''}${fmtOdds(odds)}</button>`;
   };
   // Race winner + top 5
@@ -32816,8 +32816,8 @@ const _maFee = (c) => { const r = window._betCtx && window._betCtx.upcoming && w
 // Is the slip exactly the mystery acca that was spun? (only then does it get the 1.25× boost)
 window._maIsSlip = function(legs) { const m = window._maSlip, r = window._betCtx && window._betCtx.upcoming && window._betCtx.upcoming.name;
   if (!m || m.race !== r || !legs || legs.length !== m.keys.length) return false; const k = new Set(legs.map(l => l.key)); return m.keys.every(x => k.has(x)); };
-function _maPool() { const R = window._betReg || { list: [] }, seen = new Set();
-  return R.list.filter(x => x.odds >= 1.3 && x.odds <= 9 && !seen.has(x.market + ':' + x.sel.join('-')) && seen.add(x.market + ':' + x.sel.join('-'))); }
+function _maPool() { const d = window._betDiv, R = (window._betRegs || {})[d] || { list: [] }, seen = new Set();
+  return R.list.filter(x => x.div === d && x.odds >= 1.3 && x.odds <= 9 && !seen.has(x.market + ':' + x.sel.join('-')) && seen.add(x.market + ':' + x.sel.join('-'))); }
 function _maDraw(n) { const P = _maPool(), byM = {}; P.forEach(x => (byM[x.market] = byM[x.market] || []).push(x));
   const ms = Object.keys(byM).sort(() => Math.random() - .5), out = [], usedSel = new Set();
   for (const m of ms) { if (out.length >= n) break; const c = byM[m].filter(x => !x.sel.some(id => usedSel.has(id))); if (!c.length) continue; const x = c[Math.floor(Math.random() * c.length)]; out.push(x); x.sel.forEach(id => usedSel.add(id)); }
@@ -32872,7 +32872,7 @@ window.maSpin = async function() { if (window._maSpin || typeof currentUser === 
         if (tot >= 20) { try { fireConfetti({ count: 70 }); } catch (e) {} } } }, { once: true }); }); };
 window.maTake = function() { const res = window._maRes; if (!res || window._maSpin) return; window._maUnsaved = false; const div = window._betDiv;
   if ((window._betLegs || []).some(l => l.market === 'special')) window._betLegs = [];
-    window._betLegs = []; const L2 = window._betLegs; res.forEach(x => { const key = div + '|' + x.market + ':' + x.sel.join('-'); L2.push({ key, div, market: x.market, sel: x.sel.slice(), odds: x.odds, label: x.label }); });
+    window._betLegs = []; const L2 = window._betLegs; res.forEach(x => { const key = x.div + '|' + x.market + ':' + x.sel.join('-'); L2.push({ key, div: x.div, market: x.market, sel: x.sel.slice(), odds: x.odds, label: x.label }); });
   window._maSlip = { race: window._betCtx.upcoming.name, keys: L2.map(l => l.key) }; window._betUseFree = false;
   maClose(true); renderBets(); if (typeof showToast === 'function') showToast('🎰 Mystery acca on your slip with the ×' + MA_BOOST + ' boost — set your stake and place it.', 'success');
   setTimeout(() => { const el = document.getElementById('bo-stake') || document.querySelector('#page-bets .bo-slip'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 300); };
