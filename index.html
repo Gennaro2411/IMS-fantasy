@@ -32822,7 +32822,9 @@ function _maDraw(n) { const P = _maPool(), byM = {}; P.forEach(x => (byM[x.marke
   const ms = Object.keys(byM).sort(() => Math.random() - .5), out = [], usedSel = new Set();
   for (const m of ms) { if (out.length >= n) break; const c = byM[m].filter(x => !x.sel.some(id => usedSel.has(id))); if (!c.length) continue; const x = c[Math.floor(Math.random() * c.length)]; out.push(x); x.sel.forEach(id => usedSel.add(id)); }
   return out; }
-window.maClose = function() { const m = document.getElementById('ma-modal'); if (m) { m.classList.remove('in'); setTimeout(() => m.remove(), 180); } };
+// A paid spin that hasn't gone onto the slip yet would be lost — check first.
+const _maLoseOk = (go, what) => { if (!window._maUnsaved) return go(); customConfirm('You paid for this Mystery Acca but haven\'t added it to your slip. ' + what + ' and it\'s gone for good (the spin cost isn\'t refunded).', () => { window._maUnsaved = false; go(); }, 'Yes, lose it'); };
+window.maClose = function(force) { if (!force && window._maUnsaved) return _maLoseOk(() => maClose(true), 'Close the machine'); const m = document.getElementById('ma-modal'); if (m) { m.classList.remove('in'); setTimeout(() => m.remove(), 180); } };
 window.maOpen = function() {
   if (!_maPool().length) { if (typeof showToast === 'function') showToast('No open markets in this division right now.', 'error'); return; }
   document.getElementById('ma-modal')?.remove();
@@ -32835,12 +32837,12 @@ window.maOpen = function() {
     <div class="ma-tot" id="ma-tot"><span>Total odds</span><b>?</b></div>
     <div class="ma-acts"><button class="hx-btn" id="ma-spin" onclick="maSpin()" disabled>🎰 SPIN</button><button class="hx-btn ghost" id="ma-take" onclick="maTake()" disabled>Add to slip</button></div>
     <div class="ma-fine">The spin cost is paid each spin and isn't refunded. It starts at ${MA_FEE} and goes up by ${MA_FEE} with every spin this race week. The ×${MA_BOOST} boost applies when you place the acca exactly as spun (linked picks are re-priced together first).</div></div>`;
-  document.body.appendChild(m); requestAnimationFrame(() => m.classList.add('in')); window._maRes = null; window._maN = 4; _maIdle(); _maFeeUi(); };
+  document.body.appendChild(m); requestAnimationFrame(() => m.classList.add('in')); window._maRes = null; window._maUnsaved = false; window._maN = 4; _maIdle(); _maFeeUi(); };
 async function _maFeeUi() { if (typeof currentUser === 'undefined' || !currentUser || !currentUser.userId) { const b = document.getElementById('ma-spin'); if (b) { b.textContent = 'Log in to spin'; b.disabled = true; } return; }
   const c = await _betLoadCoins(currentUser.userId).catch(() => null); if (!c) return; const fee = _maFee(c), f = document.getElementById('ma-fee'), bl = document.getElementById('ma-bal'), b = document.getElementById('ma-spin'); if (!f) return;
   f.textContent = fee.toLocaleString(); bl.textContent = Math.round(c.balance || 0).toLocaleString(); if (!window._maSpin) { b.disabled = (c.balance || 0) < fee || !_maPool().length; b.textContent = (c.balance || 0) < fee ? 'Not enough IM$' : (window._maRes ? '🎰 SPIN AGAIN · ' : '🎰 SPIN · ') + fee.toLocaleString(); } }
 // Switch division inside the machine: re-draw the bets page for that division (which refreshes the pick pool).
-window.maDiv = async function(d) { if (window._maSpin || d === window._betDiv) return; window._betDiv = d;
+window.maDiv = async function(d, ok) { if (window._maSpin || d === window._betDiv) return; if (!ok && window._maUnsaved) return _maLoseOk(() => maDiv(d, true), 'Switch division'); window._betDiv = d;
   document.querySelectorAll('#ma-divs button').forEach(b => b.classList.toggle('on', b.textContent.trim() === d));
   const sp = document.getElementById('ma-spin'); if (sp) sp.disabled = true; window._maRes = null; _maIdle();
   try { await renderBets(); } catch (e) {}
@@ -32855,7 +32857,7 @@ window.maSpin = async function() { if (window._maSpin || typeof currentUser === 
   if (res.length < 3) { window._maSpin = false; if (typeof showToast === 'function') showToast('Not enough different markets open to build an acca.', 'error'); return; }
   try { const c = await _betLoadCoins(currentUser.userId), fee = _maFee(c), r = window._betCtx.upcoming.name;
     if ((c.balance || 0) < fee) { window._maSpin = false; _maFeeUi(); if (typeof showToast === 'function') showToast('You need ' + fee + ' IM$ to spin.', 'error'); return; }
-    c.balance -= fee; c.maSpins = (c.maRace === r ? (c.maSpins || 0) : 0) + 1; c.maRace = r; c.maSpent = (c.maSpent || 0) + fee; c.maLog = (c.maLog || []).concat([{ t: Date.now(), f: fee }]).slice(-300); await dbSet('coins', currentUser.userId, c);
+    window._maUnsaved = true; c.balance -= fee; c.maSpins = (c.maRace === r ? (c.maSpins || 0) : 0) + 1; c.maRace = r; c.maSpent = (c.maSpent || 0) + fee; c.maLog = (c.maLog || []).concat([{ t: Date.now(), f: fee }]).slice(-300); await dbSet('coins', currentUser.userId, c);
     const pill = document.getElementById('wallet-amt'); if (pill && window._wlShort) pill.textContent = _wlShort(c.balance);
   } catch (e) { window._maSpin = false; if (typeof showToast === 'function') showToast('Couldn\'t take the spin cost — try again.', 'error'); return; }
   window._maN = res.length; window._maRes = res; const P = _maPool(), R = document.getElementById('ma-reels'), H = 64;
@@ -32868,11 +32870,11 @@ window.maSpin = async function() { if (window._maSpin || typeof currentUser === 
       if (i === res.length - 1) { const tot = res.reduce((a, x) => a * x.odds, 1) * MA_BOOST; const b = document.querySelector('#ma-tot b'); if (b) b.innerHTML = `<small class="ma-was">${fmtOdds(Math.round(tot / MA_BOOST * 100) / 100)}</small> 🚀 ${fmtOdds(Math.round(tot * 100) / 100)}`;
         document.getElementById('ma-tot').classList.add('pop'); window._maSpin = false; _maFeeUi(); document.getElementById('ma-take').disabled = false;
         if (tot >= 20) { try { fireConfetti({ count: 70 }); } catch (e) {} } } }, { once: true }); }); };
-window.maTake = function() { const res = window._maRes; if (!res || window._maSpin) return; const div = window._betDiv;
+window.maTake = function() { const res = window._maRes; if (!res || window._maSpin) return; window._maUnsaved = false; const div = window._betDiv;
   if ((window._betLegs || []).some(l => l.market === 'special')) window._betLegs = [];
     window._betLegs = []; const L2 = window._betLegs; res.forEach(x => { const key = div + '|' + x.market + ':' + x.sel.join('-'); L2.push({ key, div, market: x.market, sel: x.sel.slice(), odds: x.odds, label: x.label }); });
   window._maSlip = { race: window._betCtx.upcoming.name, keys: L2.map(l => l.key) }; window._betUseFree = false;
-  maClose(); renderBets(); if (typeof showToast === 'function') showToast('🎰 Mystery acca on your slip with the ×' + MA_BOOST + ' boost — set your stake and place it.', 'success');
+  maClose(true); renderBets(); if (typeof showToast === 'function') showToast('🎰 Mystery acca on your slip with the ×' + MA_BOOST + ' boost — set your stake and place it.', 'success');
   setTimeout(() => { const el = document.getElementById('bo-stake') || document.querySelector('#page-bets .bo-slip'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 300); };
 window.betPick = function(market, selCsv, odds, label) {
   if (window._betIsLocked(window._betDiv, market, String(selCsv).split(','))) { if (typeof showToast === 'function') showToast('🔒 This bet is locked by the admins.', 'error'); return; }
