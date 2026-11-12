@@ -3039,12 +3039,15 @@
     #page-my-team .mt-dc:not(.cap-glow):not(.cap-glow-tc):not(.rsv-in){border-color:color-mix(in srgb,var(--tc) 50%,rgba(255,255,255,.08))!important}
     #page-my-team .mt-dc .mt-dc-st{border-radius:18px 18px 0 0!important}
     #page-my-team .mt-dc:not(.cap-glow):not(.cap-glow-tc) .mt-dc-st{background:linear-gradient(90deg,var(--tc),#a779e6 50%,#f0487a 82%,transparent)!important}
-    #page-my-team .mt-dc-wm{position:absolute;right:12px;top:12px;height:46px;max-width:34%;object-fit:contain;opacity:.2;pointer-events:none}
+    #page-my-team .mt-dc-wm{position:absolute;right:92px;top:16px;height:44px;max-width:26%;object-fit:contain;opacity:.2;pointer-events:none}
     #page-my-team .mt-dc-ph{width:54px!important;height:62px!important;border-radius:14px!important;box-shadow:0 0 0 1.5px color-mix(in srgb,var(--tc) 65%,transparent),0 10px 22px -14px var(--tc)}
     #page-my-team .mt-dc-ph>div:first-child{border-radius:14px!important}
     #page-my-team .mt-dc-nm{font:italic 900 1.14rem/1.05 'Barlow Condensed',sans-serif!important;text-transform:uppercase;letter-spacing:.3px;padding-right:2px}
     #page-my-team .mt-dc-div{border-radius:999px!important;padding:2px 8px!important;border:none!important;background:color-mix(in srgb,var(--tc) 55%,#15122b)!important;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--tc) 80%,#fff)}
     #page-my-team .mt-dc-lg{height:14px!important}
+    #page-my-team .mt-dc-id{display:flex;align-items:center;gap:6px;margin-bottom:3px;min-height:14px}
+    #page-my-team .mt-dc-fl:empty{display:none}#page-my-team .mt-dc-fl{display:inline-flex;align-items:center}#page-my-team .mt-dc-fl img{height:12px!important;width:auto!important;border-radius:2px;display:block}
+    @media (max-width:520px){#page-my-team .mt-dc-wm{right:10px;top:12px;height:34px}}
     /* Captain: same card language, in gold (triple captain keeps its own look) */
     #page-my-team .mt-dc.cap-glow{background:linear-gradient(180deg,rgba(255,255,255,.035),transparent 45%),linear-gradient(105deg,color-mix(in srgb,#ffc800 48%,#1a1408),color-mix(in srgb,#ffc800 22%,#151008) 52%,color-mix(in srgb,#ffc800 9%,#0e0c12) 92%)!important}
     #page-my-team .mt-dc.cap-glow .mt-dc-st{background:linear-gradient(90deg,#fff3b8,#ffc800 35%,#ffa751 75%,transparent)!important}
@@ -12857,6 +12860,7 @@ async function renderMyTeam() {
     }
     // Team-colour identity stripe across the top of the card
     html += '<div class="mt-dc-st" style="height:3px;border-radius:12px 12px 0 0;background:linear-gradient(90deg,'+stripeCol+',transparent 85%)"></div>';
+    if (teamLogo && !isCap) html += '<img class="mt-dc-wm" src="'+teamLogo+'" alt="" onerror="this.remove()">';
     html += '<div class="mt-card-row" style="padding:10px 10px 0;display:flex;gap:10px;align-items:center">';
     // Looking back at a past round: today's check-ins and race bans don't belong to that race — hide them.
     const _pastView = (typeof _snapView !== 'undefined') && !!_snapView;
@@ -12897,7 +12901,8 @@ async function renderMyTeam() {
     if (hasPole) html += '<span title="Pole position — '+esc(pointsRace.name)+'" style="font-size:.56rem;font-weight:800;letter-spacing:.5px;color:#e1bee7;background:rgba(155,89,182,0.20);border:1px solid rgba(155,89,182,0.6);border-radius:4px;padding:1px 5px">P</span>';
     if (hasFL) html += '<span title="Fastest lap — '+esc(pointsRace.name)+'" style="font-size:.56rem;font-weight:800;letter-spacing:.5px;color:#e1bee7;background:rgba(155,89,182,0.20);border:1px solid rgba(155,89,182,0.6);border-radius:4px;padding:1px 5px">⏱ FL</span>';
     html += '</div>';
-    if (teamLogo) html += '<img class="mt-dc-lg" src="'+teamLogo+'" style="height:12px;object-fit:contain;margin-bottom:3px;display:block" onerror="this.style.display=\'none\'">';
+    { const _fl = window._drvFlag ? window._drvFlag(driver, 18) : ''; // team logo + nationality flag (flag only when we have one)
+      if (teamLogo || _fl !== null) html += '<div class="mt-dc-id">'+(teamLogo?'<img class="mt-dc-lg" src="'+teamLogo+'" style="height:12px;object-fit:contain;display:block" onerror="this.style.display=\'none\'">':'')+'<span class="mt-dc-fl" data-nf="'+esc(driver.id)+'">'+(_fl||'')+'</span></div>'; }
     html += '<div class="mt-dc-nm" style="font-weight:700;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2">'+esc(driver.name)+'</div>';
     if (_reserveIn) html += '<div '+(_reserveIn.id?'onclick="event.stopPropagation();openDriverModal(\''+_reserveIn.id+'\')" style="margin-top:3px;cursor:pointer"':'style="margin-top:3px"')+'><span style="display:inline-flex;align-items:center;gap:3px;font-size:.54rem;font-weight:800;letter-spacing:.5px;color:#0a1a1a;background:linear-gradient(135deg,#27f4d2,#1ec8ac);border-radius:4px;padding:1px 6px;box-shadow:0 0 8px rgba(39,244,210,0.5)">🔄 RESERVE IN</span> <span style="font-size:.6rem;color:#27f4d2;font-weight:700">'+esc(_reserveIn.name)+'</span>'+(_reserveIn.st?' <span style="font-size:.54rem;font-weight:800;color:#f87171;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.45);border-radius:4px;padding:0 5px">'+_reserveIn.st+'</span>':'')+'</div>';
     if (!_pastView && (driver.raceBanRacesLeft>0 || driver.raceBanned)) html += '<div style="margin-top:2px"><span title="This driver has a race ban" style="display:inline-block;font-size:.54rem;font-weight:800;letter-spacing:.5px;color:#fff;background:#ff5470;border-radius:4px;padding:1px 6px">🚫 RACE BAN'+(driver.raceBanRacesLeft>0?' · '+driver.raceBanRacesLeft+' RACE'+(driver.raceBanRacesLeft>1?'S':''):'')+'</span></div>';
@@ -28576,6 +28581,15 @@ function initialsAvatar(name, size, extraStyle, overrideCols, avatarUrl) {
   return `<div style="width:${size}px;height:${size}px;border-radius:50%;background:linear-gradient(135deg,${c1},${c2});display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:${Math.round(size*0.4)}px;color:${textCol};${textShadow}flex-shrink:0;${extraStyle||''}">${initials}</div>`;
 }
 
+// Nationality flag for a driver (same source as the profile). Returns '' when there's no flag.
+// If the nationality data isn't loaded yet it loads once in the background and fills any waiting flag slots.
+window._drvFlag = function(driver, size) { const W = window._wordleData;
+  if (!W || !W.stats) { if (!window._drvFlagLoading) { window._drvFlagLoading = 1; (async () => { try { const d = await dbGet('settings', 'wordleData'); window._wordleData = window._wordleData || window._wdDecode(d && d.value); } catch (e) {}
+      const all = window._allDrivers || []; document.querySelectorAll('[data-nf]').forEach(el => { if (el.innerHTML) return; const dr = all.find(x => x.id === el.dataset.nf); if (dr) el.innerHTML = window._drvFlag(dr, size) || ''; }); })(); } return ''; }
+  try { const nk = x => searchFold(String(x || '').replace(/\[[^\]]*\]/g, ''));
+    const k = (driver.discordId && W.idToKey && W.idToKey[String(driver.discordId)]) || nk(driver.name), st = W.stats[k] || W.stats[nk(driver.name)];
+    const nat = typeof _natFix === 'function' ? _natFix(driver.name, st && st.nat) : (st && st.nat); if (!nat) return '';
+    return typeof natFlagImg === 'function' ? (natFlagImg(nat, size) || '') : ''; } catch (e) { return ''; } };
 window.customConfirm = function(msg, onYes, yesLabel, onNo) {
   const o=document.getElementById('confirm-overlay');
   const yesBtn=document.getElementById('confirm-yes-btn');
