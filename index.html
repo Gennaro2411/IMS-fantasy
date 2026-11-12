@@ -3996,6 +3996,7 @@
 .ck-gpl{display:grid;gap:8px;margin:16px 0}.ck-gpi{display:flex;align-items:center;gap:12px;text-align:left;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}.ck-gpi i{flex:none;width:30px;height:40px;border-radius:5px;background:linear-gradient(160deg,var(--c),var(--c2));box-shadow:0 6px 14px -6px #000}.ck-gpi b{display:block;color:#fff}.ck-gpi small{color:#c9cbe8;font-size:.8rem}
 .ck-gfrom{text-align:center;font-size:.8rem;color:#e7e8ff;margin:4px 0 10px}.ck-gfrom small{display:block;color:#9a9cc0;font-size:.68rem;margin-top:2px}
 .ck-gift{margin-top:18px;padding:14px;border-radius:14px;border:1px dashed rgba(239,68,68,.5);display:grid;gap:8px}.ck-gift textarea{resize:vertical;min-height:90px}.ck-gpi small,.ck-gfrom{white-space:pre-wrap;overflow-wrap:anywhere}.ck-gpl{max-height:55vh;overflow:auto}.ck-gift select,.ck-gift textarea,.ck-gift input{width:100%;padding:10px;border-radius:10px;background:#0e0c1a;color:#fff;border:1px solid rgba(255,255,255,.14);font:inherit}.ck-g-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.ck-g-row label{display:grid;gap:6px;justify-items:center;padding:10px 6px;border-radius:10px;background:rgba(255,255,255,.04);font-size:.78rem;font-weight:700;color:#fff}.ck-g-row label i{width:22px;height:30px;border-radius:4px;background:linear-gradient(160deg,var(--c),var(--c2))}.ck-g-row input{text-align:center;padding:8px!important}
+.ck-gpg{display:block}.ck-gpp{display:flex;flex-wrap:wrap;gap:8px 14px;margin-bottom:8px}.ck-gpp span{display:flex;align-items:center;gap:8px}.ck-gpp i{width:22px;height:30px;border-radius:4px;background:linear-gradient(160deg,var(--c),var(--c2));box-shadow:0 6px 14px -6px #000}.ck-gpg small{display:block;padding-top:8px;border-top:1px solid rgba(255,255,255,.08)}
 .ck-oos{padding:11px 10px;border-radius:12px;text-align:center;font-weight:800;font-size:.8rem;color:#ff8aa8;background:rgba(240,72,122,.1);border:1px solid rgba(240,72,122,.4)}.ck-left{display:block;text-align:center;margin-top:6px;font-size:.7rem;color:#9a9cc0}
 .pp-board{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 6px;text-align:left}
     .pp-col{display:flex;flex-direction:column;gap:6px;min-width:0}
@@ -36898,15 +36899,17 @@ window.ckBuy = async function(id, gi) { if (!_ckCan() || window._ckBusy) return;
   } catch (e) { console.error(e); showToast('Couldn\'t open the pack — nothing was charged if your balance is unchanged.', 'error'); }
   window._ckBusy = false; };
 // Give a pack to a player (rewards / gifts). Lands in their My Packs tab.
-window.ckGift = async function(userId, id, note) { if (!adminLoggedIn || !CK_PACKS[id] || !userId) return false; const c = await _betLoadCoins(userId);
-  const K = c.cards = c.cards || { inv: {} }; K.gifts = (K.gifts || []).concat([{ p: id, from: String(note || 'Gift from IMS').slice(0, 400), t: Date.now() }]); await dbSet('coins', userId, c); return true; };
+// id can be one pack id or a list of them; everything sent together shares a batch id (b) so it shows as one gift.
+window.ckGift = async function(userId, id, note) { const L = [].concat(id).filter(x => CK_PACKS[x]); if (!adminLoggedIn || !L.length || !userId) return 0; const c = await _betLoadCoins(userId);
+  const K = c.cards = c.cards || { inv: {} }, t = Date.now(), b = t.toString(36) + Math.random().toString(36).slice(2, 6), from = String(note || 'Gift from IMS').slice(0, 400);
+  K.gifts = (K.gifts || []).concat(L.map(p => ({ p, from, t, b }))); await dbSet('coins', userId, c); return L.length; };
 // Pop-up for packs a player has been gifted but not been told about yet (g.s = seen).
 window._ckGiftPop = async function(c) { const G = (c && c.cards && c.cards.gifts) || [], fresh = G.filter(g => !g.s); if (!fresh.length || document.getElementById('ck-gp')) return;
   if (!window._gamesLock || window._gamesLock.cardsOpen == null) { const lk = await dbGet('settings', 'gamesLock').catch(() => null); window._gamesLock = (lk && lk.value) || {}; }
   if (!_ckCan()) return;
   const o = document.createElement('div'); o.id = 'ck-gp'; o.className = 'ck-ov ck-gp';
   o.innerHTML = `<div class="ck-gpb"><div class="ck-k">You've been gifted</div><div class="ck-ttl">🎁 <em>${fresh.length === 1 ? 'A CARD PACK' : fresh.length + ' CARD PACKS'}</em></div>
-    <div class="ck-gpl">${fresh.map(g => { const P = CK_PACKS[g.p] || {}; return `<div class="ck-gpi" style="--c:${P.c};--c2:${P.c2}"><i></i><span><b>${esc(P.n || 'Card Pack')}</b><small>${esc(g.from || 'Gift from IMS')}</small></span></div>`; }).join('')}</div>
+    <div class="ck-gpl">${Object.values(fresh.reduce((a, g) => { const k = g.b || (g.from + '|' + g.t); (a[k] = a[k] || { from: g.from, n: {} }).n[g.p] = (a[k].n[g.p] || 0) + 1; return a; }, {})).map(B => `<div class="ck-gpi ck-gpg"><div class="ck-gpp">${Object.keys(CK_PACKS).filter(id => B.n[id]).map(id => { const P = CK_PACKS[id]; return `<span style="--c:${P.c};--c2:${P.c2}"><i></i><b>${B.n[id]} × ${esc(P.n)}</b></span>`; }).join('')}</div><small>${esc(B.from || 'Gift from IMS')}</small></div>`).join('')}</div>
     <div class="ck-acts"><button class="hx-btn" onclick="_ckGiftSeen(1)">Open My Packs</button><button class="hx-btn ghost" onclick="_ckGiftSeen(0)">Later</button></div></div>`;
   document.body.appendChild(o); requestAnimationFrame(() => o.classList.add('in')); try { fireConfetti({ count: 70 }); } catch (e) {} };
 window._ckGiftSeen = async function(go) { document.getElementById('ck-gp')?.remove();
@@ -36916,7 +36919,7 @@ window.ckGiftUI = async function() { const u = document.getElementById('ck-g-u')
   const qs = Object.keys(CK_PACKS).map(id => [id, Math.max(0, Math.min(20, parseInt((document.getElementById('ck-g-q-' + id) || {}).value, 10) || 0))]).filter(x => x[1] > 0);
   if (!qs.length) return showToast('Add at least one pack.', 'error');
   const ids = u.value === '*' ? [...u.options].map(o => o.value).filter(v => v && v !== '*') : [u.value], lbl = u.value === '*' ? 'every player (' + ids.length + ')' : u.options[u.selectedIndex].text;
-  customConfirm(`Give ${qs.map(([id, q]) => q + ' × ' + CK_PACKS[id].n).join(', ')} to ${esc(lbl)}?`, async () => { let n = 0; for (const id of ids) { for (const [pk, q] of qs) for (let i = 0; i < q; i++) if (await ckGift(id, pk, nt.value || 'Gift from IMS')) n++; }
+  customConfirm(`Give ${qs.map(([id, q]) => q + ' × ' + CK_PACKS[id].n).join(', ')} to ${esc(lbl)}?`, async () => { const L = []; qs.forEach(([pk, q]) => { for (let i = 0; i < q; i++) L.push(pk); }); let n = 0; for (const id of ids) n += await ckGift(id, L, nt.value || 'Gift from IMS');
     showToast('🎁 Sent ' + n + ' pack' + (n === 1 ? '' : 's') + '.', 'success'); renderGames(); }, 'Send'); };
 function _ckReveal(id, got, gift) { document.getElementById('ck-ov')?.remove(); const o = document.createElement('div'); o.id = 'ck-ov'; o.className = 'ck-ov';
   window._ckRv = { id, got, i: -1, sell: {}, gift: !!gift };
