@@ -3991,6 +3991,9 @@
     @media (max-width:640px){.ck-shop{grid-template-columns:1fr}.ck-sp{flex-direction:row;flex-wrap:wrap;justify-content:center}.ck-sp .ckp{width:104px;height:146px;margin:0}.ck-sp .ckp-body b{font-size:1.05rem}.ck-sp .ck-odds{flex:1;min-width:150px}.ck-stats{grid-template-columns:1fr 1fr}.ck-row{gap:6px}.ck-pb{grid-template-columns:1fr}.ck-acts{grid-template-columns:1fr}.ck-dt{grid-template-columns:1fr}.ck-dt>.ck{max-width:200px;margin:0 auto}.ck-grid{grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:7px}.ck-vr{grid-template-columns:12px 1.2fr .7fr 1.2fr}.ck-vr span:nth-of-type(2){display:none}}
     @media (prefers-reduced-motion:reduce){.ck-pk .ckp,.ck-pk p,.ck.t-rg .ck-in::before,.ck.t-dia .ck-in::before,.ck-rv.hot .ck-back{animation:none}}
     .ck-dup{display:inline-block;padding:2px 7px;border-radius:6px;font:800 .62rem/1.3 system-ui,sans-serif;letter-spacing:.1em;color:#fff;background:#f0487a;vertical-align:1px}.ck-dup.new{background:#22c55e}.ck-pick{position:relative}.ck-front .ck-dup-tag{top:-11px;font-size:.75rem;padding:3px 10px}.ck-dup-tag{position:absolute;top:-8px;left:50%;transform:translateX(-50%);z-index:3;box-shadow:0 4px 12px -4px #000}
+.ck-wrap .wd-modes{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;width:100%}.ck-wrap .wd-modes button{min-width:0;padding:7px 2px!important;font-size:.66rem!important;letter-spacing:.3px!important;line-height:1.15;flex-direction:column;white-space:normal;overflow-wrap:normal}.ck-wrap .wd-modes button span{display:block}
+.ck-gfrom{text-align:center;font-size:.8rem;color:#e7e8ff;margin:4px 0 10px}.ck-gfrom small{display:block;color:#9a9cc0;font-size:.68rem;margin-top:2px}
+.ck-gift{margin-top:18px;padding:14px;border-radius:14px;border:1px dashed rgba(239,68,68,.5);display:grid;gap:8px}.ck-gift select,.ck-gift input{width:100%;padding:10px;border-radius:10px;background:#0e0c1a;color:#fff;border:1px solid rgba(255,255,255,.14);font:inherit}.ck-g-row{display:grid;grid-template-columns:1fr 80px;gap:8px}
 .ck-oos{padding:11px 10px;border-radius:12px;text-align:center;font-weight:800;font-size:.8rem;color:#ff8aa8;background:rgba(240,72,122,.1);border:1px solid rgba(240,72,122,.4)}.ck-left{display:block;text-align:center;margin-top:6px;font-size:.7rem;color:#9a9cc0}
 .pp-board{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 6px;text-align:left}
     .pp-col{display:flex;flex-direction:column;gap:6px;min-width:0}
@@ -36873,23 +36876,32 @@ const _ckInv = (c) => (c && c.cards && c.cards.inv) || {};
 const _ckSetPill = (c) => { const pill = document.getElementById('wallet-amt'); if (pill && window._wlShort) pill.textContent = window._wlShort(c.balance); };
 window.ckTab = function(t) { window._ckTab = t; renderGames(); };
 // ---- Buy + open ----
-window.ckBuy = async function(id) { if (!_ckCan() || window._ckBusy) return; const P = CK_PACKS[id]; if (!P) return;
+// gi = index into c.cards.gifts → opens a gifted/reward pack: free, no daily limit.
+window.ckBuy = async function(id, gi) { if (!_ckCan() || window._ckBusy) return; const P = CK_PACKS[id]; if (!P) return; const gift = gi != null;
   if (typeof currentUser === 'undefined' || !currentUser || !currentUser.userId) return showToast('Log in to buy packs.', 'error');
   window._ckBusy = true;
   try { const pool = await _ckPool(), c = await _betLoadCoins(currentUser.userId);
-    if (_ckLeft(c.cards, id) <= 0) { window._ckBusy = false; renderGames(); return showToast('Sorry! This card pack is out of stock', 'error'); }
-    if ((c.balance || 0) < P.price) { window._ckBusy = false; return showToast('You need ' + P.price.toLocaleString() + ' IM$ for a ' + P.n + '.', 'error'); }
+    if (gift && !(c.cards && c.cards.gifts && c.cards.gifts[gi] && c.cards.gifts[gi].p === id)) { window._ckBusy = false; renderGames(); return showToast('That pack has already been opened.', 'error'); }
+    if (!gift && _ckLeft(c.cards, id) <= 0) { window._ckBusy = false; renderGames(); return showToast('Sorry! This card pack is out of stock', 'error'); }
+    if (!gift && (c.balance || 0) < P.price) { window._ckBusy = false; return showToast('You need ' + P.price.toLocaleString() + ' IM$ for a ' + P.n + '.', 'error'); }
     const got = []; for (let i = 0; i < CK_N; i++) { const x = _ckRoll(id, pool); if (x) got.push(x); }
     if (got.length < CK_N) { window._ckBusy = false; return showToast('Not enough cards in the pool for that pack yet.', 'error'); }
     got.sort((a, b) => a.r - b.r || a.sc - b.sc); // worst first, best last
-    c.balance -= P.price; const K = c.cards = c.cards || { inv: {} }; K.inv = K.inv || {};
-    K.dex = K.dex || {}; Object.keys(K.inv).forEach(k => { if (K.inv[k] > 0) K.dex[k] = 1; }); got.forEach((x, i) => { got[i] = x = Object.assign({}, x, { dup: !!(K.inv[x.k] > 0 || K.dex[x.k]) }); K.inv[x.k] = (K.inv[x.k] || 0) + 1; K.dex[x.k] = 1; }); K.packs = (K.packs || 0) + 1; if (!K.day || K.day.d !== _ckDay()) K.day = { d: _ckDay() }; K.day[id] = (K.day[id] || 0) + 1; K.spent = (K.spent || 0) + P.price;
-    K.log = (K.log || []).concat([{ t: Date.now(), p: id, f: P.price }]).slice(-300); // pack spend log (for the book, like spin fees)
+    if (!gift) c.balance -= P.price; const K = c.cards = c.cards || { inv: {} }; if (gift) { K.gifts.splice(gi, 1); K.giftsOpened = (K.giftsOpened || 0) + 1; } K.inv = K.inv || {};
+    K.dex = K.dex || {}; Object.keys(K.inv).forEach(k => { if (K.inv[k] > 0) K.dex[k] = 1; }); got.forEach((x, i) => { got[i] = x = Object.assign({}, x, { dup: !!(K.inv[x.k] > 0 || K.dex[x.k]) }); K.inv[x.k] = (K.inv[x.k] || 0) + 1; K.dex[x.k] = 1; }); K.packs = (K.packs || 0) + 1; if (!gift) { if (!K.day || K.day.d !== _ckDay()) K.day = { d: _ckDay() }; K.day[id] = (K.day[id] || 0) + 1; K.spent = (K.spent || 0) + P.price;
+    K.log = (K.log || []).concat([{ t: Date.now(), p: id, f: P.price }]).slice(-300); } // pack spend log (for the book, like spin fees)
     const big = got.filter(x => x.r >= CK_FEED_MIN); if (big.length) c.cardPulls = (c.cardPulls || []).concat(big.map(x => ({ k: x.k, n: x.n, r: x.r, t: Date.now(), p: id, by: _wdMe().name }))).slice(-40);
     await dbSet('coins', currentUser.userId, c); _ckSetPill(c); window._ckFeed = null;
     _ckReveal(id, got);
   } catch (e) { console.error(e); showToast('Couldn\'t open the pack — nothing was charged if your balance is unchanged.', 'error'); }
   window._ckBusy = false; };
+// Give a pack to a player (rewards / gifts). Lands in their My Packs tab.
+window.ckGift = async function(userId, id, note) { if (!adminLoggedIn || !CK_PACKS[id] || !userId) return false; const c = await _betLoadCoins(userId);
+  const K = c.cards = c.cards || { inv: {} }; K.gifts = (K.gifts || []).concat([{ p: id, from: String(note || 'Gift from IMS').slice(0, 60), t: Date.now() }]); await dbSet('coins', userId, c); return true; };
+window.ckGiftUI = async function() { const u = document.getElementById('ck-g-u'), pk = document.getElementById('ck-g-p'), nt = document.getElementById('ck-g-n'), qn = document.getElementById('ck-g-q'); if (!u || !u.value) return showToast('Pick a player.', 'error');
+  const ids = u.value === '*' ? [...u.options].map(o => o.value).filter(v => v && v !== '*') : [u.value], q = Math.max(1, Math.min(20, parseInt(qn.value, 10) || 1)), lbl = u.value === '*' ? 'every player (' + ids.length + ')' : u.options[u.selectedIndex].text;
+  customConfirm(`Give ${q} × ${CK_PACKS[pk.value].n} to ${esc(lbl)}?`, async () => { let n = 0; for (const id of ids) { for (let i = 0; i < q; i++) if (await ckGift(id, pk.value, nt.value || 'Gift from IMS')) n++; }
+    showToast('🎁 Sent ' + n + ' pack' + (n === 1 ? '' : 's') + '.', 'success'); renderGames(); }, 'Send'); };
 function _ckReveal(id, got) { document.getElementById('ck-ov')?.remove(); const o = document.createElement('div'); o.id = 'ck-ov'; o.className = 'ck-ov';
   window._ckRv = { id, got, i: -1, sell: {} };
   o.innerHTML = `<div class="ck-stage" id="ck-stage"><div class="ck-pk" id="ck-pk" onclick="ckRip()">${_ckPackArt(id)}<p>Tap the pack to open it</p></div></div>`;
@@ -36958,7 +36970,7 @@ async function renderCardsGame(el) {
   const open = !!(window._gamesLock || {}).cardsOpen;
   let body = `<div class="wd-top"><button class="wd-back" onclick="openGame('hub')" title="Back to Games">←</button><div class="wd-brand"><img src="icons/icon-192.png?v=3" alt="IMS"><span>IMS <em>CARDS</em></span></div><div class="wd-meta"><span class="wd-pill"><i class="imc"></i> ${c ? Math.round(c.balance || 0).toLocaleString() : '—'}</span></div></div>
     ${adminLoggedIn ? `<div class="ck-adm"><span>${open ? '🟢 <b>Open to everyone</b>' : '🔒 <b>Only you can see this</b> — players can\'t see IMS Cards yet'}</span><button onclick="ckSetOpen(${open ? 'false' : 'true'})">${open ? 'Hide from players' : 'Let everyone see it'}</button></div>` : ''}
-    <div class="wd-modes">${[['shop', '🛒', 'SHOP'], ['col', '🗂️', `COLLECTION${ownN ? ' · ' + ownN : ''}`], ['feed', '🔥', 'BIG PULLS'], ['all', '📖', 'CARD INDEX']].map(([m, i, l]) => `<button class="${tab === m ? 'on' : ''}" onclick="ckTab('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>`;
+    <div class="wd-modes">${[['shop', '🛒', 'SHOP'], ['packs', '🎁', `MY PACKS${(K.gifts || []).length ? ' · ' + K.gifts.length : ''}`], ['col', '🗂️', `MY CARDS${ownN ? ' · ' + ownN : ''}`], ['feed', '🔥', 'BIG PULLS'], ['all', '📖', 'CARD INDEX']].map(([m, i, l]) => `<button class="${tab === m ? 'on' : ''}" onclick="ckTab('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>`;
   if (!me) body += '<div class="alert alert-warning">Log in to your team to buy packs.</div>';
   if (tab === 'shop') { const pct = (x) => (x * 100 >= 1 ? Math.round(x * 100) : (x * 100).toFixed(2).replace(/0$/, '')) + '%';
     body += `<div class="ck-shop">${Object.entries(CK_PACKS).map(([id, P]) => { const left = _ckLeft(K, id), oos = left <= 0, can = c && !oos && (c.balance || 0) >= P.price;
@@ -36968,6 +36980,16 @@ async function renderCardsGame(el) {
       <div class="ck-note">Each pack has <b>${CK_N} cards</b>, revealed worst to best. The percentages are the chance of <b>each card</b> being that rarity, and inside a rarity the lower-rated drivers are much more common. Most packs are worth less than they cost — the win is packing a rare card with a big sell value.</div>
       <div class="ck-vals"><div class="wl-sh"><span>Sell values</span><small>${pool.list.length} drivers in the pool</small></div>${CK_TIERS.map(t => { const n = pool.list.filter(x => x.t === t.id), hi = t.id === 'dia' ? 96 : CK_TIERS[CK_TIERS.indexOf(t) - 1].lo - 1, lo = Math.max(t.lo, 40);
         return `<div class="ck-vr t-${t.id}"><i></i><b>${t.n}</b><span>${t.id === 'ub' ? 'under 50' : lo + '–' + hi}</span><span>${n.length} card${n.length === 1 ? '' : 's'}</span><em>${Math.round(t.sell(lo)).toLocaleString()}–${Math.round(t.sell(hi)).toLocaleString()} IM$</em></div>`; }).join('')}</div>`; }
+  else if (tab === 'packs') { const G = K.gifts || [];
+    body += `<div class="wl-sh"><span>Your unopened packs</span><small>rewards &amp; gifts</small></div>
+      ${G.length ? `<div class="ck-shop">${G.map((g, i) => { const P = CK_PACKS[g.p]; if (!P) return ''; return `<div class="ck-sp" style="--c:${P.c};--c2:${P.c2}">${_ckPackArt(g.p)}<b class="ck-sp-n">${P.n}</b>
+        <div class="ck-gfrom">🎁 ${esc(g.from || 'Gift')}<small>${formatTimeAgo(g.t)}</small></div><button class="hx-btn" onclick="ckBuy('${g.p}',${i})">Open pack</button></div>`; }).join('')}</div>
+        <div class="ck-fine">Gifted and reward packs are free to open and don't count towards the daily shop limit.</div>` : '<div class="ck-empty">No packs here yet. Packs you win as rewards or get as gifts show up here.</div>'}`;
+    if (adminLoggedIn) { const tms = (await dbGetAll('teams').catch(() => [])).filter(t => t && t.userId).sort((a, b) => String(a.teamName || a.playerName).localeCompare(String(b.teamName || b.playerName)));
+      body += `<div class="ck-gift"><div class="wl-sh"><span>🛠️ Give packs</span><small>only you can see this</small></div>
+        <select id="ck-g-u"><option value="">Pick a player…</option><option value="*">Everyone</option>${tms.map(t => `<option value="${esc(t.userId)}">${esc(t.teamName || t.playerName || t.userId)}</option>`).join('')}</select>
+        <div class="ck-g-row"><select id="ck-g-p">${Object.entries(CK_PACKS).map(([id, P]) => `<option value="${id}">${P.n}</option>`).join('')}</select><input id="ck-g-q" type="number" min="1" max="20" value="1"></div>
+        <input id="ck-g-n" maxlength="60" placeholder="Message, e.g. Race winner reward"><button class="hx-btn" onclick="ckGiftUI()">🎁 Send packs</button></div>`; } }
   else if (tab === 'col') { own.sort((a, b) => b.c.r - a.c.r || b.c.sc - a.c.sc);
     body += `<div class="ck-stats"><div><small>Cards</small><b>${ownN}</b></div><div><small>Collection value</small><b>${ownV.toLocaleString()}</b></div><div><small>Packs opened</small><b>${K.packs || 0}</b></div><div><small>Spent / sold</small><b>${(K.spent || 0).toLocaleString()} / ${(K.sold || 0).toLocaleString()}</b></div></div>
       ${own.length ? `<div class="ck-grid">${own.map(x => _ckCard(x.c, { n: x.n, on: `ckDetail('${x.c.k}')` })).join('')}</div><div class="ck-fine">Tap a card for its stats and to quick sell it.</div>` : '<div class="ck-empty">No cards yet. Open a pack in the shop.</div>'}`; }
