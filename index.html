@@ -900,6 +900,42 @@
   #driver-modal-content .dm-flag{padding-left:7px;border-left:1px solid rgba(255,255,255,.24)}
   .dmi-c{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ta,#7c86ff) 26%,rgba(124,134,255,.2))!important}
   .dmi-k::before{background:linear-gradient(90deg,var(--ta,#6f74e8),#a779e6,#f0487a)!important}
+  /* Constructor profile */
+  .cx-hero{position:relative;display:flex;align-items:center;gap:18px;padding:26px 22px 22px;overflow:hidden;border-radius:26px 26px 0 0;background:radial-gradient(90% 120% at 0% 0%,color-mix(in srgb,var(--tc) 46%,transparent),transparent 62%),radial-gradient(70% 90% at 100% 100%,rgba(240,72,122,.16),transparent 65%),linear-gradient(170deg,#15122b,#0b0a14 80%)}
+  .cx-hero::before{content:'';position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(115deg,color-mix(in srgb,var(--tc) 22%,transparent) 0 2px,transparent 2px 16px);-webkit-mask-image:linear-gradient(100deg,transparent 30%,#000);mask-image:linear-gradient(100deg,transparent 30%,#000);opacity:.55}
+  .cx-hero::after{content:'';position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,var(--tc),#a779e6 55%,#f0487a)}
+  .cx-x{position:absolute;top:14px;right:14px;z-index:2;width:36px;height:36px;border-radius:50%;border:none;cursor:pointer;color:#fff;font-size:1.2rem;background:rgba(8,7,15,.6);box-shadow:inset 0 0 0 1px rgba(255,255,255,.16)}
+  .cx-logo{position:relative;z-index:1;flex:none;width:112px;height:84px;display:grid;place-items:center;border-radius:18px;font-size:2rem;background:linear-gradient(160deg,rgba(255,255,255,.1),rgba(255,255,255,.02));box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--tc) 70%,transparent),0 14px 34px -16px var(--tc)}
+  .cx-logo img{max-width:88px;max-height:60px;object-fit:contain}
+  .cx-id{position:relative;z-index:1;min-width:0}.cx-id>small{font:800 .58rem/1 system-ui,sans-serif;letter-spacing:2.4px;text-transform:uppercase;color:#c9cbf5}
+  .cx-id h2{margin:6px 0 8px;font:italic 900 2.3rem/.95 'Barlow Condensed',sans-serif;text-transform:uppercase;color:#fff;overflow-wrap:anywhere}
+  .cx-tags{display:flex;flex-wrap:wrap;gap:6px}.cx-tag{font-size:.68rem;font-weight:800;padding:4px 9px;border-radius:999px;color:#fff;background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+  .cx-tag.g{background:linear-gradient(110deg,#6f74e8,#a779e6 55%,#f0487a);box-shadow:none}
+  .cx-money{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.07)}
+  .cx-money>div{padding:12px 14px;border-radius:16px;background:linear-gradient(170deg,rgba(124,134,255,.1),rgba(255,255,255,.015) 70%);box-shadow:inset 0 0 0 1px rgba(124,134,255,.2)}
+  .cx-money small{display:block;font:800 .56rem/1 system-ui,sans-serif;letter-spacing:2px;text-transform:uppercase;color:#a9aef5}
+  .cx-money b{display:block;margin-top:5px;font:italic 900 1.7rem/1 'Barlow Condensed',sans-serif;color:#fff}
+  .cx-money span{display:block;margin-top:4px;font-size:.66rem;color:var(--muted)}.cx-money i{display:block;height:5px;border-radius:5px;background:rgba(255,255,255,.08);overflow:hidden;margin-bottom:4px}.cx-money u{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,#6f74e8,#a779e6 55%,#f0487a)}
+  .cx-divs{display:flex;flex-direction:column;gap:8px;padding:6px 0}
+  .cx-div{display:grid;grid-template-columns:38px 1fr 40px 34px;align-items:center;gap:8px}.cx-div>span{font-size:.64rem;font-weight:900;text-align:center;padding:3px 0;border-radius:6px;color:#0b0b14}
+  .cx-div i{height:10px;border-radius:10px;background:rgba(255,255,255,.07);overflow:hidden}.cx-div u{display:block;height:100%;border-radius:10px}
+  .cx-div b{font:italic 900 1.05rem/1 'Barlow Condensed',sans-serif;text-align:right;color:#fff}.cx-div small{font-size:.62rem;color:var(--muted);text-align:right}
+  .cx-hist{padding:18px 20px 22px}.cx-em{font-style:italic;background:linear-gradient(100deg,#7c86ff,#b184e8 48%,#ff5c8a);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .cx-sbar{display:flex;gap:8px;overflow-x:auto;padding-bottom:10px;scrollbar-width:none}.cx-sbar::-webkit-scrollbar{display:none}
+  .cx-sp{flex:none;display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:7px 13px;border-radius:12px;cursor:pointer;color:var(--text);font:inherit;opacity:.7;background:linear-gradient(135deg,color-mix(in srgb,var(--a) 10%,transparent),rgba(255,255,255,.02));border:1px solid color-mix(in srgb,var(--a) 30%,transparent)}
+  .cx-sp.active{opacity:1;border-color:var(--a);background:linear-gradient(135deg,color-mix(in srgb,var(--a) 38%,transparent),color-mix(in srgb,var(--a) 10%,transparent))}
+  .cx-sp b{font:900 1.05rem/1 'Barlow Condensed',sans-serif;letter-spacing:.5px}.cx-sp small{font-size:.6rem;font-weight:700;color:var(--muted)}.cx-sp.active small{color:#fff}
+  .cx-rounds{display:grid;grid-template-columns:1fr;gap:7px}
+  .cx-rd{display:grid;grid-template-columns:34px minmax(0,1fr) auto auto;align-items:center;gap:11px;padding:9px 12px;border-radius:14px;background:rgba(255,255,255,.028);box-shadow:inset 0 0 0 1px rgba(255,255,255,.07)}
+  .cx-rd.p{box-shadow:inset 0 0 0 1px rgba(177,132,232,.4)}.cx-rd.w{background:linear-gradient(110deg,rgba(255,210,74,.12),rgba(255,255,255,.02) 60%);box-shadow:inset 0 0 0 1px rgba(255,210,74,.5)}
+  .cx-rd-f{font-size:1.4rem;line-height:1;display:grid;place-items:center}.cx-rd-f img{max-width:30px;border-radius:4px}
+  .cx-rd-n{min-width:0;display:flex;flex-direction:column;gap:2px}.cx-rd-n b{font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cx-rd-n small{font-size:.66rem;color:var(--muted)}
+  .cx-rd-n i{height:4px;border-radius:4px;background:rgba(255,255,255,.07);overflow:hidden;margin-top:2px}.cx-rd-n u{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,#6f74e8,#a779e6 55%,#f0487a)}
+  .cx-rd-r{font:italic 900 .95rem/1 'Barlow Condensed',sans-serif;padding:4px 8px;border-radius:8px;color:#c9cbf5;background:rgba(124,134,255,.14)}
+  .cx-rd.p .cx-rd-r{color:#fff;background:linear-gradient(110deg,#6f74e8,#a779e6)}.cx-rd.w .cx-rd-r{color:#1a1206;background:linear-gradient(110deg,#ffe083,#ffb020)}
+  .cx-rd-p{font:italic 900 1.35rem/1 'Barlow Condensed',sans-serif;color:#fff;min-width:44px;text-align:right}.cx-rd-p small{font:800 .54rem/1 system-ui,sans-serif;letter-spacing:1px;color:var(--muted);margin-left:3px;font-style:normal}
+  @media (min-width:760px){.cx-rounds{grid-template-columns:1fr 1fr}.cx-hero{padding:32px 30px 26px}.cx-id h2{font-size:3rem}.cx-money,.cx-hist{padding-left:26px;padding-right:26px}}
+  @media (max-width:480px){.cx-logo{width:84px;height:66px}.cx-logo img{max-width:66px;max-height:46px}.cx-id h2{font-size:1.8rem}}
   .dmi{padding:18px 20px 6px;border-bottom:1px solid rgba(255,255,255,.07)}
   .dmi-h small,.dmi-ch small{display:flex;align-items:center;gap:8px;font:800 .56rem/1 system-ui,sans-serif;letter-spacing:2.6px;text-transform:uppercase;color:#a9aef5}
   .dmi-h small::before{content:'';width:20px;height:2px;border-radius:2px;background:linear-gradient(100deg,#7c86ff,#b184e8 48%,#ff5c8a)}
@@ -20958,19 +20994,17 @@ window.openConstructorModal = async function(constrId) {
     : priceChange < 0
     ? `<span style="color:var(--red);font-size:.85rem">▼ $${Math.abs(priceChange).toFixed(1)}M</span>` : '';
 
+  // Where this constructor ranked among all constructors in one round (1 = top scorer).
+  const roundRank = (race, pid) => { const cp = race.constructorPoints || {}, me = cp[pid] || 0; return 1 + Object.keys(cp).filter(k => k !== pid && (cp[k] || 0) > me).length; };
   function raceListHtml(raceList, pid) {
     if (!raceList.length) return '<p class="text-muted">No results.</p>';
-    return raceList.slice().reverse().map(race => {
-      const pts = race.constructorPoints[pid]||0;
-      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
-        <div style="display:flex;align-items:center;gap:10px">
-          <div>${getRaceFlag(race.name)}</div>
-          <div><div style="font-weight:600;font-size:.9rem">${esc(race.name)}</div>
-          <div style="font-size:.75rem;color:var(--muted)">Round ${race.raceNum}</div></div>
-        </div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.1rem;color:var(--gold)">${pts} pts</div>
-      </div>`;
-    }).join('');
+    const mx = Math.max(1, ...raceList.map(r => r.constructorPoints[pid] || 0));
+    return `<div class="cx-rounds">${raceList.slice().reverse().map(race => {
+      const pts = race.constructorPoints[pid] || 0, rk = roundRank(race, pid);
+      return `<div class="cx-rd${rk === 1 ? ' w' : rk <= 3 ? ' p' : ''}"><span class="cx-rd-f">${getRaceFlag(race.name)}</span>
+        <span class="cx-rd-n"><b>${esc(race.name)}</b><small>Round ${race.raceNum}</small><i><u style="width:${Math.round(pts / mx * 100)}%"></u></i></span>
+        <span class="cx-rd-r">P${rk}</span><span class="cx-rd-p">${pts}<small>pts</small></span></div>`;
+    }).join('')}</div>`;
   }
 
   const hasPast = pastSeasons.length > 0;
@@ -20988,39 +21022,70 @@ window.openConstructorModal = async function(constrId) {
       }).join('')}
     </div>` : '';
 
+  // ---- Season numbers for the insights block ----
+  const _live = constrs.filter(c => c && !c._deleted);
+  const _tot = (id, upTo) => completedRaces.slice(0, upTo == null ? completedRaces.length : upTo).reduce((a, r) => a + ((r.constructorPoints || {})[id] || 0), 0);
+  const _posAfter = (n) => 1 + _live.filter(c => c.id !== constrId && _tot(c.id, n) > _tot(constrId, n)).length;
+  const cStand = completedRaces.length ? _posAfter() : 0;
+  const cRanks = completedRaces.map(r => roundRank(r, constrId)), cWins = cRanks.filter(x => x === 1).length, cTop3 = cRanks.filter(x => x <= 3).length;
+  const cPosLine = completedRaces.map((_, i) => _posAfter(i + 1));
+  const cAllTime = totalPts + pastSeasons.reduce((a, x) => a + x.totalPts, 0);
+  const cLeader = _live.map(c => _tot(c.id)).sort((a, b) => b - a)[0] || 0;
+  const _nt = x => String(x || '').toLowerCase().replace(/\b(racing|f1 team|team|gp|scuderia)\b/g, '').replace(/[^a-z0-9]/g, '');
+  const _drv = (await dbGetAll('drivers').catch(() => [])).filter(d => d && !d._deleted && !d.isReserve && _nt(d.team) === _nt(constr.name));
+  const _divs = (typeof divisionsForSeason === 'function') ? divisionsForSeason(currentSeason) : DIVISIONS;
+  const cByDiv = _divs.map(dv => ({ dv, p: _drv.filter(d => d.division === dv).reduce((a, d) => a + completedRaces.reduce((x, r) => x + (((r.driverPoints || {})[d.id]) || 0), 0), 0), n: _drv.filter(d => d.division === dv).length })).filter(x => x.n);
+  const cHist = pastSeasons.slice().reverse().map(x => ({ s: x.season, p: x.totalPts })).concat([{ s: currentSeason, p: totalPts, cur: 1 }]);
+  const ord = (n) => n + (n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th');
+  // ---- Charts (inline SVG, same look as driver profiles) ----
+  const DEFS = `<defs><linearGradient id="cxG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b184e8"/><stop offset="1" stop-color="#6f74e8"/></linearGradient><linearGradient id="cxGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe083"/><stop offset="1" stop-color="#f0487a"/></linearGradient></defs>`;
+  const W = 320, H = 150, PL = 22, PR = 8, PT = 14, PB = 22, iw = W - PL - PR, ih = H - PT - PB;
+  const barChart = (vals, labs, hi, avg, titles) => { if (!vals.length) return '<div class="dmi-none">No rounds scored yet.</div>'; const mx = Math.max(1, ...vals), n = vals.length, bw = Math.min(26, iw / n * .62), X = i => PL + (i + .5) * iw / n, Y = v => PT + ih - v / mx * ih;
+    return `<svg class="dmi-svg" viewBox="0 0 ${W} ${H}">${DEFS}${[0, .5, 1].map(t => `<line class="dmi-gl" x1="${PL}" x2="${W - PR}" y1="${PT + ih * t}" y2="${PT + ih * t}"/><text x="${PL - 4}" y="${PT + ih * t + 3}" text-anchor="end">${Math.round(mx * (1 - t))}</text>`).join('')}
+      ${vals.map((v, i) => `<rect class="dmi-bar" style="--d:${i * 40}ms" x="${X(i) - bw / 2}" y="${Y(v)}" width="${bw}" height="${Math.max(1.5, PT + ih - Y(v))}" rx="${Math.min(4, bw / 3)}" fill="url(#${i === hi ? 'cxGold' : 'cxG'})"><title>${esc(titles ? titles[i] : labs[i])}: ${v} pts</title></rect>${n <= 14 ? `<text x="${X(i)}" y="${H - 7}" text-anchor="middle">${esc(labs[i])}</text>` : ''}${n <= 10 ? `<text x="${X(i)}" y="${Y(v) - 4}" text-anchor="middle" class="dmi-cv">${v}</text>` : ''}`).join('')}
+      ${avg != null ? `<line class="dmi-avg" x1="${PL}" x2="${W - PR}" y1="${Y(avg)}" y2="${Y(avg)}"/><text class="dmi-avgt" x="${W - PR}" y="${Y(avg) - 3}" text-anchor="end">avg ${avg.toFixed(1)}</text>` : ''}</svg>`; };
+  const posChart = () => { const v = cPosLine, n = v.length, N = Math.max(2, _live.length); if (!n) return '<div class="dmi-none">No rounds scored yet.</div>';
+    const X = i => PL + (n === 1 ? iw / 2 : i * iw / (n - 1)), Y = p => PT + (p - 1) / (N - 1) * ih;
+    return `<svg class="dmi-svg" viewBox="0 0 ${W} ${H}">${DEFS}${[1, Math.round((N + 1) / 2), N].map(p => `<line class="dmi-gl" x1="${PL}" x2="${W - PR}" y1="${Y(p)}" y2="${Y(p)}"/><text x="${PL - 4}" y="${Y(p) + 3}" text-anchor="end">P${p}</text>`).join('')}
+      <polyline class="dmi-line" points="${v.map((p, i) => X(i) + ',' + Y(p)).join(' ')}"/>
+      ${v.map((p, i) => `<circle class="dmi-f${p === 1 ? ' w' : p <= 3 ? ' p' : ''}" cx="${X(i)}" cy="${Y(p)}" r="3.4"><title>After ${esc(completedRaces[i].name)}: P${p}</title></circle>${n <= 14 ? `<text x="${X(i)}" y="${H - 7}" text-anchor="middle">R${completedRaces[i].raceNum}</text>` : ''}`).join('')}</svg>`; };
+  const HUE = { D0: '#ffc800', D1: '#e8002d', D2: '#9b6fd4', D3: '#27f4d2', D4: '#2ecc71', E3: '#2ecc71' };
+  const divBars = () => { if (!cByDiv.length) return '<div class="dmi-none">No drivers on the market for this team.</div>'; const mx = Math.max(1, ...cByDiv.map(x => x.p)), tot = Math.max(1, cByDiv.reduce((a, x) => a + x.p, 0));
+    return `<div class="cx-divs">${cByDiv.map(x => `<div class="cx-div"><span style="background:${HUE[x.dv] || '#9b6fd4'}">${esc(x.dv)}</span><i><u style="width:${Math.round(x.p / mx * 100)}%;background:${HUE[x.dv] || '#9b6fd4'}"></u></i><b>${x.p}</b><small>${Math.round(x.p / tot * 100)}%</small></div>`).join('')}</div><div class="dmi-key"><span>Driver points scored for the team in each division this season</span></div>`; };
+  const kpi = (v, l, sub, c) => `<div class="dmi-k"><b${c ? ` style="color:${c}"` : ''}>${v}</b><span>${l}</span>${sub ? `<small>${sub}</small>` : ''}</div>`;
+  const card = (k, t, body) => `<div class="dmi-c"><div class="dmi-ch"><small>${k}</small><h4>${t}</h4></div>${body}</div>`;
+  const cGap = cStand > 1 ? cLeader - totalPts : 0;
+
   let html = `
-    <div style="position:relative;background:${cHeaderBg};padding:0;border-radius:16px 16px 0 0;overflow:hidden">
-      <div style="height:4px;background:linear-gradient(90deg,${cModalAccent},transparent 80%)"></div>
-      <div style="position:relative;padding:16px 20px">
-      <button onclick="closeDriverModal()" style="position:absolute;top:12px;right:12px;background:rgba(255,255,255,0.1);border:none;color:#fff;font-size:1.2rem;width:32px;height:32px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>
-      <div style="display:flex;align-items:center;gap:16px">
-        <div style="width:78px;height:50px;display:flex;align-items:center;justify-content:center;background:var(--surface);border:2px solid ${cModalAccent}55;border-radius:8px;flex-shrink:0">
-          ${constr.logo ? `<img src="${esc(constr.logo)}" style="max-width:66px;max-height:40px;object-fit:contain">` : '🏎'}
-        </div>
-        <div style="min-width:0">
-          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.6rem;line-height:1">${esc(constr.name)}</div>
-          <div style="color:var(--muted);font-size:.8rem;margin-top:2px"><span style="color:#fff;background:${cModalAccent}33;border:1px solid ${cModalAccent}66;border-radius:4px;padding:0 5px;font-size:.68rem;font-weight:800">CONSTRUCTOR</span></div>
-          ${cFormHtml}
-        </div>
-      </div>
+    <div class="cx-hero" style="--tc:${cModalAccent}">
+      <button class="cx-x" onclick="closeDriverModal()">×</button>
+      <div class="cx-logo">${constr.logo ? `<img src="${esc(constr.logo)}" alt="">` : '🏎'}</div>
+      <div class="cx-id">
+        <small>Constructor${cStand ? ' · ' + ord(cStand) + ' in the standings' : ''}</small>
+        <h2>${esc(constr.name)}</h2>
+        <div class="cx-tags"><span class="cx-tag">S${currentSeason}</span><span class="cx-tag g">${totalPts} pts</span>${cWins ? `<span class="cx-tag">🏆 ${cWins} round${cWins === 1 ? '' : 's'} won</span>` : ''}</div>
+        ${cFormHtml}
       </div>
     </div>
-    <div style="padding:16px 20px;display:grid;grid-template-columns:1fr 1fr;gap:10px;border-bottom:1px solid var(--border)">
-      <div style="background:var(--surface2);border-radius:8px;padding:12px">
-        <div style="font-size:.7rem;color:var(--muted);margin-bottom:2px">S${currentSeason} Points</div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.4rem">${totalPts} Pts</div>
+    <div class="cx-money">
+      <div><small>Price</small><b>$${price.toFixed(1)}M</b>${priceChangeStr ? `<span>${priceChangeStr}</span>` : ''}</div>
+      <div><small>Ownership</small><b>${ownershipPct}%</b><span><i><u style="width:${ownershipPct}%"></u></i>${ownedBy.length} of ${allTeams.length} teams</span></div>
+    </div>
+    <div class="dmi">
+      <div class="dmi-h"><small>Season ${currentSeason} insights</small><h3>Team <em>data</em></h3></div>
+      <div class="dmi-ks">
+        ${kpi(totalPts, 'Season points', completedRaces.length + ' round' + (completedRaces.length === 1 ? '' : 's'))}
+        ${kpi(cStand ? 'P' + cStand : '—', 'Standing', cStand ? (cStand === 1 ? 'Leading' : cGap + ' pts off P1') : '', cStand === 1 ? '#ffd24a' : '')}
+        ${kpi(cAvgPts.toFixed(1), 'Avg / round')}
+        ${kpi(bestScore, 'Best round', bestRaceName ? esc(bestRaceName) : '')}
+        ${kpi(cWins, 'Rounds won', cTop3 + ' top-3 rounds')}
+        ${kpi(cAllTime.toLocaleString(), 'All-time points', cHist.length + ' season' + (cHist.length === 1 ? '' : 's'))}
       </div>
-      <div style="background:var(--surface2);border-radius:8px;padding:12px">
-        <div style="font-size:.7rem;color:var(--muted);margin-bottom:2px">Best Race Score</div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.4rem">${bestScore} Pts${bestRaceName?`<span style="font-size:.75rem;color:var(--muted);font-weight:400;display:block">(${esc(bestRaceName)})</span>`:''}</div>
-      </div>
-      <div style="background:var(--surface2);border-radius:8px;padding:12px">
-        <div style="font-size:.7rem;color:var(--muted);margin-bottom:2px">Price</div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.4rem">$${price.toFixed(1)}M</div>
-      </div>
-      <div style="background:var(--surface2);border-radius:8px;padding:12px">
-        <div style="font-size:.7rem;color:var(--muted);margin-bottom:2px">Ownership</div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.4rem">${ownershipPct}%</div>
+      <div class="dmi-grid">
+        ${card('Points scored each round', 'Round <em>by round</em>', barChart(raceScores, completedRaces.map(r => 'R' + r.raceNum), bestRaceIdx, raceScores.length > 1 ? cAvgPts : null, completedRaces.map(r => r.name)))}
+        ${card('Position in the constructors table', 'Title <em>race</em>', posChart())}
+        ${card('Who scores the points', 'By <em>division</em>', divBars())}
+        ${card('Points per season', 'Season <em>history</em>', barChart(cHist.map(x => x.p), cHist.map(x => 'S' + x.s), cHist.length - 1, null))}
       </div>
     </div>
     ${await (async () => {
@@ -21079,13 +21144,14 @@ window.openConstructorModal = async function(constrId) {
         </div>
       </div>`;
     })()}
-    <div style="padding:16px 20px">
-      ${hasPast ? `<div class="seg" style="margin-bottom:12px;flex-wrap:wrap">
-        <button id="dm-tab-s${currentSeason}" class="seg-btn active" onclick="switchModalTab('s${currentSeason}')">S${currentSeason} · ${totalPts}pts</button>
-        ${pastSeasons.map(s => `<button id="dm-tab-s${s.season}" class="seg-btn" onclick="switchModalTab('s${s.season}')">S${s.season} · ${s.totalPts}pts</button>`).join('')}
-      </div>` : `<div style="font-weight:700;font-size:.85rem;margin-bottom:10px;color:var(--muted);letter-spacing:1px">RACE RESULTS</div>`}
+    <div class="cx-hist">
+      <div class="dmi-h" style="padding:0"><small>Every round</small><h3 style="margin-bottom:10px">Race <em class="cx-em">results</em></h3></div>
+      <div class="cx-sbar">
+        <button id="dm-tab-s${currentSeason}" class="cx-sp active" style="--a:${cModalAccent}" onclick="switchModalTab('s${currentSeason}')"><b>S${currentSeason}</b><small>${totalPts} pts</small></button>
+        ${pastSeasons.map(x => `<button id="dm-tab-s${x.season}" class="cx-sp" style="--a:${cModalAccent}" onclick="switchModalTab('s${x.season}')"><b>S${x.season}</b><small>${x.totalPts} pts</small></button>`).join('')}
+      </div>
       <div id="dm-content-s${currentSeason}">${raceListHtml(completedRaces, constrId)}</div>
-      ${pastSeasons.map(s => `<div id="dm-content-s${s.season}" style="display:none">${raceListHtml(s.races, constrId)}</div>`).join('')}
+      ${pastSeasons.map(x => `<div id="dm-content-s${x.season}" style="display:none">${raceListHtml(x.races, constrId)}</div>`).join('')}
     </div>`;
 
   content.innerHTML = html;
