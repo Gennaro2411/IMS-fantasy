@@ -31598,7 +31598,9 @@ window.renderBets = async function(dry) {
   const _set = _all.filter(b => b.status !== 'open');
   const _staked = _set.reduce((a, b) => a + (b.stake || 0), 0);
   const _paid = _set.reduce((a, b) => a + (b.status === 'lost' ? 0 : (b.payout || 0)), 0);
-  const _house = _staked - _paid;
+  // Mystery Acca spin fees go straight to the book (test accounts excluded).
+  const _spins = (allCoins || []).filter(c => c && !_testIds.has(c.userId || c.id)).reduce((a, c) => a + (c.maLog || []).filter(x => (x.t || 0) >= _since).reduce((s2, x) => s2 + (x.f || 0), 0), 0);
+  const _house = _staked - _paid + _spins;
   const _openB = _all.filter(b => b.status === 'open');
   const _liab = _openB.reduce((a, b) => a + Math.round((b.stake || 0) * (b.odds || 0)), 0);
   const _wonB = _set.filter(b => b.status === 'won'), _decB = _set.filter(b => b.status === 'won' || b.status === 'lost');
@@ -31622,7 +31624,7 @@ window.renderBets = async function(dry) {
       ${_st(_liab.toLocaleString(), 'Open liability')}
     </div>
     <div class="bo-stlist">
-      ${_ln('💥', 'Biggest win', _big ? esc(_nm(_big.userId)) + ' +' + (_big.payout - _big.stake).toLocaleString() : '')}
+      ${_ln('🎰', 'Mystery Acca spins', _spins ? '+' + _spins.toLocaleString() : '')}${_ln('💥', 'Biggest win', _big ? esc(_nm(_big.userId)) + ' +' + (_big.payout - _big.stake).toLocaleString() : '')}
       ${_ln('🎯', 'Longest odds landed', _long ? esc(_nm(_long.userId)) + ' @ ' + fmtOdds(_long.odds) : '')}
       ${_ln('🔥', 'Most backed', _popTop ? esc(_popTop[0]) + ' (' + _popTop[1] + ')' : '')}
       ${_ln('🎰', 'Most active', _active ? esc(_nm(_active[0])) + ' (' + _active[1] + ' bets)' : '')}
@@ -32845,7 +32847,7 @@ window.maSpin = async function() { if (window._maSpin || typeof currentUser === 
   if (res.length < 3) { window._maSpin = false; if (typeof showToast === 'function') showToast('Not enough different markets open to build an acca.', 'error'); return; }
   try { const c = await _betLoadCoins(currentUser.userId), fee = _maFee(c), r = window._betCtx.upcoming.name;
     if ((c.balance || 0) < fee) { window._maSpin = false; _maFeeUi(); if (typeof showToast === 'function') showToast('You need ' + fee + ' IM$ to spin.', 'error'); return; }
-    c.balance -= fee; c.maSpins = (c.maRace === r ? (c.maSpins || 0) : 0) + 1; c.maRace = r; c.maSpent = (c.maSpent || 0) + fee; await dbSet('coins', currentUser.userId, c);
+    c.balance -= fee; c.maSpins = (c.maRace === r ? (c.maSpins || 0) : 0) + 1; c.maRace = r; c.maSpent = (c.maSpent || 0) + fee; c.maLog = (c.maLog || []).concat([{ t: Date.now(), f: fee }]).slice(-300); await dbSet('coins', currentUser.userId, c);
     const pill = document.getElementById('wallet-amt'); if (pill && window._wlShort) pill.textContent = _wlShort(c.balance);
   } catch (e) { window._maSpin = false; if (typeof showToast === 'function') showToast('Couldn\'t take the spin cost — try again.', 'error'); return; }
   window._maN = res.length; window._maRes = res; const P = _maPool(), R = document.getElementById('ma-reels'), H = 64;
