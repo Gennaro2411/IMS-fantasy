@@ -36892,7 +36892,7 @@ window.ckBuy = async function(id, gi) { if (!_ckCan() || window._ckBusy) return;
     K.log = (K.log || []).concat([{ t: Date.now(), p: id, f: P.price }]).slice(-300); } // pack spend log (for the book, like spin fees)
     const big = got.filter(x => x.r >= CK_FEED_MIN); if (big.length) c.cardPulls = (c.cardPulls || []).concat(big.map(x => ({ k: x.k, n: x.n, r: x.r, t: Date.now(), p: id, by: _wdMe().name }))).slice(-40);
     await dbSet('coins', currentUser.userId, c); _ckSetPill(c); window._ckFeed = null;
-    _ckReveal(id, got);
+    _ckReveal(id, got, gift);
   } catch (e) { console.error(e); showToast('Couldn\'t open the pack — nothing was charged if your balance is unchanged.', 'error'); }
   window._ckBusy = false; };
 // Give a pack to a player (rewards / gifts). Lands in their My Packs tab.
@@ -36902,8 +36902,8 @@ window.ckGiftUI = async function() { const u = document.getElementById('ck-g-u')
   const ids = u.value === '*' ? [...u.options].map(o => o.value).filter(v => v && v !== '*') : [u.value], q = Math.max(1, Math.min(20, parseInt(qn.value, 10) || 1)), lbl = u.value === '*' ? 'every player (' + ids.length + ')' : u.options[u.selectedIndex].text;
   customConfirm(`Give ${q} × ${CK_PACKS[pk.value].n} to ${esc(lbl)}?`, async () => { let n = 0; for (const id of ids) { for (let i = 0; i < q; i++) if (await ckGift(id, pk.value, nt.value || 'Gift from IMS')) n++; }
     showToast('🎁 Sent ' + n + ' pack' + (n === 1 ? '' : 's') + '.', 'success'); renderGames(); }, 'Send'); };
-function _ckReveal(id, got) { document.getElementById('ck-ov')?.remove(); const o = document.createElement('div'); o.id = 'ck-ov'; o.className = 'ck-ov';
-  window._ckRv = { id, got, i: -1, sell: {} };
+function _ckReveal(id, got, gift) { document.getElementById('ck-ov')?.remove(); const o = document.createElement('div'); o.id = 'ck-ov'; o.className = 'ck-ov';
+  window._ckRv = { id, got, i: -1, sell: {}, gift: !!gift };
   o.innerHTML = `<div class="ck-stage" id="ck-stage"><div class="ck-pk" id="ck-pk" onclick="ckRip()">${_ckPackArt(id)}<p>Tap the pack to open it</p></div></div>`;
   document.body.appendChild(o); requestAnimationFrame(() => o.classList.add('in')); }
 window.ckRip = function() { const pk = document.getElementById('ck-pk'); if (!pk || pk.classList.contains('rip')) return; pk.classList.add('rip'); try { _ptSnd.tick && _ptSnd.tick(); } catch (e) {}
@@ -36922,7 +36922,7 @@ window.ckFlip = function() { const f = document.getElementById('ck-flip'), R = w
 function _ckSummary() { const R = window._ckRv, st = document.getElementById('ck-stage'); if (!R || !st) return; const P = CK_PACKS[R.id];
   const tot = R.got.reduce((a, c) => a + _ckSellV(c), 0), selN = Object.keys(R.sell).length, selV = R.got.reduce((a, c, i) => a + (R.sell[i] ? _ckSellV(c) : 0), 0);
   st.innerHTML = `<div class="ck-sum"><div class="ck-k">${P.n} opened</div><div class="ck-ttl">YOUR <em>CARDS</em></div>
-    <div class="ck-sub">Pack value <b>${tot.toLocaleString()} IM$</b> · you paid ${P.price.toLocaleString()} IM$ · <span class="${tot >= P.price ? 'up' : 'dn'}">${tot >= P.price ? '+' : '−'}${Math.abs(tot - P.price).toLocaleString()}</span></div>
+    <div class="ck-sub">Pack value <b>${tot.toLocaleString()} IM$</b> ${R.gift ? '· 🎁 free pack' : `· you paid ${P.price.toLocaleString()} IM$ · <span class="${tot >= P.price ? 'up' : 'dn'}">${tot >= P.price ? '+' : '−'}${Math.abs(tot - P.price).toLocaleString()}</span>`}</div>
     <div class="ck-row">${R.got.map((c, i) => `<div class="ck-pick${R.sell[i] ? ' sell' : ''}">${c.dup ? '<span class="ck-dup ck-dup-tag">DUPLICATE</span>' : '<span class="ck-dup new ck-dup-tag">NEW</span>'}${_ckCard(c)}<div class="ck-pb"><button class="${R.sell[i] ? '' : 'on'}" onclick="ckMark(${i},0)">Keep</button><button class="${R.sell[i] ? 'on s' : ''}" onclick="ckMark(${i},1)">Sell <i class="imc"></i> ${_ckSellV(c).toLocaleString()}</button></div></div>`).join('')}</div>
     <div class="ck-acts"><button class="hx-btn" onclick="ckDone()">${selN ? `Sell ${selN} for ${selV.toLocaleString()} IM$${selN < R.got.length ? ' · keep the rest' : ''}` : 'Keep all 3'}</button>
       <button class="hx-btn ghost" onclick="ckMark(-1,1)">Quick sell all · ${tot.toLocaleString()} IM$</button></div>
