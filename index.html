@@ -3810,6 +3810,7 @@
     .ma-info{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;background:none;padding:0}.ma-info span{font-size:.74rem;padding:6px 11px;border-radius:999px;background:rgba(255,255,255,.06);color:#c9cbe8;display:inline-flex;align-items:center;gap:4px}.ma-info b{color:#ffe083}
     .ma-was{font-size:.9rem;color:#8b8fb8;text-decoration:line-through;margin-right:4px}
     .ma-slipb{margin:4px 0 6px;padding:7px 10px;border-radius:10px;font-size:.76rem;background:linear-gradient(110deg,rgba(111,116,232,.2),rgba(240,72,122,.2));box-shadow:inset 0 0 0 1px rgba(177,132,232,.4)}.ma-slipb s{color:#8b8fb8;margin-left:4px}
+    .ma-divs{display:flex;justify-content:center;flex-wrap:wrap;gap:4px;margin:10px 0 2px}.ma-divs button{border:1px solid rgba(255,255,255,.12);cursor:pointer;font:inherit;font-weight:900;font-style:italic;font-size:.8rem;color:#a5a9d6;background:rgba(255,255,255,.04);padding:6px 12px;border-radius:999px}.ma-divs button.on{color:#fff;border-color:transparent;background:linear-gradient(110deg,#6f74e8,#a779e6 55%,#f0487a)}
     .ma-fine{font-size:.66rem;color:#6f7299;margin-top:10px}
     @media (prefers-reduced-motion:reduce){.ma-ad-reels i,.ma-lights i{animation:none}}
     .pp-board{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 6px;text-align:left}
@@ -32827,7 +32828,8 @@ window.maOpen = function() {
   document.getElementById('ma-modal')?.remove();
   const m = document.createElement('div'); m.id = 'ma-modal'; m.className = 'ma-ov'; m.onclick = (e) => { if (e.target === m) maClose(); };
   m.innerHTML = `<div class="ma-box"><button class="ma-x" onclick="maClose()">✕</button><div class="ma-k">BET BUILDER ROULETTE</div><div class="ma-ttl">MYSTERY <em>ACCA</em></div>
-    <div class="ma-sub">${esc(window._betDiv || '')} · 3 to 6 random legs · odds boosted ×${MA_BOOST}</div>
+    <div class="ma-sub">3 to 6 random legs · odds boosted ×${MA_BOOST}</div>
+    <div class="ma-divs" id="ma-divs">${[...document.querySelectorAll('#page-bets .bo-divs > button')].map(b => b.textContent.trim()).map(d => `<button class="${d === window._betDiv ? 'on' : ''}" onclick="maDiv('${esc(d)}')">${esc(d)}</button>`).join('')}</div>
     <div class="ma-legs ma-info"><span>🎰 Spin cost <b id="ma-fee">…</b> <i class="imc"></i></span><span>🚀 <b>×${MA_BOOST}</b> boost</span><span>💰 You have <b id="ma-bal">…</b></span></div>
     <div class="ma-mach"><div class="ma-lights">${'<i></i>'.repeat(14)}</div><div class="ma-reels" id="ma-reels"></div></div>
     <div class="ma-tot" id="ma-tot"><span>Total odds</span><b>?</b></div>
@@ -32836,7 +32838,13 @@ window.maOpen = function() {
   document.body.appendChild(m); requestAnimationFrame(() => m.classList.add('in')); window._maRes = null; window._maN = 4; _maIdle(); _maFeeUi(); };
 async function _maFeeUi() { if (typeof currentUser === 'undefined' || !currentUser || !currentUser.userId) { const b = document.getElementById('ma-spin'); if (b) { b.textContent = 'Log in to spin'; b.disabled = true; } return; }
   const c = await _betLoadCoins(currentUser.userId).catch(() => null); if (!c) return; const fee = _maFee(c), f = document.getElementById('ma-fee'), bl = document.getElementById('ma-bal'), b = document.getElementById('ma-spin'); if (!f) return;
-  f.textContent = fee.toLocaleString(); bl.textContent = Math.round(c.balance || 0).toLocaleString(); if (!window._maSpin) { b.disabled = (c.balance || 0) < fee; b.textContent = (c.balance || 0) < fee ? 'Not enough IM$' : (window._maRes ? '🎰 SPIN AGAIN · ' : '🎰 SPIN · ') + fee.toLocaleString(); } }
+  f.textContent = fee.toLocaleString(); bl.textContent = Math.round(c.balance || 0).toLocaleString(); if (!window._maSpin) { b.disabled = (c.balance || 0) < fee || !_maPool().length; b.textContent = (c.balance || 0) < fee ? 'Not enough IM$' : (window._maRes ? '🎰 SPIN AGAIN · ' : '🎰 SPIN · ') + fee.toLocaleString(); } }
+// Switch division inside the machine: re-draw the bets page for that division (which refreshes the pick pool).
+window.maDiv = async function(d) { if (window._maSpin || d === window._betDiv) return; window._betDiv = d;
+  document.querySelectorAll('#ma-divs button').forEach(b => b.classList.toggle('on', b.textContent.trim() === d));
+  const sp = document.getElementById('ma-spin'); if (sp) sp.disabled = true; window._maRes = null; _maIdle();
+  try { await renderBets(); } catch (e) {}
+  if (!_maPool().length && typeof showToast === 'function') showToast('No open markets in ' + d + ' right now.', 'error'); _maFeeUi(); };
 window._maUnusedSetN = function(n) { if (window._maSpin) return; window._maN = n; document.querySelectorAll('#ma-modal .ma-legs button').forEach(b => b.classList.toggle('on', +b.dataset.n === n)); window._maRes = null; _maIdle(); };
 function _maIdle() { const R = document.getElementById('ma-reels'); if (!R) return;
   R.innerHTML = Array.from({ length: window._maN }, (_, i) => `<div class="ma-reel"><div class="ma-win"><div class="ma-strip"><div class="ma-cell q"><b>?</b></div></div></div></div>`).join('');
