@@ -36912,6 +36912,11 @@ window._ckGiftPop = async function(c) { const G = (c && c.cards && c.cards.gifts
     <div class="ck-gpl">${Object.values(fresh.reduce((a, g) => { const k = g.b || (g.from + '|' + g.t); (a[k] = a[k] || { from: g.from, n: {} }).n[g.p] = (a[k].n[g.p] || 0) + 1; return a; }, {})).map(B => `<div class="ck-gpi ck-gpg"><div class="ck-gpp">${Object.keys(CK_PACKS).filter(id => B.n[id]).map(id => { const P = CK_PACKS[id]; return `<span style="--c:${P.c};--c2:${P.c2}"><i></i><b>${B.n[id]} × ${esc(P.n)}</b></span>`; }).join('')}</div><small>${esc(B.from || 'Gift from IMS')}</small></div>`).join('')}</div>
     <div class="ck-acts"><button class="hx-btn" onclick="_ckGiftSeen(1)">Open My Packs</button><button class="hx-btn ghost" onclick="_ckGiftSeen(0)">Later</button></div></div>`;
   document.body.appendChild(o); requestAnimationFrame(() => o.classList.add('in')); try { fireConfetti({ count: 70 }); } catch (e) {} };
+// Check for new gifts while the site is open: every 60s when the tab is visible, and straight away when the
+// player comes back to the tab. One small read of their own coins doc; skipped while IMS Cards is hidden from them.
+(function() { let busy = false; const chk = async () => { if (busy || document.hidden || typeof currentUser === 'undefined' || !currentUser || !currentUser.userId || document.getElementById('ck-gp') || document.getElementById('ck-ov')) return;
+    if (!_ckCan()) return; busy = true; try { const c = await dbGet('coins', currentUser.userId).catch(() => null); if (c) await window._ckGiftPop(c); } catch (e) {} busy = false; };
+  setInterval(chk, 60e3); document.addEventListener('visibilitychange', () => { if (!document.hidden) chk(); }); window._ckGiftChk = chk; })();
 window._ckGiftSeen = async function(go) { document.getElementById('ck-gp')?.remove();
   try { const c = await _betLoadCoins(currentUser.userId); (c.cards && c.cards.gifts || []).forEach(g => g.s = 1); await dbSet('coins', currentUser.userId, c); } catch (e) {}
   if (go) { window._ckTab = 'packs'; try { await showPage('games'); } catch (e) {} openGame('cards'); } };
