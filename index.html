@@ -24071,6 +24071,7 @@ window._renderMarketKeepPlace = function() {
 };
 window.setMarketSort = function(mode) {
   if (mode !== 'team') _marketTeamFilter = 'ALL';  // leaving team sort clears the constructor filter
+  if (mode !== 'country') _marketNatFilter = 'ALL';  // leaving country sort clears the country filter
   _marketSort = mode; window._renderMarketKeepPlace();
 };
 window.setMarketTeamFilter = function(team) { _marketTeamFilter = team; window._renderMarketKeepPlace(); };
@@ -25376,7 +25377,7 @@ async function renderMarket(quiet) {
   if (onConstrTab && (_marketSort === 'elo' || _marketSort === 'dom' || _marketSort === 'team' || _marketSort === 'quali')) _marketSort = 'price';
   const SORTS = onConstrTab
     ? [['price','💰 Price'],['points','⚡ Points']]
-    : [['price','💰 Price'],['points','⚡ Points'],['elo','📈 ELO'],['dom','👑 Dominance'],['track','🏁 This Track'],['quali','⏱ Quali'],['team','🏭 Team']];
+    : [['price','💰 Price'],['points','⚡ Points'],['elo','📈 ELO'],['dom','👑 Dominance'],['track','🏁 This Track'],['quali','⏱ Quali'],['team','🏭 Team'],['country','🌍 Nationality']];
   {
     const _mktDivs = (typeof divisionsForSeason === 'function') ? divisionsForSeason(window.currentSeason) : ['D0','D1','D2','D3','E3'];
     const _divColors = { D0:'#ffc800', D1:'#e8002d', D2:'#9b6fd4', D3:'#27f4d2', D4:'#2ecc71', E3:'#2ecc71' };
@@ -25394,20 +25395,22 @@ async function renderMarket(quiet) {
       + '<span class="mkt-lbl" style="margin-bottom:0">Sort by</span>'
       + '<div class="mkt-seg">'
       + SORTS.map(([m,label]) => '<button class="'+(_marketSort===m?'on':'')+'" onclick="setMarketSort(\''+m+'\')">'+label+'</button>').join('')
-      + '</div><!--mkt-nat--></div></div>';
+      + '</div></div></div>';
   }
 
   // Country filter: every nationality on the current tab, with how many drivers each has.
-  if (!onConstrTab) {
+  if (!onConstrTab && _marketSort === 'country') {
     if (!window._wordleData && window._drvFlag) window._drvFlag({}, 18); // start loading nationalities if needed
     const _nc = {}; drivers.filter(d => _marketTab === 'ALL' || d.division === _marketTab).forEach(d => { const n = window._drvNat(d); if (n) _nc[n] = (_nc[n] || 0) + 1; });
     const _nats = Object.keys(_nc).sort((a, b) => a.localeCompare(b));
     const _emo = (n) => { try { const c = String(natCode(n) || '').toLowerCase(), sub = { 'gb-eng': '\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}', 'gb-sct': '\u{1F3F4}\u{E0067}\u{E0062}\u{E0073}\u{E0063}\u{E0074}\u{E007F}', 'gb-wls': '\u{1F3F4}\u{E0067}\u{E0062}\u{E0077}\u{E006C}\u{E0073}\u{E007F}' }; if (sub[c]) return sub[c] + ' '; return /^[a-z]{2}$/i.test(c) ? c.toUpperCase().replace(/./g, ch => String.fromCodePoint(127397 + ch.charCodeAt(0))) + ' ' : '🏳️ '; } catch (e) { return ''; } };
     if (_marketNatFilter !== 'ALL' && !_nc[_marketNatFilter]) _marketNatFilter = 'ALL';
-    if (_nats.length) html = html.replace('<!--mkt-nat-->', '<select class="mkt-natsel" title="Filter by country"  onchange="setMarketNatFilter(this.value)" style="font-size:.72rem;font-weight:700;padding:5px 10px;border-radius:999px;background:var(--surface3);color:#fff;border:1px solid rgba(255,255,255,0.15);cursor:pointer;max-width:240px">'
-      + '<option value="ALL"' + (_marketNatFilter === 'ALL' ? ' selected' : '') + '>🌍 All countries</option>'
+    if (_nats.length) html += '<div style="display:flex;gap:8px;align-items:center;margin:-6px 0 14px;flex-wrap:wrap">'
+      + '<span style="font-size:.62rem;font-weight:800;letter-spacing:1.5px;color:var(--muted)">NATIONALITY</span>'
+      + '<select class="mkt-natsel" title="Filter by nationality"  onchange="setMarketNatFilter(this.value)" style="font-size:.72rem;font-weight:700;padding:5px 10px;border-radius:999px;background:var(--surface3);color:#fff;border:1px solid rgba(255,255,255,0.15);cursor:pointer;max-width:240px">'
+      + '<option value="ALL"' + (_marketNatFilter === 'ALL' ? ' selected' : '') + '>🌍 All nationalities</option>'
       + _nats.map(n => '<option value="' + esc(n) + '"' + (_marketNatFilter === n ? ' selected' : '') + '>' + _emo(n) + esc(n) + ' (' + _nc[n] + ')</option>').join('')
-      + '</select>');
+      + '</select></div>';
   }
 
   // When sorting by team, offer a constructor dropdown to narrow the list to one team.
@@ -25533,6 +25536,12 @@ async function renderMarket(quiet) {
       .filter(d => _marketNatFilter === 'ALL' || window._drvNat(d) === _marketNatFilter)
       .map(d => ({...d, _sortPrice: driverPrice(d)}))
       .sort((a,b) => {
+        // Country sort groups drivers by nationality (A→Z, unknown last), then by price.
+        if (_marketSort === 'country') {
+          const na = window._drvNat(a) || '\uffff', nb = window._drvNat(b) || '\uffff';
+          if (na !== nb) return na.localeCompare(nb);
+          return (b._sortPrice||0) - (a._sortPrice||0);
+        }
         // Team sort groups drivers by constructor (A→Z), then by price within each team.
         if (_marketSort === 'team') {
           const ta = (a.team||'zzz').toLowerCase(), tb = (b.team||'zzz').toLowerCase();
