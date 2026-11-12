@@ -25394,7 +25394,7 @@ async function renderMarket(quiet) {
       + '<span class="mkt-lbl" style="margin-bottom:0">Sort by</span>'
       + '<div class="mkt-seg">'
       + SORTS.map(([m,label]) => '<button class="'+(_marketSort===m?'on':'')+'" onclick="setMarketSort(\''+m+'\')">'+label+'</button>').join('')
-      + '</div></div></div>';
+      + '</div><!--mkt-nat--></div></div>';
   }
 
   // Country filter: every nationality on the current tab, with how many drivers each has.
@@ -25404,12 +25404,10 @@ async function renderMarket(quiet) {
     const _nats = Object.keys(_nc).sort((a, b) => a.localeCompare(b));
     const _emo = (n) => { try { const c = String(natCode(n) || '').toLowerCase(), sub = { 'gb-eng': '\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}', 'gb-sct': '\u{1F3F4}\u{E0067}\u{E0062}\u{E0073}\u{E0063}\u{E0074}\u{E007F}', 'gb-wls': '\u{1F3F4}\u{E0067}\u{E0062}\u{E0077}\u{E006C}\u{E0073}\u{E007F}' }; if (sub[c]) return sub[c] + ' '; return /^[a-z]{2}$/i.test(c) ? c.toUpperCase().replace(/./g, ch => String.fromCodePoint(127397 + ch.charCodeAt(0))) + ' ' : '🏳️ '; } catch (e) { return ''; } };
     if (_marketNatFilter !== 'ALL' && !_nc[_marketNatFilter]) _marketNatFilter = 'ALL';
-    if (_nats.length) html += '<div style="display:flex;gap:8px;align-items:center;margin:-6px 0 14px;flex-wrap:wrap">'
-      + '<span style="font-size:.62rem;font-weight:800;letter-spacing:1.5px;color:var(--muted)">COUNTRY</span>'
-      + '<select onchange="setMarketNatFilter(this.value)" style="font-size:.72rem;font-weight:700;padding:5px 10px;border-radius:999px;background:var(--surface3);color:#fff;border:1px solid rgba(255,255,255,0.15);cursor:pointer;max-width:240px">'
+    if (_nats.length) html = html.replace('<!--mkt-nat-->', '<select class="mkt-natsel" title="Filter by country"  onchange="setMarketNatFilter(this.value)" style="font-size:.72rem;font-weight:700;padding:5px 10px;border-radius:999px;background:var(--surface3);color:#fff;border:1px solid rgba(255,255,255,0.15);cursor:pointer;max-width:240px">'
       + '<option value="ALL"' + (_marketNatFilter === 'ALL' ? ' selected' : '') + '>🌍 All countries</option>'
       + _nats.map(n => '<option value="' + esc(n) + '"' + (_marketNatFilter === n ? ' selected' : '') + '>' + _emo(n) + esc(n) + ' (' + _nc[n] + ')</option>').join('')
-      + '</select></div>';
+      + '</select>');
   }
 
   // When sorting by team, offer a constructor dropdown to narrow the list to one team.
