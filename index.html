@@ -3068,6 +3068,7 @@
     #page-market .mkt-name>span:not(.mkt-pill){font:italic 900 1.16rem/1.1 'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.3px;padding-right:2px}
     #page-market .mkt-stat{border-radius:8px;background:rgba(8,7,15,.45);border-color:rgba(255,255,255,.14)}
     #page-market .mkt-stat i{color:#d5d7f5}
+    #page-market .mkt-fl:empty{display:none}#page-market .mkt-fl{display:inline-flex;align-items:center}#page-market .mkt-fl img{height:13px!important;width:auto!important;border-radius:2px;display:block}
     #page-market .mkt-row.mkt-in{animation:mktIn .42s cubic-bezier(.2,.9,.25,1) both;animation-delay:calc(var(--mi) * 28ms)}
     @keyframes mktIn{from{opacity:0;transform:translate3d(0,10px,0)}to{opacity:1;transform:none}}
     @media (max-width:520px){
@@ -24039,6 +24040,8 @@ window.togglePriceGraph = function(btn) {
 // ===== MARKET =====
 let _marketTab = 'ALL';
 let _marketSort = 'price'; // 'price' | 'points' | 'elo' | 'dom' | 'team'
+let _marketNatFilter = 'ALL'; // nationality filter on the driver market ('ALL' = every country)
+window.setMarketNatFilter = function(n) { _marketNatFilter = n; window._renderMarketKeepPlace(); };
 let _marketTeamFilter = 'ALL'; // when sorting by team, which constructor to show ('ALL' = every team)
 try {
   const savedSort = localStorage.getItem('imsMarketSort'); if (savedSort) _marketSort = savedSort;
@@ -25394,6 +25397,21 @@ async function renderMarket(quiet) {
       + '</div></div></div>';
   }
 
+  // Country filter: every nationality on the current tab, with how many drivers each has.
+  if (!onConstrTab) {
+    if (!window._wordleData && window._drvFlag) window._drvFlag({}, 18); // start loading nationalities if needed
+    const _nc = {}; drivers.filter(d => _marketTab === 'ALL' || d.division === _marketTab).forEach(d => { const n = window._drvNat(d); if (n) _nc[n] = (_nc[n] || 0) + 1; });
+    const _nats = Object.keys(_nc).sort((a, b) => a.localeCompare(b));
+    const _emo = (n) => { try { const c = String(natCode(n) || '').toLowerCase(), sub = { 'gb-eng': '\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}', 'gb-sct': '\u{1F3F4}\u{E0067}\u{E0062}\u{E0073}\u{E0063}\u{E0074}\u{E007F}', 'gb-wls': '\u{1F3F4}\u{E0067}\u{E0062}\u{E0077}\u{E006C}\u{E0073}\u{E007F}' }; if (sub[c]) return sub[c] + ' '; return /^[a-z]{2}$/i.test(c) ? c.toUpperCase().replace(/./g, ch => String.fromCodePoint(127397 + ch.charCodeAt(0))) + ' ' : '🏳️ '; } catch (e) { return ''; } };
+    if (_marketNatFilter !== 'ALL' && !_nc[_marketNatFilter]) _marketNatFilter = 'ALL';
+    if (_nats.length) html += '<div style="display:flex;gap:8px;align-items:center;margin:-6px 0 14px;flex-wrap:wrap">'
+      + '<span style="font-size:.62rem;font-weight:800;letter-spacing:1.5px;color:var(--muted)">COUNTRY</span>'
+      + '<select onchange="setMarketNatFilter(this.value)" style="font-size:.72rem;font-weight:700;padding:5px 10px;border-radius:999px;background:var(--surface3);color:#fff;border:1px solid rgba(255,255,255,0.15);cursor:pointer;max-width:240px">'
+      + '<option value="ALL"' + (_marketNatFilter === 'ALL' ? ' selected' : '') + '>🌍 All countries</option>'
+      + _nats.map(n => '<option value="' + esc(n) + '"' + (_marketNatFilter === n ? ' selected' : '') + '>' + _emo(n) + esc(n) + ' (' + _nc[n] + ')</option>').join('')
+      + '</select></div>';
+  }
+
   // When sorting by team, offer a constructor dropdown to narrow the list to one team.
   if (!onConstrTab && _marketSort === 'team') {
     const teamNames = [...new Map(drivers.filter(d => d.team).map(d => [teamKey(d.team), d.team])).values()].sort((a,b)=>a.localeCompare(b));
@@ -25461,6 +25479,7 @@ async function renderMarket(quiet) {
         <div style="min-width:0;flex:1">
           <div class="mkt-name">
             ${(() => { const logo = getTeamLogo(d.team); return logo ? `<img src="${esc(logo)}" style="width:24px;height:14px;object-fit:contain">` : ''; })()}
+            <span class="mkt-fl" data-nf="${esc(d.id)}">${window._drvFlag ? window._drvFlag(d, 18) : ''}</span>
             <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">${esc(d.name)}</span>
             <span class="mkt-pill" style="color:#fff;background:${_divCol}2e;border:1px solid ${_divCol}66">${dv}</span>
             ${isMine?'<span class="mkt-pill" style="color:#fff;background:var(--red)">★ YOURS</span>':''}
@@ -25513,6 +25532,7 @@ async function renderMarket(quiet) {
     const flat = _marketTab === 'CONSTRUCTOR' ? [] : drivers
       .filter(d => _marketTab === 'ALL' ? true : d.division === _marketTab)
       .filter(d => (_marketSort === 'team' && _marketTeamFilter !== 'ALL') ? teamKey(d.team) === teamKey(_marketTeamFilter) : true)
+      .filter(d => _marketNatFilter === 'ALL' || window._drvNat(d) === _marketNatFilter)
       .map(d => ({...d, _sortPrice: driverPrice(d)}))
       .sort((a,b) => {
         // Team sort groups drivers by constructor (A→Z), then by price within each team.
@@ -28586,11 +28606,15 @@ function initialsAvatar(name, size, extraStyle, overrideCols, avatarUrl) {
 // If the nationality data isn't loaded yet it loads once in the background and fills any waiting flag slots.
 window._drvFlag = function(driver, size) { const W = window._wordleData;
   if (!W || !W.stats) { if (!window._drvFlagLoading) { window._drvFlagLoading = 1; (async () => { try { const d = await dbGet('settings', 'wordleData'); window._wordleData = window._wordleData || window._wdDecode(d && d.value); } catch (e) {}
-      const all = window._allDrivers || []; document.querySelectorAll('[data-nf]').forEach(el => { if (el.innerHTML) return; const dr = all.find(x => x.id === el.dataset.nf); if (dr) el.innerHTML = window._drvFlag(dr, size) || ''; }); })(); } return ''; }
+      const all = window._allDrivers || []; try { const pm = document.getElementById('page-market'); if (pm && pm.classList.contains('active') && window._renderMarketKeepPlace) window._renderMarketKeepPlace(); } catch (e) {}
+      document.querySelectorAll('[data-nf]').forEach(el => { if (el.innerHTML) return; const dr = all.find(x => x.id === el.dataset.nf); if (dr) el.innerHTML = window._drvFlag(dr, size) || ''; }); })(); } return ''; }
+  const nat = window._drvNat(driver); if (!nat) return '';
+  try { return typeof natFlagImg === 'function' ? (natFlagImg(nat, size) || '') : ''; } catch (e) { return ''; } };
+// A driver's nationality (as stored, e.g. "England"), or '' if unknown / not loaded yet.
+window._drvNat = function(driver) { const W = window._wordleData; if (!W || !W.stats || !driver) return '';
   try { const nk = x => searchFold(String(x || '').replace(/\[[^\]]*\]/g, ''));
     const k = (driver.discordId && W.idToKey && W.idToKey[String(driver.discordId)]) || nk(driver.name), st = W.stats[k] || W.stats[nk(driver.name)];
-    const nat = typeof _natFix === 'function' ? _natFix(driver.name, st && st.nat) : (st && st.nat); if (!nat) return '';
-    return typeof natFlagImg === 'function' ? (natFlagImg(nat, size) || '') : ''; } catch (e) { return ''; } };
+    return (typeof _natFix === 'function' ? _natFix(driver.name, st && st.nat) : (st && st.nat)) || ''; } catch (e) { return ''; } };
 window.customConfirm = function(msg, onYes, yesLabel, onNo) {
   const o=document.getElementById('confirm-overlay');
   const yesBtn=document.getElementById('confirm-yes-btn');
