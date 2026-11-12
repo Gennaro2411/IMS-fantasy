@@ -36827,9 +36827,9 @@ const CK_T = {}; CK_TIERS.forEach(t => CK_T[t.id] = t);
 const _ckTier = (r) => CK_TIERS.find(t => r >= t.lo);
 const _ckSellV = (c) => Math.round(_ckTier(c.r).sell(c.r));
 // odds = chance of each card in the pack being that rarity (must add up to 1)
-const CK_PACKS = { bronze: { n: 'Bronze Pack', price: 250, odds: [['ub', .94], ['rb', .06]], c: '#b4703a', c2: '#5e3516' },
-  silver: { n: 'Silver Pack', price: 500, odds: [['us', .95], ['rs', .05]], c: '#c9d2dc', c2: '#6b7684' },
-  gold: { n: 'Gold Pack', price: 1000, odds: [['ug', .9575], ['rg', .04], ['dia', .0025]], c: '#f7cf55', c2: '#9a6a0c' } };
+const CK_PACKS = { bronze: { n: 'Bronze Pack', price: 250, odds: [['ub', .85], ['rb', .15]], c: '#b4703a', c2: '#5e3516' },
+  silver: { n: 'Silver Pack', price: 500, odds: [['us', .87], ['rs', .13]], c: '#c9d2dc', c2: '#6b7684' },
+  gold: { n: 'Gold Pack', price: 1000, odds: [['ug', .887], ['rg', .11], ['dia', .003]], c: '#f7cf55', c2: '#9a6a0c' } };
 const CK_N = 3, CK_FEED_MIN = 83;
 const _ckCan = () => !!(adminLoggedIn || (window._gamesLock || {}).cardsOpen);
 // Rating: score → 40..91 on a curve, +5 for being a champion (+1 per extra title, max +2), capped at 96.
