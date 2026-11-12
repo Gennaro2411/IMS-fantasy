@@ -12857,7 +12857,6 @@ async function renderMyTeam() {
     }
     // Team-colour identity stripe across the top of the card
     html += '<div class="mt-dc-st" style="height:3px;border-radius:12px 12px 0 0;background:linear-gradient(90deg,'+stripeCol+',transparent 85%)"></div>';
-    if (teamLogo && !isCap) html += '<img class="mt-dc-wm" src="'+teamLogo+'" alt="" onerror="this.remove()">';
     html += '<div class="mt-card-row" style="padding:10px 10px 0;display:flex;gap:10px;align-items:center">';
     // Looking back at a past round: today's check-ins and race bans don't belong to that race — hide them.
     const _pastView = (typeof _snapView !== 'undefined') && !!_snapView;
