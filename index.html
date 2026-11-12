@@ -11912,6 +11912,7 @@ async function renderMyTeam() {
   if (!currentUser && !adminLoggedIn) { el.innerHTML = '<div class="card"><p class="text-muted">Set up your account on the Home page first.</p></div>'; return; }
   el.innerHTML = '<div class="ims-loader"><div class="ims-loader-mark"><img src="icons/icon-192.png?v=3" alt="" onerror="this.style.display=\'none\'"></div><div class="ims-loader-text">Loading</div><div class="ims-loader-bar"></div></div>';
   const [teams,drivers,constrs,races,lockDoc,breakDoc,roundCompleteDoc,myTeamArchives,seasonNumDoc,liveWeekendDoc,lastUnlockDoc,totalRoundsDoc,myTeamSeasonArchives] = await Promise.all([dbGetAll('teams'),dbGetAll('drivers'),dbGetAll('constructors'),dbGetAll('races'),dbGet('settings','teamsLocked'),dbGet('settings','breakWeek'),dbGet('settings','roundFullyComplete'),dbGetAll('archives').catch(()=>[]),dbGet('settings','seasonNumber').catch(()=>null),dbGet('settings','liveRaceWeekend').catch(()=>null),dbGet('settings','lastUnlockTime').catch(()=>null),dbGet('settings','totalRounds').catch(()=>null),dbGetAll('seasonArchives').catch(()=>[])]);
+  window._allRacesForTeamAt = races;
   const myTeamSeasonNum = (seasonNumDoc && seasonNumDoc.value) || window.currentSeason || 7;
   await loadAttendance();
   let myTeam = (window._adminViewAsUserId && adminLoggedIn)
@@ -12831,7 +12832,7 @@ async function renderMyTeam() {
       if (m && m[div]) return m[div]; const nk = String(driver.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
       const bn = r.teamByDivName && r.teamByDivName[div] && r.teamByDivName[div][nk]; if (bn) return bn;
       // Didn't race that round: show the team they were signed to at the time (from the roster-move log), not today's team.
-      return window._rmTeamAt ? window._rmTeamAt(driver, r.lockTime) : null; } catch(e) { return null; } })();
+      return (window._teamAtRace && window._teamAtRace(window._allRacesForTeamAt || [], r, dId, div)) || (window._rmTeamAt ? window._rmTeamAt(driver, r.lockTime) : null); } catch(e) { return null; } })();
     const _tName = _rTeam || driver.team;
     const teamCol = getTeamCardColour(_tName);
     const teamLogo = getTeamLogo(_tName);
@@ -15274,6 +15275,21 @@ window.findReserveForSlot = function(race, absentDriver, div) {
   return best;
 };
 
+// The team a driver was racing for at a given round, worked out from the imported races themselves:
+// the most recent EARLIER round where he raced (his own division first, then any), else the next later one.
+// Returns null when no round has him (caller falls back to his current team).
+window._teamAtRace = function(races, race, did, div) {
+  try { const okT = t => t && !/^reserve$/i.test(String(t).trim());
+    const tOf = (r) => { const m = r && r.driverTeamByDivision && r.driverTeamByDivision[did]; if (!m) return null; if (okT(m[div])) return m[div];
+      const o = Object.entries(m).find(([dv, t]) => !/^A/i.test(dv) && okT(t)); return o ? o[1] : null; };
+    const same = (races || []).filter(r => r && r.id !== race.id && (r.season == null || race.season == null || String(r.season) === String(race.season)));
+    const n = Number(race.raceNum) || 0;
+    const before = same.filter(r => (Number(r.raceNum) || 0) < n).sort((a, b) => (b.raceNum || 0) - (a.raceNum || 0));
+    for (const r of before) { const t = tOf(r); if (t) return t; }
+    const after = same.filter(r => (Number(r.raceNum) || 0) > n).sort((a, b) => (a.raceNum || 0) - (b.raceNum || 0));
+    for (const r of after) { const t = tOf(r); if (t) return t; }
+  } catch (e) {} return null; };
+
 // Build a team's reserve plan for the season: walk scored races oldest→newest; for each fantasy slot
 // whose driver didn't race that round, if a reserve exists AND the team still has a token, record the
 // substitution and spend a token. Returns { byRace: { raceId: { div: {absentId, reserveId, reserveName, pts} } },
@@ -15302,7 +15318,10 @@ window.computeReservePlan = function(t, races) {
       // A reserve driver has no race seat of his own, so there's no seat for anyone to cover — him not
       // racing just scores 0 (otherwise whoever raced for his listed team got swapped in and a token spent).
       if (absent.isReserve) continue;
-      const res = window.findReserveForSlot(race, absent, div);
+      // Use the team he was driving for AT THIS RACE (from the races around it), never today's roster —
+      // otherwise a later transfer re-picks a different stand-in and changes old rounds' points.
+      const _tAt = window._teamAtRace(ordered, race, did, div);
+      const res = window.findReserveForSlot(race, _tAt ? { ...absent, team: _tAt } : absent, div);
       if (!res) continue;                                                  // no reserve took the seat (0 pts still counts)
       if (!plan.byRace[race.id]) plan.byRace[race.id] = {};
       plan.byRace[race.id][div] = { absentId: did, reserveId: res.reserveId, reserveName: res.reserveName, pts: res.pts };
