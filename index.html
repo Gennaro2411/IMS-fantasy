@@ -2133,6 +2133,17 @@
       </div>
     </details>
 
+    <details class="help-sec" style="--hcol:#f7cf55">
+      <summary>🪙 IM$ — your betting money</summary>
+      <div class="help-body">
+        <p><strong>IM$ is the league's play money</strong> for the Bets page and Mystery Acca. It isn't real money and can't be bought. Your balance is in the gold wallet at the top of the page — tap it to see your vault, stats and recent activity.</p>
+        <p><strong>Starting out:</strong> you get <strong>1,000 IM$</strong> the first time you open Bets.</p>
+        <p><strong>It never resets.</strong> Your IM$ carries over from season to season forever. On top of that, everyone gets <strong>+1,000 IM$ at the start of every new season</strong> (from Season 9), added the next time your wallet loads.</p>
+        <p><strong>Earning more:</strong> win bets, and play the daily games in the Games hub — each game pays IM$ for playing its daily, plus bonuses for doing well.</p>
+        <p><strong>Spending:</strong> bet stakes, and Mystery Acca spins (100 IM$ for the first spin each race week, +100 for every spin after that).</p>
+      </div>
+    </details>
+
     <details class="help-sec" style="--hcol:#27f4d2">
       <summary>💰 Prices — how the market moves</summary>
       <div class="help-body">
@@ -30747,9 +30758,19 @@ window.acmMerge = async function(btn) {
   } catch (e) { say('✗ Stopped: ' + e.message + ' — press Merge again to finish (it picks up where it left off).'); }
   btn.disabled = false;
 };
+// IM$ never resets. Everyone gets +1,000 IM$ once per new season (from Season 9 on), added the next time
+// their wallet loads. `topUpSeason` = the last season they were topped up for (or joined in).
+const IM_SEASON_TOPUP = 1000, IM_TOPUP_FROM = 9;
 async function _betLoadCoins(userId) {
   let c = await dbGet('coins', userId).catch(() => null);
-  if (!c) { c = { userId, balance: BET_START_COINS, staked: 0, won: 0, betsPlaced: 0, betsWon: 0, createdAt: Date.now() }; await dbSet('coins', userId, c).catch(() => {}); }
+  const cs = Number(window.currentSeason) || 0;
+  if (!c) { c = { userId, balance: BET_START_COINS, staked: 0, won: 0, betsPlaced: 0, betsWon: 0, createdAt: Date.now(), ...(cs ? { topUpSeason: cs } : {}) }; await dbSet('coins', userId, c).catch(() => {}); return c; }
+  if (cs >= IM_TOPUP_FROM) {
+    const last = Number(c.topUpSeason) || (IM_TOPUP_FROM - 1); // existing players: Season 8 counts as already covered
+    if (cs > last) { const n = cs - Math.max(last, IM_TOPUP_FROM - 1);
+      c.balance = (Number(c.balance) || 0) + n * IM_SEASON_TOPUP; c.topUpSeason = cs; c.seasonTopUps = (c.seasonTopUps || []).concat([{ season: cs, amount: n * IM_SEASON_TOPUP, t: Date.now() }]);
+      await dbSet('coins', userId, c).catch(() => {}); }
+  }
   return c;
 }
 
