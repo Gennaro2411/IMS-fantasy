@@ -1883,7 +1883,7 @@
     @media (max-width:560px){.wl-kpis{grid-template-columns:repeat(2,1fr)}}
     .wl-split{margin-top:14px}.wl-sh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px}.wl-sh span{font-size:.66rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;background:linear-gradient(100deg,#7c86ff,#ff5c8a);-webkit-background-clip:text;background-clip:text;color:transparent}.wl-sh small{font-size:.66rem;color:#8b8fb8}
     .wl-bar{display:flex;height:9px;border-radius:9px;overflow:hidden;background:rgba(255,255,255,.07)}.wl-bar i{background:linear-gradient(90deg,#6f74e8,#a779e6)}.wl-bar b{background:linear-gradient(90deg,#f0487a,#ffb020)}
-    .wl-leg{display:flex;gap:14px;margin-top:6px;font-size:.7rem;color:#a5a9d6}.wl-leg i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}.wl-leg i.a{background:#a779e6}.wl-leg i.b{background:#ff7a5c}
+    .wl-leg{display:flex;gap:14px;margin-top:6px;font-size:.7rem;color:#a5a9d6}.wl-leg i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}.wl-leg i.a{background:#a779e6}.wl-leg i.b{background:#ff7a5c}.wl-leg i.c{background:#f5cf5a}.wl-bar u{background:linear-gradient(90deg,#d9a520,#f5cf5a)}.wl-leg{flex-wrap:wrap}
     .wl-acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}.wl-acts .hx-btn{justify-content:center}
     .wl-list{display:flex;flex-direction:column;gap:6px;max-height:340px;overflow:auto;padding-right:2px}
     .wl-row{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:12px;background:rgba(255,255,255,.03);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
@@ -9091,15 +9091,15 @@ window.openWallet = async function() {
   act.sort((a, b) => b.t - a.t);
   const when = (t) => { if (!t) return ''; const s = (Date.now() - t) / 1e3; return s < 3600 ? Math.max(1, Math.round(s / 60)) + 'm ago' : s < 86400 ? Math.round(s / 3600) + 'h ago' : s < 7 * 86400 ? Math.round(s / 86400) + 'd ago' : new Date(t).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }); };
   const row = (a) => `<div class="wl-row ${a.cls}"><span class="wl-ri">${a.ic}</span><span class="wl-rt"><b>${esc(a.h)}</b><small>${esc(a.s)}${a.t ? ' · ' + when(a.t) : ''}</small></span>${a.est ? '<span class="wl-rd up">✓</span>' : ''}<span style="${a.est ? 'display:none' : ''}" class="wl-rd ${a.open ? 'open' : a.d > 0 ? 'up' : a.d < 0 ? 'dn' : ''}">${a.open ? '−' + _wlFmt(-a.d) : a.d > 0 ? '+' + _wlFmt(a.d) : a.d < 0 ? '−' + _wlFmt(-a.d) : '±0'}</span></div>`;
-  const ge = c.gameEarned || 0, tot = Math.max(1, (c.won || 0) + ge);
+  const ge = c.gameEarned || 0, pk = (c.cards && c.cards.sold) || 0, tot = Math.max(1, (c.won || 0) + ge + pk);
   const V = _wlVault(c.balance);
   B.innerHTML = `<div class="wl-hero lv${V.L}">${V.svg}<div class="wl-scrim"></div><span class="wl-lvl">${V.L >= 7 ? 'BEYOND THE VAULT · LV ' + (V.L + 1) : 'VAULT LV ' + (V.L + 1)}<b>${V.name}</b></span><div class="wl-coin"><span class="imc"></span></div><div class="wl-bal"><small>Balance</small><b id="wl-bal" data-to="${Math.round(c.balance || 0)}">0</b><span>IM$</span></div>
       <div class="wl-sub"><span>🎟️ <b>${_wlFmt(staked)}</b> in play</span>${toWin ? `<span>🎯 up to <b>${_wlFmt(toWin)}</b> to win</span>` : ''}</div>
       <div class="wl-next"><div><i style="width:${Math.max(3, V.f * 100)}%"></i></div><small>${V.next ? `<b>${_wlFmt(V.next)}</b> IM$ to “${V.nextName}”` : V.note}</small></div></div>
     <div class="wl-kpis"><div><small>Bet profit</small><b class="${net > 0 ? 'up' : net < 0 ? 'dn' : ''}">${net > 0 ? '+' : net < 0 ? '−' : ''}${_wlFmt(Math.abs(net))}</b></div><div><small>Won from games</small><b class="up">+${_wlFmt(ge)}</b></div>
       <div><small>Bet record</small><b>${won.length}<i>W</i> ${lost.length}<i>L</i></b>${rate != null ? `<em>${rate}% hit rate</em>` : ''}</div><div><small>Biggest win</small><b>${best ? '+' + _wlFmt(best) : '—'}</b></div></div>
-    <div class="wl-split"><div class="wl-sh"><span>Where your winnings came from</span></div><div class="wl-bar"><i style="width:${(c.won || 0) / tot * 100}%"></i><b style="width:${ge / tot * 100}%"></b></div>
-      <div class="wl-leg"><span><i class="a"></i>Bets ${_wlFmt(c.won || 0)}</span><span><i class="b"></i>Games ${_wlFmt(ge)}</span></div></div>
+    <div class="wl-split"><div class="wl-sh"><span>Where your winnings came from</span></div><div class="wl-bar"><i style="width:${(c.won || 0) / tot * 100}%"></i><b style="width:${ge / tot * 100}%"></b><u style="width:${pk / tot * 100}%"></u></div>
+      <div class="wl-leg"><span><i class="a"></i>Bets ${_wlFmt(c.won || 0)}</span><span><i class="b"></i>Games ${_wlFmt(ge)}</span><span><i class="c"></i>IMS Packs ${_wlFmt(pk)}</span></div></div>
     <div class="wl-acts"><button class="hx-btn" onclick="closeWallet();showPage('bets')">🎟️ Place a bet</button><button class="hx-btn ghost" onclick="closeWallet();showPage('games')">🎮 Earn in games</button></div>
     <div class="wl-sh" style="margin-top:16px"><span>Recent activity</span><small>${act.length ? Math.min(act.length, 20) + ' latest' : ''}</small></div>
     <div class="wl-list">${act.length ? act.slice(0, 20).map(row).join('') : '<div class="wl-load">Nothing yet. Place a bet or play a daily game to get started.</div>'}</div>`;
