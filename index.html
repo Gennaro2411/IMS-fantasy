@@ -3972,8 +3972,8 @@
     .ckp.sm .ckp-body b{font-size:.95rem}.ckp.sm .ckp-body small{display:none}
     .ckp-crimp{position:absolute;left:0;right:0;top:0;height:12px;background:linear-gradient(160deg,var(--c),var(--c2));-webkit-mask:repeating-linear-gradient(90deg,#000 0 5px,transparent 5px 6px);mask:repeating-linear-gradient(90deg,#000 0 5px,transparent 5px 6px);opacity:.9}.ckp-crimp.b{top:auto;bottom:0}
     /* shop */
-    .ck-adm{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 12px;padding:9px 12px;border-radius:12px;font-size:.78rem;background:rgba(255,176,32,.08);box-shadow:inset 0 0 0 1px rgba(255,176,32,.4)}
-    .ck-adm button{border:none;cursor:pointer;font:inherit;font-weight:800;font-size:.72rem;color:#fff;padding:6px 12px;border-radius:999px;background:linear-gradient(110deg,#6f74e8,#a779e6 55%,#f0487a)}
+    .ck-adm{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin:0 0 12px;padding:9px 12px;border-radius:12px;font-size:.78rem;background:rgba(255,176,32,.08);box-shadow:inset 0 0 0 1px rgba(255,176,32,.4)}
+    .ck-adm>span{margin-right:auto}.ck-adm button+button{background:rgba(239,68,68,.18);box-shadow:inset 0 0 0 1px rgba(239,68,68,.55)}.ck-adm button{border:none;cursor:pointer;font:inherit;font-weight:800;font-size:.72rem;color:#fff;padding:6px 12px;border-radius:999px;background:linear-gradient(110deg,#6f74e8,#a779e6 55%,#f0487a)}
     .ck-wrap{max-width:980px}
     .ck-shop{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:6px}
     .ck-sp{display:flex;flex-direction:column;align-items:center;gap:10px;padding:20px 14px 16px;border-radius:20px;background:radial-gradient(90% 60% at 50% 0,color-mix(in srgb,var(--c) 26%,transparent),transparent 70%),linear-gradient(170deg,#15122b,#0b0a14 75%);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 45%,transparent)}
@@ -37105,6 +37105,16 @@ window.ckLoyalty = async function() { if (!adminLoggedIn) return; showToast('Wor
         add = add.concat(['bronze', 'silver', 'gold'].map(p => ({ p, from: `💜 Loyalty bonus — thanks for playing IMS Fantasy Season ${sn}!`, t, b }))); });
       if (add.length) { K.gifts = (K.gifts || []).concat(add); await dbSet('coins', uid, c); sent += add.length; } } catch (e) { console.warn('loyalty', uid, e); } }
     showToast(`💜 Sent ${sent} packs${skip ? ` · ${skip} already had it` : ''}.`, 'success'); _ckRender(); }, 'Send'); };
+// Admin resets. 'pulls' clears the Big Pulls feed. 'all' also wipes every player's cards, card index,
+// pack history and daily limits. IM$ balances, unopened gift/reward packs and loyalty flags are kept.
+window.ckReset = function(what) { if (!adminLoggedIn) return;
+  customConfirm(what === 'all' ? "Reset EVERYONE's cards? This deletes all cards in every collection, the card index, pack history, daily limits and Big Pulls. IM$ and unopened packs in My Packs are kept. This can't be undone." : 'Clear the Big Pulls feed for everyone? Cards themselves are kept.', async () => {
+    showToast('Resetting…', 'info'); const all = await dbGetAll('coins', { fresh: true }).catch(() => []); let n = 0;
+    for (const c of all) { const uid = c.userId || c.id; if (!uid) continue; let ch = false;
+      if (c.cardPulls && c.cardPulls.length) { c.cardPulls = []; ch = true; }
+      if (what === 'all' && c.cards) { const K = c.cards; c.cards = { inv: {}, gifts: K.gifts || [], loyal: K.loyal || {}, giftsOpened: K.giftsOpened || 0 }; ch = true; }
+      if (ch) { const { id, ...body } = c; try { await dbSet('coins', uid, body); n++; } catch (e) { console.warn('ckReset', uid, e); } } }
+    window._ckFeed = null; showToast(`Done — ${n} player${n === 1 ? '' : 's'} reset.`, 'success'); _ckRender(); }, what === 'all' ? 'Reset all cards' : 'Clear feed'); };
 window.ckGiftUI = async function() { const u = document.getElementById('ck-g-u'), nt = document.getElementById('ck-g-n'); if (!u || !u.value) return showToast('Pick a player.', 'error');
   const qs = Object.keys(CK_PACKS).map(id => [id, Math.max(0, Math.min(20, parseInt((document.getElementById('ck-g-q-' + id) || {}).value, 10) || 0))]).filter(x => x[1] > 0);
   if (!qs.length) return showToast('Add at least one pack.', 'error');
@@ -37202,7 +37212,7 @@ async function renderCardsGame(el) {
   let body = `<div class="ckx-hero"><div class="ckx-fan">${[...pool.list].filter(x => !x.sp).slice(0, 3).reverse().map((x, i) => `<div class="ckx-fc" style="--i:${i}">${_ckCard(x)}</div>`).join('')}</div>
     <div class="ckx-ht"><span class="ckx-k">IMS Cards</span><h1>Collect the <em>grid</em></h1><p>Every driver in IMS history is a card. Open packs, chase Diamonds and specials, and build your collection.</p>
     <div class="ckx-kpi"><div><small>Balance</small><b><i class="imc"></i> ${c ? Math.round(c.balance || 0).toLocaleString() : '—'}</b></div><div><small>My cards</small><b>${ownN}</b></div><div><small>Collection value</small><b>${ownV.toLocaleString()}</b></div><div><small>Card index</small><b>${dexN}<i>/${pool.list.length}</i></b></div></div></div></div>
-    ${adminLoggedIn ? `<div class="ck-adm"><span>${open ? '🟢 <b>Open to everyone</b>' : '🔒 <b>Only you can see this</b> — players can\'t see IMS Cards yet'}</span><button onclick="ckSetOpen(${open ? 'false' : 'true'})">${open ? 'Hide from players' : 'Let everyone see it'}</button></div>` : ''}
+    ${adminLoggedIn ? `<div class="ck-adm"><span>${open ? '🟢 <b>Open to everyone</b>' : '🔒 <b>Only you can see this</b> — players can\'t see IMS Cards yet'}</span><button onclick="ckSetOpen(${open ? 'false' : 'true'})">${open ? 'Hide from players' : 'Let everyone see it'}</button><button onclick="ckReset('pulls')">Reset Big Pulls</button><button onclick="ckReset('all')">Reset everyone's cards</button></div>` : ''}
     <div class="wd-modes">${[['shop', '🛒', 'SHOP'], ['packs', '🎁', `MY PACKS${(K.gifts || []).length ? ' · ' + K.gifts.length : ''}`], ['col', '🗂️', `MY CARDS${ownN ? ' · ' + ownN : ''}`], ['feed', '🔥', 'BIG PULLS'], ['all', '📖', 'CARD INDEX']].map(([m, i, l]) => `<button class="${tab === m ? 'on' : ''}" onclick="ckTab('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>`;
   if (!me) body += '<div class="alert alert-warning">Log in to your team to buy packs.</div>';
   if (tab === 'shop') { const TT = _ckTeamSync(pool); const pct = (x) => (x * 100 >= 1 ? Math.round(x * 100) : (x * 100).toFixed(2).replace(/0$/, '')) + '%';
