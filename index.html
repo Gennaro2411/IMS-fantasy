@@ -37115,6 +37115,16 @@ window.ckReset = function(what) { if (!adminLoggedIn) return;
       if (what === 'all' && c.cards) { const K = c.cards; c.cards = { inv: {}, gifts: K.gifts || [], loyal: K.loyal || {}, giftsOpened: K.giftsOpened || 0 }; ch = true; }
       if (ch) { const { id, ...body } = c; try { await dbSet('coins', uid, body); n++; } catch (e) { console.warn('ckReset', uid, e); } } }
     window._ckFeed = null; showToast(`Done — ${n} player${n === 1 ? '' : 's'} reset.`, 'success'); _ckRender(); }, what === 'all' ? 'Reset all cards' : 'Clear feed'); };
+// After a card reset: anyone who already opened their loyalty packs (so the cards got wiped) gets that season's
+// Bronze + Silver + Gold back. Only seasons whose loyalty packs are no longer waiting in My Packs are restored.
+window.ckLoyaltyRestore = function() { if (!adminLoggedIn) return;
+  customConfirm('Give the loyalty packs back to every player who had already opened theirs before the card reset? Players whose loyalty packs are still unopened are skipped.', async () => {
+    const all = await dbGetAll('coins', { fresh: true }).catch(() => []); let n = 0, pk = 0;
+    for (const c of all) { const uid = c.userId || c.id, K = c.cards; if (!uid || !K || !K.loyal) continue; const t = Date.now(); let add = [];
+      Object.keys(K.loyal).forEach(sn => { if ((K.gifts || []).some(g => String(g.b || '').startsWith('loy' + sn))) return;
+        const b = 'loy' + sn + t.toString(36) + 'r'; add = add.concat(['bronze', 'silver', 'gold'].map(p => ({ p, from: `💜 Loyalty bonus — thanks for playing IMS Fantasy Season ${sn}! (given back after the card reset)`, t, b }))); });
+      if (!add.length) continue; K.gifts = (K.gifts || []).concat(add); const { id, ...body } = c; try { await dbSet('coins', uid, body); n++; pk += add.length; } catch (e) {} }
+    showToast(`↺ Gave back ${pk} packs to ${n} player${n === 1 ? '' : 's'}.`, 'success'); _ckRender(); }, 'Give back'); };
 window.ckGiftUI = async function() { const u = document.getElementById('ck-g-u'), nt = document.getElementById('ck-g-n'); if (!u || !u.value) return showToast('Pick a player.', 'error');
   const qs = Object.keys(CK_PACKS).map(id => [id, Math.max(0, Math.min(20, parseInt((document.getElementById('ck-g-q-' + id) || {}).value, 10) || 0))]).filter(x => x[1] > 0);
   if (!qs.length) return showToast('Add at least one pack.', 'error');
@@ -37233,7 +37243,8 @@ async function renderCardsGame(el) {
         <select id="ck-g-u"><option value="">Pick a player…</option><option value="*">Everyone</option>${tms.map(t => `<option value="${esc(t.userId)}">${esc(t.teamName || t.playerName || t.userId)}</option>`).join('')}</select>
         <div class="ck-g-row">${Object.entries(CK_PACKS).map(([id, P]) => `<label style="--c:${P.c};--c2:${P.c2}"><i></i>${P.n.replace(' Pack', '')}<input id="ck-g-q-${id}" type="number" min="0" max="20" value="0"></label>`).join('')}</div>
         <textarea id="ck-g-n" maxlength="400" rows="4" placeholder="Message / reason, e.g. Race winner reward — Monza D1"></textarea><button class="hx-btn" onclick="ckGiftUI()">🎁 Send packs</button>
-        <button class="hx-btn ghost" onclick="ckLoyalty()">💜 Send loyalty bonus (S7 + S8 players)</button></div>`; } }
+        <button class="hx-btn ghost" onclick="ckLoyalty()">💜 Send loyalty bonus (S7 + S8 players)</button>
+        <button class="hx-btn ghost" onclick="ckLoyaltyRestore()">↺ Give back loyalty packs that were opened before a card reset</button></div>`; } }
   else if (tab === 'col') { own.sort((a, b) => b.c.r - a.c.r || b.c.sc - a.c.sc);
     body += `<div class="ck-stats"><div><small>Cards</small><b>${ownN}</b></div><div><small>Collection value</small><b>${ownV.toLocaleString()}</b></div><div><small>Packs opened</small><b>${K.packs || 0}</b></div><div><small>Spent / sold</small><b>${(K.spent || 0).toLocaleString()} / ${(K.sold || 0).toLocaleString()}</b></div></div>
       ${own.length ? `<div class="ck-grid">${own.map(x => _ckCard(x.c, { n: x.n, on: `ckDetail('${x.c.k}')` })).join('')}</div><div class="ck-fine">Tap a card for its stats and to quick sell it.</div>` : '<div class="ck-empty">No cards yet. Open a pack in the shop.</div>'}`; }
