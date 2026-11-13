@@ -15711,7 +15711,7 @@ window.computeTeamRanksByPoints = function(teams, races) {
 // ===== ROUND PACK REWARDS =====
 // Every settled round (from launch onwards) pays card packs by where your fantasy team finished that round.
 // Claimed automatically the next time you open the Leaderboard; packs land in IMS Cards → My Packs (c.cards.rw[raceId]).
-const RW_FROM = Date.UTC(2026, 10, 13); // only rounds settled from 13 Nov 2026
+const RW_FROM = Date.UTC(2026, 10, 13, 19, 20); // only rounds settled after this (Brazil R5 and earlier don't pay)
 const RW_TABLE = [[1, 1, ['supersonic', 'supersonic'], '🏆 Round winner'], [2, 2, ['supersonic', 'gold'], '🥈 2nd'], [3, 3, ['supersonic'], '🥉 3rd'],
   [4, 5, ['gold', 'gold'], '4th–5th'], [6, 10, ['gold'], '6th–10th'], [11, 25, ['mixed'], '11th–25th'], [26, 50, ['silver'], '26th–50th'], [51, 9999, ['bronze'], '51st+']];
 const _rwFor = pos => RW_TABLE.find(r => pos >= r[0] && pos <= r[1]);
@@ -15720,7 +15720,7 @@ function _rwRank(race, teams, races) { const T = (teams || []).filter(t => t && 
   const ov = typeof window.getRoundWinOverride === 'function' ? window.getRoundWinOverride(race, T) : null;
   if (ov) { const i = L.findIndex(x => x.t === ov || x.t.userId === ov.userId); if (i > 0) L.unshift(L.splice(i, 1)[0]); }
   return L; }
-const _rwSettled = races => (races || []).filter(r => r && r.priceAfterAt && r.driverPoints && Object.keys(r.driverPoints).length && +new Date(r.priceAfterAt) >= RW_FROM).sort((a, b) => (a.raceNum || 0) - (b.raceNum || 0));
+const _rwSettled = races => (races || []).filter(r => r && r.priceAfterAt && r.verdictsAt && r.driverPoints && Object.keys(r.driverPoints).length && +new Date(r.priceAfterAt) >= RW_FROM && +new Date(r.verdictsAt) >= RW_FROM) /* paid only once verdicts are in and the round is handed over */.sort((a, b) => (a.raceNum || 0) - (b.raceNum || 0));
 window._rwRun = async function(teams, races) { const me = typeof currentUser !== 'undefined' && currentUser && currentUser.userId; let got = [];
   try { if (me) { const S = _rwSettled(races); if (S.length) { const c = await _betLoadCoins(me); const K = c.cards = c.cards || { inv: {} }; K.rw = K.rw || {}; let add = [];
     S.forEach(r => { if (K.rw[r.id]) return; const L = _rwRank(r, teams, races), i = L.findIndex(x => x.t.userId === me); if (i < 0) { K.rw[r.id] = -1; return; }
@@ -16601,7 +16601,7 @@ window.showRaceBreakdown = async function(raceId) {
     <div class="rlb">${L.length ? L.map((r, i) => { const t = r.team, nm = t.teamName || t.playerName || 'Team', pic = t.discordAvatar ? `<img src="${esc(t.discordAvatar)}" alt="" loading="lazy" onerror="this.remove()">` : `<span>${esc(String(nm).slice(0, 1).toUpperCase())}</span>`;
       const rw = showRw ? _rwFor(i + 1) : null;
       return `<div class="rlb-r${i < 3 ? ' p' + (i + 1) : ''}${t.userId && t.userId === me ? ' me' : ''}"><b class="rlb-n">${i < 3 ? M[i] : i + 1}</b><div class="rlb-a">${pic}</div>
-        <div class="rlb-t"><b>${esc(nm)}</b><small>${esc(t.playerName || '')}</small></div>${rw ? `<span class="rlb-rw" title="Round reward">${rw[2].length > 1 ? rw[2].length + '× ' : ''}${CK_PACKS[rw[2][0]].n.replace(' Pack', '')}</span>` : ''}<span class="rlb-p">${Math.round(r.pts)}<i>pts</i></span></div>`; }).join('') : '<p class="text-muted">Nobody has scored this round yet.</p>'}</div>`;
+        <div class="rlb-t"><b>${esc(nm)}</b><small>${esc(t.playerName || '')}</small></div>${rw ? `<span class="rlb-rw" title="Round reward">${(() => { const n = {}; rw[2].forEach(p => n[p] = (n[p] || 0) + 1); return Object.keys(n).map(p => (n[p] > 1 ? n[p] + '× ' : '') + CK_PACKS[p].n.replace(' Pack', '')).join(' + '); })()}</span>` : ''}<span class="rlb-p">${Math.round(r.pts)}<i>pts</i></span></div>`; }).join('') : '<p class="text-muted">Nobody has scored this round yet.</p>'}</div>`;
   openModal('R' + race.raceNum + ' — ' + esc(race.name), html);
   const mr = document.querySelector('.rlb-r.me'); if (mr) setTimeout(() => mr.scrollIntoView({ block: 'center' }), 200);
 };
