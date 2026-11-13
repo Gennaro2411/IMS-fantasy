@@ -15702,7 +15702,7 @@ window.computeTeamRanksByPoints = function(teams, races) {
 // Every settled round (from launch onwards) pays card packs by where your fantasy team finished that round.
 // Claimed automatically the next time you open the Leaderboard; packs land in IMS Cards → My Packs (c.cards.rw[raceId]).
 const RW_FROM = Date.UTC(2026, 10, 13); // only rounds settled from 13 Nov 2026
-const RW_TABLE = [[1, 1, ['supersonic', 'gold', 'gold'], '🏆 Round winner'], [2, 2, ['supersonic', 'gold'], '🥈 2nd'], [3, 3, ['supersonic'], '🥉 3rd'],
+const RW_TABLE = [[1, 1, ['supersonic', 'supersonic'], '🏆 Round winner'], [2, 2, ['supersonic', 'gold'], '🥈 2nd'], [3, 3, ['supersonic'], '🥉 3rd'],
   [4, 5, ['gold', 'gold'], '4th–5th'], [6, 10, ['gold'], '6th–10th'], [11, 25, ['mixed'], '11th–25th'], [26, 50, ['silver'], '26th–50th'], [51, 9999, ['bronze'], '51st+']];
 const _rwFor = pos => RW_TABLE.find(r => pos >= r[0] && pos <= r[1]);
 function _rwRank(race, teams, races) { const T = (teams || []).filter(t => t && !t.testAccount && t.userId);
