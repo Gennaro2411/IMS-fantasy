@@ -36968,6 +36968,8 @@ function _ckTeamSync(pool) { const P = CK_PACKS.team, t = _ckTeamToday(pool); P.
 const _ckLeft = (K, id) => adminLoggedIn ? Infinity : CK_DAY_MAX - ((K && K.day && K.day.d === _ckDay() && K.day[id]) || 0);
 const _ckCan = () => !!(adminLoggedIn || (window._gamesLock || {}).cardsOpen);
 // Rating: score → 40..91 on a curve, +5 for being a champion (+1 per extra title, max +2), capped at 96.
+// Manual card-rating overrides (driver key → rating). Stats stay real; only the overall changes.
+const CK_RATE_FIX = { jeanclaude04: 65 };
 function _ckRate(w, pd, t5, p, ch) { const sc = 4.5 * w + 1.7 * pd + 1.35 * t5 + p / 17; /* wins count most, then podiums, then top 5s, then points */ let r = 40 + 51 * (1 - Math.exp(-sc / 75)); if (ch > 0) r += 5 + Math.min(2, ch - 1); return { r: Math.min(96, Math.round(r)), sc }; }
 // Last team the driver raced FULL TIME for (s.cp = full-time stints in order, oldest first).
 function _ckLastFT(s) { const cp = (s && s.cp) || []; for (let i = cp.length - 1; i >= 0; i--) { const t = cp[i] && cp[i][1]; if (t && !/^reserve$/i.test(t)) return t; } return ''; }
@@ -36983,6 +36985,7 @@ async function _ckPool() {
     const t5 = Math.max(s.t5 != null ? s.t5 : Math.round(pd * 1.6), pd), ch = Math.max(s.ch || 0, chBy[k] || 0), R = _ckRate(w, pd, t5, p, ch);
     const c = { k, n: String((d && d.name) || s.n).replace(/^\[[^\]]*\]\s*/, ''), w, pd, t5, p, ch, r: R.r, sc: R.sc, nat: (typeof _natFix === 'function' ? _natFix(s.n, s.nat) : s.nat) || '',
       cur: d && !d.isReserve && d.team && !/^reserve$/i.test(d.team) ? d.team : '', team: (d && !d.isReserve && d.team && !/^reserve$/i.test(d.team) ? d.team : '') || _ckLastFT(s), did: d ? d.id : '', ph: d ? (driverPhoto(d) || '') : '' };
+    if (CK_RATE_FIX[k] != null) c.r = CK_RATE_FIX[k];
     c.t = _ckTier(c.r).id; list.push(c); by[k] = c; });
   // Special cards (admin-made): same driver + live stats, admin-chosen rating, own key "<driver>~<id>".
   { const sd = await dbGet('settings', 'ckSpecials').catch(() => null); ((sd && sd.value && sd.value.list) || []).forEach(x => { const b = by[x.k]; if (!b || !CK_SP[x.ty]) return;
