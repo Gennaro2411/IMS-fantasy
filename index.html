@@ -37088,6 +37088,23 @@ window.ckSpAdd = async function() { if (!adminLoggedIn) return; const k = docume
 window.ckSpDel = function(id) { if (!adminLoggedIn) return; customConfirm('Delete this special card? Players who own it will lose it from their collection.', async () => {
     const sd = await dbGet('settings', 'ckSpecials').catch(() => null), list = ((sd && sd.value && sd.value.list) || []).filter(x => x.id !== id);
     await dbSet('settings', 'ckSpecials', { value: { list } }); window._ckPoolC = null; showToast('Deleted.', 'success'); _ckRender(); }, 'Delete'); };
+// Loyalty bonus: Bronze + Silver + Gold for everyone who scored a fantasy point in S7, and again for S8.
+// Each player can only ever get each season's bonus once (c.cards.loyal[season]).
+window.ckLoyalty = async function() { if (!adminLoggedIn) return; showToast('Working out who played…', 'info');
+  const [arch, teams, races] = await Promise.all([dbGetAll('archives').catch(() => []), dbGetAll('teams', { fresh: true }).catch(() => []), dbGetAll('races').catch(() => [])]);
+  const a7 = (arch || []).find(a => Number(a.season) === 7 || /season\s*7\b/i.test(a.seasonName || ''));
+  const s7 = new Set(((a7 && a7.leaderboard) || []).filter(r => r.userId && (r.total || r.pts || 0) > 0).map(r => r.userId));
+  const ranked = window.computeTeamRanksByPoints ? window.computeTeamRanksByPoints(teams.filter(t => t.userId), races) : [];
+  const s8 = new Set(ranked.filter(t => t.userId && (t.total || 0) > 0).map(t => t.userId));
+  if (!a7) return showToast("Couldn't find the Season 7 archive.", 'error');
+  const all = [...new Set([...s7, ...s8])];
+  customConfirm(`Send the loyalty bonus? 💜 Season 7: ${s7.size} players and 💜 Season 8: ${s8.size} players each get a Bronze + Silver + Gold pack per season (${all.length} players, up to 6 packs each). Anyone who already got it is skipped.`, async () => {
+    let sent = 0, skip = 0;
+    for (const uid of all) { try { const c = await _betLoadCoins(uid); const K = c.cards = c.cards || { inv: {} }; const L = K.loyal = K.loyal || {}; const t = Date.now(); let add = [];
+      [[7, s7], [8, s8]].forEach(([sn, set]) => { if (!set.has(uid)) return; if (L[sn]) { skip++; return; } L[sn] = t; const b = 'loy' + sn + t.toString(36);
+        add = add.concat(['bronze', 'silver', 'gold'].map(p => ({ p, from: `💜 Loyalty bonus — thanks for playing IMS Fantasy Season ${sn}!`, t, b }))); });
+      if (add.length) { K.gifts = (K.gifts || []).concat(add); await dbSet('coins', uid, c); sent += add.length; } } catch (e) { console.warn('loyalty', uid, e); } }
+    showToast(`💜 Sent ${sent} packs${skip ? ` · ${skip} already had it` : ''}.`, 'success'); _ckRender(); }, 'Send'); };
 window.ckGiftUI = async function() { const u = document.getElementById('ck-g-u'), nt = document.getElementById('ck-g-n'); if (!u || !u.value) return showToast('Pick a player.', 'error');
   const qs = Object.keys(CK_PACKS).map(id => [id, Math.max(0, Math.min(20, parseInt((document.getElementById('ck-g-q-' + id) || {}).value, 10) || 0))]).filter(x => x[1] > 0);
   if (!qs.length) return showToast('Add at least one pack.', 'error');
@@ -37205,7 +37222,8 @@ async function renderCardsGame(el) {
       body += `<div class="ck-gift"><div class="wl-sh"><span>🛠️ Give packs</span><small>only you can see this</small></div>
         <select id="ck-g-u"><option value="">Pick a player…</option><option value="*">Everyone</option>${tms.map(t => `<option value="${esc(t.userId)}">${esc(t.teamName || t.playerName || t.userId)}</option>`).join('')}</select>
         <div class="ck-g-row">${Object.entries(CK_PACKS).map(([id, P]) => `<label style="--c:${P.c};--c2:${P.c2}"><i></i>${P.n.replace(' Pack', '')}<input id="ck-g-q-${id}" type="number" min="0" max="20" value="0"></label>`).join('')}</div>
-        <textarea id="ck-g-n" maxlength="400" rows="4" placeholder="Message / reason, e.g. Race winner reward — Monza D1"></textarea><button class="hx-btn" onclick="ckGiftUI()">🎁 Send packs</button></div>`; } }
+        <textarea id="ck-g-n" maxlength="400" rows="4" placeholder="Message / reason, e.g. Race winner reward — Monza D1"></textarea><button class="hx-btn" onclick="ckGiftUI()">🎁 Send packs</button>
+        <button class="hx-btn ghost" onclick="ckLoyalty()">💜 Send loyalty bonus (S7 + S8 players)</button></div>`; } }
   else if (tab === 'col') { own.sort((a, b) => b.c.r - a.c.r || b.c.sc - a.c.sc);
     body += `<div class="ck-stats"><div><small>Cards</small><b>${ownN}</b></div><div><small>Collection value</small><b>${ownV.toLocaleString()}</b></div><div><small>Packs opened</small><b>${K.packs || 0}</b></div><div><small>Spent / sold</small><b>${(K.spent || 0).toLocaleString()} / ${(K.sold || 0).toLocaleString()}</b></div></div>
       ${own.length ? `<div class="ck-grid">${own.map(x => _ckCard(x.c, { n: x.n, on: `ckDetail('${x.c.k}')` })).join('')}</div><div class="ck-fine">Tap a card for its stats and to quick sell it.</div>` : '<div class="ck-empty">No cards yet. Open a pack in the shop.</div>'}`; }
