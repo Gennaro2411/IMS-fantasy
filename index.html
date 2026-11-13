@@ -37110,20 +37110,21 @@ window.ckLoyalty = async function() { if (!adminLoggedIn) return; showToast('Wor
 window.ckReset = function(what) { if (!adminLoggedIn) return;
   customConfirm(what === 'all' ? "Reset EVERYONE's cards? This deletes all cards in every collection, the card index, pack history, daily limits and Big Pulls. IM$ and unopened packs in My Packs are kept. This can't be undone." : 'Clear the Big Pulls feed for everyone? Cards themselves are kept.', async () => {
     showToast('Resetting…', 'info'); const all = await dbGetAll('coins', { fresh: true }).catch(() => []); let n = 0;
-    for (const c of all) { const uid = c.userId || c.id; if (!uid) continue; let ch = false;
-      if (c.cardPulls && c.cardPulls.length) { c.cardPulls = []; ch = true; }
-      if (what === 'all' && c.cards) { const K = c.cards; c.cards = { inv: {}, gifts: K.gifts || [], loyal: K.loyal || {}, giftsOpened: K.giftsOpened || 0 }; ch = true; }
-      if (ch) { const { id, ...body } = c; try { await dbSet('coins', uid, body); n++; } catch (e) { console.warn('ckReset', uid, e); } } }
+    // Write by DOCUMENT id and only the card fields, so a stray/duplicate coins doc can never overwrite another player's record.
+    for (const c of all) { if (!c.id) continue; const up = {};
+      if (c.cardPulls && c.cardPulls.length) up.cardPulls = [];
+      if (what === 'all' && c.cards) { const K = c.cards; up.cards = { inv: {}, gifts: K.gifts || [], loyal: K.loyal || {}, giftsOpened: K.giftsOpened || 0 }; }
+      if (Object.keys(up).length) { try { await dbSet('coins', c.id, up); n++; } catch (e) { console.warn('ckReset', c.id, e); } } }
     window._ckFeed = null; showToast(`Done — ${n} player${n === 1 ? '' : 's'} reset.`, 'success'); _ckRender(); }, what === 'all' ? 'Reset all cards' : 'Clear feed'); };
 // After a card reset: anyone who already opened their loyalty packs (so the cards got wiped) gets that season's
 // Bronze + Silver + Gold back. Only seasons whose loyalty packs are no longer waiting in My Packs are restored.
 window.ckLoyaltyRestore = function() { if (!adminLoggedIn) return;
   customConfirm('Give the loyalty packs back to every player who had already opened theirs before the card reset? Players whose loyalty packs are still unopened are skipped.', async () => {
     const all = await dbGetAll('coins', { fresh: true }).catch(() => []); let n = 0, pk = 0;
-    for (const c of all) { const uid = c.userId || c.id, K = c.cards; if (!uid || !K || !K.loyal) continue; const t = Date.now(); let add = [];
+    for (const c of all) { const uid = c.id, K = c.cards; if (!uid || !K || !K.loyal) continue; const t = Date.now(); let add = [];
       Object.keys(K.loyal).forEach(sn => { if ((K.gifts || []).some(g => String(g.b || '').startsWith('loy' + sn))) return;
         const b = 'loy' + sn + t.toString(36) + 'r'; add = add.concat(['bronze', 'silver', 'gold'].map(p => ({ p, from: `💜 Loyalty bonus — thanks for playing IMS Fantasy Season ${sn}! (given back after the card reset)`, t, b }))); });
-      if (!add.length) continue; K.gifts = (K.gifts || []).concat(add); const { id, ...body } = c; try { await dbSet('coins', uid, body); n++; pk += add.length; } catch (e) {} }
+      if (!add.length) continue; K.gifts = (K.gifts || []).concat(add); try { await dbSet('coins', uid, { cards: K }); n++; pk += add.length; } catch (e) {} }
     showToast(`↺ Gave back ${pk} packs to ${n} player${n === 1 ? '' : 's'}.`, 'success'); _ckRender(); }, 'Give back'); };
 window.ckGiftUI = async function() { const u = document.getElementById('ck-g-u'), nt = document.getElementById('ck-g-n'); if (!u || !u.value) return showToast('Pick a player.', 'error');
   const qs = Object.keys(CK_PACKS).map(id => [id, Math.max(0, Math.min(20, parseInt((document.getElementById('ck-g-q-' + id) || {}).value, 10) || 0))]).filter(x => x[1] > 0);
