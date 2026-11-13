@@ -36969,7 +36969,7 @@ const _ckLeft = (K, id) => adminLoggedIn ? Infinity : CK_DAY_MAX - ((K && K.day 
 const _ckCan = () => !!(adminLoggedIn || (window._gamesLock || {}).cardsOpen);
 // Rating: score → 40..91 on a curve, +5 for being a champion (+1 per extra title, max +2), capped at 96.
 // Manual card-rating overrides (driver key → rating). Stats stay real; only the overall changes.
-const CK_RATE_FIX = { jeanclaude04: 65 };
+const CK_RATE_FIX = {};
 function _ckRate(w, pd, t5, p, ch, pl) { const sc = 4.5 * w + 1.7 * pd + 1.35 * t5 + p / 17 + 0.9 * (pl || 0); /* wins count slightly most, then podiums, top 5s, points; poles a small extra boost */ let r = 40 + 51 * (1 - Math.exp(-sc / 75)); if (ch > 0) r += 5 + Math.min(2, ch - 1); return { r: Math.min(96, Math.round(r)), sc }; }
 // Last team the driver raced FULL TIME for (s.cp = full-time stints in order, oldest first).
 function _ckLastFT(s) { const cp = (s && s.cp) || []; for (let i = cp.length - 1; i >= 0; i--) { const t = cp[i] && cp[i][1]; if (t && !/^reserve$/i.test(t)) return t; } return ''; }
