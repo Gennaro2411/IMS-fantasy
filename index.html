@@ -17550,6 +17550,9 @@ window.loadDbFile = async function() {
     const buf = await file.arrayBuffer();
     _imsDb = new SQL.Database(new Uint8Array(buf));
     window._careerBott = null; window._appBott = null;
+    // Card ratings need top 5s in the games stats. If the saved stats don't have them yet, rebuild them from this .db now.
+    setTimeout(async () => { try { const d = window._wdDecode(((await dbGet('settings', 'wordleData').catch(() => null)) || {}).value);
+      if (!(d && Object.values(d.stats || {}).some(x => x && x.t5 != null)) && typeof buildWordleData === 'function') { await buildWordleData(null); window._ckPoolC = null; showToast('🃏 Card stats rebuilt with real top 5s.', 'success'); } } catch (e) { console.warn('card stats rebuild', e); } }, 0);
     // Sync the official season definitions (divisions + total rounds) from the bible.
     try {
       const sd = _imsDb.exec("SELECT season, official_divisions_json, total_rounds FROM season_definitions");
