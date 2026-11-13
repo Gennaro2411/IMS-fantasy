@@ -35482,7 +35482,7 @@ const _duelPickerHtml = () => { const mine = _myDuelColour();
 // Daily PaddockDle / daily Grid finished: +10 IM$ once per day each.
 // Duel wins: +5 IM$ each, up to 25 IM$ per game mode in any rolling 24 hours.
 // ===== REWARD METER: every daily game you play (first time each day) counts; milestones drop packs into My Packs.
-const GM_METER = [[5, ['bronze'], 0], [10, ['silver'], 0], [15, ['mixed'], 0], [25, ['mixed'], 100], [50, ['gold'], 0]], GM_METER_MAX = 50;
+const GM_METER = [[5, ['bronze'], 0], [10, ['silver'], 0], [15, ['mixed'], 0], [25, ['gold'], 0], [50, ['supersonic'], 0]], GM_METER_MAX = 50;
 function _gmMeterTick(c) { const n = (c.rwPlays || 0) + 1, hit = GM_METER.find(m => m[0] === n);
   if (hit) { const K = c.cards = c.cards || { inv: {} }, t = Date.now(), b = 'rw' + t.toString(36), from = `🎯 Reward meter — ${n} daily games played`;
     K.gifts = (K.gifts || []).concat(hit[1].map(p => ({ p, from, t, b }))); if (hit[2]) { c.balance = (c.balance || 0) + hit[2]; c.gameEarned = (c.gameEarned || 0) + hit[2]; }
