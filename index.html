@@ -16243,7 +16243,7 @@ async function renderLeaderboard() {
         </div>`;
       }
     } catch(e) {}
-    document.getElementById('leaderboard-content').innerHTML = (window._verdictBanner ? window._verdictBanner(races) : '') + (awardsCard ? awardsCard.replace(/<\/div>\s*$/, '<div id="lb-rw"></div></div>') : '<div id="lb-rw"></div>') + metricToggle + meStrip + (_lbHiddenNoCap ? '<div style="font-size:.78rem;color:var(--muted);text-align:center;margin:0 0 10px">Everyone is on 0 points so far — showing the ' + ranked.length + ' team' + (ranked.length !== 1 ? 's' : '') + ' with a captain picked (' + _lbHiddenNoCap + ' without one hidden until points come in).</div>' : '') + podiumHtml + '<div class="lbr-list hx-rv" data-k="lblist">' + top10 + '</div>'
+    document.getElementById('leaderboard-content').innerHTML = (window._verdictBanner ? window._verdictBanner(races) : '') + metricToggle + meStrip + (_lbHiddenNoCap ? '<div style="font-size:.78rem;color:var(--muted);text-align:center;margin:0 0 10px">Everyone is on 0 points so far — showing the ' + ranked.length + ' team' + (ranked.length !== 1 ? 's' : '') + ' with a captain picked (' + _lbHiddenNoCap + ' without one hidden until points come in).</div>' : '') + podiumHtml + '<div class="lbr-list hx-rv" data-k="lblist">' + top10 + '</div>' + '<div style="margin-top:16px"></div>' + (awardsCard ? awardsCard.replace(/<\/div>\s*$/, '<div id="lb-rw"></div></div>') : '<div id="lb-rw"></div>')
       + (rest ? '<div id="lb-rest" class="lbr-list" style="display:none;margin-top:6px">'+rest+'</div>'
                +'<div style="text-align:center;margin-top:12px">'
                +'<button class="btn btn-secondary" id="lb-show-rest-btn" onclick="toggleLbRest()">Show the rest ('+(ranked.length-10)+')</button>'
