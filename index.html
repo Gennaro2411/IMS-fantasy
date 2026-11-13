@@ -162,6 +162,16 @@
   nav{display:flex;gap:4px;border-top:1px solid rgba(255,255,255,0.06);
     padding:2px 0 0;overflow-x:auto;scrollbar-width:none;}
   nav::-webkit-scrollbar{display:none;}
+  /* Grouped desktop nav: dropdowns (hover or click) */
+  header nav{overflow:visible}
+  .nv-g{position:relative;display:flex}
+  .nv-gb i{font-style:normal;font-size:.7em;margin-left:3px;display:inline-block;transition:transform .2s}
+  .nv-g:hover .nv-gb i,.nv-g.open .nv-gb i{transform:rotate(180deg)}
+  .nv-g.on>.nv-gb{color:#fff;background:linear-gradient(110deg,rgba(111,116,232,.34),rgba(167,121,230,.22) 55%,rgba(240,72,122,.26));box-shadow:inset 0 0 0 1px rgba(124,134,255,.5)}
+  .nv-dd{position:absolute;top:100%;left:0;z-index:1200;min-width:180px;padding:8px;margin-top:6px;border-radius:14px;background:#0d0c18;box-shadow:0 0 0 1px rgba(124,134,255,.22),0 24px 50px -16px rgba(0,0,0,.9);display:flex;flex-direction:column;gap:2px;opacity:0;visibility:hidden;transform:translateY(-4px);transition:opacity .15s,transform .15s,visibility .15s}
+  .nv-dd::before{content:'';position:absolute;left:0;right:0;top:-10px;height:10px}
+  .nv-g:hover .nv-dd,.nv-g.open .nv-dd{opacity:1;visibility:visible;transform:none}
+  nav .nv-dd button{text-align:left;width:100%;border-radius:10px!important;padding:10px 14px!important}
   #market-tabs{display:flex;gap:6px;flex-wrap:wrap;background:none;border:none;padding:0}
   #market-tabs .tab{--mkcol:#ffc800;border:1px solid rgba(255,255,255,0.12);background:transparent;color:var(--muted);border-radius:20px;padding:6px 14px;font-size:.72rem;font-weight:800;letter-spacing:.5px;cursor:pointer;transition:all .15s ease}
   #market-tabs .tab:hover{border-color:var(--mkcol);color:var(--text);transform:translateY(-1px)}
@@ -1773,20 +1783,15 @@
     <div id="global-search-results" class="hdr-search-results hidden"></div>
   </div>
   <nav>
-    <button class="active" onclick="showPage('dashboard')">Home</button>
-    <button onclick="showPage('home')">Edit Team</button>
-    <button onclick="showPage('my-team')">My Team</button>
-    <button onclick="showPage('leaderboard')">Leaderboard</button>
-    <button onclick="showPage('results')">Results</button>
-    <button onclick="showPage('history')">Stats</button>
-    <button onclick="showPage('predictions')">Briefing</button>
-    <button onclick="showPage('market')">Market</button>
-    <button onclick="showPage('bets')">Bets</button>
-    <button onclick="showPage('extra')">Extra</button>
-    <button onclick="showPage('social')">Social</button>
-    <button onclick="showPage('games')">Games</button>
-    <button id="nav-cards-btn" onclick="showPage('cards')" style="display:none">Cards</button>
-    <button id="nav-admin-btn" onclick="showPage('admin')" style="display:none">Admin</button>
+    <button data-page="dashboard" onclick="navGo('dashboard')">Home</button>
+    <button data-page="home" onclick="navGo('home')">Edit Team</button>
+    <button data-page="my-team" onclick="navGo('my-team')">My Team</button>
+    <button data-page="leaderboard" onclick="navGo('leaderboard')">Leaderboard</button>
+    <button data-page="market" onclick="navGo('market')">Market</button>
+    <div class="nv-g"><button class="nv-gb" type="button" onclick="navToggle(this)">Race <i>▾</i></button><div class="nv-dd"><button data-page="results" onclick="navGo('results')">Results</button><button data-page="history" onclick="navGo('history')">Stats</button><button data-page="predictions" onclick="navGo('predictions')">Briefing</button></div></div>
+    <div class="nv-g"><button class="nv-gb" type="button" onclick="navToggle(this)">Play <i>▾</i></button><div class="nv-dd"><button data-page="bets" onclick="navGo('bets')">Bets</button><button data-page="games" onclick="navGo('games')">Games</button><button data-page="cards" onclick="navGo('cards')" id="nav-cards-btn" style="display:none">Cards</button></div></div>
+    <div class="nv-g"><button class="nv-gb" type="button" onclick="navToggle(this)">Community <i>▾</i></button><div class="nv-dd"><button data-page="social" onclick="navGo('social')">Social</button><button data-page="extra" onclick="navGo('extra')">Extra</button></div></div>
+    <button data-page="admin" onclick="navGo('admin')" id="nav-admin-btn" style="display:none">Admin</button>
   </nav>
   <div id="admin-indicator" class="admin-badge" style="display:none">ADMIN</div>
   <style>
@@ -8990,6 +8995,9 @@ window.submitBug = async function() {
 };
 // Re-pulls data for whichever page is showing, so people can check for updated points
 // during import night without hunting for the browser's reload button.
+window.navGo = function(pg) { document.querySelectorAll('header nav .nv-g.open').forEach(g => g.classList.remove('open')); showPage(pg); };
+window.navToggle = function(b) { const g = b.parentElement, was = g.classList.contains('open'); document.querySelectorAll('header nav .nv-g.open').forEach(x => x.classList.remove('open')); if (!was) g.classList.add('open'); };
+document.addEventListener('click', e => { if (!e.target.closest || !e.target.closest('.nv-g')) document.querySelectorAll('header nav .nv-g.open').forEach(g => g.classList.remove('open')); });
 window.refreshCurrentPage = async function(btn) {
   if (btn) { btn.classList.remove('spinning'); void btn.offsetWidth; btn.classList.add('spinning'); }
   try { dbInvalidate(); } catch(e) {} // manual refresh = force-fresh data, bypass the read cache
@@ -9576,7 +9584,7 @@ window.showPage = function(page) {
   const _target = document.getElementById('page-'+page);
   if (!_target) { console.warn('showPage: no element for page-'+page); return; }
   _target.classList.add('active');
-  document.querySelectorAll('nav button').forEach((b,i) => b.classList.toggle('active', ['dashboard','home','my-team','leaderboard','results','history','predictions','market','bets','extra','social','games','cards','admin'][i]===page));
+  document.querySelectorAll('header nav button[data-page]').forEach(b => b.classList.toggle('active', b.dataset.page === page)); document.querySelectorAll('header nav .nv-g').forEach(g => { g.classList.toggle('on', !!g.querySelector('button.active')); g.classList.remove('open'); });
   // Mobile bottom nav — highlight matching tab; "More" lights up for pages living in the sheet
   const morePages = ['home','results','history','predictions','bets','extra','social','games','cards','admin'];
   document.querySelectorAll('#mobile-nav button').forEach(b => {
