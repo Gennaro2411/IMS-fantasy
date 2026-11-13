@@ -9132,6 +9132,13 @@ function _wlVault(bal) { bal = Math.max(0, Number(bal) || 0);
   return { svg, L, name: WL_TIERS[L][1], note: WL_TIERS[L][2], f, next: nx ? nx[0] - bal : 0, nextName: nx ? nx[1] : '' }; }
 window._wlPill = async function() { const el = document.getElementById('wallet-amt'); if (!el || typeof currentUser === 'undefined' || !currentUser || !currentUser.userId) return;
   try { const c = await dbGet('coins', currentUser.userId).catch(() => null); el.textContent = _wlShort(c ? c.balance : BET_START_COINS); try { c && window._ckGiftPop && window._ckGiftPop(c); } catch (e) {} } catch (e) {} };
+// Keep the header IM$ pill live: whenever this user's coins doc is saved (bets, packs, games, sells…), update it straight away.
+(function() { const orig = window.dbSet; if (typeof orig !== 'function' || orig._wlWrapped) return;
+  const w = async function(col, id, v) { const r = await orig.apply(this, arguments);
+    try { if (col === 'coins' && typeof currentUser !== 'undefined' && currentUser && id === currentUser.userId) { const el = document.getElementById('wallet-amt');
+      if (el) { if (v && typeof v.balance === 'number') el.textContent = _wlShort(v.balance); else setTimeout(() => window._wlPill && window._wlPill(), 0); } } } catch (e) {}
+    return r; };
+  w._wlWrapped = true; window.dbSet = w; try { dbSet = w; } catch (e) {} })();
 const WL_GAMES = { wd: ['🟩', 'PaddockDle'], gr: ['🔢', 'PaddockDle Grid'], hl: ['⬆️', 'Higher or Lower'], cn: ['🧩', 'Connections'], pt: ['🎯', 'Pointless'], tq: ['🧠', 'Trivia'], cp: ['🛣️', 'Career Path'], st: ['⚖️', 'Steward Simulator'], qs: ['⏱️', 'Quali Shootout'], wf: ['🏁', 'Who Finished Where?'], pp: ['🔗', 'Pit Lane Pairs'] };
 window.closeWallet = function() { document.getElementById('wallet-modal').classList.add('hidden'); };
 window.openWallet = async function() {
