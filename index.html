@@ -11671,7 +11671,10 @@ window.submitTeam = async function() {
   const oldSel2 = existing ? (existing.selections||{}) : {};
   const changedCount2 = existing ? [...DIVISIONS, 'CONSTRUCTOR'].filter(div => _countsAsTransfer(div, oldSel2)).length : 0;
   const currentFree = existing ? (existing.freeTransfers !== undefined ? existing.freeTransfers : 1) : 1;
-  const newFreeTransfers = (existing && wcActive) ? currentFree : Math.max(0, currentFree - changedCount2);
+  let newFreeTransfers = (existing && wcActive) ? currentFree : Math.max(0, currentFree - changedCount2);
+  // Building a team: once the squad is complete for the first time, you're left with 2 free transfers
+  // (new teams start with 8 so filling empty slots is free; that allowance ends when the team is made).
+  if (!existing || [..._saveDivs, 'CONSTRUCTOR'].some(d => !oldSel2[d])) newFreeTransfers = Math.min(newFreeTransfers, 2);
   // Cumulative transfers made this season — only counts changes to an EXISTING team, so building
   // the initial squad doesn't count. Accumulates each time picks are swapped.
   const priorTransfers = existing ? (existing.transfersMade || 0) : 0;
@@ -26025,7 +26028,10 @@ window.confirmTransfer = async function(oldDriverId, newDriverId, div, teamId, c
     const newSel = {...(team.selections||{}), [div]: newDriverId};
     const newBudget = Math.max(0, Math.round((currentBudget - totalCost) * 10) / 10);
     // Wildcard: don't deduct free transfers. Normal: deduct one.
-    const newFreeTransfers = (wcActiveNow || _seatLost) ? freeTransfers : Math.max(0, freeTransfers - 1);
+    let newFreeTransfers = (wcActiveNow || _seatLost) ? freeTransfers : Math.max(0, freeTransfers - 1);
+    // Completing a team for the first time via the market also leaves you with 2 free transfers.
+    { const _mDivs = (typeof divisionsForSeason === 'function') ? divisionsForSeason(window._reserveSeason || 8) : DIVISIONS, _all = [..._mDivs, 'CONSTRUCTOR'];
+      if (_all.some(d => !(team.selections || {})[d]) && _all.every(d => newSel[d])) newFreeTransfers = Math.min(newFreeTransfers, 2); }
     // Record & persist the round-scoped sell count for the driver being dropped.
     const newSellCounts = {...(team.sellCounts||{})};
     if (oldDriverId) {
