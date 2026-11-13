@@ -4078,6 +4078,7 @@ body.ck-lock>header,body.ck-lock>main,body.ck-lock #mobile-nav{visibility:hidden
 .ckx-locked{display:grid;gap:6px;place-items:center;padding:70px 20px;text-align:center;color:#9a9cc0}.ckx-locked b{color:#fff;font-size:1.1rem}
 @media (max-width:760px){.ckx-hero{grid-template-columns:1fr;padding:22px 18px 18px;border-radius:22px}.ckx-fan{display:none}.ckx-kpi{grid-template-columns:repeat(2,minmax(0,1fr))}.ckx .wd-modes{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));overflow:visible}.ckx .wd-modes button{flex-direction:column;gap:4px;min-width:0;padding:9px 2px!important;font-size:.58rem!important;letter-spacing:.02em!important;white-space:normal;text-align:center;line-height:1.15}}
 .rw{margin:0 0 16px;padding:16px;border-radius:20px;background:radial-gradient(80% 120% at 100% 0,rgba(240,72,122,.16),transparent 60%),linear-gradient(170deg,#15122b,#0b0a14 72%);box-shadow:inset 0 0 0 1px rgba(124,134,255,.28)}
+.lb-awards .rw{margin:14px 0 0;padding:14px 0 0;border-radius:0;background:none;box-shadow:none;border-top:1px solid rgba(255,255,255,.08)}
 .rw-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;margin-bottom:12px}.rw-k{font:800 .74rem/1 system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#b9beff}.rw-h small{color:#9a9cc0;font-size:.75rem}
 .rw-top{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.rw-pod{padding:10px 6px 8px;border-radius:14px;text-align:center;background:rgba(255,255,255,.035);box-shadow:inset 0 0 0 1px rgba(255,255,255,.07)}
 .rw-p1{background:linear-gradient(180deg,rgba(255,210,74,.16),rgba(255,255,255,.02));box-shadow:inset 0 0 0 1px rgba(255,210,74,.55),0 10px 30px -18px #ffd24a}.rw-p2{box-shadow:inset 0 0 0 1px rgba(201,210,220,.45)}.rw-p3{box-shadow:inset 0 0 0 1px rgba(205,127,50,.5)}
@@ -15721,7 +15722,7 @@ async function _rwFill(teams, races, me) { const el = document.getElementById('l
   const S = _rwSettled(races), last = S[S.length - 1]; let mine = '';
   if (last && me) { const L = _rwRank(last, teams, races), i = L.findIndex(x => x.t.userId === me); mine = i >= 0 ? `<div class="rw-me">Last round (${esc(last.name || 'R' + last.raceNum)}): you finished <b>P${i + 1}</b> → ${_rwFor(i + 1)[2].map(p => CK_PACKS[p].n).join(' + ')} <span>sent to My Packs</span></div>` : `<div class="rw-me">Score points in a round to earn packs.</div>`; }
   const pk = ids => { const n = {}; ids.forEach(p => n[p] = (n[p] || 0) + 1); return Object.keys(n).map(p => `<span class="rw-p">${_ckPackArt(p, true)}${n[p] > 1 ? `<i>×${n[p]}</i>` : ''}</span>`).join(''); };
-  el.innerHTML = `<div class="rw hx-rv"><div class="rw-h"><span class="rw-k">🏁 Round rewards</span><small>Card packs for where you finish each race weekend</small></div>
+  el.innerHTML = `<div class="rw"><div class="rw-h"><span class="rw-k">🏁 Round rewards</span><small>Card packs for where you finish each race weekend</small></div>
     <div class="rw-top">${RW_TABLE.slice(0, 3).map((r, i) => `<div class="rw-pod rw-p${i + 1}"><b>${r[3]}</b><div class="rw-pks">${pk(r[2])}</div></div>`).join('')}</div>
     <div class="rw-rest">${RW_TABLE.slice(3).map(r => `<div><b>${r[3]}</b><span>${r[2].length > 1 ? r[2].length + '× ' : ''}${CK_PACKS[r[2][0]].n}</span></div>`).join('')}</div>${mine}
     <div class="rw-f">Packs are added automatically after each round is settled and land in <a href="#" onclick="showPage('cards');window._ckTab='packs';return false">Cards → My Packs</a>.</div></div>`; }
@@ -16242,7 +16243,7 @@ async function renderLeaderboard() {
         </div>`;
       }
     } catch(e) {}
-    document.getElementById('leaderboard-content').innerHTML = (window._verdictBanner ? window._verdictBanner(races) : '') + awardsCard + '<div id="lb-rw"></div>' + metricToggle + meStrip + (_lbHiddenNoCap ? '<div style="font-size:.78rem;color:var(--muted);text-align:center;margin:0 0 10px">Everyone is on 0 points so far — showing the ' + ranked.length + ' team' + (ranked.length !== 1 ? 's' : '') + ' with a captain picked (' + _lbHiddenNoCap + ' without one hidden until points come in).</div>' : '') + podiumHtml + '<div class="lbr-list hx-rv" data-k="lblist">' + top10 + '</div>'
+    document.getElementById('leaderboard-content').innerHTML = (window._verdictBanner ? window._verdictBanner(races) : '') + (awardsCard ? awardsCard.replace(/<\/div>\s*$/, '<div id="lb-rw"></div></div>') : '<div id="lb-rw"></div>') + metricToggle + meStrip + (_lbHiddenNoCap ? '<div style="font-size:.78rem;color:var(--muted);text-align:center;margin:0 0 10px">Everyone is on 0 points so far — showing the ' + ranked.length + ' team' + (ranked.length !== 1 ? 's' : '') + ' with a captain picked (' + _lbHiddenNoCap + ' without one hidden until points come in).</div>' : '') + podiumHtml + '<div class="lbr-list hx-rv" data-k="lblist">' + top10 + '</div>'
       + (rest ? '<div id="lb-rest" class="lbr-list" style="display:none;margin-top:6px">'+rest+'</div>'
                +'<div style="text-align:center;margin-top:12px">'
                +'<button class="btn btn-secondary" id="lb-show-rest-btn" onclick="toggleLbRest()">Show the rest ('+(ranked.length-10)+')</button>'
