@@ -36938,16 +36938,18 @@ const CK_TIERS = [ // highest first
   { id: 'ub', n: 'Bronze', lo: 0, sell: r => 20 + Math.max(0, r - 40) * 2 } ];
 const CK_T = {}; CK_TIERS.forEach(t => CK_T[t.id] = t);
 const _ckTier = (r) => CK_TIERS.find(t => r >= t.lo);
-const _ckSellV = (c) => Math.round(c.sp === 'champ' ? CK_CHAMP_SELL(c.r) : c.sp ? CK_SP_SELL(c.r) : _ckTier(c.r).sell(c.r));
+// Economy scale: packs cost 1/5 of the original prices; cards sell for 0.18× the original values (so packs return a bit less).
+const CK_VAL = 0.18, _ckV = v => Math.max(1, Math.round(v * CK_VAL));
+const _ckSellV = (c) => _ckV(c.sp === 'champ' ? CK_CHAMP_SELL(c.r) : c.sp ? CK_SP_SELL(c.r) : _ckTier(c.r).sell(c.r));
 // odds = chance of each card in the pack being that rarity (must add up to 1)
-const CK_PACKS = { bronze: { n: 'Bronze Pack', price: 250, sp: { dotd: .0025, tots: .001 }, odds: [['ub', .82], ['rb', .18]], c: '#b4703a', c2: '#5e3516' },
-  silver: { n: 'Silver Pack', price: 500, sp: { dotd: .005, tots: .003 }, odds: [['us', .88], ['rs', .12]], c: '#c9d2dc', c2: '#6b7684' },
-  gold: { n: 'Gold Pack', price: 1000, sp: { dotd: .01, tots: .007, champ: .002 }, odds: [['ug', .957], ['rg', .04], ['dia', .003]], c: '#f7cf55', c2: '#9a6a0c' },
+const CK_PACKS = { bronze: { n: 'Bronze Pack', price: 50, sp: { dotd: .0025, tots: .001 }, odds: [['ub', .82], ['rb', .18]], c: '#b4703a', c2: '#5e3516' },
+  silver: { n: 'Silver Pack', price: 100, sp: { dotd: .005, tots: .003 }, odds: [['us', .88], ['rs', .12]], c: '#c9d2dc', c2: '#6b7684' },
+  gold: { n: 'Gold Pack', price: 200, sp: { dotd: .01, tots: .007, champ: .002 }, odds: [['ug', .957], ['rg', .04], ['dia', .003]], c: '#f7cf55', c2: '#9a6a0c' },
   // Mixed: one card from each pack's odds (slots). Supersonic: boosted gold odds and specials.
-  mixed: { n: 'Mixed Drivers Pack', price: 650, slots: ['bronze', 'silver', 'gold'], c: '#c9d2dc', c2: '#9a6a0c', cls: 'mix' },
+  mixed: { n: 'Mixed Drivers Pack', price: 130, slots: ['bronze', 'silver', 'gold'], c: '#c9d2dc', c2: '#9a6a0c', cls: 'mix' },
   // Team Pack: only drivers currently racing for the team of the day (changes at midnight UK).
-  team: { n: 'Team Pack', price: 600, teamPack: true, spCh: .01, c: '#6f74e8', c2: '#2a2850', cls: 'team' },
-  supersonic: { n: 'Supersonic Gold Pack', price: 2500, sp: { dotd: .03, tots: .02, champ: .006 }, odds: [['ug', .712], ['rg', .28], ['dia', .008]], c: '#ffe27a', c2: '#ff5e00', cls: 'ss' } };
+  team: { n: 'Team Pack', price: 120, teamPack: true, spCh: .01, c: '#6f74e8', c2: '#2a2850', cls: 'team' },
+  supersonic: { n: 'Supersonic Gold Pack', price: 500, sp: { dotd: .03, tots: .02, champ: .006 }, odds: [['ug', .712], ['rg', .28], ['dia', .008]], c: '#ffe27a', c2: '#ff5e00', cls: 'ss' } };
 const CK_N = 3, CK_FEED_MIN = 83, CK_DAY_MAX = 10, CK_SP_SELL = r => 1000 + Math.max(0, r - 60) * 100, CK_CHAMP_SELL = r => Math.round(1000 * Math.exp(Math.max(0, r - 60) * Math.log(100) / 39) / 100) * 100; // champions: 1k at 60 → ~100k at 99 // special cards: 1,000 base, +100 per rating point above 60
 // Special card types. s = short label under the rating, n = banner text.
 const CK_SP = { dotd: { n: 'Driver of the Day', s: 'DOTD', i: '🔥' }, tots: { n: 'Team of the Season', s: 'TOTS', i: '⭐' }, champ: { n: 'Champion', s: 'CHAMP', i: '👑' } };
@@ -36963,7 +36965,7 @@ setInterval(() => { const el = document.getElementById('ck-clock'); if (!el) ret
 function _ckTeamSync(pool) { const P = CK_PACKS.team, t = _ckTeamToday(pool); P.tn = t; let col = '#6f74e8', logo = ''; try { const tc = getTeamCardColour(t); col = (tc && tc.accent) || col; logo = getTeamLogo(t) || ''; } catch (e) {} P.c = col; P.c2 = `color-mix(in srgb, ${col} 35%, #07060f)`; P.logo = logo;
   // Price follows the team's line-up: ~92% of the pack's expected sell value, rounded to 50 (min 250).
   const L = pool.list.filter(c => !c.sp && c.cur === t); if (L.length) { const lo = Math.min(...L.map(c => c.r)), w = L.map(c => Math.exp(-(c.r - lo) * .07)), W = w.reduce((a, b) => a + b, 0), ev = L.reduce((a, c, i) => a + w[i] * _ckSellV(c), 0) / W;
-    P.price = Math.max(250, Math.round(CK_N * ev * .92 / 50) * 50); }
+    P.price = Math.max(50, Math.round(CK_N * ev * .92 / 10) * 10); }
   return t; }
 const _ckLeft = (K, id) => adminLoggedIn ? Infinity : CK_DAY_MAX - ((K && K.day && K.day.d === _ckDay() && K.day[id]) || 0);
 const _ckCan = () => !!(adminLoggedIn || (window._gamesLock || {}).cardsOpen);
@@ -37070,7 +37072,7 @@ function _ckSpAdmin(pool) { const base = pool.list.filter(x => !x.sp).slice().so
     <div class="ck-spprev" id="ck-sp-prev"></div><button class="hx-btn" onclick="ckSpAdd()">✨ Create card</button>
     ${(() => { const miss = _ckChampMissing(pool); return miss.length ? `<button class="hx-btn ghost" onclick="ckSpAllChamps()">👑 Create a champion card for every champion (${miss.length} missing)</button>` : '<div class="ck-fine" style="margin:0">👑 Every champion has a champion card.</div>'; })()}
     ${sp.length ? `<div class="ck-spl">${sp.slice().sort((a, b) => (a.sp > b.sp ? 1 : a.sp < b.sp ? -1 : 0) || String(a.spn).localeCompare(String(b.spn), undefined, { numeric: true })).map(c => `<div><span>${CK_SP[c.sp].i} <b>${esc(c.n)}</b>${c.spn ? ' · ' + esc(c.spn) : ''} <small style="opacity:.6">(normal ${(pool.by[c.base] || {}).r || '?'})</small></span><input type="number" min="40" max="99" value="${c.r}" id="ck-spr-${esc(c.sid)}" style="width:64px;padding:5px;border-radius:8px;background:#0e0c1a;color:#fff;border:1px solid rgba(255,255,255,.14);text-align:center"><button onclick="ckSpRate('${esc(c.sid)}')" style="border-color:rgba(124,134,255,.6);color:#b9beff">Save</button><button onclick="ckSpDel('${esc(c.sid)}')">Delete</button></div>`).join('')}</div>` : ''}
-    <div class="ck-fine" style="margin:4px 0 0">Special cards keep the driver's real stats, use the rating you set, come out of packs at their own odds (DOTD 0.25% / 0.5% / 1%, TOTS 0.1% / 0.3% / 0.7%, Champion 0.2% Gold only — per card, Bronze / Silver / Gold). DOTD and TOTS sell for 1,000 IM$ plus 100 per rating point above 60; Champions are worth far more (about 10k at 80, 35k at 90, 100k at 99).</div></div>`; }
+    <div class="ck-fine" style="margin:4px 0 0">Special cards keep the driver's real stats, use the rating you set, come out of packs at their own odds (DOTD 0.25% / 0.5% / 1%, TOTS 0.1% / 0.3% / 0.7%, Champion 0.2% Gold only — per card, Bronze / Silver / Gold). DOTD and TOTS sell for ${_ckV(1000)} IM$ plus ${_ckV(100)} per rating point above 60; Champions are worth far more (about ${_ckV(CK_CHAMP_SELL(80)).toLocaleString()} at 80, ${_ckV(CK_CHAMP_SELL(90)).toLocaleString()} at 90, ${_ckV(CK_CHAMP_SELL(99)).toLocaleString()} at 99).</div></div>`; }
 // One champion card per champion (DRIVER_CHAMPS grouped by driver). Multiple titles = higher rating, label shows the count.
 function _ckChampMissing(pool) { const have = new Set(pool.list.filter(x => x.sp === 'champ').map(x => x.base)), G = {};
   DRIVER_CHAMPS.forEach(([lbl, nm]) => { const k = _wdNorm(nm); (G[k] = G[k] || []).push(lbl); });
@@ -37241,7 +37243,7 @@ async function renderCardsGame(el) {
         ${oos ? `<div class="ck-oos">Sorry! This card pack is out of stock</div>` : `<button class="hx-btn" onclick="ckBuy('${id}')" ${can ? '' : 'disabled'}><i class="imc"></i> ${P.price.toLocaleString()}${can ? '' : ' · not enough'}</button>${left !== Infinity ? `<small class="ck-left">${left} of ${CK_DAY_MAX} left today</small>` : ''}`}</div>`; }).join('')}</div>
       <div class="ck-note">Each pack has <b>${CK_N} cards</b>, revealed worst to best. The percentages are the chance of <b>each card</b> being that rarity, and inside a rarity the lower-rated drivers are much more common. Most packs are worth less than they cost — the win is packing a rare card with a big sell value.</div>
       <div class="ck-vals"><div class="wl-sh"><span>Sell values</span><small>${pool.list.length} drivers in the pool</small></div>${CK_TIERS.map(t => { const n = pool.list.filter(x => x.t === t.id && !x.sp), hi = t.id === 'dia' ? 96 : CK_TIERS[CK_TIERS.indexOf(t) - 1].lo - 1, lo = Math.max(t.lo, 40);
-        return `<div class="ck-vr t-${t.id}"><i></i><b>${t.n}</b><span>${t.id === 'ub' ? 'under ' + CK_TIERS[CK_TIERS.length - 2].lo : lo + '–' + hi}</span><span>${n.length} card${n.length === 1 ? '' : 's'}</span><em>${Math.round(t.sell(lo)).toLocaleString()}–${Math.round(t.sell(hi)).toLocaleString()} IM$</em></div>`; }).join('')}${(() => { const S = pool.list.filter(x => x.sp); return S.length ? `<div class="ck-vr t-sp"><i></i><b>✨ Special</b><span>${Math.min(...S.map(x => x.r))}–${Math.max(...S.map(x => x.r))}</span><span>${S.length} card${S.length === 1 ? '' : 's'}</span><em>${_ckSellV(S.reduce((a, b) => a.r < b.r ? a : b)).toLocaleString()}–${_ckSellV(S.reduce((a, b) => a.r > b.r ? a : b)).toLocaleString()} IM$</em></div>` : ''; })()}</div>`; }
+        return `<div class="ck-vr t-${t.id}"><i></i><b>${t.n}</b><span>${t.id === 'ub' ? 'under ' + CK_TIERS[CK_TIERS.length - 2].lo : lo + '–' + hi}</span><span>${n.length} card${n.length === 1 ? '' : 's'}</span><em>${_ckV(t.sell(lo)).toLocaleString()}–${_ckV(t.sell(hi)).toLocaleString()} IM$</em></div>`; }).join('')}${(() => { const S = pool.list.filter(x => x.sp); return S.length ? `<div class="ck-vr t-sp"><i></i><b>✨ Special</b><span>${Math.min(...S.map(x => x.r))}–${Math.max(...S.map(x => x.r))}</span><span>${S.length} card${S.length === 1 ? '' : 's'}</span><em>${_ckSellV(S.reduce((a, b) => a.r < b.r ? a : b)).toLocaleString()}–${_ckSellV(S.reduce((a, b) => a.r > b.r ? a : b)).toLocaleString()} IM$</em></div>` : ''; })()}</div>`; }
   else if (tab === 'packs') { const G = K.gifts || [];
     body += `<div class="wl-sh"><span>Your unopened packs</span><small>rewards &amp; gifts</small></div>
       ${G.length ? `<div class="ck-shop">${G.map((g, i) => { const P = CK_PACKS[g.p]; if (!P) return ''; return `<div class="ck-sp" style="--c:${P.c};--c2:${P.c2}">${_ckPackArt(g.p)}<b class="ck-sp-n">${P.n}</b>
