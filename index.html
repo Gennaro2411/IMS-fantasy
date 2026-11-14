@@ -6841,7 +6841,8 @@ function bcScenes() {
           <span style="font-size:.6rem;font-weight:800;color:var(--muted);flex-shrink:0">${esc((o.d.division||'').toUpperCase())}</span>
         </div>`;
       }).join('');
-      scenes.push({ label: _ico('pennant')+' OUT'+(upNext?' AT '+esc(upNext.name).toUpperCase():' THIS ROUND'), html: `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${cards}</div>` });
+      const _outAt = (window._attendanceMeta && window._attendanceMeta.track) || (upNext && upNext.name) || ''; /* checkouts belong to the attendance session's track, not the next scheduled race */
+      scenes.push({ label: _ico('pennant')+' OUT'+(_outAt?' AT '+esc(String(_outAt)).toUpperCase():' THIS ROUND'), html: `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${cards}</div>` });
     }
   }
 
