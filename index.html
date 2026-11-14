@@ -6243,6 +6243,7 @@ window.addEventListener('resize', () => { if (document.getElementById('broadcast
 // ===== HOME: live Twitch stream (only shown while IMSttv26 is actually live) =====
 window._homeTwitchCheck = async function() {
   const box = document.getElementById('home-twitch-live'); if (!box) return;
+  { const slot = document.getElementById('hh-tw-slot'); if (slot && box.parentElement !== slot) slot.appendChild(box); } // sits under the 'A second championship' hero
   clearTimeout(window._homeTwTimer); window._homeTwTimer = setTimeout(window._homeTwitchCheck, 120000); // re-check every 2 min
   let live = false;
   try { const r = await fetch('https://decapi.me/twitch/uptime/IMSttv26', { cache: 'no-store' }); const t = (await r.text()).trim(); live = r.ok && !!t && !/offline|error|not found/i.test(t); } catch (e) { live = false; }
@@ -10250,7 +10251,7 @@ async function renderDashboard() {
           <style>.hh-dc-pitch{max-width:560px;margin:12px auto 0;font-size:.82rem;line-height:1.5;color:var(--muted)}.hh-dc-pitch b{color:var(--text)}</style>
           <div class="hh-dc-pitch"><b>Don't follow the title fight from the outside.</b> Race-day banter, results the second they drop, check-ins, steward verdicts, trash talk with the managers you're trying to beat — and the drivers you just put in your team. Every rival is already in there.</div>
         </div>`;
-      hype.innerHTML = manifesto + heroHtml;
+      { const tw = document.getElementById('home-twitch-live'); hype.innerHTML = manifesto + '<div id="hh-tw-slot"></div>' + heroHtml; if (tw) document.getElementById('hh-tw-slot').appendChild(tw); }
       // ===== Below the hero: explore the app (live teasers on every tile) + league pulse =====
       const deck = document.getElementById('home-deck');
       if (deck) { try {
