@@ -3941,6 +3941,20 @@
     .ck-spadm .ck-g-row{grid-template-columns:1fr 90px}
     .ck-spl{display:flex;flex-direction:column;gap:6px;margin-top:6px}.ck-spl div{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.04);font-size:.82rem}.ck-spl div span{flex:1}.ck-spl button{background:none;border:1px solid rgba(240,72,122,.5);color:#ff8aa8;border-radius:8px;padding:4px 9px;cursor:pointer}
     .ck-spprev{width:150px;margin:6px auto}
+    /* Centurion: obsidian + molten gold + crimson, giant C watermark, live holo foil sweep */
+    .ck.sp.sp-cent{--rim:#ffd36b;--ink:#fff;padding:3px;background:conic-gradient(from 0deg,#ffd36b,#ff3b3b,#7a0a1e,#ffd36b,#fff6c8,#c8102e,#ffd36b);box-shadow:0 0 0 1px #ffe9a8,0 0 30px -4px rgba(255,90,60,.7),0 18px 46px -10px #c8102e}
+    .ck.sp.sp-cent .ck-in{background:radial-gradient(70% 45% at 50% 0,rgba(255,80,60,.45),transparent 70%),radial-gradient(60% 40% at 50% 100%,rgba(255,211,107,.25),transparent 70%),linear-gradient(170deg,#1a0508,#070205 55%,#140308)}
+    .ck.sp.sp-cent .ck-spfx{background:repeating-linear-gradient(90deg,rgba(255,211,107,.07) 0 1px,transparent 1px 8%),repeating-linear-gradient(0deg,rgba(255,211,107,.05) 0 1px,transparent 1px 6%)}
+    .ck-cbig{position:absolute;z-index:0;right:-8%;bottom:-6%;font:italic 900 95cqw/0.8 'Barlow Condensed',sans-serif;color:transparent;-webkit-text-stroke:1.5px rgba(255,211,107,.4);pointer-events:none;font-style:normal}
+    .ck-cfoil{position:absolute;inset:0;z-index:2;pointer-events:none;mix-blend-mode:color-dodge;opacity:.42;background:linear-gradient(115deg,transparent 30%,rgba(255,80,80,.55) 40%,rgba(255,230,140,.75) 47%,rgba(120,220,255,.5) 54%,transparent 64%);background-size:250% 100%;animation:ckFoil 3.2s linear infinite}
+    @keyframes ckFoil{from{background-position:120% 0}to{background-position:-120% 0}}
+    .ck.sp.sp-cent .ck-rt b{font-size:20cqw;padding-right:.08em;text-shadow:none;filter:drop-shadow(0 0 6px rgba(255,90,60,.7)) drop-shadow(0 2px 2px #000);background:linear-gradient(180deg,#fffbe6,#ffd36b 45%,#ff5a3c 80%,#a50d22);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .ck.sp.sp-cent .ck-rt small{color:#ffd36b;letter-spacing:.06em;font-size:4.2cqw}
+    .ck.sp.sp-cent .ck-nm{color:#fff;text-shadow:0 0 12px rgba(255,90,60,.6)}
+    .ck.sp.sp-cent .ck-spb{background:linear-gradient(90deg,#7a0a1e,#c8102e 30%,#ffd36b 50%,#c8102e 70%,#7a0a1e);color:#fff;text-shadow:0 1px 2px #000;box-shadow:0 0 14px rgba(255,90,60,.5)}
+    .ck-c100{display:inline-block;padding:0 .3em;margin-right:.2em;border-radius:3px;background:#0a0204;color:#ffd36b;font-style:normal}
+    .ck.sp.sp-cent .ck-top,.ck.sp.sp-cent .ck-nm,.ck.sp.sp-cent .ck-st,.ck.sp.sp-cent .ck-spb{position:relative;z-index:3}
+    .t-sp.cent>i{background:conic-gradient(#ffd36b,#ff3b3b,#7a0a1e,#ffd36b)}
     .ck-nm{padding:4% 5% 2%;text-align:center;font-weight:900;font-style:italic;font-size:11.5cqw;line-height:1;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff;border-top:1px solid rgba(255,255,255,.22);background:rgba(0,0,0,.22)}
     .ck-nm em{font-style:normal;margin-right:3px;font-size:.85em}
     .ck-st{display:grid;grid-template-columns:repeat(4,1fr);padding:3% 3% 6%;background:rgba(0,0,0,.22)}
@@ -37007,19 +37021,19 @@ const CK_T = {}; CK_TIERS.forEach(t => CK_T[t.id] = t);
 const _ckTier = (r) => CK_TIERS.find(t => r >= t.lo);
 // Economy scale: packs cost 1/5 of the original prices; cards sell for 0.18× the original values (so packs return a bit less).
 const CK_VAL = 0.18, _ckV = v => Math.max(1, Math.round(v * CK_VAL));
-const _ckSellV = (c) => c.sp === 'dotd' ? 1000 + _ckV(100) * Math.max(0, c.r - 80) /* DOTD (rated 80+): 1,000 at 80, +18 per point */ : _ckV(c.sp === 'champ' ? CK_CHAMP_SELL(c.r) : c.sp ? CK_SP_SELL(c.r) : _ckTier(c.r).sell(c.r));
+const _ckSellV = (c) => c.sp === 'cent' ? 2500 + 40 * Math.max(0, c.r - 70) /* Centurion: 100 appearances */ : c.sp === 'dotd' ? 1000 + _ckV(100) * Math.max(0, c.r - 80) /* DOTD (rated 80+): 1,000 at 80, +18 per point */ : _ckV(c.sp === 'champ' ? CK_CHAMP_SELL(c.r) : c.sp ? CK_SP_SELL(c.r) : _ckTier(c.r).sell(c.r));
 // odds = chance of each card in the pack being that rarity (must add up to 1)
 const CK_PACKS = { bronze: { n: 'Bronze Pack', price: 50, sp: { dotd: .0025, tots: .001 }, odds: [['ub', .82], ['rb', .18]], c: '#b4703a', c2: '#5e3516' },
   silver: { n: 'Silver Pack', price: 100, sp: { dotd: .005, tots: .003 }, odds: [['us', .88], ['rs', .12]], c: '#c9d2dc', c2: '#6b7684' },
-  gold: { n: 'Gold Pack', price: 200, sp: { dotd: .007, tots: .007, champ: .002 }, odds: [['ug', .957], ['rg', .04], ['dia', .003]], c: '#f7cf55', c2: '#9a6a0c' },
+  gold: { n: 'Gold Pack', price: 200, sp: { dotd: .007, tots: .007, champ: .002, cent: .0015 }, odds: [['ug', .957], ['rg', .04], ['dia', .003]], c: '#f7cf55', c2: '#9a6a0c' },
   // Mixed: one card from each pack's odds (slots). Supersonic: boosted gold odds and specials.
   mixed: { n: 'Mixed Drivers Pack', price: 130, slots: ['bronze', 'silver', 'gold'], c: '#c9d2dc', c2: '#9a6a0c', cls: 'mix' },
   // Team Pack: only drivers currently racing for the team of the day (changes at midnight UK).
   team: { n: 'Team Pack', price: 120, teamPack: true, spCh: .01, c: '#6f74e8', c2: '#2a2850', cls: 'team' },
-  supersonic: { n: 'Supersonic Gold Pack', price: 500, sp: { dotd: .03, tots: .02, champ: .006 }, odds: [['ug', .712], ['rg', .28], ['dia', .008]], c: '#ffe27a', c2: '#ff5e00', cls: 'ss' } };
+  supersonic: { n: 'Supersonic Gold Pack', price: 500, sp: { dotd: .03, tots: .02, champ: .006, cent: .005 }, odds: [['ug', .712], ['rg', .28], ['dia', .008]], c: '#ffe27a', c2: '#ff5e00', cls: 'ss' } };
 const CK_N = 3, CK_FEED_MIN = 83, CK_DAY_MAX = 10, CK_SP_SELL = r => 1000 + Math.max(0, r - 60) * 100, CK_CHAMP_SELL = r => Math.round(1000 * Math.exp(Math.max(0, r - 60) * Math.log(100) / 39) / 100) * 100; // champions: 1k at 60 → ~100k at 99 // special cards: 1,000 base, +100 per rating point above 60
 // Special card types. s = short label under the rating, n = banner text.
-const CK_SP = { dotd: { n: 'Driver of the Day', s: 'DOTD', i: '🔥' }, tots: { n: 'Team of the Season', s: 'TOTS', i: '⭐' }, champ: { n: 'Champion', s: 'CHAMP', i: '👑' } };
+const CK_SP = { dotd: { n: 'Driver of the Day', s: 'DOTD', i: '🔥' }, tots: { n: 'Team of the Season', s: 'TOTS', i: '⭐' }, champ: { n: 'Champion', s: 'CHAMP', i: '👑' }, cent: { n: 'Centurion', s: 'CENTURION', i: '💯' } };
 // Shop day = UK date; the store (Team Pack + daily limits) refreshes at midnight UK time.
 const _ckUK = () => { const o = {}; new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' }).formatToParts(new Date()).forEach(x => o[x.type] = x.value); return o; };
 const _ckDay = () => { const o = _ckUK(); return o.year + '-' + o.month + '-' + o.day; };
@@ -37079,9 +37093,9 @@ const _ckIni = (n) => String(n || '?').replace(/[^A-Za-z0-9 ]/g, '').trim().spli
 function _ckCard(c, o) { o = o || {}; const T = CK_T[c.t], lg = c.team && typeof getTeamLogo === 'function' ? getTeamLogo(c.team) : '', fl = c.nat && typeof natFlagImg === 'function' ? natFlagImg(c.nat, 22) : '';
   const S = c.sp && CK_SP[c.sp];
   return `<div class="ck t-${c.t}${S ? ' sp sp-' + c.sp : ''}${o.cls ? ' ' + o.cls : ''}"${o.on ? ` onclick="${o.on}"` : ''}>
-    <div class="ck-in">${S ? `<i class="ck-spfx"></i>` : ''}<div class="ck-top"><div class="ck-rt"><b>${c.r}</b><small>${S ? S.s : T.n}</small>${fl ? `<span class="ck-fl">${fl}</span>` : ''}${lg ? `<img class="ck-lg" src="${esc(lg)}" alt="" onerror="this.remove()">` : ''}${c.ch ? `<span class="ck-cr" title="${c.ch > 1 ? c.ch + '× d' : 'D'}rivers' champion">${CK_WC_SVG}${c.ch > 1 ? `<i>${c.ch}×</i>` : ''}</span>` : ''}</div>
+    <div class="ck-in">${S ? `<i class="ck-spfx"></i>${c.sp === 'cent' ? '<i class="ck-cfoil"></i><i class="ck-cbig">C</i>' : ''}` : ''}<div class="ck-top"><div class="ck-rt"><b>${c.r}</b><small>${S ? S.s : T.n}</small>${fl ? `<span class="ck-fl">${fl}</span>` : ''}${lg ? `<img class="ck-lg" src="${esc(lg)}" alt="" onerror="this.remove()">` : ''}${c.ch ? `<span class="ck-cr" title="${c.ch > 1 ? c.ch + '× d' : 'D'}rivers' champion">${CK_WC_SVG}${c.ch > 1 ? `<i>${c.ch}×</i>` : ''}</span>` : ''}</div>
       <div class="ck-ph">${c.ph ? `<img src="${esc(c.ph)}" alt="" loading="lazy" onerror="this.outerHTML='<i>${_ckIni(c.n)}</i>'">` : `<i>${_ckIni(c.n)}</i>`}</div></div>
-    ${S ? `<div class="ck-spb">${S.i} ${c.spn ? esc(c.spn) : S.n}</div>` : ''}<div class="ck-nm">${esc(c.n)}</div>
+    ${S ? `<div class="ck-spb">${c.sp === 'cent' ? '<b class="ck-c100">100</b>' : S.i} ${c.spn ? esc(c.spn) : c.sp === 'cent' ? 'Appearances' : S.n}</div>` : ''}<div class="ck-nm">${esc(c.n)}</div>
     <div class="ck-st"><span><b>${c.w}</b>WIN</span><span><b>${c.pd}</b>POD</span><span><b>${c.t5}</b>TOP5</span><span><b>${c.p >= 1000 ? (c.p / 1000).toFixed(1) + 'k' : c.p}</b>PTS</span></div>
     ${o.n > 1 ? `<span class="ck-x">×${o.n}</span>` : ''}</div></div>`; }
 const _ckPackArt = (id, sm) => { const P = CK_PACKS[id]; return `<div class="ckp${sm ? ' sm' : ''}${P.cls ? ' ckp-' + P.cls : ''}" style="--c:${P.c};--c2:${P.c2}"><i class="ckp-crimp"></i><div class="ckp-body">${P.teamPack && P.logo ? `<img class="ckp-tl" src="${esc(P.logo)}" alt="" onerror="this.src='icons/icon-192.png?v=3';this.className=''"><img class="ckp-ims" src="icons/icon-192.png?v=3" alt="IMS">` : '<img src="icons/icon-192.png?v=3" alt="IMS">'}<b>${P.teamPack && P.tn ? esc(P.tn) : P.n.replace(' Pack', '')}</b><small>PACK · ${CK_N} CARDS</small></div><i class="ckp-crimp b"></i></div>`; };
@@ -37139,7 +37153,7 @@ function _ckSpAdmin(pool) { const base = pool.list.filter(x => !x.sp).slice().so
     <div class="ck-spprev" id="ck-sp-prev"></div><button class="hx-btn" onclick="ckSpAdd()">✨ Create card</button>
     ${(() => { const miss = _ckChampMissing(pool); return miss.length ? `<button class="hx-btn ghost" onclick="ckSpAllChamps()">👑 Create a champion card for every champion (${miss.length} missing)</button>` : '<div class="ck-fine" style="margin:0">👑 Every champion has a champion card.</div>'; })()}
     ${sp.length ? `<div class="ck-spl">${sp.slice().sort((a, b) => (a.sp > b.sp ? 1 : a.sp < b.sp ? -1 : 0) || String(a.spn).localeCompare(String(b.spn), undefined, { numeric: true })).map(c => `<div><span>${CK_SP[c.sp].i} <b>${esc(c.n)}</b>${c.spn ? ' · ' + esc(c.spn) : ''} <small style="opacity:.6">(normal ${(pool.by[c.base] || {}).r || '?'})</small></span><input type="number" min="40" max="99" value="${c.r}" id="ck-spr-${esc(c.sid)}" style="width:64px;padding:5px;border-radius:8px;background:#0e0c1a;color:#fff;border:1px solid rgba(255,255,255,.14);text-align:center"><button onclick="ckSpRate('${esc(c.sid)}')" style="border-color:rgba(124,134,255,.6);color:#b9beff">Save</button><button onclick="ckSpDel('${esc(c.sid)}')">Delete</button></div>`).join('')}</div>` : ''}
-    <div class="ck-fine" style="margin:4px 0 0">Special cards keep the driver's real stats, use the rating you set, come out of packs at their own odds (DOTD 0.25% / 0.5% / 0.7%, TOTS 0.1% / 0.3% / 0.7%, Champion 0.2% Gold only — per card, Bronze / Silver / Gold). DOTD cards (always rated 80+) sell for 1,000 IM$ plus ${_ckV(100)} per rating point above 80, TOTS for ${_ckV(1000)} IM$ plus ${_ckV(100)} per point; Champions are worth far more (about ${_ckV(CK_CHAMP_SELL(80)).toLocaleString()} at 80, ${_ckV(CK_CHAMP_SELL(90)).toLocaleString()} at 90, ${_ckV(CK_CHAMP_SELL(99)).toLocaleString()} at 99).</div></div>`; }
+    <div class="ck-fine" style="margin:4px 0 0">Special cards keep the driver's real stats, use the rating you set, come out of packs at their own odds (DOTD 0.25% / 0.5% / 0.7%, TOTS 0.1% / 0.3% / 0.7%, Champion 0.2% Gold only, Centurion 0.15% Gold / 0.5% Supersonic — per card, Bronze / Silver / Gold). DOTD cards (always rated 80+) sell for 1,000 IM$ plus ${_ckV(100)} per rating point above 80, TOTS for ${_ckV(1000)} IM$ plus ${_ckV(100)} per point; Champions are worth far more (about ${_ckV(CK_CHAMP_SELL(80)).toLocaleString()} at 80, ${_ckV(CK_CHAMP_SELL(90)).toLocaleString()} at 90, ${_ckV(CK_CHAMP_SELL(99)).toLocaleString()} at 99).</div></div>`; }
 // One champion card per champion (DRIVER_CHAMPS grouped by driver). Multiple titles = higher rating, label shows the count.
 function _ckChampMissing(pool) { const have = new Set(pool.list.filter(x => x.sp === 'champ').map(x => x.base)), G = {};
   DRIVER_CHAMPS.forEach(([lbl, nm]) => { const k = _wdNorm(nm); (G[k] = G[k] || []).push(lbl); });
