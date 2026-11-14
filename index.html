@@ -11878,14 +11878,17 @@ window._trophySvg = function(t) {
 };
 // Finishing position AFTER verdicts: the stored finish is the raw result, but verdicts change points,
 // so re-rank the division by points (ties keep raw order; DNF/DNS/DSQ excluded) — same order as the results table.
+function _pvTime(race, id, div) { const tm = (race.raceTimeByDiv || {})[div]; if (!tm) return 9e6; const nk = (x) => String(x || '').replace(/^\[[^\]]*\]\s*/, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const nm = (race.driverNames || {})[id] || ((window._allDrivers || []).find(d => d.id === id) || {}).name || ''; const t = String(tm[nk(nm)] || '');
+  const l = t.match(/(\d+)\s*Lap/i); if (l) return 1e6 + Number(l[1]); if (!/^[0-9:.,]+$/.test(t)) return 9e6; let v = 0; for (const q of t.replace(',', '.').split(':')) v = v * 60 + parseFloat(q); return isFinite(v) ? v : 9e6; }
 window._postVerdictPos = function(race, dId, div) { try {
   const bd = race && race.driverPointsByDivision; if (!bd || !bd[dId] || bd[dId][div] === undefined) return null;
   const pd = race.positionByDivision || {}, sd = race.raceStatusByDivision || {};
   const out = (id) => !!((sd[id] || {})[div]);
   if (out(dId)) return null;
   const rows = Object.entries(bd).filter(([id, by]) => by && by[div] !== undefined && !out(id))
-    .map(([id, by]) => ({ id, pts: Number(by[div]) || 0, raw: Number((pd[id] || {})[div]) || 999 }))
-    .sort((a, b) => b.pts - a.pts || a.raw - b.raw);
+    .map(([id, by]) => ({ id, pts: Number(by[div]) || 0, raw: Number((pd[id] || {})[div]) || 999, tm: _pvTime(race, id, div) }))
+    .sort((a, b) => b.pts - a.pts || a.tm - b.tm || a.raw - b.raw); /* same order as the Results table: points, then race time */
   const i = rows.findIndex(r => r.id === dId); return i >= 0 ? i + 1 : null; } catch (e) { return null; } };
 window.renderTrophyShelf = function(trophies, opts) {
   opts = opts || {};
