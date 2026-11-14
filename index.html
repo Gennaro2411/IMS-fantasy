@@ -37348,7 +37348,7 @@ function _ckSummary() { const R = window._ckRv, st = document.getElementById('ck
     <div class="ck-row">${R.got.map((c, i) => `<div class="ck-pick${R.sell[i] ? ' sell' : ''}">${c.dup ? '<span class="ck-dup ck-dup-tag">DUPLICATE</span>' : c.nw ? '<span class="ck-dup new ck-dup-tag">NEW</span>' : ''}${_ckCard(c)}<div class="ck-pb"><button class="${R.sell[i] ? '' : 'on'}" onclick="ckMark(${i},0)">Keep</button><button class="${R.sell[i] ? 'on s' : ''}" onclick="ckMark(${i},1)">Sell <i class="imc"></i> ${_ckSellV(c).toLocaleString()}</button></div></div>`).join('')}</div>
     <div class="ck-acts"><button class="hx-btn" onclick="ckDone()">${selN ? `Sell ${selN} for ${selV.toLocaleString()} IM$${selN < R.got.length ? ' · keep the rest' : ''}` : 'Keep all 3'}</button>
       <button class="hx-btn ghost" onclick="ckMark(-1,1)">Quick sell all · ${tot.toLocaleString()} IM$</button></div>
-    <div class="ck-fine">Kept cards go to your collection. You can sell them from there any time.</div></div>`; }
+    <div class="ck-fine">Kept cards go to your collection. You can sell them from there any time. Selling a card never removes it from your Card Index.</div></div>`; }
 window.ckMark = function(i, s) { const R = window._ckRv; if (!R) return; if (i < 0) R.got.forEach((_, j) => R.sell[j] = 1); else if (s) R.sell[i] = 1; else delete R.sell[i]; _ckSummary(); };
 window.ckDone = async function() { const R = window._ckRv; if (!R || window._ckBusy) return; const idx = Object.keys(R.sell).map(Number);
   if (idx.length) { window._ckBusy = true; const cnt = {}; idx.forEach(i => { const k = R.got[i].k; cnt[k] = (cnt[k] || 0) + 1; }); const ok = await _ckSellMany(cnt); window._ckBusy = false; if (!ok) return; }
