@@ -28321,7 +28321,7 @@ window.showRaceResults = function(raceId, season) {
     if (sa !== sb) return sa - sb;
     // Official finishing position first (fantasy points ≠ finishing order); points as fallback.
     const _rf = race.raceFinByDiv && race.raceFinByDiv[div], _rk = (x) => String(x || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-    const pd = race.positionByDivision || {}, fp = (it) => { const v = (it.dId && pd[it.dId] && pd[it.dId][div]) || (it.driver && pd[it.driver.id] && pd[it.driver.id][div]) || (_rf && (_rf[_rk(it.name)] || _rf[_rk(String(it.name || '').replace(/^\[[^\]]*\]\s*/, ''))] || (it.driver && _rf[_rk(it.driver.name)]))); return v ? Number(v) : 999; };
+    const pd = race.positionByDivision || {}, fp = (it) => { const v = (_rf && (_rf[_rk(it.name)] || _rf[_rk(String(it.name || '').replace(/^\[[^\]]*\]\s*/, ''))] || (it.driver && _rf[_rk(it.driver.name)]))) || (it.dId && pd[it.dId] && pd[it.dId][div]) || (it.driver && pd[it.driver.id] && pd[it.driver.id][div]); return v ? Number(v) : 999; }; /* official .db classification first (stored ids can be stale for reserves) */
     // No stored position → fall back to race time (laps-down after), never fantasy points first.
     const tm = (race.raceTimeByDiv || {})[div] || {}, nk = (s) => String(s || '').replace(/^\[[^\]]*\]\s*/, '').toLowerCase().replace(/[^a-z0-9]/g, '');
     const ts = (it) => { const t = String(tm[nk(it.name)] || (it.driver && tm[nk(it.driver.name)]) || ''); const l = t.match(/(\d+)\s*Lap/i); if (l) return 1e6 + Number(l[1]); if (!/^[0-9:.,]+$/.test(t)) return 9e6; let v = 0; for (const q of t.replace(',', '.').split(':')) v = v * 60 + parseFloat(q); return isFinite(v) ? v : 9e6; };
@@ -28387,7 +28387,7 @@ window.showRaceResults = function(raceId, season) {
           const pd = race.positionByDivision || {};
           const _rf = race.raceFinByDiv && race.raceFinByDiv[div], _rk = (x) => String(x || '').toLowerCase().replace(/[^a-z0-9]/g, '');
           // Finishing position: by driver id, else by name (reserves / renamed drivers aren't always keyed by id), else after the classified field.
-          const fp = (it) => { const v = (it.dId && pd[it.dId] && pd[it.dId][div]) || (it.driver && pd[it.driver.id] && pd[it.driver.id][div]) || (_rf && (_rf[_rk(it.name)] || _rf[_rk(String(it.name || '').replace(/^\[[^\]]*\]\s*/, ''))] || (it.driver && _rf[_rk(it.driver.name)]))); return v ? Number(v) : 999; };
+          const fp = (it) => { const v = (_rf && (_rf[_rk(it.name)] || _rf[_rk(String(it.name || '').replace(/^\[[^\]]*\]\s*/, ''))] || (it.driver && _rf[_rk(it.driver.name)]))) || (it.dId && pd[it.dId] && pd[it.dId][div]) || (it.driver && pd[it.driver.id] && pd[it.driver.id][div]); return v ? Number(v) : 999; }; /* official .db classification first (stored ids can be stale for reserves) */
           return (!!statusOf(a, div)) - (!!statusOf(b, div)) || fp(a) - fp(b) || b.pts - a.pts;
         });
     }
