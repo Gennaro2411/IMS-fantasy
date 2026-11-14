@@ -3949,10 +3949,11 @@
     .ck-cfoil{position:absolute;inset:0;z-index:2;pointer-events:none;mix-blend-mode:color-dodge;opacity:.42;background:linear-gradient(115deg,transparent 30%,rgba(255,80,80,.55) 40%,rgba(255,230,140,.75) 47%,rgba(120,220,255,.5) 54%,transparent 64%);background-size:250% 100%;animation:ckFoil 3.2s linear infinite}
     @keyframes ckFoil{from{background-position:120% 0}to{background-position:-120% 0}}
     .ck.sp.sp-cent .ck-rt b{font-size:20cqw;padding-right:.08em;text-shadow:none;filter:drop-shadow(0 0 6px rgba(255,90,60,.7)) drop-shadow(0 2px 2px #000);background:linear-gradient(180deg,#fffbe6,#ffd36b 45%,#ff5a3c 80%,#a50d22);-webkit-background-clip:text;background-clip:text;color:transparent}
-    .ck.sp.sp-cent .ck-rt small{color:#ffd36b;letter-spacing:.06em;font-size:4.2cqw}
+    .ck.sp.sp-cent .ck-rt small{color:#ffd36b;letter-spacing:.02em;font-size:3.5cqw;white-space:nowrap}
     .ck.sp.sp-cent .ck-nm{color:#fff;text-shadow:0 0 12px rgba(255,90,60,.6)}
     .ck.sp.sp-cent .ck-spb{background:linear-gradient(90deg,#7a0a1e,#c8102e 30%,#ffd36b 50%,#c8102e 70%,#7a0a1e);color:#fff;text-shadow:0 1px 2px #000;box-shadow:0 0 14px rgba(255,90,60,.5)}
-    .ck-c100{display:inline-block;padding:0 .3em;margin-right:.2em;border-radius:3px;background:#0a0204;color:#ffd36b;font-style:normal}
+    .ck.r3 .ck-rt b{font-size:15.5cqw!important;letter-spacing:-.04em}.ck.sp.sp-cent .ck-rt b{max-width:100%}
+.ck-c100{display:inline-block;padding:0 .3em;margin-right:.2em;border-radius:3px;background:#0a0204;color:#ffd36b;font-style:normal}
     .ck.sp.sp-cent .ck-top,.ck.sp.sp-cent .ck-nm,.ck.sp.sp-cent .ck-st,.ck.sp.sp-cent .ck-spb{position:relative;z-index:3}
     .t-sp.cent>i{background:conic-gradient(#ffd36b,#ff3b3b,#7a0a1e,#ffd36b)}
     .ck-nm{padding:4% 5% 2%;text-align:center;font-weight:900;font-style:italic;font-size:11.5cqw;line-height:1;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff;border-top:1px solid rgba(255,255,255,.22);background:rgba(0,0,0,.22)}
@@ -37074,7 +37075,7 @@ async function _ckPool() {
     c.t = _ckTier(c.r).id; list.push(c); by[k] = c; });
   // Special cards (admin-made): same driver + live stats, admin-chosen rating, own key "<driver>~<id>".
   { const sd = await dbGet('settings', 'ckSpecials').catch(() => null); ((sd && sd.value && sd.value.list) || []).forEach(x => { const b = by[x.k]; if (!b || !CK_SP[x.ty]) return;
-    const c = Object.assign({}, b, { k: b.k + '~' + x.id, base: b.k, sp: x.ty, sid: x.id, spn: x.note || '', r: Math.max(40, Math.min(99, +x.r || b.r)) }); c.t = _ckTier(c.r).id; list.push(c); by[c.k] = c; }); }
+    const c = Object.assign({}, b, { k: b.k + '~' + x.id, base: b.k, sp: x.ty, sid: x.id, spn: x.note || '', r: Math.max(40, Math.min(x.ty === 'cent' ? 100 : 99, +x.r || b.r)) }); c.t = _ckTier(c.r).id; list.push(c); by[c.k] = c; }); }
   list.sort((a, b) => b.r - a.r || b.sc - a.sc);
   return (window._ckPoolC = { at: _now(), list, by, hasT5: Object.values(W.stats || {}).some(s => s && s.t5 != null) }); }
 // One card: a rarity by the pack's odds, then a driver from that rarity — lower ratings much more likely.
@@ -37092,7 +37093,7 @@ function _ckRoll(pack, pool) { const P = CK_PACKS[pack];
 const _ckIni = (n) => String(n || '?').replace(/[^A-Za-z0-9 ]/g, '').trim().split(/\s+/).map(x => x[0]).join('').slice(0, 2).toUpperCase() || '?';
 function _ckCard(c, o) { o = o || {}; const T = CK_T[c.t], lg = c.team && typeof getTeamLogo === 'function' ? getTeamLogo(c.team) : '', fl = c.nat && typeof natFlagImg === 'function' ? natFlagImg(c.nat, 22) : '';
   const S = c.sp && CK_SP[c.sp];
-  return `<div class="ck t-${c.t}${S ? ' sp sp-' + c.sp : ''}${o.cls ? ' ' + o.cls : ''}"${o.on ? ` onclick="${o.on}"` : ''}>
+  return `<div class="ck t-${c.t}${S ? ' sp sp-' + c.sp : ''}${c.r >= 100 ? ' r3' : ''}${o.cls ? ' ' + o.cls : ''}"${o.on ? ` onclick="${o.on}"` : ''}>
     <div class="ck-in">${S ? `<i class="ck-spfx"></i>${c.sp === 'cent' ? '<i class="ck-cfoil"></i><i class="ck-cbig">C</i>' : ''}` : ''}<div class="ck-top"><div class="ck-rt"><b>${c.r}</b><small>${S ? S.s : T.n}</small>${fl ? `<span class="ck-fl">${fl}</span>` : ''}${lg ? `<img class="ck-lg" src="${esc(lg)}" alt="" onerror="this.remove()">` : ''}${c.ch ? `<span class="ck-cr" title="${c.ch > 1 ? c.ch + '× d' : 'D'}rivers' champion">${CK_WC_SVG}${c.ch > 1 ? `<i>${c.ch}×</i>` : ''}</span>` : ''}</div>
       <div class="ck-ph">${c.ph ? `<img src="${esc(c.ph)}" alt="" loading="lazy" onerror="this.outerHTML='<i>${_ckIni(c.n)}</i>'">` : `<i>${_ckIni(c.n)}</i>`}</div></div>
     ${S ? `<div class="ck-spb">${c.sp === 'cent' ? '<b class="ck-c100">100</b>' : S.i} ${c.spn ? esc(c.spn) : c.sp === 'cent' ? 'Appearances' : S.n}</div>` : ''}<div class="ck-nm">${esc(c.n)}</div>
@@ -37148,7 +37149,7 @@ window._ckGiftSeen = async function(go) { document.getElementById('ck-gp')?.remo
 function _ckSpAdmin(pool) { const base = pool.list.filter(x => !x.sp).slice().sort((a, b) => a.n.localeCompare(b.n)), sp = pool.list.filter(x => x.sp);
   return `<div class="ck-spadm"><div class="wl-sh"><span>🛠️ Create a special card</span><small>only you can see this</small></div>
     <input id="ck-sp-q" placeholder="Search driver…" oninput="ckSpFind(this.value)"><select id="ck-sp-k" onchange="ckSpPrev()">${base.map(c => `<option value="${esc(c.k)}">${esc(c.n)} (${c.r})</option>`).join('')}</select>
-    <div class="ck-g-row"><select id="ck-sp-ty" onchange="ckSpPrev()">${Object.entries(CK_SP).map(([id, S]) => `<option value="${id}">${S.i} ${S.n}</option>`).join('')}</select><input id="ck-sp-r" type="number" min="40" max="99" placeholder="Rating" oninput="ckSpPrev()"></div>
+    <div class="ck-g-row"><select id="ck-sp-ty" onchange="ckSpPrev()">${Object.entries(CK_SP).map(([id, S]) => `<option value="${id}">${S.i} ${S.n}</option>`).join('')}</select><input id="ck-sp-r" type="number" min="40" max="100" placeholder="Rating" oninput="ckSpPrev()"></div>
     <input id="ck-sp-n" maxlength="30" placeholder="Label (optional), e.g. Monza D1 or Season 8" oninput="ckSpPrev()">
     <div class="ck-spprev" id="ck-sp-prev"></div><button class="hx-btn" onclick="ckSpAdd()">✨ Create card</button>
     ${(() => { const miss = _ckChampMissing(pool); return miss.length ? `<button class="hx-btn ghost" onclick="ckSpAllChamps()">👑 Create a champion card for every champion (${miss.length} missing)</button>` : '<div class="ck-fine" style="margin:0">👑 Every champion has a champion card.</div>'; })()}
@@ -37163,17 +37164,17 @@ window.ckSpAllChamps = async function() { if (!adminLoggedIn) return; window._ck
   customConfirm(`Create ${miss.length} champion cards (one per champion)? Starting rating = normal rating +2, +1 if they won a D1/E1 title, +2 for each extra title (75–99). Multi-champions are labelled e.g. "3× Champion". You can change each one after.`, async () => {
     const sd = await dbGet('settings', 'ckSpecials').catch(() => null), t = Date.now(), list = ((sd && sd.value && sd.value.list) || []).concat(miss.map((m, i) => ({ id: (t + i).toString(36), k: m.k, ty: 'champ', r: m.r, note: m.note.slice(0, 30), t })));
     await dbSet('settings', 'ckSpecials', { value: { list } }); window._ckPoolC = null; showToast('👑 ' + miss.length + ' champion cards created.', 'success'); window._ckAllT = 'sp'; _ckRender(); }, 'Create'); };
-window.ckSpRate = async function(id) { if (!adminLoggedIn) return; const v = parseInt((document.getElementById('ck-spr-' + id) || {}).value, 10); if (!(v >= 40 && v <= 99)) return showToast('Rating must be 40–99.', 'error');
+window.ckSpRate = async function(id) { if (!adminLoggedIn) return; const v = parseInt((document.getElementById('ck-spr-' + id) || {}).value, 10); if (!(v >= 40 && v <= 100)) return showToast('Rating must be 40–100.', 'error');
   { const sd0 = await dbGet('settings', 'ckSpecials').catch(() => null), x0 = ((sd0 && sd0.value && sd0.value.list) || []).find(y => y.id === id); if (x0 && x0.ty === 'dotd' && v < 80) return showToast('DOTD cards are rated 80 or higher.', 'error'); }
   const sd = await dbGet('settings', 'ckSpecials').catch(() => null), list = ((sd && sd.value && sd.value.list) || []); const x = list.find(y => y.id === id); if (!x) return; x.r = v;
   await dbSet('settings', 'ckSpecials', { value: { list } }); window._ckPoolC = null; showToast('Rating saved: ' + v, 'success'); _ckRender(); };
 window.ckSpFind = function(q) { const sel = document.getElementById('ck-sp-k'); if (!sel) return; q = String(q || '').toLowerCase(); let first = null;
   [...sel.options].forEach(o => { const m = !q || o.text.toLowerCase().includes(q); o.hidden = !m; if (m && !first) first = o; }); if (first && sel.selectedOptions[0] && sel.selectedOptions[0].hidden) sel.value = first.value; ckSpPrev(); };
 window.ckSpPrev = async function() { const pool = await _ckPool(), k = (document.getElementById('ck-sp-k') || {}).value, b = pool.by[k], el = document.getElementById('ck-sp-prev'); if (!b || !el) return;
-  const ty = document.getElementById('ck-sp-ty').value, r = Math.max(40, Math.min(99, parseInt(document.getElementById('ck-sp-r').value, 10) || b.r));
+  const ty = document.getElementById('ck-sp-ty').value, r = Math.max(40, Math.min(ty === 'cent' ? 100 : 99, parseInt(document.getElementById('ck-sp-r').value, 10) || b.r));
   const c = Object.assign({}, b, { sp: ty, spn: document.getElementById('ck-sp-n').value.trim(), r }); c.t = _ckTier(r).id; el.innerHTML = _ckCard(c); };
 window.ckSpAdd = async function() { if (!adminLoggedIn) return; const k = document.getElementById('ck-sp-k').value, ty = document.getElementById('ck-sp-ty').value, r = parseInt(document.getElementById('ck-sp-r').value, 10), note = document.getElementById('ck-sp-n').value.trim().slice(0, 30);
-  if (!k || !CK_SP[ty]) return showToast('Pick a driver and type.', 'error'); if (!(r >= 40 && r <= 99)) return showToast('Set a rating between 40 and 99.', 'error'); if (ty === 'dotd' && r < 80) return showToast('DOTD cards are rated 80 or higher.', 'error');
+  if (!k || !CK_SP[ty]) return showToast('Pick a driver and type.', 'error'); if (!(r >= 40 && r <= (ty === 'cent' ? 100 : 99))) return showToast('Set a rating between 40 and ' + (ty === 'cent' ? 100 : 99) + '.', 'error'); if (ty === 'dotd' && r < 80) return showToast('DOTD cards are rated 80 or higher.', 'error');
   const pool = await _ckPool(), b = pool.by[k]; customConfirm(`Create a ${r} ${CK_SP[ty].n} card for ${esc(b ? b.n : k)}?`, async () => {
     const sd = await dbGet('settings', 'ckSpecials').catch(() => null), list = ((sd && sd.value && sd.value.list) || []).concat([{ id: Date.now().toString(36), k, ty, r, note, t: Date.now() }]);
     await dbSet('settings', 'ckSpecials', { value: { list } }); window._ckPoolC = null; showToast('✨ Special card created.', 'success'); window._ckAllT = 'sp'; _ckRender(); }, 'Create'); };
