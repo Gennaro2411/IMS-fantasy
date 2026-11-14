@@ -10098,10 +10098,12 @@ async function renderDashboard() {
   let totwHtml = '';
   if (prevRace) {
     const totwDrivers = ((typeof divisionsForSeason==='function') ? divisionsForSeason(seasonNumber) : DIVISIONS).map(div => {
-      const divDrivers = drivers.filter(d => d.division === div);
+      // Who actually raced in this division that round (per-division points), not their current division.
+      const byDiv = prevRace.driverPointsByDivision || null;
+      const divDrivers = byDiv ? drivers.filter(d => byDiv[d.id] && byDiv[d.id][div] != null) : drivers.filter(d => d.division === div);
       let best = null, bestPts = -1;
       divDrivers.forEach(d => {
-        const pts = prevRace.driverPoints[d.id] || 0;
+        const pts = byDiv ? (Number(byDiv[d.id][div]) || 0) : (prevRace.driverPoints[d.id] || 0);
         if (pts > bestPts) { bestPts = pts; best = d; }
       });
       return best ? { driver: best, pts: bestPts, div } : null;
