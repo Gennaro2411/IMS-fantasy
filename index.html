@@ -4152,6 +4152,20 @@ body.ck-lock>header,body.ck-lock>main,body.ck-lock #mobile-nav{visibility:hidden
 .ck-cs-skip{position:absolute;bottom:22px;left:0;right:0;text-align:center;font:700 .7rem system-ui;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4);z-index:4}
 @media (prefers-reduced-motion:reduce){.ck-cs.boom,.ck-cs-rays,.ck-cs-grid{animation:none}}
 .ck-bulk{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 12px}.ck-bulk .dn{color:#ff8aa8;box-shadow:inset 0 0 0 1px rgba(240,72,122,.5)}.ck-lkw{position:relative}.ck-lk{position:absolute;top:-6px;left:-6px;z-index:5;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:.75rem;background:#0b0a14;box-shadow:0 0 0 2px #ffd36b}
+.tw-live{position:relative;margin:14px 0 18px;padding:14px;border-radius:24px;isolation:isolate;overflow:hidden;background:radial-gradient(80% 120% at 0 0,rgba(145,70,255,.32),transparent 60%),radial-gradient(70% 120% at 100% 100%,rgba(240,72,122,.22),transparent 60%),linear-gradient(170deg,#15122b,#0b0a14 72%);box-shadow:inset 0 0 0 1px rgba(145,70,255,.45),0 30px 70px -40px #9146ff}
+.tw-live::before{content:'';position:absolute;inset:-2px;z-index:-1;border-radius:inherit;padding:2px;background:conic-gradient(from var(--twa,0deg),#9146ff,#f0487a,#6f74e8,#9146ff);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:twSpin 6s linear infinite;opacity:.9}
+@property --twa{syntax:'<angle>';inherits:false;initial-value:0deg}@keyframes twSpin{to{--twa:360deg}}
+.tw-top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.tw-badge{flex:none;display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;background:#e8002d;color:#fff;font:900 .7rem/1 system-ui,sans-serif;letter-spacing:.16em;box-shadow:0 0 0 0 rgba(232,0,45,.6);animation:twPing 1.8s infinite}
+.tw-badge i{width:8px;height:8px;border-radius:50%;background:#fff}
+@keyframes twPing{70%{box-shadow:0 0 0 12px rgba(232,0,45,0)}100%{box-shadow:0 0 0 0 rgba(232,0,45,0)}}
+.tw-tt{flex:1;min-width:0}.tw-tt small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font:700 .64rem/1.2 system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#b9a2ff}
+.tw-tt b{display:block;margin-top:3px;font:italic 900 clamp(1.05rem,3vw,1.4rem)/1.1 'Barlow Condensed',sans-serif;text-transform:uppercase;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:.1em}
+.tw-open{flex:none;display:inline-flex;align-items:center;gap:7px;padding:10px 14px;border-radius:12px;background:linear-gradient(110deg,#9146ff,#b184e8);color:#fff;font:800 .74rem/1 system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;box-shadow:0 10px 24px -10px #9146ff}
+.tw-open svg{width:16px;height:16px}.tw-open:hover{filter:brightness(1.12)}
+.tw-frame{position:relative;width:100%;aspect-ratio:16/9;border-radius:16px;overflow:hidden;background:#000;box-shadow:0 0 0 1px rgba(255,255,255,.08),0 20px 40px -20px #000}
+.tw-frame iframe{position:absolute;inset:0;width:100%;height:100%}
+@media (max-width:560px){.tw-live{padding:12px;border-radius:20px}.tw-open{padding:9px 11px}.tw-open svg{display:none}}
 .ck-oos{padding:11px 10px;border-radius:12px;text-align:center;font-weight:800;font-size:.8rem;color:#ff8aa8;background:rgba(240,72,122,.1);border:1px solid rgba(240,72,122,.4)}.ck-left{display:block;text-align:center;margin-top:6px;font-size:.7rem;color:#9a9cc0}
 .pp-board{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 6px;text-align:left}
     .pp-col{display:flex;flex-direction:column;gap:6px;min-width:0}
@@ -6250,12 +6264,14 @@ window._homeTwitchCheck = async function() {
   if (!live) { box.innerHTML = ''; return; }
   if (box.querySelector('iframe')) return; // already showing — don't reload the player
   const parents = Array.from(new Set(['fantasy.ims-league.com', location.hostname].filter(Boolean))).map(h => 'parent=' + encodeURIComponent(h)).join('&');
-  box.innerHTML = `<div class="card" style="border:1px solid rgba(145,70,255,.55);background:linear-gradient(135deg,rgba(145,70,255,.16),var(--surface) 60%)">
-    <div class="card-title" style="display:flex;align-items:center;gap:8px"><span style="display:inline-flex;align-items:center;gap:5px;background:#e8002d;color:#fff;font-size:.62rem;font-weight:800;letter-spacing:1.5px;padding:3px 8px;border-radius:5px"><span style="width:7px;height:7px;border-radius:50%;background:#fff;animation:twLivePulse 1.2s infinite"></span>LIVE</span> IMS is live on Twitch
-      <a href="https://twitch.tv/IMSttv26" target="_blank" rel="noopener" style="margin-left:auto;font-size:.72rem;color:#b48cff;text-decoration:none;font-weight:700">Open on Twitch ↗</a></div>
-    <div style="position:relative;width:100%;aspect-ratio:16/9;border-radius:10px;overflow:hidden;background:#000">
-      <iframe src="https://player.twitch.tv/?channel=IMSttv26&${parents}&muted=true" allowfullscreen frameborder="0" style="position:absolute;inset:0;width:100%;height:100%"></iframe></div>
-  </div>`;
+  let up = ''; try { const r = await fetch('https://decapi.me/twitch/uptime/IMSttv26', { cache: 'no-store' }); up = (await r.text()).trim(); } catch (e) {}
+  let ti = ''; try { const r = await fetch('https://decapi.me/twitch/title/IMSttv26', { cache: 'no-store' }); ti = (await r.text()).trim(); if (/error|not found|offline/i.test(ti)) ti = ''; } catch (e) {}
+  const upS = up && !/offline|error/i.test(up) ? up.replace(/(\d+) hours?/, '$1h').replace(/(\d+) minutes?/, '$1m').replace(/(\d+) seconds?/, '').replace(/,/g, '').trim() : '';
+  box.innerHTML = `<section class="tw-live">
+    <div class="tw-top"><span class="tw-badge"><i></i>LIVE</span><div class="tw-tt"><small>IMS TV${upS ? ' · live for ' + esc(upS) : ''}</small><b>${esc(ti || 'IMS is live on Twitch')}</b></div>
+      <a class="tw-open" href="https://twitch.tv/IMSttv26" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M4 2 2.5 6v14h5v3h3l3-3h4l5-5V2zm16 12-3 3h-5l-3 3v-3H5V4h15zm-3-7h-2v6h2zm-5 0h-2v6h2z" fill="currentColor"/></svg>Watch</a></div>
+    <div class="tw-frame"><iframe src="https://player.twitch.tv/?channel=IMSttv26&${parents}&muted=true" allowfullscreen frameborder="0"></iframe></div>
+  </section>`;
 };
 window.toggleTwitchTheatre = function() {
   const box = document.getElementById('twitch-box');
