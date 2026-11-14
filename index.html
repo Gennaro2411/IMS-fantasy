@@ -4117,6 +4117,39 @@ body.ck-lock>header,body.ck-lock>main,body.ck-lock #mobile-nav{visibility:hidden
 .ck-show-c{width:min(78vw,calc(70vh * .7),420px);filter:drop-shadow(0 30px 50px rgba(0,0,0,.7));animation:ckShowIn .6s cubic-bezier(.2,.9,.3,1.2)}.ck-show-c .ck{width:100%}
 @keyframes ckShowIn{from{transform:scale(.85) translateY(20px);opacity:0}}
 .ck-show-b{display:flex;align-items:center;gap:10px;font:900 1.1rem/1 'Barlow Condensed',sans-serif;letter-spacing:.12em;color:#fff;opacity:.9}.ck-show-b img{width:28px;height:28px;border-radius:50%}.ck-show-b em{font-style:normal;color:#b184e8}.ck-show-b i{font-style:normal;font-size:.8rem;letter-spacing:.14em;padding:5px 10px;border-radius:99px;background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,.2)}
+.ck-cs{position:fixed;inset:0;z-index:10080;overflow:hidden;cursor:pointer;display:grid;place-items:center;animation:ckCsIn .35s ease}
+.ck-cs.out{opacity:0;transition:opacity .25s}
+@keyframes ckCsIn{from{opacity:0}}
+.ck-cs-bg{position:absolute;inset:0;background:radial-gradient(50% 45% at 50% 50%,color-mix(in srgb,var(--a) 35%,transparent),transparent 70%),#030207;animation:ckCsPulse 1.1s ease-in-out infinite alternate}
+@keyframes ckCsPulse{to{filter:brightness(1.35)}}
+.ck-cs-rays{position:absolute;left:50%;top:50%;width:220vmax;height:220vmax;margin:-110vmax 0 0 -110vmax;background:repeating-conic-gradient(from 0deg,color-mix(in srgb,var(--b) 22%,transparent) 0 4deg,transparent 4deg 18deg);mask:radial-gradient(closest-side,#000 10%,transparent 60%);-webkit-mask:radial-gradient(closest-side,#000 10%,transparent 60%);animation:ckCsSpin 14s linear infinite;opacity:.8}
+@keyframes ckCsSpin{to{transform:rotate(360deg)}}
+.ck-cs-grid{position:absolute;left:-50%;right:-50%;bottom:-10%;height:55%;background:repeating-linear-gradient(90deg,color-mix(in srgb,var(--a) 45%,transparent) 0 1px,transparent 1px 60px),repeating-linear-gradient(0deg,color-mix(in srgb,var(--a) 45%,transparent) 0 1px,transparent 1px 60px);transform:perspective(400px) rotateX(70deg);transform-origin:top;animation:ckCsRun .6s linear infinite;mask:linear-gradient(transparent,#000 60%);-webkit-mask:linear-gradient(transparent,#000 60%);opacity:.55}
+@keyframes ckCsRun{to{background-position:0 60px,0 60px}}
+.ck-cs-st{position:relative;z-index:2;display:grid;place-items:center}
+.ck-cs-beat{display:flex;flex-direction:column;align-items:center;gap:14px;animation:ckCsBeat 1s cubic-bezier(.2,1.4,.3,1) both}
+.ck-cs-beat img{width:clamp(110px,26vw,180px);height:auto;max-height:180px;object-fit:contain;filter:drop-shadow(0 0 30px var(--a)) drop-shadow(0 10px 20px #000)}
+.ck-cs-beat small{font:italic 900 clamp(1.4rem,5vw,2.4rem)/1 'Barlow Condensed',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#fff;text-shadow:0 0 24px var(--a)}
+@keyframes ckCsBeat{0%{transform:scale(2.4);opacity:0;filter:blur(12px)}55%{opacity:1;filter:blur(0)}100%{transform:scale(1)}}
+.ck-cs-type b{font-size:clamp(4rem,16vw,7rem);line-height:1;filter:drop-shadow(0 0 30px var(--a))}
+.ck-cs-type em{font:italic 900 clamp(3rem,12vw,5.5rem)/1 'Barlow Condensed',sans-serif;font-style:normal;padding-right:.1em;background:linear-gradient(180deg,#fff,var(--b) 50%,var(--a));-webkit-background-clip:text;background-clip:text;color:transparent;animation:ckCsNum 1.3s ease both}
+@keyframes ckCsNum{0%,30%{opacity:0;transform:translateY(20px)}}
+.ck-cs-flash{position:absolute;inset:0;z-index:3;pointer-events:none;background:radial-gradient(circle,#fff,var(--b) 40%,transparent 75%);opacity:0}
+.ck-cs.boom .ck-cs-flash{animation:ckCsFlash .9s ease-out}
+@keyframes ckCsFlash{0%{opacity:0}8%{opacity:1}100%{opacity:0}}
+.ck-cs.boom{animation:ckCsShake .5s .05s}
+@keyframes ckCsShake{10%,50%{transform:translate(-8px,4px)}30%,70%{transform:translate(8px,-4px)}90%{transform:translate(-3px,2px)}}
+.ck-cs.boom .ck-cs-rays{animation-duration:3s;opacity:1}
+.ck-cs-card{width:min(64vw,300px);animation:ckCsSlam .7s cubic-bezier(.2,1.6,.4,1) both;filter:drop-shadow(0 0 40px var(--a)) drop-shadow(0 30px 40px #000)}
+.ck-cs-card .ck{width:100%}
+@keyframes ckCsSlam{0%{transform:scale(3) rotate(-8deg);opacity:0}60%{opacity:1}100%{transform:none}}
+.ck-cs-ring{position:absolute;left:50%;top:50%;width:40px;height:40px;margin:-20px;border-radius:50%;border:3px solid var(--b);box-shadow:0 0 30px var(--a);animation:ckCsRing 1.2s ease-out both;pointer-events:none}
+.ck-cs-ring.r2{animation-delay:.15s;border-color:var(--a)}.ck-cs-ring.r3{animation-delay:.3s}
+@keyframes ckCsRing{from{transform:scale(1);opacity:1}to{transform:scale(22);opacity:0}}
+.ck-cs-spk{position:absolute;left:50%;top:50%;width:6px;height:22px;margin:-11px -3px;border-radius:3px;background:linear-gradient(var(--b),var(--a));transform:rotate(var(--r)) translateY(0) scale(var(--s));animation:ckCsSpk 1.1s ease-out both;pointer-events:none}
+@keyframes ckCsSpk{to{transform:rotate(var(--r)) translateY(calc(-1 * var(--d) - 60px)) scale(var(--s));opacity:0}}
+.ck-cs-skip{position:absolute;bottom:22px;left:0;right:0;text-align:center;font:700 .7rem system-ui;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4);z-index:4}
+@media (prefers-reduced-motion:reduce){.ck-cs.boom,.ck-cs-rays,.ck-cs-grid{animation:none}}
 .ck-oos{padding:11px 10px;border-radius:12px;text-align:center;font-weight:800;font-size:.8rem;color:#ff8aa8;background:rgba(240,72,122,.1);border:1px solid rgba(240,72,122,.4)}.ck-left{display:block;text-align:center;margin-top:6px;font-size:.7rem;color:#9a9cc0}
 .pp-board{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 6px;text-align:left}
     .pp-col{display:flex;flex-direction:column;gap:6px;min-width:0}
@@ -37250,10 +37283,26 @@ window.ckNext = function() { const R = window._ckRv, st = document.getElementByI
     <div class="ck-flip" id="ck-flip"><div class="ck-back t-${c.t}"><img src="icons/icon-192.png?v=3" alt=""><b>${last ? 'BEST CARD' : 'TAP TO REVEAL'}</b></div><div class="ck-front">${c.dup ? '<span class="ck-dup ck-dup-tag">DUPLICATE</span>' : c.nw ? '<span class="ck-dup new ck-dup-tag">NEW</span>' : ''}${_ckCard(c)}</div></div>
     <div class="ck-rvb" id="ck-rvb">Tap the card</div></div>`; };
 window.ckFlip = function() { const f = document.getElementById('ck-flip'), R = window._ckRv; if (!f || !R) return; if (f.classList.contains('on')) return ckNext();
-  const c = R.got[R.i]; f.classList.add('on'); f.parentElement.classList.add('shown');
+  const c = R.got[R.i];
+  // Specials and Diamonds get a walkout cutscene first, then the normal flip.
+  if ((c.sp || c.t === 'dia') && !R['cs' + R.i]) { R['cs' + R.i] = 1; return _ckCutscene(c, () => window.ckFlip()); } f.classList.add('on'); f.parentElement.classList.add('shown');
   try { c.r >= 83 ? _ptSnd.pointless() : c.r >= 60 ? _ptSnd.ding() : _ptSnd.tick && _ptSnd.tick(); } catch (e) {}
   if (c.r >= 83) { try { fireConfetti({ count: c.r >= 92 ? 90 : 45 }); } catch (e) {} }
   const b = document.getElementById('ck-rvb'); if (b) b.innerHTML = `<b>${c.sp ? '✨ Special' : CK_T[c.t].n}</b> · worth <i class="imc"></i> ${_ckSellV(c).toLocaleString()} · tap for ${R.i === R.got.length - 1 ? 'your pack' : 'the next card'}`; };
+// ===== Walkout cutscene: flag → team → type tease, then a flash and the card slams in. Tap to skip.
+function _ckCutscene(c, done) { const S = c.sp && CK_SP[c.sp], col = { cent: ['#ff3b3b', '#ffd36b'], champ: ['#ffd24a', '#fff3c4'], dotd: ['#ff6a3d', '#ffd27a'], tots: ['#3b5bff', '#f5cf5a'] }[c.sp] || ['#6fd8ff', '#e3fbff'];
+  const lg = c.team && typeof getTeamLogo === 'function' ? getTeamLogo(c.team) : '', fl = c.nat && typeof natFlagImg === 'function' ? natFlagImg(c.nat, 120) : '';
+  const o = document.createElement('div'); o.id = 'ck-cs'; o.className = 'ck-cs'; o.style.cssText = `--a:${col[0]};--b:${col[1]}`;
+  const beats = [fl && `<div class="ck-cs-beat">${fl}<small>${esc(c.nat || '')}</small></div>`, lg && `<div class="ck-cs-beat"><img src="${esc(lg)}" alt="" onerror="this.remove()"><small>${esc(c.team)}</small></div>`,
+    `<div class="ck-cs-beat ck-cs-type"><b>${S ? S.i : '💎'}</b><small>${S ? S.n : 'Diamond'}</small><em>${c.r}</em></div>`].filter(Boolean);
+  o.innerHTML = `<div class="ck-cs-bg"></div><div class="ck-cs-rays"></div><div class="ck-cs-grid"></div><div class="ck-cs-st" id="ck-cs-st"></div><div class="ck-cs-flash"></div><div class="ck-cs-skip">tap to skip</div>`;
+  document.body.appendChild(o); const st = o.querySelector('#ck-cs-st'), T = []; let fin = false;
+  const end = () => { if (fin) return; fin = true; T.forEach(clearTimeout); o.classList.add('out'); setTimeout(() => { o.remove(); done(); }, 260); };
+  o.onclick = end; try { _ptSnd.tick && _ptSnd.tick(); } catch (e) {}
+  let t = 650; beats.forEach((h, i) => { T.push(setTimeout(() => { st.innerHTML = h; try { (i === beats.length - 1 ? _ptSnd.ding : _ptSnd.tick)(); } catch (e) {} }, t)); t += i === beats.length - 1 ? 1300 : 1050; });
+  T.push(setTimeout(() => { o.classList.add('boom'); st.innerHTML = `<div class="ck-cs-card">${_ckCard(c, { cls: 'big' })}</div><i class="ck-cs-ring"></i><i class="ck-cs-ring r2"></i><i class="ck-cs-ring r3"></i>${Array.from({ length: 26 }, (_, i) => `<i class="ck-cs-spk" style="--r:${i * 360 / 26}deg;--d:${120 + (i * 37) % 140}px;--s:${0.6 + (i % 4) * .25}"></i>`).join('')}`;
+    try { _ptSnd.pointless(); fireConfetti({ count: 140 }); } catch (e) {} }, t));
+  T.push(setTimeout(end, t + 2400)); }
 function _ckSummary() { const R = window._ckRv, st = document.getElementById('ck-stage'); if (!R || !st) return; const P = CK_PACKS[R.id];
   const tot = R.got.reduce((a, c) => a + _ckSellV(c), 0), selN = Object.keys(R.sell).length, selV = R.got.reduce((a, c, i) => a + (R.sell[i] ? _ckSellV(c) : 0), 0);
   st.innerHTML = `<div class="ck-sum"><div class="ck-k">${P.n} opened</div><div class="ck-ttl">YOUR <em>CARDS</em></div>
