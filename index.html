@@ -11879,7 +11879,7 @@ window._trophySvg = function(t) {
 // Finishing position AFTER verdicts: the stored finish is the raw result, but verdicts change points,
 // so re-rank the division by points (ties keep raw order; DNF/DNS/DSQ excluded) — same order as the results table.
 function _pvTime(race, id, div) { const tm = (race.raceTimeByDiv || {})[div]; if (!tm) return 9e6; const nk = (x) => String(x || '').replace(/^\[[^\]]*\]\s*/, '').toLowerCase().replace(/[^a-z0-9]/g, '');
-  const nm = (race.driverNames || {})[id] || ((window._allDrivers || []).find(d => d.id === id) || {}).name || ''; const t = String(tm[nk(nm)] || '');
+  const nm = (race.driverNames || {})[id] || ((window._allDrivers || []).find(d => d.id === id) || {}).name || ''; const t = String(tm[nk(nm)] || tm[String(nm).toLowerCase().replace(/[^a-z0-9]/g, '')] || '');
   const l = t.match(/(\d+)\s*Lap/i); if (l) return 1e6 + Number(l[1]); if (!/^[0-9:.,]+$/.test(t)) return 9e6; let v = 0; for (const q of t.replace(',', '.').split(':')) v = v * 60 + parseFloat(q); return isFinite(v) ? v : 9e6; }
 window._postVerdictPos = function(race, dId, div) { try {
   const bd = race && race.driverPointsByDivision; if (!bd || !bd[dId] || bd[dId][div] === undefined) return null;
@@ -28394,7 +28394,7 @@ window.showRaceResults = function(raceId, season) {
           // Race points only ever fall as you go down the order, so they're the most reliable order (stored positions
           // can be wrong — e.g. reserves appended at the bottom). Then race time (untimed last), then stored position.
           const _tm = (race.raceTimeByDiv || {})[div] || {}, _nk = (x) => String(x || '').replace(/^\[[^\]]*\]\s*/, '').toLowerCase().replace(/[^a-z0-9]/g, '');
-          const ts = (it) => { const t = String(_tm[_nk(it.name)] || (it.driver && _tm[_nk(it.driver.name)]) || ''); const l = t.match(/(\d+)\s*Lap/i); if (l) return 1e6 + Number(l[1]); if (!/^[0-9:.,]+$/.test(t)) return 9e6; let v = 0; for (const q of t.replace(',', '.').split(':')) v = v * 60 + parseFloat(q); return isFinite(v) ? v : 9e6; };
+          const _fk = (x) => String(x || '').toLowerCase().replace(/[^a-z0-9]/g, ''); const ts = (it) => { const t = String(_tm[_fk(it.name)] || _tm[_nk(it.name)] || (it.driver && (_tm[_fk(it.driver.name)] || _tm[_nk(it.driver.name)])) || ''); const l = t.match(/(\d+)\s*Lap/i); if (l) return 1e6 + Number(l[1]); if (!/^[0-9:.,]+$/.test(t)) return 9e6; let v = 0; for (const q of t.replace(',', '.').split(':')) v = v * 60 + parseFloat(q); return isFinite(v) ? v : 9e6; };
           return (!!statusOf(a, div)) - (!!statusOf(b, div)) || (Number(b.pts) || 0) - (Number(a.pts) || 0) || ts(a) - ts(b) || fp(a) - fp(b);
         });
     }
