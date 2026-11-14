@@ -11878,6 +11878,12 @@ window._trophySvg = function(t) {
 };
 // Finishing position AFTER verdicts: the stored finish is the raw result, but verdicts change points,
 // so re-rank the division by points (ties keep raw order; DNF/DNS/DSQ excluded) — same order as the results table.
+// Sprint points inside a driver's combined total (same 10-9-…-1 the Results table strips off), so the
+// profile ranks on race-only points like the table does.
+function _pvSprint(race, id, div) { try { const rows = typeof _spRowsOf === 'function' ? _spRowsOf(race, div) : null; if (!rows) return 0;
+  const k = (x) => String(x || '').toLowerCase().replace(/[^a-z0-9]/g, ''), nm = (race.driverNames || {})[id] || ((window._allDrivers || []).find(d => d.id === id) || {}).name || '';
+  const r = rows.find(x => k(x.name) === k(nm) || k(String(x.name || '').replace(/^\[[^\]]*\]\s*/, '')) === k(String(nm).replace(/^\[[^\]]*\]\s*/, '')));
+  return r && r.pos && r.pos <= 10 && !(r.status && /DNF|DNS|DSQ/.test(r.status)) ? 11 - r.pos : 0; } catch (e) { return 0; } }
 function _pvTime(race, id, div) { const tm = (race.raceTimeByDiv || {})[div]; if (!tm) return 9e6; const nk = (x) => String(x || '').replace(/^\[[^\]]*\]\s*/, '').toLowerCase().replace(/[^a-z0-9]/g, '');
   const nm = (race.driverNames || {})[id] || ((window._allDrivers || []).find(d => d.id === id) || {}).name || ''; const t = String(tm[nk(nm)] || tm[String(nm).toLowerCase().replace(/[^a-z0-9]/g, '')] || '');
   const l = t.match(/(\d+)\s*Lap/i); if (l) return 1e6 + Number(l[1]); if (!/^[0-9:.,]+$/.test(t)) return 9e6; let v = 0; for (const q of t.replace(',', '.').split(':')) v = v * 60 + parseFloat(q); return isFinite(v) ? v : 9e6; }
@@ -11887,7 +11893,7 @@ window._postVerdictPos = function(race, dId, div) { try {
   const out = (id) => !!((sd[id] || {})[div]);
   if (out(dId)) return null;
   const rows = Object.entries(bd).filter(([id, by]) => by && by[div] !== undefined && !out(id))
-    .map(([id, by]) => ({ id, pts: Number(by[div]) || 0, raw: Number((pd[id] || {})[div]) || 999, tm: _pvTime(race, id, div) }))
+    .map(([id, by]) => ({ id, pts: (Number(by[div]) || 0) - _pvSprint(race, id, div), raw: Number((pd[id] || {})[div]) || 999, tm: _pvTime(race, id, div) }))
     .sort((a, b) => b.pts - a.pts || a.tm - b.tm || a.raw - b.raw); /* same order as the Results table: points, then race time */
   const i = rows.findIndex(r => r.id === dId); return i >= 0 ? i + 1 : null; } catch (e) { return null; } };
 window.renderTrophyShelf = function(trophies, opts) {
