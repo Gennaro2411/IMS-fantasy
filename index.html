@@ -37321,7 +37321,22 @@ function _ckRender() { const pg = document.getElementById('page-cards'); if (pg 
 async function _ckLockLoad() { const lk = await dbGet('settings', 'gamesLock').catch(() => null); window._gamesLock = (lk && lk.value) || {}; _ckNavSync(); }
 function _ckNavSync() { const on = _ckCan(); ['nav-cards-btn', 'mobile-cards-btn'].forEach(id => { const b = document.getElementById(id); if (b) b.style.display = on ? '' : 'none'; }); }
 setTimeout(() => { _ckLockLoad(); setInterval(_ckNavSync, 4000); }, 2500);
-async function renderCards() { const el = document.getElementById('cards-content'); if (!el) return; await _ckLockLoad();
+// Auto Centurion: whenever a driver reaches 100 appearances, create their 100-rated Centurion card.
+// Runs on the admin's device (the only one allowed to write settings). First run just records everyone
+// already on 100+ (Fred and earlier) so only drivers who hit 100 from now on get one automatically.
+async function _ckAutoCent() { if (!adminLoggedIn || window._ckCentBusy) return; window._ckCentBusy = true;
+  try { await _wdLoad(); const FP = window._wdFullPool || []; const sd = await dbGet('settings', 'ckCentSeen').catch(() => null), seen = (sd && sd.value) || null;
+    const at100 = FP.filter(p => (p.st || 0) >= 100).map(p => _wdNorm(p.name)).filter(Boolean);
+    if (!seen) { await dbSet('settings', 'ckCentSeen', { value: { keys: at100, t: Date.now() } }); return; }
+    const known = new Set(seen.keys || []), fresh = at100.filter(k => !known.has(k)); if (!fresh.length) return;
+    const sp = await dbGet('settings', 'ckSpecials').catch(() => null), list = ((sp && sp.value && sp.value.list) || []), t = Date.now(), pool = await _ckPool(); let made = [];
+    fresh.forEach((k, i) => { if (!pool.by[k] || list.some(x => x.ty === 'cent' && x.k === k)) return; list.push({ id: (t + i).toString(36) + 'c', k, ty: 'cent', r: 100, note: '', t }); made.push(pool.by[k].n); });
+    if (made.length) await dbSet('settings', 'ckSpecials', { value: { list } });
+    await dbSet('settings', 'ckCentSeen', { value: { keys: [...known, ...fresh], t } });
+    if (made.length) { window._ckPoolC = null; showToast('💯 New Centurion card' + (made.length > 1 ? 's' : '') + ': ' + made.join(', '), 'success'); _ckRender(); }
+  } catch (e) { console.warn('auto centurion', e); } finally { window._ckCentBusy = false; } }
+setTimeout(() => { if (typeof adminLoggedIn !== 'undefined' && adminLoggedIn) _ckAutoCent(); }, 8000);
+async function renderCards() { if (adminLoggedIn) setTimeout(_ckAutoCent, 500); const el = document.getElementById('cards-content'); if (!el) return; await _ckLockLoad();
   if (!_ckCan()) { el.innerHTML = '<div class="ckx-locked"><b>🔒 IMS Cards is coming soon</b><span>Check back later.</span></div>'; return; }
   return renderCardsGame(el); }
 async function renderCardsGame(el) {
