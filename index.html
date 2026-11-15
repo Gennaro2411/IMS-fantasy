@@ -34488,7 +34488,7 @@ async function _cnDuelBody(pool) {
   const myWin = oppFf || (st.won && (!oP.won || (oP.at && st.wonAt && st.wonAt < oP.at))), oppWin = !oppFf && oP.won && (!st.won || (st.wonAt && oP.at < st.wonAt));
   const over = (st.done && oP.done) || myWin || oppWin;
   window._cnDuelLive = { status: 'playing', over };
-  if (over && !st.duelDone) { st.duelDone = true; _cnSave(st, 'duel'); if (myWin) _gameCoins('duel-cn', 5); }
+  if (over && !st.duelDone) { st.duelDone = true; _cnSave(st, 'duel'); if (myWin) _gameCoins('duel-cn', 10); }
   // Record the result once (by the winner's screen) for BOTH players, like the other duels.
   if (over && (myWin || oppWin) && !d.done) { dbSet('cnDuels', k.code, { done: true }).catch(() => {}); }
   if (over && myWin && !d.rec && !_wdLS('cnRec_' + k.code)) { _wdLS('cnRec_' + k.code, 1);
@@ -34723,7 +34723,7 @@ window.renderGames = async function() {
     <div class="wd-info">
       <h3>What is IMS PaddockDle?</h3>
       <p>IMS PaddockDle is a driver guessing game built on International Motorsport Series data. A mystery IMS driver is picked and you work out who it is from colour-coded clues about their nationality, division, team, BOTT titles, all-time points, wins and race starts.</p>
-      <p style="margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(247,207,85,.08);border:1px solid rgba(247,207,85,.35);font-size:.84rem"><span class="imc"></span> <b>Earn IM$:</b> finish the daily for <b>+10 IM$</b> (once a day), get <b>another +10 IM$</b> for solving it (PaddockDle: guess the driver · Grid: a perfect 9/9), and win duels for <b>+5 IM$</b> each — up to 25 IM$ from duels per game every 24 hours. Log in to earn.</p>
+      <p style="margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(247,207,85,.08);border:1px solid rgba(247,207,85,.35);font-size:.84rem"><span class="imc"></span> <b>Earn IM$:</b> finish the daily for <b>+10 IM$</b> (once a day), get <b>another +10 IM$</b> for solving it (PaddockDle: guess the driver · Grid: a perfect 9/9), and win duels for <b>+10 IM$</b> each — up to 100 IM$ from duels a day. Log in to earn.</p>
       <h3>Reading the colour clues</h3>
       <div class="wd-legend">
         <div><span class="wd-sw ok"></span><b>Green</b><small>Exact match</small></div>
@@ -35736,6 +35736,8 @@ async function _gameCoins(kind, amount) {
   try { const c = await _betLoadCoins(currentUser.userId); const now = Date.now(); const g = c.gameRewards || {};
     let give = 0;
     if (/^(wd|gr|hl|cn|pt|tq|cp|st|qs|wf|pp)-(daily|win|hidden)$/.test(kind)) { const day = _wdDayKey() + (_wdSalt() ? '#' + _wdSalt() : ''); if (g[kind] === day) return 0; g[kind] = day; give = amount; if (/-daily$/.test(kind)) _gmMeterTick(c); }
+    else if (/^duel-/.test(kind)) { /* duel wins: +10 each, up to 100 IM$ a day across every duel game (UK day) */ const day = _ckDay(), D = g.duelDay && g.duelDay.d === day ? g.duelDay : { d: day, a: 0 };
+      give = Math.max(0, Math.min(amount, 100 - D.a)); if (!give) return 0; D.a += give; g.duelDay = D; }
     else { const log = (g[kind] || []).filter(x => now - x.t < 864e5); const used = log.reduce((a, x) => a + x.a, 0); give = Math.max(0, Math.min(amount, 25 - used));
       if (!give) { g[kind] = log; return 0; } log.push({ t: now, a: give }); g[kind] = log; }
     c.balance = (c.balance || 0) + give; c.gameRewards = g; c.gameEarned = (c.gameEarned || 0) + give;
@@ -35834,7 +35836,7 @@ async function _wdDuelBody(pool, top) {
       <div class="wd-fc-av">${_wdAv({ name: p.name, photo: p.av }, 96)}</div><b>${esc(p.name)}</b>
       <div class="wd-fc-st"><span><i>${st.points || 0}</i>Daily pts</span><span><i>${st.duelW || 0}–${st.duelL || 0}</i>Duels W–L</span></div></div>`; };
   // Record this round's result once (per browser), then show confetti to the winner.
-  if (done && iWon && !_wdLS('wdCoin_' + rk)) { _wdLS('wdCoin_' + rk, 1); _gameCoins('duel-wd', 5); }
+  if (done && iWon && !_wdLS('wdCoin_' + rk)) { _wdLS('wdCoin_' + rk, 1); _gameCoins('duel-wd', 10); }
   { const recBy = lob.forfeit ? (lob.forfeit === 'host' ? 'guest' : 'host') : 'host';
     if (done && winRole && role === recBy && (lob.recR || 0) !== round && !_wdLS('wdRec_' + rk)) { _wdLS('wdRec_' + rk, 1); _duelRecordBoth(lob, round, winRole, lob.forfeit, 'duelW', 'duelL', 'h2hWd'); } }
   if (done && iWon && !window['_wdCf_' + rk]) { window['_wdCf_' + rk] = 1; setTimeout(() => { try { fireConfetti({ count: 200 }); } catch (e) {} }, 300); }
@@ -36302,7 +36304,7 @@ async function _hdBody(pool, top) {
   else if (done) { if (lob[opp + 'Quit'] && !lob[role + 'Quit']) winner = role; else if (lob[role + 'Quit'] && !lob[opp + 'Quit']) winner = opp;
     else if (mySc !== opSc) winner = mySc > opSc ? role : opp; else { const mt = myDone - (lob.startedAt + FACE), ot = opDone - (lob.startedAt + FACE); winner = mt === ot ? 'draw' : mt < ot ? role : opp; } }
   window._hdLive = { status: lob.status, done, moved }; window._hdRef = { code: lob.id, role, locked: faceLeft > 0 || !!myDone || lob.status !== 'playing' };
-  if (done && winner === role && !_wdLS('hdCoin_' + rk)) { _wdLS('hdCoin_' + rk, 1); _gameCoins('duel-hl', 5); setTimeout(() => { try { fireConfetti({ count: 200 }); } catch (e) {} }, 300); }
+  if (done && winner === role && !_wdLS('hdCoin_' + rk)) { _wdLS('hdCoin_' + rk, 1); _gameCoins('duel-hl', 10); setTimeout(() => { try { fireConfetti({ count: 200 }); } catch (e) {} }, 300); }
   { const quitR = lob.hostQuit ? 'host' : lob.guestQuit ? 'guest' : '', recBy = quitR ? (quitR === 'host' ? 'guest' : 'host') : 'host';
     const winR = winner === role ? role : winner === opp ? opp : '';
     if (done && winR && role === recBy && (lob.recR || 0) !== round && !_wdLS('hdRec_' + rk)) { _wdLS('hdRec_' + rk, 1); _duelRecordBoth(lob, round, winR, quitR, 'hlW', 'hlL', 'h2hHl'); } }
@@ -36317,7 +36319,14 @@ async function _hdBody(pool, top) {
     if (!l2) { _hdSet(null); renderGames(); return; }
     if (l2.status === 'waiting' && role === 'host' && _now() - (l2.hostSeen || 0) > 10e3) dbSet('wordleDuels', lob.id, { hostSeen: _now() }).catch(() => {}); else if (l2.status === 'playing' && !l2.done && _now() - (l2[role + 'Seen'] || 0) > 10e3) dbSet('wordleDuels', lob.id, { [role + 'Seen']: _now() }).catch(() => {});
     const sig = (x) => [x.status, x.round || 1, (x.hostAns || []).length, (x.guestAns || []).length, x.hostDone || 0, x.guestDone || 0, x.guestName || '', !!x.hostRematch, !!x.guestRematch, !!x.hostLeft, !!x.guestLeft, !!x.hostDraw, !!x.guestDraw, !!x.drawAgreed, !!x.cancelled, !!x.hostQuit, !!x.guestQuit].join('|');
-    if (sig(l2) !== sig(lob)) await renderGames(); } finally { window._hdPollBusy = false; } }, 1000);
+    if (sig(l2) === sig(lob)) return;
+    // Only the opponent answered another question: update their dots + score in place. A full re-render here
+    // replayed the question animation and swallowed taps, so you couldn't answer.
+    const oA = l2[opp + 'Ans'] || [], quiet = (x) => sig(Object.assign({}, x, { [opp + 'Ans']: [] }));
+    if (quiet(l2) === quiet(lob) && oA.length > (lob[opp + 'Ans'] || []).length && document.getElementById('hd-op-dots')) { lob[opp + 'Ans'] = oA;
+      document.getElementById('hd-op-dots').innerHTML = Array.from({ length: HL_N }, (_, k) => `<span class="${k < oA.length ? (oA[k] ? 'ok' : 'bad') : ''}"></span>`).join('');
+      const sc = document.getElementById('hd-op-sc'); if (sc) sc.textContent = oA.filter(Boolean).length + '/' + oA.length; return; }
+    await renderGames(); } finally { window._hdPollBusy = false; } }, 1000);
   const V = `style="${_duelVars(lob, role)}"`;
   // Once one player finishes, the other has 30 s — then the round ends on whatever they've got (unanswered = wrong).
   const HD_LAST = 30e3, oneDone = lob.status === 'playing' && !done && !!(myDone || opDone) && !(myDone && opDone);
@@ -36353,7 +36362,7 @@ async function _hdBody(pool, top) {
   const head = `<div id="hd-duel" class="wd-vs" ${V}>
     <div class="wd-vs-p me"><div class="wd-vs-row">${_wdAv({ name: meP.name, photo: meP.av }, 40)}<div><b>${esc(meP.name)}</b><small>You · ${mySc}/${myA.length}</small></div></div><div class="hl-ddots">${dots(myA)}</div></div>
     <div class="wd-vs-mid"><span>VS</span><small>Round ${round}</small></div>
-    <div class="wd-vs-p"><div class="wd-vs-row r"><div><b>${esc(opP.name)}</b><small>${opDone ? 'Finished · ' : ''}${opSc}/${opA.length}</small></div>${_wdAv({ name: opP.name, photo: opP.av }, 40)}</div><div class="hl-ddots r">${dots(opA)}</div></div></div>`;
+    <div class="wd-vs-p"><div class="wd-vs-row r"><div><b>${esc(opP.name)}</b><small>${opDone ? 'Finished · ' : ''}<span id="hd-op-sc">${opSc}/${opA.length}</span></small></div>${_wdAv({ name: opP.name, photo: opP.av }, 40)}</div><div class="hl-ddots r" id="hd-op-dots">${dots(opA)}</div></div></div>`;
   let body;
   if (done) { const iWon = winner === role, draw = winner === 'draw';
     const tOut = lob[opp + 'Timeout'] ? esc(opP.name) + ' ran out of time · ' : lob[role + 'Timeout'] ? 'You ran out of time · ' : '';
@@ -36388,7 +36397,7 @@ async function renderHLGame(el) {
   el.innerHTML = `<div class="wd-wrap">${body}
     <div class="wd-info"><h3>How to play</h3><p>Each round is <b>${HL_N} questions</b>. You see two IMS drivers and one stat — race starts, wins, podiums, pole positions, career points or BOTTs. The left driver's number is shown: is the right driver's <b>higher</b> or <b>lower</b>? Equal numbers count as right.</p>
       <p><b>📅 Daily</b> — the same ${HL_N} questions for everyone, once a day. <b>∞ Practice</b> — as many rounds as you like. <b>⚔️ Duel</b> — you and an opponent get the same ${HL_N} questions at the same time; most right wins, and if it's level the faster finisher wins.</p>
-      <p style="margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(247,207,85,.08);border:1px solid rgba(247,207,85,.35);font-size:.84rem"><span class="imc"></span> <b>Earn IM$:</b> play the daily for <b>+10 IM$</b>, score <b>8/10 or better</b> for <b>another +10 IM$</b>, and win duels for <b>+5 IM$</b> each (up to 25 IM$ from duels every 24 hours). Log in to earn.</p>
+      <p style="margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(247,207,85,.08);border:1px solid rgba(247,207,85,.35);font-size:.84rem"><span class="imc"></span> <b>Earn IM$:</b> play the daily for <b>+10 IM$</b>, score <b>8/10 or better</b> for <b>another +10 IM$</b>, and win duels for <b>+10 IM$</b> each (up to 100 IM$ from duels a day). Log in to earn.</p>
       <p>Same driver pool as PaddockDle: everyone on the market, plus reserves with 25+ starts (or a title / BOTT). Stats are all-time across every IMS season.</p></div></div>`;
   if (mode === 'daily' && document.getElementById('hl-timer')) { const until = _now() + _wdMsToMidnight(); clearInterval(window._wdTick);
     window._wdTick = setInterval(() => { const t = document.getElementById('hl-timer'); if (!t) { clearInterval(window._wdTick); return; } const ms = until - _now(); if (ms <= 0) { clearInterval(window._wdTick); renderGames(); return; }
@@ -36749,7 +36758,7 @@ async function _pdBody(pool, top) {
   const quit = lob.hostQuit ? 'host' : lob.guestQuit ? 'guest' : '', done = lob.status === 'playing' && (!!lob.done || !!quit || !_pdTurn(lob)), t = done ? null : _pdTurn(lob);
   const R = _pdResult(lob, pool); let winner = done ? (quit ? (quit === 'host' ? 'guest' : 'host') : R.w) : '';
   window._pdLive = { status: lob.status, done };
-  if (done && winner === role && !_wdLS('pdCoin_' + rk)) { _wdLS('pdCoin_' + rk, 1); _gameCoins('duel-pt', 5); setTimeout(() => { try { fireConfetti({ count: 220 }); } catch (e) {} }, 300); }
+  if (done && winner === role && !_wdLS('pdCoin_' + rk)) { _wdLS('pdCoin_' + rk, 1); _gameCoins('duel-pt', 10); setTimeout(() => { try { fireConfetti({ count: 220 }); } catch (e) {} }, 300); }
   if (done && winner !== 'draw' && winner && role === (quit ? winner : 'host') && (lob.recR || 0) !== round && !_wdLS('pdRec_' + rk)) { _wdLS('pdRec_' + rk, 1); _duelRecordBoth(lob, round, winner, quit, 'ptW', 'ptL', 'h2hPt'); }
   if (done && role === 'host' && lob.hostRematch && lob.guestRematch && !lob[opp + 'Left']) { const qs = _pdQs(pool);
     if (qs) { const st = _now() + 1500; await dbSet('wordleDuels', lob.id, { qs, round: round + 1, hostAns: [], guestAns: [], done: false, hostQuit: false, guestQuit: false, hostRematch: false, guestRematch: false, hostLeft: false, guestLeft: false, startedAt: st, turnAt: st }); setTimeout(() => renderGames(), 200); } }
@@ -37014,7 +37023,7 @@ async function _tqdBody(pool, top) {
   const T = { host: _tot('host'), guest: _tot('guest') };
   const winner = done ? (quit ? (quit === 'host' ? 'guest' : 'host') : T.host === T.guest ? 'draw' : T.host > T.guest ? 'host' : 'guest') : '';
   window._tqdLive = { status: lob.status, done }; window._tqdRef = { code: lob.id, role };
-  if (done && winner === role && !_wdLS('tqdCoin_' + rk)) { _wdLS('tqdCoin_' + rk, 1); _gameCoins('duel-tq', 5); setTimeout(() => { try { fireConfetti({ count: 220 }); } catch (e) {} }, 300); }
+  if (done && winner === role && !_wdLS('tqdCoin_' + rk)) { _wdLS('tqdCoin_' + rk, 1); _gameCoins('duel-tq', 10); setTimeout(() => { try { fireConfetti({ count: 220 }); } catch (e) {} }, 300); }
   if (done && winner && winner !== 'draw' && role === (quit ? winner : 'host') && (lob.recR || 0) !== round && !_wdLS('tqdRec_' + rk)) { _wdLS('tqdRec_' + rk, 1); _duelRecordBoth(lob, round, winner, quit, 'tqW', 'tqL', 'h2hTq'); }
   if (done && role === 'host' && lob.hostRematch && lob.guestRematch && !lob[opp + 'Left']) { const nq = _tqMakeSet(pool, window._tqTrk, Math.random);
     if (nq) { const st = _now() + 1500; await dbSet('wordleDuels', lob.id, { qsJson: JSON.stringify(nq), round: round + 1, qi: 0, qStart: st, startedAt: st, revAt: 0, revQi: -1, hostAns: [], guestAns: [], done: false, hostQuit: false, guestQuit: false, hostRematch: false, guestRematch: false, hostLeft: false, guestLeft: false }); setTimeout(() => renderGames(), 200); } }
@@ -38349,7 +38358,7 @@ async function _wfDuelPrep(list, hdr) {
   let st = window._wfDu; if (!st || st.code !== lob.id || st.round !== round) { const s2 = _wfdLoadSt(); st = s2 && s2.code === lob.id && s2.round === round ? s2 : { code: lob.id, round, pk: lob.pk, cur: (lob.cur0 || []).slice(), tries: [], h: [], t0: Math.max(lob.startedAt || 0, 0) || _now(), done: false, won: false }; window._wfDu = st; _wfdSaveSt(st); }
   const quit = lob.hostQuit ? 'host' : lob.guestQuit ? 'guest' : '', over = !!(quit || (lob.hostR && lob.guestR)), win = over ? _wfdWinner(lob) : '', rk = lob.id + '_' + round;
   window._wfdLive = { status: 'playing', over };
-  if (over && win === role && !_wdLS('wfdCoin_' + rk)) { _wdLS('wfdCoin_' + rk, 1); _gameCoins('duel-wf', 5); setTimeout(() => { try { fireConfetti({ count: 90 }); } catch (e) {} }, 300); }
+  if (over && win === role && !_wdLS('wfdCoin_' + rk)) { _wdLS('wfdCoin_' + rk, 1); _gameCoins('duel-wf', 10); setTimeout(() => { try { fireConfetti({ count: 90 }); } catch (e) {} }, 300); }
   if (over && win && win !== 'draw' && role === (quit ? win : 'host') && (lob.recR || 0) !== round && !_wdLS('wfdRec_' + rk)) { _wdLS('wfdRec_' + rk, 1); _duelRecordBoth(lob, round, win, quit, 'wfW', 'wfL', 'h2hWf'); }
   if (over && role === 'host' && lob.hostRematch && lob.guestRematch && !lob.guestLeft) { await dbSet('wordleDuels', lob.id, Object.assign({ round: round + 1, startedAt: _now() + 2600, hostR: false, guestR: false, hostT: 0, guestT: 0, hostRematch: false, guestRematch: false, hostQuit: false, guestQuit: false, recR: 0 }, _wfdNew(list))); setTimeout(() => renderGames(), 150); }
   const side = (who, p) => { const R = lob[who + 'R'], T = lob[who + 'T'] || 0, mine = who === role;
@@ -38445,7 +38454,7 @@ async function _cpdBody(pool, top) {
   const T = _cpdScore(lob, pool, shownUpTo);
   const winner = done ? (quit ? (quit === 'host' ? 'guest' : 'host') : T.host === T.guest ? 'draw' : T.host > T.guest ? 'host' : 'guest') : '';
   window._cpdLive = { status: lob.status, done }; window._cpdRef = { code: lob.id, role };
-  if (done && winner === role && !_wdLS('cpdCoin_' + rk)) { _wdLS('cpdCoin_' + rk, 1); _gameCoins('duel-cp', 5); setTimeout(() => { try { fireConfetti({ count: 220 }); } catch (e) {} }, 300); }
+  if (done && winner === role && !_wdLS('cpdCoin_' + rk)) { _wdLS('cpdCoin_' + rk, 1); _gameCoins('duel-cp', 10); setTimeout(() => { try { fireConfetti({ count: 220 }); } catch (e) {} }, 300); }
   if (done && winner && winner !== 'draw' && role === (quit ? winner : 'host') && (lob.recR || 0) !== round && !_wdLS('cpdRec_' + rk)) { _wdLS('cpdRec_' + rk, 1); _duelRecordBoth(lob, round, winner, quit, 'cpW', 'cpL', 'h2hCp'); }
   if (done && role === 'host' && lob.hostRematch && lob.guestRematch && !lob[opp + 'Left']) { const E = _cpEligible(pool), ids = []; while (ids.length < CPD_ROUNDS && E.length >= CPD_ROUNDS) { const p = E[Math.floor(Math.random() * E.length)]; if (!ids.includes(p.id)) ids.push(p.id); }
     if (ids.length === CPD_ROUNDS) { const st = _now() + 1500; await dbSet('wordleDuels', lob.id, { ids, round: round + 1, r: 0, rStart: st, startedAt: st, endR: -1, endAt: 0, hostG: [], guestG: [], done: false, hostQuit: false, guestQuit: false, hostRematch: false, guestRematch: false, hostLeft: false, guestLeft: false }); setTimeout(() => renderGames(), 200); } }
@@ -38723,7 +38732,7 @@ async function renderGridGame(el) {
     <div class="wd-info">
       <h3>What is IMS PaddockDle Grid?</h3>
       <p>The sister game to IMS PaddockDle. Instead of guessing one mystery driver, you fill a 3×3 grid where every row and column is its own IMS category — nationality, team, division, BOTT winners, race wins, podiums, starts, points and more. Each cell needs a driver who fits <b>both</b> the row and the column it sits in.</p>
-      <p>The driver pool is every driver currently on the IMS fantasy market, plus <b>reserves with 25 or more race starts</b> (any <b>Drivers' champion or BOTT winner</b> is always in, whatever their starts). Team categories count <b>any team a driver has driven for</b>, not just their current one — as long as they've made <b>3 or more race starts</b> for that team. A driver's <b>current team</b> always counts, even before they've raced for it.</p><p style="margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(247,207,85,.08);border:1px solid rgba(247,207,85,.35);font-size:.84rem"><span class="imc"></span> <b>Earn IM$:</b> finish the daily for <b>+10 IM$</b> (once a day), get <b>another +10 IM$</b> for solving it (PaddockDle: guess the driver · Grid: a perfect 9/9), and win duels for <b>+5 IM$</b> each — up to 25 IM$ from duels per game every 24 hours. Log in to earn.</p>
+      <p>The driver pool is every driver currently on the IMS fantasy market, plus <b>reserves with 25 or more race starts</b> (any <b>Drivers' champion or BOTT winner</b> is always in, whatever their starts). Team categories count <b>any team a driver has driven for</b>, not just their current one — as long as they've made <b>3 or more race starts</b> for that team. A driver's <b>current team</b> always counts, even before they've raced for it.</p><p style="margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(247,207,85,.08);border:1px solid rgba(247,207,85,.35);font-size:.84rem"><span class="imc"></span> <b>Earn IM$:</b> finish the daily for <b>+10 IM$</b> (once a day), get <b>another +10 IM$</b> for solving it (PaddockDle: guess the driver · Grid: a perfect 9/9), and win duels for <b>+10 IM$</b> each — up to 100 IM$ from duels a day. Log in to earn.</p>
       <h3>How to play</h3>
       <div class="gr-steps">
         <div><i>1</i><b>Pick a cell</b><small>Tap any of the 9 cells where a row category meets a column category.</small></div>
@@ -38845,7 +38854,7 @@ async function _gdBody(pool, top) {
   // Result is recorded ONCE, for BOTH players, by one screen: the player who didn't forfeit (a forfeiter
   // has already left, so their screen never saw the result — that's why their losses went missing), else the host.
   const _isRes = winner === 'host' || winner === 'guest';
-  if (done && _isRes && winner === role && !_wdLS('gdCoin_' + rk)) { _wdLS('gdCoin_' + rk, 1); _gameCoins('duel-gr', 5); }
+  if (done && _isRes && winner === role && !_wdLS('gdCoin_' + rk)) { _wdLS('gdCoin_' + rk, 1); _gameCoins('duel-gr', 10); }
   const _recBy = lob.forfeit ? (lob.forfeit === 'host' ? 'guest' : 'host') : 'host';
   if (done && _isRes && role === _recBy && (lob.recR || 0) !== round && !_wdLS('gdRec_' + rk)) { _wdLS('gdRec_' + rk, 1);
     try { await dbSet('wordleDuels', lob.id, { recR: round });
