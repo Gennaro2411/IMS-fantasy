@@ -4541,7 +4541,52 @@ body.ck-lock>header,body.ck-lock>main,body.ck-lock #mobile-nav{visibility:hidden
       .wd-modes button{padding:8px 11px;font-size:.8rem;letter-spacing:1px}
     }
     @media (max-width:600px){.wd-brand span{font-size:1.25rem;letter-spacing:2px}.wd-brand img{height:32px}}
-  </style>
+  /* ===== CTC — Card Trading Challenges ===== */
+.ctc-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
+.ctc-c{display:flex;flex-direction:column;gap:9px;padding:14px;border-radius:16px;background:linear-gradient(160deg,rgba(111,116,232,.14),rgba(240,72,122,.06) 60%,rgba(255,255,255,.02));box-shadow:inset 0 0 0 1px rgba(124,134,255,.28)}
+.ctc-c.done{background:rgba(74,222,128,.05);box-shadow:inset 0 0 0 1px rgba(74,222,128,.3)}.ctc-c.off{opacity:.72;box-shadow:inset 0 0 0 1px rgba(255,176,32,.4)}
+.ctc-ch{display:flex;justify-content:space-between;align-items:baseline;gap:10px}.ctc-ch b{font:900 italic 1.25rem/1.1 'Barlow Condensed',sans-serif;letter-spacing:.02em;text-transform:uppercase;color:#fff}.ctc-ch span{flex:none;font-size:.68rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#b9beff;padding:3px 9px;border-radius:99px;background:rgba(124,134,255,.16)}
+.ctc-c p,.ctc-hd p{margin:0;font-size:.8rem;color:#a5a9d6;line-height:1.4}
+.ctc-chips{display:flex;flex-wrap:wrap;gap:5px}.ctc-chips span{font-size:.72rem;padding:4px 9px;border-radius:8px;background:rgba(255,255,255,.06);color:#d5d7f5}
+.ctc-cr small,.ctc-hr small,.ctc-chem small{display:block;font-size:.6rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#8b8fb8;margin-bottom:4px}
+.ctc-rw{display:flex;flex-wrap:wrap;gap:5px}.ctc-rw span{display:inline-flex;align-items:center;gap:5px;font-size:.76rem;font-weight:700;padding:5px 10px;border-radius:99px;background:rgba(247,207,85,.1);color:#ffe083;box-shadow:inset 0 0 0 1px rgba(247,207,85,.3)}
+.ctc-rw-p i{width:9px;height:12px;border-radius:2px;background:linear-gradient(160deg,var(--c),var(--c2))}.ctc-rw .ctc-rw-c{background:rgba(124,134,255,.14);color:#cfd3ff;box-shadow:inset 0 0 0 1px rgba(124,134,255,.4)}
+.ctc-rwc{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,120px));gap:8px;margin-top:8px;justify-content:center}
+.ctc-cf{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:auto}.ctc-cf small{font-size:.72rem;color:#8b8fb8}.ctc-cf .hx-btn{flex:none}
+.ctc-c .up,.ctc-chem .up,.ctc-hd .up{color:#4ade80}.ctc-c .dn,.ctc-chem .dn,.ctc-hd .dn{color:#ffb020}
+.ctc-ad{display:flex;gap:6px;flex-wrap:wrap;padding-top:8px;border-top:1px dashed rgba(239,68,68,.4)}.ctc-ad button,.ctc-rl button{cursor:pointer;font:inherit;font-size:.72rem;color:#fca5a5;background:none;border:1px solid rgba(239,68,68,.45);border-radius:8px;padding:5px 9px}
+.ctc-lim{display:grid;gap:6px;font-size:.8rem;color:#c9cbe8}.ctc-lim .ck-fil{margin:0}
+.ctc-st{flex-basis:100%;font-size:.76rem;color:#c9cbe8}.ctc-st b{color:#ffe083}
+.ctc-back{cursor:pointer;font:inherit;font-weight:700;font-size:.8rem;color:#b9beff;background:none;border:0;padding:4px 0;margin-bottom:8px}
+.ctc-hd{display:grid;grid-template-columns:1.2fr 1fr;gap:14px;padding:16px;border-radius:18px;margin-bottom:12px;background:linear-gradient(150deg,rgba(111,116,232,.2),rgba(240,72,122,.1) 65%,rgba(255,255,255,.02));box-shadow:inset 0 0 0 1px rgba(124,134,255,.3)}
+.ctc-hd h2{margin:2px 0 4px;font:900 italic 1.9rem/1 'Barlow Condensed',sans-serif;text-transform:uppercase;color:#fff}.ctc-hd>div>small{display:block;margin-top:6px;font-size:.72rem;color:#8b8fb8}
+.ctc-chem{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:14px;margin-bottom:12px;background:rgba(255,255,255,.035);box-shadow:inset 0 0 0 1px rgba(255,255,255,.07)}
+.ctc-chem b{font:900 1.5rem/1 'Titillium Web',sans-serif;color:#7dd3fc}.ctc-chem b i{font-style:normal;font-size:.85rem;color:#8b8fb8}.ctc-chem>span{flex:none;font-size:.72rem;font-weight:800}
+.ctc-bar{position:relative;flex:1;height:10px;border-radius:99px;background:rgba(255,255,255,.08)}.ctc-bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#38bdf8,#4ade80);transition:width .3s}.ctc-bar u{position:absolute;top:-4px;bottom:-4px;width:2px;margin-left:-1px;background:#ffd36b;border-radius:2px}
+.ctc-sq{display:grid;grid-template-columns:repeat(var(--n,5),minmax(0,150px));gap:12px 10px;justify-content:center;margin-bottom:14px}
+.ctc-sl{position:relative;display:flex;flex-direction:column;gap:5px;min-width:0}
+.ctc-add{cursor:pointer;width:100%;aspect-ratio:5/7;border-radius:14px;border:2px dashed rgba(124,134,255,.45);background:rgba(124,134,255,.06);color:#b9beff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font:inherit}
+.ctc-add b{font-size:1.8rem;line-height:1}.ctc-add small{font-size:.62rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.ctc-add:hover{background:rgba(124,134,255,.14)}
+.ctc-pips{display:flex;justify-content:center;gap:4px}.ctc-pips i{width:9px;height:9px;transform:rotate(45deg);border-radius:2px;background:rgba(255,255,255,.12)}.ctc-pips i.on{background:#4ade80;box-shadow:0 0 6px rgba(74,222,128,.7)}
+.ctc-rm{position:absolute;top:-6px;right:-6px;z-index:4;width:24px;height:24px;border-radius:50%;border:0;cursor:pointer;background:#ef4444;color:#fff;font-size:.72rem;font-weight:900;line-height:1;box-shadow:0 2px 8px rgba(0,0,0,.5)}
+.ctc-rq{padding:12px 14px;border-radius:14px;margin-bottom:12px;background:rgba(255,255,255,.035);box-shadow:inset 0 0 0 1px rgba(255,255,255,.07)}
+.ctc-rq>div:not(.wl-sh){display:flex;align-items:center;gap:9px;padding:7px 0;border-top:1px solid rgba(255,255,255,.06);font-size:.84rem;color:#d5d7f5}
+.ctc-rq>div>i{flex:none;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:.7rem;font-weight:900;background:rgba(239,68,68,.18);color:#fca5a5}.ctc-rq>div.ok>i{background:rgba(74,222,128,.2);color:#4ade80}
+.ctc-rq>div>span{flex:1}.ctc-rq>div>b{flex:none;font-variant-numeric:tabular-nums;color:#fca5a5}.ctc-rq>div.ok>b{color:#4ade80}
+.ck-ov.ctc-pk{place-items:start center}.ctc-pkb{position:relative;width:min(900px,100%);padding:18px 14px;border-radius:20px;background:#0f0d1f;box-shadow:inset 0 0 0 1px rgba(255,255,255,.1)}
+.ctc-pkt{display:grid;grid-template-columns:1fr auto;gap:8px;margin:10px 0}.ctc-pkt input,.ctc-pkt select{padding:10px;border-radius:10px;background:#0e0c1a;color:#fff;border:1px solid rgba(255,255,255,.14);font:inherit;min-width:0}
+.ctc-pkf{margin-bottom:8px}.ctc-pkm{display:block;text-align:center;font-size:.64rem;color:#8b8fb8;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ctc-no{opacity:.4}.ctc-no .ck{cursor:not-allowed}
+.ctc-dnb{width:min(520px,100%);text-align:center;display:grid;gap:10px}.ctc-dnb .ctc-rw{justify-content:center}
+.ctc-b textarea{width:100%;padding:10px;border-radius:10px;background:#0e0c1a;color:#fff;border:1px solid rgba(255,255,255,.14);font:inherit;resize:vertical;box-sizing:border-box}
+.ctc-gen{display:grid;grid-template-columns:110px 1fr;gap:8px}.ctc-lb{display:grid;grid-template-columns:1fr 110px;align-items:center;gap:4px 10px;font-size:.8rem;color:#c9cbe8}.ctc-lb small{grid-column:1/-1;font-size:.68rem;color:#8b8fb8}.ctc-lb input[type=datetime-local]{grid-column:1/-1}
+.ctc-ck{display:flex;align-items:center;gap:8px;font-size:.8rem;color:#c9cbe8}.ctc-b .ctc-ck input,.ck-spadm .ctc-ck input{width:auto}
+.ctc-rqi{display:grid;grid-template-columns:minmax(0,1.1fr) 70px minmax(0,1.6fr);gap:6px;align-items:center}.ctc-rqs{font-size:.76rem;color:#8b8fb8}
+.ctc-rl>div{display:flex;justify-content:space-between;align-items:center;gap:8px}.ctc-pr{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))!important}
+.ctc-pf{padding:10px 12px;border-radius:12px;font-size:.78rem;line-height:1.45;color:#c9cbe8;background:rgba(255,255,255,.05)}.ctc-pf.ok{background:rgba(74,222,128,.08);box-shadow:inset 0 0 0 1px rgba(74,222,128,.35)}.ctc-pf.bad{background:rgba(239,68,68,.08);box-shadow:inset 0 0 0 1px rgba(239,68,68,.4)}
+.ctc-pfl{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:5px;margin-top:8px}.ctc-pfl span{padding:5px 8px;border-radius:8px;background:rgba(0,0,0,.25);color:#fff;font-size:.76rem}.ctc-pfl b{color:#ffe083;margin-right:4px}.ctc-pfl small{display:block;font-size:.64rem;color:#8b8fb8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ck-ctcb{position:absolute;left:6%;bottom:27%;z-index:4;font:900 5.2cqw/1 system-ui,sans-serif;letter-spacing:.1em;padding:1.6cqw 2.6cqw;border-radius:99px;background:rgba(10,8,25,.78);color:#b9beff;box-shadow:0 0 0 1px rgba(124,134,255,.6)}
+@media (max-width:760px){.ckx .wd-modes{grid-template-columns:repeat(6,minmax(0,1fr))}.ctc-hd{grid-template-columns:1fr}.ctc-sq{grid-template-columns:repeat(min(var(--n,5),3),minmax(0,1fr));gap:12px 8px}.ctc-list{grid-template-columns:1fr}.ctc-rqi{grid-template-columns:1fr 64px}.ctc-rqi>:nth-child(3){grid-column:1/-1}.ctc-pkb{padding:16px 10px}}
+</style>
   <div id="games-content"></div>
 </div>
 
@@ -35055,6 +35100,8 @@ async function _stLoad(force) {
     });
     window._stInc._clipFill = 1;
   } catch (e) { console.warn('clip fill', e); } }
+  { const fx = await dbGet('settings', 'stFix').catch(() => null), F = window._stFixD = (fx && fx.value) || {};
+    window._stInc.forEach(x => { const f = F[x.k]; if (!f) return; x.fixed = 1; Object.keys(f.o || {}).forEach(i => { if (x.o[i] === undefined) return; x.o[i] = f.o[i]; x.sz = x.sz || []; x.sz[i] = (f.sz || {})[i] != null ? f.sz[i] : null; x.od = x.od || []; x.od[i] = (f.od || {})[i] || ''; }); }); }
   const races = await dbGetAll('races').catch(() => []), curS = Number(window.currentSeason || window._reserveSeason) || 0;
   const played = (r) => r.driverPoints && Object.values(r.driverPoints).some(v => v > 0);
   // Settled = penalties already linked, or the round is "After verdicts", or a later round has results (stewards are done).
@@ -35124,6 +35171,31 @@ window._stSubmit = async function(k, mode) {
   if (mode === 'daily') { const a = _stAns(x); _gameCoins('st-daily', 10).then(() => { if (tg.every(i => c[i] === a[i])) _gameCoins('st-win', 10); }); }
   renderGames();
 };
+// ---- Admin: correct a wrong stewards' verdict, then pay +10 IM$ to Daily players who are now right ----
+// settings/stFix { incidentKey: { o: {driverIdx: category}, sz: {driverIdx: sizeCat}, od: {driverIdx: label}, paid: [uids], t } }
+window._stFixUI = function(k, i) { if (!adminLoggedIn) return; const x = (window._stInc || []).find(y => y.k === k); if (!x) return; document.getElementById('st-fx')?.remove();
+  const o = document.createElement('div'); o.id = 'st-fx'; o.className = 'ck-ov in'; o.onclick = e => { if (e.target === o) o.remove(); };
+  const b = (lbl, a) => `<button class="hx-btn${/NOT/.test(lbl) ? ' ghost' : ''}" onclick="${a}">${lbl}</button>`;
+  o.innerHTML = `<div class="ck-gpb" style="max-width:440px;display:grid;gap:8px"><div class="ck-k">Fix the stewards' verdict</div><div class="ck-ttl" style="font-size:1.3rem">${esc(x.drv[i])}</div>
+    <div class="ck-fine" style="margin:0">Now: ${_stAns(x)[i] ? '🔨 GUILTY' + (x.od[i] ? ' · ' + esc(x.od[i]) : '') : '🕊️ NOT GUILTY'}. Pick the right answer — Daily players who are right after the change get +10 IM$ (nobody loses IM$).</div>
+    <b style="font-size:.8rem">🔨 Guilty — how much did they get?</b><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">${ST_SZ.map(([z, l]) => b('🔨 ' + l, `_stFixSave('${esc(k)}',${i},1,${z},'${l.replace(/'/g, '')}')`)).join('')}</div>
+    ${b('🕊️ NOT GUILTY', `_stFixSave('${esc(k)}',${i},0,null,'')`)}<button class="hx-btn ghost" onclick="document.getElementById('st-fx').remove()">Cancel</button></div>`;
+  document.body.appendChild(o); };
+window._stFixSave = function(k, i, g, z, lbl) { if (!adminLoggedIn) return; const x = (window._stInc || []).find(y => y.k === k); if (!x) return;
+  const cat = g ? (z === 0 ? 1 : Math.max(1, z)) : 0, od = g ? ({ 5: 'DSQ / ban', 1: 'Quali ban', 0: 'Penalty points' }[z] || lbl) : '';
+  customConfirm(`Set ${esc(x.drv[i])} to ${g ? '🔨 GUILTY · ' + esc(od) : '🕊️ NOT GUILTY'} and pay +10 IM$ to every Daily player who is now right?`, async () => {
+    document.getElementById('st-fx')?.remove(); showToast('Fixing verdict…', 'info');
+    try { const fx = await dbGet('settings', 'stFix').catch(() => null), F = (fx && fx.value) || {}, f = F[k] = F[k] || { o: {}, sz: {}, od: {}, paid: [] };
+      const before = _stAns(x), tg = _stTg(x);
+      f.o[i] = cat; f.sz[i] = g ? z : null; f.od[i] = od; f.t = Date.now(); x.o[i] = cat; x.sz[i] = g ? z : null; x.od[i] = od; x.fixed = 1;
+      const after = _stAns(x), paid = new Set(f.paid || []), votes = await dbGetAll('stewardVotes', { fresh: true }).catch(() => []); let n = 0;
+      for (const u of votes) { const uid = u.id || u.userId, v = u.g && u.g[k]; if (!uid || !v || v.m !== 'daily' || paid.has(uid)) continue;
+        const wasRight = tg.every(j => v.c[j] === before[j]), nowRight = tg.every(j => v.c[j] === after[j]); if (wasRight || !nowRight) continue;
+        try { const c = await _betLoadCoins(uid); c.balance = (c.balance || 0) + 10; c.gameEarned = (c.gameEarned || 0) + 10; c.stFixPaid = (c.stFixPaid || []).concat([{ k, a: 10, t: Date.now() }]).slice(-50);
+          await dbSet('coins', uid, c); paid.add(uid); n++; } catch (e) { console.warn('stFix pay', uid, e); } }
+      f.paid = [...paid]; await dbSet('settings', 'stFix', { value: F }); window._stVotesAll = null;
+      showToast(`✅ Verdict fixed · paid +10 IM$ to ${n} player${n === 1 ? '' : 's'}`, 'success'); renderGames();
+    } catch (e) { console.error(e); showToast('Couldn\'t fix the verdict.', 'error'); } }, 'Fix + pay'); };
 window._stSetMode = function(m) { window._stMode = m; renderGames(); };
 window._stPracNext = function() { window._stPr = null; window._stPrCur = null; renderGames(); };
 function _stCrowd(all, x) { return x.drv.map((_, i) => { const n = [0, 0]; all.forEach(u => { const v = u.g && u.g[x.k], c = v && v.c && v.c[i]; if (c != null && n[c] != null) n[c]++; }); return n; }); }
@@ -35212,7 +35284,7 @@ function _stCardHtml(x, st, all) {
     </div>
     ${tg.map(i => { const a = x.drv[i], my = done ? st.pick[i] : draft[i], tot = crowd ? crowd[i].reduce((p, q) => p + q, 0) : 0;
       return `<div style="padding:10px 0;border-top:1px solid rgba(255,255,255,.06)"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">${_stAv(a, 34, (x.did || [])[i])}<span style="font-size:.7rem;color:var(--muted);font-weight:800">IS THIS DRIVER GUILTY?</span><b>${esc(a)}</b>
-        ${st.reveal ? `<span style="margin-left:auto;font-size:.72rem;font-weight:800;color:#a0a4ff">STEWARDS: ${ans[i] ? '🔨 GUILTY' + ((x.od || [])[i] ? ' · ' + esc(x.od[i]) : '') : '🕊️ NOT GUILTY'}</span>` : ''}</div>
+        ${st.reveal ? `<span style="margin-left:auto;font-size:.72rem;font-weight:800;color:#a0a4ff">STEWARDS: ${ans[i] ? '🔨 GUILTY' + ((x.od || [])[i] ? ' · ' + esc(x.od[i]) : '') : '🕊️ NOT GUILTY'}${x.fixed ? ' <small style="opacity:.7">(corrected)</small>' : ''}</span>` : ''}${adminLoggedIn ? `<button onclick="_stFixUI('${esc(x.k)}',${i})" style="${st.reveal ? '' : 'margin-left:auto;'}cursor:pointer;font:inherit;font-size:.68rem;font-weight:800;color:#fca5a5;background:none;border:1px solid rgba(239,68,68,.5);border-radius:8px;padding:4px 8px">✏️ Fix verdict</button>` : ''}</div>
         ${_stCtx((x.rc || [])[i], (x.rap || [])[i], /quali/i.test(x.sess))}
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${ST_GNG.map(([c, l, ic, rgb]) => {
           const isAns = st.reveal && ans[i] === c, isMine = my === c, pct = tot ? Math.round(crowd[i][c] / tot * 100) : null, wrong = isMine && st.reveal && !isAns;
@@ -37125,7 +37197,7 @@ const _ckOnTeam = (c, T, pool) => { const b = c.sp ? (pool.by[c.base] || c) : c;
 function _ckTeamSync(pool) { const P = CK_PACKS.team, t = _ckTeamToday(pool); P.tn = t; let col = '#6f74e8', logo = ''; try { const tc = getTeamCardColour(t); col = (tc && tc.accent) || col; logo = getTeamLogo(t) || ''; } catch (e) {} P.c = col; P.c2 = `color-mix(in srgb, ${col} 35%, #07060f)`; P.logo = logo;
   // Price follows the team's line-up: ~92% of the pack's expected sell value, rounded to 50 (min 250).
   const L = pool.list.filter(c => !c.sp && c.cur === t); if (L.length) { const lo = Math.min(...L.map(c => c.r)), w = L.map(c => Math.exp(-(c.r - lo) * .07)), W = w.reduce((a, b) => a + b, 0), ev = L.reduce((a, c, i) => a + w[i] * _ckSellV(c), 0) / W;
-    const SPL = pool.list.filter(c => c.sp && _ckOnTeam(c, t, pool)), spEv = SPL.length ? SPL.reduce((a, c) => a + _ckSellV(c), 0) / SPL.length : 0;
+    const SPL = pool.list.filter(c => c.sp && !c.ctc && _ckOnTeam(c, t, pool)), spEv = SPL.length ? SPL.reduce((a, c) => a + _ckSellV(c), 0) / SPL.length : 0;
     const ev2 = (1 - (SPL.length ? P.spCh : 0)) * ev + (SPL.length ? P.spCh : 0) * spEv; /* specials (e.g. a champion card) push the price up */
     P.price = 100; }
   return t; }
@@ -37150,23 +37222,23 @@ async function _ckPool() {
     const w = s.w || 0, p = Math.round(s.p || 0), pd = Math.max((b ? b[2] || 0 : 0) + (s.pd8 || 0), s.pdA || 0, w);
     const t5 = Math.max(s.t5 != null ? s.t5 : Math.round(pd * 1.6), pd), ch = Math.max(s.ch || 0, chBy[k] || 0), pl = s.pl || 0, R = _ckRate(w, pd, t5, p, ch, pl);
     const c = { k, n: String((d && d.name) || s.n).replace(/^\[[^\]]*\]\s*/, ''), w, pd, t5, p, ch, pl, r: R.r, sc: R.sc, nat: (typeof _natFix === 'function' ? _natFix(s.n, s.nat) : s.nat) || '',
-      cur: d && !d.isReserve && d.team && !/^reserve$/i.test(d.team) ? d.team : '', team: (d && !d.isReserve && d.team && !/^reserve$/i.test(d.team) ? d.team : '') || _ckLastFT(s), did: d ? d.id : '', ph: d ? (driverPhoto(d) || '') : '' };
+      cur: d && !d.isReserve && d.team && !/^reserve$/i.test(d.team) ? d.team : '', team: (d && !d.isReserve && d.team && !/^reserve$/i.test(d.team) ? d.team : '') || _ckLastFT(s), div: _ctcDivOf(d, s), did: d ? d.id : '', ph: d ? (driverPhoto(d) || '') : '' };
     if (CK_RATE_FIX[k] != null) c.r = CK_RATE_FIX[k];
     c.t = _ckTier(c.r).id; list.push(c); by[k] = c; });
   // Special cards (admin-made): same driver + live stats, admin-chosen rating, own key "<driver>~<id>".
   { const sd = await dbGet('settings', 'ckSpecials').catch(() => null); ((sd && sd.value && sd.value.list) || []).forEach(x => { const b = by[x.k]; if (!b || !CK_SP[x.ty]) return;
-    const c = Object.assign({}, b, { k: b.k + '~' + x.id, base: b.k, sp: x.ty, sid: x.id, spn: x.note || '', r: Math.max(40, Math.min(x.ty === 'cent' ? 100 : 99, +x.r || b.r)) }); c.t = _ckTier(c.r).id; list.push(c); by[c.k] = c; }); }
+    const c = Object.assign({}, b, { k: b.k + '~' + x.id, base: b.k, sp: x.ty, sid: x.id, ctc: x.ctc ? 1 : 0, spn: x.note || '', r: Math.max(40, Math.min(x.ty === 'cent' ? 100 : 99, +x.r || b.r)) }); c.t = _ckTier(c.r).id; list.push(c); by[c.k] = c; }); }
   list.sort((a, b) => b.r - a.r || b.sc - a.sc);
   return (window._ckPoolC = { at: _now(), list, by, hasT5: Object.values(W.stats || {}).some(s => s && s.t5 != null) }); }
 // One card: a rarity by the pack's odds, then a driver from that rarity — lower ratings much more likely.
 function _ckRoll(pack, pool) { const P = CK_PACKS[pack];
-  if (P.teamPack) { const T = P.tn || _ckTeamSync(pool); const sp = pool.list.filter(c => c.sp && _ckOnTeam(c, T, pool));
+  if (P.teamPack) { const T = P.tn || _ckTeamSync(pool); const sp = pool.list.filter(c => c.sp && !c.ctc && _ckOnTeam(c, T, pool));
     let L = null; for (const [ty, ch] of Object.entries(CK_PACKS.gold.sp || {})) { const S = sp.filter(c => c.sp === ty); if (S.length && Math.random() < ch) { L = S; break; } } /* same special odds as a Gold pack */
     if (!L) L = pool.list.filter(c => !c.sp && c.cur === T); if (!L.length) L = pool.list.filter(c => !c.sp && c.t === 'ub');
     const lo = Math.min(...L.map(c => c.r)), w = L.map(c => Math.exp(-(c.r - lo) * .07)); let y = Math.random() * w.reduce((a, b) => a + b, 0); for (let i = 0; i < L.length; i++) { y -= w[i]; if (y <= 0) return L[i]; } return L[L.length - 1]; }
   // Special card slot: its own chance per card (higher in pricier packs); lower-rated specials are more common.
   // Per special TYPE: chance per card of pulling that type (only if at least one card of that type exists).
-  for (const [ty, ch] of Object.entries(P.sp || {})) { if (Math.random() >= ch) continue; const S = pool.list.filter(c => c.sp === ty); if (S.length) { const lo = Math.min(...S.map(c => c.r)), w = S.map(c => Math.exp(-(c.r - lo) * .08)); let y = Math.random() * w.reduce((a, b) => a + b, 0); for (let i = 0; i < S.length; i++) { y -= w[i]; if (y <= 0) return S[i]; } return S[S.length - 1]; } }
+  for (const [ty, ch] of Object.entries(P.sp || {})) { if (Math.random() >= ch) continue; const S = pool.list.filter(c => c.sp === ty && !c.ctc); if (S.length) { const lo = Math.min(...S.map(c => c.r)), w = S.map(c => Math.exp(-(c.r - lo) * .08)); let y = Math.random() * w.reduce((a, b) => a + b, 0); for (let i = 0; i < S.length; i++) { y -= w[i]; if (y <= 0) return S[i]; } return S[S.length - 1]; } }
   let x = Math.random(), tid = P.odds[0][0]; for (const [t, pr] of P.odds) { if (x < pr) { tid = t; break; } x -= pr; }
   let cands = pool.list.filter(c => c.t === tid && !c.sp); if (!cands.length) cands = pool.list.filter(c => c.t === P.odds[0][0] && !c.sp); if (!cands.length) return null;
   const lo = Math.min(...cands.map(c => c.r)), wt = cands.map(c => Math.exp(-(c.r - lo) * .28)); let y = Math.random() * wt.reduce((a, b) => a + b, 0);
@@ -37179,7 +37251,7 @@ function _ckCard(c, o) { o = o || {}; const T = CK_T[c.t], lg = c.team && typeof
       <div class="ck-ph">${c.ph ? `<img src="${esc(c.ph)}" alt="" loading="lazy" onerror="this.outerHTML='<i>${_ckIni(c.n)}</i>'">` : `<i>${_ckIni(c.n)}</i>`}</div></div>
     ${S ? `<div class="ck-spb">${c.sp === 'cent' ? '<b class="ck-c100">100</b>' : S.i} ${c.spn ? esc(c.spn) : c.sp === 'cent' ? 'Appearances' : S.n}</div>` : ''}<div class="ck-nm">${esc(c.n)}</div>
     <div class="ck-st"><span><b>${c.w}</b>WIN</span><span><b>${c.pd}</b>POD</span><span><b>${c.t5}</b>TOP5</span><span><b>${c.p >= 1000 ? (c.p / 1000).toFixed(1) + 'k' : c.p}</b>PTS</span></div>
-    ${o.n > 1 ? `<span class="ck-x">×${o.n}</span>` : ''}</div></div>`; }
+    ${o.n > 1 ? `<span class="ck-x">×${o.n}</span>` : ''}${c.ctc ? '<span class="ck-ctcb">CTC</span>' : ''}</div></div>`; }
 const _ckPackArt = (id, sm) => { const P = CK_PACKS[id]; return `<div class="ckp${sm ? ' sm' : ''}${P.cls ? ' ckp-' + P.cls : ''}" style="--c:${P.c};--c2:${P.c2}"><i class="ckp-crimp"></i><div class="ckp-body">${P.teamPack && P.logo ? `<img class="ckp-tl" src="${esc(P.logo)}" alt="" onerror="this.src='icons/icon-192.png?v=3';this.className=''"><img class="ckp-ims" src="icons/icon-192.png?v=3" alt="IMS">` : '<img src="icons/icon-192.png?v=3" alt="IMS">'}<b>${P.teamPack && P.tn ? esc(P.tn) : P.n.replace(' Pack', '')}</b><small>PACK · ${CK_N} CARDS</small></div><i class="ckp-crimp b"></i></div>`; };
 const _ckInv = (c) => (c && c.cards && c.cards.inv) || {};
 const _ckSetPill = (c) => { const pill = document.getElementById('wallet-amt'); if (pill && window._wlShort) pill.textContent = window._wlShort(c.balance); };
@@ -37232,9 +37304,10 @@ function _ckSpAdmin(pool) { const base = pool.list.filter(x => !x.sp).slice().so
     <input id="ck-sp-q" placeholder="Search driver…" oninput="ckSpFind(this.value)"><select id="ck-sp-k" onchange="ckSpPrev()">${base.map(c => `<option value="${esc(c.k)}">${esc(c.n)} (${c.r})</option>`).join('')}</select>
     <div class="ck-g-row"><select id="ck-sp-ty" onchange="ckSpPrev()">${Object.entries(CK_SP).map(([id, S]) => `<option value="${id}">${S.i} ${S.n}</option>`).join('')}</select><input id="ck-sp-r" type="number" min="40" max="100" placeholder="Rating" oninput="ckSpPrev()"></div>
     <input id="ck-sp-n" maxlength="30" placeholder="Label (optional), e.g. Monza D1 or Season 8" oninput="ckSpPrev()">
+    <label class="ctc-ck"><input type="checkbox" id="ck-sp-ctc" onchange="ckSpPrev()"> 🧩 CTC only — never in packs, only from a Card Trading Challenge reward</label>
     <div class="ck-spprev" id="ck-sp-prev"></div><button class="hx-btn" onclick="ckSpAdd()">✨ Create card</button>
     ${(() => { const miss = _ckChampMissing(pool); return miss.length ? `<button class="hx-btn ghost" onclick="ckSpAllChamps()">👑 Create a champion card for every champion (${miss.length} missing)</button>` : '<div class="ck-fine" style="margin:0">👑 Every champion has a champion card.</div>'; })()}
-    ${sp.length ? `<div class="ck-spl">${sp.slice().sort((a, b) => (a.sp > b.sp ? 1 : a.sp < b.sp ? -1 : 0) || String(a.spn).localeCompare(String(b.spn), undefined, { numeric: true })).map(c => `<div><span>${CK_SP[c.sp].i} <b>${esc(c.n)}</b>${c.spn ? ' · ' + esc(c.spn) : ''} <small style="opacity:.6">(normal ${(pool.by[c.base] || {}).r || '?'})</small></span><input type="number" min="40" max="99" value="${c.r}" id="ck-spr-${esc(c.sid)}" style="width:64px;padding:5px;border-radius:8px;background:#0e0c1a;color:#fff;border:1px solid rgba(255,255,255,.14);text-align:center"><button onclick="ckSpRate('${esc(c.sid)}')" style="border-color:rgba(124,134,255,.6);color:#b9beff">Save</button><button onclick="ckShow('${esc(c.k)}')" style="border-color:rgba(255,211,107,.6);color:#ffd36b">📸</button><button onclick="ckSpDel('${esc(c.sid)}')">Delete</button></div>`).join('')}</div>` : ''}
+    ${sp.length ? `<div class="ck-spl">${sp.slice().sort((a, b) => (a.sp > b.sp ? 1 : a.sp < b.sp ? -1 : 0) || String(a.spn).localeCompare(String(b.spn), undefined, { numeric: true })).map(c => `<div><span>${CK_SP[c.sp].i} <b>${esc(c.n)}</b>${c.spn ? ' · ' + esc(c.spn) : ''} <small style="opacity:.6">(normal ${(pool.by[c.base] || {}).r || '?'})</small></span><input type="number" min="40" max="99" value="${c.r}" id="ck-spr-${esc(c.sid)}" style="width:64px;padding:5px;border-radius:8px;background:#0e0c1a;color:#fff;border:1px solid rgba(255,255,255,.14);text-align:center"><button onclick="ckSpRate('${esc(c.sid)}')" style="border-color:rgba(124,134,255,.6);color:#b9beff">Save</button><button onclick="ckSpCtc('${esc(c.sid)}')" title="CTC only: never in packs, only from a challenge reward" style="border-color:rgba(124,134,255,.6);color:${c.ctc ? '#0e0c1a;background:#b9beff' : '#b9beff'}">🧩 ${c.ctc ? 'CTC only' : 'In packs'}</button><button onclick="ckShow('${esc(c.k)}')" style="border-color:rgba(255,211,107,.6);color:#ffd36b">📸</button><button onclick="ckSpDel('${esc(c.sid)}')">Delete</button></div>`).join('')}</div>` : ''}
     <div class="ck-fine" style="margin:4px 0 0">Special cards keep the driver's real stats, use the rating you set, come out of packs at their own odds (DOTD 0.25% / 0.5% / 0.7%, TOTS 0.1% / 0.3% / 0.7%, Champion 0.2% Gold only, Centurion 0.15% Gold / 0.5% Supersonic — per card, Bronze / Silver / Gold). DOTD cards (always rated 80+) sell for 1,000 IM$ plus ${_ckV(100)} per rating point above 80, TOTS for ${_ckV(1000)} IM$ plus ${_ckV(100)} per point; Champions are worth far more (about ${_ckV(CK_CHAMP_SELL(80)).toLocaleString()} at 80, ${_ckV(CK_CHAMP_SELL(90)).toLocaleString()} at 90, ${_ckV(CK_CHAMP_SELL(99)).toLocaleString()} at 99).</div></div>`; }
 // One champion card per champion (DRIVER_CHAMPS grouped by driver). Multiple titles = higher rating, label shows the count.
 function _ckChampMissing(pool) { const have = new Set(pool.list.filter(x => x.sp === 'champ').map(x => x.base)), G = {};
@@ -37253,11 +37326,11 @@ window.ckSpFind = function(q) { const sel = document.getElementById('ck-sp-k'); 
   [...sel.options].forEach(o => { const m = !q || o.text.toLowerCase().includes(q); o.hidden = !m; if (m && !first) first = o; }); if (first && sel.selectedOptions[0] && sel.selectedOptions[0].hidden) sel.value = first.value; ckSpPrev(); };
 window.ckSpPrev = async function() { const pool = await _ckPool(), k = (document.getElementById('ck-sp-k') || {}).value, b = pool.by[k], el = document.getElementById('ck-sp-prev'); if (!b || !el) return;
   const ty = document.getElementById('ck-sp-ty').value, r = Math.max(40, Math.min(ty === 'cent' ? 100 : 99, parseInt(document.getElementById('ck-sp-r').value, 10) || b.r));
-  const c = Object.assign({}, b, { sp: ty, spn: document.getElementById('ck-sp-n').value.trim(), r }); c.t = _ckTier(r).id; el.innerHTML = _ckCard(c); };
-window.ckSpAdd = async function() { if (!adminLoggedIn) return; const k = document.getElementById('ck-sp-k').value, ty = document.getElementById('ck-sp-ty').value, r = parseInt(document.getElementById('ck-sp-r').value, 10), note = document.getElementById('ck-sp-n').value.trim().slice(0, 30);
+  const c = Object.assign({}, b, { sp: ty, spn: document.getElementById('ck-sp-n').value.trim(), r, ctc: (document.getElementById('ck-sp-ctc') || {}).checked ? 1 : 0 }); c.t = _ckTier(r).id; el.innerHTML = _ckCard(c); };
+window.ckSpAdd = async function() { if (!adminLoggedIn) return; const k = document.getElementById('ck-sp-k').value, ty = document.getElementById('ck-sp-ty').value, r = parseInt(document.getElementById('ck-sp-r').value, 10), note = document.getElementById('ck-sp-n').value.trim().slice(0, 30), ctc = !!(document.getElementById('ck-sp-ctc') || {}).checked;
   if (!k || !CK_SP[ty]) return showToast('Pick a driver and type.', 'error'); if (!(r >= 40 && r <= (ty === 'cent' ? 100 : 99))) return showToast('Set a rating between 40 and ' + (ty === 'cent' ? 100 : 99) + '.', 'error'); if (ty === 'dotd' && r < 80) return showToast('DOTD cards are rated 80 or higher.', 'error');
-  const pool = await _ckPool(), b = pool.by[k]; customConfirm(`Create a ${r} ${CK_SP[ty].n} card for ${esc(b ? b.n : k)}?`, async () => {
-    const sd = await dbGet('settings', 'ckSpecials').catch(() => null), list = ((sd && sd.value && sd.value.list) || []).concat([{ id: Date.now().toString(36), k, ty, r, note, t: Date.now() }]);
+  const pool = await _ckPool(), b = pool.by[k]; customConfirm(`Create a ${r} ${CK_SP[ty].n} card for ${esc(b ? b.n : k)}?${ctc ? ' It will be CTC only (not in packs).' : ''}`, async () => {
+    const sd = await dbGet('settings', 'ckSpecials').catch(() => null), list = ((sd && sd.value && sd.value.list) || []).concat([Object.assign({ id: Date.now().toString(36), k, ty, r, note, t: Date.now() }, ctc ? { ctc: 1 } : {})]);
     await dbSet('settings', 'ckSpecials', { value: { list } }); window._ckPoolC = null; showToast('✨ Special card created.', 'success'); window._ckAllT = 'sp'; _ckRender(); }, 'Create'); };
 window.ckSpDel = function(id) { if (!adminLoggedIn) return; customConfirm('Delete this special card? Players who own it will lose it from their collection.', async () => {
     const sd = await dbGet('settings', 'ckSpecials').catch(() => null), list = ((sd && sd.value && sd.value.list) || []).filter(x => x.id !== id);
@@ -37355,7 +37428,7 @@ window.ckDone = async function() { const R = window._ckRv; if (!R || window._ckB
   const o = document.getElementById('ck-ov'); document.body.classList.remove('ck-lock'); if (o) { o.classList.remove('in'); setTimeout(() => o.remove(), 200); } window._ckRv = null; _ckRender(); };
 // Sell copies: { driverKey: howMany }. Prices are today's sell value for each card.
 async function _ckSellMany(cnt) { try { const pool = await _ckPool(), c = await _betLoadCoins(currentUser.userId), inv = _ckInv(c); let gain = 0, n = 0;
-    const LK = (c.cards && c.cards.lock) || {}; Object.entries(cnt).forEach(([k, q]) => { const card = pool.by[k], have = inv[k] || 0, s = Math.min(q, LK[k] ? Math.max(0, have - 1) : have); /* locked: always keep 1 */ if (!card || s <= 0) return; inv[k] = have - s; if (!inv[k]) delete inv[k]; gain += _ckSellV(card) * s; n += s; });
+    const LK = (c.cards && c.cards.lock) || {}; Object.entries(cnt).forEach(([k, q]) => { const card = pool.by[k], have = inv[k] || 0, s = card && card.ctc ? 0 : Math.min(q, LK[k] ? Math.max(0, have - 1) : have); /* locked: always keep 1 */ if (!card || s <= 0) return; inv[k] = have - s; if (!inv[k]) delete inv[k]; gain += _ckSellV(card) * s; n += s; });
     if (!n) { showToast('Those cards aren\'t in your collection any more.', 'error'); return false; }
     c.balance = (c.balance || 0) + gain; c.cards.sold = (c.cards.sold || 0) + gain; c.cards.soldN = (c.cards.soldN || 0) + n;
     await dbSet('coins', currentUser.userId, c); _ckSetPill(c); showToast(`Sold ${n} card${n === 1 ? '' : 's'} for ${gain.toLocaleString()} IM$`, 'success'); return true;
@@ -37367,8 +37440,8 @@ window.ckDetail = async function(k) { const pool = await _ckPool(), card = pool.
   o.innerHTML = `<div class="ck-dt"><button class="ma-x" onclick="document.getElementById('ck-dt').remove()">✕</button>${_ckCard(card, { cls: 'big' })}
     <div class="ck-dti"><div class="ck-k">${card.sp ? '✨ Special · ' + CK_SP[card.sp].n : CK_T[card.t].n} · ${card.r} rated</div><div class="ck-ttl" style="font-size:1.5rem">${esc(card.n)}</div>
       <div class="ck-dts">${row('Wins', card.w)}${row('Podiums', card.pd)}${row('Top 5s', card.t5)}${row('Points', card.p.toLocaleString())}${row('Drivers\' titles', card.ch || '—')}${row('Team', esc(card.team || '—'))}${row('You own', have)}${row('Sell value', v.toLocaleString() + ' IM$')}</div>
-      <div class="ck-acts" style="grid-template-columns:1fr">${have && !(((c.cards || {}).lock || {})[k] && have < 2) ? `<button class="hx-btn" onclick="ckQuick('${k}',1)">Quick sell 1 · ${v.toLocaleString()} IM$</button>${have > 1 ? `<button class="hx-btn ghost" onclick="ckQuick('${k}',${have - 1})">Sell duplicates (${have - 1}) · ${(v * (have - 1)).toLocaleString()} IM$</button>` : ''}` : ''}
-        ${card.did ? `<button class="hx-btn ghost" onclick="document.getElementById('ck-dt').remove();openDriverModal('${card.did}')">Open driver profile</button>` : ''}${have ? `<button class="hx-btn ghost" onclick="ckLock('${k}')">${((c.cards || {}).lock || {})[k] ? '🔓 Unlock card' : '🔒 Lock card (never sell)'}</button>` : ''}${adminLoggedIn || have || ((c.cards || {}).dex || {})[k] ? `<button class="hx-btn ghost" onclick="ckShow('${k}')">📸 Showcase (screenshot mode)</button>` : ''}</div></div></div>`;
+      <div class="ck-acts" style="grid-template-columns:1fr">${card.ctc ? '<div class="ck-fine" style="margin:0">🧩 CTC reward card — it can\'t be sold or traded in.</div>' : ''}${have && !card.ctc && !(((c.cards || {}).lock || {})[k] && have < 2) ? `<button class="hx-btn" onclick="ckQuick('${k}',1)">Quick sell 1 · ${v.toLocaleString()} IM$</button>${have > 1 ? `<button class="hx-btn ghost" onclick="ckQuick('${k}',${have - 1})">Sell duplicates (${have - 1}) · ${(v * (have - 1)).toLocaleString()} IM$</button>` : ''}` : ''}
+        ${card.did ? `<button class="hx-btn ghost" onclick="document.getElementById('ck-dt').remove();openDriverModal('${card.did}')">Open driver profile</button>` : ''}${have && !card.ctc ? `<button class="hx-btn ghost" onclick="ckLock('${k}')">${((c.cards || {}).lock || {})[k] ? '🔓 Unlock card' : '🔒 Lock card (never sell)'}</button>` : ''}${adminLoggedIn || have || ((c.cards || {}).dex || {})[k] ? `<button class="hx-btn ghost" onclick="ckShow('${k}')">📸 Showcase (screenshot mode)</button>` : ''}</div></div></div>`;
   document.body.appendChild(o); };
 // Full-screen showcase (admin: any card; players: cards in their collection or card index) of one card for screenshots. Tap anywhere / Esc to close.
 window.ckShow = async function(k) { const pool = await _ckPool(), card = pool.by[k]; if (!card) return;
@@ -37380,7 +37453,7 @@ window.ckShow = async function(k) { const pool = await _ckPool(), card = pool.by
 window.ckLock = async function(k) { const c = await _betLoadCoins(currentUser.userId); const K = c.cards = c.cards || { inv: {} }; K.lock = K.lock || {};
   if (K.lock[k]) delete K.lock[k]; else K.lock[k] = 1; await dbSet('coins', currentUser.userId, { cards: K }); showToast(K.lock[k] ? '🔒 Locked — this card can\'t be sold.' : '🔓 Unlocked.', 'success'); document.getElementById('ck-dt')?.remove(); _ckRender(); if (K.lock[k] !== undefined || true) ckDetail(k); };
 window.ckSellBulk = async function(dupOnly) { const pool = await _ckPool(), c = await _betLoadCoins(currentUser.userId), inv = _ckInv(c), LK = (c.cards && c.cards.lock) || {}, cnt = {}; let n = 0, v = 0;
-  Object.entries(inv).forEach(([k, have]) => { const card = pool.by[k]; if (!card || have <= 0) return; const keep = dupOnly || LK[k] ? 1 : 0, q = Math.max(0, have - keep); if (q) { cnt[k] = q; n += q; v += _ckSellV(card) * q; } });
+  Object.entries(inv).forEach(([k, have]) => { const card = pool.by[k]; if (!card || have <= 0 || card.ctc) return; const keep = dupOnly || LK[k] ? 1 : 0, q = Math.max(0, have - keep); if (q) { cnt[k] = q; n += q; v += _ckSellV(card) * q; } });
   if (!n) return showToast(dupOnly ? 'No duplicates to sell.' : 'Nothing to sell (locked cards are kept).', 'info');
   customConfirm(`${dupOnly ? 'Sell all duplicates' : 'Sell ALL your cards'}: ${n} card${n === 1 ? '' : 's'} for ${v.toLocaleString()} IM$? Locked cards are kept. You can't undo this.`, async () => { if (await _ckSellMany(cnt)) _ckRender(); }, 'Sell'); };
 window.ckQuick = function(k, n) { customConfirm(`Sell ${n} cop${n === 1 ? 'y' : 'ies'} of this card? You can't undo this.`, async () => { if (await _ckSellMany({ [k]: n })) { document.getElementById('ck-dt')?.remove(); _ckRender(); } }, 'Sell'); };
@@ -37442,12 +37515,12 @@ async function renderCardsGame(el) {
     <div class="ckx-ht"><span class="ckx-k">IMS Cards</span><h1>Collect the <em>grid</em></h1><p>Every driver in IMS history is a card. Open packs, chase Diamonds and specials, and build your collection.</p>
     <div class="ckx-kpi"><div><small>Balance</small><b><i class="imc"></i> ${c ? Math.round(c.balance || 0).toLocaleString() : '—'}</b></div><div><small>My cards</small><b>${ownN}</b></div><div><small>Collection value</small><b>${ownV.toLocaleString()}</b></div><div><small>Card index</small><b>${dexN}<i>/${pool.list.length}</i></b></div></div></div></div>
     ${adminLoggedIn ? `<div class="ck-adm"><span>${open ? '🟢 <b>Open to everyone</b>' : '🔒 <b>Only you can see this</b> — players can\'t see IMS Cards yet'}</span><button onclick="ckSetOpen(${open ? 'false' : 'true'})">${open ? 'Hide from players' : 'Let everyone see it'}</button><button onclick="ckReset('pulls')">Reset Big Pulls</button><button onclick="ckReset('all')">Reset everyone's cards</button></div>` : ''}
-    <div class="wd-modes">${[['shop', '🛒', 'SHOP'], ['packs', '🎁', `MY PACKS${(K.gifts || []).length ? ' · ' + K.gifts.length : ''}`], ['col', '🗂️', `MY CARDS${ownN ? ' · ' + ownN : ''}`], ['feed', '🔥', 'BIG PULLS'], ['all', '📖', 'CARD INDEX']].map(([m, i, l]) => `<button class="${tab === m ? 'on' : ''}" onclick="ckTab('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>`;
+    <div class="wd-modes">${[['shop', '🛒', 'SHOP'], ['packs', '🎁', `MY PACKS${(K.gifts || []).length ? ' · ' + K.gifts.length : ''}`], ['col', '🗂️', `MY CARDS${ownN ? ' · ' + ownN : ''}`], ['ctc', '🧩', 'CTC'], ['feed', '🔥', 'BIG PULLS'], ['all', '📖', 'CARD INDEX']].map(([m, i, l]) => `<button class="${tab === m ? 'on' : ''}" onclick="ckTab('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>`;
   if (!me) body += '<div class="alert alert-warning">Log in to your team to buy packs.</div>';
   if (tab === 'shop') { const TT = _ckTeamSync(pool); const pct = (x) => (x * 100 >= 1 ? Math.round(x * 100) : (x * 100).toFixed(2).replace(/0$/, '')) + '%';
     body += `<div class="ck-timer">🕛 Store refreshes in <b id="ck-clock">${_ckClock()}</b><small>A new Team Pack arrives at midnight UK time</small></div><div class="ck-shop">${Object.entries(CK_PACKS).map(([id, P]) => { const left = _ckLeft(K, id), oos = left <= 0, can = c && !oos && (c.balance || 0) >= P.price;
       return `<div class="ck-sp" style="--c:${P.c};--c2:${P.c2}">${_ckPackArt(id)}<b class="ck-sp-n">${P.teamPack ? `Team Pack<small class="ck-tn">${esc(TT || '—')} · today only</small>` : P.n}</b>
-        <div class="ck-odds">${P.teamPack ? (() => { const L = pool.list.filter(c => !c.sp && c.cur === TT); return `<span class="t-ug"><i></i>${L.length} ${esc(TT)} drivers only<b>×3</b></span><span class="t-rg"><i></i>Best card in it<b>${L.length ? Math.max(...L.map(c => c.r)) : '—'}</b></span>${pool.list.some(c => c.sp && _ckOnTeam(c, TT, pool)) ? Object.entries(CK_PACKS.gold.sp).filter(([ty]) => pool.list.some(c => c.sp === ty && _ckOnTeam(c, TT, pool))).map(([ty, ch]) => `<span class="t-sp"><i></i>${CK_SP[ty].i} ${esc(TT)} ${CK_SP[ty].n}<b>${pct(ch)}</b></span>`).join('') : ''}`; })() : ''}${P.slots ? P.slots.map(sl => `<span class="t-${CK_PACKS[sl].odds[0][0]}"><i></i>1 card from ${CK_PACKS[sl].n.replace(' Pack', '')} odds<b>×1</b></span>`).join('') : ''}${(P.odds || []).map(([t, pr]) => `<span class="t-${t}"><i></i>${CK_T[t].n}<b>${pct(pr)}</b></span>`).join('')}${Object.entries(P.sp || {}).filter(([ty]) => pool.list.some(x => x.sp === ty)).map(([ty, ch]) => `<span class="t-sp"><i></i>${CK_SP[ty].i} ${CK_SP[ty].n}<b>${pct(ch)}</b></span>`).join('')}</div>
+        <div class="ck-odds">${P.teamPack ? (() => { const L = pool.list.filter(c => !c.sp && c.cur === TT); return `<span class="t-ug"><i></i>${L.length} ${esc(TT)} drivers only<b>×3</b></span><span class="t-rg"><i></i>Best card in it<b>${L.length ? Math.max(...L.map(c => c.r)) : '—'}</b></span>${pool.list.some(c => c.sp && !c.ctc && _ckOnTeam(c, TT, pool)) ? Object.entries(CK_PACKS.gold.sp).filter(([ty]) => pool.list.some(c => c.sp === ty && !c.ctc && _ckOnTeam(c, TT, pool))).map(([ty, ch]) => `<span class="t-sp"><i></i>${CK_SP[ty].i} ${esc(TT)} ${CK_SP[ty].n}<b>${pct(ch)}</b></span>`).join('') : ''}`; })() : ''}${P.slots ? P.slots.map(sl => `<span class="t-${CK_PACKS[sl].odds[0][0]}"><i></i>1 card from ${CK_PACKS[sl].n.replace(' Pack', '')} odds<b>×1</b></span>`).join('') : ''}${(P.odds || []).map(([t, pr]) => `<span class="t-${t}"><i></i>${CK_T[t].n}<b>${pct(pr)}</b></span>`).join('')}${Object.entries(P.sp || {}).filter(([ty]) => pool.list.some(x => x.sp === ty && !x.ctc)).map(([ty, ch]) => `<span class="t-sp"><i></i>${CK_SP[ty].i} ${CK_SP[ty].n}<b>${pct(ch)}</b></span>`).join('')}</div>
         ${oos ? `<div class="ck-oos">Sorry! This card pack is out of stock</div>` : `<button class="hx-btn" onclick="ckBuy('${id}')" ${can ? '' : 'disabled'}><i class="imc"></i> ${P.price.toLocaleString()}${can ? '' : ' · not enough'}</button>${left !== Infinity ? `<small class="ck-left">${left} of ${CK_DAY_MAX} left today</small>` : ''}`}</div>`; }).join('')}</div>
       <div class="ck-note">Each pack has <b>${CK_N} cards</b>, revealed worst to best. The percentages are the chance of <b>each card</b> being that rarity, and inside a rarity the lower-rated drivers are much more common. Most packs are worth less than they cost — the win is packing a rare card with a big sell value.</div>
       <div class="ck-vals"><div class="wl-sh"><span>Sell values</span><small>${pool.list.length} drivers in the pool</small></div>${CK_TIERS.map(t => { const n = pool.list.filter(x => x.t === t.id && !x.sp), hi = t.id === 'dia' ? 96 : CK_TIERS[CK_TIERS.indexOf(t) - 1].lo - 1, lo = Math.max(t.lo, 40);
@@ -37468,10 +37541,11 @@ async function renderCardsGame(el) {
     body += `<div class="ck-stats"><div><small>Cards</small><b>${ownN}</b></div><div><small>Collection value</small><b>${ownV.toLocaleString()}</b></div><div><small>Packs opened</small><b>${K.packs || 0}</b></div><div><small>Spent / sold</small><b>${(K.spent || 0).toLocaleString()} / ${(K.sold || 0).toLocaleString()}</b></div></div>
       ${own.length ? `<div class="ck-bulk"><button class="hx-btn ghost" onclick="ckSellBulk(true)">Sell all duplicates</button><button class="hx-btn ghost dn" onclick="ckSellBulk(false)">Sell all cards</button></div>
       <div class="ck-grid">${own.map(x => `<div class="ck-lkw">${((K.lock || {})[x.c.k]) ? '<span class="ck-lk">🔒</span>' : ''}${_ckCard(x.c, { n: x.n, on: `ckDetail('${x.c.k}')` })}</div>`).join('')}</div><div class="ck-fine">Tap a card for its stats, to quick sell it, or to 🔒 lock it so it's never sold (bulk sells and quick sells keep locked cards).</div>` : '<div class="ck-empty">No cards yet. Open a pack in the shop.</div>'}`; }
+  else if (tab === 'ctc') { body += await _ctcTab(pool, c); }
   else if (tab === 'feed') { if (!window._ckFeed || _now() - window._ckFeed.at > 60e3) { const all = await _gmNoTestCoins(await dbGetAll('coins').catch(() => [])); const rows = []; all.forEach(x => (x && x.cardPulls || []).forEach(p => rows.push(Object.assign({ uid: x.userId }, p)))); rows.sort((a, b) => (b.t || 0) - (a.t || 0)); window._ckFeed = { at: _now(), rows: rows.slice(0, 60) }; }
     const rows = window._ckFeed.rows, ago = (t) => { const s = (Date.now() - t) / 1e3; return s < 3600 ? Math.max(1, Math.round(s / 60)) + 'm ago' : s < 86400 ? Math.round(s / 3600) + 'h ago' : Math.round(s / 86400) + 'd ago'; };
     body += `<div class="ck-feed"><div class="wl-sh"><span>Everyone's ${CK_FEED_MIN}+ rated pulls</span><small>newest first</small></div>${rows.length ? rows.map(p => { const card = pool.by[p.k], r = card ? card.r : p.r, t = _ckTier(Math.max(r, p.r)).id;
-      return `<div class="ck-fr t-${t}"><b class="ck-fr-r">${p.r}</b><span class="ck-fr-t"><b>${esc(card ? card.n : p.n)}</b><small>${card && card.sp ? '✨ Special' : CK_T[t].n} · packed by <u>${esc(p.by || 'a player')}</u> from a ${(CK_PACKS[p.p] || {}).n || 'pack'}</small></span><em>${ago(p.t)}</em></div>`; }).join('') : '<div class="ck-empty">Nobody has packed an 83+ yet. Be the first.</div>'}</div>`; }
+      return `<div class="ck-fr t-${t}"><b class="ck-fr-r">${p.r}</b><span class="ck-fr-t"><b>${esc(card ? card.n : p.n)}</b><small>${card && card.sp ? '✨ Special' : CK_T[t].n} · ${p.p === 'ctc' ? 'earned from a 🧩 CTC' : 'packed by'} <u>${esc(p.by || 'a player')}</u>${p.p === 'ctc' ? '' : ' from a ' + ((CK_PACKS[p.p] || {}).n || 'pack')}</small></span><em>${ago(p.t)}</em></div>`; }).join('') : '<div class="ck-empty">Nobody has packed an 83+ yet. Be the first.</div>'}</div>`; }
   else { const dex = Object.assign({}, K.dex || {}); Object.keys(inv).forEach(k => { if (inv[k] > 0) dex[k] = 1; }); const dexN = pool.list.filter(x => dex[x.k]).length, f = window._ckAllT || 'all';
     const X = window._ckIx = Object.assign({ q: '', sort: 'rating', nat: '', own: '' }, window._ckIx || {}); window._ckIxD = { pool, dex, inv };
     const nats = [...new Set(pool.list.map(x => x.nat).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b)));
@@ -37484,10 +37558,322 @@ async function renderCardsGame(el) {
       <div id="ck-ix-n" class="ck-ixn"></div><div class="ck-grid" id="ck-ix-g"></div><div id="ck-ix-more"></div><div class="ck-fine">Your card index — every card in the game. Once you've packed a card it stays unlocked here, even after you sell it. Cards you've never packed are dimmed.${pool.hasT5 || !adminLoggedIn ? '' : ' <b style="color:#ffb020">(Only you see this: Top 5 counts are estimated until the league database is loaded again.)</b>'}</div>`;
     setTimeout(_ckIxDraw, 0);
     if (adminLoggedIn) body += _ckSpAdmin(pool); }
+  if (tab === 'ctc' && adminLoggedIn) setTimeout(() => { try { ctcBReqUI(); } catch (e) {} }, 0);
   el.innerHTML = `<div class="ck-wrap ckx">${body}<div class="wd-info"><h3>How IMS Cards work</h3><p>Every driver in the IMS database is a card. A card's <b>rating</b> comes from the driver's <b>wins, podiums, top 5s and points</b> — division doesn't matter — and <b>drivers' champions</b> get a big boost. Ratings update as new results come in, so a card you own can go up or down.</p>
     <p><b>Poles</b> give a small extra boost on top of wins, podiums, top 5s and points.</p>
     <p><b>Rarities:</b> Diamond 92+ · Rare Gold 83–91 · Gold 70–82 · Rare Silver 65–69 · Silver 55–64 · Rare Bronze 47–54 · Bronze under 47.</p>
-    <p><b>Packs:</b> Bronze ${CK_PACKS.bronze.price}, Silver ${CK_PACKS.silver.price}, Gold ${CK_PACKS.gold.price.toLocaleString()}, Mixed Drivers ${CK_PACKS.mixed.price} (one card each on Bronze, Silver and Gold odds), Supersonic Gold ${CK_PACKS.supersonic.price.toLocaleString()} (far better Rare Gold, Diamond and special odds) IM$. Keep cards in your collection or sell them for IM$ at any time.</p></div></div>`; }
+    <p><b>Packs:</b> Bronze ${CK_PACKS.bronze.price}, Silver ${CK_PACKS.silver.price}, Gold ${CK_PACKS.gold.price.toLocaleString()}, Mixed Drivers ${CK_PACKS.mixed.price} (one card each on Bronze, Silver and Gold odds), Supersonic Gold ${CK_PACKS.supersonic.price.toLocaleString()} (far better Rare Gold, Diamond and special odds) IM$. Keep cards in your collection or sell them for IM$ at any time.</p>
+    <p><b>CTC (Card Trading Challenges):</b> build a squad from your cards that meets the challenge's requirements — nations, constructors, divisions, ratings and <b>chemistry</b> — and trade it in for a reward. Some special cards only exist as CTC rewards.</p></div></div>`; }
+// ===== CTC — CARD TRADING CHALLENGES =====
+// Admin-built challenges (like squad building challenges): a squad of 1–10 cards from the player's collection
+// that has to meet a list of requirements. Submitting TRADES THE CARDS IN (they leave the collection) for a reward:
+// IM$, packs and/or cards. Stored in settings/ckCtc { list: [{ id, name, desc, slots, reqs, rew, max, exp, on, t }] };
+// each player's progress is in coins.cards.ctc = { challengeId: { n: timesCompleted, t } }.
+// Special cards flagged ctc (settings/ckSpecials item.ctc = 1) never come out of packs — only from a CTC reward.
+//
+// Chemistry: every driver earns 0–3 points, squad chemistry = the sum (so up to 3 × slots, 30 for a full 10).
+//   constructor links — 2 / 3 / 5 drivers from the same team   → 1 / 2 / 3
+//   nation links      — 2 / 4 / 6 drivers of the same nation   → 1 / 2 / 3
+//   division links    — 3 / 5 / 8 drivers from the same division → 1 / 2 / 3
+//   perfect link      — a squad-mate with the same team AND nation → +2 straight away
+// (counts include the driver himself; the three sources add up, capped at 3 per driver)
+const CTC_MAX = 10, CTC_CHEM = { team: [2, 3, 5], nat: [2, 4, 6], div: [3, 5, 8] };
+const _ctcDivN = v => { v = String(v || '').trim().toUpperCase(); return /^\d$/.test(v) ? 'D' + v : v; };
+// A card's division: where the driver races now, else the division of his last full-time seat.
+function _ctcDivOf(d, s) { if (d && !d.isReserve && d.division && d.team && !/^reserve$/i.test(d.team)) return _ctcDivN(d.division);
+  const cp = (s && s.cp) || []; for (let i = cp.length - 1; i >= 0; i--) { const x = cp[i]; if (x && x[1] && !/^reserve$/i.test(x[1]) && x[2]) return _ctcDivN(x[2]); } return ''; }
+const _ctcTm = c => String((c && c.team) || '').trim().toLowerCase();
+const _ctcBk = c => c.base || c.k; // one driver per squad, whichever version of his card
+const _ctcStep = (n, T) => n >= T[2] ? 3 : n >= T[1] ? 2 : n >= T[0] ? 1 : 0;
+function _ctcChem(cards) { const L = cards.filter(Boolean), cnt = f => { const m = {}; L.forEach(c => { const v = f(c); if (v) m[v] = (m[v] || 0) + 1; }); return m; };
+  const T = cnt(_ctcTm), N = cnt(c => c.nat), D = cnt(c => c.div), B = cnt(c => _ctcTm(c) && c.nat ? _ctcTm(c) + '|' + c.nat : '');
+  const per = cards.map(c => { if (!c) return 0; const t = _ctcTm(c);
+    return Math.min(3, _ctcStep(T[t] || 0, CTC_CHEM.team) + _ctcStep(N[c.nat] || 0, CTC_CHEM.nat) + _ctcStep(D[c.div] || 0, CTC_CHEM.div) + (t && c.nat && B[t + '|' + c.nat] >= 2 ? 2 : 0)); });
+  return { per, tot: per.reduce((a, b) => a + b, 0) }; }
+// ---- Requirement types ----
+// f = "count the cards that match" types (value v); g = whole-squad numbers. t = wording.
+const _ctcS = n => n === 1 ? '' : 's', _ctcDist = (L, f) => new Set(L.map(f).filter(Boolean)).size, _ctcTop = (L, f) => { const m = {}; let b = 0; L.forEach(c => { const v = f(c); if (v) b = Math.max(b, m[v] = (m[v] || 0) + 1); }); return b; };
+const _ctcSum = (L, f) => L.reduce((a, c) => a + (f(c) || 0), 0);
+const CTC_OP = { min: 'At least', max: 'No more than', exact: 'Exactly' };
+const CTC_RQ = {
+  nat: { n: 'Drivers of a nationality', vs: 'nat', f: (c, v) => c.nat === v, t: (v, n) => `${v} driver${_ctcS(n)}` },
+  team: { n: 'Drivers from a constructor', vs: 'team', f: (c, v) => _ctcTm(c) === String(v || '').trim().toLowerCase(), t: (v, n) => `${v} driver${_ctcS(n)}` },
+  div: { n: 'Drivers from a division', vs: 'div', f: (c, v) => c.div === v, t: (v, n) => `${v} driver${_ctcS(n)}` },
+  tier: { n: 'Cards of a rarity', vs: 'tier', f: (c, v) => c.t === v, t: (v, n) => `${(CK_T[v] || {}).n || v} card${_ctcS(n)}` },
+  minr: { n: 'Cards rated X or higher', vs: 'num', dv: 75, f: (c, v) => c.r >= +v, t: (v, n) => `card${_ctcS(n)} rated ${v} or higher` },
+  maxr: { n: 'Cards rated X or lower', vs: 'num', dv: 60, f: (c, v) => c.r <= +v, t: (v, n) => `card${_ctcS(n)} rated ${v} or lower` },
+  sp: { n: 'Special cards', vs: 'sp', f: (c, v) => v === 'any' || !v ? !!c.sp : c.sp === v, t: (v, n) => `${v === 'any' || !v ? 'special' : (CK_SP[v] || {}).n || v} card${_ctcS(n)}` },
+  champ: { n: "Drivers' champions", f: c => c.ch > 0, t: (v, n) => `drivers' champion${_ctcS(n)}` },
+  cur: { n: 'Drivers racing this season', f: c => !!c.cur, t: (v, n) => `driver${_ctcS(n)} racing this season` },
+  win: { n: 'Race winners', f: c => c.w > 0, t: (v, n) => `race winner${_ctcS(n)}` },
+  pod: { n: 'Podium finishers', f: c => c.pd > 0, t: (v, n) => `podium finisher${_ctcS(n)}` },
+  chem: { n: 'Total chemistry', ops: ['min'], dn: 10, w: .5, g: (L, ch) => ch.tot, t: (o, n) => `${o} ${n} chemistry` },
+  each: { n: 'Chemistry on every driver', ops: ['min'], dn: 1, mx: 3, g: (L, ch, cards) => { const P = cards.map((c, i) => c ? ch.per[i] : null).filter(x => x != null); return P.length ? Math.min(...P) : 0; }, t: (o, n) => `Every driver on ${o.toLowerCase()} ${n} chemistry` },
+  avg: { n: 'Squad rating (average)', ops: ['min', 'max'], dn: 70, mx: 100, g: L => L.length ? Math.round(_ctcSum(L, c => c.r) / L.length * 10) / 10 : 0, t: (o, n) => `Squad rating ${o.toLowerCase()} ${n}` },
+  nats: { n: 'Different nationalities', dn: 3, g: L => _ctcDist(L, c => c.nat), t: (o, n) => `${o} ${n} different nationalit${n === 1 ? 'y' : 'ies'}` },
+  teams: { n: 'Different constructors', dn: 3, g: L => _ctcDist(L, _ctcTm), t: (o, n) => `${o} ${n} different constructor${_ctcS(n)}` },
+  divs: { n: 'Different divisions', dn: 2, g: L => _ctcDist(L, c => c.div), t: (o, n) => `${o} ${n} different division${_ctcS(n)}` },
+  samenat: { n: 'Most drivers sharing a nation', dn: 3, g: L => _ctcTop(L, c => c.nat), t: (o, n) => `${o} ${n} driver${_ctcS(n)} sharing a nationality` },
+  sameteam: { n: 'Most drivers sharing a constructor', dn: 2, g: L => _ctcTop(L, _ctcTm), t: (o, n) => `${o} ${n} driver${_ctcS(n)} sharing a constructor` },
+  samediv: { n: 'Most drivers sharing a division', dn: 3, g: L => _ctcTop(L, c => c.div), t: (o, n) => `${o} ${n} driver${_ctcS(n)} sharing a division` },
+  wins: { n: 'Combined race wins', ops: ['min', 'max'], dn: 10, mx: 9999, w: .1, g: L => _ctcSum(L, c => c.w), t: (o, n) => `${o} ${n} combined race win${_ctcS(n)}` },
+  pods: { n: 'Combined podiums', ops: ['min', 'max'], dn: 20, mx: 9999, w: .1, g: L => _ctcSum(L, c => c.pd), t: (o, n) => `${o} ${n} combined podium${_ctcS(n)}` },
+  titles: { n: "Combined drivers' titles", ops: ['min', 'max'], dn: 1, mx: 99, g: L => _ctcSum(L, c => c.ch), t: (o, n) => `${o} ${n} combined drivers' title${_ctcS(n)}` },
+  pts: { n: 'Combined career points', ops: ['min', 'max'], dn: 1000, mx: 999999, w: .004, g: L => _ctcSum(L, c => c.p), t: (o, n) => `${o} ${Number(n).toLocaleString()} combined career points` } };
+function _ctcReqTxt(r) { const q = CTC_RQ[r.ty]; if (!q) return 'Unknown requirement'; const n = +r.n || 0, o = CTC_OP[r.op] || CTC_OP.min; return q.f ? `${o} ${n} ${q.t(r.v, n)}` : q.t(o, n); }
+// Check a squad (array of cards / nulls, one per slot) against a challenge.
+function _ctcEval(cards, ch) { const L = cards.filter(Boolean), chem = _ctcChem(cards), full = L.length === ch.slots && cards.length === ch.slots;
+  const dupe = new Set(L.map(_ctcBk)).size !== L.length;
+  const reqs = (ch.reqs || []).map(r => { const q = CTC_RQ[r.ty], n = +r.n || 0, have = !q ? 0 : q.f ? L.filter(c => q.f(c, r.v)).length : q.g(L, chem, cards);
+    const gap = Math.max(0, r.op === 'max' ? have - n : r.op === 'exact' ? Math.abs(have - n) : n - have); return { r, have, gap, ok: !!q && gap <= 0 }; });
+  return { chem, reqs, full, dupe, max: ch.slots * 3, ok: full && !dupe && reqs.every(x => x.ok) }; }
+// Find a squad that completes the challenge from a list of cards (random restarts + swap one card at a time,
+// keeping swaps that close the gap). Returns { sq, ok } — ok false = nothing found in the time allowed.
+function _ctcSolve(ch, cand, ms) { const t0 = Date.now(), n = ch.slots, rnd = A => A[Math.floor(Math.random() * A.length)];
+  if (new Set(cand.map(_ctcBk)).size < n) return { sq: [], ok: false };
+  const pen = sq => _ctcEval(sq, ch).reqs.reduce((a, x) => a + x.gap * ((CTC_RQ[x.r.ty] || {}).w || 1), 0);
+  const foc = cand.filter(c => (ch.reqs || []).some(r => { const q = CTC_RQ[r.ty]; return q && q.f && r.op !== 'max' && q.f(c, r.v); }));
+  const grp = f => { const m = {}; cand.forEach(c => { const v = f(c); if (v) (m[v] = m[v] || []).push(c); }); return m; }, byN = grp(c => c.nat), byT = grp(_ctcTm), byD = grp(c => c.div);
+  let best = null, bestP = Infinity;
+  while (Date.now() - t0 < (ms || 1200) && bestP > 0) { const sq = [], used = new Set(); let g = 0;
+    while (sq.length < n && g++ < 5000) { const c = rnd(foc.length && Math.random() < .5 ? foc : cand); if (used.has(_ctcBk(c))) continue; used.add(_ctcBk(c)); sq.push(c); }
+    if (sq.length < n) break; let p = pen(sq); if (p < bestP) { bestP = p; best = sq.slice(); }
+    for (let it = 0; it < 3000 && bestP > 0; it++) { if ((it & 63) === 63 && Date.now() - t0 > (ms || 1200)) break;
+      const i = Math.floor(Math.random() * n), x = Math.random(); let c;
+      if (x < .3 && foc.length) c = rnd(foc); else if (x < .8) { const o = sq[Math.floor(Math.random() * n)], y = Math.random(), G = y < .4 ? byN[o.nat] : y < .8 ? byT[_ctcTm(o)] : byD[o.div]; c = G && G.length ? rnd(G) : rnd(cand); } else c = rnd(cand);
+      if (c === sq[i] || sq.some((s, j) => j !== i && _ctcBk(s) === _ctcBk(c))) continue;
+      const old = sq[i]; sq[i] = c; const p2 = pen(sq); if (p2 <= p || Math.random() < .015) { p = p2; if (p < bestP) { bestP = p; best = sq.slice(); } } else sq[i] = old; } }
+  return { sq: best || [], ok: bestP === 0 }; }
+// Cards a player can actually get without a CTC: everything that comes out of packs.
+const _ctcPackable = (pool, withSp) => pool.list.filter(c => !c.ctc && (withSp || !c.sp));
+// ---- Idea generator ----
+// Builds a real squad from packable cards first (around a nation, a constructor and a rating band for the
+// difficulty), then writes the requirements FROM that squad — so every idea comes with a squad that completes it.
+function _ctcIdea(diff, pool) { const D = { easy: { s: [3, 5], lo: 0, hi: 64, nr: [1, 2], chem: .55, slack: 2, must: ['nat'], opt: ['avg', 'team', 'tier', 'div'], ims: 150, packs: { gold: 1 } },
+    medium: { s: [5, 7], lo: 50, hi: 80, nr: [3, 3], chem: .8, slack: 1, must: ['nat', 'chem'], opt: ['team', 'avg', 'minr', 'nats', 'div', 'win'], ims: 500, packs: { supersonic: 1 } },
+    hard: { s: [8, 10], lo: 62, hi: 91, nr: [4, 5], chem: .95, slack: 0, must: ['nat', 'team', 'chem', 'avg'], opt: ['nats', 'minr', 'champ', 'win', 'div'], ims: 1500, packs: { supersonic: 2 } } }[diff] || null; if (!D) return null;
+  const ri = (a, b) => a + Math.floor(Math.random() * (b - a + 1)), rnd = A => A[Math.floor(Math.random() * A.length)], shuf = A => { A = A.slice(); for (let i = A.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [A[i], A[j]] = [A[j], A[i]]; } return A; };
+  let lo = D.lo, base = []; for (;;) { base = _ctcPackable(pool).filter(c => c.r >= lo && c.r <= D.hi); if (base.length >= 40 || lo <= 0) break; lo -= 6; }
+  if (base.length < D.s[0]) return null;
+  const grp = f => { const m = {}; base.forEach(c => { const v = f(c); if (v) (m[v] = m[v] || []).push(c); }); return m; }, byN = grp(c => c.nat), byT = grp(_ctcTm), byD = grp(c => c.div);
+  const cntOf = (sq, f) => { const m = {}; sq.forEach(c => { const v = f(c); if (v) m[v] = (m[v] || 0) + 1; }); return Object.entries(m).sort((a, b) => b[1] - a[1]); };
+  for (let at = 0; at < 80; at++) { const n = ri(D.s[0], D.s[1]), sq = [], add = c => { if (c && sq.length < n && !sq.some(s => _ctcBk(s) === _ctcBk(c))) sq.push(c); };
+    const NA = Object.keys(byN).filter(k => byN[k].length >= 2); if (!NA.length) return null; const A = rnd(NA);
+    const kN = Math.min(byN[A].length, Math.ceil(n * .6), diff === 'easy' ? ri(2, 3) : diff === 'medium' ? ri(2, 4) : ri(3, 6)); shuf(byN[A]).slice(0, kN).forEach(add);
+    // constructor: one a squad member already drives for if it has more drivers, else any team with 2+
+    let T = ''; const kT = diff === 'easy' ? (Math.random() < .5 ? 0 : 2) : diff === 'medium' ? ri(2, 3) : ri(3, 4);
+    if (kT) { const own = sq.map(_ctcTm).filter(t => t && byT[t].length >= 2), TA = own.length && Math.random() < .7 ? own : Object.keys(byT).filter(k => byT[k].length >= 2); if (TA.length) { T = rnd(TA); shuf(byT[T]).forEach(c => { if (sq.filter(s => _ctcTm(s) === T).length < kT) add(c); }); } }
+    // fill: harder squads lean on the division / nations already in it so the chemistry adds up
+    let g = 0; while (sq.length < n && g++ < 400) { const o = sq.length ? rnd(sq) : null, y = Math.random(), lean = diff === 'hard' ? .85 : diff === 'medium' ? .55 : .2;
+      add(o && y < lean ? rnd((Math.random() < .5 ? byD[o.div] : byN[o.nat]) || base) : rnd(base)); }
+    if (sq.length < n) continue;
+    const chem = _ctcChem(sq), avg = sq.reduce((a, c) => a + c.r, 0) / n, C = {};
+    const cN = sq.filter(c => c.nat === A).length; C.nat = { ty: 'nat', v: A, op: 'min', n: cN };
+    if (T) { const cT = sq.filter(c => _ctcTm(c) === T).length; if (cT >= 1) C.team = { ty: 'team', v: byT[T][0].team, op: 'min', n: cT }; }
+    if (Math.floor(avg) - D.slack >= 45) C.avg = { ty: 'avg', op: 'min', n: Math.floor(avg) - D.slack };
+    if (Math.floor(chem.tot * D.chem) >= 3) C.chem = { ty: 'chem', op: 'min', n: Math.floor(chem.tot * D.chem) };
+    const dv = cntOf(sq, c => c.div)[0]; if (dv && dv[1] >= 2) C.div = { ty: 'div', v: dv[0], op: 'min', n: Math.max(1, dv[1] - (diff === 'easy' ? 1 : 0)) };
+    const tr = cntOf(sq, c => c.t)[0]; if (tr && tr[1] - D.slack >= 1) C.tier = { ty: 'tier', v: tr[0], op: 'min', n: tr[1] - D.slack };
+    const thr = diff === 'hard' ? 75 : 60, cR = sq.filter(c => c.r >= thr).length; if (cR >= 1 && cR < n) C.minr = { ty: 'minr', v: thr, op: 'min', n: cR };
+    const dn = _ctcDist(sq, c => c.nat); if (diff === 'hard' ? dn >= 1 && dn < n : dn >= 3) C.nats = { ty: 'nats', op: diff === 'hard' ? 'max' : 'min', n: dn };
+    const cW = sq.filter(c => c.w > 0).length; if (cW >= 1) C.win = { ty: 'win', op: 'min', n: cW };
+    const cC = sq.filter(c => c.ch > 0).length; if (cC >= 1) C.champ = { ty: 'champ', op: 'min', n: cC };
+    const want = ri(D.nr[0], D.nr[1]), reqs = D.must.filter(k => C[k]).map(k => C[k]); shuf(D.opt.filter(k => C[k])).forEach(k => { if (reqs.length < Math.max(want, D.must.length)) reqs.push(C[k]); });
+    if (reqs.length < Math.min(want, D.nr[0])) continue;
+    const val = sq.reduce((a, c) => a + _ckSellV(c), 0), tn = T ? byT[T][0].team : '';
+    const nm = rnd(diff === 'easy' ? [`${A} Roll Call`, `${A} Starter`, `First Steps: ${A}`] : diff === 'medium' ? [`${A} Connection`, tn ? `${tn} Academy` : `${A} United`, `${A} Midfield`] : [tn ? `${A} × ${tn} Elite` : `${A} Elite`, `Grid Legends: ${A}`, tn ? `${tn} Dynasty` : `${A} Dynasty`]);
+    const ch = { name: nm, desc: `Trade in ${n} card${_ctcS(n)} that fit the brief.`, slots: n, reqs, rew: { ims: Math.max(D.ims, Math.round(val * 1.4 / 50) * 50), packs: Object.assign({}, D.packs), cards: [] } };
+    if (!_ctcEval(sq, ch).ok) continue; // the squad it was built from must complete it
+    return { ch, sq: sq.slice().sort((a, b) => b.r - a.r), val, diff }; }
+  return null; }
+// ---- Data ----
+async function _ctcLoad(force) { if (!force && window._ctcC && _now() - window._ctcC.at < 60e3) return window._ctcC.list;
+  const d = await dbGet('settings', 'ckCtc').catch(() => null), list = ((d && d.value && d.value.list) || []).filter(x => x && x.id); window._ctcC = { at: _now(), list }; return list; }
+const _ctcSave = async (list) => { await dbSet('settings', 'ckCtc', { value: { list } }); window._ctcC = { at: _now(), list }; };
+const _ctcLive = ch => !!ch.on && !(ch.exp && ch.exp < Date.now());
+const _ctcEnds = t => { const s = Math.max(0, (t - Date.now()) / 1e3); return s >= 86400 ? Math.floor(s / 86400) + 'd ' + Math.floor(s % 86400 / 3600) + 'h' : s >= 3600 ? Math.floor(s / 3600) + 'h ' + Math.floor(s % 3600 / 60) + 'm' : Math.max(1, Math.round(s / 60)) + 'm'; };
+function _ctcRewHtml(rew, pool, big) { rew = rew || {}; const P = Object.entries(rew.packs || {}).filter(([id, q]) => CK_PACKS[id] && q > 0), C = (rew.cards || []).map(k => pool.by[k]).filter(Boolean);
+  const chips = `${rew.ims > 0 ? `<span class="ctc-rw-i"><i class="imc"></i> ${Number(rew.ims).toLocaleString()} IM$</span>` : ''}${P.map(([id, q]) => `<span class="ctc-rw-p" style="--c:${CK_PACKS[id].c};--c2:${CK_PACKS[id].c2}"><i></i>${q} × ${esc(CK_PACKS[id].n)}</span>`).join('')}${big ? '' : C.map(c => `<span class="ctc-rw-c">🃏 ${c.r} ${esc(c.n)}${c.sp ? ' · ' + CK_SP[c.sp].s : ''}</span>`).join('')}`;
+  return `<div class="ctc-rw">${chips || (C.length ? '' : '<span class="ctc-rw-c">No reward set</span>')}</div>${big && C.length ? `<div class="ctc-rwc">${C.map(c => _ckCard(c)).join('')}</div>` : ''}`; }
+// ---- CTC tab: list of challenges, or the one that's open ----
+async function _ctcTab(pool, c) { const list = await _ctcLoad(), K = (c && c.cards) || {}, mine = K.ctc || {}, me = typeof currentUser !== 'undefined' && currentUser && currentUser.userId;
+  const cur = window._ctcCur && list.find(x => x.id === window._ctcCur); if (cur && (adminLoggedIn || _ctcLive(cur))) return _ctcView(cur, pool, c);
+  window._ctcCur = ''; let ST = {};
+  if (adminLoggedIn) { if (!window._ctcSt || _now() - window._ctcSt.at > 60e3) { const all = await _gmNoTestCoins(await dbGetAll('coins', { fresh: true }).catch(() => [])), m = {};
+      all.forEach(x => Object.entries((x && x.cards && x.cards.ctc) || {}).forEach(([id, v]) => { const o = m[id] = m[id] || { n: 0, p: 0 }; o.n += (v && v.n) || 0; o.p++; })); window._ctcSt = { at: _now(), m }; } ST = window._ctcSt.m; }
+  const vis = list.filter(ch => adminLoggedIn || _ctcLive(ch)), doneOf = ch => (mine[ch.id] || {}).n || 0, fin = ch => ch.max > 0 && doneOf(ch) >= ch.max;
+  const row = ch => { const d = doneOf(ch), f = fin(ch), live = _ctcLive(ch);
+    return `<div class="ctc-c${f ? ' done' : ''}${live ? '' : ' off'}"><div class="ctc-ch"><b>${esc(ch.name)}</b><span>${ch.slots} card${_ctcS(ch.slots)}</span></div>${ch.desc ? `<p>${esc(ch.desc)}</p>` : ''}
+      <div class="ctc-chips">${(ch.reqs || []).map(r => `<span>${esc(_ctcReqTxt(r))}</span>`).join('') || '<span>Any cards</span>'}</div>
+      <div class="ctc-cr"><small>Reward</small>${_ctcRewHtml(ch.rew, pool)}</div>
+      <div class="ctc-cf"><small>${f ? '✅ Completed' : ch.max === 1 ? 'One time only' : ch.max > 1 ? `Completed ${d} of ${ch.max}` : `Repeatable${d ? ' · done ' + d + '×' : ''}`}${ch.exp ? (ch.exp < Date.now() ? ' · ⌛ ended' : ' · ⏳ ends in ' + _ctcEnds(ch.exp)) : ''}${adminLoggedIn ? ` · <b class="${live ? 'up' : 'dn'}">${ch.on ? (live ? 'LIVE' : 'EXPIRED') : 'DRAFT'}</b>` : ''}</small>
+        <button class="hx-btn${f ? ' ghost' : ''}" onclick="ctcOpen('${esc(ch.id)}')">${f ? 'View' : 'Build squad'}</button></div>
+      ${adminLoggedIn ? `<div class="ctc-ad"><span class="ctc-st">📊 Completed <b>${((ST[ch.id] || {}).n || 0).toLocaleString()}</b> time${((ST[ch.id] || {}).n || 0) === 1 ? '' : 's'} by <b>${(ST[ch.id] || {}).p || 0}</b> player${((ST[ch.id] || {}).p || 0) === 1 ? '' : 's'}</span><button onclick="ctcEdit('${esc(ch.id)}')">✏️ Edit</button><button onclick="ctcToggle('${esc(ch.id)}')">${ch.on ? '⏸ Make draft' : '▶ Go live'}</button><button onclick="ctcDel('${esc(ch.id)}')">🗑 Delete</button></div>` : ''}</div>`; };
+  const open = vis.filter(ch => !fin(ch)), done = vis.filter(fin);
+  let h = `<div class="wl-sh"><span>Card Trading Challenges</span><small>${open.length} open${done.length ? ' · ' + done.length + ' completed' : ''}</small></div>
+    ${!me ? '' : open.length ? `<div class="ctc-list">${open.map(row).join('')}</div>` : `<div class="ck-empty">${vis.length ? 'You\'ve completed every challenge. More will come.' : 'No challenges yet. Check back soon.'}</div>`}
+    ${done.length ? `<div class="wl-sh" style="margin-top:18px"><span>Completed</span><small>${done.length}</small></div><div class="ctc-list">${done.map(row).join('')}</div>` : ''}
+    <div class="ck-fine">Build a squad from <b>My Cards</b> that meets every requirement, then trade it in for the reward. <b>Cards you trade in leave your collection for good</b> (they stay unlocked in your Card Index). <b>Chemistry</b>: each driver earns 0–3 from squad-mates who share his constructor (2 / 3 / 5 drivers), nation (2 / 4 / 6) or division (3 / 5 / 8) — and a squad-mate with the same constructor <i>and</i> nation is an instant +2.</div>`;
+  if (adminLoggedIn) h += `<div class="ck-spadm ctc-b" id="ctc-b">${_ctcBHtml(pool)}</div>`;
+  return h; }
+window.ctcOpen = function(id) { window._ctcCur = id || ''; _ckRender(); try { document.getElementById('cards-content').scrollIntoView({ block: 'start' }); } catch (e) {} };
+const _ctcPicks = ch => { const S = window._ctcSq = window._ctcSq || {}; let p = S[ch.id]; if (!p || p.length !== ch.slots) p = S[ch.id] = Array.from({ length: ch.slots }, (_, i) => (p && p[i]) || null); return p; };
+function _ctcView(ch, pool, c) { const K = (c && c.cards) || {}, inv = _ckInv(c), picks = _ctcPicks(ch), P0 = (K.ctc || {})[ch.id] || {};
+  if (ch.max > 0 && (P0.n || 0) >= ch.max) return _ctcUsed(ch, pool, P0);
+  picks.forEach((k, i) => { if (k && !(pool.by[k] && inv[k] > 0)) picks[i] = null; }); // sold / traded since it was placed
+  const cards = picks.map(k => k ? pool.by[k] : null), ev = _ctcEval(cards, ch), d = ((K.ctc || {})[ch.id] || {}).n || 0, fin = ch.max > 0 && d >= ch.max, live = _ctcLive(ch);
+  const needC = (ch.reqs || []).find(r => r.ty === 'chem'), pct = ev.max ? Math.min(100, ev.chem.tot / ev.max * 100) : 0, n = cards.filter(Boolean).length;
+  return `<button class="ctc-back" onclick="ctcOpen('')">‹ All challenges</button>
+    <div class="ctc-hd"><div><span class="ckx-k">Card Trading Challenge</span><h2>${esc(ch.name)}</h2>${ch.desc ? `<p>${esc(ch.desc)}</p>` : ''}
+      <small>${ch.max === 1 ? 'One time only' : ch.max > 1 ? `Completed ${d} of ${ch.max}` : `Repeatable${d ? ' · done ' + d + '×' : ''}`}${ch.exp ? (ch.exp < Date.now() ? ' · ⌛ ended' : ' · ⏳ ends in ' + _ctcEnds(ch.exp)) : ''}${live ? '' : ' · <b class="dn">not live — only you can see this</b>'}</small></div>
+      <div class="ctc-hr"><small>Reward</small>${_ctcRewHtml(ch.rew, pool, true)}</div></div>
+    <div class="ctc-chem"><div><small>Squad chemistry</small><b>${ev.chem.tot}<i> / ${ev.max}</i></b></div><div class="ctc-bar"><i style="width:${pct}%"></i>${needC ? `<u style="left:${Math.min(100, needC.n / ev.max * 100)}%" title="Needed: ${needC.n}"></u>` : ''}</div>${needC ? `<span class="${ev.chem.tot >= needC.n ? 'up' : 'dn'}">need ${needC.n}</span>` : ''}</div>
+    <div class="ctc-sq" style="--n:${Math.min(5, ch.slots)}">${cards.map((x, i) => x ? `<div class="ctc-sl on">${_ckCard(x, { on: `ctcPick(${i})` })}<div class="ctc-pips" title="Chemistry ${ev.chem.per[i]} / 3">${[0, 1, 2].map(j => `<i class="${j < ev.chem.per[i] ? 'on' : ''}"></i>`).join('')}</div><button class="ctc-rm" onclick="ctcRm(${i})" aria-label="Remove">✕</button></div>`
+      : `<div class="ctc-sl"><button class="ctc-add" onclick="ctcPick(${i})"><b>+</b><small>Add card</small></button><div class="ctc-pips"><i></i><i></i><i></i></div></div>`).join('')}</div>
+    <div class="ctc-rq"><div class="wl-sh"><span>Requirements</span><small>${ev.reqs.filter(x => x.ok).length + (ev.full ? 1 : 0)} / ${ev.reqs.length + 1} met</small></div>
+      <div class="${ev.full ? 'ok' : ''}"><i>${ev.full ? '✓' : '✗'}</i><span>${ch.slots} card${_ctcS(ch.slots)} in the squad</span><b>${n} / ${ch.slots}</b></div>
+      ${ev.reqs.map(x => `<div class="${x.ok ? 'ok' : ''}"><i>${x.ok ? '✓' : '✗'}</i><span>${esc(_ctcReqTxt(x.r))}</span><b>${Number(x.have).toLocaleString()}${x.r.op === 'max' ? ' ≤ ' : x.r.op === 'exact' ? ' = ' : ' / '}${Number(x.r.n).toLocaleString()}</b></div>`).join('')}</div>
+    <div class="ck-acts"><button class="hx-btn" onclick="ctcSubmit()" ${ev.ok && !fin && live ? '' : 'disabled'}>${fin ? '✅ Already completed' : !live ? 'Not live' : ev.ok ? `🔁 Trade in ${ch.slots} card${_ctcS(ch.slots)} for the reward` : 'Meet every requirement to trade in'}</button>
+      <button class="hx-btn ghost" onclick="ctcClear()" ${n ? '' : 'disabled'}>Clear squad</button></div>
+    <div class="ck-fine">Tap a slot to pick a card from your collection. One card per driver. The cards you trade in are <b>gone for good</b>. 🔒 Locked cards can only be used if you own a spare copy.</div>`; }
+function _ctcUsed(ch, pool, P0) { const L = P0.sqs && P0.sqs.length ? P0.sqs : P0.sq ? [P0.sq] : [];
+  return `<button class="ctc-back" onclick="ctcOpen('')">‹ All challenges</button>
+    <div class="ctc-hd"><div><span class="ckx-k">Card Trading Challenge · ✅ completed</span><h2>${esc(ch.name)}</h2>${ch.desc ? `<p>${esc(ch.desc)}</p>` : ''}<small>Completed ${P0.t ? formatTimeAgo(P0.t) : ''}</small></div>
+      <div class="ctc-hr"><small>Reward you got</small>${_ctcRewHtml(ch.rew, pool, true)}</div></div>
+    ${L.length ? L.slice().reverse().map((sq, j) => { const cards = sq.map(k => pool.by[k] || null), ev = _ctcEval(cards, ch);
+      return `<div class="wl-sh"><span>${L.length > 1 ? 'Squad #' + (L.length - j) : 'The squad you traded in'}</span><small>chemistry ${ev.chem.tot} / ${ev.max}</small></div>
+      <div class="ctc-sq" style="--n:${Math.min(5, sq.length)}">${cards.map((x, i) => x ? `<div class="ctc-sl on">${_ckCard(x)}<div class="ctc-pips">${[0, 1, 2].map(q => `<i class="${q < ev.chem.per[i] ? 'on' : ''}"></i>`).join('')}</div></div>` : '<div class="ctc-sl"><div class="ctc-add" style="cursor:default"><small>Card no longer exists</small></div></div>').join('')}</div>`; }).join('')
+      : '<div class="ck-empty">This was completed before squads were saved, so there\'s no squad to show.</div>'}
+    <div class="ctc-rq"><div class="wl-sh"><span>Requirements</span><small>all met</small></div>${(ch.reqs || []).map(r => `<div class="ok"><i>✓</i><span>${esc(_ctcReqTxt(r))}</span></div>`).join('')}</div>`; }
+window.ctcRm = function(i) { const S = (window._ctcSq || {})[window._ctcCur]; if (S) { S[i] = null; _ckRender(); } };
+window.ctcClear = function() { const S = (window._ctcSq || {})[window._ctcCur]; if (S) { S.fill(null); _ckRender(); } };
+// ---- Card picker for one slot ----
+window.ctcPick = async function(i) { const list = await _ctcLoad(), ch = list.find(x => x.id === window._ctcCur); if (!ch) return; const pool = await _ckPool(), c = await _betLoadCoins(currentUser.userId), inv = _ckInv(c), LK = (c.cards && c.cards.lock) || {}, picks = _ctcPicks(ch);
+  const taken = new Set(picks.filter((k, j) => k && j !== i && pool.by[k]).map(k => _ctcBk(pool.by[k])));
+  const own = Object.entries(inv).filter(([k, n]) => n > 0 && pool.by[k]).filter(([k]) => !pool.by[k].ctc).map(([k, n]) => ({ c: pool.by[k], n, lock: !!LK[k] && n < 2, used: taken.has(_ctcBk(pool.by[k])) }));
+  window._ctcPk = { i, ch, own, q: '', f: -1, sort: 'r' }; document.getElementById('ctc-pk')?.remove();
+  const fl = (ch.reqs || []).map((r, j) => [r, j]).filter(([r]) => CTC_RQ[r.ty] && CTC_RQ[r.ty].f && r.op !== 'max');
+  const o = document.createElement('div'); o.id = 'ctc-pk'; o.className = 'ck-ov in ctc-pk'; o.onclick = e => { if (e.target === o) o.remove(); };
+  o.innerHTML = `<div class="ctc-pkb"><button class="ma-x" onclick="document.getElementById('ctc-pk').remove()">✕</button><div class="ck-k">Slot ${i + 1} of ${ch.slots}</div><div class="ck-ttl" style="font-size:1.4rem">PICK A <em>CARD</em></div>
+    <div class="ctc-pkt"><input type="search" placeholder="Search driver, team or nation…" oninput="window._ctcPk.q=this.value;_ctcPkDraw()"><select onchange="window._ctcPk.sort=this.value;_ctcPkDraw()"><option value="r">Rating: high → low</option><option value="ra">Rating: low → high</option><option value="v">Cheapest first</option><option value="n">Most copies</option></select></div>
+    ${fl.length ? `<div class="ck-fil ctc-pkf"><button class="on" onclick="_ctcPkF(-1,this)">All my cards</button>${fl.map(([r, j]) => `<button onclick="_ctcPkF(${j},this)">${esc(CTC_RQ[r.ty].t(r.v, 2).replace(/^./, m => m.toUpperCase()))}</button>`).join('')}</div>` : ''}
+    <div class="ck-ixn" id="ctc-pk-n"></div><div class="ck-grid" id="ctc-pk-g"></div></div>`;
+  document.body.appendChild(o); _ctcPkDraw(); };
+window._ctcPkF = function(j, b) { window._ctcPk.f = j; b.parentElement.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); _ctcPkDraw(); };
+window._ctcPkDraw = function() { const P = window._ctcPk, g = document.getElementById('ctc-pk-g'); if (!P || !g) return; const q = String(P.q || '').trim().toLowerCase(), r = P.f >= 0 ? P.ch.reqs[P.f] : null;
+  let L = P.own.filter(x => (!q || String(x.c.n).toLowerCase().includes(q) || String(x.c.team || '').toLowerCase().includes(q) || String(x.c.nat || '').toLowerCase().includes(q) || String(x.c.div || '').toLowerCase().includes(q)) && (!r || CTC_RQ[r.ty].f(x.c, r.v)));
+  L.sort({ r: (a, b) => b.c.r - a.c.r, ra: (a, b) => a.c.r - b.c.r, v: (a, b) => _ckSellV(a.c) - _ckSellV(b.c), n: (a, b) => b.n - a.n || b.c.r - a.c.r }[P.sort] || ((a, b) => b.c.r - a.c.r));
+  P.L = L; g.innerHTML = L.map((x, j) => `<div class="ck-lkw${x.lock || x.used ? ' ctc-no' : ''}">${x.lock ? '<span class="ck-lk">🔒</span>' : ''}${_ckCard(x.c, { n: x.n, on: x.lock || x.used ? '' : `ctcPut(${j})` })}<small class="ctc-pkm">${x.used ? 'Driver already in squad' : x.lock ? 'Locked' : esc([x.c.team, x.c.div].filter(Boolean).join(' · ') || '—')}</small></div>`).join('') || '<div class="ck-empty" style="grid-column:1/-1">No cards match. Open packs to find more.</div>';
+  const n = document.getElementById('ctc-pk-n'); if (n) n.textContent = `${L.length} card${L.length === 1 ? '' : 's'}`; };
+window.ctcPut = function(j) { const P = window._ctcPk, x = P && P.L && P.L[j]; if (!x || x.lock || x.used) return; _ctcPicks(P.ch)[P.i] = x.c.k; document.getElementById('ctc-pk')?.remove(); _ckRender(); };
+// ---- Trade in ----
+window.ctcSubmit = function() { if (window._ctcBusy) return; const id = window._ctcCur, picks = ((window._ctcSq || {})[id] || []).slice(); if (!id || !picks.length || picks.some(k => !k)) return;
+  if (typeof currentUser === 'undefined' || !currentUser || !currentUser.userId) return showToast('Log in to trade cards in.', 'error');
+  customConfirm(`Trade in these ${picks.length} card${_ctcS(picks.length)} for the reward? They leave your collection for good — you can't undo this.`, async () => { if (window._ctcBusy) return; window._ctcBusy = true;
+    try { const [pool, list, c] = await Promise.all([_ckPool(), _ctcLoad(true), _betLoadCoins(currentUser.userId)]), ch = list.find(x => x.id === id);
+      if (!ch || !_ctcLive(ch)) { showToast('This challenge has ended.', 'error'); window._ctcCur = ''; return _ckRender(); }
+      const K = c.cards = c.cards || { inv: {} }; K.inv = K.inv || {}; const LK = K.lock || {}, prev = (K.ctc || {})[id] || {};
+      if (ch.max > 0 && (prev.n || 0) >= ch.max) { showToast('You\'ve already completed this challenge.', 'error'); return _ckRender(); }
+      const cards = picks.map(k => pool.by[k]);
+      if (picks.length !== ch.slots || cards.some(x => !x) || new Set(picks).size !== picks.length || cards.some(x => x.ctc) || picks.some(k => (K.inv[k] || 0) < (LK[k] ? 2 : 1))) { showToast('Some of those cards aren\'t in your collection any more (or are locked).', 'error'); return _ckRender(); }
+      if (!_ctcEval(cards, ch).ok) { showToast('That squad doesn\'t meet every requirement any more — ratings and teams can change.', 'error'); return _ckRender(); }
+      K.dex = K.dex || {}; Object.keys(K.inv).forEach(k => { if (K.inv[k] > 0) K.dex[k] = 1; });
+      picks.forEach(k => { K.inv[k] -= 1; if (!K.inv[k]) delete K.inv[k]; });
+      const rew = ch.rew || {}, t = Date.now(), got = (rew.cards || []).map(k => pool.by[k]).filter(Boolean).map(x => Object.assign({}, x, { nw: !K.dex[x.k] }));
+      if (rew.ims > 0) { c.balance = (c.balance || 0) + Math.round(rew.ims); K.ctcIms = (K.ctcIms || 0) + Math.round(rew.ims); }
+      const b = 'ctc' + t.toString(36), PK = []; Object.entries(rew.packs || {}).forEach(([p, q]) => { if (CK_PACKS[p]) for (let i = 0; i < Math.min(20, q); i++) PK.push({ p, from: '🧩 CTC reward — ' + String(ch.name).slice(0, 80), t, b, s: 1 }); });
+      if (PK.length) K.gifts = (K.gifts || []).concat(PK);
+      got.forEach(x => { K.inv[x.k] = (K.inv[x.k] || 0) + 1; K.dex[x.k] = 1; });
+      const big = got.filter(x => x.r >= CK_FEED_MIN); if (big.length) c.cardPulls = (c.cardPulls || []).concat(big.map(x => ({ k: x.k, n: x.n, r: x.r, t, p: 'ctc', by: _wdMe().name }))).slice(-40);
+      K.ctc = K.ctc || {}; K.ctc[id] = { n: (prev.n || 0) + 1, t, sq: picks.slice(), sqs: (prev.sqs || (prev.sq ? [prev.sq] : [])).concat([picks.slice()]).slice(-10) }; K.ctcN = (K.ctcN || 0) + 1; K.ctcIn = (K.ctcIn || 0) + picks.length;
+      await dbSet('coins', currentUser.userId, c); _ckSetPill(c); window._ckFeed = null; window._ctcSt = null; (window._ctcSq || {})[id] = null;
+      _ctcDone(ch, got, PK.length, pool);
+    } catch (e) { console.error(e); showToast('Couldn\'t trade in — nothing was taken if your cards are still there.', 'error'); } finally { window._ctcBusy = false; } }, 'Trade in'); };
+function _ctcDone(ch, got, nPacks, pool) { const show = () => { document.getElementById('ctc-dn')?.remove(); const o = document.createElement('div'); o.id = 'ctc-dn'; o.className = 'ck-ov ctc-dn';
+    o.innerHTML = `<div class="ctc-dnb"><div class="ck-k">Challenge complete</div><div class="ck-ttl">🧩 <em>${esc(ch.name)}</em></div><div class="ck-sub">Your reward</div>${_ctcRewHtml(ch.rew, pool, true)}
+      ${nPacks ? `<div class="ck-fine" style="text-align:center">Your pack${_ctcS(nPacks)} ${nPacks === 1 ? 'is' : 'are'} waiting in <b>My Packs</b>.</div>` : ''}
+      <div class="ck-acts"><button class="hx-btn" onclick="_ctcDnClose(${nPacks ? 1 : 0})">${nPacks ? 'Open My Packs' : 'Collect'}</button>${nPacks ? '<button class="hx-btn ghost" onclick="_ctcDnClose(0)">Later</button>' : ''}</div></div>`;
+    document.body.appendChild(o); requestAnimationFrame(() => o.classList.add('in')); try { _ptSnd.pointless(); fireConfetti({ count: 90 }); } catch (e) {} };
+  const top = got.slice().sort((a, b) => b.r - a.r)[0]; if (top && typeof _ckCutscene === 'function') _ckCutscene(top, show); else show(); }
+window._ctcDnClose = function(go) { document.getElementById('ctc-dn')?.remove(); if (go) window._ckTab = 'packs'; window._ctcCur = ''; _ckRender(); };
+// ---- Admin: challenge builder ----
+const _ctcBNew = () => ({ id: '', name: '', desc: '', slots: 5, reqs: [], rew: { ims: 0, packs: {}, cards: [] }, max: 1, exp: '', on: true, proof: null });
+const _ctcVals = (pool, vs) => vs === 'nat' ? [...new Set(pool.list.map(c => c.nat).filter(Boolean))].sort((a, b) => a.localeCompare(b)).map(v => [v, `${v} (${pool.list.filter(c => !c.sp && c.nat === v).length})`])
+  : vs === 'team' ? Object.values(pool.list.reduce((m, c) => { const t = _ctcTm(c); if (t && !c.sp) (m[t] = m[t] || [c.team, 0])[1]++; return m; }, {})).sort((a, b) => a[0].localeCompare(b[0])).map(([v, n]) => [v, `${v} (${n})`])
+  : vs === 'div' ? [...new Set(pool.list.map(c => c.div).filter(Boolean))].sort().map(v => [v, `${v} (${pool.list.filter(c => !c.sp && c.div === v).length})`])
+  : vs === 'tier' ? CK_TIERS.map(t => [t.id, `${t.n} (${pool.list.filter(c => !c.sp && c.t === t.id).length})`]) : vs === 'sp' ? [['any', 'Any special']].concat(Object.entries(CK_SP).map(([id, S]) => [id, S.i + ' ' + S.n])) : [];
+function _ctcBHtml(pool) { const B = window._ctcB = window._ctcB || _ctcBNew(), IN = 'style="width:100%"';
+  const cardOpts = pool.list.slice().sort((a, b) => a.n.localeCompare(b.n) || b.r - a.r).map(c => `<option value="${esc(c.k)}">${esc(c.n)} — ${c.r}${c.sp ? ' ' + CK_SP[c.sp].i + ' ' + CK_SP[c.sp].s + (c.spn ? ' · ' + esc(c.spn) : '') : ''}${c.ctc ? ' 🧩 CTC only' : ''}</option>`).join('');
+  return `<div class="wl-sh"><span>🛠️ ${B.id ? 'Edit challenge' : 'Build a challenge'}</span><small>only you can see this</small></div>
+    <div class="ctc-gen"><select id="ctc-g-d"><option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option></select><button class="hx-btn ghost" onclick="ctcIdea()">🎲 Generate a CTC idea</button></div>
+    <input ${IN} maxlength="40" placeholder="Challenge name, e.g. Indian Summer" value="${esc(B.name)}" oninput="_ctcB.name=this.value">
+    <textarea rows="2" maxlength="200" placeholder="Short description (optional)" oninput="_ctcB.desc=this.value">${esc(B.desc)}</textarea>
+    <label class="ctc-lb">Cards needed (1–${CTC_MAX})<input type="number" min="1" max="${CTC_MAX}" value="${B.slots}" onchange="ctcBSlots(this.value)"><small>max chemistry ${B.slots * 3}</small></label>
+    <div class="wl-sh" style="margin-top:6px"><span>Requirements</span><small>${B.reqs.length || 'none — any cards'}</small></div>
+    ${B.reqs.length ? `<div class="ck-spl ctc-rl">${B.reqs.map((r, i) => `<div><span>${esc(_ctcReqTxt(r))}</span><button onclick="ctcBReqDel(${i})">Remove</button></div>`).join('')}</div>` : ''}
+    <select id="ctc-rq-ty" onchange="ctcBReqUI()"><optgroup label="Count cards that…">${Object.entries(CTC_RQ).filter(([, q]) => q.f).map(([id, q]) => `<option value="${id}">${q.n}</option>`).join('')}</optgroup><optgroup label="Whole squad">${Object.entries(CTC_RQ).filter(([, q]) => q.g).map(([id, q]) => `<option value="${id}">${q.n}</option>`).join('')}</optgroup></select>
+    <div class="ctc-rqi" id="ctc-rq-in"></div><button class="hx-btn ghost" onclick="ctcBReqAdd()">＋ Add requirement</button>
+    <div class="wl-sh" style="margin-top:6px"><span>Reward</span><small>IM$, packs and/or cards</small></div>
+    <label class="ctc-lb">IM$<input type="number" min="0" max="1000000" value="${B.rew.ims || 0}" oninput="_ctcB.rew.ims=Math.max(0,parseInt(this.value,10)||0)"></label>
+    <div class="ck-g-row ctc-pr">${Object.entries(CK_PACKS).map(([id, P]) => `<label style="--c:${P.c};--c2:${P.c2}"><i></i>${P.n.replace(' Pack', '')}<input type="number" min="0" max="20" value="${B.rew.packs[id] || 0}" oninput="_ctcB.rew.packs['${id}']=Math.max(0,Math.min(20,parseInt(this.value,10)||0))"></label>`).join('')}</div>
+    ${B.rew.cards.length ? `<div class="ck-spl ctc-rl">${B.rew.cards.map((k, i) => { const c = pool.by[k]; return `<div><span>🃏 ${c ? `<b>${esc(c.n)}</b> — ${c.r}${c.sp ? ' ' + CK_SP[c.sp].s : ''}${c.ctc ? ' · 🧩 CTC only' : ''}` : 'Card no longer exists'}</span><button onclick="ctcBCardDel(${i})">Remove</button></div>`; }).join('')}</div>` : ''}
+    <input id="ctc-rc-q" placeholder="Search a reward card…" oninput="ctcBCardFind(this.value)"><div class="ck-g-row" style="grid-template-columns:1fr auto"><select id="ctc-rc-k">${cardOpts}</select><button class="hx-btn ghost" onclick="ctcBCardAdd()">＋ Add card</button></div>
+    <div class="wl-sh" style="margin-top:6px"><span>Options</span><small></small></div>
+    <label class="ctc-lb">Times each player can complete it<input type="number" min="0" max="99" value="${B.max}" oninput="_ctcB.max=Math.max(0,parseInt(this.value,10)||0)"><small>0 = unlimited</small></label>
+    <div class="ctc-lim"><span>How long is it available?</span><div class="ck-fil"><button class="${B.lim ? '' : 'on'}" onclick="ctcBLim(0)">♾️ Forever</button><button class="${B.lim ? 'on' : ''}" onclick="ctcBLim(1)">⏳ Time limit</button></div>
+      ${B.lim ? `<div class="ck-fil">${[[1, '24 hours'], [3, '3 days'], [7, '1 week'], [14, '2 weeks']].map(([d, l]) => `<button onclick="ctcBLim(1,${d})">${l}</button>`).join('')}</div><label class="ctc-lb">Ends at<input type="datetime-local" value="${esc(B.exp || '')}" oninput="_ctcB.exp=this.value"></label>` : ''}</div>
+    <label class="ctc-ck"><input type="checkbox" ${B.on ? 'checked' : ''} onchange="_ctcB.on=this.checked"> Live — players can see it as soon as it's saved (untick to save a draft)</label>
+    <div class="ctc-proof" id="ctc-proof">${_ctcProofHtml(B.proof)}</div>
+    <div class="ck-acts"><button class="hx-btn ghost" onclick="ctcBCheck()">🧪 Check it's possible</button><button class="hx-btn" onclick="ctcBSave()">💾 ${B.id ? 'Save changes' : 'Create challenge'}</button></div>
+    ${B.id || B.name || B.reqs.length ? `<button class="hx-btn ghost" onclick="ctcBReset()">${B.id ? 'Cancel edit' : 'Clear the builder'}</button>` : ''}
+    <div class="ck-fine" style="margin:4px 0 0">“Check it's possible” and the idea generator only use cards players can pack (no CTC-only cards), and show a squad that completes the challenge. Cards a player trades in are removed from their collection. To make a reward card that can't be packed, create a special card in <b>Card Index</b> with “CTC only” ticked, then add it here.</div>`; }
+function _ctcProofHtml(P) { if (!P) return ''; if (P.busy) return '<div class="ctc-pf">🧪 Looking for a squad that completes it…</div>';
+  if (!P.ok) return `<div class="ctc-pf bad">❌ <b>No squad found.</b> ${esc(P.why || 'With the cards players can pack, these requirements look impossible (or very close to it). Loosen one and check again.')}</div>`;
+  return `<div class="ctc-pf ok">✅ <b>Proven possible${P.diff ? ' · ' + P.diff.toUpperCase() + ' idea' : ''}</b> — this squad completes it${P.sp ? ' (needs special cards)' : ''}: chemistry ${P.chem}, squad rating ${P.avg}, worth about ${Number(P.val).toLocaleString()} IM$ if sold.
+    <div class="ctc-pfl">${P.sq.map(c => `<span><b>${c.r}</b> ${esc(c.n)}<small>${esc([c.nat, c.team, c.div].filter(Boolean).join(' · '))}</small></span>`).join('')}</div></div>`; }
+const _ctcProofOf = (sq, ch, extra) => { const ev = _ctcEval(sq, ch); return Object.assign({ ok: true, sq: sq.map(c => ({ r: c.r, n: c.n, nat: c.nat, team: c.team, div: c.div })), chem: ev.chem.tot + ' / ' + ev.max, avg: Math.round(sq.reduce((a, c) => a + c.r, 0) / sq.length * 10) / 10, val: sq.reduce((a, c) => a + _ckSellV(c), 0) }, extra || {}); };
+async function _ctcBDraw() { const el = document.getElementById('ctc-b'); if (!el) return; el.innerHTML = _ctcBHtml(await _ckPool()); ctcBReqUI(); }
+window.ctcBReqUI = async function() { const el = document.getElementById('ctc-rq-in'), ty = (document.getElementById('ctc-rq-ty') || {}).value, q = CTC_RQ[ty]; if (!el || !q) return; const pool = await _ckPool(), B = window._ctcB || _ctcBNew();
+  const ops = (q.ops || ['min', 'exact', 'max']).map(o => `<option value="${o}">${CTC_OP[o]}</option>`).join('');
+  el.innerHTML = q.f ? `<select id="ctc-rq-op">${ops}</select><input id="ctc-rq-n" type="number" min="0" max="${CTC_MAX}" value="1" title="How many cards">${q.vs === 'num' ? `<input id="ctc-rq-v" type="number" min="40" max="100" value="${q.dv}" title="Rating">` : q.vs ? `<select id="ctc-rq-v">${_ctcVals(pool, q.vs).map(([v, l]) => `<option value="${esc(v)}">${esc(l)}</option>`).join('')}</select>` : '<span class="ctc-rqs">cards</span>'}`
+    : `<select id="ctc-rq-op">${ops}</select><input id="ctc-rq-n" type="number" min="0" max="${q.mx || (ty === 'chem' ? B.slots * 3 : CTC_MAX)}" value="${ty === 'chem' ? Math.min(q.dn, B.slots * 3) : q.dn}"><span class="ctc-rqs">${esc(q.n.toLowerCase())}</span>`; };
+window.ctcBReqAdd = function() { const B = window._ctcB, ty = document.getElementById('ctc-rq-ty').value, q = CTC_RQ[ty]; if (!B || !q) return; const op = (document.getElementById('ctc-rq-op') || {}).value || 'min', n = parseFloat((document.getElementById('ctc-rq-n') || {}).value), vEl = document.getElementById('ctc-rq-v');
+  if (!(n >= 0)) return showToast('Set a number for the requirement.', 'error'); const r = { ty, op, n };
+  if (q.f) { if (n > B.slots && op !== 'max') return showToast(`The challenge only has ${B.slots} card${_ctcS(B.slots)}.`, 'error'); if (q.vs) { r.v = q.vs === 'num' ? Math.max(40, Math.min(100, parseInt(vEl.value, 10) || q.dv)) : vEl.value; if (r.v === '' || r.v == null) return showToast('Pick a value.', 'error'); } r.n = Math.round(n); }
+  else if (ty === 'chem' && n > B.slots * 3) return showToast(`Max chemistry for ${B.slots} card${_ctcS(B.slots)} is ${B.slots * 3}.`, 'error'); else if (ty === 'each' && n > 3) return showToast('A driver can have 3 chemistry at most.', 'error');
+  B.reqs.push(r); B.proof = null; _ctcBDraw(); };
+window.ctcBReqDel = function(i) { window._ctcB.reqs.splice(i, 1); window._ctcB.proof = null; _ctcBDraw(); };
+window.ctcBSlots = function(v) { const B = window._ctcB; B.slots = Math.max(1, Math.min(CTC_MAX, parseInt(v, 10) || 1)); B.proof = null; _ctcBDraw(); };
+window.ctcBCardFind = function(q) { const sel = document.getElementById('ctc-rc-k'); if (!sel) return; q = String(q || '').toLowerCase(); let first = null; [...sel.options].forEach(o => { const m = !q || o.text.toLowerCase().includes(q); o.hidden = !m; if (m && !first) first = o; }); if (first && sel.selectedOptions[0] && sel.selectedOptions[0].hidden) sel.value = first.value; };
+window.ctcBCardAdd = function() { const k = (document.getElementById('ctc-rc-k') || {}).value; if (!k) return; if (window._ctcB.rew.cards.length >= 5) return showToast('Up to 5 reward cards.', 'error'); window._ctcB.rew.cards.push(k); _ctcBDraw(); };
+window.ctcBCardDel = function(i) { window._ctcB.rew.cards.splice(i, 1); _ctcBDraw(); };
+window.ctcBLim = function(on, days) { const B = window._ctcB; B.lim = !!on; if (on && (days || !B.exp)) { const d = new Date(Date.now() + (days || 7) * 864e5), z = n => String(n).padStart(2, '0'); B.exp = `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}`; } _ctcBDraw(); };
+window.ctcBReset = function() { window._ctcB = _ctcBNew(); _ctcBDraw(); };
+window.ctcBCheck = async function() { const B = window._ctcB, box = document.getElementById('ctc-proof'); if (!B) return; B.proof = { busy: 1 }; if (box) box.innerHTML = _ctcProofHtml(B.proof); await new Promise(r => setTimeout(r, 30));
+  const pool = await _ckPool(), ch = { slots: B.slots, reqs: B.reqs }; let R = _ctcSolve(ch, _ctcPackable(pool), 1500), sp = false; if (!R.ok && pool.list.some(c => c.sp && !c.ctc)) { R = _ctcSolve(ch, _ctcPackable(pool, true), 1500); sp = R.ok; }
+  B.proof = R.ok ? _ctcProofOf(R.sq, ch, { sp }) : { ok: false }; if (box) box.innerHTML = _ctcProofHtml(B.proof); };
+window.ctcIdea = async function() { if (!adminLoggedIn) return; const diff = (document.getElementById('ctc-g-d') || {}).value || 'easy', pool = await _ckPool(), I = _ctcIdea(diff, pool);
+  if (!I) return showToast('Couldn\'t build an idea from the cards in the pool — try again.', 'error');
+  const B = window._ctcB = Object.assign(_ctcBNew(), I.ch, { id: (window._ctcB || {}).id || '' }); B.proof = _ctcProofOf(I.sq, I.ch, { diff }); await _ctcBDraw(); const d = document.getElementById('ctc-g-d'); if (d) d.value = diff;
+  showToast('🎲 ' + diff[0].toUpperCase() + diff.slice(1) + ' idea ready — tweak it, set the reward, then create it.', 'success'); };
+window.ctcBSave = async function() { if (!adminLoggedIn) return; const B = window._ctcB; if (!B) return; const name = String(B.name || '').trim().slice(0, 40); if (!name) return showToast('Give the challenge a name.', 'error');
+  const rew = { ims: Math.max(0, Math.round(B.rew.ims || 0)), packs: Object.fromEntries(Object.entries(B.rew.packs || {}).filter(([id, q]) => CK_PACKS[id] && q > 0)), cards: (B.rew.cards || []).slice(0, 5) };
+  if (!rew.ims && !Object.keys(rew.packs).length && !rew.cards.length) return showToast('Add a reward: IM$, packs or a card.', 'error');
+  const exp = B.lim && B.exp ? new Date(B.exp).getTime() : 0; if (B.lim && !(exp > Date.now())) return showToast('Set an end time in the future, or choose Forever.', 'error');
+  const go = async () => { const list = (await _ctcLoad(true)).slice(), ch = { id: B.id || Date.now().toString(36), name, desc: String(B.desc || '').trim().slice(0, 200), slots: B.slots, reqs: B.reqs.map(r => Object.assign({}, r)), rew, max: Math.max(0, B.max | 0), exp: exp || 0, on: !!B.on, t: Date.now() };
+    const i = list.findIndex(x => x.id === ch.id); if (i >= 0) list[i] = Object.assign({}, list[i], ch); else list.unshift(ch);
+    await _ctcSave(list); window._ctcB = _ctcBNew(); showToast(i >= 0 ? 'Challenge saved.' : '🧩 Challenge created' + (ch.on ? ' — it\'s live.' : ' as a draft.'), 'success'); _ckRender(); };
+  if (B.proof && B.proof.ok) return go();
+  customConfirm(B.proof && B.proof.ok === false ? 'The check couldn\'t find a squad that completes this challenge with packable cards. Save it anyway?' : 'You haven\'t checked that this challenge is possible. Save it anyway?', go, 'Save anyway'); };
+window.ctcEdit = async function(id) { if (!adminLoggedIn) return; const ch = (await _ctcLoad()).find(x => x.id === id); if (!ch) return; const z = n => String(n).padStart(2, '0'), d = ch.exp ? new Date(ch.exp) : null;
+  window._ctcB = Object.assign(_ctcBNew(), { id: ch.id, name: ch.name, desc: ch.desc || '', slots: ch.slots, reqs: (ch.reqs || []).map(r => Object.assign({}, r)), rew: { ims: (ch.rew || {}).ims || 0, packs: Object.assign({}, (ch.rew || {}).packs), cards: ((ch.rew || {}).cards || []).slice() }, max: ch.max | 0, on: !!ch.on, lim: !!ch.exp,
+    exp: d ? `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}` : '' });
+  await _ctcBDraw(); try { document.getElementById('ctc-b').scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {} };
+window.ctcToggle = async function(id) { if (!adminLoggedIn) return; const list = (await _ctcLoad(true)).slice(), ch = list.find(x => x.id === id); if (!ch) return; ch.on = !ch.on; await _ctcSave(list); showToast(ch.on ? '▶ Challenge is live.' : '⏸ Challenge is a draft — players can\'t see it.', 'success'); _ckRender(); };
+window.ctcDel = function(id) { if (!adminLoggedIn) return; customConfirm('Delete this challenge? Players who already completed it keep their rewards.', async () => { const list = (await _ctcLoad(true)).filter(x => x.id !== id); await _ctcSave(list); if ((window._ctcB || {}).id === id) window._ctcB = _ctcBNew(); showToast('Deleted.', 'success'); _ckRender(); }, 'Delete'); };
+// Special cards: flip "CTC only" (never in packs; only from a challenge reward).
+window.ckSpCtc = async function(id) { if (!adminLoggedIn) return; const sd = await dbGet('settings', 'ckSpecials').catch(() => null), list = ((sd && sd.value && sd.value.list) || []), x = list.find(y => y.id === id); if (!x) return;
+  if (x.ctc) delete x.ctc; else x.ctc = 1; await dbSet('settings', 'ckSpecials', { value: { list } }); window._ckPoolC = null; showToast(x.ctc ? '🧩 CTC only — this card no longer comes out of packs.' : 'This card can come out of packs again.', 'success'); _ckRender(); };
 async function _gmNoTestCoins(rows) { try { const ids = await _gmTestIds(), me = _wdMe().uid; return (rows || []).filter(r => r && (r.userId === me || !ids.has(r.userId))); } catch (e) { return rows || []; } }
 // ===== PIT LANE PAIRS =====
 // 7 drivers, 7 clues (their team, an old team, or a teammate). Tap a driver, then the clue that fits.
