@@ -34723,7 +34723,7 @@ window.renderGames = async function() {
     <div class="wd-info">
       <h3>What is IMS PaddockDle?</h3>
       <p>IMS PaddockDle is a driver guessing game built on International Motorsport Series data. A mystery IMS driver is picked and you work out who it is from colour-coded clues about their nationality, division, team, BOTT titles, all-time points, wins and race starts.</p>
-      <p style="margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(247,207,85,.08);border:1px solid rgba(247,207,85,.35);font-size:.84rem"><span class="imc"></span> <b>Earn IM$:</b> finish the daily for <b>+10 IM$</b> (once a day), get <b>another +10 IM$</b> for solving it (PaddockDle: guess the driver · Grid: a perfect 9/9), and win duels for <b>+10 IM$</b> each — up to 100 IM$ from duels a day. Log in to earn.</p>
+      <p style="margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(247,207,85,.08);border:1px solid rgba(247,207,85,.35);font-size:.84rem"><span class="imc"></span> <b>Earn IM$:</b> finish the daily for <b>+10 IM$</b> (once a day), get <b>another +10 IM$</b> for solving it (PaddockDle: guess the driver · Grid: a perfect 9/9), and win duels for <b>+10 IM$</b> each — up to 100 IM$ a day from each duel game. Log in to earn.</p>
       <h3>Reading the colour clues</h3>
       <div class="wd-legend">
         <div><span class="wd-sw ok"></span><b>Green</b><small>Exact match</small></div>
@@ -35736,8 +35736,8 @@ async function _gameCoins(kind, amount) {
   try { const c = await _betLoadCoins(currentUser.userId); const now = Date.now(); const g = c.gameRewards || {};
     let give = 0;
     if (/^(wd|gr|hl|cn|pt|tq|cp|st|qs|wf|pp)-(daily|win|hidden)$/.test(kind)) { const day = _wdDayKey() + (_wdSalt() ? '#' + _wdSalt() : ''); if (g[kind] === day) return 0; g[kind] = day; give = amount; if (/-daily$/.test(kind)) _gmMeterTick(c); }
-    else if (/^duel-/.test(kind)) { /* duel wins: +10 each, up to 100 IM$ a day across every duel game (UK day) */ const day = _ckDay(), D = g.duelDay && g.duelDay.d === day ? g.duelDay : { d: day, a: 0 };
-      give = Math.max(0, Math.min(amount, 100 - D.a)); if (!give) return 0; D.a += give; g.duelDay = D; }
+    else if (/^duel-/.test(kind)) { /* duel wins: +10 each, up to 100 IM$ a day per duel game (UK day) */ const day = _ckDay(), DD = g.duelDay && g.duelDay.d === day && g.duelDay.by ? g.duelDay : { d: day, by: {} }, a0 = DD.by[kind] || 0;
+      give = Math.max(0, Math.min(amount, 100 - a0)); if (!give) return 0; DD.by[kind] = a0 + give; g.duelDay = DD; }
     else { const log = (g[kind] || []).filter(x => now - x.t < 864e5); const used = log.reduce((a, x) => a + x.a, 0); give = Math.max(0, Math.min(amount, 25 - used));
       if (!give) { g[kind] = log; return 0; } log.push({ t: now, a: give }); g[kind] = log; }
     c.balance = (c.balance || 0) + give; c.gameRewards = g; c.gameEarned = (c.gameEarned || 0) + give;
@@ -36397,7 +36397,7 @@ async function renderHLGame(el) {
   el.innerHTML = `<div class="wd-wrap">${body}
     <div class="wd-info"><h3>How to play</h3><p>Each round is <b>${HL_N} questions</b>. You see two IMS drivers and one stat — race starts, wins, podiums, pole positions, career points or BOTTs. The left driver's number is shown: is the right driver's <b>higher</b> or <b>lower</b>? Equal numbers count as right.</p>
       <p><b>📅 Daily</b> — the same ${HL_N} questions for everyone, once a day. <b>∞ Practice</b> — as many rounds as you like. <b>⚔️ Duel</b> — you and an opponent get the same ${HL_N} questions at the same time; most right wins, and if it's level the faster finisher wins.</p>
-      <p style="margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(247,207,85,.08);border:1px solid rgba(247,207,85,.35);font-size:.84rem"><span class="imc"></span> <b>Earn IM$:</b> play the daily for <b>+10 IM$</b>, score <b>8/10 or better</b> for <b>another +10 IM$</b>, and win duels for <b>+10 IM$</b> each (up to 100 IM$ from duels a day). Log in to earn.</p>
+      <p style="margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(247,207,85,.08);border:1px solid rgba(247,207,85,.35);font-size:.84rem"><span class="imc"></span> <b>Earn IM$:</b> play the daily for <b>+10 IM$</b>, score <b>8/10 or better</b> for <b>another +10 IM$</b>, and win duels for <b>+10 IM$</b> each (up to 100 IM$ a day from duels). Log in to earn.</p>
       <p>Same driver pool as PaddockDle: everyone on the market, plus reserves with 25+ starts (or a title / BOTT). Stats are all-time across every IMS season.</p></div></div>`;
   if (mode === 'daily' && document.getElementById('hl-timer')) { const until = _now() + _wdMsToMidnight(); clearInterval(window._wdTick);
     window._wdTick = setInterval(() => { const t = document.getElementById('hl-timer'); if (!t) { clearInterval(window._wdTick); return; } const ms = until - _now(); if (ms <= 0) { clearInterval(window._wdTick); renderGames(); return; }
@@ -38732,7 +38732,7 @@ async function renderGridGame(el) {
     <div class="wd-info">
       <h3>What is IMS PaddockDle Grid?</h3>
       <p>The sister game to IMS PaddockDle. Instead of guessing one mystery driver, you fill a 3×3 grid where every row and column is its own IMS category — nationality, team, division, BOTT winners, race wins, podiums, starts, points and more. Each cell needs a driver who fits <b>both</b> the row and the column it sits in.</p>
-      <p>The driver pool is every driver currently on the IMS fantasy market, plus <b>reserves with 25 or more race starts</b> (any <b>Drivers' champion or BOTT winner</b> is always in, whatever their starts). Team categories count <b>any team a driver has driven for</b>, not just their current one — as long as they've made <b>3 or more race starts</b> for that team. A driver's <b>current team</b> always counts, even before they've raced for it.</p><p style="margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(247,207,85,.08);border:1px solid rgba(247,207,85,.35);font-size:.84rem"><span class="imc"></span> <b>Earn IM$:</b> finish the daily for <b>+10 IM$</b> (once a day), get <b>another +10 IM$</b> for solving it (PaddockDle: guess the driver · Grid: a perfect 9/9), and win duels for <b>+10 IM$</b> each — up to 100 IM$ from duels a day. Log in to earn.</p>
+      <p>The driver pool is every driver currently on the IMS fantasy market, plus <b>reserves with 25 or more race starts</b> (any <b>Drivers' champion or BOTT winner</b> is always in, whatever their starts). Team categories count <b>any team a driver has driven for</b>, not just their current one — as long as they've made <b>3 or more race starts</b> for that team. A driver's <b>current team</b> always counts, even before they've raced for it.</p><p style="margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(247,207,85,.08);border:1px solid rgba(247,207,85,.35);font-size:.84rem"><span class="imc"></span> <b>Earn IM$:</b> finish the daily for <b>+10 IM$</b> (once a day), get <b>another +10 IM$</b> for solving it (PaddockDle: guess the driver · Grid: a perfect 9/9), and win duels for <b>+10 IM$</b> each — up to 100 IM$ a day from each duel game. Log in to earn.</p>
       <h3>How to play</h3>
       <div class="gr-steps">
         <div><i>1</i><b>Pick a cell</b><small>Tap any of the 9 cells where a row category meets a column category.</small></div>
