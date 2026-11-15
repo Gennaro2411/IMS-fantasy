@@ -4558,6 +4558,26 @@ body.ck-lock>header,body.ck-lock>main,body.ck-lock #mobile-nav{visibility:hidden
 .rw-im{display:block;margin-top:6px;font-style:normal;font-weight:900;font-size:.85rem;color:#ffe083}
 .ck.ck-hv:hover{transform:translateY(-3px)}
 .ck-pn{display:block;text-align:center;font-size:.66rem;font-weight:800;color:#b9beff;margin-top:4px}.ck-pn.no{color:#5f6290;font-weight:600}
+.spec-b{position:sticky;top:64px;z-index:30;display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:12px;padding:10px 14px;margin:0 0 14px;border-radius:16px;background:linear-gradient(110deg,rgba(239,68,68,.18),rgba(124,134,255,.16));box-shadow:inset 0 0 0 1px rgba(239,68,68,.45),0 10px 30px -14px rgba(0,0,0,.8);backdrop-filter:blur(10px)}
+.spec-l b{display:inline-block;font:900 italic .95rem/1 'Barlow Condensed',sans-serif;letter-spacing:.08em;color:#fff;margin-left:6px}.spec-l small{display:block;margin-top:3px;font-size:.72rem;color:#c9cbe8}
+.spec-dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 0 rgba(239,68,68,.7);animation:specPulse 1.6s infinite}
+@keyframes specPulse{0%{box-shadow:0 0 0 0 rgba(239,68,68,.7)}70%{box-shadow:0 0 0 8px rgba(239,68,68,0)}100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}}
+.spec-pov small{display:block;font-size:.58rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#8b8fb8;margin-bottom:4px;text-align:center}.spec-pov>div{display:flex;gap:4px;padding:3px;border-radius:12px;background:rgba(0,0,0,.25)}
+.spec-pov button{display:inline-flex;align-items:center;gap:6px;max-width:150px;cursor:pointer;font:inherit;font-size:.78rem;font-weight:700;color:#a5a9d6;background:none;border:0;border-radius:9px;padding:5px 9px 5px 5px}.spec-pov button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.spec-pov button.on{color:#fff;background:linear-gradient(110deg,#6f74e8,#a779e6 55%,#f0487a)}
+.spec-x{cursor:pointer;font:inherit;font-size:.74rem;font-weight:800;color:#fca5a5;background:none;border:1px solid rgba(239,68,68,.5);border-radius:10px;padding:8px 10px;white-space:nowrap}
+.spec-on>*:not(.spec-b){pointer-events:none}.spec-on .wd-rm,.spec-on [onclick*="Leave"],.spec-on [onclick*="Draw("],.spec-on [onclick*="Rematch"],.spec-on .wd-modes,.spec-on .hl-btns{display:none!important}
+@media (max-width:640px){.spec-b{grid-template-columns:1fr auto;top:56px}.spec-pov{grid-column:1/-1;order:3}.spec-pov>div{justify-content:center}.spec-pov button{flex:1;justify-content:center;max-width:none}}
+.tr-sub{margin-bottom:12px}.tr-r{padding:12px 14px;border-radius:14px;margin-bottom:10px;background:rgba(255,255,255,.035);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.tr-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.tr-h b{color:#fff}.tr-h>span{color:#b9beff;font-weight:900}.tr-h em{font-style:normal;font-size:.68rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-left:auto}.tr-h small{font-size:.7rem;color:#8b8fb8}
+.tr-s{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}.tr-s small{display:block;font-size:.6rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#8b8fb8;margin-bottom:4px}
+.tr-l{display:flex;flex-wrap:wrap;gap:5px}.tr-im{display:inline-flex;align-items:center;gap:5px;font-size:.76rem;font-weight:800;padding:5px 10px;border-radius:99px;background:rgba(247,207,85,.1);color:#ffe083;box-shadow:inset 0 0 0 1px rgba(247,207,85,.3)}
+.tr-cc{font-size:.74rem;padding:5px 9px;border-radius:8px;background:rgba(124,134,255,.12);color:#d5d7f5}.tr-cc b{color:#ffe083}.tr-m{margin:8px 0 0;font-size:.8rem;font-style:italic;color:#a5a9d6}
+.tr-new{display:grid;gap:10px}.tr-new select,.tr-msg{width:100%;padding:10px;border-radius:10px;background:#0e0c1a;color:#fff;border:1px solid rgba(255,255,255,.14);font:inherit;box-sizing:border-box}.tr-new .ctc-lb input{padding:8px;border-radius:8px;background:#0e0c1a;color:#fff;border:1px solid rgba(255,255,255,.14);font:inherit;width:100%;box-sizing:border-box}
+.tr-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}.tr-col{display:grid;gap:8px;align-content:start;padding:12px;border-radius:14px;background:rgba(255,255,255,.03);box-shadow:inset 0 0 0 1px rgba(124,134,255,.25)}
+.tr-col .tr-l{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:6px}.tr-col .tr-im,.tr-col .tr-cc{grid-column:1/-1;justify-self:start}.tr-cw{min-width:0}
+.tr-sel .ck{box-shadow:0 0 0 3px #4ade80}.tr-sn{position:absolute;top:-6px;left:-6px;z-index:4;min-width:24px;height:24px;border-radius:12px;background:#4ade80;color:#04210f;font-weight:900;font-size:.75rem;display:grid;place-items:center}.tr-sel{position:relative}
+@media (max-width:640px){.tr-cols,.tr-s{grid-template-columns:1fr}.ckx .wd-modes{grid-template-columns:repeat(4,minmax(0,1fr))}}
 .ctc-lim{display:grid;gap:6px;font-size:.8rem;color:#c9cbe8}.ctc-lim .ck-fil{margin:0}
 .ctc-st{flex-basis:100%;font-size:.76rem;color:#c9cbe8}.ctc-st b{color:#ffe083}
 .ctc-back{cursor:pointer;font:inherit;font-weight:700;font-size:.8rem;color:#b9beff;background:none;border:0;padding:4px 0;margin-bottom:8px}
@@ -6055,6 +6075,7 @@ async function dbAdd(col, obj) {
 window._deletedTeamIds = window._deletedTeamIds || new Set();
 
 async function dbSet(col, id, obj) {
+  if (window._spec && /^(wordleDuels|wordleScores|cnDuels|coins)$/.test(col)) return; // spectating: read-only
   if (!PROJECT_ID) throw new Error('Not connected');
   // Firestore's PATCH CREATES a document when the id doesn't exist. That means any ordinary
   // write carrying a deleted team's id — saving a team, a transfer, a captain change —
@@ -6084,6 +6105,7 @@ async function dbSet(col, id, obj) {
 }
 
 async function dbDelete(col, id) {
+  if (window._spec && /^(wordleDuels|cnDuels)$/.test(col)) return; // spectating: read-only
   if (!PROJECT_ID) throw new Error('Not connected');
   await fsRequest('DELETE', fsUrl(col, id));
   dbInvalidate(col); _snapEnq(col, id);
@@ -15849,8 +15871,8 @@ window.computeTeamRanksByPoints = function(teams, races) {
 // Claimed automatically the next time you open the Leaderboard; packs land in IMS Cards → My Packs (c.cards.rw[raceId]).
 const RW_FROM = Date.UTC(2026, 10, 13, 19, 20); // only rounds settled after this (Brazil R5 and earlier don't pay)
 // [from, to, packs, label, IM$]
-const RW_TABLE = [[1, 1, ['supersonic', 'supersonic'], '🏆 Round winner', 1000], [2, 2, ['supersonic', 'gold'], '🥈 2nd', 600], [3, 3, ['supersonic'], '🥉 3rd', 400],
-  [4, 5, ['gold', 'gold'], '4th–5th', 250], [6, 10, ['gold'], '6th–10th', 150], [11, 25, ['mixed'], '11th–25th', 75], [26, 50, ['silver'], '26th–50th', 40], [51, 9999, ['bronze'], '51st+', 20]];
+const RW_TABLE = [[1, 1, ['supersonic', 'supersonic', 'supersonic'], '🏆 Round winner', 2500], [2, 2, ['supersonic', 'supersonic'], '🥈 2nd', 1500], [3, 3, ['supersonic', 'gold'], '🥉 3rd', 1000],
+  [4, 5, ['supersonic', 'gold'], '4th–5th', 600], [6, 10, ['gold', 'gold'], '6th–10th', 400], [11, 25, ['gold', 'mixed'], '11th–25th', 200], [26, 50, ['mixed', 'silver'], '26th–50th', 100], [51, 9999, ['silver', 'bronze'], '51st+', 50]];
 const _rwIm = R => R && R[4] ? ` + <i class="imc"></i> ${R[4].toLocaleString()}` : '';
 const _rwFor = pos => RW_TABLE.find(r => pos >= r[0] && pos <= r[1]);
 function _rwRank(race, teams, races) { const T = (teams || []).filter(t => t && !t.testAccount && t.userId);
@@ -15872,7 +15894,7 @@ async function _rwFill(teams, races, me) { const el = document.getElementById('l
   const pk = ids => { const n = {}; ids.forEach(p => n[p] = (n[p] || 0) + 1); return Object.keys(n).map(p => `<span class="rw-p">${_ckPackArt(p, true)}${n[p] > 1 ? `<i>×${n[p]}</i>` : ''}</span>`).join(''); };
   el.innerHTML = `<div class="rw"><div class="rw-h"><span class="rw-k">🏁 Round rewards</span><small>Card packs + IM$ for where you finish each race weekend</small></div>
     <div class="rw-top">${RW_TABLE.slice(0, 3).map((r, i) => `<div class="rw-pod rw-p${i + 1}"><b>${r[3]}</b><div class="rw-pks">${pk(r[2])}</div><em class="rw-im"><i class="imc"></i> ${r[4].toLocaleString()}</em></div>`).join('')}</div>
-    <div class="rw-rest">${RW_TABLE.slice(3).map(r => `<div><b>${r[3]}</b><span>${r[2].length > 1 ? r[2].length + '× ' : ''}${CK_PACKS[r[2][0]].n}${_rwIm(r)}</span></div>`).join('')}</div>${mine}
+    <div class="rw-rest">${RW_TABLE.slice(3).map(r => `<div><b>${r[3]}</b><span>${(() => { const n = {}; r[2].forEach(p => n[p] = (n[p] || 0) + 1); return Object.keys(n).map(p => (n[p] > 1 ? n[p] + '× ' : '') + CK_PACKS[p].n).join(' + '); })()}${_rwIm(r)}</span></div>`).join('')}</div>${mine}
     <div class="rw-f">IM$ goes straight to your balance and packs are added automatically after each round is settled. Packs land in <a href="#" onclick="showPage('cards');window._ckTab='packs';return false">Cards → My Packs</a>.</div></div>`; }
 // ===== ROUND WINNER REEL =====
 // Once a round is fully settled (handed over after results + verdicts — the race has its round-end
@@ -34561,7 +34583,7 @@ async function renderConnGame(el) {
 window.openGame = function(g) {
   if (window._qsArmed && g !== 'qs' && window._qsLeave) { window._qsLeave('left'); if (window._qsArmed) { window._qsArmed.away = true; try { localStorage.setItem('qsArmed', JSON.stringify(window._qsArmed)); } catch (e) {} } } if (g !== window._games.view && _wdGuardLeave(() => openGame(g))) return; if (g !== 'cn' && typeof _cnEndDuel === 'function') _cnEndDuel(false); if (g !== 'hl' && typeof _hdLeave === 'function') _hdLeave(true); if (g !== 'pt' && typeof _pdLeave === 'function') _pdLeave(true); if (g !== 'tq' && typeof _tqdLeave === 'function') _tqdLeave(true); if (g !== 'cp' && typeof _cpdLeave === 'function') _cpdLeave(true); if (g !== 'wordle') _wdEndDuel(false); if (g !== 'grid' && typeof _gdEnd === 'function') _gdEnd(false); window._grSel = null; window._games.view = g; renderGames(); };
 // ---- Modes: 'daily' (one shared driver per UK day), 'inf' (random, back to back), 'duel' (1v1 race) ----
-const _wdGetMode = () => { try { return localStorage.getItem('imsWordleMode') || 'daily'; } catch (e) { return 'daily'; } };
+const _wdGetMode = () => { if (window._spec && window._spec.g === 'wd') return 'duel'; try { return localStorage.getItem('imsWordleMode') || 'daily'; } catch (e) { return 'daily'; } };
 window.setWordleMode = function(m) { if (m !== _wdGetMode() && _wdGuardLeave(() => setWordleMode(m))) return; if (m !== 'duel') _wdEndDuel(false); try { localStorage.setItem('imsWordleMode', m); } catch (e) {} clearInterval(window._wdDuelPoll); renderGames(); };
 const _wdState = (mode) => { try { return JSON.parse(localStorage.getItem('imsWordle_' + (mode || _wdGetMode())) || 'null'); } catch (e) { return null; } };
 const _wdSave = (st, mode) => { const m = mode || _wdGetMode(); try { localStorage.setItem('imsWordle_' + m, JSON.stringify(st)); } catch (e) {} if (m === 'daily') _dailySync('wdDaily', st); };
@@ -35732,6 +35754,7 @@ async function _gmMeterFill() { const el = document.getElementById('gm-meter'); 
     <div class="gmm-rw">${GM_METER.map(m => `<div class="gmm-t${n >= m[0] ? ' got' : nx === m ? ' nx' : ''}"><div class="gmm-pk">${_ckPackArt(m[1][0], true)}${m[2] ? `<span class="gmm-im"><i class="imc"></i>+${m[2]}</span>` : ''}${n >= m[0] ? '<span class="gmm-ok">✓</span>' : ''}</div><b>${m[0]} games</b><small>${esc(lab(m))}</small></div>`).join('')}</div>
     <div class="gmm-next">${nx ? `<b>${nx[0] - n}</b> more daily game${nx[0] - n === 1 ? '' : 's'} to unlock <b>${esc(lab(nx))}</b>` : ''}<small>Every daily puzzle you finish counts once a day. Packs land in IMS Cards → My Packs. Resets after ${GM_METER_MAX}${c.rwDone ? ` · completed ${c.rwDone}×` : ''}.</small></div>`; }
 async function _gameCoins(kind, amount) {
+  if (window._spec) return 0; // spectators don't earn
   if (typeof currentUser === 'undefined' || !currentUser || !currentUser.userId) return 0; // guests don't earn IM$
   try { const c = await _betLoadCoins(currentUser.userId); const now = Date.now(); const g = c.gameRewards || {};
     let give = 0;
@@ -35763,8 +35786,8 @@ function _wdMe() {
   if (!g) { g = { uid: 'guest_' + Math.random().toString(36).slice(2, 10), name: 'Guest ' + Math.floor(1000 + Math.random() * 9000) }; try { localStorage.setItem('imsGuestId', JSON.stringify(g)); } catch (e) {} }
   return g;
 }
-const _wdDuelKey = () => { try { return JSON.parse(localStorage.getItem('imsDuel') || 'null'); } catch (e) { return null; } };
-const _wdDuelSet = (v) => { try { v ? localStorage.setItem('imsDuel', JSON.stringify(v)) : localStorage.removeItem('imsDuel'); } catch (e) {} };
+const _wdDuelKey = () => { if (window._spec && window._spec.g === 'wd') return { code: window._spec.code, role: window._spec.role }; try { return JSON.parse(localStorage.getItem('imsDuel') || 'null'); } catch (e) { return null; } };
+const _wdDuelSet = (v) => { if (window._spec) { if (!v) setTimeout(() => window.specEnd && specEnd(1), 0); return; } try { v ? localStorage.setItem('imsDuel', JSON.stringify(v)) : localStorage.removeItem('imsDuel'); } catch (e) {} };
 const _wdCode = () => { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let c = ''; for (let i = 0; i < 5; i++) c += A[Math.floor(Math.random() * A.length)]; return c; };
 
 // ---- Shared duel helpers (PaddockDle + Higher or Lower; Grid has its own copies) ----
@@ -35926,7 +35949,8 @@ async function _liveDuelsHtml(all, game, f) {
     const [w, ls] = _h2hVs(stats, l.hostUid, l.guestUid, f);
     const lead = w > ls ? 'host' : ls > w ? 'guest' : '';
     const side = (r, n) => `<span style="display:inline-flex;align-items:center;gap:7px;min-width:0;${r === 'guest' ? 'flex-direction:row-reverse;' : ''}">${_wdAv({ name: l[r + 'Name'] || 'Player', photo: l[r + 'Avatar'] || '' }, 30)}<b style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:${lead === r ? '#4ade80' : 'inherit'}">${esc(l[r + 'Name'] || 'Player')}</b></span>`;
-    return `<div class="wd-lob" style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px">${side('host')}<span style="text-align:center;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.1rem;white-space:nowrap">${w} – ${ls}<small style="display:block;font-size:.55rem;letter-spacing:1px;color:var(--muted);font-weight:700">H2H</small></span>${side('guest')}</div>`;
+    const canW = game !== 'cn' && l.hostUid !== _wdMe().uid && l.guestUid !== _wdMe().uid, wb = canW ? `<button class="btn btn-secondary btn-sm spec-w" onclick="specStart('${game}','${esc(l.id)}','host')">👁 Watch live</button>` : '';
+    return `<div class="wd-lob" style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px">${wb ? `<div style="grid-column:1/-1;order:9;display:flex;justify-content:center">${wb}</div>` : ''}${side('host')}<span style="text-align:center;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.1rem;white-space:nowrap">${w} – ${ls}<small style="display:block;font-size:.55rem;letter-spacing:1px;color:var(--muted);font-weight:700">H2H</small></span>${side('guest')}</div>`;
   }).join('');
   return `<div class="wd-panel" style="margin-top:12px"><h4><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ef4444;box-shadow:0 0 8px #ef4444;margin-right:6px;animation:pulseDot 1.2s ease-in-out infinite"></span>Live now <small>${live.length}</small></h4>${rows}</div>`;
 }
@@ -35971,6 +35995,7 @@ window._wdAutoLeave = () => { if (typeof _cpdLeave === 'function') _cpdLeave(tru
 // ---- Anti-cheat: an attempt in progress can't be left without giving it up ----
 const _WD_MODE_NAME = { daily: 'Daily', inf: 'Infinite', duel: 'Duel', grid: 'Grid', gridduel: 'Grid duel' };
 function _wdActiveAttempt() {
+  if (window._spec) return null;
   const pg = document.getElementById('page-games'); if (!pg || !pg.classList.contains('active')) return null;
   if (window._games.view === 'grid') { if (_grGetMode() === 'duel') { const L = window._gdLive; return _gdKey() && L && L.status === 'playing' && !L.done ? 'gridduel' : null; }
     const gs = typeof _grState === 'function' ? _grState() : null; return gs && !gs.done && gs.started ? 'grid' : null; }
@@ -36070,6 +36095,7 @@ window.wordleDuelJoin = async function(code) {
 window.wordleDuelDraw = async function(on) { const r = window._wdDuelRef; if (!r) return; await _duelDrawVote(r.code, r.role, on); renderGames(); };
 window.wordleDuelLeave = async function() { _wdEndDuel(false); setTimeout(() => renderGames(), 150); };
 async function _wdDuelGuess(id) {
+  if (window._spec) return;
   const ref = window._wdDuelRef; if (!ref || ref.locked) return;
   dbInvalidate('wordleDuels'); const l = await dbGet('wordleDuels', ref.code).catch(() => null); if (!l || l.hostWonAt || l.guestWonAt || l.drawAgreed || l.cancelled) return renderGames();
   const g = (l[ref.role + 'Guesses'] || []).slice(); if (g.includes(id)) return; g.push(id);
@@ -36129,7 +36155,7 @@ window.wordleRestart = function() { if (_wdGetMode() !== 'inf') return; _wdNew(w
 // Modes: 📅 Daily (same 10 for everyone, once a day, IM$), ∞ Practice (unlimited), ⚔️ Duel (same 10, live race).
 const HL_STATS = [['st', 'race starts', '🏁'], ['w', 'race wins', '🥇'], ['pd', 'podiums', '🍾'], ['pl', 'pole positions', '⏱️'], ['p', 'career points', '⭐'], ['b', 'BOTTs', '🏆']];
 const HL_N = 10;
-const _hlGetMode = () => { try { return localStorage.getItem('imsHLMode') || 'daily'; } catch (e) { return 'daily'; } };
+const _hlGetMode = () => { if (window._spec && window._spec.g === 'hl') return 'duel'; try { return localStorage.getItem('imsHLMode') || 'daily'; } catch (e) { return 'daily'; } };
 window.setHLMode = function(m) { if (m !== _hlGetMode() && _wdGuardLeave(() => setHLMode(m))) return; if (_hlGetMode() === 'duel' && m !== 'duel') _hdLeave(true); try { localStorage.setItem('imsHLMode', m); } catch (e) {} if (m === 'inf') window._hlInf = null; renderGames(); };
 // Pairs are picked to be CLOSE on the chosen stat, so it's a real question rather than an obvious one.
 const HL_CLOSE = { st: [10, 0.4], w: [3, 0.5], pd: [5, 0.45], pl: [3, 0.5], p: [100, 0.4], b: [2, 0] }; // [min gap allowed, % of the value]
@@ -36239,8 +36265,8 @@ const _hlEndHtml = (st, mode) => { const sc = st.ans.filter(Boolean).length, goo
       <button class="btn btn-secondary hl-share" onclick="hlShare()">📤 Share result</button></div></div>`; };
 
 // ---- ⚔️ Duel: same 10 questions for both players at the same time; most right wins, tie → faster ----
-const _hdKey = () => { try { return JSON.parse(localStorage.getItem('imsHLDuel') || 'null'); } catch (e) { return null; } };
-const _hdSet = (v) => { try { v ? localStorage.setItem('imsHLDuel', JSON.stringify(v)) : localStorage.removeItem('imsHLDuel'); } catch (e) {} };
+const _hdKey = () => { if (window._spec && window._spec.g === 'hl') return { code: window._spec.code, role: window._spec.role }; try { return JSON.parse(localStorage.getItem('imsHLDuel') || 'null'); } catch (e) { return null; } };
+const _hdSet = (v) => { if (window._spec) { if (!v) setTimeout(() => window.specEnd && specEnd(1), 0); return; } try { v ? localStorage.setItem('imsHLDuel', JSON.stringify(v)) : localStorage.removeItem('imsHLDuel'); } catch (e) {} };
 window.hlDuelCreate = async function(pub) {
   await _clockSync();
   if (window._hlLocked) return; const me = _wdMe(), qs = _hlMakeQs(window._hlPool || [], Math.random); if (!qs) return;
@@ -36268,6 +36294,7 @@ window.hlDuelLeave = () => _hdLeave(false);
 window.hlDuelDraw = async function(on) { const r = window._hdRef; if (!r) return; await _duelDrawVote(r.code, r.role, on); renderGames(); };
 window.hlDuelRematch = async function() { const r = window._hdRef; if (r) { await dbSet('wordleDuels', r.code, { [r.role + 'Rematch']: true }); renderGames(); } };
 async function _hdGuess(dir) {
+  if (window._spec) return;
   const r = window._hdRef; if (!r || r.locked) return; dbInvalidate('wordleDuels'); const l = await dbGet('wordleDuels', r.code).catch(() => null); if (!l) return;
   const mine = (l[r.role + 'Ans'] || []).slice(); const oD = l[(r.role === 'host' ? 'guest' : 'host') + 'Done'] || 0;
   if (mine.length >= HL_N || l[r.role + 'Done'] || l.drawAgreed || l.cancelled || (oD && _now() > oD + 30e3)) return renderGames(); // time's up after the opponent finished
@@ -36409,7 +36436,7 @@ async function renderHLGame(el) {
 // Pool: everyone on the market + reserves with 25+ starts.
 const PT_N = 3, PT_WIN = 60; // 3 questions; 60 or under earns the bonus
 const PT_REV = '#r3'; // bump to re-roll today's Pointless daily for everyone
-const _ptGetMode = () => window._ptMode || 'daily';
+const _ptGetMode = () => window._spec && window._spec.g === 'pt' ? 'duel' : window._ptMode || 'daily';
 window.setPTMode = function(m) { if (m !== 'duel' && typeof _pdLeave === 'function') _pdLeave(true); window._ptMode = m; window._ptReveal = null; renderGames(); };
 const _ptLoadSt = () => { try { return JSON.parse(localStorage.getItem('imsPtDaily') || 'null'); } catch (e) { return null; } };
 const _ptSave = (st) => { try { localStorage.setItem('imsPtDaily', JSON.stringify(st)); } catch (e) {} };
@@ -36658,8 +36685,8 @@ async function renderPTGame(el) {
 // Lowest total wins — but a POINTLESS answer in the final wins it outright (the jackpot), unless both find one.
 // Answers are stored per round as strings ('' = out of time / skipped; final = 'id1|id2|id3').
 const PD_ROUNDS = 3, PD_TURN = 30e3, PD_FINAL_TURN = 50e3, PD_GRACE = 12e3;
-const _pdKey = () => { try { return JSON.parse(localStorage.getItem('imsPTDuel') || 'null'); } catch (e) { return null; } };
-const _pdSet = (v) => { try { v ? localStorage.setItem('imsPTDuel', JSON.stringify(v)) : localStorage.removeItem('imsPTDuel'); } catch (e) {} };
+const _pdKey = () => { if (window._spec && window._spec.g === 'pt') return { code: window._spec.code, role: window._spec.role }; try { return JSON.parse(localStorage.getItem('imsPTDuel') || 'null'); } catch (e) { return null; } };
+const _pdSet = (v) => { if (window._spec) { if (!v) setTimeout(() => window.specEnd && specEnd(1), 0); return; } try { v ? localStorage.setItem('imsPTDuel', JSON.stringify(v)) : localStorage.removeItem('imsPTDuel'); } catch (e) {} };
 const _pdFirst = (r) => r % 2 === 0 ? 'host' : 'guest'; // rounds 1–2 alternate who goes first
 // Whose turn is it? → { r, who } or null when all rounds are answered.
 function _pdTurn(l) { const h = l.hostAns || [], g = l.guestAns || [];
@@ -36824,7 +36851,7 @@ async function _pdBody(pool, top) {
 // 10 multiple-choice questions generated from the league's own stats (career numbers, teams,
 // nationalities, debut seasons, track records). Daily (same for everyone) + 3 practice rounds a day.
 const TQ_N = 10, TQ_WIN = 8, TQ_PRAC_MAX = 3;
-const _tqGetMode = () => window._tqMode || 'daily';
+const _tqGetMode = () => window._spec && window._spec.g === 'tq' ? 'duel' : window._tqMode || 'daily';
 window.setTQMode = function(m) { if (m !== 'duel' && typeof _tqdLeave === 'function') _tqdLeave(true); window._tqMode = m; window._tqRev = null; renderGames(); };
 const _tqLoadSt = () => { try { return JSON.parse(localStorage.getItem('imsTqDaily') || 'null'); } catch (e) { return null; } };
 const _tqSave = (st) => { try { localStorage.setItem('imsTqDaily', JSON.stringify(st)); } catch (e) {} };
@@ -36959,8 +36986,8 @@ async function renderTQGame(el) {
 // Both players get the same 10 questions at the same moment. 15 s each. Correct = 500 + up to 500 for
 // speed; wrong / no answer = 0. Last question is worth double. Answers are 'pick|ms' strings.
 const TQD_T = 15000, TQD_REV = 4500;
-const _tqdKey = () => { try { return JSON.parse(localStorage.getItem('imsTQDuel') || 'null'); } catch (e) { return null; } };
-const _tqdSet = (v) => { try { v ? localStorage.setItem('imsTQDuel', JSON.stringify(v)) : localStorage.removeItem('imsTQDuel'); } catch (e) {} };
+const _tqdKey = () => { if (window._spec && window._spec.g === 'tq') return { code: window._spec.code, role: window._spec.role }; try { return JSON.parse(localStorage.getItem('imsTQDuel') || 'null'); } catch (e) { return null; } };
+const _tqdSet = (v) => { if (window._spec) { if (!v) setTimeout(() => window.specEnd && specEnd(1), 0); return; } try { v ? localStorage.setItem('imsTQDuel', JSON.stringify(v)) : localStorage.removeItem('imsTQDuel'); } catch (e) {} };
 const _tqdPts = (raw, Q, qi) => { if (!raw) return 0; const [p, ms] = String(raw).split('|').map(Number); if (p !== Q.a) return 0; return Math.round((500 + 500 * Math.max(0, 1 - (ms || 0) / TQD_T)) * (qi === TQ_N - 1 ? 2 : 1)); };
 const _tqdTot = (l, ro, qs) => (l[ro + 'Ans'] || []).reduce((a, r, i) => a + (qs[i] ? _tqdPts(r, qs[i], i) : 0), 0);
 const _tqdQs = (l) => { try { return JSON.parse(l.qsJson || '[]'); } catch (e) { return []; } };
@@ -37085,7 +37112,7 @@ async function _tqdBody(pool, top) {
 // A driver's team history, season by season. Start with their first season; every wrong guess reveals
 // the next one (then their nationality and current division). 6 guesses.
 const CP_MAX = 6, CP_PRAC_MAX = 3;
-const _cpGetMode = () => window._cpMode || 'daily';
+const _cpGetMode = () => window._spec && window._spec.g === 'cp' ? 'duel' : window._cpMode || 'daily';
 window.setCPMode = function(m) { if (m !== 'duel' && typeof _cpdLeave === 'function') _cpdLeave(true); window._cpMode = m; renderGames(); };
 const _cpLoadSt = () => { try { return JSON.parse(localStorage.getItem('imsCpDaily') || 'null'); } catch (e) { return null; } };
 const _cpSave = (st) => { try { localStorage.setItem('imsCpDaily', JSON.stringify(st)); } catch (e) {} };
@@ -37531,7 +37558,7 @@ async function renderCardsGame(el) {
     <div class="ckx-ht"><span class="ckx-k">IMS Cards</span><h1>Collect the <em>grid</em></h1><p>Every driver in IMS history is a card. Open packs, chase Diamonds and specials, and build your collection.</p>
     <div class="ckx-kpi"><div><small>Balance</small><b><i class="imc"></i> ${c ? Math.round(c.balance || 0).toLocaleString() : '—'}</b></div><div><small>My cards</small><b>${ownN}</b></div><div><small>Collection value</small><b>${ownV.toLocaleString()}</b></div><div><small>Card index</small><b>${dexN}<i>/${pool.list.length}</i></b></div></div></div></div>
     ${adminLoggedIn ? `<div class="ck-adm"><span>${open ? '🟢 <b>Open to everyone</b>' : '🔒 <b>Only you can see this</b> — players can\'t see IMS Cards yet'}</span><button onclick="ckSetOpen(${open ? 'false' : 'true'})">${open ? 'Hide from players' : 'Let everyone see it'}</button><button onclick="ckReset('pulls')">Reset Big Pulls</button><button onclick="ckReset('all')">Reset everyone's cards</button></div>` : ''}
-    <div class="wd-modes">${[['shop', '🛒', 'SHOP'], ['packs', '🎁', `MY PACKS${(K.gifts || []).length ? ' · ' + K.gifts.length : ''}`], ['col', '🗂️', `MY CARDS${ownN ? ' · ' + ownN : ''}`], ['ctc', '🧩', 'CTC'], ['feed', '🔥', 'BIG PULLS'], ['all', '📖', 'CARD INDEX']].map(([m, i, l]) => `<button class="${tab === m ? 'on' : ''}" onclick="ckTab('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>`;
+    <div class="wd-modes">${[['shop', '🛒', 'SHOP'], ['packs', '🎁', `MY PACKS${(K.gifts || []).length ? ' · ' + K.gifts.length : ''}`], ['col', '🗂️', `MY CARDS${ownN ? ' · ' + ownN : ''}`], ['ctc', '🧩', 'CTC'], ['trade', '🤝', `TRADES${window._trInN ? ' · ' + window._trInN : ''}`], ['feed', '🔥', 'BIG PULLS'], ['all', '📖', 'CARD INDEX']].map(([m, i, l]) => `<button class="${tab === m ? 'on' : ''}" onclick="ckTab('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>`;
   if (!me) body += '<div class="alert alert-warning">Log in to your team to buy packs.</div>';
   if (tab === 'shop') { const TT = _ckTeamSync(pool); const pct = (x) => (x * 100 >= 1 ? Math.round(x * 100) : (x * 100).toFixed(2).replace(/0$/, '')) + '%';
     body += `<div class="ck-timer">🕛 Store refreshes in <b id="ck-clock">${_ckClock()}</b><small>A new Team Pack arrives at midnight UK time</small></div><div class="ck-shop">${Object.entries(CK_PACKS).map(([id, P]) => { const left = _ckLeft(K, id), oos = left <= 0, can = c && !oos && (c.balance || 0) >= P.price;
@@ -37558,6 +37585,7 @@ async function renderCardsGame(el) {
       ${own.length ? `<div class="ck-bulk"><button class="hx-btn ghost" onclick="ckSellBulk(true)">Sell all duplicates</button><button class="hx-btn ghost dn" onclick="ckSellBulk(false)">Sell all cards</button></div>
       <div class="ck-grid">${own.map(x => `<div class="ck-lkw">${((K.lock || {})[x.c.k]) ? '<span class="ck-lk">🔒</span>' : ''}${_ckCard(x.c, { n: x.n, on: `ckDetail('${x.c.k}')` })}</div>`).join('')}</div><div class="ck-fine">Tap a card for its stats, to quick sell it, or to 🔒 lock it so it's never sold (bulk sells and quick sells keep locked cards).</div>` : '<div class="ck-empty">No cards yet. Open a pack in the shop.</div>'}`; }
   else if (tab === 'ctc') { body += await _ctcTab(pool, c); }
+  else if (tab === 'trade') { body += await _trTab(pool, c); }
   else if (tab === 'feed') { if (!window._ckFeed || _now() - window._ckFeed.at > 60e3) { const all = await _gmNoTestCoins(await dbGetAll('coins').catch(() => [])); const rows = []; all.forEach(x => (x && x.cardPulls || []).forEach(p => rows.push(Object.assign({ uid: x.userId }, p)))); rows.sort((a, b) => (b.t || 0) - (a.t || 0)); window._ckFeed = { at: _now(), rows: rows.slice(0, 60) }; }
     const rows = window._ckFeed.rows, ago = (t) => { const s = (Date.now() - t) / 1e3; return s < 3600 ? Math.max(1, Math.round(s / 60)) + 'm ago' : s < 86400 ? Math.round(s / 3600) + 'h ago' : Math.round(s / 86400) + 'd ago'; };
     body += `<div class="ck-feed"><div class="wl-sh"><span>Everyone's ${CK_FEED_MIN}+ rated pulls</span><small>newest first</small></div>${rows.length ? rows.map(p => { const card = pool.by[p.k], r = card ? card.r : p.r, t = _ckTier(Math.max(r, p.r)).id;
@@ -37896,6 +37924,148 @@ window.ctcDel = function(id) { if (!adminLoggedIn) return; customConfirm('Delete
 // Special cards: flip "CTC only" (never in packs; only from a challenge reward).
 window.ckSpCtc = async function(id) { if (!adminLoggedIn) return; const sd = await dbGet('settings', 'ckSpecials').catch(() => null), list = ((sd && sd.value && sd.value.list) || []), x = list.find(y => y.id === id); if (!x) return;
   if (x.ctc) delete x.ctc; else x.ctc = 1; await dbSet('settings', 'ckSpecials', { value: { list } }); window._ckPoolC = null; showToast(x.ctc ? '🧩 CTC only — this card no longer comes out of packs.' : 'This card can come out of packs again.', 'success'); _ckRender(); };
+// ===== SPECTATE LIVE DUELS =====
+// Watch a live duel through either player's eyes. The duel's own screen is drawn with the spectator standing in
+// for the chosen player (their key, mode and role are swapped in), and every write is blocked while spectating
+// (dbSet/dbDelete on duel collections, coins, guesses), so watching can never change the game. Tap a name to switch POV.
+const SPEC_VIEW = { wd: 'wordle', hl: 'hl', pt: 'pt', tq: 'tq', cp: 'cp', grid: 'grid' }, SPEC_NAME = { wd: 'PaddockDle', hl: 'Higher or Lower', pt: 'Pointless', tq: 'Trivia', cp: 'Career Path', grid: 'Grid' };
+window.specStart = async function(g, code, role) { if (!SPEC_VIEW[g]) return; dbInvalidate('wordleDuels'); const l = await dbGet('wordleDuels', code).catch(() => null);
+  if (!l || l.status !== 'playing') return showToast('That duel has already finished.', 'info');
+  const me = _wdMe().uid; if (me && (l.hostUid === me || l.guestUid === me)) return showToast('That\'s your own duel!', 'info');
+  ['_wdDuelPoll', '_hdPoll', '_pdPoll', '_tqdPoll', '_cpdPoll', '_gdPoll', '_hdCd'].forEach(k => clearInterval(window[k]));
+  window._spec = { g, code, role: role === 'guest' ? 'guest' : 'host', view: SPEC_VIEW[g], n: { host: l.hostName || 'Player', guest: l.guestName || 'Player' }, av: { host: l.hostAvatar || '', guest: l.guestAvatar || '' } };
+  window._hlReveal = null; window._hlBusy = false; window._games.view = SPEC_VIEW[g]; await renderGames(); try { document.getElementById('games-content').scrollIntoView({ block: 'start' }); } catch (e) {} };
+window.specPov = async function(role) { const S = window._spec; if (!S || S.role === role || window._specBusy) return; window._specBusy = 1;
+  ['_wdDuelPoll', '_hdPoll', '_pdPoll', '_tqdPoll', '_cpdPoll', '_gdPoll', '_hdCd'].forEach(k => clearInterval(window[k])); S.role = role; window._hlReveal = null; window._hlBusy = false;
+  try { await renderGames(); } finally { window._specBusy = 0; } };
+window.specEnd = function(ended) { if (!window._spec) return; ['_wdDuelPoll', '_hdPoll', '_pdPoll', '_tqdPoll', '_cpdPoll', '_gdPoll', '_hdCd'].forEach(k => clearInterval(window[k]));
+  window._spec = null; if (ended) showToast('The duel has finished.', 'info'); renderGames(); };
+function _specBar() { const el = document.getElementById('games-content'); if (!el) return; document.getElementById('spec-b')?.remove(); const S = window._spec;
+  el.classList.toggle('spec-on', !!S); if (!S) return;
+  const b = r => `<button class="${S.role === r ? 'on' : ''}" onclick="specPov('${r}')">${_wdAv({ name: S.n[r], photo: S.av[r] }, 26)}<span>${esc(S.n[r])}</span></button>`;
+  el.insertAdjacentHTML('afterbegin', `<div id="spec-b" class="spec-b"><div class="spec-l"><i class="spec-dot"></i><b>WATCHING LIVE</b><small>${SPEC_NAME[S.g]} duel · ${esc(S.n[S.role])}'s view</small></div>
+    <div class="spec-pov"><small>Switch view</small><div>${b('host')}${b('guest')}</div></div><button class="spec-x" onclick="specEnd()">✕ Stop watching</button></div>`); }
+{ const _rg = window.renderGames; window.renderGames = async function() { const S = window._spec; if (S && window._games.view !== S.view) window._spec = null;
+    const r = await _rg.apply(this, arguments); _specBar(); return r; }; }
+// ===== CARD TRADING (players swap IM$ and cards) =====
+// trades/{id}: { from, fromName, to, toName, give: { ims, cards: {k: n} }, get: { ims, cards: {k: n} }, status, t, at, by, done }
+// status: open → accepting → accepted, or declined / cancelled. What the sender offers is taken out of their wallet
+// when they send it (held), so it can't be sold or offered twice. Each player only ever writes their OWN coins doc:
+//   • accepter: takes "get" out of their wallet, adds "give", records cards.tra[id] in the same write, then marks accepted
+//   • sender: on their next sync collects "get" (cards.trc[id]) or, if declined/cancelled, gets "give" back (cards.trr[id])
+// Those per-trade flags live inside the coins write itself, so nothing can ever be paid twice.
+// "accepting" is a short claim before the accepter's wallet changes; a cancel that races it is settled by re-reading.
+const TR_MAXC = 10, TR_ST = { open: ['Waiting', '#ffb020'], accepting: ['Completing…', '#7dd3fc'], accepted: ['Completed', '#4ade80'], declined: ['Declined', '#f87171'], cancelled: ['Cancelled', '#8b8fb8'] };
+const _trCan = (c, k) => !!c && !c.ctc; // CTC reward cards can't be traded
+const _trN = o => Object.values((o && o.cards) || {}).reduce((a, b) => a + b, 0);
+const _trEmpty = o => !(o && o.ims > 0) && !_trN(o);
+async function _trAll(force) { if (!force && window._trC && _now() - window._trC.at < 15e3) return window._trC.list;
+  dbInvalidate('trades'); const list = (await dbGetAll('trades', { fresh: true }).catch(() => [])).filter(x => x && x.id && x.from && x.to).sort((a, b) => (b.done || b.t || 0) - (a.done || a.t || 0));
+  window._trC = { at: _now(), list }; return list; }
+// Can this wallet pay this side of a trade? (locked cards keep 1 copy, CTC cards never move)
+function _trShort(c, side, pool) { const inv = _ckInv(c), LK = (c.cards && c.cards.lock) || {};
+  if ((side.ims || 0) > (c.balance || 0)) return 'not enough IM$';
+  for (const [k, n] of Object.entries(side.cards || {})) { const card = pool.by[k]; if (!card) return 'a card that no longer exists'; if (!_trCan(card)) return 'a CTC card (can\'t be traded)';
+    if ((inv[k] || 0) - (LK[k] ? 1 : 0) < n) return `not enough copies of ${card.n}${LK[k] ? ' (locked cards keep 1)' : ''}`; }
+  return ''; }
+function _trTake(c, side) { const K = c.cards = c.cards || { inv: {} }; K.inv = K.inv || {}; c.balance = (c.balance || 0) - (side.ims || 0);
+  Object.entries(side.cards || {}).forEach(([k, n]) => { K.inv[k] = (K.inv[k] || 0) - n; if (K.inv[k] <= 0) delete K.inv[k]; }); }
+function _trGive(c, side) { const K = c.cards = c.cards || { inv: {} }; K.inv = K.inv || {}; K.dex = K.dex || {}; c.balance = (c.balance || 0) + (side.ims || 0);
+  Object.entries(side.cards || {}).forEach(([k, n]) => { K.inv[k] = (K.inv[k] || 0) + n; K.dex[k] = 1; }); }
+// Settle anything waiting on me: collect accepted trades, get back declined/cancelled offers, heal a stuck "accepting".
+async function _trSync() { const me = typeof currentUser !== 'undefined' && currentUser && currentUser.userId; if (!me || window._trSyncing) return; window._trSyncing = 1;
+  try { const list = await _trAll(true); let c = null, ch = 0; const load = async () => c || (c = await _betLoadCoins(me));
+    for (const t of list) {
+      if (t.from === me && (t.status === 'accepted' || t.status === 'declined' || t.status === 'cancelled')) { await load(); const K = c.cards = c.cards || { inv: {} };
+        if (t.status === 'accepted') { K.trc = K.trc || {}; if (!K.trc[t.id]) { K.trc[t.id] = 1; _trGive(c, t.get); ch++; } }
+        else { K.trr = K.trr || {}; if (!K.trr[t.id]) { K.trr[t.id] = 1; _trGive(c, t.give); ch++; } } }
+      if (t.to === me && t.status === 'accepting' && t.by === me && _now() - (t.at || 0) > 20e3) { await load(); const done = !!(((c.cards || {}).tra || {})[t.id]);
+        await dbSet('trades', t.id, done ? { status: 'accepted', done: t.done || _now() } : { status: 'open', by: '', at: 0 }).catch(() => {}); } }
+    if (ch) { await dbSet('coins', me, c); _ckSetPill(c); window._trC = null; }
+  } catch (e) { console.warn('trade sync', e); } finally { window._trSyncing = 0; } }
+// ---- Tab ----
+const _trSide = (side, pool, big) => { const C = Object.entries(side.cards || {}).map(([k, n]) => [pool.by[k], n, k]);
+  return `${side.ims > 0 ? `<span class="tr-im"><i class="imc"></i> ${Number(side.ims).toLocaleString()} IM$</span>` : ''}${C.map(([c, n, k]) => c ? (big ? `<div class="tr-cw">${_ckCard(c, { n, on: `ckDetail('${esc(k)}')` })}</div>` : `<span class="tr-cc t-${c.t}">${n > 1 ? n + '× ' : ''}<b>${c.r}</b> ${esc(c.n)}${c.sp ? ' · ' + CK_SP[c.sp].s : ''}</span>`) : '<span class="tr-cc">Removed card</span>').join('')}${_trEmpty(side) ? '<span class="tr-cc">Nothing</span>' : ''}`; };
+async function _trTab(pool, c) { const me = currentUser && currentUser.userId; if (!me) return '<div class="ck-empty">Log in to trade.</div>'; await _trSync();
+  if (!window._trPl) window._trPl = (await dbGetAll('teams').catch(() => [])).filter(t => t && t.userId && t.userId !== me && !t.testAccount).map(t => ({ id: t.userId, n: t.teamName || t.playerName || t.userId })).sort((a, b) => String(a.n).localeCompare(String(b.n))); const list = await _trAll(), sub = window._trSub || 'new';
+  const inc = list.filter(t => t.to === me && (t.status === 'open' || t.status === 'accepting')), out = list.filter(t => t.from === me && (t.status === 'open' || t.status === 'accepting')), log = list.filter(t => t.status === 'accepted');
+  const tabs = [['new', '➕ New trade'], ['in', `📥 Offers${inc.length ? ' · ' + inc.length : ''}`], ['out', `📤 Sent${out.length ? ' · ' + out.length : ''}`], ['log', `📜 Trade log · ${log.length}`]];
+  let h = `<div class="ck-fil tr-sub">${tabs.map(([id, l]) => `<button class="${sub === id ? 'on' : ''}" onclick="window._trSub='${id}';_ckRender()">${l}</button>`).join('')}</div>`;
+  const row = (t, acts) => `<div class="tr-r"><div class="tr-h"><b>${esc(t.fromName || 'Player')}</b><span>⇄</span><b>${esc(t.toName || 'Player')}</b><em style="color:${(TR_ST[t.status] || [])[1]}">${(TR_ST[t.status] || [t.status])[0]}</em><small>${formatTimeAgo(t.done || t.t)}</small></div>
+    <div class="tr-s"><div><small>${esc(t.fromName || 'Player')} gives</small><div class="tr-l">${_trSide(t.give, pool)}</div></div><div><small>${esc(t.toName || 'Player')} gives</small><div class="tr-l">${_trSide(t.get, pool)}</div></div></div>${t.msg ? `<p class="tr-m">“${esc(t.msg)}”</p>` : ''}${acts || ''}</div>`;
+  if (sub === 'in') h += inc.length ? inc.map(t => row(t, t.status === 'open' ? `<div class="ck-acts"><button class="hx-btn" onclick="trView('${esc(t.id)}')">Review offer</button><button class="hx-btn ghost" onclick="trDecline('${esc(t.id)}')">Decline</button></div>` : '')).join('') : '<div class="ck-empty">No offers right now.</div>';
+  else if (sub === 'out') h += out.length ? out.map(t => row(t, t.status === 'open' ? `<div class="ck-acts" style="grid-template-columns:1fr"><button class="hx-btn ghost" onclick="trCancel('${esc(t.id)}')">Cancel offer — get your items back</button></div>` : '')).join('') : '<div class="ck-empty">You haven\'t sent any offers.</div>';
+  else if (sub === 'log') { const q = String(window._trQ || '').toLowerCase(), L = log.filter(t => !q || String(t.fromName).toLowerCase().includes(q) || String(t.toName).toLowerCase().includes(q) || Object.keys(Object.assign({}, t.give.cards, t.get.cards)).some(k => String((pool.by[k] || {}).n || '').toLowerCase().includes(q)));
+    h += `<div class="ckx-sr" style="margin-bottom:10px"><span>🔍</span><input type="search" placeholder="Search a player or card…" value="${esc(window._trQ || '')}" onchange="window._trQ=this.value;_ckRender()"></div>
+      ${L.length ? L.map(t => row(t)).join('') : '<div class="ck-empty">No trades yet.</div>'}<div class="ck-fine">Every completed trade between players, newest first. Everyone can see this log.</div>`; }
+  else h += _trNewHtml(pool, c);
+  return h; }
+// ---- New trade builder ----
+function _trNewHtml(pool, c) { const D = window._trD = window._trD || { to: '', give: { ims: 0, cards: {} }, get: { ims: 0, cards: {} }, msg: '' }, pl = window._trPl || [];
+  return `<div class="tr-new"><label class="ctc-lb" style="grid-template-columns:1fr">Trade with<select onchange="trTo(this.value)"><option value="">Pick a player…</option>${pl.map(p => `<option value="${esc(p.id)}"${D.to === p.id ? ' selected' : ''}>${esc(p.n)}</option>`).join('')}</select></label>
+    ${D.to ? `<div class="tr-cols"><div class="tr-col"><div class="wl-sh"><span>You give</span><small>${_trN(D.give)} card${_trN(D.give) === 1 ? '' : 's'}</small></div>
+        <label class="ctc-lb">IM$ <small style="grid-column:auto">you have ${Math.round((c && c.balance) || 0).toLocaleString()}</small><input type="number" min="0" value="${D.give.ims || ''}" placeholder="0" onchange="window._trD.give.ims=Math.max(0,parseInt(this.value,10)||0)"></label>
+        <div class="tr-l">${_trSide({ cards: D.give.cards }, pool, true)}</div><button class="hx-btn ghost" onclick="trPick('give')">＋ Add your cards</button></div>
+      <div class="tr-col"><div class="wl-sh"><span>You get</span><small>${_trN(D.get)} card${_trN(D.get) === 1 ? '' : 's'}</small></div>
+        <label class="ctc-lb">IM$<input type="number" min="0" value="${D.get.ims || ''}" placeholder="0" onchange="window._trD.get.ims=Math.max(0,parseInt(this.value,10)||0)"></label>
+        <div class="tr-l">${_trSide({ cards: D.get.cards }, pool, true)}</div><button class="hx-btn ghost" onclick="trPick('get')">＋ Add their cards</button></div></div>
+      <input class="tr-msg" maxlength="120" placeholder="Message (optional)" value="${esc(D.msg || '')}" oninput="window._trD.msg=this.value">
+      <div class="ck-acts" style="grid-template-columns:1fr"><button class="hx-btn" onclick="trSend()">🤝 Send offer</button></div>` : ''}
+    <div class="ck-fine">What you offer is <b>held</b> as soon as you send it, so you can't sell it or offer it twice. If they decline, or you cancel, it comes straight back. Up to ${TR_MAXC} cards a side. Locked cards keep 1 copy and CTC reward cards can't be traded. Every completed trade goes in the public Trade log.</div></div>`; }
+window.trTo = async function(id) { const D = window._trD; D.to = id; D.get = { ims: 0, cards: {} }; window._trTheirs = null; if (id) { const t = await _betLoadCoins(id).catch(() => null); window._trTheirs = { id, c: t }; } _ckRender(); };
+// Card picker: your collection (give) or theirs (get). Tap to add a copy, tap ✕ to remove.
+window.trPick = async function(side) { const D = window._trD; if (!D || !D.to) return; const pool = await _ckPool(), me = currentUser.userId;
+  const c = side === 'give' ? await _betLoadCoins(me) : ((window._trTheirs && window._trTheirs.id === D.to && window._trTheirs.c) || await _betLoadCoins(D.to)), inv = _ckInv(c), LK = (c.cards && c.cards.lock) || {};
+  const L = Object.entries(inv).map(([k, n]) => ({ c: pool.by[k], k, n: n - (LK[k] ? 1 : 0), lk: !!LK[k] })).filter(x => x.c && x.n > 0 && _trCan(x.c)).sort((a, b) => b.c.r - a.c.r);
+  window._trPk = { side, L, q: '' }; document.getElementById('tr-pk')?.remove(); const o = document.createElement('div'); o.id = 'tr-pk'; o.className = 'ck-ov in ctc-pk'; o.onclick = e => { if (e.target === o) o.remove(); };
+  o.innerHTML = `<div class="ctc-pkb"><button class="ma-x" onclick="document.getElementById('tr-pk').remove();_ckRender()">✕</button><div class="ck-k">${side === 'give' ? 'Your cards' : esc(((window._trPl || []).find(p => p.id === D.to) || {}).n || 'Their cards')}</div><div class="ck-ttl" style="font-size:1.4rem">ADD <em>CARDS</em></div>
+    <div class="ctc-pkt" style="grid-template-columns:1fr"><input type="search" placeholder="Search…" oninput="window._trPk.q=this.value;_trPkDraw()"></div><div class="ck-ixn" id="tr-pk-n"></div><div class="ck-grid" id="tr-pk-g"></div>
+    <div class="ck-acts" style="grid-template-columns:1fr"><button class="hx-btn" onclick="document.getElementById('tr-pk').remove();_ckRender()">Done</button></div></div>`;
+  document.body.appendChild(o); _trPkDraw(); };
+window._trPkDraw = function() { const P = window._trPk, g = document.getElementById('tr-pk-g'); if (!P || !g) return; const S = window._trD[P.side].cards, q = String(P.q || '').toLowerCase();
+  const L = P.L.filter(x => !q || String(x.c.n).toLowerCase().includes(q) || String(x.c.team || '').toLowerCase().includes(q));
+  g.innerHTML = L.map(x => { const s = S[x.k] || 0; return `<div class="ck-lkw${s ? ' tr-sel' : ''}">${s ? `<span class="tr-sn">${s}</span><button class="ctc-rm" onclick="trAdd('${esc(x.k)}',-1)">✕</button>` : ''}${_ckCard(x.c, { n: x.n, on: `trAdd('${esc(x.k)}',1)` })}<small class="ctc-pkm">${s ? s + ' of ' + x.n + ' added' : x.n + ' available' + (x.lk ? ' · 🔒 keeps 1' : '')}</small></div>`; }).join('') || '<div class="ck-empty" style="grid-column:1/-1">No tradeable cards.</div>';
+  const n = document.getElementById('tr-pk-n'); if (n) n.textContent = `${L.length} card${L.length === 1 ? '' : 's'} · ${_trN({ cards: S })} / ${TR_MAXC} added`; };
+window.trAdd = function(k, d) { const P = window._trPk; if (!P) return; const S = window._trD[P.side].cards, x = P.L.find(y => y.k === k); if (!x) return;
+  if (d > 0 && _trN({ cards: S }) >= TR_MAXC) return showToast(`Up to ${TR_MAXC} cards a side.`, 'error'); const v = Math.max(0, Math.min(x.n, (S[k] || 0) + d)); if (v) S[k] = v; else delete S[k]; _trPkDraw(); };
+window.trSend = async function() { const D = window._trD, me = currentUser && currentUser.userId; if (!D || !D.to || !me || window._trBusy) return; if (D.to === me) return showToast('You can\'t trade with yourself.', 'error');
+  if (_trEmpty(D.give) && _trEmpty(D.get)) return showToast('Add something to the trade.', 'error');
+  const to = (window._trPl || []).find(p => p.id === D.to) || {}, pool = await _ckPool();
+  customConfirm(`Send this offer to ${esc(to.n || 'them')}? What you're giving is held until they answer.`, async () => { window._trBusy = 1;
+    try { const c = await _betLoadCoins(me), give = { ims: Math.round(D.give.ims || 0), cards: Object.assign({}, D.give.cards) }, get = { ims: Math.round(D.get.ims || 0), cards: Object.assign({}, D.get.cards) };
+      const why = _trShort(c, give, pool); if (why) return showToast('You can\'t send that — ' + why + '.', 'error');
+      const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6), t = { id, from: me, fromName: _wdMe().name, to: D.to, toName: to.n || 'Player', give, get, msg: String(D.msg || '').trim().slice(0, 120), status: 'open', t: Date.now() };
+      _trTake(c, give); await dbSet('coins', me, c); _ckSetPill(c);
+      try { await dbSet('trades', id, t); } catch (e) { _trGive(c, give); await dbSet('coins', me, c); throw e; } // couldn't post the offer: hand the items back
+      window._trD = null; window._trTheirs = null; window._trSub = 'out'; window._trC = null; showToast('🤝 Offer sent.', 'success'); _ckRender();
+    } catch (e) { console.error(e); showToast('Couldn\'t send the offer.', 'error'); } finally { window._trBusy = 0; } }, 'Send offer'); };
+window.trView = async function(id) { const t = (await _trAll(true)).find(x => x.id === id); if (!t) return; const pool = await _ckPool(); document.getElementById('tr-v')?.remove();
+  const o = document.createElement('div'); o.id = 'tr-v'; o.className = 'ck-ov in ctc-pk'; o.onclick = e => { if (e.target === o) o.remove(); };
+  o.innerHTML = `<div class="ctc-pkb"><button class="ma-x" onclick="document.getElementById('tr-v').remove()">✕</button><div class="ck-k">Trade offer from ${esc(t.fromName)}</div><div class="ck-ttl" style="font-size:1.4rem">REVIEW <em>OFFER</em></div>${t.msg ? `<p class="tr-m">“${esc(t.msg)}”</p>` : ''}
+    <div class="tr-cols"><div class="tr-col"><div class="wl-sh"><span>You get</span></div><div class="tr-l">${_trSide(t.give, pool, true)}</div></div><div class="tr-col"><div class="wl-sh"><span>You give</span></div><div class="tr-l">${_trSide(t.get, pool, true)}</div></div></div>
+    <div class="ck-acts"><button class="hx-btn" onclick="trAccept('${esc(id)}')">✅ Accept trade</button><button class="hx-btn ghost" onclick="trDecline('${esc(id)}')">Decline</button></div></div>`;
+  document.body.appendChild(o); };
+window.trAccept = function(id) { const me = currentUser && currentUser.userId; if (!me || window._trBusy) return;
+  customConfirm('Accept this trade? It can\'t be undone.', async () => { window._trBusy = 1; document.getElementById('tr-v')?.remove();
+    try { dbInvalidate('trades'); const t = await dbGet('trades', id); if (!t || t.to !== me || t.status !== 'open') { showToast('This offer isn\'t available any more.', 'error'); return; }
+      const pool = await _ckPool(), c = await _betLoadCoins(me), why = _trShort(c, t.get, pool); if (why) { showToast('You can\'t accept — ' + why + '.', 'error'); return; }
+      await dbSet('trades', id, { status: 'accepting', by: me, at: _now() }); await new Promise(r => setTimeout(r, 1500)); dbInvalidate('trades'); const t2 = await dbGet('trades', id); // claim it, then make sure a cancel didn't win the race
+      if (!t2 || t2.status !== 'accepting' || t2.by !== me) { showToast('The sender cancelled this offer.', 'error'); return; }
+      const K = c.cards = c.cards || { inv: {} }; K.tra = K.tra || {}; if (!K.tra[id]) { K.tra[id] = 1; _trTake(c, t.get); _trGive(c, t.give); await dbSet('coins', me, c); _ckSetPill(c); }
+      await dbSet('trades', id, { status: 'accepted', done: _now() }); window._trC = null; window._trSub = 'log'; showToast('🤝 Trade complete!', 'success'); try { fireConfetti({ count: 70 }); } catch (e) {}
+    } catch (e) { console.error(e); showToast('Couldn\'t complete the trade — try again.', 'error'); } finally { window._trBusy = 0; _ckRender(); } }, 'Accept'); };
+window.trDecline = function(id) { const me = currentUser && currentUser.userId; customConfirm('Decline this offer?', async () => { document.getElementById('tr-v')?.remove();
+    dbInvalidate('trades'); const t = await dbGet('trades', id).catch(() => null); if (!t || t.to !== me || t.status !== 'open') return showToast('This offer isn\'t available any more.', 'error');
+    await dbSet('trades', id, { status: 'declined', done: _now() }); window._trC = null; showToast('Offer declined.', 'success'); _ckRender(); }, 'Decline'); };
+window.trCancel = function(id) { const me = currentUser && currentUser.userId; customConfirm('Cancel this offer and get your items back?', async () => {
+    dbInvalidate('trades'); const t = await dbGet('trades', id).catch(() => null); if (!t || t.from !== me || t.status !== 'open') return showToast('Too late — they\'ve already answered.', 'error');
+    await dbSet('trades', id, { status: 'cancelled', done: _now() }); await new Promise(r => setTimeout(r, 1500)); dbInvalidate('trades'); const t2 = await dbGet('trades', id).catch(() => null);
+    if (!t2 || t2.status !== 'cancelled') return showToast('Too late — they accepted it.', 'error');
+    window._trC = null; await _trSync(); showToast('Offer cancelled — your items are back.', 'success'); _ckRender(); }, 'Cancel offer'); };
+// Offers badge on the Trades tab + settle my trades in the background (every 60s while the tab is visible).
+(function() { const chk = async () => { if (document.hidden || typeof currentUser === 'undefined' || !currentUser || !currentUser.userId || typeof _ckCan !== 'function' || !_ckCan()) return;
+    try { await _trSync(); const me = currentUser.userId, n = (await _trAll()).filter(t => t.to === me && t.status === 'open').length; if (n !== (window._trInN || 0)) { window._trInN = n; if (window._ckTab !== 'trade' && !document.getElementById('ck-ov')) _ckRender(); } } catch (e) {} };
+  setTimeout(chk, 6000); setInterval(chk, 60e3); })();
 async function _gmNoTestCoins(rows) { try { const ids = await _gmTestIds(), me = _wdMe().uid; return (rows || []).filter(r => r && (r.userId === me || !ids.has(r.userId))); } catch (e) { return rows || []; } }
 // ===== PIT LANE PAIRS =====
 // 7 drivers, 7 clues (their team, an old team, or a teammate). Tap a driver, then the clue that fits.
@@ -38385,8 +38555,8 @@ function _wfHistHtml(r) { if (!r || !(r.wfDays > 0)) return '';
 // last race) for both players at once. 3 guesses each per round; the first correct guess takes the round:
 // 100 pts with 1 season showing, −20 per extra reveal (min 20). Guesses are stored 'id@ms'.
 const CPD_ROUNDS = 5, CPD_STEP = 10000, CPD_PAUSE = 4500, CPD_GUESSES = 3;
-const _cpdKey = () => { try { return JSON.parse(localStorage.getItem('imsCPDuel') || 'null'); } catch (e) { return null; } };
-const _cpdSet = (v) => { try { v ? localStorage.setItem('imsCPDuel', JSON.stringify(v)) : localStorage.removeItem('imsCPDuel'); } catch (e) {} };
+const _cpdKey = () => { if (window._spec && window._spec.g === 'cp') return { code: window._spec.code, role: window._spec.role }; try { return JSON.parse(localStorage.getItem('imsCPDuel') || 'null'); } catch (e) { return null; } };
+const _cpdSet = (v) => { if (window._spec) { if (!v) setTimeout(() => window.specEnd && specEnd(1), 0); return; } try { v ? localStorage.setItem('imsCPDuel', JSON.stringify(v)) : localStorage.removeItem('imsCPDuel'); } catch (e) {} };
 const _cpdG = (l, ro, r) => String(((l[ro + 'G'] || [])[r]) || '').split(',').filter(Boolean).map(x => { const [id, ms] = x.split('@'); return { id, ms: +ms || 0 }; });
 const _cpdTotal = (D) => (D ? (D.cp || []).length : 3) + 3; // reveals: every season + 3 hints
 const _cpdPtsAt = (ms) => Math.max(20, 100 - 20 * Math.floor(ms / CPD_STEP));
@@ -38521,7 +38691,7 @@ async function _cpdBody(pool, top) {
 // once per grid; a wrong guess costs a life. Daily grid (same for everyone, new at midnight UK) or
 // Infinite (random, for testing). Categories use the PaddockDle stats (nationality, team history,
 // division, BOTTs, wins, podiums, starts, points).
-const _grGetMode = () => { try { return localStorage.getItem('imsGridMode') || 'daily'; } catch (e) { return 'daily'; } };
+const _grGetMode = () => { if (window._spec && window._spec.g === 'grid') return 'duel'; try { return localStorage.getItem('imsGridMode') || 'daily'; } catch (e) { return 'daily'; } };
 const _grState = (m) => { try { return JSON.parse(localStorage.getItem('imsGrid_' + (m || _grGetMode())) || 'null'); } catch (e) { return null; } };
 const _grSave = (st, m) => { const mm = m || _grGetMode(); try { localStorage.setItem('imsGrid_' + mm, JSON.stringify(st)); } catch (e) {} if (mm === 'daily' && typeof _dailySync === 'function') _dailySync('grDaily', st); };
 const _grRng = (seed) => { let a = seed >>> 0; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; };
@@ -38805,8 +38975,8 @@ window.gridGuess = function(id) {
 // guess just passes the turn. First to own 3 in a row (across, down or diagonal) wins. Lobbies live in
 // the same `wordleDuels` collection as PaddockDle duels, tagged game: 'grid'.
 const _GD_LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-const _gdKey = () => { try { return JSON.parse(localStorage.getItem('imsGridDuel') || 'null'); } catch (e) { return null; } };
-const _gdSet = (v) => { try { v ? localStorage.setItem('imsGridDuel', JSON.stringify(v)) : localStorage.removeItem('imsGridDuel'); } catch (e) {} };
+const _gdKey = () => { if (window._spec && window._spec.g === 'grid') return { code: window._spec.code, role: window._spec.role }; try { return JSON.parse(localStorage.getItem('imsGridDuel') || 'null'); } catch (e) { return null; } };
+const _gdSet = (v) => { if (window._spec) { if (!v) setTimeout(() => window.specEnd && specEnd(1), 0); return; } try { v ? localStorage.setItem('imsGridDuel', JSON.stringify(v)) : localStorage.removeItem('imsGridDuel'); } catch (e) {} };
 function _gdWinner(cells) {
   const own = (i) => (cells[Math.floor(i / 3) + ',' + (i % 3)] || {}).by;
   for (const L of _GD_LINES) { const a = own(L[0]); if (a && a === own(L[1]) && a === own(L[2])) return { by: a, line: L }; }
@@ -38978,6 +39148,7 @@ window.gridDuelJoin = async function(code) {
 window.gridDuelLeave = function() { _gdEnd(false); window._grSel = null; setTimeout(() => renderGames(), 150); };
 window.gridDuelRematch = async function() { const r = window._gdRef; if (!r) return; await dbSet('wordleDuels', r.code, { [r.role + 'Rematch']: true }); renderGames(); };
 async function _gdGuess(id) {
+  if (window._spec) return;
   const ref = window._gdRef, key = window._grSel; if (!ref || !ref.myTurn || !key) return;
   dbInvalidate('wordleDuels'); const l = await dbGet('wordleDuels', ref.code).catch(() => null);
   if (!l || l.turn !== ref.role || l.winner || (l.cells || {})[key]) return renderGames();
