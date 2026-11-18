@@ -38186,16 +38186,14 @@ function _ctcUsed(ch, pool, P0, grp) { const L = P0.sqs && P0.sqs.length ? P0.sq
       <div class="ctc-sq" style="--n:${Math.min(5, sq.length)}">${cards.map((x, i) => x ? `<div class="ctc-sl on">${_ckCard(x)}<div class="ctc-pips">${[0, 1, 2].map(q => `<i class="${q < ev.chem.per[i] ? 'on' : ''}"></i>`).join('')}</div></div>` : '<div class="ctc-sl"><div class="ctc-add" style="cursor:default"><small>Card no longer exists</small></div></div>').join('')}</div>`; }).join('')
       : '<div class="ck-empty">This was completed before squads were saved, so there\'s no squad to show.</div>'}
     <div class="ctc-rq"><div class="wl-sh"><span>Requirements</span><small>all met</small></div>${(ch.reqs || []).map(r => `<div class="ok"><i>✓</i><span>${esc(_ctcReqTxt(r))}</span></div>`).join('')}</div>`; }
-// Auto-fill (from the card picker): builds a squad that completes the challenge from the cards the picker is showing right now
-// (its requirement chip, search, nation / team / division / rarity filters), preferring cards in the picker's current order
-// (high → low by default). It tries the first few cards and only widens if it has to. Locked-only and CTC reward cards are skipped.
-window.ctcAutoFill = async function() { const P = window._ctcPk; if (!P || window._ctcAfBusy) return; const ch = P.ch; window._ctcAfBusy = 1;
-  const btn = document.querySelector('.ctc-pkaf .hx-btn'); if (btn) { btn.disabled = true; btn.textContent = '⚡ Finding a squad…'; } await new Promise(r => setTimeout(r, 30));
-  try { const seen = new Set(), cand = (P.L || []).filter(x => !x.lock && !x.c.ctc).map(x => x.c).filter(c => !seen.has(_ctcBk(c)) && seen.add(_ctcBk(c))); let R = { ok: false };
-    for (const lim of [ch.slots * 3, 25, 50, 100, 200, cand.length]) { R = _ctcSolve(ch, cand.slice(0, Math.min(lim, cand.length)), lim >= cand.length ? 2500 : 700); if (R.ok || lim >= cand.length) break; }
-    if (!R.ok) { showToast(cand.length < P.own.length ? 'No squad found with these filters — loosen them and try again.' : 'Couldn\'t find a squad from your cards that completes it yet.', 'error'); return; }
-    window._ctcSq = window._ctcSq || {}; window._ctcSq[ch.id] = R.sq.slice().sort((a, b) => b.r - a.r).map(x => x.k); document.getElementById('ctc-pk')?.remove(); showToast('⚡ Squad filled — check it, then trade in.', 'success'); _ckRender();
-  } catch (e) { console.error(e); showToast('Couldn\'t auto-fill.', 'error'); } finally { window._ctcAfBusy = 0; if (btn && btn.isConnected) { btn.disabled = false; btn.textContent = '⚡ Auto-fill squad'; } } };
+// Auto-fill (from the card picker): drops the cards the picker is showing right now — its search, nation / team / division /
+// rarity filters and requirement chip, in its current order (high → low by default) — into the EMPTY slots, top first.
+// It doesn't solve the challenge for you; cards already placed stay. One card per driver; locked-only and CTC reward cards are skipped.
+window.ctcAutoFill = function() { const P = window._ctcPk; if (!P) return; const ch = P.ch, pool = window._ckPoolC; if (!pool) return; const picks = _ctcPicks(ch);
+  const used = new Set(picks.filter(k => k && pool.by[k]).map(k => _ctcBk(pool.by[k]))), L = (P.L || []).filter(x => !x.lock && !x.c.ctc); let put = 0, li = 0;
+  picks.forEach((k, i) => { if (k) return; while (li < L.length && used.has(_ctcBk(L[li].c))) li++; if (li >= L.length) return; picks[i] = L[li].c.k; used.add(_ctcBk(L[li].c)); li++; put++; });
+  if (!put) return showToast(picks.every(Boolean) ? 'Every slot is already filled.' : 'No more cards match these filters.', 'error');
+  document.getElementById('ctc-pk')?.remove(); showToast(`⚡ Filled ${put} slot${put === 1 ? '' : 's'} from your filter.`, 'success'); _ckRender(); };
 window.ctcRm = function(i) { const S = (window._ctcSq || {})[window._ctcCur]; if (S) { S[i] = null; _ckRender(); } };
 window.ctcClear = function() { const S = (window._ctcSq || {})[window._ctcCur]; if (S) { S.fill(null); _ckRender(); } };
 // ---- Card picker for one slot ----
@@ -38210,7 +38208,7 @@ window.ctcPick = async function(i) { const list = await _ctcLoad(), ch = list.fi
     <div class="ctc-pkx">${(() => { const P = window._ctcPk, u = f => [...new Set(own.map(x => f(x.c)).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b))), sel = (key, all, L) => `<select onchange="window._ctcPk.${key}=this.value;_ctcPkDraw()"><option value="">${all}</option>${L.map(v => `<option value="${esc(v)}"${P[key] === v ? ' selected' : ''}>${esc(v)}</option>`).join('')}</select>`;
       return sel('nat', '🌍 All nations', u(c => c.nat)) + sel('tm', '🏎️ All teams', u(c => c.team)) + sel('dv', '🏁 All divisions', u(c => c.div)) + `<select onchange="window._ctcPk.t=this.value;_ctcPkDraw()">${[['', '✨ All rarities'], ['sp', 'Special only']].concat(CK_TIERS.map(t => [t.id, t.n + (CTC_FAM[t.id] ? ' (incl. rare)' : '')])).map(([v, l]) => `<option value="${v}"${P.t === v ? ' selected' : ''}>${l}</option>`).join('')}</select>`; })()}</div>
     ${fl.length ? `<div class="ck-fil ctc-pkf"><button class="${window._ctcPk.f < 0 ? 'on' : ''}" onclick="_ctcPkF(-1,this)">All my cards</button>${fl.map(([r, j]) => `<button class="${window._ctcPk.f === j ? 'on' : ''}" onclick="_ctcPkF(${j},this)">${esc(_ctcReqTxt(r))}</button>`).join('')}</div>` : ''}
-    <div class="ctc-pkaf"><div class="ck-ixn" id="ctc-pk-n"></div><button class="hx-btn" onclick="ctcAutoFill()">⚡ Auto-fill squad</button></div><div class="ck-grid" id="ctc-pk-g"></div></div>`;
+    <div class="ctc-pkaf"><div class="ck-ixn" id="ctc-pk-n"></div><button class="hx-btn" onclick="ctcAutoFill()">⚡ Fill empty slots</button></div><div class="ck-grid" id="ctc-pk-g"></div></div>`;
   document.body.appendChild(o); _ctcPkDraw(); };
 window._ctcPkF = function(j, b) { window._ctcPk.f = j; b.parentElement.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); _ctcPkDraw(); };
 window._ctcPkDraw = function() { const P = window._ctcPk, g = document.getElementById('ctc-pk-g'); if (!P || !g) return; (window._ctcPkLast = window._ctcPkLast || {})[P.ch.id] = { f: P.f, q: P.q, sort: P.sort, nat: P.nat, dv: P.dv, tm: P.tm, t: P.t }; const q = String(P.q || '').trim().toLowerCase(), r = P.f >= 0 ? P.ch.reqs[P.f] : null;
