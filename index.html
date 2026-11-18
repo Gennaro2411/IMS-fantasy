@@ -15966,8 +15966,8 @@ window.computeTeamRanksByPoints = function(teams, races) {
 // Claimed automatically the next time you open the Leaderboard; packs land in IMS Cards → My Packs (c.cards.rw[raceId]).
 const RW_FROM = Date.UTC(2026, 10, 13, 19, 20); // only rounds settled after this (Brazil R5 and earlier don't pay)
 // [from, to, packs, label, IM$]
-const RW_TABLE = [[1, 1, ['supersonic', 'supersonic', 'supersonic'], '🏆 Round winner', 2500], [2, 2, ['supersonic', 'supersonic'], '🥈 2nd', 1500], [3, 3, ['supersonic', 'gold'], '🥉 3rd', 1000],
-  [4, 5, ['supersonic', 'gold'], '4th–5th', 600], [6, 10, ['gold', 'gold'], '6th–10th', 400], [11, 25, ['gold', 'mixed'], '11th–25th', 200], [26, 50, ['mixed', 'silver'], '26th–50th', 100], [51, 9999, ['silver', 'bronze'], '51st+', 50]];
+const RW_TABLE = [[1, 1, ['jumbo', 'supersonic', 'pickSp'], '🏆 Round winner', 10000], [2, 2, ['supersonic', 'supersonic', 'pickG'], '🥈 2nd', 6500], [3, 3, ['supersonic', 'gold', 'pickG'], '🥉 3rd', 4500],
+  [4, 5, ['supersonic', 'gold'], '4th–5th', 3000], [6, 10, ['supersonic', 'gold'], '6th–10th', 2000], [11, 25, ['gold', 'gold'], '11th–25th', 1000], [26, 50, ['gold', 'mixed'], '26th–50th', 500], [51, 9999, ['mixed', 'silver'], '51st+', 250]];
 const _rwIm = R => R && R[4] ? ` + <i class="imc"></i> ${R[4].toLocaleString()}` : '';
 const _rwFor = pos => RW_TABLE.find(r => pos >= r[0] && pos <= r[1]);
 function _rwRank(race, teams, races) { const T = (teams || []).filter(t => t && !t.testAccount && t.userId);
