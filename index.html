@@ -37695,8 +37695,10 @@ async function _ckSellMany(cnt) { try { const pool = await _ckPool(), c = await 
 async function _ckGlobal(pool) { if (window._ckGl && _now() - window._ckGl.at < 120e3) return window._ckGl;
   const all = await _gmNoTestCoins(await dbGetAll('coins').catch(() => [])), n = {}, own = {}; all.forEach(x => { const K = (x && x.cards) || {}, inv = K.inv || {}, pl = K.pull || {}, dx = K.dex || {};
     new Set([...Object.keys(inv), ...Object.keys(pl), ...Object.keys(dx)]).forEach(k => { const v = Math.max(pl[k] || 0, inv[k] || 0, dx[k] ? 1 : 0); if (v) n[k] = (n[k] || 0) + v; if (inv[k] > 0) own[k] = (own[k] || 0) + 1; }); });
-  // rarest first: fewest times obtained; on a tie, CTC-only (limited) cards first, then the higher-rated card. Every card gets its own rank.
-  const order = pool.list.slice().sort((a, b) => (n[a.k] || 0) - (n[b.k] || 0) || (b.ctc ? 1 : 0) - (a.ctc ? 1 : 0) || b.r - a.r || String(a.n).localeCompare(String(b.n))), rank = {}; order.forEach((x, i) => { rank[x.k] = i + 1; });
+  // rarest first: fewest owners, then fewest times obtained; on a tie, limited cards first (CTC-only, or a special that never comes out of packs,
+  // e.g. Moments), then the higher-rated card. Every card gets its own rank.
+  const spT = new Set(); Object.values(CK_PACKS).forEach(P => Object.keys(P.sp || {}).forEach(t => spT.add(t))); const lim = c => c.ctc || (c.sp && !spT.has(c.sp)) ? 1 : 0;
+  const order = pool.list.slice().sort((a, b) => (own[a.k] || 0) - (own[b.k] || 0) || (n[a.k] || 0) - (n[b.k] || 0) || lim(b) - lim(a) || b.r - a.r || String(a.n).localeCompare(String(b.n))), rank = {}; order.forEach((x, i) => { rank[x.k] = i + 1; });
   return (window._ckGl = { at: _now(), n, own, rank, tot: pool.list.length }); }
 window.ckDetail = async function(k) { const pool = await _ckPool(), card = pool.by[k]; if (!card) return; const c = await _betLoadCoins(currentUser.userId), have = _ckInv(c)[k] || 0, v = _ckSellV(card), GL = await _ckGlobal(pool).catch(() => null);
   document.getElementById('ck-dt')?.remove(); const o = document.createElement('div'); o.id = 'ck-dt'; o.className = 'ck-ov in'; o.onclick = (e) => { if (e.target === o) o.remove(); };
