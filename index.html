@@ -4673,6 +4673,7 @@ body.ck-lock>header,body.ck-lock>main,body.ck-lock #mobile-nav{visibility:hidden
 .ck-six button{cursor:pointer;padding:5px 12px;border:0;border-radius:99px;background:none;color:#a5a9d6;font:800 .7rem/1 'Barlow',system-ui,sans-serif;letter-spacing:.04em}
 .ck-six button.on{color:#fff;background:linear-gradient(110deg,#6f74e8,#a779e6 55%,#f0487a);box-shadow:0 6px 16px -8px #a779e6}
 .ctc-pkx{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:-4px 0 10px}.ctc-pkx select{min-width:0;padding:8px;border-radius:10px;background:#0e0c1a;color:#fff;border:1px solid rgba(255,255,255,.14);font:inherit;font-size:.78rem}
+.ctc-tipp{margin:0;font-size:.88rem;color:#d5d7f5;line-height:1.5}.ctc-tipl{margin:0;padding:0;list-style:none;display:grid;gap:8px;text-align:left}.ctc-tipl li{font-size:.82rem;color:#c9cbe8;line-height:1.45;padding:9px 12px;border-radius:12px;background:rgba(255,255,255,.04)}.ctc-tipl b{color:#fff}
 .ctc-pkaf{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}.ctc-pkaf .ck-ixn{margin:0}.ctc-pkaf .hx-btn{flex:none;padding:8px 14px}
 .ctc-af{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;margin:2px 0 12px;padding:10px 12px;border-radius:14px;background:rgba(124,134,255,.08);box-shadow:inset 0 0 0 1px rgba(124,134,255,.3)}.ctc-af span{font-size:.78rem;font-weight:800;color:#cfd3ff}.ctc-af select{padding:8px 10px;border-radius:10px;background:#0e0c1a;color:#fff;border:1px solid rgba(255,255,255,.14);font:inherit;font-size:.8rem}
 @media (max-width:640px){.ctc-pkx{grid-template-columns:1fr 1fr}.ctc-af select,.ctc-af .hx-btn{flex:1 1 100%}}
@@ -38189,7 +38190,14 @@ function _ctcUsed(ch, pool, P0, grp) { const L = P0.sqs && P0.sqs.length ? P0.sq
 // Auto-fill (from the card picker): drops the cards the picker is showing right now — its search, nation / team / division /
 // rarity filters and requirement chip, in its current order (high → low by default) — into the EMPTY slots, top first.
 // It doesn't solve the challenge for you; cards already placed stay. One card per driver; locked-only and CTC reward cards are skipped.
-window.ctcAutoFill = function() { const P = window._ctcPk; if (!P) return; const ch = P.ch, pool = window._ckPoolC; if (!pool) return; const picks = _ctcPicks(ch);
+window.ctcAutoFill = function(go) { const P = window._ctcPk; if (!P) return;
+  let seen = false; try { seen = localStorage.getItem('ctcFillTip') === '1'; } catch (e) {}
+  if (!go && !seen) { document.getElementById('ctc-tip')?.remove(); const o = document.createElement('div'); o.id = 'ctc-tip'; o.className = 'ck-ov in ck-ixo'; o.style.zIndex = 10070; o.onclick = e => { if (e.target === o) o.remove(); };
+    o.innerHTML = `<div class="ck-ixob"><div class="ck-k">How it works</div><div class="ck-ttl" style="font-size:1.4rem">⚡ FILL EMPTY <em>SLOTS</em></div>
+      <p class="ctc-tipp">This fills your empty slots with the cards the picker is showing <b>right now</b>, in the order it's showing them.</p>
+      <ul class="ctc-tipl"><li>🔍 It follows your <b>search, nation, team, division and rarity</b> filters, plus any requirement chip you've switched on.</li><li>↕️ It uses your <b>sort</b>, so <b>Rating: high → low</b> fills your best cards first. Pick <b>low → high</b> or <b>Cheapest first</b> to use your spare cards.</li><li>✋ It does <b>not</b> solve the challenge for you. Check the ✓ / ✗ list before you trade in.</li><li>🔒 Locked cards, CTC reward cards and drivers already in your squad are skipped.</li></ul>
+      <div class="ck-acts"><button class="hx-btn" onclick="document.getElementById('ctc-tip').remove();ctcAutoFill(1)">Understood — fill it</button><button class="hx-btn ghost" onclick="try{localStorage.setItem('ctcFillTip','1')}catch(e){};document.getElementById('ctc-tip').remove();ctcAutoFill(1)">Don't show this again</button></div></div>`;
+    document.body.appendChild(o); return; } const ch = P.ch, pool = window._ckPoolC; if (!pool) return; const picks = _ctcPicks(ch);
   const used = new Set(picks.filter(k => k && pool.by[k]).map(k => _ctcBk(pool.by[k]))), L = (P.L || []).filter(x => !x.lock && !x.c.ctc); let put = 0, li = 0;
   picks.forEach((k, i) => { if (k) return; while (li < L.length && used.has(_ctcBk(L[li].c))) li++; if (li >= L.length) return; picks[i] = L[li].c.k; used.add(_ctcBk(L[li].c)); li++; put++; });
   if (!put) return showToast(picks.every(Boolean) ? 'Every slot is already filled.' : 'No more cards match these filters.', 'error');
