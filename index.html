@@ -37381,6 +37381,7 @@ Object.assign(CK_PACKS, {
 // 6-card versions of Bronze / Silver / Gold: same odds, a little dearer than two packs for the convenience. Shown via the 3 / 6 switch in the shop.
 [['bronze', 'b6', 110], ['silver', 's6', 220], ['gold', 'g6', 430]].forEach(([b, id, price]) => { const B = CK_PACKS[b]; CK_PACKS[id] = Object.assign({}, B, { n: B.n + ' ×6', price, cnt: 6, six: b, sp: Object.assign({}, B.sp), odds: B.odds.slice() }); });
 const _ckPkShow = id => CK_PACKS[id] && !CK_PACKS[id].hid; // packs you can give as rewards / gifts / trades
+const CK_BIG_MIN = 88; // Big Pulls shows 88+ rated cards and every special (83+ are still recorded for pull counts)
 const CK_N = 3, CK_FEED_MIN = 83, CK_DAY_MAX = 10, CK_SP_SELL = r => 1000 + Math.max(0, r - 60) * 100, CK_CHAMP_SELL = r => Math.round(1000 * Math.exp(Math.max(0, r - 60) * Math.log(100) / 39) / 100) * 100; // champions: 1k at 60 → ~100k at 99 // special cards: 1,000 base, +100 per rating point above 60
 // Special card types. s = short label under the rating, n = banner text.
 const CK_SP = { dotd: { n: 'Driver of the Day', s: 'DOTD', i: '🔥' }, tots: { n: 'Team of the Season', s: 'TOTS', i: '⭐' }, champ: { n: 'Champion', s: 'CHAMP', i: '👑' }, cent: { n: 'Centurion', s: 'CENTURION', i: '💯' }, mom: { n: 'Moments', s: 'MOMENT', i: '🎞️' } };
@@ -37484,7 +37485,7 @@ window.ckBuy = async function(id, gi) { if (!_ckCan() || window._ckBusy) return;
     if (!gift) c.balance -= P.price; const K = c.cards = c.cards || { inv: {} }; if (gift) { K.gifts.splice(gi, 1); K.giftsOpened = (K.giftsOpened || 0) + 1; } K.inv = K.inv || {};
     K.dex = K.dex || {}; Object.keys(K.inv).forEach(k => { if (K.inv[k] > 0) K.dex[k] = 1; }); got.forEach((x, i) => { got[i] = x = Object.assign({}, x, { dup: K.inv[x.k] > 0, nw: !K.dex[x.k] }); K.inv[x.k] = (K.inv[x.k] || 0) + 1; K.dex[x.k] = 1; K.pull = K.pull || {}; K.pull[x.k] = Math.max(K.pull[x.k] || 0, 0) + 1; }); K.packs = (K.packs || 0) + 1; if (!gift) { if (!K.day || K.day.d !== _ckDay()) K.day = { d: _ckDay() }; K.day[id] = (K.day[id] || 0) + 1; K.spent = (K.spent || 0) + P.price;
     K.log = (K.log || []).concat([{ t: Date.now(), p: id, f: P.price }]).slice(-300); } // pack spend log (for the book, like spin fees)
-    const big = got.filter(x => x.r >= CK_FEED_MIN); if (big.length) c.cardPulls = (c.cardPulls || []).concat(big.map(x => ({ k: x.k, n: x.n, r: x.r, t: Date.now(), p: id, by: _wdMe().name }))).slice(-40);
+    const big = got.filter(x => (x.r >= CK_FEED_MIN || x.sp)); if (big.length) c.cardPulls = (c.cardPulls || []).concat(big.map(x => ({ k: x.k, n: x.n, r: x.r, t: Date.now(), p: id, by: _wdMe().name }))).slice(-40);
     await dbSet('coins', currentUser.userId, c); _ckSetPill(c); window._ckFeed = null;
     _ckReveal(id, got, gift);
   } catch (e) { console.error(e); showToast('Couldn\'t open the pack — nothing was charged if your balance is unchanged.', 'error'); }
@@ -37527,7 +37528,7 @@ window.ckPickGet = function(gi, idx) { if (window._ckBusy || window._ckPk3Done) 
       if (!g || !CK_PACKS[g.p] || !CK_PACKS[g.p].pick || !k || !pool.by[k]) { window._ckBusy = false; document.getElementById('ck-pk3')?.remove(); showToast('That pick has already been made.', 'error'); return _ckRender(); }
       K.gifts.splice(gi, 1); K.giftsOpened = (K.giftsOpened || 0) + 1; K.inv = K.inv || {}; K.dex = K.dex || {}; const x = Object.assign({}, pool.by[k], { dup: K.inv[k] > 0, nw: !K.dex[k] });
       K.inv[k] = (K.inv[k] || 0) + 1; K.dex[k] = 1; K.pull = K.pull || {}; K.pull[k] = (K.pull[k] || 0) + 1;
-      if (x.r >= CK_FEED_MIN) c.cardPulls = (c.cardPulls || []).concat([{ k, n: x.n, r: x.r, t: Date.now(), p: g.p, by: _wdMe().name }]).slice(-40);
+      if ((x.r >= CK_FEED_MIN || x.sp)) c.cardPulls = (c.cardPulls || []).concat([{ k, n: x.n, r: x.r, t: Date.now(), p: g.p, by: _wdMe().name }]).slice(-40);
       await dbSet('coins', currentUser.userId, c); _ckSetPill(c); window._ckFeed = null; window._ckBusy = false; window._ckPk3Done = 1; // saved before anything is shown
       const fl = i => { const el = document.getElementById('ck-fl3-' + i); if (el) el.classList.add('flip'); };
       document.querySelectorAll('.ck-fl3').forEach(el => el.onclick = null); const walk = !!(x.sp || x.t === 'dia') && typeof _ckCutscene === 'function'; // same rule as packs: specials and Diamonds get a walkout
@@ -37889,9 +37890,9 @@ async function renderCardsGame(el) {
   else if (tab === 'ctc') { body += await _ctcTab(pool, c); }
   else if (tab === 'trade') { body += await _trTab(pool, c); }
   else if (tab === 'rich') { body += await _ckRichHtml(pool, me); }
-  else if (tab === 'feed') { if (!window._ckFeed || _now() - window._ckFeed.at > 60e3) { const all = await _gmNoTestCoins(await dbGetAll('coins').catch(() => [])); const rows = []; all.forEach(x => (x && x.cardPulls || []).forEach(p => rows.push(Object.assign({ uid: x.userId }, p)))); rows.sort((a, b) => (b.t || 0) - (a.t || 0)); window._ckFeed = { at: _now(), rows: rows.slice(0, 60) }; }
+  else if (tab === 'feed') { if (!window._ckFeed || _now() - window._ckFeed.at > 60e3) { const all = await _gmNoTestCoins(await dbGetAll('coins').catch(() => [])); const rows = []; all.forEach(x => (x && x.cardPulls || []).forEach(p => rows.push(Object.assign({ uid: x.userId }, p)))); rows.sort((a, b) => (b.t || 0) - (a.t || 0)); window._ckFeed = { at: _now(), rows: rows.filter(p => (p.r || 0) >= CK_BIG_MIN || (pool.by[p.k] || {}).sp).slice(0, 60) }; }
     const rows = window._ckFeed.rows, ago = (t) => { const s = (Date.now() - t) / 1e3; return s < 3600 ? Math.max(1, Math.round(s / 60)) + 'm ago' : s < 86400 ? Math.round(s / 3600) + 'h ago' : Math.round(s / 86400) + 'd ago'; };
-    body += `<div class="ck-feed"><div class="wl-sh"><span>Everyone's ${CK_FEED_MIN}+ rated pulls</span><small>newest first</small></div>${rows.length ? rows.map(p => { const card = pool.by[p.k], r = card ? card.r : p.r, t = _ckTier(Math.max(r, p.r)).id;
+    body += `<div class="ck-feed"><div class="wl-sh"><span>Everyone's ${CK_BIG_MIN}+ rated pulls &amp; specials</span><small>newest first</small></div>${rows.length ? rows.map(p => { const card = pool.by[p.k], r = card ? card.r : p.r, t = _ckTier(Math.max(r, p.r)).id;
       return `<div class="ck-fr t-${t}"><b class="ck-fr-r">${p.r}</b><span class="ck-fr-t"><b>${esc(card ? card.n : p.n)}</b><small>${card && card.sp ? '✨ Special' : CK_T[t].n} · ${p.p === 'ctc' ? 'earned from a 🧩 CTC' : 'packed by'} <u>${esc(p.by || 'a player')}</u>${p.p === 'ctc' ? '' : ' from a ' + ((CK_PACKS[p.p] || {}).n || 'pack')}</small></span><em>${ago(p.t)}</em></div>`; }).join('') : '<div class="ck-empty">Nobody has packed an 83+ yet. Be the first.</div>'}</div>`; }
   else { const dex = Object.assign({}, K.dex || {}); Object.keys(inv).forEach(k => { if (inv[k] > 0) dex[k] = 1; }); const dexN = pool.list.filter(x => dex[x.k]).length, f = window._ckAllT || 'all';
     const X = window._ckIx = Object.assign({ q: '', sort: 'rating', nat: '', own: '' }, window._ckIx || {}); window._ckIxD = { pool, dex, inv, K, cp: (c && c.cardPulls) || [] };
@@ -38275,7 +38276,7 @@ function _ctcPay(c, rew, name, pool) { rew = rew || {}; const K = c.cards = c.ca
   const b = 'ctc' + t.toString(36), PK = []; Object.entries(rew.packs || {}).forEach(([p, q]) => { if (CK_PACKS[p]) for (let i = 0; i < Math.min(20, q); i++) PK.push({ p, from: '🧩 CTC reward — ' + String(name).slice(0, 80), t, b, s: 1 }); });
   if (PK.length) K.gifts = (K.gifts || []).concat(PK);
   got.forEach(x => { K.inv[x.k] = (K.inv[x.k] || 0) + 1; K.dex[x.k] = 1; K.pull = K.pull || {}; K.pull[x.k] = (K.pull[x.k] || 0) + 1; });
-  const big = got.filter(x => x.r >= CK_FEED_MIN); if (big.length) c.cardPulls = (c.cardPulls || []).concat(big.map(x => ({ k: x.k, n: x.n, r: x.r, t, p: 'ctc', by: _wdMe().name }))).slice(-40);
+  const big = got.filter(x => (x.r >= CK_FEED_MIN || x.sp)); if (big.length) c.cardPulls = (c.cardPulls || []).concat(big.map(x => ({ k: x.k, n: x.n, r: x.r, t, p: 'ctc', by: _wdMe().name }))).slice(-40);
   return { got, PK }; }
 function _ctcDone(ch, got, nPacks, pool) { const show = () => { document.getElementById('ctc-dn')?.remove(); const o = document.createElement('div'); o.id = 'ctc-dn'; o.className = 'ck-ov ctc-dn';
     o.innerHTML = `<div class="ctc-dnb"><div class="ck-k">${ch.kind === 'grp' ? 'Group complete — every part done' : 'Challenge complete'}</div><div class="ck-ttl">🧩 <em>${esc(ch.name)}</em></div><div class="ck-sub">Your reward</div>${_ctcRewHtml(ch.rew, pool, true)}
