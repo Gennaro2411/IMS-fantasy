@@ -32425,7 +32425,7 @@ window.renderBets = async function(dry) {
     <button onclick="window._games=window._games||{};window._games.view='qs';window._qsMode='now';showPage('games')" style="display:flex;align-items:center;gap:14px;width:100%;margin:0 0 12px;padding:14px 16px;border-radius:16px;cursor:pointer;text-align:left;color:#fff;border:1px solid rgba(250,204,21,.45);background:linear-gradient(120deg,rgba(250,204,21,.16),rgba(232,0,45,.10) 60%,rgba(90,94,201,.12))">
       <span style="font-size:2rem;flex-shrink:0">⏱️</span>
       <span style="flex:1;min-width:0"><span style="display:block;font-size:.6rem;font-weight:800;letter-spacing:2px;color:#facc15">NEW GAME · QUALI SHOOTOUT</span>
-        <b style="display:block;font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;letter-spacing:1px;line-height:1.1;margin-top:2px">Guess the pole time — win <span style="color:#facc15">500 IM$</span> per division, <span style="color:#facc15">5,000</span> if you nail it</b>
+        <b style="display:block;font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;letter-spacing:1px;line-height:1.1;margin-top:2px">Guess the pole time — win <span style="color:#facc15">10,000 IM$</span> per division, <span style="color:#facc15">1,000,000</span> if you nail it</b>
         <span style="display:block;font-size:.74rem;color:var(--muted);margin-top:3px">Free to enter · closes when teams lock${upcoming ? ' · ' + esc(upcoming.name) : ''}</span></span>
       <span style="flex-shrink:0;padding:8px 14px;border-radius:10px;background:#facc15;color:#111;font-weight:900;font-size:.8rem;letter-spacing:1px">PLAY →</span>
     </button>
@@ -34773,7 +34773,7 @@ window.renderGames = async function() {
       ['tq', '🧠', 'Trivia', 'Ten quick questions on IMS history. How well do you know the league?', 'Quick fire', '#a779e6', '#7c86ff'],
       ['cp', '🛣️', 'Career Path', 'A driver\'s team history, season by season. Every wrong guess reveals more.', 'Daily · Duels', '#f0487a', '#b184e8'],
       ['st', '⚖️', 'Steward Simulator', 'Real IMS incidents. Guilty or not guilty? Compare with the stewards.', 'You be the judge', '#7c86ff', '#ff5c8a'],
-      ['qs', '⏱️', 'Quali Shootout', 'Predict each division\'s pole time. Closest wins 500 IM$, spot on wins 5,000.', 'Win IM$', '#ffb020', '#ff5c8a'],
+      ['qs', '⏱️', 'Quali Shootout', 'Predict each division\'s pole time. Closest wins 10,000 IM$, spot on wins 1,000,000.', 'Win IM$', '#ffb020', '#ff5c8a'],
       ['wf', '🏁', 'Who Finished Where?', 'A real IMS race, top 5 shuffled. Put them back in order in 3 tries.', 'Daily · Practice · Duels', '#b184e8', '#6f74e8'],
       ['pp', '🔗', 'Pit Lane Pairs', '7 drivers, 7 clues: teams, teammates, stats and more. Match them all up.', 'Daily · Practice', '#27f4d2', '#7c86ff'],
     ];
@@ -35572,8 +35572,8 @@ window._qsSettleMine = async function(prefetch) {
     const wins = []; let earn = 0;
     todo.forEach(({ r, dv, pole, rk, k }) => { const errs = all.map(u => ((u.g || {})[rk] || {})[dv]).filter(g => g != null).map(g => Math.abs(g - pole));
       const best = Math.min(...errs), myG = mine.g[rk][dv], myE = Math.abs(myG - pole);
-      if (myE === 0) { earn += 5000; wins.push({ race: r.name, dv, g: myG, pole, prize: 5000, spot: true }); }
-      else if (myE === best) { earn += 500; wins.push({ race: r.name, dv, g: myG, pole, prize: 500 }); }
+      if (myE === 0) { earn += 1000000; wins.push({ race: r.name, dv, g: myG, pole, prize: 1000000, spot: true }); }
+      else if (myE === best) { earn += 10000; wins.push({ race: r.name, dv, g: myG, pole, prize: 10000 }); }
       paid[k] = 1; });
     await dbSet('qualiGuesses', me.uid, { paid }); window._qsAll = null;
     if (earn) await _qsCredit(me.uid, earn);
@@ -35593,7 +35593,7 @@ function _qsWinPopup(wins) {
   ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
   document.body.appendChild(ov);
 }
-// Shootout prizes skip the normal games cap: 500 IM$ for the closest guess, 5000 IM$ for spot on.
+// Shootout prizes skip the normal games cap: 10,000 IM$ for the closest guess, 1,000,000 IM$ for spot on.
 async function _qsCredit(uid, n) { try { const c = await _betLoadCoins(uid); c.balance = (c.balance || 0) + n; c.gameEarned = (c.gameEarned || 0) + n; await dbSet('coins', uid, c); _coinPop(n, 'qs-win'); } catch (e) {} }
 // Anti-cheat: once today's pole is on screen, leaving it (other tab, other window, another page in the app, reload) loses the round.
 // Leaving the daily before locking in: first time = a warning, second time = round lost.
@@ -35743,7 +35743,7 @@ async function renderQSGame(el) {
           <div class="qs-tag"><i></i>ROUND ${esc(String(up.raceNum || ''))} · POLE TIME PREDICTOR</div>
           <div class="qs-trk">${flag(up.name)} ${esc(up.name)}</div>
           ${open ? `<div class="qs-lockin"><small>GUESSES LOCK IN</small>${seg('qs-lock')}<span>👥 ${cnt} player${cnt === 1 ? '' : 's'} in so far</span></div>` : `<div class="qs-q">🔒 Locked — the round is underway. Results land when quali times are imported.</div>`}
-          <div class="qs-prize"><span>🏆 Closest per division <b>+500</b> IM$</span><span>🎯 Spot on <b>+5,000</b> IM$</span></div></div>
+          <div class="qs-prize"><span>🏆 Closest per division <b>+10,000</b> IM$</span><span>🎯 Spot on <b>+1,000,000</b> IM$</span></div></div>
         <div class="qs-divs">${divs.map(dv => { const h = hist.map(x => ({ se: x.se, p: _qsPole(x.r, dv), by: (x.r.poleByDiv || {})[dv] })).filter(x => x.p != null).slice(0, 3);
           return `<div class="qs-div${myG[dv] != null ? ' set' : ''}" style="--qc:${HUE[dv] || '#888'}" data-ref="${h.length ? h[0].p : ''}" data-refs="${h.length ? 'S' + h[0].se : ''}">
             <div class="qs-div-h"><b>${dv}</b>${myG[dv] != null ? `<small>✓ ${_qsFmt(myG[dv])}</small>` : '<small class="mt">No guess yet</small>'}</div>
@@ -35775,7 +35775,7 @@ async function renderQSGame(el) {
       <div class="wd-brand"><img src="icons/icon-192.png?v=3" alt="IMS"><span>QUALI <em>SHOOTOUT</em></span></div><div class="wd-meta">${pills}</div></div>${lockBanner}
     <div class="wd-modes">${[['now', '⏱️', 'THIS ROUND'], ['day', '📅', 'DAILY'], ['res', '📋', 'RESULTS'], ['lb', '🏆', 'RANKINGS']].map(([m, i, l]) => `<button class="${mode === m ? 'on' : ''}" onclick="_qsSetMode('${m}')"><span>${i}</span>${l}</button>`).join('')}</div>
     ${body}
-    <div class="wd-info"><h3>How it works</h3><ul><li>Before the round locks, guess the <b>pole time</b> in each division you fancy — to the thousandth (e.g. <i>1:23.456</i>).</li><li>When quali times are imported, the <b>closest guess</b> in each division wins <b>+500 IM$</b> (ties all win). Get it <b>spot on to the thousandth</b> and you win <b>+5,000 IM$</b>. Guess every division for more chances.</li><li>Past pole times at the same circuit are shown to help you.</li><li><i>Daily</i>: guess one real IMS pole from the past each day — <b>+10 IM$</b> for playing, <b>+10 IM$</b> more if you're within 0.100s.</li></ul></div></div>`;
+    <div class="wd-info"><h3>How it works</h3><ul><li>Before the round locks, guess the <b>pole time</b> in each division you fancy — to the thousandth (e.g. <i>1:23.456</i>).</li><li>When quali times are imported, the <b>closest guess</b> in each division wins <b>+10,000 IM$</b> (ties all win). Get it <b>spot on to the thousandth</b> and you win <b>+1,000,000 IM$</b>. Guess every division for more chances.</li><li>Past pole times at the same circuit are shown to help you.</li><li><i>Daily</i>: guess one real IMS pole from the past each day — <b>+10 IM$</b> for playing, <b>+10 IM$</b> more if you're within 0.100s.</li></ul></div></div>`;
 }
 
 // ---- Admin: lock / unlock games ----
