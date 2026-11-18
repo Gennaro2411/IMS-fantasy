@@ -4673,6 +4673,7 @@ body.ck-lock>header,body.ck-lock>main,body.ck-lock #mobile-nav{visibility:hidden
 .ck-six button{cursor:pointer;padding:5px 12px;border:0;border-radius:99px;background:none;color:#a5a9d6;font:800 .7rem/1 'Barlow',system-ui,sans-serif;letter-spacing:.04em}
 .ck-six button.on{color:#fff;background:linear-gradient(110deg,#6f74e8,#a779e6 55%,#f0487a);box-shadow:0 6px 16px -8px #a779e6}
 .ctc-pkx{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:-4px 0 10px}.ctc-pkx select{min-width:0;padding:8px;border-radius:10px;background:#0e0c1a;color:#fff;border:1px solid rgba(255,255,255,.14);font:inherit;font-size:.78rem}
+.ctc-pkaf{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}.ctc-pkaf .ck-ixn{margin:0}.ctc-pkaf .hx-btn{flex:none;padding:8px 14px}
 .ctc-af{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;margin:2px 0 12px;padding:10px 12px;border-radius:14px;background:rgba(124,134,255,.08);box-shadow:inset 0 0 0 1px rgba(124,134,255,.3)}.ctc-af span{font-size:.78rem;font-weight:800;color:#cfd3ff}.ctc-af select{padding:8px 10px;border-radius:10px;background:#0e0c1a;color:#fff;border:1px solid rgba(255,255,255,.14);font:inherit;font-size:.8rem}
 @media (max-width:640px){.ctc-pkx{grid-template-columns:1fr 1fr}.ctc-af select,.ctc-af .hx-btn{flex:1 1 100%}}
 .ctc-lim{display:grid;gap:6px;font-size:.8rem;color:#c9cbe8}.ctc-lim .ck-fil{margin:0}
@@ -38174,7 +38175,6 @@ function _ctcView(ch, pool, c, grp) { const K = (c && c.cards) || {}, inv = _ckI
       ${ev.reqs.map(x => `<div class="${x.ok ? 'ok' : ''}"><i>${x.ok ? '✓' : '✗'}</i><span>${esc(_ctcReqTxt(x.r))}</span><b>${Number(x.have).toLocaleString()}${x.r.op === 'max' ? ' ≤ ' : x.r.op === 'exact' ? ' = ' : ' / '}${Number(x.r.n).toLocaleString()}</b></div>`).join('')}</div>
     <div class="ck-acts"><button class="hx-btn" onclick="ctcSubmit()" ${ev.ok && !fin && (live || _ctcTester()) ? '' : 'disabled'}>${fin ? '✅ Already completed' : !live && !_ctcTester() ? 'Not live' : ev.ok ? `🔁 Trade in ${ch.slots} card${_ctcS(ch.slots)} for the reward` : 'Meet every requirement to trade in'}</button>
       <button class="hx-btn ghost" onclick="ctcClear()" ${n ? '' : 'disabled'}>Clear squad</button></div>
-    ${fin ? '' : `<div class="ctc-af"><span>⚡ Auto-fill using</span><select id="ctc-af-m">${[['lo', 'Lowest rated first'], ['cheap', 'Cheapest first'], ['dup', 'Duplicates first'], ['filt', 'My picker filters']].map(([v, l]) => `<option value="${v}"${window._ctcAfM === v ? ' selected' : ''}>${l}</option>`).join('')}</select><button class="hx-btn" onclick="ctcAutoFill(document.getElementById('ctc-af-m').value)">Fill squad</button></div>`}
     ${window._ckTestC && window._ckTestC.v ? '<div class="ck-acts" style="grid-template-columns:1fr"><button class="hx-btn ghost ck-testb" onclick="ctcTestFill()">🧪 Test: fill the squad for me</button></div>' : ''}
     <div class="ck-fine">Tap a slot to pick a card from your collection. One card per driver. The cards you trade in are <b>gone for good</b>. 🔒 Locked cards can only be used if you own a spare copy.</div>`; }
 function _ctcUsed(ch, pool, P0, grp) { const L = P0.sqs && P0.sqs.length ? P0.sqs : P0.sq ? [P0.sq] : [];
@@ -38186,20 +38186,16 @@ function _ctcUsed(ch, pool, P0, grp) { const L = P0.sqs && P0.sqs.length ? P0.sq
       <div class="ctc-sq" style="--n:${Math.min(5, sq.length)}">${cards.map((x, i) => x ? `<div class="ctc-sl on">${_ckCard(x)}<div class="ctc-pips">${[0, 1, 2].map(q => `<i class="${q < ev.chem.per[i] ? 'on' : ''}"></i>`).join('')}</div></div>` : '<div class="ctc-sl"><div class="ctc-add" style="cursor:default"><small>Card no longer exists</small></div></div>').join('')}</div>`; }).join('')
       : '<div class="ck-empty">This was completed before squads were saved, so there\'s no squad to show.</div>'}
     <div class="ctc-rq"><div class="wl-sh"><span>Requirements</span><small>all met</small></div>${(ch.reqs || []).map(r => `<div class="ok"><i>✓</i><span>${esc(_ctcReqTxt(r))}</span></div>`).join('')}</div>`; }
-// Auto-fill: find a squad from your own cards that completes the challenge, using your least valuable cards first.
-// It tries a small set of the cheapest / lowest cards and only widens the search if it has to. Locked cards keep 1 copy; CTC reward cards are never used.
-window.ctcAutoFill = async function(mode) { if (window._ctcAfBusy) return; window._ctcAfM = mode; const list = await _ctcLoad(), ch = list.find(x => x.id === window._ctcCur); if (!ch) return;
-  window._ctcAfBusy = 1; showToast('⚡ Finding a squad from your cards…', 'info'); await new Promise(r => setTimeout(r, 30));
-  try { const pool = await _ckPool(), c = await _betLoadCoins(currentUser.userId), inv = _ckInv(c), LK = (c.cards && c.cards.lock) || {};
-    let own = Object.entries(inv).filter(([k, n]) => pool.by[k] && !pool.by[k].ctc && n >= (LK[k] ? 2 : 1)).map(([k, n]) => ({ c: pool.by[k], n }));
-    if (mode === 'filt') { const P = (window._ctcPkLast || {})[ch.id] || {}, q = String(P.q || '').toLowerCase(); own = own.filter(x => (!q || String(x.c.n).toLowerCase().includes(q) || String(x.c.team || '').toLowerCase().includes(q) || String(x.c.nat || '').toLowerCase().includes(q)) && (!P.nat || x.c.nat === P.nat) && (!P.tm || x.c.team === P.tm) && (!P.dv || x.c.div === P.dv) && (!P.t || (P.t === 'sp' ? !!x.c.sp : !x.c.sp && _ctcTierOk(x.c, P.t)))); }
-    const key = mode === 'cheap' ? x => _ckSellV(x.c) * 1000 + x.c.r : mode === 'dup' ? x => (x.n > 1 ? 0 : 1e9) + x.c.r * 1000 + _ckSellV(x.c) : x => x.c.r * 1e6 + _ckSellV(x.c);
-    own.sort((a, b) => (a.c.sp ? 1 : 0) - (b.c.sp ? 1 : 0) || key(a) - key(b)); const cand = own.map(x => x.c); let R = { ok: false };
+// Auto-fill (from the card picker): builds a squad that completes the challenge from the cards the picker is showing right now
+// (its requirement chip, search, nation / team / division / rarity filters), preferring cards in the picker's current order
+// (high → low by default). It tries the first few cards and only widens if it has to. Locked-only and CTC reward cards are skipped.
+window.ctcAutoFill = async function() { const P = window._ctcPk; if (!P || window._ctcAfBusy) return; const ch = P.ch; window._ctcAfBusy = 1;
+  const btn = document.querySelector('.ctc-pkaf .hx-btn'); if (btn) { btn.disabled = true; btn.textContent = '⚡ Finding a squad…'; } await new Promise(r => setTimeout(r, 30));
+  try { const seen = new Set(), cand = (P.L || []).filter(x => !x.lock && !x.c.ctc).map(x => x.c).filter(c => !seen.has(_ctcBk(c)) && seen.add(_ctcBk(c))); let R = { ok: false };
     for (const lim of [ch.slots * 3, 25, 50, 100, 200, cand.length]) { R = _ctcSolve(ch, cand.slice(0, Math.min(lim, cand.length)), lim >= cand.length ? 2500 : 700); if (R.ok || lim >= cand.length) break; }
-    if (!R.ok) return showToast(mode === 'filt' ? 'No squad found with those filters — loosen them or pick another option.' : 'Couldn\'t find a squad from your cards that completes it yet.', 'error');
-    // order the squad like the slots expect (highest first) and drop it in
-    window._ctcSq = window._ctcSq || {}; window._ctcSq[ch.id] = R.sq.slice().sort((a, b) => b.r - a.r).map(x => x.k); showToast('⚡ Squad filled — check it, then trade in.', 'success'); _ckRender();
-  } catch (e) { console.error(e); showToast('Couldn\'t auto-fill.', 'error'); } finally { window._ctcAfBusy = 0; } };
+    if (!R.ok) { showToast(cand.length < P.own.length ? 'No squad found with these filters — loosen them and try again.' : 'Couldn\'t find a squad from your cards that completes it yet.', 'error'); return; }
+    window._ctcSq = window._ctcSq || {}; window._ctcSq[ch.id] = R.sq.slice().sort((a, b) => b.r - a.r).map(x => x.k); document.getElementById('ctc-pk')?.remove(); showToast('⚡ Squad filled — check it, then trade in.', 'success'); _ckRender();
+  } catch (e) { console.error(e); showToast('Couldn\'t auto-fill.', 'error'); } finally { window._ctcAfBusy = 0; if (btn && btn.isConnected) { btn.disabled = false; btn.textContent = '⚡ Auto-fill squad'; } } };
 window.ctcRm = function(i) { const S = (window._ctcSq || {})[window._ctcCur]; if (S) { S[i] = null; _ckRender(); } };
 window.ctcClear = function() { const S = (window._ctcSq || {})[window._ctcCur]; if (S) { S.fill(null); _ckRender(); } };
 // ---- Card picker for one slot ----
@@ -38214,7 +38210,7 @@ window.ctcPick = async function(i) { const list = await _ctcLoad(), ch = list.fi
     <div class="ctc-pkx">${(() => { const P = window._ctcPk, u = f => [...new Set(own.map(x => f(x.c)).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b))), sel = (key, all, L) => `<select onchange="window._ctcPk.${key}=this.value;_ctcPkDraw()"><option value="">${all}</option>${L.map(v => `<option value="${esc(v)}"${P[key] === v ? ' selected' : ''}>${esc(v)}</option>`).join('')}</select>`;
       return sel('nat', '🌍 All nations', u(c => c.nat)) + sel('tm', '🏎️ All teams', u(c => c.team)) + sel('dv', '🏁 All divisions', u(c => c.div)) + `<select onchange="window._ctcPk.t=this.value;_ctcPkDraw()">${[['', '✨ All rarities'], ['sp', 'Special only']].concat(CK_TIERS.map(t => [t.id, t.n + (CTC_FAM[t.id] ? ' (incl. rare)' : '')])).map(([v, l]) => `<option value="${v}"${P.t === v ? ' selected' : ''}>${l}</option>`).join('')}</select>`; })()}</div>
     ${fl.length ? `<div class="ck-fil ctc-pkf"><button class="${window._ctcPk.f < 0 ? 'on' : ''}" onclick="_ctcPkF(-1,this)">All my cards</button>${fl.map(([r, j]) => `<button class="${window._ctcPk.f === j ? 'on' : ''}" onclick="_ctcPkF(${j},this)">${esc(_ctcReqTxt(r))}</button>`).join('')}</div>` : ''}
-    <div class="ck-ixn" id="ctc-pk-n"></div><div class="ck-grid" id="ctc-pk-g"></div></div>`;
+    <div class="ctc-pkaf"><div class="ck-ixn" id="ctc-pk-n"></div><button class="hx-btn" onclick="ctcAutoFill()">⚡ Auto-fill squad</button></div><div class="ck-grid" id="ctc-pk-g"></div></div>`;
   document.body.appendChild(o); _ctcPkDraw(); };
 window._ctcPkF = function(j, b) { window._ctcPk.f = j; b.parentElement.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); _ctcPkDraw(); };
 window._ctcPkDraw = function() { const P = window._ctcPk, g = document.getElementById('ctc-pk-g'); if (!P || !g) return; (window._ctcPkLast = window._ctcPkLast || {})[P.ch.id] = { f: P.f, q: P.q, sort: P.sort, nat: P.nat, dv: P.dv, tm: P.tm, t: P.t }; const q = String(P.q || '').trim().toLowerCase(), r = P.f >= 0 ? P.ch.reqs[P.f] : null;
