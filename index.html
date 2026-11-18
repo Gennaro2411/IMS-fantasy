@@ -37333,8 +37333,8 @@ function _ckRotOf(pool, f, min, salt) { const n = {}; pool.list.forEach(c => { i
 function _ckEvCard(L, k, SPL) { if (!L.length) return 0; const lo = Math.min(...L.map(c => c.r)), w = L.map(c => Math.exp(-(c.r - lo) * k)), W = w.reduce((a, b) => a + b, 0), ev = L.reduce((a, c, i) => a + w[i] * _ckSellV(c), 0) / W;
   let ps = 0, es = 0; Object.entries(CK_PACKS.gold.sp || {}).forEach(([ty, ch]) => { const S = (SPL || []).filter(c => c.sp === ty); if (!S.length) return; const lo2 = Math.min(...S.map(c => c.r)), w2 = S.map(c => Math.exp(-(c.r - lo2) * .22)), W2 = w2.reduce((a, b) => a + b, 0); ps += ch; es += ch * S.reduce((a, c, i) => a + w2[i] * _ckSellV(c), 0) / W2; });
   return (1 - ps) * ev + es; }
-// Daily packs are priced from what's inside: ~90% of the expected value of their 3 cards, rounded to 5 (min 20), so a weak E3 pack is cheap and a stacked one costs more.
-const _ckPriceFrom = ev => Math.max(20, Math.round(ev * CK_N * .9 / 5) * 5);
+// Daily packs are priced from what's inside: ~90% of the expected value of their 3 cards, rounded to 5 (min 50), so a weak E3 pack is cheap and a stacked one costs more.
+const _ckPriceFrom = ev => Math.max(50, Math.round(ev * CK_N * .9 / 5) * 5);
 function _ckRotSync(pool) { const N = CK_PACKS.nat, D = CK_PACKS.divp; N.v = _ckRotOf(pool, c => c.nat, 8, 5); N.n = (N.v || 'Nationality') + ' Pack'; D.v = _ckRotOf(pool, c => c.div, 8, 2); D.n = (D.v || 'Division') + ' Pack';
   [[N, c => c.nat], [D, c => c.div]].forEach(([P, f]) => { if (P.v) P.price = _ckPriceFrom(_ckEvCard(pool.list.filter(c => !c.sp && f(c) === P.v), .1, pool.list.filter(c => c.sp && !c.ctc && f(c) === P.v))); }); }
 const _ckRotRoll = (pool, P, f) => { if (!P.v) _ckRotSync(pool); const sp = pool.list.filter(c => c.sp && !c.ctc && f(c) === P.v && CK_PACKS.gold.sp[c.sp]);
