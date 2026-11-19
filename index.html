@@ -4152,6 +4152,17 @@ body.ck-lock>header,body.ck-lock>main,body.ck-lock #mobile-nav{visibility:hidden
 @keyframes ckCsSpk{to{transform:rotate(var(--r)) translateY(calc(-1 * var(--d) - 60px)) scale(var(--s));opacity:0}}
 .ck-cs-skip{position:absolute;bottom:22px;left:0;right:0;text-align:center;font:700 .7rem system-ui;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4);z-index:4}
 @media (prefers-reduced-motion:reduce){.ck-cs.boom,.ck-cs-rays,.ck-cs-grid{animation:none}}
+.ck-bs{margin:0 0 14px;padding:12px 14px;border-radius:14px;background:linear-gradient(180deg,rgba(232,0,45,.08),rgba(255,255,255,.02));border:1px solid rgba(232,0,45,.28);border-left:4px solid #E8002D}
+.ck-bs-h{font-size:.68rem;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#ff4d6d;margin:0 0 10px}
+.ck-bs-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.ck-bs-l{font-size:.85rem;font-weight:700;color:#e4e4f4}
+.ck-bs-step{display:flex;align-items:center;border:1px solid rgba(255,255,255,.14);border-radius:10px;overflow:hidden;background:#0e0c1a}
+.ck-bs-step button{width:34px;height:34px;border:0;background:rgba(255,255,255,.05);color:#fff;font-weight:900;cursor:pointer}.ck-bs-step button:hover{background:rgba(232,0,45,.35)}
+.ck-bs-step input{width:48px;height:34px;border:0;border-left:1px solid rgba(255,255,255,.1);border-right:1px solid rgba(255,255,255,.1);background:transparent;color:#fff;text-align:center;font:inherit;font-weight:900;-moz-appearance:textfield}.ck-bs-step input::-webkit-inner-spin-button{-webkit-appearance:none}
+.ck-bs-go{margin-left:auto;padding:9px 26px;border:0;border-radius:10px;background:#E8002D;color:#fff;font-weight:900;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;box-shadow:0 4px 14px rgba(232,0,45,.35)}.ck-bs-go:hover{background:#ff1744}
+.ck-bs-q{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.07)}
+.ck-bs-q button{padding:9px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:#e4e4f4;font-weight:800;font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer}.ck-bs-q button:hover{border-color:rgba(255,255,255,.3)}
+.ck-bs-q .dn{color:#ff6b85;border-color:rgba(232,0,45,.45)}.ck-bs-q .dn:hover{background:rgba(232,0,45,.15)}
+@media(max-width:520px){.ck-bs-go{margin-left:0;flex:1 1 100%}}
 .ck-bulk{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 12px}.ck-bulk .dn{color:#ff8aa8;box-shadow:inset 0 0 0 1px rgba(240,72,122,.5)}.ck-lkw{position:relative}.ck-lk{position:absolute;top:-6px;left:-6px;z-index:5;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:.75rem;background:#0b0a14;box-shadow:0 0 0 2px #ffd36b}
 .tw-live{position:relative;margin:14px 0 18px;padding:14px;border-radius:24px;isolation:isolate;overflow:hidden;background:radial-gradient(80% 120% at 0 0,rgba(145,70,255,.32),transparent 60%),radial-gradient(70% 120% at 100% 100%,rgba(240,72,122,.22),transparent 60%),linear-gradient(170deg,#15122b,#0b0a14 72%);box-shadow:inset 0 0 0 1px rgba(145,70,255,.45),0 30px 70px -40px #9146ff}
 .tw-live::before{content:'';position:absolute;inset:-2px;z-index:-1;border-radius:inherit;padding:2px;background:conic-gradient(from var(--twa,0deg),#9146ff,#f0487a,#6f74e8,#9146ff);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:twSpin 6s linear infinite;opacity:.9}
@@ -37889,9 +37900,10 @@ async function renderCardsGame(el) {
         <button class="hx-btn ghost" onclick="ckLoyaltyRestore()">↺ Give back loyalty packs that were opened before a card reset</button></div>`; } }
   else if (tab === 'col') { own.sort((a, b) => b.c.r - a.c.r || b.c.sc - a.c.sc);
     body += `<div class="ck-stats"><div><small>Cards</small><b>${ownN}</b></div><div><small>Collection value</small><b>${ownV.toLocaleString()}</b></div><div><small>Packs opened</small><b>${K.packs || 0}</b></div><div><small>Spent / sold</small><b>${(K.spent || 0).toLocaleString()} / ${(K.sold || 0).toLocaleString()}</b></div></div>
-      ${own.length ? `<div class="ck-bulk"><button class="hx-btn ghost" onclick="ckSellBulk(true)">Sell all duplicates</button><button class="hx-btn ghost dn" onclick="ckSellBulk(false)">Sell all cards</button></div>
-      <div class="ck-keep ck-keepall"><span>Sell all duplicates above</span><button onclick="ckKeepAllStep(-1)">−</button><input id="ck-keepall" type="number" min="1" max="99" value="${window._ckKeepAll || 3}" oninput="window._ckKeepAll=Math.max(1,parseInt(this.value,10)||1)"><button onclick="ckKeepAllStep(1)">＋</button><span>copies</span>
-        <button class="hx-btn ghost" onclick="ckSellBulk(Math.max(1, parseInt(document.getElementById('ck-keepall').value, 10) || 1))">Sell</button></div>
+      ${own.length ? `<div class="ck-bs"><div class="ck-bs-h">Bulk sell</div>
+        <div class="ck-bs-row"><span class="ck-bs-l">Sell duplicates above</span><div class="ck-bs-step"><button onclick="ckKeepAllStep(-1)">−</button><input id="ck-keepall" type="number" min="1" max="99" value="${window._ckKeepAll || 3}" oninput="window._ckKeepAll=Math.max(1,parseInt(this.value,10)||1)"><button onclick="ckKeepAllStep(1)">＋</button></div><span class="ck-bs-l">copies</span>
+          <button class="ck-bs-go" onclick="ckSellBulk(Math.max(1, parseInt(document.getElementById('ck-keepall').value, 10) || 1))">Sell</button></div>
+        <div class="ck-bs-q"><button onclick="ckSellBulk(true)">Sell all duplicates</button><button class="dn" onclick="ckSellBulk(false)">Sell all cards</button></div></div>
       ${(() => { const X = window._ckCol = Object.assign({ q: '', sort: 'rating', nat: '', own: '', f: 'all' }, window._ckCol || {}); window._ckColD = { own, K }; const nats = [...new Set(own.map(x => x.c.nat).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b)));
         setTimeout(_ckColDraw, 0);
         return `<div class="ckx-ix"><div class="ckx-sr"><span>🔍</span><input type="search" placeholder="Search drivers or teams…" value="${esc(X.q)}" oninput="window._ckCol.q=this.value;clearTimeout(window._ckColT);window._ckColT=setTimeout(_ckColDraw,150)"></div>
