@@ -4152,20 +4152,22 @@ body.ck-lock>header,body.ck-lock>main,body.ck-lock #mobile-nav{visibility:hidden
 @keyframes ckCsSpk{to{transform:rotate(var(--r)) translateY(calc(-1 * var(--d) - 60px)) scale(var(--s));opacity:0}}
 .ck-cs-skip{position:absolute;bottom:22px;left:0;right:0;text-align:center;font:700 .7rem system-ui;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4);z-index:4}
 @media (prefers-reduced-motion:reduce){.ck-cs.boom,.ck-cs-rays,.ck-cs-grid{animation:none}}
-.ck-bs{margin:0 0 12px;display:flex;flex-direction:column;align-items:flex-end}
-.ck-bs-h{list-style:none;display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:#b8b8d4;font-size:.72rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;user-select:none}
-.ck-bs-h::-webkit-details-marker{display:none}.ck-bs-h:hover{color:#fff;border-color:rgba(232,0,45,.5)}.ck-bs-h i{font-style:normal;transition:transform .2s}
-.ck-bs[open] .ck-bs-h{color:#fff;border-color:#E8002D}.ck-bs[open] .ck-bs-h i{transform:rotate(180deg)}
-.ck-bs-b{align-self:stretch;margin-top:8px;padding:14px;border-radius:12px;background:#12111c;border:1px solid rgba(255,255,255,.08)}
-.ck-bs-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.ck-bs-l{font-size:.84rem;font-weight:600;color:#d4d4e8}
-.ck-bs-step{display:flex;align-items:center;border:1px solid rgba(255,255,255,.12);border-radius:8px;overflow:hidden}
-.ck-bs-step button{width:30px;height:32px;border:0;background:transparent;color:#aaa;font-weight:700;cursor:pointer}.ck-bs-step button:hover{color:#fff;background:rgba(255,255,255,.06)}
-.ck-bs-step input{width:44px;height:32px;border:0;background:transparent;color:#fff;text-align:center;font:inherit;font-weight:800;-moz-appearance:textfield}.ck-bs-step input::-webkit-inner-spin-button{-webkit-appearance:none}
-.ck-bs-go{margin-left:auto;padding:8px 22px;border:0;border-radius:8px;background:#E8002D;color:#fff;font-weight:800;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}.ck-bs-go:hover{filter:brightness(1.12)}
-.ck-bs-q{display:flex;gap:16px;margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.06)}
-.ck-bs-q button{padding:0;border:0;background:none;color:#9a9ab8;font-weight:600;font-size:.78rem;cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(255,255,255,.2)}.ck-bs-q button:hover{color:#fff}
-.ck-bs-q .dn{color:#ff6b85;margin-left:auto}
-@media(max-width:520px){.ck-bs-go{margin-left:0;flex:1 1 100%}}
+.ckx-ix.ck-colbar{grid-template-columns:minmax(0,1.6fr) repeat(3,minmax(0,1fr)) auto}
+.ck-bs{position:relative}
+.ck-bs-h{list-style:none;height:100%;box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;background:#0e0c1a;border:1px solid rgba(255,255,255,.12);color:#fff;font-size:.85rem;white-space:nowrap;cursor:pointer;user-select:none}
+.ck-bs-h::-webkit-details-marker{display:none}.ck-bs-h i{font-style:normal;font-size:.7rem;opacity:.7;transition:transform .2s}
+.ck-bs[open] .ck-bs-h{border-color:#E8002D}.ck-bs[open] .ck-bs-h i{transform:rotate(180deg)}
+.ck-bs-b{position:absolute;right:0;top:calc(100% + 6px);z-index:30;width:290px;padding:14px;border-radius:12px;background:#14131f;border:1px solid rgba(255,255,255,.12);box-shadow:0 14px 34px rgba(0,0,0,.55)}
+.ck-bs-t{font-size:.68rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8a8aa8;margin-bottom:8px}
+.ck-bs-row{display:flex;align-items:center;gap:8px}.ck-bs-l{font-size:.84rem;color:#c8c8dc}
+.ck-bs-step{display:flex;align-items:center;border:1px solid rgba(255,255,255,.12);border-radius:8px;overflow:hidden;background:#0e0c1a}
+.ck-bs-step button{width:30px;height:34px;border:0;background:transparent;color:#bbb;font-weight:700;cursor:pointer}.ck-bs-step button:hover{color:#fff;background:rgba(255,255,255,.06)}
+.ck-bs-step input{width:40px;height:34px;border:0;background:transparent;color:#fff;text-align:center;font:inherit;font-weight:800;-moz-appearance:textfield}.ck-bs-step input::-webkit-inner-spin-button{-webkit-appearance:none}
+.ck-bs-go{margin-left:auto;height:36px;padding:0 18px;border:0;border-radius:8px;background:#E8002D;color:#fff;font-weight:800;font-size:.8rem;cursor:pointer}.ck-bs-go:hover{filter:brightness(1.12)}
+.ck-bs-q{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.08)}
+.ck-bs-q button{height:34px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:transparent;color:#d4d4e8;font-size:.78rem;font-weight:600;cursor:pointer}.ck-bs-q button:hover{background:rgba(255,255,255,.05)}
+.ck-bs-q .dn{color:#ff6b85;border-color:rgba(232,0,45,.4)}.ck-bs-q .dn:hover{background:rgba(232,0,45,.1)}
+@media (max-width:760px){.ckx-ix.ck-colbar{grid-template-columns:1fr 1fr}.ck-bs-b{width:min(290px,calc(100vw - 32px))}}
 .ck-bulk{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 12px}.ck-bulk .dn{color:#ff8aa8;box-shadow:inset 0 0 0 1px rgba(240,72,122,.5)}.ck-lkw{position:relative}.ck-lk{position:absolute;top:-6px;left:-6px;z-index:5;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:.75rem;background:#0b0a14;box-shadow:0 0 0 2px #ffd36b}
 .tw-live{position:relative;margin:14px 0 18px;padding:14px;border-radius:24px;isolation:isolate;overflow:hidden;background:radial-gradient(80% 120% at 0 0,rgba(145,70,255,.32),transparent 60%),radial-gradient(70% 120% at 100% 100%,rgba(240,72,122,.22),transparent 60%),linear-gradient(170deg,#15122b,#0b0a14 72%);box-shadow:inset 0 0 0 1px rgba(145,70,255,.45),0 30px 70px -40px #9146ff}
 .tw-live::before{content:'';position:absolute;inset:-2px;z-index:-1;border-radius:inherit;padding:2px;background:conic-gradient(from var(--twa,0deg),#9146ff,#f0487a,#6f74e8,#9146ff);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:twSpin 6s linear infinite;opacity:.9}
@@ -37903,16 +37905,17 @@ async function renderCardsGame(el) {
         <button class="hx-btn ghost" onclick="ckLoyaltyRestore()">↺ Give back loyalty packs that were opened before a card reset</button></div>`; } }
   else if (tab === 'col') { own.sort((a, b) => b.c.r - a.c.r || b.c.sc - a.c.sc);
     body += `<div class="ck-stats"><div><small>Cards</small><b>${ownN}</b></div><div><small>Collection value</small><b>${ownV.toLocaleString()}</b></div><div><small>Packs opened</small><b>${K.packs || 0}</b></div><div><small>Spent / sold</small><b>${(K.spent || 0).toLocaleString()} / ${(K.sold || 0).toLocaleString()}</b></div></div>
-      ${own.length ? `<details class="ck-bs"${window._ckBsOpen ? ' open' : ''} ontoggle="window._ckBsOpen=this.open"><summary class="ck-bs-h"><span>Bulk sell</span><i>▾</i></summary><div class="ck-bs-b">
-        <div class="ck-bs-row"><span class="ck-bs-l">Sell duplicates above</span><div class="ck-bs-step"><button onclick="ckKeepAllStep(-1)">−</button><input id="ck-keepall" type="number" min="1" max="99" value="${window._ckKeepAll || 3}" oninput="window._ckKeepAll=Math.max(1,parseInt(this.value,10)||1)"><button onclick="ckKeepAllStep(1)">＋</button></div><span class="ck-bs-l">copies</span>
-          <button class="ck-bs-go" onclick="ckSellBulk(Math.max(1, parseInt(document.getElementById('ck-keepall').value, 10) || 1))">Sell</button></div>
-        <div class="ck-bs-q"><button onclick="ckSellBulk(true)">Sell all duplicates</button><button class="dn" onclick="ckSellBulk(false)">Sell all cards</button></div></div></details>
+      
       ${(() => { const X = window._ckCol = Object.assign({ q: '', sort: 'rating', nat: '', own: '', f: 'all' }, window._ckCol || {}); window._ckColD = { own, K }; const nats = [...new Set(own.map(x => x.c.nat).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b)));
         setTimeout(_ckColDraw, 0);
-        return `<div class="ckx-ix"><div class="ckx-sr"><span>🔍</span><input type="search" placeholder="Search drivers or teams…" value="${esc(X.q)}" oninput="window._ckCol.q=this.value;clearTimeout(window._ckColT);window._ckColT=setTimeout(_ckColDraw,150)"></div>
+        return `<div class="ckx-ix ck-colbar"><div class="ckx-sr"><span>🔍</span><input type="search" placeholder="Search drivers or teams…" value="${esc(X.q)}" oninput="window._ckCol.q=this.value;clearTimeout(window._ckColT);window._ckColT=setTimeout(_ckColDraw,150)"></div>
           <select onchange="window._ckCol.sort=this.value;_ckColDraw()">${[['rating', 'Rating: high → low'], ['rating-asc', 'Rating: low → high'], ['rrank', 'Rarity rank: rarest first'], ['rrank-asc', 'Rarity rank: most common first'], ['rarity', 'Rarity'], ['name', 'Name A–Z'], ['nat', 'Nationality'], ['team', 'Team'], ['value', 'Sell value'], ['copies', 'Most copies'], ['wins', 'Most wins'], ['pts', 'Most points']].map(([v, l]) => `<option value="${v}"${X.sort === v ? ' selected' : ''}>${l}</option>`).join('')}</select>
           <select onchange="window._ckCol.nat=this.value;_ckColDraw()"><option value="">🌍 All nationalities</option>${nats.map(n => `<option value="${esc(n)}"${X.nat === n ? ' selected' : ''}>${esc(n)}</option>`).join('')}</select>
-          <select onchange="window._ckCol.own=this.value;_ckColDraw()">${[['', 'All my cards'], ['dup', 'Duplicates'], ['lock', '🔒 Locked'], ['unlock', 'Not locked']].map(([v, l]) => `<option value="${v}"${X.own === v ? ' selected' : ''}>${l}</option>`).join('')}</select></div>
+          <select onchange="window._ckCol.own=this.value;_ckColDraw()">${[['', 'All my cards'], ['dup', 'Duplicates'], ['lock', '🔒 Locked'], ['unlock', 'Not locked']].map(([v, l]) => `<option value="${v}"${X.own === v ? ' selected' : ''}>${l}</option>`).join('')}</select><details class="ck-bs"${window._ckBsOpen ? ' open' : ''} ontoggle="window._ckBsOpen=this.open"><summary class="ck-bs-h">Bulk sell <i>▾</i></summary><div class="ck-bs-b">
+            <div class="ck-bs-t">Sell duplicates above</div>
+            <div class="ck-bs-row"><div class="ck-bs-step"><button onclick="ckKeepAllStep(-1)">−</button><input id="ck-keepall" type="number" min="1" max="99" value="${window._ckKeepAll || 3}" oninput="window._ckKeepAll=Math.max(1,parseInt(this.value,10)||1)"><button onclick="ckKeepAllStep(1)">＋</button></div><span class="ck-bs-l">copies</span>
+              <button class="ck-bs-go" onclick="ckSellBulk(Math.max(1, parseInt(document.getElementById('ck-keepall').value, 10) || 1))">Sell</button></div>
+            <div class="ck-bs-q"><button onclick="ckSellBulk(true)">Sell all duplicates</button><button class="dn" onclick="ckSellBulk(false)">Sell all cards</button></div></div></details></div>
         <div class="ck-fil">${[['all', 'All'], ['sp', '✨ Special']].concat(CK_TIERS.map(t => [t.id, t.n])).map(([id, n]) => `<button class="${X.f === id ? 'on' : ''}" onclick="window._ckCol.f='${id}';this.parentElement.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b===this));_ckColDraw()">${n}</button>`).join('')}</div>
         <div id="ck-col-n" class="ck-ixn"></div><div class="ck-grid" id="ck-col-g"></div>`; })()}<div class="ck-fine">Tap a card for its stats, to quick sell it, or to 🔒 lock it so it's never sold (bulk sells and quick sells keep locked cards).</div>` : '<div class="ck-empty">No cards yet. Open a pack in the shop.</div>'}`; }
   else if (tab === 'ctc') { body += await _ctcTab(pool, c); }
