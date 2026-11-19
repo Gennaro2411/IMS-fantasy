@@ -37905,7 +37905,7 @@ async function renderCardsGame(el) {
         <button class="hx-btn ghost" onclick="ckLoyaltyRestore()">↺ Give back loyalty packs that were opened before a card reset</button></div>`; } }
   else if (tab === 'col') { own.sort((a, b) => b.c.r - a.c.r || b.c.sc - a.c.sc);
     body += `<div class="ck-stats"><div><small>Cards</small><b>${ownN}</b></div><div><small>Collection value</small><b>${ownV.toLocaleString()}</b></div><div><small>Packs opened</small><b>${K.packs || 0}</b></div><div><small>Spent / sold</small><b>${(K.spent || 0).toLocaleString()} / ${(K.sold || 0).toLocaleString()}</b></div></div>
-      
+      ${own.length ? `
       ${(() => { const X = window._ckCol = Object.assign({ q: '', sort: 'rating', nat: '', own: '', f: 'all' }, window._ckCol || {}); window._ckColD = { own, K }; const nats = [...new Set(own.map(x => x.c.nat).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b)));
         setTimeout(_ckColDraw, 0);
         return `<div class="ckx-ix ck-colbar"><div class="ckx-sr"><span>🔍</span><input type="search" placeholder="Search drivers or teams…" value="${esc(X.q)}" oninput="window._ckCol.q=this.value;clearTimeout(window._ckColT);window._ckColT=setTimeout(_ckColDraw,150)"></div>
