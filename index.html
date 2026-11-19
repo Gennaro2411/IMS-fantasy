@@ -37771,10 +37771,12 @@ window.ckShow = async function(k) { const pool = await _ckPool(), card = pool.by
   o.onclick = close; document.addEventListener('keydown', esc_); document.body.appendChild(o); };
 window.ckLock = async function(k) { const c = await _betLoadCoins(currentUser.userId); const K = c.cards = c.cards || { inv: {} }; K.lock = K.lock || {};
   if (K.lock[k]) delete K.lock[k]; else K.lock[k] = 1; await dbSet('coins', currentUser.userId, { cards: K }); showToast(K.lock[k] ? '🔒 Locked — this card can\'t be sold.' : '🔓 Unlocked.', 'success'); document.getElementById('ck-dt')?.remove(); _ckRender(); if (K.lock[k] !== undefined || true) ckDetail(k); };
-window.ckSellBulk = async function(dupOnly) { const pool = await _ckPool(), c = await _betLoadCoins(currentUser.userId), inv = _ckInv(c), LK = (c.cards && c.cards.lock) || {}, cnt = {}; let n = 0, v = 0;
-  Object.entries(inv).forEach(([k, have]) => { const card = pool.by[k]; if (!card || have <= 0 || _ckNoSell(card)) return; const keep = dupOnly || LK[k] ? 1 : 0, q = Math.max(0, have - keep); if (q) { cnt[k] = q; n += q; v += _ckSellV(card) * q; } });
-  if (!n) return showToast(dupOnly ? 'No duplicates to sell.' : 'Nothing to sell (locked cards are kept).', 'info');
-  customConfirm(`${dupOnly ? 'Sell all duplicates' : 'Sell ALL your cards'}: ${n} card${n === 1 ? '' : 's'} for ${v.toLocaleString()} IM$? Locked cards are kept. You can't undo this.`, async () => { if (await _ckSellMany(cnt)) _ckRender(); }, 'Sell'); };
+window.ckKeepAllStep = function(d) { const i = document.getElementById('ck-keepall'); if (!i) return; i.value = window._ckKeepAll = Math.max(1, Math.min(99, (parseInt(i.value, 10) || 1) + d)); };
+// dupOnly: true = keep 1 of each, false = sell everything (locked keep 1), a number = keep that many of each and sell the rest
+window.ckSellBulk = async function(dupOnly) { const keepN = typeof dupOnly === 'number' ? dupOnly : null; const pool = await _ckPool(), c = await _betLoadCoins(currentUser.userId), inv = _ckInv(c), LK = (c.cards && c.cards.lock) || {}, cnt = {}; let n = 0, v = 0;
+  Object.entries(inv).forEach(([k, have]) => { const card = pool.by[k]; if (!card || have <= 0 || _ckNoSell(card)) return; const keep = keepN ? Math.max(keepN, LK[k] ? 1 : 0) : dupOnly || LK[k] ? 1 : 0, q = Math.max(0, have - keep); if (q) { cnt[k] = q; n += q; v += _ckSellV(card) * q; } });
+  if (!n) return showToast(keepN ? `You don't have more than ${keepN} of any card.` : dupOnly ? 'No duplicates to sell.' : 'Nothing to sell (locked cards are kept).', 'info');
+  customConfirm(`${keepN ? `Keep ${keepN} of every card and sell the extras` : dupOnly ? 'Sell all duplicates' : 'Sell ALL your cards'}: ${n} card${n === 1 ? '' : 's'} for ${v.toLocaleString()} IM$? Locked cards are kept. You can't undo this.`, async () => { if (await _ckSellMany(cnt)) _ckRender(); }, 'Sell'); };
 window.ckQuick = function(k, n) { customConfirm(`Sell ${n} cop${n === 1 ? 'y' : 'ies'} of this card? You can't undo this.`, async () => { if (await _ckSellMany({ [k]: n })) { document.getElementById('ck-dt')?.remove(); _ckRender(); } }, 'Sell'); };
 // ---- Admin: let everyone in ----
 window.ckSetOpen = function(on) { if (!adminLoggedIn) return;
@@ -37888,6 +37890,8 @@ async function renderCardsGame(el) {
   else if (tab === 'col') { own.sort((a, b) => b.c.r - a.c.r || b.c.sc - a.c.sc);
     body += `<div class="ck-stats"><div><small>Cards</small><b>${ownN}</b></div><div><small>Collection value</small><b>${ownV.toLocaleString()}</b></div><div><small>Packs opened</small><b>${K.packs || 0}</b></div><div><small>Spent / sold</small><b>${(K.spent || 0).toLocaleString()} / ${(K.sold || 0).toLocaleString()}</b></div></div>
       ${own.length ? `<div class="ck-bulk"><button class="hx-btn ghost" onclick="ckSellBulk(true)">Sell all duplicates</button><button class="hx-btn ghost dn" onclick="ckSellBulk(false)">Sell all cards</button></div>
+      <div class="ck-keep ck-keepall"><span>Keep</span><button onclick="ckKeepAllStep(-1)">−</button><input id="ck-keepall" type="number" min="1" max="99" value="${window._ckKeepAll || 3}" oninput="window._ckKeepAll=Math.max(1,parseInt(this.value,10)||1)"><button onclick="ckKeepAllStep(1)">＋</button><span>of every card</span>
+        <button class="hx-btn ghost" onclick="ckSellBulk(Math.max(1, parseInt(document.getElementById('ck-keepall').value, 10) || 1))">Sell the extras</button></div>
       ${(() => { const X = window._ckCol = Object.assign({ q: '', sort: 'rating', nat: '', own: '', f: 'all' }, window._ckCol || {}); window._ckColD = { own, K }; const nats = [...new Set(own.map(x => x.c.nat).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b)));
         setTimeout(_ckColDraw, 0);
         return `<div class="ckx-ix"><div class="ckx-sr"><span>🔍</span><input type="search" placeholder="Search drivers or teams…" value="${esc(X.q)}" oninput="window._ckCol.q=this.value;clearTimeout(window._ckColT);window._ckColT=setTimeout(_ckColDraw,150)"></div>
