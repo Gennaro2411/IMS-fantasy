@@ -38054,10 +38054,12 @@ function _ctcIdea(diff, pool) { const D = { easy: { s: [3, 5], lo: 0, hi: 64, nr
     medium: { s: [5, 7], lo: 50, hi: 80, nr: [3, 3], chem: .8, slack: 1, must: ['nat', 'chem'], opt: ['team', 'avg', 'minr', 'nats', 'div', 'win'], ims: 500, packs: { supersonic: 1 } },
     hard: { s: [8, 10], lo: 62, hi: 91, nr: [5, 6], chem: .95, slack: 0, must: ['nat', 'team', 'chem', 'avg'], opt: ['nats', 'minr', 'champ', 'win', 'div', 'tierf', 'rare', 'retired', 'teams', 'card'], ims: 1500, packs: { supersonic: 2 } },
     // Extra Hard: a full squad and 7–9 requirements — exact counts, a must-have card, a low-rated card to fit in, per-driver chemistry…
-    xhard: { s: [9, 10], lo: 64, hi: 99, nr: [7, 9], chem: 1, slack: 0, must: ['nat', 'team', 'chem', 'avg', 'each', 'card'], opt: ['divsx', 'champx', 'maxr', 'tierf', 'rare', 'retired', 'nowin', 'wins', 't5s', 'natsx', 'teams', 'samediv', 'minr'], ims: 4000, packs: { supersonic: 3 } } }[diff] || null; if (!D) return null;
-  const HD = diff === 'hard' || diff === 'xhard', XH = diff === 'xhard';
+    xhard: { s: [9, 10], lo: 64, hi: 99, nr: [7, 9], chem: 1, slack: 0, must: ['nat', 'team', 'chem', 'avg', 'each', 'card'], opt: ['divsx', 'champx', 'maxr', 'tierf', 'rare', 'retired', 'nowin', 'wins', 't5s', 'natsx', 'teams', 'samediv', 'minr'], ims: 4000, packs: { supersonic: 3 } },
+    // Insane: built from high-rated cards (specials allowed) — full 10-card squad, 10–12 requirements, nearly all exact, 85+ count, top avg.
+    insane: { s: [10, 10], lo: 80, hi: 99, nr: [10, 12], chem: 1, slack: 0, must: ['nat', 'team', 'chem', 'avg', 'each', 'card', 'minr', 'natsx', 'divsx'], opt: ['champx', 'maxr', 'tierf', 'rare', 'retired', 'nowin', 'wins', 't5s', 'teams', 'samediv'], ims: 12000, packs: { supersonic: 5 } } }[diff] || null; if (!D) return null;
+  const IN = diff === 'insane', HD = diff === 'hard' || diff === 'xhard' || IN, XH = diff === 'xhard' || IN;
   const ri = (a, b) => a + Math.floor(Math.random() * (b - a + 1)), rnd = A => A[Math.floor(Math.random() * A.length)], shuf = A => { A = A.slice(); for (let i = A.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [A[i], A[j]] = [A[j], A[i]]; } return A; };
-  let lo = D.lo, base = []; for (;;) { base = _ctcPackable(pool).filter(c => c.r >= lo && c.r <= D.hi); if (base.length >= 40 || lo <= 0) break; lo -= 6; }
+  let lo = D.lo, base = []; for (;;) { base = _ctcPackable(pool, IN).filter(c => c.r >= lo && c.r <= D.hi); if (base.length >= (IN ? 25 : 40) || lo <= 0) break; lo -= 6; }
   if (base.length < D.s[0]) return null;
   const grp = f => { const m = {}; base.forEach(c => { const v = f(c); if (v) (m[v] = m[v] || []).push(c); }); return m; }, byN = grp(c => c.nat), byT = grp(_ctcTm), byD = grp(c => c.div);
   const cntOf = (sq, f) => { const m = {}; sq.forEach(c => { const v = f(c); if (v) m[v] = (m[v] || 0) + 1; }); return Object.entries(m).sort((a, b) => b[1] - a[1]); };
@@ -38078,7 +38080,7 @@ function _ctcIdea(diff, pool) { const D = { easy: { s: [3, 5], lo: 0, hi: 64, nr
     if (Math.floor(chem.tot * D.chem) >= 3) C.chem = { ty: 'chem', op: 'min', n: Math.floor(chem.tot * D.chem) };
     const dv = cntOf(sq, c => c.div)[0]; if (dv && dv[1] >= 2) C.div = { ty: 'div', v: dv[0], op: 'min', n: Math.max(1, dv[1] - (diff === 'easy' ? 1 : 0)) };
     const tr = cntOf(sq, c => c.t)[0]; if (tr && tr[1] - D.slack >= 1) C.tier = { ty: 'tier', v: tr[0], op: 'min', n: tr[1] - D.slack };
-    const thr = HD ? 75 : 60, cR = sq.filter(c => c.r >= thr).length; if (cR >= 1 && cR < n) C.minr = { ty: 'minr', v: thr, op: 'min', n: cR };
+    const thr = IN ? 85 : HD ? 75 : 60, cR = sq.filter(c => c.r >= thr).length; if (cR >= 1 && cR < n) C.minr = { ty: 'minr', v: thr, op: 'min', n: cR };
     const dn = _ctcDist(sq, c => c.nat); if (HD ? dn >= 1 && dn < n : dn >= 3) C.nats = { ty: 'nats', op: HD ? 'max' : 'min', n: dn };
     // obscure extras (all read straight off the squad, so it still completes them)
     const per = chem.per, mn = Math.min(...per); if (mn >= 1) C.each = { ty: 'each', op: 'min', n: mn };
@@ -38097,8 +38099,8 @@ function _ctcIdea(diff, pool) { const D = { easy: { s: [3, 5], lo: 0, hi: 64, nr
     const want = ri(D.nr[0], D.nr[1]), reqs = D.must.filter(k => C[k]).map(k => C[k]); shuf(D.opt.filter(k => C[k])).forEach(k => { if (reqs.length < Math.max(want, D.must.length)) reqs.push(C[k]); });
     if (reqs.length < Math.min(want, D.nr[0])) continue;
     const val = sq.reduce((a, c) => a + _ckSellV(c), 0), tn = T ? byT[T][0].team : '';
-    const nm = rnd(diff === 'easy' ? [`${A} Roll Call`, `${A} Starter`, `First Steps: ${A}`] : diff === 'medium' ? [`${A} Connection`, tn ? `${tn} Academy` : `${A} United`, `${A} Midfield`] : XH ? [`Puzzle Box: ${A}`, tn ? `The ${tn} Files` : `The ${A} Files`, `${A} Masterclass`, tn ? `${tn} Enigma` : `${A} Enigma`, `Paddock Cipher: ${A}`] : [tn ? `${A} × ${tn} Elite` : `${A} Elite`, `Grid Legends: ${A}`, tn ? `${tn} Dynasty` : `${A} Dynasty`]);
-    const ch = { name: nm, desc: XH ? `Only the sharpest collections will crack this one. ${n} cards, ${reqs.length} requirements.` : `Trade in ${n} card${_ctcS(n)} that fit the brief.`, slots: n, reqs, rew: { ims: Math.max(D.ims, Math.round(val * (XH ? 1.8 : 1.4) / 50) * 50), packs: Object.assign({}, D.packs), cards: [] } };
+    const nm = IN ? rnd([`Nightmare: ${A}`, tn ? `${tn} Gauntlet` : `${A} Gauntlet`, `Final Boss: ${A}`, `The ${A} Impossible`, tn ? `${tn} Black Box` : `Black Box: ${A}`]) : rnd(diff === 'easy' ? [`${A} Roll Call`, `${A} Starter`, `First Steps: ${A}`] : diff === 'medium' ? [`${A} Connection`, tn ? `${tn} Academy` : `${A} United`, `${A} Midfield`] : XH ? [`Puzzle Box: ${A}`, tn ? `The ${tn} Files` : `The ${A} Files`, `${A} Masterclass`, tn ? `${tn} Enigma` : `${A} Enigma`, `Paddock Cipher: ${A}`] : [tn ? `${A} × ${tn} Elite` : `${A} Elite`, `Grid Legends: ${A}`, tn ? `${tn} Dynasty` : `${A} Dynasty`]);
+    const ch = { name: nm, desc: IN ? `Insane difficulty. Only the very best collections stand a chance. ${n} cards, ${reqs.length} requirements, almost all exact.` : XH ? `Only the sharpest collections will crack this one. ${n} cards, ${reqs.length} requirements.` : `Trade in ${n} card${_ctcS(n)} that fit the brief.`, slots: n, reqs, rew: { ims: Math.max(D.ims, Math.round(val * (IN ? 2.2 : XH ? 1.8 : 1.4) / 50) * 50), packs: Object.assign({}, D.packs), cards: [] } };
     if (!_ctcEval(sq, ch).ok) continue; // the squad it was built from must complete it
     return { ch, sq: sq.slice().sort((a, b) => b.r - a.r), val, diff }; }
   return null; }
@@ -38336,7 +38338,7 @@ function _ctcBHtml(pool) { const B = window._ctcB = window._ctcB || _ctcBNew(), 
     <div class="ck-fil ctc-parts" style="margin:0">${B.parts.map((x, i) => `<button class="${i === B.pi ? 'on' : ''}" onclick="ctcBPart(${i})">${i + 1}. ${esc(x.name || 'Part ' + (i + 1))}${x.proof && x.proof.ok ? ' ✅' : ''}</button>`).join('')}<button onclick="ctcBPartAdd()">＋ Add part</button></div>
     <div class="ctc-partb"><div class="ctc-parth"><b>Part ${B.pi + 1}</b>${B.parts.length > 1 ? `<button onclick="ctcBPartDel()">Remove this part</button>` : ''}</div>
     <input ${IN} maxlength="40" placeholder="Part name, e.g. VCARB Academy" value="${esc(P.name || '')}" oninput="_ctcBP(_ctcB).name=this.value">` : ''}
-    <div class="ctc-gen"><select id="ctc-g-d"><option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option><option value="xhard">Extra Hard</option></select><button class="hx-btn ghost" onclick="ctcIdea()">🎲 Generate a CTC idea</button></div>
+    <div class="ctc-gen"><select id="ctc-g-d"><option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option><option value="xhard">Extra Hard</option><option value="insane">Insane</option></select><button class="hx-btn ghost" onclick="ctcIdea()">🎲 Generate a CTC idea</button></div>
     ${isG ? '' : `<input ${IN} maxlength="40" placeholder="Challenge name, e.g. Indian Summer" value="${esc(B.name)}" oninput="_ctcB.name=this.value">
     <textarea rows="2" maxlength="200" placeholder="Short description (optional)" oninput="_ctcB.desc=this.value">${esc(B.desc)}</textarea>`}
     <div style="display:grid;gap:10px"><label class="ctc-lb">Cards needed (1–${CTC_MAX})<input type="number" min="1" max="${CTC_MAX}" value="${B.slots}" onchange="ctcBSlots(this.value)"><small>max chemistry ${B.slots * 3}</small></label>
@@ -38361,7 +38363,7 @@ function _ctcBHtml(pool) { const B = window._ctcB = window._ctcB || _ctcBNew(), 
     <div class="ck-fine" style="margin:4px 0 0">“Check it's possible” and the idea generator only use cards players can pack (no CTC-only cards), and show a squad that completes the challenge. Cards a player trades in are removed from their collection. To make a reward card that can't be packed, create a special card in <b>Card Index</b> with “CTC only” ticked, then add it here.</div>`; }
 function _ctcProofHtml(P) { if (!P) return ''; if (P.busy) return '<div class="ctc-pf">🧪 Looking for a squad that completes it…</div>';
   if (!P.ok) return `<div class="ctc-pf bad">❌ <b>No squad found.</b> ${esc(P.why || 'With the cards players can pack, these requirements look impossible (or very close to it). Loosen one and check again.')}</div>`;
-  return `<div class="ctc-pf ok">✅ <b>Proven possible${P.diff ? ' · ' + ({ xhard: 'EXTRA HARD' }[P.diff] || P.diff.toUpperCase()) + ' idea' : ''}</b> — this squad completes it${P.sp ? ' (needs special cards)' : ''}: chemistry ${P.chem}, squad rating ${P.avg}, worth about ${Number(P.val).toLocaleString()} IM$ if sold.
+  return `<div class="ctc-pf ok">✅ <b>Proven possible${P.diff ? ' · ' + ({ xhard: 'EXTRA HARD', insane: 'INSANE' }[P.diff] || P.diff.toUpperCase()) + ' idea' : ''}</b> — this squad completes it${P.sp ? ' (needs special cards)' : ''}: chemistry ${P.chem}, squad rating ${P.avg}, worth about ${Number(P.val).toLocaleString()} IM$ if sold.
     <div class="ctc-pfl">${P.sq.map(c => `<span><b>${c.r}</b> ${esc(c.n)}<small>${esc([c.nat, c.team, c.div].filter(Boolean).join(' · '))}</small></span>`).join('')}</div></div>`; }
 const _ctcProofOf = (sq, ch, extra) => { const ev = _ctcEval(sq, ch); return Object.assign({ ok: true, sq: sq.map(c => ({ r: c.r, n: c.n, nat: c.nat, team: c.team, div: c.div })), chem: ev.chem.tot + ' / ' + ev.max, avg: Math.round(sq.reduce((a, c) => a + c.r, 0) / sq.length * 10) / 10, val: sq.reduce((a, c) => a + _ckSellV(c), 0) }, extra || {}); };
 async function _ctcBDraw() { const el = document.getElementById('ctc-b'); if (!el) return; el.innerHTML = _ctcBHtml(await _ckPool()); ctcBReqUI(); }
@@ -38395,7 +38397,7 @@ window.ctcIdea = async function() { if (!adminLoggedIn) return; const diff = (do
   if (!I) return showToast('Couldn\'t build an idea from the cards in the pool — try again.', 'error');
   const B0 = window._ctcB; if (B0 && B0.kind === 'grp') { const P = _ctcBP(B0); B0.slots = I.ch.slots; B0.reqs = I.ch.reqs; B0.proof = _ctcProofOf(I.sq, I.ch, { diff }); if (!P.name) P.name = I.ch.name; _ctcBSaveP(B0); await _ctcBDraw(); return showToast('🎲 Idea added to part ' + (B0.pi + 1) + '.', 'success'); }
   const B = window._ctcB = Object.assign(_ctcBNew(), I.ch, { id: (B0 || {}).id || '' }); B.proof = _ctcProofOf(I.sq, I.ch, { diff }); await _ctcBDraw(); const d = document.getElementById('ctc-g-d'); if (d) d.value = diff;
-  showToast('🎲 ' + ({ easy: 'Easy', medium: 'Medium', hard: 'Hard', xhard: 'Extra Hard' }[diff] || diff) + ' idea ready — tweak it, set the reward, then create it.', 'success'); };
+  showToast('🎲 ' + ({ easy: 'Easy', medium: 'Medium', hard: 'Hard', xhard: 'Extra Hard', insane: 'Insane' }[diff] || diff) + ' idea ready — tweak it, set the reward, then create it.', 'success'); };
 window.ctcBSave = async function() { if (!adminLoggedIn) return; const B = window._ctcB; if (!B) return; const name = String(B.name || '').trim().slice(0, 40); if (!name) return showToast('Give the challenge a name.', 'error');
   const inG = B.kind !== 'grp' && !!B.grp, rew = inG ? { ims: 0, packs: {}, cards: [] } : { ims: Math.max(0, Math.round(B.rew.ims || 0)), packs: Object.fromEntries(Object.entries(B.rew.packs || {}).filter(([id, q]) => CK_PACKS[id] && q > 0)), cards: (B.rew.cards || []).slice(0, 5) };
   if (!inG && !rew.ims && !Object.keys(rew.packs).length && !rew.cards.length) return showToast('Add a reward: IM$, packs or a card.', 'error');
