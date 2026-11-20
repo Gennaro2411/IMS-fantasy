@@ -6058,10 +6058,11 @@ async function fsRequest(method, url, body) {
 window._dbCache = window._dbCache || {};        // col -> { at: ms, data: [...] }
 window._DB_CACHE_TTL = 8000;                     // ms; short enough that nothing feels stale
 // Collections that rarely change keep longer (your own writes still clear them instantly).
-window._DB_TTL = { archives: 1800000, seasonArchives: 1800000, constructors: 300000, drivers: 180000, schedule: 180000, races: 120000, teams: 90000, transfers: 90000, bets: 30000 };
+window._DB_TTL = { archives: 1800000, seasonArchives: 1800000, constructors: 300000, drivers: 180000, schedule: 180000, races: 120000, teams: 90000, transfers: 90000, bets: 30000, coins: 300000 }; // coins: every player's wallet — one read per player, so the whole list is kept 5 min
 window._dbInflight = window._dbInflight || {};
 function dbInvalidate(col) {
   window._dbGen = (window._dbGen || 0) + 1;
+  if (col === 'coins') return; // your own wallet write doesn't throw away everyone else's (a full re-read per pack opened)
   if (col) { delete window._dbCache[col]; delete window._dbInflight[col]; } else { window._dbCache = {}; window._dbInflight = {}; }
   // Reserve plans depend on teams/races/drivers — drop the cached plans when any of those change.
   if (!col || col === 'teams' || col === 'races' || col === 'drivers') { try { window.clearReservePlanCache && window.clearReservePlanCache(); } catch(e){} }
@@ -37513,11 +37514,12 @@ window.ckTab = function(t) { window._ckTab = t; _ckRender(); };
 // gi = index into c.cards.gifts → opens a gifted/reward pack: free, no daily limit.
 // Before any pack is opened: (1) if a newer version of the app is live, reload into it first (old builds don't know the newest pack rules);
 // (2) re-read the special card list so 'Not in packs' / 'CTC only' changes apply instantly, not after the 10-minute pool cache.
-async function _ckPackGuard() { await _appVerCheck(); if (window._appUpd && window._appUpd.pending) { showToast('Updating to the latest version…', 'info'); setTimeout(() => location.reload(), 400); return false; }
+async function _ckPackGuard() { if (window._appUpd && window._appUpd.pending) { showToast('Updating to the latest version…', 'info'); setTimeout(() => location.reload(), 400); return false; }
+  if (_now() - (window._ckSpChkAt || 0) < 60e3) return true; window._ckSpChkAt = _now(); /* at most one check a minute */
   try { const sd = await dbGet('settings', 'ckSpecials'); if (JSON.stringify((sd && sd.value && sd.value.list) || []) !== window._ckSpSig) window._ckPoolC = null; } catch (e) {} return true; }
 // New-version check. APP_BUILD is stamped on every commit (git pre-commit hook). Any device running a newer build records it in
 // settings/appBuild; a device whose own build is older than that number knows it's out of date. Only a real newer build can trigger it.
-const APP_BUILD = 1795184617;
+const APP_BUILD = 1795185847;
 window._appUpd = window._appUpd || { pending: false };
 async function _appVerCheck() { try { const d = await dbGet('settings', 'appBuild'), live = +((d && d.value) || 0);
     if (APP_BUILD > live) { await dbSet('settings', 'appBuild', { value: APP_BUILD }); return; }
@@ -37791,9 +37793,13 @@ async function _ckSellMany(cnt) { try { const pool = await _ckPool(), c = await 
   } catch (e) { console.error(e); showToast('Couldn\'t sell — try again.', 'error'); return false; } }
 // ---- Collection card detail ----
 // How many times each card has been obtained by everyone (test accounts left out), and a rarity rank: #1 = obtained the fewest times.
-async function _ckGlobal(pool) { if (window._ckGl && _now() - window._ckGl.at < 120e3) return window._ckGl;
-  const all = await _gmNoTestCoins(await dbGetAll('coins').catch(() => [])), n = {}, own = {}; all.forEach(x => { const K = (x && x.cards) || {}, inv = K.inv || {}, pl = K.pull || {}, dx = K.dex || {};
-    new Set([...Object.keys(inv), ...Object.keys(pl), ...Object.keys(dx)]).forEach(k => { const v = Math.max(pl[k] || 0, inv[k] || 0, dx[k] ? 1 : 0); if (v) n[k] = (n[k] || 0) + v; if (inv[k] > 0) own[k] = (own[k] || 0) + 1; }); });
+// Shared aggregates: reading every player's coins doc costs one read per player, so instead the first device that finds the
+// stored summary older than maxAge rebuilds it and saves it to one settings doc; everyone else reads that single doc.
+async function _ckAgg(id, maxAge, build) { try { const d = await dbGet('settings', id), v = d && d.value; if (v && v.at && Date.now() - v.at < maxAge && v.data) return v.data; } catch (e) {}
+  const data = await build(); dbSet('settings', id, { value: { at: Date.now(), data } }).catch(() => {}); return data; }
+async function _ckGlobal(pool) { if (window._ckGl && _now() - window._ckGl.at < 5 * 60e3) return window._ckGl;
+  const G = await _ckAgg('ckAggGlobal', 10 * 60e3, async () => { const all = await _gmNoTestCoins(await dbGetAll('coins').catch(() => [])), n = {}, own = {}; all.forEach(x => { const K = (x && x.cards) || {}, inv = K.inv || {}, pl = K.pull || {}, dx = K.dex || {};
+    new Set([...Object.keys(inv), ...Object.keys(pl), ...Object.keys(dx)]).forEach(k => { const v = Math.max(pl[k] || 0, inv[k] || 0, dx[k] ? 1 : 0); if (v) n[k] = (n[k] || 0) + v; if (inv[k] > 0) own[k] = (own[k] || 0) + 1; }); }); return { n, own }; }), n = G.n || {}, own = G.own || {};
   // rarest first: fewest owners, then fewest times obtained; on a tie, limited cards first (CTC-only, or a special that never comes out of packs,
   // e.g. Moments), then the higher-rated card. Every card gets its own rank.
   const spT = new Set(); Object.values(CK_PACKS).forEach(P => Object.keys(P.sp || {}).forEach(t => spT.add(t))); const lim = c => c.ctc || (c.sp && !spT.has(c.sp)) ? 1 : 0;
@@ -37849,10 +37855,12 @@ function _ckSettingsBlock() { try { const m = document.querySelector('#settings-
 // Times pulled: exact count from now on (K.pull), backed up for older pulls by the Big Pulls log (83+ only, last 40), copies owned, or 1 if it's in your index.
 const _ckPulled = (K, k, cp) => Math.max(((K && K.pull) || {})[k] || 0, (cp || []).filter(x => x && x.k === k).length, ((K && K.inv) || {})[k] || 0, ((K && K.dex) || {})[k] ? 1 : 0);
 // Net worth leaderboard: IM$ balance + what every card in the collection sells for (test accounts left out).
-async function _ckRichHtml(pool, me) { if (!window._ckRich || _now() - window._ckRich.at > 60e3) { const [coins, teams] = await Promise.all([dbGetAll('coins', { fresh: true }).catch(() => []), dbGetAll('teams').catch(() => [])]);
+async function _ckRichHtml(pool, me) { if (!window._ckRich || _now() - window._ckRich.at > 3 * 60e3) { const teams = await dbGetAll('teams').catch(() => []);
     const T = {}; teams.forEach(t => { if (t && t.userId && !t.testAccount) T[t.userId] = t; });
-    const rows = (await _gmNoTestCoins(coins)).filter(x => x && x.userId && T[x.userId]).map(x => { const inv = _ckInv(x), cv = Object.entries(inv).reduce((a, [k, n]) => a + (pool.by[k] && n > 0 ? _ckSellV(pool.by[k]) * n : 0), 0), bal = Math.round(x.balance || 0);
-      return { id: x.userId, t: T[x.userId], bal, cv, nw: bal + cv }; }).sort((a, b) => b.nw - a.nw); window._ckRich = { at: _now(), rows }; }
+    const base = await _ckAgg('ckAggRich', 5 * 60e3, async () => { const coins = await dbGetAll('coins').catch(() => []);
+      return (await _gmNoTestCoins(coins)).filter(x => x && x.userId).map(x => { const inv = _ckInv(x), cv = Object.entries(inv).reduce((a, [k, n]) => a + (pool.by[k] && n > 0 ? _ckSellV(pool.by[k]) * n : 0), 0), bal = Math.round(x.balance || 0);
+        return { id: x.userId, bal, cv, nw: bal + cv }; }); });
+    const rows = base.filter(r => T[r.id]).map(r => Object.assign({}, r, { t: T[r.id] })).sort((a, b) => b.nw - a.nw); window._ckRich = { at: _now(), rows }; }
   const R = window._ckRich.rows, mi = R.findIndex(r => r.id === me), show = window._ckRichAll ? R : R.slice(0, 25);
   const row = (r, i) => `<div class="ck-rr${r.id === me ? ' me' : ''}"><b class="ck-rr-r">${i + 1}</b>${_wdAv({ name: r.t.playerName || r.t.teamName, photo: r.t.discordAvatar || '' }, 30)}<span><b>${esc(r.t.teamName || r.t.playerName || '—')}</b><small>${esc(r.t.playerName || '')}</small></span><em><b>${r.nw.toLocaleString()} <i class="imc"></i></b><small>${r.bal.toLocaleString()} IM$ + ${r.cv.toLocaleString()} in cards</small></em></div>`;
   return `<div class="wl-sh"><span>🏆 Team net worth</span><small>IM$ + collection value</small></div>${mi >= 0 ? `<div class="ck-rme">You're <b>#${mi + 1}</b> of ${R.length} · ${R[mi].nw.toLocaleString()} IM$</div>` : ''}
@@ -37958,7 +37966,7 @@ async function renderCardsGame(el) {
   else if (tab === 'ctc') { body += await _ctcTab(pool, c); }
   else if (tab === 'trade') { body += await _trTab(pool, c); }
   else if (tab === 'rich') { body += await _ckRichHtml(pool, me); }
-  else if (tab === 'feed') { if (!window._ckFeed || _now() - window._ckFeed.at > 60e3) { const all = await _gmNoTestCoins(await dbGetAll('coins').catch(() => [])); const rows = []; all.forEach(x => (x && x.cardPulls || []).forEach(p => rows.push(Object.assign({ uid: x.userId }, p)))); rows.sort((a, b) => (b.t || 0) - (a.t || 0)); window._ckFeed = { at: _now(), rows: rows.filter(p => (p.r || 0) >= CK_BIG_MIN || (pool.by[p.k] || {}).sp).slice(0, 60) }; }
+  else if (tab === 'feed') { if (!window._ckFeed || _now() - window._ckFeed.at > 3 * 60e3) { const rows = await _ckAgg('ckAggFeed', 5 * 60e3, async () => { const all = await _gmNoTestCoins(await dbGetAll('coins').catch(() => [])); const rows = []; all.forEach(x => (x && x.cardPulls || []).forEach(p => rows.push(Object.assign({ uid: x.userId }, p)))); rows.sort((a, b) => (b.t || 0) - (a.t || 0)); return rows.filter(p => (p.r || 0) >= CK_BIG_MIN || (pool.by[p.k] || {}).sp).slice(0, 60); }); window._ckFeed = { at: _now(), rows }; }
     const rows = window._ckFeed.rows, ago = (t) => { const s = (Date.now() - t) / 1e3; return s < 3600 ? Math.max(1, Math.round(s / 60)) + 'm ago' : s < 86400 ? Math.round(s / 3600) + 'h ago' : Math.round(s / 86400) + 'd ago'; };
     body += `<div class="ck-feed"><div class="wl-sh"><span>Everyone's ${CK_BIG_MIN}+ rated pulls &amp; specials</span><small>newest first</small></div>${rows.length ? rows.map(p => { const card = pool.by[p.k], r = card ? card.r : p.r, t = _ckTier(Math.max(r, p.r)).id;
       return `<div class="ck-fr t-${t}"><b class="ck-fr-r">${p.r}</b><span class="ck-fr-t"><b>${esc(card ? card.n : p.n)}</b><small>${card && card.sp ? '✨ Special' : CK_T[t].n} · ${p.p === 'ctc' ? 'earned from a 🧩 CTC' : 'packed by'} <u>${esc(p.by || 'a player')}</u>${p.p === 'ctc' ? '' : ' from a ' + ((CK_PACKS[p.p] || {}).n || 'pack')}</small></span><em>${ago(p.t)}</em></div>`; }).join('') : '<div class="ck-empty">Nobody has packed an 83+ yet. Be the first.</div>'}</div>`; }
