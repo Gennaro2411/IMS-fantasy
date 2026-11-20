@@ -37376,12 +37376,12 @@ const _ckSellV = (c) => c.sp === 'mom' ? 0 : c.sp === 'cent' ? 10000 + 150 * Mat
 // odds = chance of each card in the pack being that rarity (must add up to 1)
 const CK_PACKS = { bronze: { n: 'Bronze Pack', price: 50, sp: { dotd: .003, tots: .0012 }, odds: [['ub', .8], ['rb', .2]], c: '#b4703a', c2: '#5e3516' },
   silver: { n: 'Silver Pack', price: 100, sp: { dotd: .006, tots: .0035 }, odds: [['us', .86], ['rs', .14]], c: '#c9d2dc', c2: '#6b7684' },
-  gold: { n: 'Gold Pack', price: 200, sp: { dotd: .005, tots: .005, champ: .001, cent: .0005 }, odds: [['ug', .951], ['rg', .045], ['dia', .004]], c: '#f7cf55', c2: '#9a6a0c' },
+  gold: { n: 'Gold Pack', price: 200, sp: { dotd: .005, tots: .005, champ: .001, cent: .0005, rb: .0003 }, odds: [['ug', .951], ['rg', .045], ['dia', .004]], c: '#f7cf55', c2: '#9a6a0c' },
   // Mixed: one card from each pack's odds (slots). Supersonic: boosted gold odds and specials.
   mixed: { n: 'Mixed Drivers Pack', price: 130, slots: ['bronze', 'silver', 'gold'], c: '#c9d2dc', c2: '#9a6a0c', cls: 'mix' },
   // Team Pack: only drivers currently racing for the team of the day (changes at midnight UK).
   team: { n: 'Team Pack', price: 100, teamPack: true, spCh: .01, c: '#6f74e8', c2: '#2a2850', cls: 'team' },
-  supersonic: { n: 'Supersonic Gold Pack', price: 500, sp: { dotd: .018, tots: .012, champ: .0036, cent: .0018 }, odds: [['ug', .69], ['rg', .3], ['dia', .01]], c: '#ffe27a', c2: '#ff5e00', cls: 'ss' } };
+  supersonic: { n: 'Supersonic Gold Pack', price: 500, sp: { dotd: .018, tots: .012, champ: .0036, cent: .0018, rb: .0011 }, odds: [['ug', .69], ['rg', .3], ['dia', .01]], c: '#ffe27a', c2: '#ff5e00', cls: 'ss' } };
 // Weighted pick: lower-rated cards in L are more likely (k = how steeply).
 const _ckW = (L, k) => { if (!L || !L.length) return null; const lo = Math.min(...L.map(c => c.r)), w = L.map(c => Math.exp(-(c.r - lo) * k)); let y = Math.random() * w.reduce((a, b) => a + b, 0); for (let i = 0; i < L.length; i++) { y -= w[i]; if (y <= 0) return L[i]; } return L[L.length - 1]; };
 // Special cards that can currently come out of packs (their type is in some pack's odds, not CTC only).
@@ -37404,7 +37404,7 @@ Object.assign(CK_PACKS, {
   nat: { n: 'Nationality Pack', price: 120, rot: 'nat', roll: pool => _ckRotRoll(pool, CK_PACKS.nat, c => c.nat), c: '#27f4d2', c2: '#0b5a50', cls: 'nat' },
   divp: { n: 'Division Pack', price: 120, rot: 'div', roll: pool => _ckRotRoll(pool, CK_PACKS.divp, c => c.div), c: '#ff8ad8', c2: '#5a1048', cls: 'divp' },
   // Jumbo costs a bit more than two Supersonics, so its odds are a bit better to match (similar return per IM$).
-  jumbo: { n: 'Jumbo Supersonic Gold Pack', price: 1200, cnt: 6, sp: { dotd: .024, tots: .016, champ: .0048, cent: .0023 }, odds: [['ug', .59], ['rg', .39], ['dia', .02]], c: '#fff2a8', c2: '#ff2e00', cls: 'ss jumbo' },
+  jumbo: { n: 'Jumbo Supersonic Gold Pack', price: 1200, cnt: 6, sp: { dotd: .024, tots: .016, champ: .0048, cent: .0023, rb: .0014 }, odds: [['ug', .59], ['rg', .39], ['dia', .02]], c: '#fff2a8', c2: '#ff2e00', cls: 'ss jumbo' },
   // reward-only packs (never in the store: give them as CTC / round / index rewards or gifts)
   spcl: { n: 'Special Pack', rw: 1, slots: ['_sp', 'gold', 'gold'], c: '#a779e6', c2: '#2a0f52', cls: 'spcl' },
   p83: { n: '83+ Pack', rw: 1, slots: ['_83', 'gold', 'gold'], c: '#ffd36b', c2: '#7a3a00', cls: 'p83' },
@@ -37414,7 +37414,7 @@ Object.assign(CK_PACKS, {
   pickG: { n: 'Driver Pick: Gold', rw: 1, pick: 'gold', c: '#f7cf55', c2: '#9a6a0c' },
   pickSp: { n: 'Driver Pick: Special', rw: 1, pick: '_sp', c: '#a779e6', c2: '#2a0f52' },
   // internal slot rolls (hidden)
-  _sp: { n: 'Special', hid: 1, roll: pool => _ckW(_ckSpLive(pool), .22), c: '#a779e6', c2: '#2a0f52' },
+  _sp: { n: 'Special', hid: 1, roll: pool => { const L = _ckSpLive(pool), R = L.filter(c => c.sp === 'rb'), O = L.filter(c => c.sp !== 'rb'); return R.length && (!O.length || Math.random() < R.length / L.length * .6) ? _ckW(R, .5) : _ckW(O, .22); }, /* Record Breakers rarer, high ones much rarer */ c: '#a779e6', c2: '#2a0f52' },
   _83: { n: '83+', hid: 1, roll: pool => _ckW(pool.list.filter(c => !c.sp && c.r >= 83), .2), c: '#ffd36b', c2: '#7a3a00' },
   _ch: { n: 'Champion', hid: 1, roll: pool => _ckW(pool.list.filter(c => c.sp === 'champ' && !c.ctc), .3), c: '#fff3c4', c2: '#8a6408' } });
 // 6-card versions of Bronze / Silver / Gold: same odds, a little dearer than two packs for the convenience. Shown via the 3 / 6 switch in the shop.
@@ -37484,7 +37484,7 @@ function _ckRoll(pack, pool) { const P = CK_PACKS[pack]; if (P.roll) return P.ro
     const lo = Math.min(...L.map(c => c.r)), w = L.map(c => Math.exp(-(c.r - lo) * .1)); let y = Math.random() * w.reduce((a, b) => a + b, 0); for (let i = 0; i < L.length; i++) { y -= w[i]; if (y <= 0) return L[i]; } return L[L.length - 1]; }
   // Special card slot: its own chance per card (higher in pricier packs); lower-rated specials are more common.
   // Per special TYPE: chance per card of pulling that type (only if at least one card of that type exists).
-  for (const [ty, ch] of Object.entries(P.sp || {})) { if (Math.random() >= ch) continue; const S = pool.list.filter(c => c.sp === ty && !c.ctc); if (S.length) { const lo = Math.min(...S.map(c => c.r)), w = S.map(c => Math.exp(-(c.r - lo) * .22)); let y = Math.random() * w.reduce((a, b) => a + b, 0); for (let i = 0; i < S.length; i++) { y -= w[i]; if (y <= 0) return S[i]; } return S[S.length - 1]; } }
+  for (const [ty, ch] of Object.entries(P.sp || {})) { if (Math.random() >= ch) continue; const S = pool.list.filter(c => c.sp === ty && !c.ctc); if (S.length) { const lo = Math.min(...S.map(c => c.r)), w = S.map(c => Math.exp(-(c.r - lo) * (ty === 'rb' ? .5 : .22))); /* Record Breakers: high ratings drop off much faster */ let y = Math.random() * w.reduce((a, b) => a + b, 0); for (let i = 0; i < S.length; i++) { y -= w[i]; if (y <= 0) return S[i]; } return S[S.length - 1]; } }
   let x = Math.random(), tid = P.odds[0][0]; for (const [t, pr] of P.odds) { if (x < pr) { tid = t; break; } x -= pr; }
   let cands = pool.list.filter(c => c.t === tid && !c.sp); if (!cands.length) cands = pool.list.filter(c => c.t === P.odds[0][0] && !c.sp); if (!cands.length) return null;
   const lo = Math.min(...cands.map(c => c.r)), wt = cands.map(c => Math.exp(-(c.r - lo) * .4)); let y = Math.random() * wt.reduce((a, b) => a + b, 0);
