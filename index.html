@@ -4184,7 +4184,7 @@ body.ck-lock>header,body.ck-lock>main,body.ck-lock #mobile-nav{visibility:hidden
 .ck-bs-row{display:flex;align-items:center;gap:8px}.ck-bs-l{font-size:.84rem;color:#c8c8dc}
 .ck-bs-step{display:flex;align-items:center;border:1px solid rgba(255,255,255,.12);border-radius:8px;overflow:hidden;background:#0e0c1a}
 .ck-bs-step button{width:30px;height:34px;border:0;background:transparent;color:#bbb;font-weight:700;cursor:pointer}.ck-bs-step button:hover{color:#fff;background:rgba(255,255,255,.06)}
-.ck-bs-step input{width:40px;height:34px;border:0;background:transparent;color:#fff;text-align:center;font:inherit;font-weight:800;-moz-appearance:textfield}.ck-bs-step input::-webkit-inner-spin-button{-webkit-appearance:none}
+.ck-bs-step input{width:52px;min-width:52px;padding:0;box-sizing:border-box;height:34px;border:0;background:transparent;color:#fff;text-align:center;font:inherit;font-weight:800;-moz-appearance:textfield}.ck-bs-step input::-webkit-inner-spin-button{-webkit-appearance:none}
 .ck-bs-go{margin-left:auto;height:36px;padding:0 18px;border:0;border-radius:8px;background:#E8002D;color:#fff;font-weight:800;font-size:.8rem;cursor:pointer}.ck-bs-go:hover{filter:brightness(1.12)}
 .ck-bs-q{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.08)}
 .ck-bs-q button{height:34px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:transparent;color:#d4d4e8;font-size:.78rem;font-weight:600;cursor:pointer}.ck-bs-q button:hover{background:rgba(255,255,255,.05)}
@@ -37520,7 +37520,7 @@ async function _ckPackGuard() { if (window._appUpd && window._appUpd.pending) { 
   try { const sd = await dbGet('settings', 'ckSpecials'); if (JSON.stringify((sd && sd.value && sd.value.list) || []) !== window._ckSpSig) window._ckPoolC = null; } catch (e) {} return true; }
 // New-version check. APP_BUILD is stamped on every commit (git pre-commit hook). Any device running a newer build records it in
 // settings/appBuild; a device whose own build is older than that number knows it's out of date. Only a real newer build can trigger it.
-const APP_BUILD = 1795193070;
+const APP_BUILD = 1795193162;
 window._appUpd = window._appUpd || { pending: false };
 async function _appVerCheck() { try { const d = await dbGet('settings', 'appBuild'), live = +((d && d.value) || 0);
     if (APP_BUILD > live) { await dbSet('settings', 'appBuild', { value: APP_BUILD }); return; }
