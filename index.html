@@ -31898,7 +31898,7 @@ window.renderBets = async function(dry) {
   const _stakeOn = (market, key) => _openHere.filter(b => b.market === market && b.sel.join('-') === key).reduce((a, b) => a + (b.stake || 0), 0);
   const _dyn = (auto, share, fair, total) => {
     if (total < 50) return auto;
-    const f = Math.max(0.7, Math.min(1.3, 1 - 0.8 * (share - fair) * Math.min(1, total / 1000)));
+    const f = Math.max(0.7, Math.min(1.15, 1 - 0.8 * (share - fair) * Math.min(1, total / 1000))); // lengthening capped at +15% so a lopsided market can't be backed both ways for a sure profit
     return Math.max(1.01, Math.round(auto * f * 100) / 100);
   };
   const _boostDoc = await dbGet('settings', 'betBoost').catch(() => null);
@@ -32226,6 +32226,14 @@ window.renderBets = async function(dry) {
       const rr = cr.filter(r => window._raceCP(r)[c.id] != null); const tk = (r) => window.trackKey ? window.trackKey(r.name) : String(r.name || '').toLowerCase();
       const pts = rr.map((r, i) => ({ v: (Number(window._raceCP(r)[c.id]) || 0) + _add, w: (i >= rr.length - 3 ? 2 : 1) * (_upK && tk(r) === _upK ? 3 : 1) }));
       const o = _ouFrom(pts, 1); if (o) _ouCons[c.id] = o; });
+    // Keep Big haul consistent with the team lines. "A team scores 156+" must be at least as likely as ANY single team
+    // doing it — otherwise Big haul YES + "<team> under 155.5" both pay whatever happens (guaranteed profit).
+    { const bi = (_bSpec || []).findIndex(x => /^bmx:/.test(x[0])); if (bi >= 0) { const bar = parseFloat(_bSpec[bi][0].slice(4)); let pNone = 1;
+      field.forEach(c => { const _add = _spAdd2[c.id] || 0, vs = _curC.filter(r => window._raceCP(r)[c.id] != null).map(r => (Number(window._raceCP(r)[c.id]) || 0) + _add);
+        const oc = _ouCons[c.id]; let pc = vs.length ? (vs.filter(v => v > bar).length + 1) / (vs.length + 2) : 0;
+        if (oc && oc.line >= bar) pc = Math.max(pc, oc.po); // that team's own over price already implies at least this
+        pNone *= 1 - Math.min(0.97, pc); });
+      _bSpec[bi][3] = Math.min(0.97, Math.max(_bSpec[bi][3], 1 - pNone)); } }
     // Bet builder (BOTT): each team's round-score spread — this season's same-type rounds, else recent history.
     { const st = {}; field.forEach(c => { let v = _curC.filter(r => window._raceCP(r)[c.id] != null).map(r => Number(window._raceCP(r)[c.id]) || 0);
         if (v.length < 2) v = cr.slice(-8).filter(r => window._raceCP(r)[c.id] != null).map(r => Number(window._raceCP(r)[c.id]) || 0);
@@ -37520,7 +37528,7 @@ async function _ckPackGuard() { if (window._appUpd && window._appUpd.pending) { 
   try { const sd = await dbGet('settings', 'ckSpecials'); if (JSON.stringify((sd && sd.value && sd.value.list) || []) !== window._ckSpSig) window._ckPoolC = null; } catch (e) {} return true; }
 // New-version check. APP_BUILD is stamped on every commit (git pre-commit hook). Any device running a newer build records it in
 // settings/appBuild; a device whose own build is older than that number knows it's out of date. Only a real newer build can trigger it.
-const APP_BUILD = 1795194263;
+const APP_BUILD = 1795197209;
 window._appUpd = window._appUpd || { pending: false };
 async function _appVerCheck() { try { const d = await dbGet('settings', 'appBuild'), live = +((d && d.value) || 0);
     if (APP_BUILD > live) { await dbSet('settings', 'appBuild', { value: APP_BUILD }); return; }
