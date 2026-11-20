@@ -37472,7 +37472,7 @@ async function _ckPool() {
     if (CK_RATE_FIX[k] != null) c.r = CK_RATE_FIX[k];
     c.t = _ckTier(c.r).id; list.push(c); by[k] = c; });
   // Special cards (admin-made): same driver + live stats, admin-chosen rating, own key "<driver>~<id>".
-  { const sd = await dbGet('settings', 'ckSpecials').catch(() => null); ((sd && sd.value && sd.value.list) || []).forEach(x => { const b = by[x.k]; if (!b || !CK_SP[x.ty]) return;
+  { const sd = await dbGet('settings', 'ckSpecials').catch(() => null); window._ckSpSig = JSON.stringify((sd && sd.value && sd.value.list) || []); ((sd && sd.value && sd.value.list) || []).forEach(x => { const b = by[x.k]; if (!b || !CK_SP[x.ty]) return;
     const c = Object.assign({}, b, { k: b.k + '~' + x.id, base: b.k, sp: x.ty, sid: x.id, ctc: x.ctc ? 1 : 0, np: x.np ? 1 : 0, mph: x.img || '', spn: x.note || '', r: Math.max(40, Math.min(x.ty === 'cent' ? 100 : 99, +x.r || b.r)) }); c.t = _ckTier(c.r).id; list.push(c); by[c.k] = c; }); }
   list.sort((a, b) => b.r - a.r || b.sc - a.sc);
   return (window._ckPoolC = { at: _now(), list, by, hasT5: Object.values(W.stats || {}).some(s => s && s.t5 != null) }); }
@@ -37511,9 +37511,22 @@ const _ckSetPill = (c) => { const pill = document.getElementById('wallet-amt'); 
 window.ckTab = function(t) { window._ckTab = t; _ckRender(); };
 // ---- Buy + open ----
 // gi = index into c.cards.gifts → opens a gifted/reward pack: free, no daily limit.
+// Before any pack is opened: (1) if a newer version of the app is live, reload into it first (old builds don't know the newest pack rules);
+// (2) re-read the special card list so 'Not in packs' / 'CTC only' changes apply instantly, not after the 10-minute pool cache.
+async function _ckPackGuard() { await _appVerCheck(); if (window._appUpd && window._appUpd.pending) { showToast('Updating to the latest version…', 'info'); setTimeout(() => location.reload(), 400); return false; }
+  try { const sd = await dbGet('settings', 'ckSpecials'); if (JSON.stringify((sd && sd.value && sd.value.list) || []) !== window._ckSpSig) window._ckPoolC = null; } catch (e) {} return true; }
+// New-version check: compare the live index.html's ETag with the one this page loaded with (HEAD request, no download).
+window._appUpd = window._appUpd || { tag: null, pending: false };
+async function _appVerCheck() { try { const r = await fetch(location.pathname, { method: 'HEAD', cache: 'no-store' }), t = r.ok && (r.headers.get('etag') || r.headers.get('last-modified')); if (!t) return;
+    const U = window._appUpd; if (!U.tag) U.tag = t; else if (t !== U.tag && !U.pending) { U.pending = true; _appUpdBar(); } } catch (e) {} }
+function _appUpdBar() { if (document.getElementById('app-upd')) return; const d = document.createElement('div'); d.id = 'app-upd';
+  d.style.cssText = 'position:fixed;left:50%;bottom:76px;transform:translateX(-50%);z-index:100000;display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;background:#14131f;border:1px solid #E8002D;box-shadow:0 10px 30px rgba(0,0,0,.6);color:#fff;font-size:.85rem;max-width:calc(100vw - 24px)';
+  d.innerHTML = '<span>A new version of IMS Fantasy is out.</span><button style="border:0;border-radius:8px;background:#E8002D;color:#fff;font-weight:800;padding:7px 14px;cursor:pointer" onclick="location.reload()">Update</button>'; document.body.appendChild(d); }
+_appVerCheck(); setInterval(_appVerCheck, 3 * 60e3); document.addEventListener('visibilitychange', () => { if (!document.hidden) _appVerCheck(); });
 window.ckBuy = async function(id, gi) { if (!_ckCan() || window._ckBusy) return; const P = CK_PACKS[id]; if (!P || P.hid) return; const gift = gi != null; if (P.pick) return gift ? ckPickOpen(gi) : null;
   if (typeof currentUser === 'undefined' || !currentUser || !currentUser.userId) return showToast('Log in to buy packs.', 'error');
   window._ckBusy = true;
+  if (!(await _ckPackGuard())) { window._ckBusy = false; return; }
   try { const pool = await _ckPool(), c = await _betLoadCoins(currentUser.userId);
     if (gift && !(c.cards && c.cards.gifts && c.cards.gifts[gi] && c.cards.gifts[gi].p === id)) { window._ckBusy = false; _ckRender(); return showToast('That pack has already been opened.', 'error'); }
     if (!gift && _ckLeft(c.cards, id) <= 0) { window._ckBusy = false; _ckRender(); return showToast('Sorry! This card pack is out of stock', 'error'); }
@@ -37552,7 +37565,7 @@ window.ckIxClaim = async function(m) { if (window._ckBusy) return; window._ckBus
     c.balance = (c.balance || 0) + ims; await dbSet('coins', currentUser.userId, c); _ckSetPill(c);
     showToast(`🏁 ${L.length > 1 ? L.length + ' milestones' : L[0][0] + '% milestone'} claimed! ${ims.toLocaleString()} IM$ added${np ? ` and ${np} pack${np === 1 ? '' : 's'} in My Packs` : ''}.`, 'success'); try { fireConfetti({ count: 90 }); } catch (e) {}
   } catch (e) { console.error(e); showToast('Couldn\'t claim it.', 'error'); } window._ckBusy = false; if (document.getElementById('ck-ixo')) ckIxOpen(); _ckRender(); };
-window.ckPickOpen = async function(gi) { if (window._ckBusy) return; window._ckBusy = true; window._ckPk3Done = 0;
+window.ckPickOpen = async function(gi) { if (window._ckBusy) return; window._ckBusy = true; window._ckPk3Done = 0; if (!(await _ckPackGuard())) { window._ckBusy = false; return; }
   try { const pool = await _ckPool(), c = await _betLoadCoins(currentUser.userId), K = c.cards = c.cards || { inv: {} }, g = (K.gifts || [])[gi], P = g && CK_PACKS[g.p]; if (!P || !P.pick) { window._ckBusy = false; return _ckRender(); }
     if (!(g.opts && g.opts.length === 3 && g.opts.every(k => pool.by[k]))) { const o = []; let n = 0; while (o.length < 3 && n++ < 400) { const x = P.pick === '_sp' ? _ckW(_ckSpLive(pool), .22) : _ckRoll(P.pick, pool); if (x && !o.includes(x.k)) o.push(x.k); }
       if (o.length < 3) { window._ckBusy = false; return showToast('Not enough cards for this pick yet.', 'error'); } g.opts = o; await dbSet('coins', currentUser.userId, c); } // lock the 3 choices in
