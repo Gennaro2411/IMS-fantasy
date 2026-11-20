@@ -37520,7 +37520,7 @@ async function _ckPackGuard() { if (window._appUpd && window._appUpd.pending) { 
   try { const sd = await dbGet('settings', 'ckSpecials'); if (JSON.stringify((sd && sd.value && sd.value.list) || []) !== window._ckSpSig) window._ckPoolC = null; } catch (e) {} return true; }
 // New-version check. APP_BUILD is stamped on every commit (git pre-commit hook). Any device running a newer build records it in
 // settings/appBuild; a device whose own build is older than that number knows it's out of date. Only a real newer build can trigger it.
-const APP_BUILD = 1795191866;
+const APP_BUILD = 1795193070;
 window._appUpd = window._appUpd || { pending: false };
 async function _appVerCheck() { try { const d = await dbGet('settings', 'appBuild'), live = +((d && d.value) || 0);
     if (APP_BUILD > live) { await dbSet('settings', 'appBuild', { value: APP_BUILD }); return; }
@@ -37837,12 +37837,13 @@ const _ckLk = (LK, k) => { const v = LK && LK[k]; return v === true ? 1 : Math.m
 window.ckLock = async function(k, d) { const c = await _betLoadCoins(currentUser.userId); const K = c.cards = c.cards || { inv: {} }; K.lock = K.lock || {};
   const have = (K.inv || {})[k] || 0, cur = _ckLk(K.lock, k), nx = d === undefined ? (cur ? 0 : 1) : Math.max(0, Math.min(Math.max(have, 1), cur + d)); if (nx) K.lock[k] = nx; else delete K.lock[k];
   await dbSet('coins', currentUser.userId, { cards: K }); showToast(nx ? `🔒 ${nx} cop${nx === 1 ? 'y' : 'ies'} locked — bulk sell and quick sell will always keep ${nx === 1 ? 'it' : 'them'}.` : '🔓 Unlocked.', 'success'); document.getElementById('ck-dt')?.remove(); _ckRender(); if (K.lock[k] !== undefined || true) ckDetail(k); };
+window.ckBelowStep = function(d) { const i = document.getElementById('ck-below'); if (!i) return; i.value = window._ckBelow = Math.max(40, Math.min(99, (parseInt(i.value, 10) || 80) + d)); };
 window.ckKeepAllStep = function(d) { const i = document.getElementById('ck-keepall'); if (!i) return; i.value = window._ckKeepAll = Math.max(1, Math.min(99, (parseInt(i.value, 10) || 1) + d)); };
 // dupOnly: true = keep 1 of each, false = sell everything (locked keep 1), a number = keep that many of each and sell the rest
-window.ckSellBulk = async function(dupOnly) { const keepN = typeof dupOnly === 'number' ? dupOnly : null; const pool = await _ckPool(), c = await _betLoadCoins(currentUser.userId), inv = _ckInv(c), LK = (c.cards && c.cards.lock) || {}, cnt = {}; let n = 0, v = 0;
-  Object.entries(inv).forEach(([k, have]) => { const card = pool.by[k]; if (!card || have <= 0 || _ckNoSell(card)) return; const keep = Math.max(keepN || (dupOnly ? 1 : 0), _ckLk(LK, k)), q = Math.max(0, have - keep); if (q) { cnt[k] = q; n += q; v += _ckSellV(card) * q; } });
-  if (!n) return showToast(keepN ? `You don't have more than ${keepN} of any card.` : dupOnly ? 'No duplicates to sell.' : 'Nothing to sell (locked cards are kept).', 'info');
-  customConfirm(`${keepN ? `Sell all duplicates above ${keepN} cop${keepN === 1 ? 'y' : 'ies'}` : dupOnly ? 'Sell all duplicates' : 'Sell ALL your cards'}: ${n} card${n === 1 ? '' : 's'} for ${v.toLocaleString()} IM$? Locked cards are kept. You can't undo this.`, async () => { if (await _ckSellMany(cnt)) _ckRender(); }, 'Sell'); };
+window.ckSellBulk = async function(dupOnly, below) { const keepN = typeof dupOnly === 'number' ? dupOnly : null; /* below: only cards rated under this */ const pool = await _ckPool(), c = await _betLoadCoins(currentUser.userId), inv = _ckInv(c), LK = (c.cards && c.cards.lock) || {}, cnt = {}; let n = 0, v = 0;
+  Object.entries(inv).forEach(([k, have]) => { const card = pool.by[k]; if (!card || have <= 0 || _ckNoSell(card) || (below && card.r >= below)) return; const keep = Math.max(keepN || (dupOnly ? 1 : 0), _ckLk(LK, k)), q = Math.max(0, have - keep); if (q) { cnt[k] = q; n += q; v += _ckSellV(card) * q; } });
+  if (!n) return showToast(below ? `No duplicates rated below ${below}.` : keepN ? `You don't have more than ${keepN} of any card.` : dupOnly ? 'No duplicates to sell.' : 'Nothing to sell (locked cards are kept).', 'info');
+  customConfirm(`${below ? `Sell all duplicates rated below ${below} (keeping 1 of each)` : keepN ? `Sell all duplicates above ${keepN} cop${keepN === 1 ? 'y' : 'ies'}` : dupOnly ? 'Sell all duplicates' : 'Sell ALL your cards'}: ${n} card${n === 1 ? '' : 's'} for ${v.toLocaleString()} IM$? Locked cards are kept. You can't undo this.`, async () => { if (await _ckSellMany(cnt)) _ckRender(); }, 'Sell'); };
 window.ckQuick = function(k, n) { customConfirm(`Sell ${n} cop${n === 1 ? 'y' : 'ies'} of this card? You can't undo this.`, async () => { if (await _ckSellMany({ [k]: n })) { document.getElementById('ck-dt')?.remove(); _ckRender(); } }, 'Sell'); };
 // ---- Admin: let everyone in ----
 window.ckSetOpen = function(on) { if (!adminLoggedIn) return;
@@ -37967,6 +37968,9 @@ async function renderCardsGame(el) {
             <div class="ck-bs-t">Sell duplicates above</div>
             <div class="ck-bs-row"><div class="ck-bs-step"><button onclick="ckKeepAllStep(-1)">−</button><input id="ck-keepall" type="number" min="1" max="99" value="${window._ckKeepAll || 3}" oninput="window._ckKeepAll=Math.max(1,parseInt(this.value,10)||1)"><button onclick="ckKeepAllStep(1)">＋</button></div><span class="ck-bs-l">copies</span>
               <button class="ck-bs-go" onclick="ckSellBulk(Math.max(1, parseInt(document.getElementById('ck-keepall').value, 10) || 1))">Sell</button></div>
+            <div class="ck-bs-t" style="margin-top:12px">Sell duplicates rated below</div>
+            <div class="ck-bs-row"><div class="ck-bs-step"><button onclick="ckBelowStep(-1)">−</button><input id="ck-below" type="number" min="40" max="99" value="${window._ckBelow || 80}" oninput="window._ckBelow=parseInt(this.value,10)||80"><button onclick="ckBelowStep(1)">＋</button></div><span class="ck-bs-l">rating</span>
+              <button class="ck-bs-go" onclick="ckSellBulk(true, Math.max(40, Math.min(99, parseInt(document.getElementById('ck-below').value, 10) || 80)))">Sell</button></div>
             <div class="ck-bs-q"><button onclick="ckSellBulk(true)">Sell all duplicates</button><button class="dn" onclick="ckSellBulk(false)">Sell all cards</button></div></div></details></div>
         <div class="ck-fil">${[['all', 'All'], ['sp', '✨ Special']].concat(Object.entries(CK_SP).map(([id, S]) => ['sp:' + id, S.i + ' ' + S.n]), CK_TIERS.map(t => [t.id, t.n])).map(([id, n]) => `<button class="${X.f === id ? 'on' : ''}" onclick="window._ckCol.f='${id}';this.parentElement.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b===this));_ckColDraw()">${n}</button>`).join('')}</div>
         <div id="ck-col-n" class="ck-ixn"></div><div class="ck-grid" id="ck-col-g"></div>`; })()}<div class="ck-fine">Tap a card for its stats, to quick sell it, or to 🔒 lock it so it's never sold (bulk sells and quick sells keep locked cards).</div>` : '<div class="ck-empty">No cards yet. Open a pack in the shop.</div>'}`; }
