@@ -37520,7 +37520,7 @@ async function _ckPackGuard() { if (window._appUpd && window._appUpd.pending) { 
   try { const sd = await dbGet('settings', 'ckSpecials'); if (JSON.stringify((sd && sd.value && sd.value.list) || []) !== window._ckSpSig) window._ckPoolC = null; } catch (e) {} return true; }
 // New-version check. APP_BUILD is stamped on every commit (git pre-commit hook). Any device running a newer build records it in
 // settings/appBuild; a device whose own build is older than that number knows it's out of date. Only a real newer build can trigger it.
-const APP_BUILD = 1795193162;
+const APP_BUILD = 1795194263;
 window._appUpd = window._appUpd || { pending: false };
 async function _appVerCheck() { try { const d = await dbGet('settings', 'appBuild'), live = +((d && d.value) || 0);
     if (APP_BUILD > live) { await dbSet('settings', 'appBuild', { value: APP_BUILD }); return; }
@@ -37586,7 +37586,7 @@ window.ckPickGet = function(gi, idx) { if (window._ckBusy || window._ckPk3Done) 
       if (!g || !CK_PACKS[g.p] || !CK_PACKS[g.p].pick || !k || !pool.by[k]) { window._ckBusy = false; document.getElementById('ck-pk3')?.remove(); showToast('That pick has already been made.', 'error'); return _ckRender(); }
       K.gifts.splice(gi, 1); K.giftsOpened = (K.giftsOpened || 0) + 1; K.inv = K.inv || {}; K.dex = K.dex || {}; const x = Object.assign({}, pool.by[k], { dup: K.inv[k] > 0, nw: !K.dex[k] });
       K.inv[k] = (K.inv[k] || 0) + 1; K.dex[k] = 1; K.pull = K.pull || {}; K.pull[k] = (K.pull[k] || 0) + 1;
-      if ((x.r >= CK_FEED_MIN || x.sp)) c.cardPulls = (c.cardPulls || []).concat([{ k, n: x.n, r: x.r, t: Date.now(), p: g.p, by: _wdMe().name }]).slice(-40);
+      c.cardPulls = (c.cardPulls || []).concat([{ k, n: x.n, r: x.r, t: Date.now(), p: g.p, by: _wdMe().name, pk: 1 }]).slice(-40); /* every Driver Pick goes to Big Pulls */
       await dbSet('coins', currentUser.userId, c); _ckSetPill(c); window._ckFeed = null; window._ckBusy = false; window._ckPk3Done = 1; // saved before anything is shown
       const fl = i => { const el = document.getElementById('ck-fl3-' + i); if (el) el.classList.add('flip'); };
       document.querySelectorAll('.ck-fl3').forEach(el => el.onclick = null); const walk = !!(x.sp || x.t === 'dia') && typeof _ckCutscene === 'function'; // same rule as packs: specials and Diamonds get a walkout
@@ -37977,7 +37977,7 @@ async function renderCardsGame(el) {
   else if (tab === 'ctc') { body += await _ctcTab(pool, c); }
   else if (tab === 'trade') { body += await _trTab(pool, c); }
   else if (tab === 'rich') { body += await _ckRichHtml(pool, me); }
-  else if (tab === 'feed') { if (!window._ckFeed || _now() - window._ckFeed.at > 3 * 60e3) { const rows = await _ckAgg('ckAggFeed', 5 * 60e3, async () => { const all = await _gmNoTestCoins(await dbGetAll('coins').catch(() => [])); const rows = []; all.forEach(x => (x && x.cardPulls || []).forEach(p => rows.push(Object.assign({ uid: x.userId }, p)))); rows.sort((a, b) => (b.t || 0) - (a.t || 0)); return rows.filter(p => (p.r || 0) >= CK_BIG_MIN || (pool.by[p.k] || {}).sp).slice(0, 60); }); window._ckFeed = { at: _now(), rows }; }
+  else if (tab === 'feed') { if (!window._ckFeed || _now() - window._ckFeed.at > 3 * 60e3) { const rows = await _ckAgg('ckAggFeed', 5 * 60e3, async () => { const all = await _gmNoTestCoins(await dbGetAll('coins').catch(() => [])); const rows = []; all.forEach(x => (x && x.cardPulls || []).forEach(p => rows.push(Object.assign({ uid: x.userId }, p)))); rows.sort((a, b) => (b.t || 0) - (a.t || 0)); return rows.filter(p => p.pk || (p.r || 0) >= CK_BIG_MIN || (pool.by[p.k] || {}).sp).slice(0, 60); }); window._ckFeed = { at: _now(), rows }; }
     const rows = window._ckFeed.rows, ago = (t) => { const s = (Date.now() - t) / 1e3; return s < 3600 ? Math.max(1, Math.round(s / 60)) + 'm ago' : s < 86400 ? Math.round(s / 3600) + 'h ago' : Math.round(s / 86400) + 'd ago'; };
     body += `<div class="ck-feed"><div class="wl-sh"><span>Everyone's ${CK_BIG_MIN}+ rated pulls &amp; specials</span><small>newest first${_ckAgo('ckAggFeed') ? ' · ' + _ckAgo('ckAggFeed') : ''}</small></div>${rows.length ? rows.map(p => { const card = pool.by[p.k], r = card ? card.r : p.r, t = _ckTier(Math.max(r, p.r)).id;
       return `<div class="ck-fr t-${t}"><b class="ck-fr-r">${p.r}</b><span class="ck-fr-t"><b>${esc(card ? card.n : p.n)}</b><small>${card && card.sp ? '✨ Special' : CK_T[t].n} · ${p.p === 'ctc' ? 'earned from a 🧩 CTC' : 'packed by'} <u>${esc(p.by || 'a player')}</u>${p.p === 'ctc' ? '' : ' from a ' + ((CK_PACKS[p.p] || {}).n || 'pack')}</small></span><em>${ago(p.t)}</em></div>`; }).join('') : '<div class="ck-empty">Nobody has packed an 83+ yet. Be the first.</div>'}</div>`; }
