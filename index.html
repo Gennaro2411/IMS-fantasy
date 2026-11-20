@@ -4040,6 +4040,7 @@ body.ck-lock>header,body.ck-lock>main,body.ck-lock #mobile-nav{visibility:hidden
     .ck-pick{display:flex;flex-direction:column;gap:8px;transition:opacity .15s}.ck-pick.sell .ck{opacity:.45;filter:grayscale(.6)}
     .ck-pb{display:grid;grid-template-columns:1fr 1.5fr;gap:4px}.ck-pb button{border:1px solid rgba(255,255,255,.14);cursor:pointer;font:inherit;font-weight:800;font-size:.7rem;color:#a5a9d6;background:rgba(255,255,255,.05);padding:8px 4px;border-radius:10px;white-space:nowrap}
     .ck-pb button.on{color:#fff;border-color:transparent;background:linear-gradient(110deg,#6f74e8,#a779e6)}.ck-pb button.on.s{background:linear-gradient(110deg,#f0487a,#ffb020)}
+    .ck-lkn{grid-column:1/-1;display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);font-weight:700}.ck-lkn span{flex:1}.ck-lkn button{width:32px;height:32px;border-radius:8px;border:1px solid rgba(255,255,255,.16);background:transparent;color:#fff;font-weight:900;cursor:pointer}.ck-lkn button:disabled{opacity:.35;cursor:default}.ck-lkn b{min-width:22px;text-align:center;font-size:1.05rem}.ck-lkn small{color:#9a9ab8;font-weight:600}
     .ck-acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px auto 0;max-width:560px}.ck-acts .hx-btn{justify-content:center}
     .ck-dt{position:relative;display:grid;grid-template-columns:230px 1fr;gap:20px;width:min(640px,100%);padding:22px;border-radius:22px;text-align:left;background:linear-gradient(170deg,#15122b,#0b0a14 75%);box-shadow:inset 0 0 0 1px rgba(177,132,232,.35),0 30px 80px -20px #000}
     .ck-dts{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:12px 0 4px}.ck-dts div{display:flex;justify-content:space-between;gap:8px;padding:7px 10px;border-radius:10px;font-size:.78rem;background:rgba(255,255,255,.04)}.ck-dts span{color:#8b8fb8}.ck-dts b{color:#fff;text-align:right}
@@ -37519,7 +37520,7 @@ async function _ckPackGuard() { if (window._appUpd && window._appUpd.pending) { 
   try { const sd = await dbGet('settings', 'ckSpecials'); if (JSON.stringify((sd && sd.value && sd.value.list) || []) !== window._ckSpSig) window._ckPoolC = null; } catch (e) {} return true; }
 // New-version check. APP_BUILD is stamped on every commit (git pre-commit hook). Any device running a newer build records it in
 // settings/appBuild; a device whose own build is older than that number knows it's out of date. Only a real newer build can trigger it.
-const APP_BUILD = 1795185939;
+const APP_BUILD = 1795191866;
 window._appUpd = window._appUpd || { pending: false };
 async function _appVerCheck() { try { const d = await dbGet('settings', 'appBuild'), live = +((d && d.value) || 0);
     if (APP_BUILD > live) { await dbSet('settings', 'appBuild', { value: APP_BUILD }); return; }
@@ -37786,7 +37787,7 @@ window.ckDone = async function() { const R = window._ckRv; if (!R || window._ckB
   const o = document.getElementById('ck-ov'); document.body.classList.remove('ck-lock'); if (o) { o.classList.remove('in'); setTimeout(() => o.remove(), 200); } window._ckRv = null; _ckRender(); };
 // Sell copies: { driverKey: howMany }. Prices are today's sell value for each card.
 async function _ckSellMany(cnt) { try { const pool = await _ckPool(), c = await _betLoadCoins(currentUser.userId), inv = _ckInv(c); let gain = 0, n = 0;
-    const LK = (c.cards && c.cards.lock) || {}; Object.entries(cnt).forEach(([k, q]) => { const card = pool.by[k], have = inv[k] || 0, s = _ckNoSell(card) ? 0 : Math.min(q, LK[k] ? Math.max(0, have - 1) : have); /* locked: always keep 1 */ if (!card || s <= 0) return; inv[k] = have - s; if (!inv[k]) delete inv[k]; gain += _ckSellV(card) * s; n += s; });
+    const LK = (c.cards && c.cards.lock) || {}; Object.entries(cnt).forEach(([k, q]) => { const card = pool.by[k], have = inv[k] || 0, s = _ckNoSell(card) ? 0 : Math.min(q, Math.max(0, have - _ckLk(LK, k))); /* locked copies are always kept */ if (!card || s <= 0) return; inv[k] = have - s; if (!inv[k]) delete inv[k]; gain += _ckSellV(card) * s; n += s; });
     if (!n) { showToast('Those cards aren\'t in your collection any more.', 'error'); return false; }
     c.balance = (c.balance || 0) + gain; c.cards.sold = (c.cards.sold || 0) + gain; c.cards.soldN = (c.cards.soldN || 0) + n;
     await dbSet('coins', currentUser.userId, c); _ckSetPill(c); showToast(`Sold ${n} card${n === 1 ? '' : 's'} for ${gain.toLocaleString()} IM$`, 'success'); return true;
@@ -37822,7 +37823,7 @@ window.ckDetail = async function(k) { const pool = await _ckPool(), card = pool.
       <div class="ck-acts" style="grid-template-columns:1fr">${card.ctc ? '<div class="ck-fine" style="margin:0">🧩 CTC reward card — it can\'t be sold or used in a CTC, but you can trade it and lock it.</div>' : card.sp === 'mom' ? '<div class="ck-fine" style="margin:0">🎞️ Moments card — it can\'t be sold.</div>' : ''}${have && !_ckNoSell(card) && !(((c.cards || {}).lock || {})[k] && have < 2) ? `<button class="hx-btn" onclick="ckQuick('${k}',1)">Quick sell 1 · ${v.toLocaleString()} IM$</button>${have > 1 ? `<button class="hx-btn ghost" onclick="ckQuick('${k}',${have - 1})">Sell duplicates (${have - 1}) · ${(v * (have - 1)).toLocaleString()} IM$</button>` : ''}${have > 2 ? (() => { const minK = (((c.cards || {}).lock || {})[k]) ? 1 : 0, def = Math.max(minK, Math.min(have - 1, 5));
         return `<div class="ck-keep"><span>Keep</span><button onclick="ckKeepStep(-1)">−</button><input id="ck-keep" type="number" min="${minK}" max="${have}" value="${def}" oninput="ckKeepUpd()" data-have="${have}" data-v="${v}" data-min="${minK}"><button onclick="ckKeepStep(1)">＋</button><span>of ${have}</span>
           <button class="hx-btn ghost" id="ck-keep-go" onclick="ckKeepGo('${k}')">Sell ${have - def} · ${(v * (have - def)).toLocaleString()} IM$</button></div>`; })() : ''}` : ''}
-        ${card.did ? `<button class="hx-btn ghost" onclick="if(Date.now()-(window._ckDtAt||0)<700)return;document.getElementById('ck-dt').remove();openDriverModal('${card.did}')">Open driver profile</button>` : ''}${have ? `<button class="hx-btn ghost" onclick="ckLock('${k}')">${((c.cards || {}).lock || {})[k] ? '🔓 Unlock card' : '🔒 Lock card (never sell)'}</button>` : ''}${have || ((c.cards || {}).dex || {})[k] ? `${card.mph ? `<button class="hx-btn ghost" onclick="ckAltImg('${k}')">🔄 ${_ckAlt()[k] ? 'Show the ' + (card.sp === 'mom' ? 'moment' : 'special') + ' image' : 'Show the normal photo'}</button>` : ''}<button class="hx-btn ghost" onclick="ckShow('${k}')">📸 Showcase (screenshot mode)</button>` : ''}</div></div></div>`;
+        ${card.did ? `<button class="hx-btn ghost" onclick="if(Date.now()-(window._ckDtAt||0)<700)return;document.getElementById('ck-dt').remove();openDriverModal('${card.did}')">Open driver profile</button>` : ''}${have ? (() => { const ln = _ckLk((c.cards || {}).lock, k); return ln ? `<div class="ck-lkn"><span>🔒 Locked copies</span><button onclick="ckLock('${k}',-1)">−</button><b>${ln}</b><button onclick="ckLock('${k}',1)"${ln >= have ? ' disabled' : ''}>＋</button><small>of ${have}</small></div>` : `<button class="hx-btn ghost" onclick="ckLock('${k}')">🔒 Lock card (never sell)</button>`; })() : ''}${have || ((c.cards || {}).dex || {})[k] ? `${card.mph ? `<button class="hx-btn ghost" onclick="ckAltImg('${k}')">🔄 ${_ckAlt()[k] ? 'Show the ' + (card.sp === 'mom' ? 'moment' : 'special') + ' image' : 'Show the normal photo'}</button>` : ''}<button class="hx-btn ghost" onclick="ckShow('${k}')">📸 Showcase (screenshot mode)</button>` : ''}</div></div></div>`;
   document.body.appendChild(o); };
 // Full-screen showcase (admin: any card; players: cards in their collection or card index) of one card for screenshots. Tap anywhere / Esc to close.
 window.ckShow = async function(k) { const pool = await _ckPool(), card = pool.by[k]; if (!card) return;
@@ -37831,12 +37832,15 @@ window.ckShow = async function(k) { const pool = await _ckPool(), card = pool.by
   o.innerHTML = `<div class="ck-show-c">${_ckCard(card, { cls: 'big' })}</div><div class="ck-show-b"><img src="icons/icon-192.png?v=3" alt=""><span>IMS <em>CARDS</em></span>${S ? `<i>${S.i} ${S.n}</i>` : ''}</div>`;
   const close = () => { o.remove(); document.removeEventListener('keydown', esc_); }, esc_ = e => { if (e.key === 'Escape') close(); };
   o.onclick = close; document.addEventListener('keydown', esc_); document.body.appendChild(o); };
-window.ckLock = async function(k) { const c = await _betLoadCoins(currentUser.userId); const K = c.cards = c.cards || { inv: {} }; K.lock = K.lock || {};
-  if (K.lock[k]) delete K.lock[k]; else K.lock[k] = 1; await dbSet('coins', currentUser.userId, { cards: K }); showToast(K.lock[k] ? '🔒 Locked — this card can\'t be sold.' : '🔓 Unlocked.', 'success'); document.getElementById('ck-dt')?.remove(); _ckRender(); if (K.lock[k] !== undefined || true) ckDetail(k); };
+// How many copies of a card are locked (old saves stored true/1 = one copy).
+const _ckLk = (LK, k) => { const v = LK && LK[k]; return v === true ? 1 : Math.max(0, parseInt(v, 10) || 0); };
+window.ckLock = async function(k, d) { const c = await _betLoadCoins(currentUser.userId); const K = c.cards = c.cards || { inv: {} }; K.lock = K.lock || {};
+  const have = (K.inv || {})[k] || 0, cur = _ckLk(K.lock, k), nx = d === undefined ? (cur ? 0 : 1) : Math.max(0, Math.min(Math.max(have, 1), cur + d)); if (nx) K.lock[k] = nx; else delete K.lock[k];
+  await dbSet('coins', currentUser.userId, { cards: K }); showToast(nx ? `🔒 ${nx} cop${nx === 1 ? 'y' : 'ies'} locked — bulk sell and quick sell will always keep ${nx === 1 ? 'it' : 'them'}.` : '🔓 Unlocked.', 'success'); document.getElementById('ck-dt')?.remove(); _ckRender(); if (K.lock[k] !== undefined || true) ckDetail(k); };
 window.ckKeepAllStep = function(d) { const i = document.getElementById('ck-keepall'); if (!i) return; i.value = window._ckKeepAll = Math.max(1, Math.min(99, (parseInt(i.value, 10) || 1) + d)); };
 // dupOnly: true = keep 1 of each, false = sell everything (locked keep 1), a number = keep that many of each and sell the rest
 window.ckSellBulk = async function(dupOnly) { const keepN = typeof dupOnly === 'number' ? dupOnly : null; const pool = await _ckPool(), c = await _betLoadCoins(currentUser.userId), inv = _ckInv(c), LK = (c.cards && c.cards.lock) || {}, cnt = {}; let n = 0, v = 0;
-  Object.entries(inv).forEach(([k, have]) => { const card = pool.by[k]; if (!card || have <= 0 || _ckNoSell(card)) return; const keep = keepN ? Math.max(keepN, LK[k] ? 1 : 0) : dupOnly || LK[k] ? 1 : 0, q = Math.max(0, have - keep); if (q) { cnt[k] = q; n += q; v += _ckSellV(card) * q; } });
+  Object.entries(inv).forEach(([k, have]) => { const card = pool.by[k]; if (!card || have <= 0 || _ckNoSell(card)) return; const keep = Math.max(keepN || (dupOnly ? 1 : 0), _ckLk(LK, k)), q = Math.max(0, have - keep); if (q) { cnt[k] = q; n += q; v += _ckSellV(card) * q; } });
   if (!n) return showToast(keepN ? `You don't have more than ${keepN} of any card.` : dupOnly ? 'No duplicates to sell.' : 'Nothing to sell (locked cards are kept).', 'info');
   customConfirm(`${keepN ? `Sell all duplicates above ${keepN} cop${keepN === 1 ? 'y' : 'ies'}` : dupOnly ? 'Sell all duplicates' : 'Sell ALL your cards'}: ${n} card${n === 1 ? '' : 's'} for ${v.toLocaleString()} IM$? Locked cards are kept. You can't undo this.`, async () => { if (await _ckSellMany(cnt)) _ckRender(); }, 'Sell'); };
 window.ckQuick = function(k, n) { customConfirm(`Sell ${n} cop${n === 1 ? 'y' : 'ies'} of this card? You can't undo this.`, async () => { if (await _ckSellMany({ [k]: n })) { document.getElementById('ck-dt')?.remove(); _ckRender(); } }, 'Sell'); };
@@ -37878,7 +37882,7 @@ window._ckColDraw = function() { const D = window._ckColD, g = document.getEleme
   const by = { rrank: (a, b) => (RK[a.c.k] || 1e9) - (RK[b.c.k] || 1e9), 'rrank-asc': (a, b) => (RK[b.c.k] || 0) - (RK[a.c.k] || 0), rating: (a, b) => b.c.r - a.c.r, 'rating-asc': (a, b) => a.c.r - b.c.r, rarity: (a, b) => (!!b.c.sp - !!a.c.sp) || tr[a.c.t] - tr[b.c.t] || b.c.r - a.c.r, name: (a, b) => String(a.c.n).localeCompare(String(b.c.n)),
     nat: (a, b) => String(a.c.nat || '~').localeCompare(String(b.c.nat || '~')) || b.c.r - a.c.r, team: (a, b) => String(a.c.team || '~').localeCompare(String(b.c.team || '~')) || b.c.r - a.c.r,
     value: (a, b) => _ckSellV(b.c) - _ckSellV(a.c), copies: (a, b) => b.n - a.n || b.c.r - a.c.r, wins: (a, b) => b.c.w - a.c.w || b.c.r - a.c.r, pts: (a, b) => b.c.p - a.c.p }[X.sort] || ((a, b) => b.c.r - a.c.r);
-  L = L.slice().sort(by); g.innerHTML = L.map(x => `<div class="ck-lkw">${LK[x.c.k] ? '<span class="ck-lk">🔒</span>' : ''}${_ckCard(x.c, { n: x.n, on: `ckDetail('${x.c.k}')` })}</div>`).join('') || '<div class="ck-empty" style="grid-column:1/-1">No cards match.</div>';
+  L = L.slice().sort(by); g.innerHTML = L.map(x => `<div class="ck-lkw">${_ckLk(LK, x.c.k) ? `<span class="ck-lk">🔒${_ckLk(LK, x.c.k) > 1 ? _ckLk(LK, x.c.k) : ''}</span>` : ''}${_ckCard(x.c, { n: x.n, on: `ckDetail('${x.c.k}')` })}</div>`).join('') || '<div class="ck-empty" style="grid-column:1/-1">No cards match.</div>';
   const nEl = document.getElementById('ck-col-n'); if (nEl) nEl.textContent = `${L.length} of ${D.own.length} card${D.own.length === 1 ? '' : 's'}${/^rrank/.test(X.sort) && _ckAgo('ckAggGlobal') ? ' · rarity ranks ' + _ckAgo('ckAggGlobal') : ''}`; };
 window._ckIxDraw = function(more) { const D = window._ckIxD, g = document.getElementById('ck-ix-g'); if (!D || !g) return; const X = window._ckIx, f = window._ckAllT || 'all', q = String(X.q || '').trim().toLowerCase();
   const tr = Object.fromEntries(CK_TIERS.map((t, i) => [t.id, i]));
@@ -38258,7 +38262,7 @@ window.ckTestInfT = function() { try { localStorage.setItem('ckTestInf', _ckTest
 // Fill a CTC squad from your own cards (test accounts only) — uses the same solver as the admin "Check it's possible".
 window.ctcTestFill = async function() { if (!(await _ckIsTest())) return; const list = await _ctcLoad(), ch = list.find(x => x.id === window._ctcCur); if (!ch) return;
   const pool = await _ckPool(), c = await _betLoadCoins(currentUser.userId), inv = _ckInv(c), LK = (c.cards && c.cards.lock) || {};
-  const cand = Object.entries(inv).filter(([k, n]) => pool.by[k] && !pool.by[k].ctc && n >= (LK[k] ? 2 : 1)).map(([k]) => pool.by[k]);
+  const cand = Object.entries(inv).filter(([k, n]) => pool.by[k] && !pool.by[k].ctc && n > _ckLk(LK, k)).map(([k]) => pool.by[k]);
   showToast('🧪 Finding a squad…', 'info'); await new Promise(r => setTimeout(r, 30)); const R = _ctcSolve(ch, cand, 2500);
   if (!R.ok) return showToast('Couldn\'t find a squad from your cards that completes it.', 'error');
   window._ctcSq = window._ctcSq || {}; window._ctcSq[ch.id] = R.sq.map(x => x.k); showToast('🧪 Squad filled — check it, then trade in.', 'success'); _ckRender(); };
@@ -38311,7 +38315,7 @@ window.ctcClear = function() { const S = (window._ctcSq || {})[window._ctcCur]; 
 // ---- Card picker for one slot ----
 window.ctcPick = async function(i) { const list = await _ctcLoad(), ch = list.find(x => x.id === window._ctcCur); if (!ch) return; const pool = await _ckPool(), c = await _betLoadCoins(currentUser.userId), inv = _ckInv(c), LK = (c.cards && c.cards.lock) || {}, picks = _ctcPicks(ch);
   const taken = new Set(picks.filter((k, j) => k && j !== i && pool.by[k]).map(k => _ctcBk(pool.by[k])));
-  const own = Object.entries(inv).filter(([k, n]) => n > 0 && pool.by[k]).filter(([k]) => !pool.by[k].ctc).map(([k, n]) => ({ c: pool.by[k], n, lock: !!LK[k] && n < 2, used: taken.has(_ctcBk(pool.by[k])) }));
+  const own = Object.entries(inv).filter(([k, n]) => n > 0 && pool.by[k]).filter(([k]) => !pool.by[k].ctc).map(([k, n]) => ({ c: pool.by[k], n, lock: n <= _ckLk(LK, k), used: taken.has(_ctcBk(pool.by[k])) }));
   const LS = (window._ctcPkLast = window._ctcPkLast || {})[ch.id] || {}; window._ctcPk = { i, ch, own, q: LS.q || '', f: LS.f != null ? LS.f : -1, sort: LS.sort || 'r', nat: LS.nat || '', dv: LS.dv || '', tm: LS.tm || '', t: LS.t || '' }; // reopen on the filter / search / sort you last used in this CTC document.getElementById('ctc-pk')?.remove();
   const fl = (ch.reqs || []).map((r, j) => [r, j]).filter(([r]) => CTC_RQ[r.ty] && CTC_RQ[r.ty].f && r.op !== 'max');
   const o = document.createElement('div'); o.id = 'ctc-pk'; o.className = 'ck-ov in ctc-pk'; o.onclick = e => { if (e.target === o) o.remove(); };
@@ -38341,7 +38345,7 @@ window.ctcSubmit = function() { if (window._ctcBusy) return; const id = window._
       const K = c.cards = c.cards || { inv: {} }; K.inv = K.inv || {}; const LK = K.lock || {}, prev = (K.ctc || {})[id] || {};
       if (ch.max > 0 && (prev.n || 0) >= ch.max) { showToast('You\'ve already completed this challenge.', 'error'); return _ckRender(); }
       const cards = picks.map(k => pool.by[k]);
-      if (picks.length !== ch.slots || cards.some(x => !x) || new Set(picks).size !== picks.length || cards.some(x => x.ctc) || picks.some(k => (K.inv[k] || 0) < (LK[k] ? 2 : 1))) { showToast('Some of those cards aren\'t in your collection any more (or are locked).', 'error'); return _ckRender(); }
+      if (picks.length !== ch.slots || cards.some(x => !x) || new Set(picks).size !== picks.length || cards.some(x => x.ctc) || picks.some(k => (K.inv[k] || 0) <= _ckLk(LK, k))) { showToast('Some of those cards aren\'t in your collection any more (or are locked).', 'error'); return _ckRender(); }
       if (!_ctcEval(cards, ch).ok) { showToast('That squad doesn\'t meet every requirement any more — ratings and teams can change.', 'error'); return _ckRender(); }
       K.dex = K.dex || {}; Object.keys(K.inv).forEach(k => { if (K.inv[k] > 0) K.dex[k] = 1; });
       picks.forEach(k => { K.inv[k] -= 1; if (!K.inv[k]) delete K.inv[k]; });
