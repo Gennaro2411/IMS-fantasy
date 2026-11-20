@@ -4114,6 +4114,27 @@ body.ck-lock>header,body.ck-lock>main,body.ck-lock #mobile-nav{visibility:hidden
 @media (max-width:480px){.rlb-rw{display:none}}
 .ck-show{position:fixed;inset:0;z-index:100000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;cursor:zoom-out;background:radial-gradient(60% 55% at 50% 45%,rgba(124,134,255,.35),transparent 70%),radial-gradient(90% 90% at 50% 120%,rgba(240,72,122,.25),transparent 60%),#07060f}
 .ck-show.t-dia{background:radial-gradient(60% 55% at 50% 45%,rgba(111,216,255,.4),transparent 70%),#07060f}.ck-show.t-rg,.ck-show.t-ug,.ck-show.sp-champ{background:radial-gradient(60% 55% at 50% 45%,rgba(255,200,60,.38),transparent 70%),#0a0805}
+/* Record Breaker: neon synthwave — animated magenta/cyan rim, flickering glow, perspective grid, scanline sweep */
+.ck.sp.sp-rb{--rim:#ff2bd6;--ink:#fff;padding:3px;background:linear-gradient(120deg,#ff2bd6,#7b2bff,#00f0ff,#ff2bd6,#7b2bff,#00f0ff);background-size:300% 300%;animation:ckRbRim 4s linear infinite,ckRbGlow 3.2s steps(1) infinite;box-shadow:0 0 0 1px rgba(255,255,255,.35),0 0 18px #ff2bd6,0 0 42px -6px #00f0ff,0 18px 46px -12px #7b2bff}
+.ck.sp.sp-rb .ck-in{background:radial-gradient(80% 45% at 50% 0,rgba(255,43,214,.45),transparent 70%),radial-gradient(70% 40% at 50% 100%,rgba(0,240,255,.35),transparent 70%),linear-gradient(175deg,#12002a,#05010f 55%,#0a0020);overflow:hidden}
+.ck.sp.sp-rb .ck-spfx{background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.18) 48%,rgba(0,240,255,.25) 52%,transparent 65%);background-size:250% 100%;animation:ckRbSheen 3.5s ease-in-out infinite}
+.ck-rbgrid{position:absolute;left:-30%;right:-30%;bottom:0;height:46%;pointer-events:none;z-index:0;background:repeating-linear-gradient(90deg,rgba(0,240,255,.55) 0 1px,transparent 1px 9%),repeating-linear-gradient(0deg,rgba(255,43,214,.6) 0 1px,transparent 1px 14%);transform:perspective(120px) rotateX(58deg);transform-origin:bottom;mask:linear-gradient(transparent,#000 70%);-webkit-mask:linear-gradient(transparent,#000 70%);opacity:.75;animation:ckRbGrid 1.6s linear infinite}
+.ck-rbscan{position:absolute;inset:0;pointer-events:none;z-index:4;background:repeating-linear-gradient(0deg,rgba(255,255,255,.04) 0 1px,transparent 1px 3px),linear-gradient(180deg,transparent 0,rgba(0,240,255,.22) 49%,rgba(255,255,255,.35) 50%,transparent 51%);background-size:100% 100%,100% 220%;animation:ckRbScan 2.8s linear infinite;mix-blend-mode:screen}
+.ck.sp.sp-rb .ck-top,.ck.sp.sp-rb .ck-nm,.ck.sp.sp-rb .ck-st,.ck.sp.sp-rb .ck-spb{position:relative;z-index:3}
+.ck.sp.sp-rb .ck-rt b{color:#fff;text-shadow:0 0 2px #fff,0 0 8px #ff2bd6,0 0 16px #ff2bd6,0 0 28px #7b2bff;animation:ckRbFlick 5s infinite}
+.ck.sp.sp-rb .ck-rt small{color:#00f0ff;letter-spacing:.06em;text-shadow:0 0 6px #00f0ff;white-space:nowrap}
+.ck.sp.sp-rb .ck-nm{color:#fff;text-shadow:0 0 4px #00f0ff,0 0 12px #00f0ff,0 0 22px rgba(0,240,255,.6)}
+.ck.sp.sp-rb .ck-st{color:#e8d6ff}
+.ck.sp.sp-rb .ck-spb{background:#07000f;color:#fff;border:1px solid #ff2bd6;box-shadow:0 0 8px #ff2bd6,inset 0 0 8px rgba(255,43,214,.6);text-shadow:0 0 6px #ff2bd6;letter-spacing:.06em}
+.ck.sp.sp-rb .ck-ph img{filter:saturate(1.15) contrast(1.05) drop-shadow(0 0 10px rgba(255,43,214,.55))}
+.ck-show.sp-rb{background:radial-gradient(55% 50% at 50% 45%,rgba(255,43,214,.42),transparent 70%),radial-gradient(80% 60% at 50% 110%,rgba(0,240,255,.3),transparent 60%),#05010f}
+@keyframes ckRbRim{to{background-position:300% 0}}
+@keyframes ckRbGlow{0%,100%{filter:none}92%{filter:brightness(1.35)}94%{filter:brightness(.8)}96%{filter:brightness(1.25)}}
+@keyframes ckRbFlick{0%,88%,92%,100%{opacity:1}90%{opacity:.55}91%{opacity:.95}}
+@keyframes ckRbSheen{0%{background-position:150% 0}60%,100%{background-position:-50% 0}}
+@keyframes ckRbGrid{to{background-position:0 0,0 14%}}
+@keyframes ckRbScan{0%{background-position:0 0,0 120%}100%{background-position:0 0,0 -120%}}
+@media (prefers-reduced-motion:reduce){.ck.sp.sp-rb,.ck.sp.sp-rb *,.ck-rbgrid,.ck-rbscan{animation:none!important}}
 .ck-show.sp-cent,.ck-show.sp-dotd{background:radial-gradient(60% 55% at 50% 45%,rgba(255,70,50,.42),transparent 70%),radial-gradient(80% 60% at 50% 110%,rgba(255,211,107,.18),transparent 60%),#0a0306}.ck-show.sp-tots{background:radial-gradient(60% 55% at 50% 45%,rgba(59,91,255,.45),transparent 70%),#05071a}
 .ck-show-c{width:min(78vw,calc(70vh * .7),420px);filter:drop-shadow(0 30px 50px rgba(0,0,0,.7));animation:ckShowIn .6s cubic-bezier(.2,.9,.3,1.2)}.ck-show-c .ck{width:100%}
 @keyframes ckShowIn{from{transform:scale(.85) translateY(20px);opacity:0}}
@@ -37402,7 +37423,7 @@ const _ckPkShow = id => CK_PACKS[id] && !CK_PACKS[id].hid; // packs you can give
 const CK_BIG_MIN = 88; // Big Pulls shows 88+ rated cards and every special (83+ are still recorded for pull counts)
 const CK_N = 3, CK_FEED_MIN = 83, CK_DAY_MAX = 10, CK_SP_SELL = r => 1000 + Math.max(0, r - 60) * 100, CK_CHAMP_SELL = r => Math.round(1000 * Math.exp(Math.max(0, r - 60) * Math.log(100) / 39) / 100) * 100; // champions: 1k at 60 → ~100k at 99 // special cards: 1,000 base, +100 per rating point above 60
 // Special card types. s = short label under the rating, n = banner text.
-const CK_SP = { dotd: { n: 'Driver of the Day', s: 'DOTD', i: '🔥' }, tots: { n: 'Team of the Season', s: 'TOTS', i: '⭐' }, champ: { n: 'Champion', s: 'CHAMP', i: '👑' }, cent: { n: 'Centurion', s: 'CENTURION', i: '💯' }, mom: { n: 'Moments', s: 'MOMENT', i: '🎞️' } };
+const CK_SP = { dotd: { n: 'Driver of the Day', s: 'DOTD', i: '🔥' }, tots: { n: 'Team of the Season', s: 'TOTS', i: '⭐' }, champ: { n: 'Champion', s: 'CHAMP', i: '👑' }, cent: { n: 'Centurion', s: 'CENTURION', i: '💯' }, mom: { n: 'Moments', s: 'MOMENT', i: '🎞️' }, rb: { n: 'Record Breaker', s: 'RECORD', i: '⚡' } };
 // Dynamic image: a special card can carry its own photo (x.img). It shows by default; players can flip it back to the normal photo from the card's pop-up (saved per device).
 const _ckAltK = 'ckAltImg', _ckAlt = () => { try { return JSON.parse(localStorage.getItem(_ckAltK) || '{}'); } catch (e) { return {}; } };
 const _ckPhOf = c => c.mph && !_ckAlt()[c.k] ? c.mph : c.ph;
@@ -37472,7 +37493,7 @@ const _ckIni = (n) => String(n || '?').replace(/[^A-Za-z0-9 ]/g, '').trim().spli
 function _ckCard(c, o) { o = o || {}; const T = CK_T[c.t], lg = c.team && typeof getTeamLogo === 'function' ? getTeamLogo(c.team) : '', fl = c.nat && typeof natFlagImg === 'function' ? natFlagImg(c.nat, 22) : '';
   const S = c.sp && CK_SP[c.sp];
   return `<div class="ck t-${c.t}${S ? ' sp sp-' + c.sp : ''}${c.r >= 100 ? ' r3' : ''}${o.cls ? ' ' + o.cls : ''}"${o.on ? ` onclick="${o.on}"` : ''}>
-    <div class="ck-in">${S ? `<i class="ck-spfx"></i>${c.sp === 'cent' ? '<i class="ck-cfoil"></i><i class="ck-cbig">100</i>' : ''}` : ''}<div class="ck-top"><div class="ck-rt"><b>${c.r}</b><small>${S ? S.s : T.n}</small>${fl ? `<span class="ck-fl">${fl}</span>` : ''}${lg ? `<img class="ck-lg" src="${esc(lg)}" alt="" onerror="this.remove()">` : ''}${c.ctc ? '<span class="ck-ctcb">CTC</span>' : ''}${c.ch ? `<span class="ck-cr" title="${c.ch > 1 ? c.ch + '× d' : 'D'}rivers' champion">${CK_WC_SVG}${c.ch > 1 ? `<i>${c.ch}×</i>` : ''}</span>` : ''}</div>
+    <div class="ck-in">${S ? `<i class="ck-spfx"></i>${c.sp === 'cent' ? '<i class="ck-cfoil"></i><i class="ck-cbig">100</i>' : c.sp === 'rb' ? '<i class="ck-rbgrid"></i><i class="ck-rbscan"></i>' : ''}` : ''}<div class="ck-top"><div class="ck-rt"><b>${c.r}</b><small>${S ? S.s : T.n}</small>${fl ? `<span class="ck-fl">${fl}</span>` : ''}${lg ? `<img class="ck-lg" src="${esc(lg)}" alt="" onerror="this.remove()">` : ''}${c.ctc ? '<span class="ck-ctcb">CTC</span>' : ''}${c.ch ? `<span class="ck-cr" title="${c.ch > 1 ? c.ch + '× d' : 'D'}rivers' champion">${CK_WC_SVG}${c.ch > 1 ? `<i>${c.ch}×</i>` : ''}</span>` : ''}</div>
       <div class="ck-ph${c.mph && !_ckAlt()[c.k] ? ' mom' : ''}">${_ckPhOf(c) ? `<img src="${esc(_ckPhOf(c))}" alt="" loading="lazy" onerror="this.outerHTML='<i>${_ckIni(c.n)}</i>'">` : `<i>${_ckIni(c.n)}</i>`}</div></div>
     ${S ? `<div class="ck-spb">${c.sp === 'cent' ? '<b class="ck-c100">100</b>' : S.i} ${c.spn ? esc(c.spn) : c.sp === 'cent' ? 'Appearances' : S.n}</div>` : ''}<div class="ck-nm">${esc(c.n)}</div>
     <div class="ck-st"><span><b>${c.w}</b>WIN</span><span><b>${c.pd}</b>POD</span><span><b>${c.t5}</b>TOP5</span><span><b>${c.p >= 1000 ? (c.p / 1000).toFixed(1) + 'k' : c.p}</b>PTS</span></div>
