@@ -37564,7 +37564,7 @@ async function _ckPackGuard() { if (window._appUpd && window._appUpd.pending) { 
   try { const sd = await dbGet('settings', 'ckSpecials'); if (JSON.stringify((sd && sd.value && sd.value.list) || []) !== window._ckSpSig) window._ckPoolC = null; } catch (e) {} return true; }
 // New-version check. APP_BUILD is stamped on every commit (git pre-commit hook). Any device running a newer build records it in
 // settings/appBuild; a device whose own build is older than that number knows it's out of date. Only a real newer build can trigger it.
-const APP_BUILD = 1795300800;
+const APP_BUILD = 1795301109;
 window._appUpd = window._appUpd || { pending: false };
 async function _appVerCheck() { try { const d = await dbGet('settings', 'appBuild'), live = +((d && d.value) || 0);
     if (APP_BUILD > live) { await dbSet('settings', 'appBuild', { value: APP_BUILD }); return; }
@@ -37926,7 +37926,7 @@ async function _ckRichHtml(pool, me) { if (!window._ckRich || _now() - window._c
 // My Cards: same search / sort / filters as the Card Index.
 window._ckColDraw = function() { const D = window._ckColD, g = document.getElementById('ck-col-g'); if (!D || !g) return; const X = window._ckCol, q = String(X.q || '').trim().toLowerCase(), LK = D.K.lock || {}, tr = Object.fromEntries(CK_TIERS.map((t, i) => [t.id, i]));
   let L = D.own.filter(({ c: x, n }) => (X.f === 'all' || (X.f === 'sp' ? x.sp : String(X.f).startsWith('sp:') ? x.sp === X.f.slice(3) : x.t === X.f && !x.sp)) && (!X.nat || x.nat === X.nat) && (!q || String(x.n).toLowerCase().includes(q) || String(x.team || '').toLowerCase().includes(q) || String(x.spn || '').toLowerCase().includes(q))
-    && (!X.own || (X.own === 'dup' ? n > 1 : X.own === 'lock' ? !!LK[x.k] : !LK[x.k])));
+    && (!X.own || (X.own === 'dup' ? n > 1 : X.own === 'og' ? _ckOgHeld(x.k) : X.own === 'lock' ? !!LK[x.k] : !LK[x.k])));
   const RK = (window._ckGl || {}).rank || {}; if (/^rrank/.test(X.sort) && !window._ckGl) { _ckPool().then(p => _ckGlobal(p)).then(() => _ckColDraw()); }
   const by = { rrank: (a, b) => (RK[a.c.k] || 1e9) - (RK[b.c.k] || 1e9), 'rrank-asc': (a, b) => (RK[b.c.k] || 0) - (RK[a.c.k] || 0), rating: (a, b) => b.c.r - a.c.r, 'rating-asc': (a, b) => a.c.r - b.c.r, rarity: (a, b) => (!!b.c.sp - !!a.c.sp) || tr[a.c.t] - tr[b.c.t] || b.c.r - a.c.r, name: (a, b) => String(a.c.n).localeCompare(String(b.c.n)),
     nat: (a, b) => String(a.c.nat || '~').localeCompare(String(b.c.nat || '~')) || b.c.r - a.c.r, team: (a, b) => String(a.c.team || '~').localeCompare(String(b.c.team || '~')) || b.c.r - a.c.r,
@@ -38012,7 +38012,7 @@ async function renderCardsGame(el) {
         return `<div class="ckx-ix ck-colbar"><div class="ckx-sr"><span>🔍</span><input type="search" placeholder="Search drivers or teams…" value="${esc(X.q)}" oninput="window._ckCol.q=this.value;clearTimeout(window._ckColT);window._ckColT=setTimeout(_ckColDraw,150)"></div>
           <select onchange="window._ckCol.sort=this.value;_ckColDraw()">${[['rating', 'Rating: high → low'], ['rating-asc', 'Rating: low → high'], ['rrank', 'Rarity rank: rarest first'], ['rrank-asc', 'Rarity rank: most common first'], ['rarity', 'Rarity'], ['name', 'Name A–Z'], ['nat', 'Nationality'], ['team', 'Team'], ['value', 'Sell value'], ['copies', 'Most copies'], ['wins', 'Most wins'], ['pts', 'Most points']].map(([v, l]) => `<option value="${v}"${X.sort === v ? ' selected' : ''}>${l}</option>`).join('')}</select>
           <select onchange="window._ckCol.nat=this.value;_ckColDraw()"><option value="">🌍 All nationalities</option>${nats.map(n => `<option value="${esc(n)}"${X.nat === n ? ' selected' : ''}>${esc(n)}</option>`).join('')}</select>
-          <select onchange="window._ckCol.own=this.value;_ckColDraw()">${[['', 'All my cards'], ['dup', 'Duplicates'], ['lock', '🔒 Locked'], ['unlock', 'Not locked']].map(([v, l]) => `<option value="${v}"${X.own === v ? ' selected' : ''}>${l}</option>`).join('')}</select><details class="ck-bs"${window._ckBsOpen ? ' open' : ''} ontoggle="window._ckBsOpen=this.open"><summary class="ck-bs-h">Bulk sell <i>▾</i></summary><div class="ck-bs-b">
+          <select onchange="window._ckCol.own=this.value;_ckColDraw()">${[['', 'All my cards'], ['dup', 'Duplicates'], ['og', '👑 My Original Cards (OG)'], ['lock', '🔒 Locked'], ['unlock', 'Not locked']].map(([v, l]) => `<option value="${v}"${X.own === v ? ' selected' : ''}>${l}</option>`).join('')}</select><details class="ck-bs"${window._ckBsOpen ? ' open' : ''} ontoggle="window._ckBsOpen=this.open"><summary class="ck-bs-h">Bulk sell <i>▾</i></summary><div class="ck-bs-b">
             <div class="ck-bs-t">Sell duplicates above</div>
             <div class="ck-bs-row"><div class="ck-bs-step"><button onclick="ckKeepAllStep(-1)">−</button><input id="ck-keepall" type="number" min="1" max="99" value="${window._ckKeepAll || 3}" oninput="window._ckKeepAll=Math.max(1,parseInt(this.value,10)||1);_ckBsSave()"><button onclick="ckKeepAllStep(1)">＋</button></div><span class="ck-bs-l">copies</span>
               <button class="ck-bs-go" onclick="ckSellBulk(Math.max(1, parseInt(document.getElementById('ck-keepall').value, 10) || 1))">Sell</button></div>
