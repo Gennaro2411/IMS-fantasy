@@ -4138,6 +4138,7 @@ body.ck-lock>header,body.ck-lock>main,body.ck-lock #mobile-nav{visibility:hidden
 @keyframes ckRbGrid{to{background-position:0 0,0 14%}}
 @keyframes ckRbScan{0%{background-position:0 0,0 120%}100%{background-position:0 0,0 -120%}}
 @media (prefers-reduced-motion:reduce){.ck.sp.sp-rb,.ck.sp.sp-rb *,.ck-rbgrid,.ck-rbscan{animation:none!important}}
+.ck-ixpg{display:flex;align-items:center;gap:8px;margin:6px 0 4px;font-size:.85rem;color:#c8c8dc}.ck-ixpg b{color:#fff}.ck-ixpg i{flex:1;height:6px;border-radius:99px;background:linear-gradient(90deg,#E8002D var(--p),rgba(255,255,255,.08) var(--p))}.ck-ixpg small{color:#9a9ab8;font-weight:700}
 .ck-og{position:absolute;left:50%;bottom:-1px;transform:translate(-50%,50%);z-index:9;display:block;background:none;pointer-events:none}
 .ck-og b{display:block;padding:0 3.6cqw 0 4cqw;border-radius:999px;font:900 italic 6.4cqw/1.55 'Barlow Condensed',sans-serif;letter-spacing:.2em;color:var(--b);
   background:linear-gradient(180deg,color-mix(in srgb,var(--rim) 55%,#fff),var(--rim));box-shadow:0 0 0 1.5px var(--b),0 3px 8px rgba(0,0,0,.55);pointer-events:auto;cursor:help;transition:filter .15s}
@@ -37592,7 +37593,7 @@ async function _ckPackGuard() { document.querySelectorAll('#toast-stack .toast')
   try { const sd = await dbGet('settings', 'ckSpecials'); if (JSON.stringify((sd && sd.value && sd.value.list) || []) !== window._ckSpSig) window._ckPoolC = null; } catch (e) {} return true; }
 // New-version check. APP_BUILD is stamped on every commit (git pre-commit hook). Any device running a newer build records it in
 // settings/appBuild; a device whose own build is older than that number knows it's out of date. Only a real newer build can trigger it.
-const APP_BUILD = 1795302736;
+const APP_BUILD = 1795302764;
 window._appUpd = window._appUpd || { pending: false };
 async function _appVerCheck() { try { const d = await dbGet('settings', 'appBuild'), live = +((d && d.value) || 0);
     if (APP_BUILD > live) { await dbSet('settings', 'appBuild', { value: APP_BUILD }); return; }
@@ -37971,7 +37972,10 @@ window._ckIxDraw = function(more) { const D = window._ckIxD, g = document.getEle
     value: (a, b) => _ckSellV(b) - _ckSellV(a), wins: (a, b) => b.w - a.w || b.r - a.r, pts: (a, b) => b.p - a.p }[X.sort] || ((a, b) => b.r - a.r);
   L = L.slice().sort(by); const cap = window._ckIxCap = more ? (window._ckIxCap || 90) + 90 : 90;
   g.innerHTML = L.slice(0, cap).map(x => { const pn = _ckPulled(D.K, x.k, D.cp); return `<div class="ck-lkw">${_ckCard(x, { n: D.inv[x.k] || 0, cls: (D.dex[x.k] ? '' : 'dim') + ' ck-hv', on: `ckDetail('${x.k}')` })}${/^rrank/.test(X.sort) && window._ckGl ? `<small class="ck-pn">#${window._ckGl.rank[x.k]} · ${(window._ckGl.own[x.k] || 0)} owner${(window._ckGl.own[x.k] || 0) === 1 ? '' : 's'}</small>` : `<small class="ck-pn${pn ? '' : ' no'}">${pn ? 'Pulled ' + pn + '×' : 'Not pulled yet'}</small>`}</div>`; }).join('') || '<div class="ck-empty" style="grid-column:1/-1">No cards match.</div>';
-  const n = document.getElementById('ck-ix-n'); if (n) n.textContent = `${L.length} card${L.length === 1 ? '' : 's'}${L.length > cap ? ` · showing ${cap}` : ''}${/^rrank/.test(X.sort) && _ckAgo('ckAggGlobal') ? ' · rarity ranks ' + _ckAgo('ckAggGlobal') : ''}`;
+  const n = document.getElementById('ck-ix-n'); { const _cf = c => f === 'all' || f === 'top' || (f === 'sp' ? c.sp : String(f).startsWith('sp:') ? c.sp === f.slice(3) : c.t === f && !c.sp), _cb = D.pool.list.filter(_cf), _ch = _cb.filter(c => D.dex[c.k]).length;
+  const _cl = f === 'all' || f === 'top' ? 'cards' : f === 'sp' ? 'specials' : String(f).startsWith('sp:') ? ((CK_SP[f.slice(3)] || {}).n || 'specials') : ((CK_T[f] || {}).n || f) + 's';
+  const pg = document.getElementById('ck-ix-pg'); if (pg) pg.innerHTML = `<b>${_ch.toLocaleString()}</b> of <b>${_cb.length.toLocaleString()}</b> ${esc(_cl)} collected <i style="--p:${_cb.length ? (_ch / _cb.length * 100).toFixed(1) : 0}%"></i><small>${_cb.length ? Math.floor(_ch / _cb.length * 100) : 0}%</small>`; }
+  if (n) n.textContent = `${L.length} card${L.length === 1 ? '' : 's'}${L.length > cap ? ` · showing ${cap}` : ''}${/^rrank/.test(X.sort) && _ckAgo('ckAggGlobal') ? ' · rarity ranks ' + _ckAgo('ckAggGlobal') : ''}`;
   const m = document.getElementById('ck-ix-more'); if (m) m.innerHTML = L.length > cap ? `<button class="hx-btn ghost" style="width:100%;margin-top:12px" onclick="_ckIxDraw(1)">Show more (${L.length - cap} left)</button>` : ''; };
 function _ckRender() { const pg = document.getElementById('page-cards'); if (pg && pg.classList.contains('active')) return renderCards(); }
 async function _ckLockLoad() { const lk = await dbGet('settings', 'gamesLock').catch(() => null); window._gamesLock = (lk && lk.value) || {}; _ckNavSync(); }
@@ -38066,7 +38070,7 @@ async function renderCardsGame(el) {
         <select onchange="window._ckIx.nat=this.value;_ckIxDraw()"><option value="">🌍 All nationalities</option>${nats.map(n => `<option value="${esc(n)}"${X.nat === n ? ' selected' : ''}>${esc(n)}</option>`).join('')}</select>
         <select onchange="window._ckIx.own=this.value;_ckIxDraw()">${[['', 'All cards'], ['got', 'Packed'], ['miss', 'Not packed yet'], ['own', 'In My Cards'], ['notmine', 'Not in My Cards']].map(([v, l]) => `<option value="${v}"${X.own === v ? ' selected' : ''}>${l}</option>`).join('')}</select></div>
       <div class="ck-fil">${[['all', 'All'], ['sp', '✨ Special']].concat(Object.entries(CK_SP).map(([id, S]) => ['sp:' + id, S.i + ' ' + S.n]), CK_TIERS.map(t => [t.id, t.n])).map(([id, n]) => `<button class="${f === id ? 'on' : ''}" onclick="window._ckAllT='${id}';document.querySelectorAll('.ck-fil button').forEach(b=>b.classList.toggle('on',b===this));_ckIxDraw()">${n}</button>`).join('')}</div>
-      <div id="ck-ix-n" class="ck-ixn"></div><div class="ck-grid" id="ck-ix-g"></div><div id="ck-ix-more"></div><div class="ck-fine">Your card index — every card in the game. Once you've packed a card it stays unlocked here, even after you sell it. Cards you've never packed are dimmed. Tap any card for its stats, how many times you've pulled it, and 📸 screenshot mode.${pool.hasT5 || !adminLoggedIn ? '' : ' <b style="color:#ffb020">(Only you see this: Top 5 counts are estimated until the league database is loaded again.)</b>'}</div>`;
+      <div id="ck-ix-pg" class="ck-ixpg"></div><div id="ck-ix-n" class="ck-ixn"></div><div class="ck-grid" id="ck-ix-g"></div><div id="ck-ix-more"></div><div class="ck-fine">Your card index — every card in the game. Once you've packed a card it stays unlocked here, even after you sell it. Cards you've never packed are dimmed. Tap any card for its stats, how many times you've pulled it, and 📸 screenshot mode.${pool.hasT5 || !adminLoggedIn ? '' : ' <b style="color:#ffb020">(Only you see this: Top 5 counts are estimated until the league database is loaded again.)</b>'}</div>`;
     setTimeout(_ckIxDraw, 0);
     if (adminLoggedIn) body += _ckSpAdmin(pool); }
   if (tab === 'ctc' && adminLoggedIn) setTimeout(() => { try { ctcBReqUI(); } catch (e) {} }, 0);
