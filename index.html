@@ -37580,12 +37580,12 @@ window.ckTab = function(t) { window._ckTab = t; _ckRender(); };
 // gi = index into c.cards.gifts → opens a gifted/reward pack: free, no daily limit.
 // Before any pack is opened: (1) if a newer version of the app is live, reload into it first (old builds don't know the newest pack rules);
 // (2) re-read the special card list so 'Not in packs' / 'CTC only' changes apply instantly, not after the 10-minute pool cache.
-async function _ckPackGuard() { if (window._appUpd && window._appUpd.pending) { showToast('Updating to the latest version…', 'info'); setTimeout(() => location.reload(), 400); return false; }
+async function _ckPackGuard() { document.querySelectorAll('#toast-stack .toast').forEach(t => t.remove()); /* clear leftover toasts (e.g. 'Sold 6 cards…') so they don't sit over the new pack */ if (window._appUpd && window._appUpd.pending) { showToast('Updating to the latest version…', 'info'); setTimeout(() => location.reload(), 400); return false; }
   if (_now() - (window._ckSpChkAt || 0) < 60e3) return true; window._ckSpChkAt = _now(); /* at most one check a minute */
   try { const sd = await dbGet('settings', 'ckSpecials'); if (JSON.stringify((sd && sd.value && sd.value.list) || []) !== window._ckSpSig) window._ckPoolC = null; } catch (e) {} return true; }
 // New-version check. APP_BUILD is stamped on every commit (git pre-commit hook). Any device running a newer build records it in
 // settings/appBuild; a device whose own build is older than that number knows it's out of date. Only a real newer build can trigger it.
-const APP_BUILD = 1795301596;
+const APP_BUILD = 1795301643;
 window._appUpd = window._appUpd || { pending: false };
 async function _appVerCheck() { try { const d = await dbGet('settings', 'appBuild'), live = +((d && d.value) || 0);
     if (APP_BUILD > live) { await dbSet('settings', 'appBuild', { value: APP_BUILD }); return; }
