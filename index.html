@@ -3240,7 +3240,7 @@
     #page-bets .bo-hstats div{background:var(--bcard);padding:10px 6px;text-align:center}
     #page-bets .bo-hstats b{display:block;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.15rem;line-height:1}
     #page-bets .bo-hstats small{font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-    #page-bets .bo-htabs{display:flex;gap:4px;padding:8px 10px;border-bottom:1px solid var(--bline);overflow-x:auto}
+    #page-bets .bo-hdiv{margin-bottom:8px}.bo-hdiv button{font-weight:800}.bo-htabs{display:flex;gap:4px;padding:8px 10px;border-bottom:1px solid var(--bline);overflow-x:auto}
     #page-bets .bo-htabs button{flex-shrink:0;border:none;background:transparent;color:var(--muted);border-radius:8px;padding:5px 9px;font-size:.72rem;font-weight:700;cursor:pointer}
     #page-bets .bo-htabs button i{font-style:normal;margin-left:4px;opacity:.6}
     #page-bets .bo-htabs button.on{background:rgba(123,127,232,0.22);color:#fff}
@@ -32428,15 +32428,19 @@ window.renderBets = async function(dry) {
     </div></div>`;
   // Bet history: filter tabs + running totals so players can see what came in and what didn't.
   const _hf = window._betHistFilter || 'all';
-  const _settled = myBets.filter(b => b.status !== 'open');
-  const _won = myBets.filter(b => b.status === 'won'), _lost = myBets.filter(b => b.status === 'lost');
+  // Division filter for My bets: stats, tabs and list all follow it.
+  const _dv = window._betHistDiv || '', _dvs = [...new Set(myBets.filter(b => b.market !== 'acca' && b.div).map(b => b.div))].sort((a, b) => (a === 'BOTT') - (b === 'BOTT') || String(a).localeCompare(String(b), undefined, { numeric: true }));
+  const MB = myBets.filter(b => !_dv || (_dv === 'acca' ? b.market === 'acca' : b.market !== 'acca' && b.div === _dv));
+  const histDivs = (_dvs.length > 1 || myBets.some(b => b.market === 'acca')) ? `<div class="bo-htabs bo-hdiv">${[['', 'All divisions'], ..._dvs.map(d => [d, d]), ...(myBets.some(b => b.market === 'acca') ? [['acca', '🎯 Accas']] : [])].map(([k, l]) => `<button class="${_dv === k ? 'on' : ''}" onclick="betHistDiv('${k}')">${esc(l)}</button>`).join('')}</div>` : '';
+  const _settled = MB.filter(b => b.status !== 'open');
+  const _won = MB.filter(b => b.status === 'won'), _lost = MB.filter(b => b.status === 'lost');
   // Free bets: a win is all profit, a loss costs nothing (same rule as the leaderboard's profit / loss).
-  const _net = myBets.reduce((a, b) => a + (b.status === 'open' ? 0 : (Number(b.payout) || 0) - (b.free ? 0 : (Number(b.stake) || 0))), 0);
+  const _net = MB.reduce((a, b) => a + (b.status === 'open' ? 0 : (Number(b.payout) || 0) - (b.free ? 0 : (Number(b.stake) || 0))), 0);
   const _decided = _won.length + _lost.length;
-  const histStats = `<div class="bo-hstats"><div><b>${myBets.length}</b><small>Bets</small></div><div><b>${_won.length}</b><small>Won</small></div><div><b>${_decided ? Math.round(_won.length / _decided * 100) + '%' : '–'}</b><small>Hit rate</small></div><div><b style="color:${_net >= 0 ? '#4ade80' : '#ff5470'}">${_net >= 0 ? '+' : ''}${_net}</b><small>Net <i class="imc" title="IM$"></i></small></div></div>`;
-  const _cnt = { all: myBets.length, open: myBets.length - _settled.length, won: _won.length, lost: _lost.length, void: myBets.filter(b => b.status === 'void').length, cashed: myBets.filter(b => b.status === 'cashed').length };
+  const histStats = `<div class="bo-hstats"><div><b>${MB.length}</b><small>Bets</small></div><div><b>${_won.length}</b><small>Won</small></div><div><b>${_decided ? Math.round(_won.length / _decided * 100) + '%' : '–'}</b><small>Hit rate</small></div><div><b style="color:${_net >= 0 ? '#4ade80' : '#ff5470'}">${_net >= 0 ? '+' : ''}${_net}</b><small>Net <i class="imc" title="IM$"></i></small></div></div>`;
+  const _cnt = { all: MB.length, open: MB.length - _settled.length, won: _won.length, lost: _lost.length, void: MB.filter(b => b.status === 'void').length, cashed: MB.filter(b => b.status === 'cashed').length };
   const histTabs = `<div class="bo-htabs">${[['all','All'],['open','Open'],['won','Won'],['lost','Lost'],['cashed','Cashed out'],['void','Refunded']].map(([k,l]) => `<button class="${_hf === k ? 'on' : ''}" onclick="betHist('${k}')">${l}<i>${_cnt[k]}</i></button>`).join('')}</div>`;
-  const _shown = myBets.filter(b => _hf === 'all' || b.status === _hf).sort((a, b) => (b.placedAt || 0) - (a.placedAt || 0));
+  const _shown = MB.filter(b => _hf === 'all' || b.status === _hf).sort((a, b) => (b.placedAt || 0) - (a.placedAt || 0));
   // 10 bets per page with page controls.
   const _per = 10, _pages = Math.max(1, Math.ceil(_shown.length / _per));
   const _pg = Math.min(Math.max(1, window._betHistPage || 1), _pages); window._betHistPage = _pg;
@@ -32703,7 +32707,7 @@ window.renderBets = async function(dry) {
       </div>
       <div class="bo-side">
         ${slipHtml}
-        <div class="card bo-card"><div class="bo-card-h"><span>🎟 My bets</span><small>History</small></div>${histStats}${histTabs}${betsHtml}${betsMore}</div>
+        <div class="card bo-card"><div class="bo-card-h"><span>🎟 My bets</span><small>History</small></div>${histDivs}${histStats}${histTabs}${betsHtml}${betsMore}</div>
         ${statsHtml}
         <div class="card bo-card"><div class="bo-card-h"><span>${_lbMode === 'wins' ? '🏆 Biggest wins' : _lbMode === 'losses' ? '💸 Biggest losses' : '📈 Bet profit leaderboard'}</span><span class="bo-fmt">${[['coins', 'Profit'], ['wins', 'Wins'], ['losses', 'Losses']].map(([k, l]) => `<button class="${_lbMode === k ? 'on' : ''}" onclick="setBetLbMode('${k}')">${l}</button>`).join('')}</span></div>${_lbMode === 'coins' ? boardHtml : bigHtml}</div>
         <div class="bo-how">${(() => { const c = window._betCfg || {}; const pw = typeof c.priceWeight === 'number' ? c.priceWeight : 100, fw = typeof c.formWeight === 'number' ? c.formWeight : 0, tw = typeof c.trackWeight === 'number' ? c.trackWeight : 0;
@@ -33318,6 +33322,7 @@ function _betPoleRatings_end() {}
 
 window.buildQualiPace_marker = true;
 window.betHist = function(k) { window._betHistFilter = k; window._betHistPage = 1; renderBets(); };
+window.betHistDiv = function(d) { window._betHistDiv = d; window._betHistPage = 1; renderBets(); };
 window.betHistPage = function(n) { window._betHistPage = n; renderBets(); };
 window.betDiv = function(d) { window._betDiv = d; renderBets(); };
 // Smooth Bets re-renders: renderBets builds the whole page as HTML on every tap. Instead of swapping the
@@ -37587,7 +37592,7 @@ async function _ckPackGuard() { document.querySelectorAll('#toast-stack .toast')
   try { const sd = await dbGet('settings', 'ckSpecials'); if (JSON.stringify((sd && sd.value && sd.value.list) || []) !== window._ckSpSig) window._ckPoolC = null; } catch (e) {} return true; }
 // New-version check. APP_BUILD is stamped on every commit (git pre-commit hook). Any device running a newer build records it in
 // settings/appBuild; a device whose own build is older than that number knows it's out of date. Only a real newer build can trigger it.
-const APP_BUILD = 1795301892;
+const APP_BUILD = 1795302736;
 window._appUpd = window._appUpd || { pending: false };
 async function _appVerCheck() { try { const d = await dbGet('settings', 'appBuild'), live = +((d && d.value) || 0);
     if (APP_BUILD > live) { await dbSet('settings', 'appBuild', { value: APP_BUILD }); return; }
