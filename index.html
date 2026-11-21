@@ -37415,7 +37415,7 @@ const _ckW = (L, k) => { if (!L || !L.length) return null; const lo = Math.min(.
 const _ckSpLive = pool => { const T = new Set(); Object.values(CK_PACKS).forEach(P => Object.keys(P.sp || {}).forEach(t => T.add(t))); return pool.list.filter(c => c.sp && !c.ctc && !c.np && T.has(c.sp)); };
 // Daily rotation (UK day): nationality / division with enough cards, same for everyone.
 function _ckRotOf(pool, f, min, salt) { const n = {}; pool.list.forEach(c => { if (!c.sp) { const v = f(c); if (v) n[v] = (n[v] || 0) + 1; } }); const L = Object.keys(n).filter(v => n[v] >= min).sort(); if (!L.length) return '';
-  const d = _ckDay().split('-').map(Number), day = Math.floor(Date.UTC(d[0], d[1] - 1, d[2]) / 864e5); return L[(day * 11 + salt) % L.length]; }
+  const d = _ckDay().split('-').map(Number), day = Math.floor(Date.UTC(d[0], d[1] - 1, d[2]) / 864e5); const st = [11, 7, 13, 17, 19, 23].find(p => L.length % p) || 1; /* step must not divide the list size, or the same one repeats every day (11 nations × 11 = stuck) */ return L[(day * st + salt) % L.length]; }
 // Expected IM$ value of ONE card from these cards (weighted like the roll, k) plus the Gold special chances from SPL.
 function _ckEvCard(L, k, SPL) { if (!L.length) return 0; const lo = Math.min(...L.map(c => c.r)), w = L.map(c => Math.exp(-(c.r - lo) * k)), W = w.reduce((a, b) => a + b, 0), ev = L.reduce((a, c, i) => a + w[i] * _ckSellV(c), 0) / W;
   let ps = 0, es = 0; Object.entries(CK_PACKS.gold.sp || {}).forEach(([ty, ch]) => { const S = (SPL || []).filter(c => c.sp === ty); if (!S.length) return; const lo2 = Math.min(...S.map(c => c.r)), w2 = S.map(c => Math.exp(-(c.r - lo2) * .22)), W2 = w2.reduce((a, b) => a + b, 0); ps += ch; es += ch * S.reduce((a, c, i) => a + w2[i] * _ckSellV(c), 0) / W2; });
@@ -37593,7 +37593,7 @@ async function _ckPackGuard() { document.querySelectorAll('#toast-stack .toast')
   try { const sd = await dbGet('settings', 'ckSpecials'); if (JSON.stringify((sd && sd.value && sd.value.list) || []) !== window._ckSpSig) window._ckPoolC = null; } catch (e) {} return true; }
 // New-version check. APP_BUILD is stamped on every commit (git pre-commit hook). Any device running a newer build records it in
 // settings/appBuild; a device whose own build is older than that number knows it's out of date. Only a real newer build can trigger it.
-const APP_BUILD = 1795303292;
+const APP_BUILD = 1795303353;
 window._appUpd = window._appUpd || { pending: false };
 async function _appVerCheck() { try { const d = await dbGet('settings', 'appBuild'), live = +((d && d.value) || 0);
     if (APP_BUILD > live) { await dbSet('settings', 'appBuild', { value: APP_BUILD }); return; }
