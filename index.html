@@ -4136,10 +4136,10 @@ body.ck-lock>header,body.ck-lock>main,body.ck-lock #mobile-nav{visibility:hidden
 @keyframes ckRbGrid{to{background-position:0 0,0 14%}}
 @keyframes ckRbScan{0%{background-position:0 0,0 120%}100%{background-position:0 0,0 -120%}}
 @media (prefers-reduced-motion:reduce){.ck.sp.sp-rb,.ck.sp.sp-rb *,.ck-rbgrid,.ck-rbscan{animation:none!important}}
-.ck-og{display:block;background:none;position:absolute;top:2px;right:2px;width:32cqw;height:32cqw;overflow:hidden;border-top-right-radius:12px;z-index:6;pointer-events:none}
-.ck-og b{position:absolute;top:7cqw;right:-13cqw;width:50cqw;transform:rotate(45deg);text-align:center;font:900 italic 6.5cqw/1.3 'Barlow Condensed',sans-serif;letter-spacing:.2em;padding-left:.2em;color:var(--b);
-  background:linear-gradient(90deg,var(--rim),color-mix(in srgb,var(--rim) 45%,#fff) 50%,var(--rim));box-shadow:0 1px 0 rgba(255,255,255,.35) inset,0 3px 8px rgba(0,0,0,.55);pointer-events:auto;cursor:help;transition:filter .15s}
-.ck-og b:hover{filter:brightness(1.25)}.ck:has(.ck-og) .ck-x{top:auto;bottom:calc(100% - 34cqw - 22px);right:5px} /* duplicate count moves just below the OG sash */
+.ck-og{position:absolute;left:50%;bottom:-1px;transform:translate(-50%,50%);z-index:9;display:block;background:none;pointer-events:none}
+.ck-og b{display:block;padding:0 3.6cqw 0 4cqw;border-radius:999px;font:900 italic 6.4cqw/1.55 'Barlow Condensed',sans-serif;letter-spacing:.2em;color:var(--b);
+  background:linear-gradient(180deg,color-mix(in srgb,var(--rim) 55%,#fff),var(--rim));box-shadow:0 0 0 1.5px var(--b),0 3px 8px rgba(0,0,0,.55);pointer-events:auto;cursor:help;transition:filter .15s}
+.ck-og b:hover{filter:brightness(1.2)}
 .ck-show.sp-cent,.ck-show.sp-dotd{background:radial-gradient(60% 55% at 50% 45%,rgba(255,70,50,.42),transparent 70%),radial-gradient(80% 60% at 50% 110%,rgba(255,211,107,.18),transparent 60%),#0a0306}.ck-show.sp-tots{background:radial-gradient(60% 55% at 50% 45%,rgba(59,91,255,.45),transparent 70%),#05071a}
 .ck-show-c{width:min(78vw,calc(70vh * .7),420px);filter:drop-shadow(0 30px 50px rgba(0,0,0,.7));animation:ckShowIn .6s cubic-bezier(.2,.9,.3,1.2)}.ck-show-c .ck{width:100%}
 @keyframes ckShowIn{from{transform:scale(.85) translateY(20px);opacity:0}}
@@ -37555,7 +37555,7 @@ async function _ckPackGuard() { if (window._appUpd && window._appUpd.pending) { 
   try { const sd = await dbGet('settings', 'ckSpecials'); if (JSON.stringify((sd && sd.value && sd.value.list) || []) !== window._ckSpSig) window._ckPoolC = null; } catch (e) {} return true; }
 // New-version check. APP_BUILD is stamped on every commit (git pre-commit hook). Any device running a newer build records it in
 // settings/appBuild; a device whose own build is older than that number knows it's out of date. Only a real newer build can trigger it.
-const APP_BUILD = 1795300370;
+const APP_BUILD = 1795300472;
 window._appUpd = window._appUpd || { pending: false };
 async function _appVerCheck() { try { const d = await dbGet('settings', 'appBuild'), live = +((d && d.value) || 0);
     if (APP_BUILD > live) { await dbSet('settings', 'appBuild', { value: APP_BUILD }); return; }
