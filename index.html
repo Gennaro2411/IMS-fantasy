@@ -37585,7 +37585,7 @@ async function _ckPackGuard() { document.querySelectorAll('#toast-stack .toast')
   try { const sd = await dbGet('settings', 'ckSpecials'); if (JSON.stringify((sd && sd.value && sd.value.list) || []) !== window._ckSpSig) window._ckPoolC = null; } catch (e) {} return true; }
 // New-version check. APP_BUILD is stamped on every commit (git pre-commit hook). Any device running a newer build records it in
 // settings/appBuild; a device whose own build is older than that number knows it's out of date. Only a real newer build can trigger it.
-const APP_BUILD = 1795301643;
+const APP_BUILD = 1795301766;
 window._appUpd = window._appUpd || { pending: false };
 async function _appVerCheck() { try { const d = await dbGet('settings', 'appBuild'), live = +((d && d.value) || 0);
     if (APP_BUILD > live) { await dbSet('settings', 'appBuild', { value: APP_BUILD }); return; }
@@ -38657,7 +38657,7 @@ window._trFind = function(q) { const el = document.getElementById('tr-res'); if 
   el.innerHTML = L.length ? L.map(p => `<button onclick="trTo('${esc(p.id)}')">${_wdAv({ name: p.n, photo: p.av }, 28)}<span><b>${esc(p.n)}</b></span></button>`).join('') : '<div class="tr-nr">No player or team called that.</div>'; };
 window.trTo = async function(id) { const D = window._trD; D.to = id; D.get = { ims: 0, cards: {}, packs: {} }; window._trTheirs = null; if (id) { const t = await _betLoadCoins(id).catch(() => null); window._trTheirs = { id, c: t }; } _ckRender(); };
 // Card picker: your collection (give) or theirs (get). Tap to add a copy, tap ✕ to remove.
-window.trPick = async function(side) { const D = window._trD; if (!D || !D.to) return; const pool = await _ckPool(), me = currentUser.userId;
+window.trPick = async function(side) { const D = window._trD; if (!D || !D.to) return; const pool = await _ckPool(), me = currentUser.userId; await _ckOgLoad(); /* fresh Original Card holders */
   const c = side === 'give' ? await _betLoadCoins(me) : ((window._trTheirs && window._trTheirs.id === D.to && window._trTheirs.c) || await _betLoadCoins(D.to)), inv = _ckInv(c), LK = (c.cards && c.cards.lock) || {};
   const who = side === 'give' ? me : D.to, L = Object.entries(inv).map(([k, n]) => ({ c: pool.by[k], k, n: n - (LK[k] ? 1 : 0), lk: !!LK[k], tot: n, og: !!(pool.by[k] && (pool.by[k].sp || pool.by[k].ctc) && _ckOgHeld(k, who)) })).filter(x => x.c && (x.n > 0 || x.lk) && _trCan(x.c)).sort((a, b) => b.c.r - a.c.r); // by rating; locked cards with no spare copy sit in their place, greyed out, and can't be picked
   window._trPk = { side, L, q: '' }; D[side].og = D[side].og || {}; document.getElementById('tr-pk')?.remove(); const o = document.createElement('div'); o.id = 'tr-pk'; o.className = 'ck-ov in ctc-pk'; o.onclick = e => { if (e.target === o) o.remove(); };
@@ -38667,7 +38667,7 @@ window.trPick = async function(side) { const D = window._trD; if (!D || !D.to) r
   document.body.appendChild(o); _trPkDraw(); };
 window._trPkDraw = function() { const P = window._trPk, g = document.getElementById('tr-pk-g'); if (!P || !g) return; const S = window._trD[P.side].cards, q = String(P.q || '').toLowerCase();
   const L = P.L.filter(x => !q || String(x.c.n).toLowerCase().includes(q) || String(x.c.team || '').toLowerCase().includes(q));
-  g.innerHTML = L.map(x => { const s = S[x.k] || 0; if (x.n <= 0) return `<div class="ck-lkw ctc-no"><span class="ck-lk">🔒</span>${_ckCard(x.c, { n: 1 })}<small class="ctc-pkm">🔒 Locked — can't be traded</small></div>`;
+  g.innerHTML = L.map(x => { const s = S[x.k] || 0; if (x.n <= 0) return `<div class="ck-lkw ctc-no"><span class="ck-lk">🔒</span>${_ckCard(x.c, { n: 1, og: x.og })}<small class="ctc-pkm">🔒 Locked — can't be traded</small></div>`;
     const ogIn = x.og && s && (s >= x.tot || window._trD[P.side].og[x.k]);
     return `<div class="ck-lkw${s ? ' tr-sel' : ''}">${x.lk ? '<span class="ck-lk">🔒</span>' : ''}${s ? `<span class="tr-sn">${s}</span><button class="ctc-rm" onclick="trAdd('${esc(x.k)}',-1)">✕</button>` : ''}${_ckCard(x.c, { n: x.n, og: x.og, on: `trAdd('${esc(x.k)}',1)` })}<small class="ctc-pkm">${s ? s + ' of ' + x.n + ' added' : x.n + ' available' + (x.lk ? ' · 🔒 keeps 1' : '')}</small>${x.og && s ? (s >= x.tot ? '<small class="tr-og on">👑 Original Card included (all copies)</small>' : `<button class="tr-og${ogIn ? ' on' : ''}" onclick="trOgT('${esc(x.k)}')">${ogIn ? '✅ Original Card included' : '👑 Include the Original Card'}</button>`) : ''}</div>`; }).join('') || '<div class="ck-empty" style="grid-column:1/-1">No tradeable cards.</div>';
   const n = document.getElementById('tr-pk-n'); if (n) n.textContent = `${L.length} card${L.length === 1 ? '' : 's'} · ${_trN({ cards: S })} / ${TR_MAXC} added`; };
