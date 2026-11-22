@@ -34341,7 +34341,9 @@ window.saveWordleCfg = async function() {
   const ovrTxt = (document.getElementById('wd-cfg-bott') || {}).value || '';
   const bottOverride = {}; ovrTxt.split(/[,\n]/).forEach(p => { const m = p.match(/^\s*S?(\d+)\s*[=:]\s*(.+?)\s*$/i); if (m) bottOverride[m[1]] = m[2]; });
   const ptsCol = ((document.getElementById('wd-cfg-pts') || {}).value || 'wcc_points_effective').trim();
-  await dbSet('settings', 'wordleCfg', { value: { maxGuesses: Math.max(1, Math.min(20, g || 8)), daily, bottOverride, ptsCol } });
+  // First-season fixes: "Geo=3, SomeoneElse=4" — for drivers whose early seasons are stored under an old name.
+  const fsOverride = {}; ((document.getElementById('wd-cfg-fs') || {}).value || '').split(/[,\n]/).forEach(p => { const m = p.match(/^\s*(.+?)\s*[=:]\s*S?(\d+)\s*$/i); if (m) fsOverride[_wdNorm(m[1])] = +m[2]; });
+  await dbSet('settings', 'wordleCfg', { value: { maxGuesses: Math.max(1, Math.min(20, g || 8)), daily, bottOverride, ptsCol, fsOverride } });
   window._wordleCfg = null; customAlert('✔ PaddockDle settings saved.' + (Object.keys(bottOverride).length ? ' Rebuild the data to apply BOTT overrides.' : ''));
   renderGames();
 };
@@ -34410,7 +34412,7 @@ async function _wdLoad() {
     // alias differs from their market name still gets their real points/wins.
     p: WORDLE_BASE[_wdNorm(d.name)] ? bs[0] + Math.round(s.p8 || 0) : (s.p != null ? s.p : 0),
     w: WORDLE_BASE[_wdNorm(d.name)] ? bs[1] + Math.max(s.w8 || 0, liveW[d.id] || 0) : (s.w != null ? s.w : 0) + Math.max(0, (liveW[d.id] || 0) - (s.w8 || 0)), st: (s.st0 || 0) + (liveSt[d.id] || 0), pd: (bs[2] || 0) + Math.max(s.pd8 || 0, livePd[d.id] || 0), pl: _poleFix(d.name, Math.max(s.pl || 0, s2.pl || 0) + Math.max(0, (livePl[d.id] || 0) - Math.max(s.pl8 || 0, s2.pl8 || 0))), th, thw, dh, dw, tn, lr: (() => { let best = null; (_allR || []).forEach(r => { const pd = r && r.positionByDivision && r.positionByDivision[d.id], sd = r && r.raceStatusByDivision && r.raceStatusByDivision[d.id]; const dvs = Object.keys(Object.assign({}, pd || {}, sd || {})).filter(x => !/^A/i.test(x)); if (!dvs.length) return; if (!best || (r.raceNum || 0) > (best.r.raceNum || 0)) best = { r, dv: dvs[0], pos: pd && pd[dvs[0]], st: sd && sd[dvs[0]] }; });
-      if (best) return [Number(window._reserveSeason) || 8, best.r.raceNum || 0, best.r.name, best.dv, best.pos != null ? String(best.pos) : '', best.st ? String(best.st).toUpperCase() : '']; return (s.lr || s2.lr || null); })(), cp: (() => { const c = ((s.cp || []).length >= (s2.cp || []).length ? s.cp : s2.cp) || [], cs = Number(window._reserveSeason) || Number(window.currentSeason) || 8; const out = c.filter(x => x[0] < cs).map(x => x.slice()); const curC = c.filter(x => x[0] === cs); if (!d.isReserve && d.team && !/^reserve$/i.test(d.team)) { /* earlier stints this season (e.g. McLaren before a move to Red Bull), then the current seat */ curC.forEach(x => { if (_wdNorm(x[1]) !== _wdNorm(d.team)) out.push(x.slice()); }); out.push([cs, d.team, d.division || '']); } else curC.forEach(x => out.push(x.slice())); return out; })(), fs: _wdFirstSeason(s, s2), ch: DRIVER_CHAMPS.filter(([, n]) => { const c = _wdNorm(n); return c === k || c === _wdNorm(d.name); }).length, photo: (typeof driverPhoto === 'function') ? driverPhoto(d) : '' };
+      if (best) return [Number(window._reserveSeason) || 8, best.r.raceNum || 0, best.r.name, best.dv, best.pos != null ? String(best.pos) : '', best.st ? String(best.st).toUpperCase() : '']; return (s.lr || s2.lr || null); })(), cp: (() => { const c = ((s.cp || []).length >= (s2.cp || []).length ? s.cp : s2.cp) || [], cs = Number(window._reserveSeason) || Number(window.currentSeason) || 8; const out = c.filter(x => x[0] < cs).map(x => x.slice()); const curC = c.filter(x => x[0] === cs); if (!d.isReserve && d.team && !/^reserve$/i.test(d.team)) { /* earlier stints this season (e.g. McLaren before a move to Red Bull), then the current seat */ curC.forEach(x => { if (_wdNorm(x[1]) !== _wdNorm(d.team)) out.push(x.slice()); }); out.push([cs, d.team, d.division || '']); } else curC.forEach(x => out.push(x.slice())); return out; })(), fs: ((window._wordleCfg || {}).fsOverride || {})[_wdNorm(d.name)] || _wdFirstSeason(s, s2), ch: DRIVER_CHAMPS.filter(([, n]) => { const c = _wdNorm(n); return c === k || c === _wdNorm(d.name); }).length, photo: (typeof driverPhoto === 'function') ? driverPhoto(d) : '' };
   }).sort((a, b) => a.id < b.id ? -1 : 1);
   // Drivers who are only in the .db (not in the fantasy app) — same 25+ starts / champion / BOTT rule as reserves.
   { const curS = Number(window._reserveSeason) || 8, have = new Set();
@@ -34422,7 +34424,7 @@ async function _wdLoad() {
       let photo = ''; try { photo = (window._avatarByName && typeof _normName === 'function' && window._avatarByName[_normName(s.n)]) || ''; } catch (e) {}
       pool.push({ id: 'db:' + k, name: s.n, res: true, dbOnly: true, dv: ld, team: 'Reserve', div: '', nat: _natFix(s.n, s.nat || ''), b: s.b || 0,
         p: bs ? bs[0] + Math.round(s.p8 || 0) : Math.round(s.p || 0), w: bs ? bs[1] + (s.w8 || 0) : (s.w || 0), st: s.st0 || 0, pd: (bs ? bs[2] : 0) + (s.pd8 || 0),
-        th: Object.assign({}, s.th || {}), cp: (s.cp || []).map(x => x.slice()), lr: s.lr || null, dh: Object.assign({}, s.dh || {}), dw: _ptDivWins(s.ws || []), tn: Object.fromEntries(Object.entries(s.tc || {}).map(([k, t]) => [k, t.n])), fs: _wdFirstSeason(s), pl: _poleFix(s.n, s.pl || 0), ch: DRIVER_CHAMPS.filter(([, n]) => _wdNorm(n) === k).length, photo }); }); }
+        th: Object.assign({}, s.th || {}), cp: (s.cp || []).map(x => x.slice()), lr: s.lr || null, dh: Object.assign({}, s.dh || {}), dw: _ptDivWins(s.ws || []), tn: Object.fromEntries(Object.entries(s.tc || {}).map(([k, t]) => [k, t.n])), fs: ((window._wordleCfg || {}).fsOverride || {})[_wdNorm(s.n || '')] || _wdFirstSeason(s), pl: _poleFix(s.n, s.pl || 0), ch: DRIVER_CHAMPS.filter(([, n]) => _wdNorm(n) === k).length, photo }); }); }
   // Admin stat overrides (settings/statOverrides, keyed by normalised name) — applied last so they win everywhere.
   { const so = await dbGet('settings', 'statOverrides').catch(() => null); window._statOv = (so && so.value) || {};
     pool.forEach(p => { p._orig = { p: p.p, w: p.w, pd: p.pd, pl: p.pl, st: p.st, b: p.b, ch: p.ch, nat: p.nat };
@@ -34980,6 +34982,7 @@ function _wdAdminHtml(cfg, ans) {
       <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-top:12px">
         <div class="form-group"><label>Guesses (Daily & Infinite)</label><input id="wd-cfg-max" type="number" min="1" max="20" value="${cfg.maxGuesses}" style="max-width:90px"></div>
         <div class="form-group" style="flex:1;min-width:220px"><label>BOTT overrides (if a computed winner is wrong)</label><input id="wd-cfg-bott" type="text" placeholder="e.g. S3=Ferrari, S7=Williams" value="${esc(Object.entries(cfg.bottOverride || {}).map(([k, v]) => 'S' + k + '=' + v).join(', '))}"></div>
+        <div class="form-group" style="flex:1;min-width:220px"><label>First season fixes (if a driver's debut is wrong)</label><input id="wd-cfg-fs" type="text" placeholder="e.g. Geo=S3, Kat=S2" value="${esc(Object.entries(cfg.fsOverride || {}).map(([k, v]) => k + '=S' + v).join(', '))}"></div>
         <div class="form-group"><label>Points column</label><input id="wd-cfg-pts" type="text" value="${esc(cfg.ptsCol && cfg.ptsCol !== 'col_as' ? cfg.ptsCol : 'wcc_points_effective')}" style="max-width:110px"></div>
         <button class="btn btn-secondary" onclick="saveWordleCfg()">Save</button></div>
       ${ans ? `<div class="text-muted" style="font-size:.72rem;margin-top:6px">Answer (admin only): ${esc(ans.name)}</div>` : ''}
@@ -37601,7 +37604,7 @@ async function _ckPackGuard() { document.querySelectorAll('#toast-stack .toast')
   try { const sd = await dbGet('settings', 'ckSpecials'); if (JSON.stringify((sd && sd.value && sd.value.list) || []) !== window._ckSpSig) window._ckPoolC = null; } catch (e) {} return true; }
 // New-version check. APP_BUILD is stamped on every commit (git pre-commit hook). Any device running a newer build records it in
 // settings/appBuild; a device whose own build is older than that number knows it's out of date. Only a real newer build can trigger it.
-const APP_BUILD = 1795378707;
+const APP_BUILD = 1795378930;
 window._appUpd = window._appUpd || { pending: false };
 async function _appVerCheck() { try { const d = await dbGet('settings', 'appBuild'), live = +((d && d.value) || 0);
     if (APP_BUILD > live) { await dbSet('settings', 'appBuild', { value: APP_BUILD }); return; }
