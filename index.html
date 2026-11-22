@@ -37604,7 +37604,7 @@ async function _ckPackGuard() { document.querySelectorAll('#toast-stack .toast')
   try { const sd = await dbGet('settings', 'ckSpecials'); if (JSON.stringify((sd && sd.value && sd.value.list) || []) !== window._ckSpSig) window._ckPoolC = null; } catch (e) {} return true; }
 // New-version check. APP_BUILD is stamped on every commit (git pre-commit hook). Any device running a newer build records it in
 // settings/appBuild; a device whose own build is older than that number knows it's out of date. Only a real newer build can trigger it.
-const APP_BUILD = 1795380375;
+const APP_BUILD = 1795380393;
 window._appUpd = window._appUpd || { pending: false };
 async function _appVerCheck() { try { const d = await dbGet('settings', 'appBuild'), live = +((d && d.value) || 0);
     if (APP_BUILD > live) { await dbSet('settings', 'appBuild', { value: APP_BUILD }); return; }
@@ -37653,7 +37653,8 @@ async function _ckRunNext() { const R = window._ckRun; if (!R) return; if (R.lef
   R.spent += CK_PACKS[R.id].price; R.done++; _ckRunBar(); _ckRunTick(); }
 function _ckRunTick() { const R = window._ckRun; if (!R) return; clearTimeout(window._ckRunT);
   window._ckRunT = setTimeout(async () => { if (!window._ckRun) return; const pk = document.getElementById('ck-pk'), fl = document.getElementById('ck-flip'), sum = document.querySelector('#ck-stage .ck-sum');
-    if (document.getElementById('ck-cs')) return _ckRunTick(); // walkout playing — wait for it to finish
+    if (document.getElementById('ck-cs')) { R.wo = 1; return _ckRunTick(); } // walkout playing — wait for it to finish
+    if (R.wo) { R.wo = 0; return setTimeout(_ckRunTick, 1500); } // then let the new card sit on screen a moment
     if (!document.getElementById('ck-ov')) return setTimeout(_ckRunNext, 250); // summary closed → next pack
     if (pk && !pk.classList.contains('rip')) { ckRip(); if (!R.show) { setTimeout(() => { const V = window._ckRv; if (window._ckRun && V && !document.querySelector('#ck-stage .ck-sum')) { V.i = V.got.length; _ckSummary(); } _ckRunTick(); }, 650); return; } }
     else if (fl) { if (R.show) ckFlip(); else { const V = window._ckRv; if (V) { V.i = V.got.length; _ckSummary(); } } }
