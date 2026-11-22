@@ -37604,7 +37604,7 @@ async function _ckPackGuard() { document.querySelectorAll('#toast-stack .toast')
   try { const sd = await dbGet('settings', 'ckSpecials'); if (JSON.stringify((sd && sd.value && sd.value.list) || []) !== window._ckSpSig) window._ckPoolC = null; } catch (e) {} return true; }
 // New-version check. APP_BUILD is stamped on every commit (git pre-commit hook). Any device running a newer build records it in
 // settings/appBuild; a device whose own build is older than that number knows it's out of date. Only a real newer build can trigger it.
-const APP_BUILD = 1795378930;
+const APP_BUILD = 1795379998;
 window._appUpd = window._appUpd || { pending: false };
 async function _appVerCheck() { try { const d = await dbGet('settings', 'appBuild'), live = +((d && d.value) || 0);
     if (APP_BUILD > live) { await dbSet('settings', 'appBuild', { value: APP_BUILD }); return; }
@@ -37635,20 +37635,29 @@ window.ckBuy = async function(id, gi) { if (!_ckCan() || window._ckBusy) return;
 // Admin auto-play: runs the normal pack animation hands-free — rips the pack, flips every card, applies keep / sell
 // duplicates / sell all on the summary, then opens the next one. A small ■ Stop bar shows how many are left.
 window.ckAutoPlay = function() { if (!adminLoggedIn) return; const AO = window._ckAO || {}; if (!CK_PACKS[AO.p]) return;
-  window._ckRun = { id: AO.p, left: Math.max(1, Math.min(500, AO.n || 1)), done: 0, mode: AO.m || 'dup', step: 0 }; _ckRunBar(); _ckRunNext(); };
-window.ckAutoStop = function() { window._ckRun = null; clearTimeout(window._ckRunT); document.getElementById('ck-run')?.remove(); showToast('Auto opener stopped.', 'info'); };
+  window._ckRun = { id: AO.p, left: Math.max(1, Math.min(500, AO.n || 1)), done: 0, mode: AO.m || 'dup', step: 0, show: !!AO.show, spent: 0, sold: 0, soldN: 0, kept: [], all: 0 }; _ckRunBar(); _ckRunNext(); };
+window.ckAutoStop = function() { const R = window._ckRun; window._ckRun = null; clearTimeout(window._ckRunT); document.getElementById('ck-run')?.remove(); if (R) _ckRunReport(R, 'Stopped'); };
+// End-of-session report: packs, IM$ spent / made from sales, net, and the best cards kept.
+function _ckRunReport(R, why) { const P = CK_PACKS[R.id], net = R.sold - R.spent, top = R.kept.slice().sort((a, b) => (!!b.sp - !!a.sp) || b.r - a.r), best = top.filter(x => x.sp || x.r >= CK_BIG_MIN).slice(0, 30);
+  document.getElementById('ck-ao')?.remove(); const o = document.createElement('div'); o.id = 'ck-ao'; o.className = 'ck-ov in ctc-pk'; o.onclick = e => { if (e.target === o) o.remove(); };
+  o.innerHTML = `<div class="ctc-pkb"><button class="ma-x" onclick="document.getElementById('ck-ao').remove()">✕</button><div class="ck-k">Auto opener · ${esc(why)}</div><div class="ck-ttl" style="font-size:1.4rem">${R.done} × ${esc(P ? P.n : '')}</div>
+    <div class="bo-hstats" style="margin:10px 0"><div><b>${R.all}</b><small>Cards</small></div><div><b>${R.spent.toLocaleString()}</b><small>Spent IM$</small></div><div><b>${R.sold.toLocaleString()}</b><small>Sold for (${R.soldN})</small></div><div><b style="color:${net >= 0 ? '#4ade80' : '#ff5470'}">${net >= 0 ? '+' : ''}${net.toLocaleString()}</b><small>Net IM$</small></div></div>
+    <div class="ck-k" style="margin:6px 0">Kept ${R.kept.length} card${R.kept.length === 1 ? '' : 's'}${best.length ? ' · best pulls' : ''}</div>
+    ${best.length ? `<div class="ck-grid">${best.map(x => _ckCard(x, { on: `ckDetail('${esc(x.k)}')` })).join('')}</div>` : `<div class="ck-empty">${R.kept.length ? 'No specials or ' + CK_BIG_MIN + '+ cards kept this time.' : 'Nothing kept.'}</div>`}</div>`;
+  document.body.appendChild(o); }
 function _ckRunBar() { const R = window._ckRun; let b = document.getElementById('ck-run'); if (!R) return b && b.remove(); if (!b) { b = document.createElement('div'); b.id = 'ck-run'; document.body.appendChild(b); }
   b.innerHTML = `<span>⚡ ${esc(CK_PACKS[R.id].n)} · ${R.done} opened · ${R.left} to go</span><button onclick="ckAutoStop()">■ Stop</button>`; }
-async function _ckRunNext() { const R = window._ckRun; if (!R) return; if (R.left <= 0) { window._ckRun = null; _ckRunBar(); return showToast(`⚡ Done — opened ${R.done} pack${R.done === 1 ? '' : 's'}.`, 'success'); }
+async function _ckRunNext() { const R = window._ckRun; if (!R) return; if (R.left <= 0) { window._ckRun = null; _ckRunBar(); return _ckRunReport(R, 'Finished'); }
   R.left--; R.step = 0; _ckRunBar(); await ckBuy(R.id);
-  if (!document.getElementById('ck-ov')) { window._ckRun = null; _ckRunBar(); return; } // couldn't open (no IM$ / sold out) — ckBuy already said why
-  R.done++; _ckRunBar(); _ckRunTick(); }
+  if (!document.getElementById('ck-ov')) { window._ckRun = null; _ckRunBar(); return _ckRunReport(R, 'Stopped early'); } // couldn't open (no IM$ / sold out) — ckBuy already said why
+  R.spent += CK_PACKS[R.id].price; R.done++; _ckRunBar(); _ckRunTick(); }
 function _ckRunTick() { const R = window._ckRun; if (!R) return; clearTimeout(window._ckRunT);
   window._ckRunT = setTimeout(async () => { if (!window._ckRun) return; const pk = document.getElementById('ck-pk'), fl = document.getElementById('ck-flip'), sum = document.querySelector('#ck-stage .ck-sum');
     if (!document.getElementById('ck-ov')) return setTimeout(_ckRunNext, 250); // summary closed → next pack
-    if (pk && !pk.classList.contains('rip')) ckRip();
-    else if (fl) ckFlip();
+    if (pk && !pk.classList.contains('rip')) { ckRip(); if (!R.show) { setTimeout(() => { const V = window._ckRv; if (window._ckRun && V && !document.querySelector('#ck-stage .ck-sum')) { V.i = V.got.length; _ckSummary(); } _ckRunTick(); }, 650); return; } }
+    else if (fl) { if (R.show) ckFlip(); else { const V = window._ckRv; if (V) { V.i = V.got.length; _ckSummary(); } } }
     else if (sum && !R.sum) { R.sum = 1; if (R.mode === 'dup') { if (_ckDupIdx(window._ckRv.got).length) ckMark(-2, 1); } else if (R.mode === 'all') ckMark(-1, 1);
+      { const V = window._ckRv; V.got.forEach((c, i) => { R.all++; if (V.sell[i]) { R.sold += _ckSellV(c); R.soldN++; } else R.kept.push(c); }); }
       window._ckSumAt = 0; setTimeout(async () => { await ckDone(); R.sum = 0; _ckRunTick(); }, 600); return; }
     _ckRunTick(); }, R.step++ ? 450 : 700); }
 // Card Index milestones: collect a share of every card in the game for a reward (claimed once each).
@@ -38050,7 +38059,7 @@ async function renderCardsGame(el) {
       <label>Pack<select onchange="window._ckAO.p=this.value">${Object.entries(CK_PACKS).filter(([id, P]) => !P.hid && !P.pick && !P.rw && P.price).map(([id, P]) => `<option value="${id}"${AO.p === id ? ' selected' : ''}>${esc(P.n)} · ${P.price.toLocaleString()} IM$</option>`).join('')}</select></label>
       <label>How many<input type="number" min="1" max="500" value="${AO.n}" oninput="window._ckAO.n=Math.max(1,Math.min(500,parseInt(this.value,10)||1))"></label>
       <label>Cards<select onchange="window._ckAO.m=this.value">${[['keep', 'Keep everything'], ['dup', 'Sell duplicates (keep 1 of each)'], ['all', 'Sell everything']].map(([v, l]) => `<option value="${v}"${AO.m === v ? ' selected' : ''}>${l}</option>`).join('')}</select></label>
-      <button class="hx-btn" onclick="ckAutoPlay()">▶ Watch them open</button><small>Every pack opens with the normal animation, flips each card for you, then keeps / sells and opens the next — tap ■ Stop any time. Locked copies, Moments, CTC cards and Original Cards are never sold. Stops if you run out of IM$ or the pack sells out.</small></div></details>`; }
+      <button class="hx-btn" onclick="ckAutoPlay()">▶ Watch them open</button><label style="flex-direction:row;align-items:center;gap:8px;color:#d4d4e8"><input type="checkbox" ${AO.show ? 'checked' : ''} onchange="window._ckAO.show=this.checked" style="width:18px;height:18px">Show every card one by one</label><small>Every pack opens with the normal animation, flips each card for you, then keeps / sells and opens the next — tap ■ Stop any time. Locked copies, Moments, CTC cards and Original Cards are never sold. Stops if you run out of IM$ or the pack sells out.</small></div></details>`; }
   if (isT) body += `<div class="ck-test"><b>🧪 Test account tools</b><span>Only test accounts see this.</span><div><button class="hx-btn" onclick="ckTestFill()">♾️ Fill now: every card ×10 + 1,000,000,000 IM$</button><button class="hx-btn ghost" onclick="window._ckOgPrev=!window._ckOgPrev;_ckRender()">${window._ckOgPrev ? '✅ OG seal preview ON — tap to turn off' : '👑 Preview the OG seal on every special card'}</button><button class="hx-btn ghost" onclick="ckTestInfT()">${_ckTestInf() ? '✅ Infinite mode ON — tap to turn off' : '♾️ Infinite mode OFF — tap to turn on'}</button></div><small>Infinite mode tops you back up whenever you open IMS Cards, so you never run out of any card or IM$.</small>
     <b style="margin-top:6px">➕ Add packs to My Packs</b><div class="ck-testpk">${Object.keys(CK_PACKS).filter(_ckPkShow).map(id => `<button onclick="ckTestPack('${id}')" style="--c:${CK_PACKS[id].c};--c2:${CK_PACKS[id].c2}"><i></i>${esc(CK_PACKS[id].n)}<em>＋</em></button>`).join('')}</div></div>`;
   if (tab === 'shop') { const TT = _ckTeamSync(pool); _ckRotSync(pool); const pct = (x) => (x * 100 >= 1 ? Math.round(x * 100) : (x * 100).toFixed(2).replace(/0$/, '')) + '%';
