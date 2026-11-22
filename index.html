@@ -4139,6 +4139,8 @@ body.ck-lock>header,body.ck-lock>main,body.ck-lock #mobile-nav{visibility:hidden
 @keyframes ckRbScan{0%{background-position:0 0,0 120%}100%{background-position:0 0,0 -120%}}
 @media (prefers-reduced-motion:reduce){.ck.sp.sp-rb,.ck.sp.sp-rb *,.ck-rbgrid,.ck-rbscan{animation:none!important}}
 .ck-ixpg{display:flex;align-items:center;gap:8px;margin:6px 0 4px;font-size:.85rem;color:#c8c8dc}.ck-ixpg b{color:#fff}.ck-ixpg i{flex:1;height:6px;border-radius:99px;background:linear-gradient(90deg,#E8002D var(--p),rgba(255,255,255,.08) var(--p))}.ck-ixpg small{color:#9a9ab8;font-weight:700}
+.ck-auto{margin:0 0 14px;border:1px solid rgba(232,0,45,.35);border-radius:14px;background:#12111c}.ck-auto summary{list-style:none;cursor:pointer;padding:12px 14px;font-weight:800}.ck-auto summary::-webkit-details-marker{display:none}.ck-auto summary small{color:#9a9ab8;font-weight:600;margin-left:6px}
+.ck-auto-b{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;padding:0 14px 14px;align-items:end}.ck-auto-b label{display:flex;flex-direction:column;gap:4px;font-size:.75rem;color:#9a9ab8;font-weight:700}.ck-auto-b select,.ck-auto-b input{padding:9px;border-radius:10px;background:#0e0c1a;color:#fff;border:1px solid rgba(255,255,255,.14);font:inherit}.ck-auto-b small{grid-column:1/-1;color:#8a8aa8}
 .ck-og{position:absolute;left:50%;bottom:-1px;transform:translate(-50%,50%);z-index:9;display:block;background:none;pointer-events:none}
 .ck-og b{display:block;padding:0 3.6cqw 0 4cqw;border-radius:999px;font:900 italic 6.4cqw/1.55 'Barlow Condensed',sans-serif;letter-spacing:.2em;color:var(--b);
   background:linear-gradient(180deg,color-mix(in srgb,var(--rim) 55%,#fff),var(--rim));box-shadow:0 0 0 1.5px var(--b),0 3px 8px rgba(0,0,0,.55);pointer-events:auto;cursor:help;transition:filter .15s}
@@ -37598,7 +37600,7 @@ async function _ckPackGuard() { document.querySelectorAll('#toast-stack .toast')
   try { const sd = await dbGet('settings', 'ckSpecials'); if (JSON.stringify((sd && sd.value && sd.value.list) || []) !== window._ckSpSig) window._ckPoolC = null; } catch (e) {} return true; }
 // New-version check. APP_BUILD is stamped on every commit (git pre-commit hook). Any device running a newer build records it in
 // settings/appBuild; a device whose own build is older than that number knows it's out of date. Only a real newer build can trigger it.
-const APP_BUILD = 1795357462;
+const APP_BUILD = 1795378325;
 window._appUpd = window._appUpd || { pending: false };
 async function _appVerCheck() { try { const d = await dbGet('settings', 'appBuild'), live = +((d && d.value) || 0);
     if (APP_BUILD > live) { await dbSet('settings', 'appBuild', { value: APP_BUILD }); return; }
@@ -37625,6 +37627,28 @@ window.ckBuy = async function(id, gi) { if (!_ckCan() || window._ckBusy) return;
     await dbSet('coins', currentUser.userId, c); _ckSetPill(c); window._ckFeed = null;
     _ckReveal(id, got, gift);
   } catch (e) { console.error(e); showToast('Couldn\'t open the pack — nothing was charged if your balance is unchanged.', 'error'); }
+  window._ckBusy = false; };
+// Admin auto opener: opens N packs in one go (charged normally), then keeps / sells duplicates / sells everything. One save at the end.
+window.ckAutoOpen = async function() { if (!adminLoggedIn || window._ckBusy) return; const AO = window._ckAO || {}, id = AO.p, P = CK_PACKS[id], N = Math.max(1, Math.min(500, AO.n || 1)), mode = AO.m || 'dup'; if (!P || P.pick) return;
+  window._ckBusy = true; if (!(await _ckPackGuard())) { window._ckBusy = false; return; } showToast(`Opening ${N} × ${P.n}…`, 'info');
+  try { const pool = await _ckPool(), c = await _betLoadCoins(currentUser.userId), K = c.cards = c.cards || { inv: {} }; K.inv = K.inv || {}; K.dex = K.dex || {}; K.pull = K.pull || {}; const LK = K.lock || {};
+    let opened = 0, spent = 0, gain = 0, soldN = 0, why = ''; const all = [], cnt = {};
+    for (let i = 0; i < N; i++) { if ((c.balance || 0) < P.price) { why = 'ran out of IM$'; break; } if (_ckLeft(K, id) <= 0) { why = 'sold out for today'; break; }
+      if (P.teamPack) _ckTeamSync(pool); if (P.rot) _ckRotSync(pool); const got = []; for (let j = 0; j < (P.cnt || CK_N); j++) { const x = _ckRoll(P.slots ? P.slots[j] : id, pool); if (x) got.push(x); } if (got.length < (P.cnt || CK_N)) { why = 'not enough cards in the pool'; break; }
+      c.balance -= P.price; spent += P.price; opened++; K.packs = (K.packs || 0) + 1; if (!K.day || K.day.d !== _ckDay()) K.day = { d: _ckDay() }; K.day[id] = (K.day[id] || 0) + 1; K.spent = (K.spent || 0) + P.price; K.log = (K.log || []).concat([{ t: Date.now(), p: id, f: P.price }]).slice(-300);
+      got.forEach(x => { K.inv[x.k] = (K.inv[x.k] || 0) + 1; K.dex[x.k] = 1; K.pull[x.k] = (K.pull[x.k] || 0) + 1; all.push(x); cnt[x.k] = (cnt[x.k] || 0) + 1; });
+      const big = got.filter(x => x.r >= CK_FEED_MIN || x.sp); if (big.length) c.cardPulls = (c.cardPulls || []).concat(big.map(x => ({ k: x.k, n: x.n, r: x.r, t: Date.now(), p: id, by: _wdMe().name }))).slice(-40); }
+    if (mode !== 'keep') Object.keys(cnt).forEach(k => { const card = pool.by[k]; if (!card || _ckNoSell(card) || card.sp) return; const have = K.inv[k] || 0, keep = Math.max(mode === 'dup' ? 1 : 0, _ckKeepN(LK, k)), s = Math.min(cnt[k], Math.max(0, have - keep)); if (s <= 0) return;
+      K.inv[k] = have - s; if (!K.inv[k]) delete K.inv[k]; gain += _ckSellV(card) * s; soldN += s; });
+    c.balance += gain; K.sold = (K.sold || 0) + gain; K.soldN = (K.soldN || 0) + soldN;
+    await dbSet('coins', currentUser.userId, c); _ckSetPill(c); window._ckFeed = null; _ckOgClaim(all, 'pack');
+    const top = all.filter(x => x.sp || x.r >= CK_BIG_MIN).sort((a, b) => (!!b.sp - !!a.sp) || b.r - a.r).slice(0, 24);
+    document.getElementById('ck-ao')?.remove(); const o = document.createElement('div'); o.id = 'ck-ao'; o.className = 'ck-ov in ctc-pk'; o.onclick = e => { if (e.target === o) o.remove(); };
+    o.innerHTML = `<div class="ctc-pkb"><button class="ma-x" onclick="document.getElementById('ck-ao').remove()">✕</button><div class="ck-k">Auto opener</div><div class="ck-ttl" style="font-size:1.4rem">${opened} × ${esc(P.n)}</div>
+      <p style="margin:6px 0 12px;opacity:.85">${all.length} cards · spent <b>${spent.toLocaleString()}</b> IM$${soldN ? ` · sold ${soldN} for <b>${gain.toLocaleString()}</b> IM$` : ''} · net <b style="color:${gain - spent >= 0 ? '#4ade80' : '#ff5470'}">${gain - spent >= 0 ? '+' : ''}${(gain - spent).toLocaleString()}</b>${why ? `<br><small>Stopped early: ${why}.</small>` : ''}</p>
+      ${top.length ? `<div class="ck-k" style="margin-bottom:6px">Best pulls</div><div class="ck-grid">${top.map(x => _ckCard(x, { on: `ckDetail('${esc(x.k)}')` })).join('')}</div>` : '<div class="ck-empty">No specials or 88+ cards this time.</div>'}</div>`;
+    document.body.appendChild(o); _ckRender();
+  } catch (e) { console.error(e); showToast('Auto opener failed — check your balance.', 'error'); }
   window._ckBusy = false; };
 // Card Index milestones: collect a share of every card in the game for a reward (claimed once each).
 const CK_IXM = [[10, { ims: 500, packs: { gold: 1 } }], [25, { ims: 2000, packs: { supersonic: 1, pickS: 1 } }], [50, { ims: 6000, packs: { p83: 1, pickG: 1 } }], [75, { ims: 15000, packs: { jumbo: 1, spcl: 1 } }], [90, { ims: 35000, packs: { chpk: 1, pickSp: 1 } }], [100, { ims: 100000, packs: { jumbo: 2, chpk: 1, pickSp: 2 } }]];
@@ -38020,6 +38044,12 @@ async function renderCardsGame(el) {
     <div class="wd-modes">${[['shop', '🛒', 'SHOP'], ['packs', '🎁', `MY PACKS${(K.gifts || []).length ? '<em class="ck-tb">' + K.gifts.length + '</em>' : ''}`], ['col', '🗂️', `MY CARDS${ownN ? '<em class="ck-tb">' + ownN + '</em>' : ''}`], ['ctc', '🧩', 'CTC'], ['trade', '🤝', `TRADES${window._trInN ? '<em class="ck-tb hot">' + window._trInN + '</em>' : ''}`], ['rich', '📖', 'COMPLETION'], ['feed', '🔥', 'BIG PULLS'], ['all', '📖', 'CARD INDEX']].map(([m, i, l]) => `<button class="${tab === m ? 'on' : ''}" onclick="ckTab('${m}')"><span>${i}</span><b class="ck-tl">${l}</b><b class="ck-ts">${({ shop: 'Shop', packs: 'Packs', col: 'Cards', ctc: 'CTC', trade: 'Trades', rich: 'Worth', feed: 'Pulls', all: 'Index' })[m] || l}</b>${({ packs: (K.gifts || []).length, col: ownN, trade: window._trInN })[m] ? `<i class="ck-tbd${m === 'trade' ? ' hot' : ''}">${({ packs: (K.gifts || []).length, col: ownN, trade: window._trInN })[m]}</i>` : ''}</button>`).join('')}</div>`;
   setTimeout(() => { const b = document.querySelector('.ckx .wd-modes button.on'); if (b && b.parentElement.scrollWidth > b.parentElement.clientWidth) b.parentElement.scrollLeft = b.offsetLeft - (b.parentElement.clientWidth - b.offsetWidth) / 2; }, 0); // mobile: keep the open tab in view
   if (!me) body += '<div class="alert alert-warning">Log in to your team to buy packs.</div>';
+  if (typeof adminLoggedIn !== 'undefined' && adminLoggedIn && tab === 'shop') { const AO = window._ckAO || (window._ckAO = { p: 'gold', n: 10, m: 'dup' });
+    body += `<details class="ck-auto"${AO.open ? ' open' : ''} ontoggle="window._ckAO.open=this.open"><summary>⚡ Auto pack opener <small>admin only</small></summary><div class="ck-auto-b">
+      <label>Pack<select onchange="window._ckAO.p=this.value">${Object.entries(CK_PACKS).filter(([id, P]) => !P.hid && !P.pick && !P.rw && P.price).map(([id, P]) => `<option value="${id}"${AO.p === id ? ' selected' : ''}>${esc(P.n)} · ${P.price.toLocaleString()} IM$</option>`).join('')}</select></label>
+      <label>How many<input type="number" min="1" max="500" value="${AO.n}" oninput="window._ckAO.n=Math.max(1,Math.min(500,parseInt(this.value,10)||1))"></label>
+      <label>Cards<select onchange="window._ckAO.m=this.value">${[['keep', 'Keep everything'], ['dup', 'Sell duplicates (keep 1 of each)'], ['all', 'Sell everything']].map(([v, l]) => `<option value="${v}"${AO.m === v ? ' selected' : ''}>${l}</option>`).join('')}</select></label>
+      <button class="hx-btn" onclick="ckAutoOpen()">Open</button><small>Specials, Moments, CTC cards, locked copies and Original Cards are never sold. Stops early if you run out of IM$ or the pack sells out.</small></div></details>`; }
   if (isT) body += `<div class="ck-test"><b>🧪 Test account tools</b><span>Only test accounts see this.</span><div><button class="hx-btn" onclick="ckTestFill()">♾️ Fill now: every card ×10 + 1,000,000,000 IM$</button><button class="hx-btn ghost" onclick="window._ckOgPrev=!window._ckOgPrev;_ckRender()">${window._ckOgPrev ? '✅ OG seal preview ON — tap to turn off' : '👑 Preview the OG seal on every special card'}</button><button class="hx-btn ghost" onclick="ckTestInfT()">${_ckTestInf() ? '✅ Infinite mode ON — tap to turn off' : '♾️ Infinite mode OFF — tap to turn on'}</button></div><small>Infinite mode tops you back up whenever you open IMS Cards, so you never run out of any card or IM$.</small>
     <b style="margin-top:6px">➕ Add packs to My Packs</b><div class="ck-testpk">${Object.keys(CK_PACKS).filter(_ckPkShow).map(id => `<button onclick="ckTestPack('${id}')" style="--c:${CK_PACKS[id].c};--c2:${CK_PACKS[id].c2}"><i></i>${esc(CK_PACKS[id].n)}<em>＋</em></button>`).join('')}</div></div>`;
   if (tab === 'shop') { const TT = _ckTeamSync(pool); _ckRotSync(pool); const pct = (x) => (x * 100 >= 1 ? Math.round(x * 100) : (x * 100).toFixed(2).replace(/0$/, '')) + '%';
