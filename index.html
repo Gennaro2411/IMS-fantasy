@@ -31429,7 +31429,12 @@ function _betOutcome(b, races) {
     const rs = (b.specLegs || []).map(l => _betOutcome({ raceName: b.raceName, div: l.div, market: 'top5', sel: [l.id] }, races));
     if (rs.includes('lost')) return 'lost'; if (rs.includes(null) || !rs.length) return null; if (rs.includes('void')) return 'void'; return 'won'; }
   // If several race docs share the name (re-imports / old copies), use the most complete, most recently updated one — not just the first.
-  const race = races.filter(r => (r.name || '').toLowerCase().trim() === (b.raceName || '').toLowerCase().trim() && (b.div === 'BOTT' ? r.constructorPoints : r.positionByDivision))
+  // Race names are matched loosely: 'Vegas', 'Las Vegas', 'Las Vegas GP' and 'Las Vegas Grand Prix' are the same round.
+  const _nm = x => String(x || '').toLowerCase().replace(/grand prix|\bgp\b/g, '').replace(/[^a-z0-9]/g, ''), bn = _nm(b.raceName);
+  const _same = r => { const rn = _nm(r.name); return !!bn && !!rn && (rn === bn || (Math.min(rn.length, bn.length) >= 4 && (rn.includes(bn) || bn.includes(rn)))); };
+  let cand = races.filter(r => (r.name || '').toLowerCase().trim() === (b.raceName || '').toLowerCase().trim() && (b.div === 'BOTT' ? r.constructorPoints : r.positionByDivision));
+  if (!cand.length) cand = races.filter(r => _same(r) && (b.div === 'BOTT' ? r.constructorPoints : r.positionByDivision));
+  const race = cand
     .sort((x, y) => ((b.div === 'BOTT' ? _raceAllDivsIn(y) : 0) - (b.div === 'BOTT' ? _raceAllDivsIn(x) : 0)) || ((y.updatedAt || y.createdAt || 0) - (x.updatedAt || x.createdAt || 0)) || ((y.raceNum || 0) - (x.raceNum || 0)))[0];
   if (!race) return null;
   if (b.div === 'BOTT' && !_raceAllDivsIn(race)) return null; // still waiting on later divisions — don't settle on partial BOTT points
@@ -37593,7 +37598,7 @@ async function _ckPackGuard() { document.querySelectorAll('#toast-stack .toast')
   try { const sd = await dbGet('settings', 'ckSpecials'); if (JSON.stringify((sd && sd.value && sd.value.list) || []) !== window._ckSpSig) window._ckPoolC = null; } catch (e) {} return true; }
 // New-version check. APP_BUILD is stamped on every commit (git pre-commit hook). Any device running a newer build records it in
 // settings/appBuild; a device whose own build is older than that number knows it's out of date. Only a real newer build can trigger it.
-const APP_BUILD = 1795304577;
+const APP_BUILD = 1795357462;
 window._appUpd = window._appUpd || { pending: false };
 async function _appVerCheck() { try { const d = await dbGet('settings', 'appBuild'), live = +((d && d.value) || 0);
     if (APP_BUILD > live) { await dbSet('settings', 'appBuild', { value: APP_BUILD }); return; }
