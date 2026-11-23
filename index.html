@@ -37616,7 +37616,7 @@ async function _ckPackGuard() { document.querySelectorAll('#toast-stack .toast')
   try { const sd = await dbGet('settings', 'ckSpecials'); if (JSON.stringify((sd && sd.value && sd.value.list) || []) !== window._ckSpSig) window._ckPoolC = null; } catch (e) {} return true; }
 // New-version check. APP_BUILD is stamped on every commit (git pre-commit hook). Any device running a newer build records it in
 // settings/appBuild; a device whose own build is older than that number knows it's out of date. Only a real newer build can trigger it.
-const APP_BUILD = 1795447740;
+const APP_BUILD = 1795448150;
 window._appUpd = window._appUpd || { pending: false };
 async function _appVerCheck() { try { const d = await dbGet('settings', 'appBuild'), live = +((d && d.value) || 0);
     if (APP_BUILD > live) { await dbSet('settings', 'appBuild', { value: APP_BUILD }); return; }
@@ -38309,35 +38309,56 @@ function _ctcIdea(diff, pool) { const D = { easy: { s: [3, 5], lo: 0, hi: 64, nr
     if (!_ctcEval(sq, ch).ok) continue; // the squad it was built from must complete it
     return { ch, sq: sq.slice().sort((a, b) => b.r - a.r), val, diff }; }
   return null; }
-// ---- Driver-themed CTC: built around one driver card (often the reward). The squad is drawn from that driver's world —
-// countrymen, their team, their division — and the bar scales with the card's rating: a 95 asks a lot more than a 72.
-function _ctcIdeaDrv(pool, key) { const T0 = pool.by[key]; if (!T0) return null; const D0 = pool.by[T0.base || T0.k] || T0, R = T0.r;
+// ---- Driver-themed CTC: everything is about ONE driver. Each generation picks a few "angles" from their career —
+// countrymen, current team, past teams (from their history), division, their podium / win / points tallies, their rating —
+// and builds a squad + requirements around those. Successive generations (e.g. parts of a group) use different angles.
+function _ctcIdeaDrv(pool, key) { const T0 = pool.by[key]; if (!T0) return null; const D0 = pool.by[T0.base || T0.k] || T0, R = T0.r, nm = String(D0.n || T0.n);
   const ri = (a, b) => a + Math.floor(Math.random() * (b - a + 1)), rnd = A => A[Math.floor(Math.random() * A.length)], shuf = A => { A = A.slice(); for (let i = A.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [A[i], A[j]] = [A[j], A[i]]; } return A; };
-  const n = R >= 90 ? 10 : R >= 85 ? 9 : R >= 80 ? 8 : R >= 72 ? 7 : R >= 64 ? 6 : 5, slack = R >= 88 ? 0 : R >= 78 ? 1 : 2, lo = Math.max(40, R - (R >= 88 ? 8 : 14));
+  const n = R >= 90 ? 10 : R >= 85 ? 9 : R >= 80 ? 8 : R >= 72 ? 7 : R >= 64 ? 6 : 5, slack = R >= 88 ? 0 : R >= 78 ? 1 : 2, lo = Math.max(40, R - (R >= 88 ? 10 : 16));
   const base = _ctcPackable(pool, R >= 85).filter(c => c.r >= lo && c.k !== D0.k); if (base.length < n * 2) return null;
-  const tm = _ctcTm(D0), nat = D0.nat, dv = D0.div, own = D0 && !D0.sp && _ctcPackable(pool).some(c => c.k === D0.k);
-  for (let at = 0; at < 120; at++) { const sq = [], add = c => { if (c && sq.length < n && !sq.some(x => _ctcBk(x) === _ctcBk(c))) sq.push(c); };
-    if (own) add(D0); // the driver's own normal card is part of their tribute
-    const mates = shuf(base.filter(c => c.nat === nat)), team = shuf(base.filter(c => _ctcTm(c) === tm)), divm = shuf(base.filter(c => c.div === dv));
-    mates.slice(0, Math.min(mates.length, Math.ceil(n * (R >= 85 ? .5 : .4)))).forEach(add); team.slice(0, Math.min(team.length, R >= 80 ? 3 : 2)).forEach(add);
-    const near = base.filter(c => Math.abs(c.r - R) <= 10); let g = 0; while (sq.length < n && g++ < 500) add(Math.random() < .6 && divm.length ? rnd(divm) : rnd(near.length ? near : base));
+  const tm = _ctcTm(D0), nat = D0.nat, dv = D0.div, own = !D0.sp && _ctcPackable(pool).some(c => c.k === D0.k);
+  // their past teams, from their season-by-season history (full-time stints), newest first, without the current one
+  const S = ((window._wordleData || {}).stats || {})[D0.k] || {}, past = []; (S.cp || []).slice().reverse().forEach(x => { const t = x && x[1]; if (t && !/^reserve$/i.test(t) && String(t).trim().toLowerCase() !== tm && !past.some(p => p.toLowerCase() === String(t).toLowerCase()) && base.some(c => _ctcTm(c) === String(t).trim().toLowerCase())) past.push(String(t)); });
+  const ANG = ['nation', 'team', 'div', 'rating', 'self']; if (past.length) ANG.push('past', 'past'); if (D0.pd >= 3) ANG.push('pods'); if (D0.w >= 1) ANG.push('wins'); if (D0.p >= 200) ANG.push('pts'); if (D0.ch > 0) ANG.push('titles');
+  const last = window._ctcDrvLast && window._ctcDrvLast.k === D0.k ? window._ctcDrvLast.a : [];
+  for (let at = 0; at < 160; at++) {
+    // 3 angles (4 for 85+), preferring ones the last generation for this driver didn't use
+    const fresh = shuf([...new Set(ANG)]).sort((x, y) => last.includes(x) - last.includes(y)), A = fresh.slice(0, R >= 85 ? 4 : 3); const has = x => A.includes(x);
+    const pastT = has('past') ? shuf(past).slice(0, Math.min(past.length, R >= 85 ? 2 : 1)) : [];
+    const sq = [], add = c => { if (c && sq.length < n && !sq.some(x => _ctcBk(x) === _ctcBk(c))) sq.push(c); };
+    if (has('self') && own) add(D0);
+    if (has('nation')) shuf(base.filter(c => c.nat === nat)).slice(0, Math.ceil(n * .4)).forEach(add);
+    if (has('team')) shuf(base.filter(c => _ctcTm(c) === tm)).slice(0, R >= 80 ? 3 : 2).forEach(add);
+    pastT.forEach(t => shuf(base.filter(c => _ctcTm(c) === t.trim().toLowerCase())).slice(0, 2).forEach(add));
+    const statPick = has('pods') ? (c => c.pd) : has('wins') ? (c => c.w) : has('pts') ? (c => c.p) : has('titles') ? (c => c.ch) : null;
+    if (statPick) base.filter(c => statPick(c) > 0).sort((x, y) => statPick(y) - statPick(x)).slice(0, 40).sort(() => Math.random() - .5).slice(0, Math.ceil(n / 2)).forEach(add);
+    const divm = base.filter(c => c.div === dv), near = base.filter(c => Math.abs(c.r - R) <= 6);
+    let g = 0; while (sq.length < n && g++ < 600) add(has('div') && divm.length && Math.random() < .7 ? rnd(divm) : has('rating') && near.length && Math.random() < .7 ? rnd(near) : rnd(base));
     if (sq.length < n) continue;
-    const chem = _ctcChem(sq), avg = sq.reduce((a, c) => a + c.r, 0) / n, reqs = [];
-    if (own) reqs.push({ ty: 'card', v: D0.k, l: _ctcCardL(D0), op: 'min', n: 1 });
-    const cN = sq.filter(c => c.nat === nat).length; if (nat && cN >= 2) reqs.push({ ty: 'nat', v: nat, op: 'min', n: cN });
-    const cT = sq.filter(c => _ctcTm(c) === tm).length; if (tm && cT >= 1) reqs.push({ ty: 'team', v: D0.team, op: 'min', n: cT });
-    const cD = sq.filter(c => c.div === dv).length; if (dv && cD >= 2) reqs.push({ ty: 'div', v: dv, op: 'min', n: cD });
+    const chem = _ctcChem(sq), avg = sq.reduce((a, c) => a + c.r, 0) / n, reqs = [], sum = f => sq.reduce((a, c) => a + (f(c) || 0), 0);
+    if (has('self') && own) reqs.push({ ty: 'card', v: D0.k, l: _ctcCardL(D0), op: 'min', n: 1 });
+    if (has('nation')) { const k = sq.filter(c => c.nat === nat).length; if (k >= 2) reqs.push({ ty: 'nat', v: nat, op: 'min', n: k }); }
+    if (has('team')) { const k = sq.filter(c => _ctcTm(c) === tm).length; if (k >= 1) reqs.push({ ty: 'team', v: D0.team, op: 'min', n: k }); }
+    pastT.forEach(t => { const k = sq.filter(c => _ctcTm(c) === t.trim().toLowerCase()).length; if (k >= 1) reqs.push({ ty: 'team', v: t, op: 'min', n: k }); });
+    if (has('div')) { const k = sq.filter(c => c.div === dv).length; if (k >= 2) reqs.push({ ty: 'div', v: dv, op: 'min', n: k }); }
+    if (has('rating')) { const k = sq.filter(c => c.r >= R - 3).length; if (k >= 1) reqs.push({ ty: 'minr', v: R - 3, op: 'min', n: k }); }
+    // career tallies: "at least as many podiums as {driver}" — if the squad can't reach their number, it uses what the squad can
+    if (has('pods')) reqs.push({ ty: 'pods', op: 'min', n: Math.min(D0.pd, sum(c => c.pd)) });
+    if (has('wins')) reqs.push({ ty: 'wins', op: 'min', n: Math.min(D0.w, sum(c => c.w)) });
+    if (has('pts')) reqs.push({ ty: 'pts', op: 'min', n: Math.min(D0.p, sum(c => c.p)) });
+    if (has('titles')) { const k = sq.filter(c => c.ch > 0).length; if (k >= 1) reqs.push({ ty: 'champ', op: 'min', n: k }); }
+    // difficulty from the rating
     if (Math.floor(avg) - slack >= 45) reqs.push({ ty: 'avg', op: 'min', n: Math.floor(avg) - slack });
-    const cR = sq.filter(c => c.r >= R - 3).length; if (cR >= 1 && cR < n && R >= 70) reqs.push({ ty: 'minr', v: R - 3, op: 'min', n: cR }); // cards close to the driver's own rating
-    if (Math.floor(chem.tot * (R >= 85 ? 1 : .85)) >= 3) reqs.push({ ty: 'chem', op: 'min', n: Math.floor(chem.tot * (R >= 85 ? 1 : .85)) });
-    if (D0.ch > 0) { const cC = sq.filter(c => c.ch > 0).length; if (cC >= 1) reqs.push({ ty: 'champ', op: 'min', n: cC }); } // champions get champions
-    else if (D0.w > 0) { const cW = sq.filter(c => c.w > 0).length; if (cW >= 1) reqs.push({ ty: 'win', op: 'min', n: cW }); }
-    if (R >= 88) { const mn = Math.min(...chem.per); if (mn >= 1) reqs.push({ ty: 'each', op: 'min', n: mn }); }
-    if (reqs.length < 3) continue;
-    const val = sq.reduce((a, c) => a + _ckSellV(c), 0), nm = String(D0.n || T0.n);
-    const ch = { name: rnd([`${nm} Tribute`, `The ${nm} Challenge`, `In ${nm}'s Footsteps`, `${nm}'s World`, `Built for ${nm}`]), desc: `A squad built around ${nm} (${R}): ${nat ? 'their countrymen' : 'their rivals'}${tm ? ', ' + D0.team : ''}${dv ? ', ' + dv : ''} — the higher their rating, the tougher it gets. ${n} cards, ${reqs.length} requirements.`,
-      slots: n, reqs, rew: { ims: Math.max(300, Math.round(val * (R >= 90 ? 2 : R >= 80 ? 1.6 : 1.3) / 50) * 50), packs: R >= 85 ? { supersonic: R >= 90 ? 3 : 2 } : R >= 75 ? { supersonic: 1 } : { gold: 1 }, cards: T0.sp || T0.ctc ? [T0.k] : [] } };
+    if (R >= 75 && Math.floor(chem.tot * (R >= 85 ? 1 : .8)) >= 3) reqs.push({ ty: 'chem', op: 'min', n: Math.floor(chem.tot * (R >= 85 ? 1 : .8)) });
+    if (R >= 90) { const mn = Math.min(...chem.per); if (mn >= 1) reqs.push({ ty: 'each', op: 'min', n: mn }); }
+    if (reqs.filter(r => !['avg', 'chem', 'each'].includes(r.ty)).length < 2) continue;
+    const val = sq.reduce((a, c) => a + _ckSellV(c), 0), pt = pastT[0];
+    const name = has('pods') ? rnd([`${nm}'s Podiums`, `${nm}: Podium Haul`]) : has('wins') ? rnd([`${nm}'s Wins`, `Winning Like ${nm}`]) : pt ? rnd([`${nm}: The ${pt} Years`, `${nm} Back at ${pt}`]) : has('nation') ? rnd([`${nm} & Co.`, `${nm}'s Countrymen`]) : has('team') ? `${nm} at ${D0.team}` : has('pts') ? `${nm}'s Points` : rnd([`${nm} Tribute`, `In ${nm}'s Footsteps`, `Built for ${nm}`]);
+    const about = [has('nation') && nat ? nat + ' drivers' : '', has('team') ? D0.team : '', pastT.length ? 'past team' + (pastT.length > 1 ? 's ' : ' ') + pastT.join(' & ') : '', has('div') ? dv : '', has('pods') ? 'his ' + D0.pd + ' podiums' : '', has('wins') ? 'his ' + D0.w + ' wins' : '', has('pts') ? 'his career points' : '', has('titles') ? 'champions' : '', has('rating') ? 'cards near his ' + R : ''].filter(Boolean);
+    const ch = { name, desc: `All about ${nm}: ${about.join(', ')}. ${n} cards, ${reqs.length} requirements.`, slots: n, reqs,
+      rew: { ims: Math.max(300, Math.round(val * (R >= 90 ? 2 : R >= 80 ? 1.6 : 1.3) / 50) * 50), packs: R >= 85 ? { supersonic: R >= 90 ? 3 : 2 } : R >= 75 ? { supersonic: 1 } : { gold: 1 }, cards: T0.sp || T0.ctc ? [T0.k] : [] } };
     if (!_ctcEval(sq, ch).ok) continue;
+    window._ctcDrvLast = { k: D0.k, a: A };
     return { ch, sq: sq.slice().sort((a, b) => b.r - a.r), val, diff: 'drv' }; }
   return null; }
 // ---- Data ----
