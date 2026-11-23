@@ -37631,7 +37631,7 @@ async function _ckPackGuard() { document.querySelectorAll('#toast-stack .toast')
   try { const sd = await dbGet('settings', 'ckSpecials'); if (JSON.stringify((sd && sd.value && sd.value.list) || []) !== window._ckSpSig) window._ckPoolC = null; } catch (e) {} return true; }
 // New-version check. APP_BUILD is stamped on every commit (git pre-commit hook). Any device running a newer build records it in
 // settings/appBuild; a device whose own build is older than that number knows it's out of date. Only a real newer build can trigger it.
-const APP_BUILD = 1795449941;
+const APP_BUILD = 1795450575;
 window._appUpd = window._appUpd || { pending: false };
 async function _appVerCheck() { try { const d = await dbGet('settings', 'appBuild'), live = +((d && d.value) || 0);
     if (APP_BUILD > live) { await dbSet('settings', 'appBuild', { value: APP_BUILD }); return; }
@@ -37681,10 +37681,10 @@ function _ckAutoSellIdx(got, AC) { const dup = new Set(_ckDupIdx(got)), seen = n
 // duplicates / sell all on the summary, then opens the next one. A small ■ Stop bar shows how many are left.
 window.ckAutoStop = function() { const R = window._ckRun; window._ckRun = null; clearTimeout(window._ckRunT); document.getElementById('ck-run')?.remove(); if (R) _ckRunReport(R, 'Stopped'); };
 // End-of-session report: packs, IM$ spent / made from sales, net, and the best cards kept.
-function _ckRunReport(R, why) { const P = CK_PACKS[R.id], net = R.sold - R.spent, top = R.kept.slice().sort((a, b) => (!!b.sp - !!a.sp) || b.r - a.r), best = top.filter(x => x.sp || x.r >= CK_BIG_MIN).slice(0, 30);
+function _ckRunReport(R, why) { const P = CK_PACKS[R.id], net = (R.val || 0) - R.spent, /* net = value of every card found minus what the packs cost */ top = R.kept.slice().sort((a, b) => (!!b.sp - !!a.sp) || b.r - a.r), best = top.filter(x => x.sp || x.r >= CK_BIG_MIN).slice(0, 30);
   document.getElementById('ck-ao')?.remove(); const o = document.createElement('div'); o.id = 'ck-ao'; o.className = 'ck-ov in ctc-pk'; o.onclick = e => { if (e.target === o) o.remove(); };
   o.innerHTML = `<div class="ctc-pkb"><button class="ma-x" onclick="document.getElementById('ck-ao').remove()">✕</button><div class="ck-k">Auto opener · ${esc(why)}</div><div class="ck-ttl" style="font-size:1.4rem">${R.done} × ${esc(P ? P.n : '')}</div>
-    <div class="bo-hstats" style="margin:10px 0"><div><b>${R.all}</b><small>Cards</small></div><div><b>${R.spent.toLocaleString()}</b><small>Spent IM$</small></div><div><b>${R.sold.toLocaleString()}</b><small>Sold for (${R.soldN})</small></div><div><b style="color:${net >= 0 ? '#4ade80' : '#ff5470'}">${net >= 0 ? '+' : ''}${net.toLocaleString()}</b><small>Net IM$</small></div></div>
+    <div class="bo-hstats" style="margin:10px 0"><div><b>${R.all}</b><small>Cards</small></div><div><b>${R.spent.toLocaleString()}</b><small>Spent IM$</small></div><div><b>${(R.val || 0).toLocaleString()}</b><small>Cards worth</small></div><div><b style="color:${net >= 0 ? '#4ade80' : '#ff5470'}">${net >= 0 ? '+' : ''}${net.toLocaleString()}</b><small>Net value</small></div><div><b>${R.sold.toLocaleString()}</b><small>Sold for (${R.soldN} cards)</small></div></div>
     <div class="ck-k" style="margin:6px 0">Kept ${R.kept.length} card${R.kept.length === 1 ? '' : 's'}${best.length ? ' · best pulls' : ''}</div>
     ${best.length ? `<div class="ck-grid">${best.map(x => _ckCard(x, { on: `ckDetail('${esc(x.k)}')` })).join('')}</div>` : `<div class="ck-empty">${R.kept.length ? 'No specials or ' + CK_BIG_MIN + '+ cards kept this time.' : 'Nothing kept.'}</div>`}</div>`;
   document.body.appendChild(o); }
@@ -37702,7 +37702,7 @@ function _ckRunTick() { const R = window._ckRun; if (!R) return; clearTimeout(wi
     if (pk && !pk.classList.contains('rip')) { ckRip(); if (!R.show) { setTimeout(() => { const V = window._ckRv; if (window._ckRun && V && !document.querySelector('#ck-stage .ck-sum')) { V.i = V.got.length; _ckSummary(); } _ckRunTick(); }, 650); return; } }
     else if (fl) { if (R.show) ckFlip(); else { const V = window._ckRv; if (V) { V.i = V.got.length; _ckSummary(); } } }
     else if (sum && !R.sum) { R.sum = 1; { const V = window._ckRv, AC = R.cfg || { m: R.mode || 'dup' }; V.sell = {}; _ckAutoSellIdx(V.got, AC).forEach(i => V.sell[i] = 1); _ckSummary(); }
-      { const V = window._ckRv; V.got.forEach((c, i) => { R.all++; if (V.sell[i]) { R.sold += _ckSellV(c); R.soldN++; } else R.kept.push(c); }); }
+      { const V = window._ckRv; V.got.forEach((c, i) => { R.all++; R.val = (R.val || 0) + _ckSellV(c); if (V.sell[i]) { R.sold += _ckSellV(c); R.soldN++; } else R.kept.push(c); }); }
       window._ckSumAt = 0; setTimeout(async () => { await ckDone(); R.sum = 0; _ckRunTick(); }, 600); return; }
     _ckRunTick(); }, R.step++ ? 450 : 700); }
 // Card Index milestones: collect a share of every card in the game for a reward (claimed once each).
