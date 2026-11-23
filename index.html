@@ -37616,7 +37616,7 @@ async function _ckPackGuard() { document.querySelectorAll('#toast-stack .toast')
   try { const sd = await dbGet('settings', 'ckSpecials'); if (JSON.stringify((sd && sd.value && sd.value.list) || []) !== window._ckSpSig) window._ckPoolC = null; } catch (e) {} return true; }
 // New-version check. APP_BUILD is stamped on every commit (git pre-commit hook). Any device running a newer build records it in
 // settings/appBuild; a device whose own build is older than that number knows it's out of date. Only a real newer build can trigger it.
-const APP_BUILD = 1795448684;
+const APP_BUILD = 1795448813;
 window._appUpd = window._appUpd || { pending: false };
 async function _appVerCheck() { try { const d = await dbGet('settings', 'appBuild'), live = +((d && d.value) || 0);
     if (APP_BUILD > live) { await dbSet('settings', 'appBuild', { value: APP_BUILD }); return; }
@@ -38368,7 +38368,19 @@ function _ctcIdeaDrv(pool, key, diff) { const T0 = pool.by[key]; if (!T0) return
     if (DF ? DF.each : R >= 90) { const mn = Math.min(...chem.per); if (mn >= 1) reqs.push({ ty: 'each', op: 'min', n: mn }); }
     if (reqs.filter(r => !['avg', 'chem', 'each'].includes(r.ty)).length < 2) continue;
     const val = sq.reduce((a, c) => a + _ckSellV(c), 0), pt = pastT[0];
-    const name = has('pods') ? rnd([`${nm}'s Podiums`, `${nm}: Podium Haul`]) : has('wins') ? rnd([`${nm}'s Wins`, `Winning Like ${nm}`]) : pt ? rnd([`${nm}: The ${pt} Years`, `${nm} Back at ${pt}`]) : has('nation') ? rnd([`${nm} & Co.`, `${nm}'s Countrymen`]) : has('team') ? `${nm} at ${D0.team}` : has('pts') ? `${nm}'s Points` : rnd([`${nm} Tribute`, `In ${nm}'s Footsteps`, `Built for ${nm}`]);
+    const tN = D0.team || 'the team', NM = [];
+    if (has('pods')) NM.push(`${nm}'s Podiums`, `${nm}: Podium Haul`, `Champagne with ${nm}`, `${nm} on the Rostrum`);
+    if (has('wins')) NM.push(`${nm}'s Wins`, `Winning Like ${nm}`, `${nm}: Top Step`, `${nm}'s Victory Lap`);
+    if (has('pts')) NM.push(`${nm}'s Points`, `${nm}: Points Machine`, `Every Point Counts, ${nm}`);
+    if (has('titles')) NM.push(`${nm}: Champion's Club`, `Crowned Like ${nm}`);
+    if (pt) NM.push(`${nm}: The ${pt} Years`, `${nm} Back at ${pt}`, `${pt} Reunion: ${nm}`, `Where ${nm} Began: ${pt}`, `${nm}'s ${pt} Chapter`, `Old Garage: ${pt}`);
+    if (has('team')) NM.push(`${nm} at ${tN}`, `${tN} Garage: ${nm}`, `${nm}'s ${tN} Crew`, `Pit Wall: ${tN} × ${nm}`, `${tN} Family: ${nm}`);
+    if (has('nation') && nat) NM.push(`${nm} & Co.`, `${nm}'s Countrymen`, `${nat} Pride: ${nm}`, `Flying the Flag with ${nm}`, `${nat} Heroes ft. ${nm}`);
+    if (has('div') && dv) NM.push(`${nm}'s ${dv} Rivals`, `${dv} Paddock: ${nm}`);
+    if (has('rating')) NM.push(`${nm}'s Level`, `Rated Like ${nm}`, `Keeping Up with ${nm}`);
+    if (has('self')) NM.push(`Starring ${nm}`, `${nm} Leads the Way`);
+    NM.push(`${nm} Tribute`, `In ${nm}'s Footsteps`, `Built for ${nm}`, `The ${nm} File`, `${nm}: Behind the Visor`, `A Lap with ${nm}`);
+    const used = window._ctcNmUsed = window._ctcNmUsed || []; const name = rnd(NM.filter(x => !used.includes(x)).length ? NM.filter(x => !used.includes(x)) : NM); used.push(name); if (used.length > 40) used.shift();
     const about = [has('nation') && nat ? nat + ' drivers' : '', has('team') ? D0.team : '', pastT.length ? 'past team' + (pastT.length > 1 ? 's ' : ' ') + pastT.join(' & ') : '', has('div') ? dv : '', has('pods') ? 'their ' + D0.pd + ' podiums' : '', has('wins') ? 'their ' + D0.w + ' wins' : '', has('pts') ? 'their career points' : '', has('titles') ? 'champions' : '', has('rating') ? 'cards near their ' + R : ''].filter(Boolean);
     const ch = { name, desc: `All about ${nm}: ${about.join(', ')}. ${n} cards, ${reqs.length} requirements.`, slots: n, reqs,
       rew: { ims: DF ? Math.max(DF.ims, Math.round(val * DF.m / 50) * 50) : Math.max(300, Math.round(val * (R >= 90 ? 2 : R >= 80 ? 1.6 : 1.3) / 50) * 50), packs: DF ? Object.assign({}, DF.pk) : R >= 85 ? { supersonic: R >= 90 ? 3 : 2 } : R >= 75 ? { supersonic: 1 } : { gold: 1 }, cards: T0.sp || T0.ctc ? [T0.k] : [] } };
@@ -38696,11 +38708,11 @@ window.ctcIdea = async function() { if (!adminLoggedIn) return; const diff = (do
   let I; if (dvv && !(dk && pool.by[dk])) return showToast('Pick the driver card from the list (or clear the box for a normal idea).', 'error');
   if (dk) I = _ctcIdeaDrv(pool, dk, diff); else if (diff === 'drv') return showToast('Pick a driver card first.', 'error'); else I = _ctcIdea(diff, pool);
   if (!I) return showToast('Couldn\'t build an idea from the cards in the pool — try again.', 'error');
-  const B0 = window._ctcB; if (B0 && B0.kind === 'grp') { const P = _ctcBP(B0); B0.slots = I.ch.slots; B0.reqs = I.ch.reqs; B0.proof = _ctcProofOf(I.sq, I.ch, { diff }); if (!P.name) P.name = I.ch.name; _ctcBSaveP(B0); await _ctcBDraw(); return showToast('🎲 Idea added to part ' + (B0.pi + 1) + '.', 'success'); }
+  const B0 = window._ctcB; if (B0 && B0.kind === 'grp') { const P = _ctcBP(B0); B0.slots = I.ch.slots; B0.reqs = I.ch.reqs; B0.proof = _ctcProofOf(I.sq, I.ch, { diff }); P.name = I.ch.name; _ctcBSaveP(B0); /* every idea gets its own name — rename after if you like */ await _ctcBDraw(); return showToast('🎲 Idea added to part ' + (B0.pi + 1) + '.', 'success'); }
   // Keep everything you've set (section, expiry, group, your own name / reward…); only the squad + requirements change.
   // Name, description and reward follow the idea only while they're still the ones a previous idea filled in.
   let B; if (B0) { B = B0; B.slots = I.ch.slots; B.reqs = I.ch.reqs;
-      if (!B.name || B.name === B._aN) { B.name = I.ch.name; B._aN = I.ch.name; } if (!B.desc || B.desc === B._aD) { B.desc = I.ch.desc; B._aD = I.ch.desc; }
+      B.name = I.ch.name; B.desc = I.ch.desc;
       const rs = JSON.stringify(B.rew || {}); if (!B.rew || rs === B._aR || rs === JSON.stringify(_ctcBNew().rew)) { B.rew = JSON.parse(JSON.stringify(I.ch.rew)); B._aR = JSON.stringify(B.rew); } }
   else { B = window._ctcB = Object.assign(_ctcBNew(), I.ch); B._aN = I.ch.name; B._aD = I.ch.desc; B._aR = JSON.stringify(I.ch.rew); }
   B.proof = _ctcProofOf(I.sq, I.ch, { diff }); await _ctcBDraw();
