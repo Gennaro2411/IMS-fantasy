@@ -37616,7 +37616,7 @@ async function _ckPackGuard() { document.querySelectorAll('#toast-stack .toast')
   try { const sd = await dbGet('settings', 'ckSpecials'); if (JSON.stringify((sd && sd.value && sd.value.list) || []) !== window._ckSpSig) window._ckPoolC = null; } catch (e) {} return true; }
 // New-version check. APP_BUILD is stamped on every commit (git pre-commit hook). Any device running a newer build records it in
 // settings/appBuild; a device whose own build is older than that number knows it's out of date. Only a real newer build can trigger it.
-const APP_BUILD = 1795448150;
+const APP_BUILD = 1795448160;
 window._appUpd = window._appUpd || { pending: false };
 async function _appVerCheck() { try { const d = await dbGet('settings', 'appBuild'), live = +((d && d.value) || 0);
     if (APP_BUILD > live) { await dbSet('settings', 'appBuild', { value: APP_BUILD }); return; }
@@ -38354,7 +38354,7 @@ function _ctcIdeaDrv(pool, key) { const T0 = pool.by[key]; if (!T0) return null;
     if (reqs.filter(r => !['avg', 'chem', 'each'].includes(r.ty)).length < 2) continue;
     const val = sq.reduce((a, c) => a + _ckSellV(c), 0), pt = pastT[0];
     const name = has('pods') ? rnd([`${nm}'s Podiums`, `${nm}: Podium Haul`]) : has('wins') ? rnd([`${nm}'s Wins`, `Winning Like ${nm}`]) : pt ? rnd([`${nm}: The ${pt} Years`, `${nm} Back at ${pt}`]) : has('nation') ? rnd([`${nm} & Co.`, `${nm}'s Countrymen`]) : has('team') ? `${nm} at ${D0.team}` : has('pts') ? `${nm}'s Points` : rnd([`${nm} Tribute`, `In ${nm}'s Footsteps`, `Built for ${nm}`]);
-    const about = [has('nation') && nat ? nat + ' drivers' : '', has('team') ? D0.team : '', pastT.length ? 'past team' + (pastT.length > 1 ? 's ' : ' ') + pastT.join(' & ') : '', has('div') ? dv : '', has('pods') ? 'his ' + D0.pd + ' podiums' : '', has('wins') ? 'his ' + D0.w + ' wins' : '', has('pts') ? 'his career points' : '', has('titles') ? 'champions' : '', has('rating') ? 'cards near his ' + R : ''].filter(Boolean);
+    const about = [has('nation') && nat ? nat + ' drivers' : '', has('team') ? D0.team : '', pastT.length ? 'past team' + (pastT.length > 1 ? 's ' : ' ') + pastT.join(' & ') : '', has('div') ? dv : '', has('pods') ? 'their ' + D0.pd + ' podiums' : '', has('wins') ? 'their ' + D0.w + ' wins' : '', has('pts') ? 'their career points' : '', has('titles') ? 'champions' : '', has('rating') ? 'cards near their ' + R : ''].filter(Boolean);
     const ch = { name, desc: `All about ${nm}: ${about.join(', ')}. ${n} cards, ${reqs.length} requirements.`, slots: n, reqs,
       rew: { ims: Math.max(300, Math.round(val * (R >= 90 ? 2 : R >= 80 ? 1.6 : 1.3) / 50) * 50), packs: R >= 85 ? { supersonic: R >= 90 ? 3 : 2 } : R >= 75 ? { supersonic: 1 } : { gold: 1 }, cards: T0.sp || T0.ctc ? [T0.k] : [] } };
     if (!_ctcEval(sq, ch).ok) continue;
