@@ -37616,7 +37616,7 @@ async function _ckPackGuard() { document.querySelectorAll('#toast-stack .toast')
   try { const sd = await dbGet('settings', 'ckSpecials'); if (JSON.stringify((sd && sd.value && sd.value.list) || []) !== window._ckSpSig) window._ckPoolC = null; } catch (e) {} return true; }
 // New-version check. APP_BUILD is stamped on every commit (git pre-commit hook). Any device running a newer build records it in
 // settings/appBuild; a device whose own build is older than that number knows it's out of date. Only a real newer build can trigger it.
-const APP_BUILD = 1795448160;
+const APP_BUILD = 1795448267;
 window._appUpd = window._appUpd || { pending: false };
 async function _appVerCheck() { try { const d = await dbGet('settings', 'appBuild'), live = +((d && d.value) || 0);
     if (APP_BUILD > live) { await dbSet('settings', 'appBuild', { value: APP_BUILD }); return; }
@@ -38312,10 +38312,14 @@ function _ctcIdea(diff, pool) { const D = { easy: { s: [3, 5], lo: 0, hi: 64, nr
 // ---- Driver-themed CTC: everything is about ONE driver. Each generation picks a few "angles" from their career —
 // countrymen, current team, past teams (from their history), division, their podium / win / points tallies, their rating —
 // and builds a squad + requirements around those. Successive generations (e.g. parts of a group) use different angles.
-function _ctcIdeaDrv(pool, key) { const T0 = pool.by[key]; if (!T0) return null; const D0 = pool.by[T0.base || T0.k] || T0, R = T0.r, nm = String(D0.n || T0.n);
+function _ctcIdeaDrv(pool, key, diff) { const T0 = pool.by[key]; if (!T0) return null; const D0 = pool.by[T0.base || T0.k] || T0, R = T0.r, nm = String(D0.n || T0.n);
+  // diff = one of the normal difficulties (sets squad size, how many themes, exactness, reward); 'drv' = scale from the driver's rating
+  const DF = { easy: { s: [3, 5], sl: 2, a: 2, ch: 0, ims: 150, pk: { gold: 1 }, m: 1.3 }, medium: { s: [5, 7], sl: 1, a: 3, ch: .8, ims: 500, pk: { supersonic: 1 }, m: 1.4 }, hard: { s: [8, 10], sl: 0, a: 3, ch: .95, ims: 1500, pk: { supersonic: 2 }, m: 1.5 },
+    xhard: { s: [9, 10], sl: 0, a: 4, ch: 1, ex: 1, each: 1, ims: 4000, pk: { supersonic: 3 }, m: 1.8 }, insane: { s: [10, 10], sl: 0, a: 5, ch: 1, ex: 1, each: 1, sp: 1, hi: 85, ims: 12000, pk: { supersonic: 5 }, m: 2.2 },
+    perfect: { s: [10, 10], sl: 0, a: 5, ch: 1, ex: 1, each: 1, sp: 1, hi: 90, named: 3, ims: 25000, pk: { supersonic: 8 }, m: 3 } }[diff] || null;
   const ri = (a, b) => a + Math.floor(Math.random() * (b - a + 1)), rnd = A => A[Math.floor(Math.random() * A.length)], shuf = A => { A = A.slice(); for (let i = A.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [A[i], A[j]] = [A[j], A[i]]; } return A; };
-  const n = R >= 90 ? 10 : R >= 85 ? 9 : R >= 80 ? 8 : R >= 72 ? 7 : R >= 64 ? 6 : 5, slack = R >= 88 ? 0 : R >= 78 ? 1 : 2, lo = Math.max(40, R - (R >= 88 ? 10 : 16));
-  const base = _ctcPackable(pool, R >= 85).filter(c => c.r >= lo && c.k !== D0.k); if (base.length < n * 2) return null;
+  const n0 = R >= 90 ? 10 : R >= 85 ? 9 : R >= 80 ? 8 : R >= 72 ? 7 : R >= 64 ? 6 : 5, slack = DF ? DF.sl : R >= 88 ? 0 : R >= 78 ? 1 : 2, lo = DF ? (DF.hi ? DF.hi - 10 : 40) : Math.max(40, R - (R >= 88 ? 10 : 16));
+  const base = _ctcPackable(pool, DF ? !!DF.sp : R >= 85).filter(c => c.r >= lo && c.k !== D0.k); if (base.length < n0 * 2) return null;
   const tm = _ctcTm(D0), nat = D0.nat, dv = D0.div, own = !D0.sp && _ctcPackable(pool).some(c => c.k === D0.k);
   // their past teams, from their season-by-season history (full-time stints), newest first, without the current one
   const S = ((window._wordleData || {}).stats || {})[D0.k] || {}, past = []; (S.cp || []).slice().reverse().forEach(x => { const t = x && x[1]; if (t && !/^reserve$/i.test(t) && String(t).trim().toLowerCase() !== tm && !past.some(p => p.toLowerCase() === String(t).toLowerCase()) && base.some(c => _ctcTm(c) === String(t).trim().toLowerCase())) past.push(String(t)); });
@@ -38323,7 +38327,7 @@ function _ctcIdeaDrv(pool, key) { const T0 = pool.by[key]; if (!T0) return null;
   const last = window._ctcDrvLast && window._ctcDrvLast.k === D0.k ? window._ctcDrvLast.a : [];
   for (let at = 0; at < 160; at++) {
     // 3 angles (4 for 85+), preferring ones the last generation for this driver didn't use
-    const fresh = shuf([...new Set(ANG)]).sort((x, y) => last.includes(x) - last.includes(y)), A = fresh.slice(0, R >= 85 ? 4 : 3); const has = x => A.includes(x);
+    const n = DF ? ri(DF.s[0], DF.s[1]) : n0, fresh = shuf([...new Set(ANG)]).sort((x, y) => last.includes(x) - last.includes(y)), A = fresh.slice(0, DF ? DF.a : R >= 85 ? 4 : 3); const has = x => A.includes(x);
     const pastT = has('past') ? shuf(past).slice(0, Math.min(past.length, R >= 85 ? 2 : 1)) : [];
     const sq = [], add = c => { if (c && sq.length < n && !sq.some(x => _ctcBk(x) === _ctcBk(c))) sq.push(c); };
     if (has('self') && own) add(D0);
@@ -38349,17 +38353,20 @@ function _ctcIdeaDrv(pool, key) { const T0 = pool.by[key]; if (!T0) return null;
     if (has('titles')) { const k = sq.filter(c => c.ch > 0).length; if (k >= 1) reqs.push({ ty: 'champ', op: 'min', n: k }); }
     // difficulty from the rating
     if (Math.floor(avg) - slack >= 45) reqs.push({ ty: 'avg', op: 'min', n: Math.floor(avg) - slack });
-    if (R >= 75 && Math.floor(chem.tot * (R >= 85 ? 1 : .8)) >= 3) reqs.push({ ty: 'chem', op: 'min', n: Math.floor(chem.tot * (R >= 85 ? 1 : .8)) });
-    if (R >= 90) { const mn = Math.min(...chem.per); if (mn >= 1) reqs.push({ ty: 'each', op: 'min', n: mn }); }
+    { const cf = DF ? DF.ch : R >= 75 ? (R >= 85 ? 1 : .8) : 0; if (cf && Math.floor(chem.tot * cf) >= 3) reqs.push({ ty: 'chem', op: 'min', n: Math.floor(chem.tot * cf) }); }
+    if (DF && DF.hi) { const k = sq.filter(c => c.r >= DF.hi).length; if (k >= 1 && k < n) reqs.push({ ty: 'minr', v: DF.hi, op: 'min', n: k }); }
+    if (DF && DF.ex) reqs.forEach(r => { if (['nat', 'team', 'div'].includes(r.ty)) r.op = 'exact'; }); // Extra Hard and up: exact counts
+    if (DF && DF.named) sq.filter(c => c.k !== D0.k).sort((x, y) => (!!y.sp - !!x.sp) || y.r - x.r).slice(0, DF.named).forEach(pk => reqs.push({ ty: 'card', v: pk.k, l: _ctcCardL(pk), op: 'min', n: 1 }));
+    if (DF ? DF.each : R >= 90) { const mn = Math.min(...chem.per); if (mn >= 1) reqs.push({ ty: 'each', op: 'min', n: mn }); }
     if (reqs.filter(r => !['avg', 'chem', 'each'].includes(r.ty)).length < 2) continue;
     const val = sq.reduce((a, c) => a + _ckSellV(c), 0), pt = pastT[0];
     const name = has('pods') ? rnd([`${nm}'s Podiums`, `${nm}: Podium Haul`]) : has('wins') ? rnd([`${nm}'s Wins`, `Winning Like ${nm}`]) : pt ? rnd([`${nm}: The ${pt} Years`, `${nm} Back at ${pt}`]) : has('nation') ? rnd([`${nm} & Co.`, `${nm}'s Countrymen`]) : has('team') ? `${nm} at ${D0.team}` : has('pts') ? `${nm}'s Points` : rnd([`${nm} Tribute`, `In ${nm}'s Footsteps`, `Built for ${nm}`]);
     const about = [has('nation') && nat ? nat + ' drivers' : '', has('team') ? D0.team : '', pastT.length ? 'past team' + (pastT.length > 1 ? 's ' : ' ') + pastT.join(' & ') : '', has('div') ? dv : '', has('pods') ? 'their ' + D0.pd + ' podiums' : '', has('wins') ? 'their ' + D0.w + ' wins' : '', has('pts') ? 'their career points' : '', has('titles') ? 'champions' : '', has('rating') ? 'cards near their ' + R : ''].filter(Boolean);
     const ch = { name, desc: `All about ${nm}: ${about.join(', ')}. ${n} cards, ${reqs.length} requirements.`, slots: n, reqs,
-      rew: { ims: Math.max(300, Math.round(val * (R >= 90 ? 2 : R >= 80 ? 1.6 : 1.3) / 50) * 50), packs: R >= 85 ? { supersonic: R >= 90 ? 3 : 2 } : R >= 75 ? { supersonic: 1 } : { gold: 1 }, cards: T0.sp || T0.ctc ? [T0.k] : [] } };
+      rew: { ims: DF ? Math.max(DF.ims, Math.round(val * DF.m / 50) * 50) : Math.max(300, Math.round(val * (R >= 90 ? 2 : R >= 80 ? 1.6 : 1.3) / 50) * 50), packs: DF ? Object.assign({}, DF.pk) : R >= 85 ? { supersonic: R >= 90 ? 3 : 2 } : R >= 75 ? { supersonic: 1 } : { gold: 1 }, cards: T0.sp || T0.ctc ? [T0.k] : [] } };
     if (!_ctcEval(sq, ch).ok) continue;
     window._ctcDrvLast = { k: D0.k, a: A };
-    return { ch, sq: sq.slice().sort((a, b) => b.r - a.r), val, diff: 'drv' }; }
+    return { ch, sq: sq.slice().sort((a, b) => b.r - a.r), val, diff: DF ? diff : 'drv' }; }
   return null; }
 // ---- Data ----
 async function _ctcLoad(force) { if (!force && window._ctcC && _now() - window._ctcC.at < 60e3) return window._ctcC.list;
@@ -38595,7 +38602,7 @@ function _ctcBHtml(pool) { const B = window._ctcB = window._ctcB || _ctcBNew(), 
     <div class="ck-fil ctc-parts" style="margin:0">${B.parts.map((x, i) => `<button class="${i === B.pi ? 'on' : ''}" onclick="ctcBPart(${i})">${i + 1}. ${esc(x.name || 'Part ' + (i + 1))}${x.proof && x.proof.ok ? ' ✅' : ''}</button>`).join('')}<button onclick="ctcBPartAdd()">＋ Add part</button></div>
     <div class="ctc-partb"><div class="ctc-parth"><b>Part ${B.pi + 1}</b>${B.parts.length > 1 ? `<button onclick="ctcBPartDel()">Remove this part</button>` : ''}</div>
     <input ${IN} maxlength="40" placeholder="Part name, e.g. VCARB Academy" value="${esc(P.name || '')}" oninput="_ctcBP(_ctcB).name=this.value">` : ''}
-    <div class="ctc-gen"><select id="ctc-g-d"><option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option><option value="xhard">Extra Hard</option><option value="insane">Insane</option><option value="perfect">Perfect</option><option value="drv">🎯 Driver themed</option></select><input id="ctc-g-drv" list="ctc-g-drvl" placeholder="Driver card (for Driver themed)" style="min-width:200px;padding:9px;border-radius:10px;background:#0e0c1a;color:#fff;border:1px solid rgba(255,255,255,.14)"><datalist id="ctc-g-drvl">${((window._ckPoolC && window._ckPoolC.list) || []).slice(0, 2500).map(c => `<option value="${esc(c.n + ' · ' + c.r + (c.sp ? ' · ' + CK_SP[c.sp].n : '') + ' #' + c.k)}">`).join('')}</datalist><button class="hx-btn ghost" onclick="ctcIdea()">🎲 Generate a CTC idea</button></div>
+    <div class="ctc-gen"><select id="ctc-g-d"><option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option><option value="xhard">Extra Hard</option><option value="insane">Insane</option><option value="perfect">Perfect</option><option value="drv">🎯 Match the driver's rating</option></select><input id="ctc-g-drv" list="ctc-g-drvl" placeholder="Optional: build it around a driver…" style="min-width:200px;padding:9px;border-radius:10px;background:#0e0c1a;color:#fff;border:1px solid rgba(255,255,255,.14)"><datalist id="ctc-g-drvl">${((window._ckPoolC && window._ckPoolC.list) || []).slice(0, 2500).map(c => `<option value="${esc(c.n + ' · ' + c.r + (c.sp ? ' · ' + CK_SP[c.sp].n : '') + ' #' + c.k)}">`).join('')}</datalist><button class="hx-btn ghost" onclick="ctcIdea()">🎲 Generate a CTC idea</button></div>
     ${isG ? '' : `<input ${IN} maxlength="40" placeholder="Challenge name, e.g. Indian Summer" value="${esc(B.name)}" oninput="_ctcB.name=this.value">
     <textarea rows="2" maxlength="200" placeholder="Short description (optional)" oninput="_ctcB.desc=this.value">${esc(B.desc)}</textarea>`}
     <div style="display:grid;gap:10px"><label class="ctc-lb">Cards needed (1–${CTC_MAX})<input type="number" min="1" max="${CTC_MAX}" value="${B.slots}" onchange="ctcBSlots(this.value)"><small>max chemistry ${B.slots * 3}</small></label>
@@ -38677,7 +38684,9 @@ window.ctcBTweak = async function() { if (!adminLoggedIn) return; const B = wind
 window.ctcBTweakUse = function(x) { const B = window._ctcB, f = (window._ctcTw || [])[x]; if (!B || !f) return; const reqs = B.reqs.slice(); f.ch.forEach(([i, v]) => { reqs[i] = v.drop ? null : v.r; }); B.reqs = reqs.filter(Boolean);
   B.proof = _ctcProofOf(f.sq, { slots: B.slots, reqs: B.reqs }, { sp: f.sq.some(c => c && c.sp) }); _ctcBDraw(); showToast('🔧 Tweak applied — press Save to keep it.', 'success'); };
 window.ctcIdea = async function() { if (!adminLoggedIn) return; const diff = (document.getElementById('ctc-g-d') || {}).value || 'easy', pool = await _ckPool();
-  let I; if (diff === 'drv') { const v = (document.getElementById('ctc-g-drv') || {}).value || '', k = (v.match(/#(.+)$/) || [])[1]; if (!k || !pool.by[k]) return showToast('Pick a driver card from the list first.', 'error'); I = _ctcIdeaDrv(pool, k); } else I = _ctcIdea(diff, pool);
+  const dvv = ((document.getElementById('ctc-g-drv') || {}).value || '').trim(), dk = (dvv.match(/#(.+)$/) || [])[1];
+  let I; if (dvv && !(dk && pool.by[dk])) return showToast('Pick the driver card from the list (or clear the box for a normal idea).', 'error');
+  if (dk) I = _ctcIdeaDrv(pool, dk, diff); else if (diff === 'drv') return showToast('Pick a driver card first.', 'error'); else I = _ctcIdea(diff, pool);
   if (!I) return showToast('Couldn\'t build an idea from the cards in the pool — try again.', 'error');
   const B0 = window._ctcB; if (B0 && B0.kind === 'grp') { const P = _ctcBP(B0); B0.slots = I.ch.slots; B0.reqs = I.ch.reqs; B0.proof = _ctcProofOf(I.sq, I.ch, { diff }); if (!P.name) P.name = I.ch.name; _ctcBSaveP(B0); await _ctcBDraw(); return showToast('🎲 Idea added to part ' + (B0.pi + 1) + '.', 'success'); }
   const B = window._ctcB = Object.assign(_ctcBNew(), I.ch, { id: (B0 || {}).id || '' }); B.proof = _ctcProofOf(I.sq, I.ch, { diff }); await _ctcBDraw(); const d = document.getElementById('ctc-g-d'); if (d) d.value = diff;
