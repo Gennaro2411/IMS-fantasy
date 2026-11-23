@@ -37616,7 +37616,7 @@ async function _ckPackGuard() { document.querySelectorAll('#toast-stack .toast')
   try { const sd = await dbGet('settings', 'ckSpecials'); if (JSON.stringify((sd && sd.value && sd.value.list) || []) !== window._ckSpSig) window._ckPoolC = null; } catch (e) {} return true; }
 // New-version check. APP_BUILD is stamped on every commit (git pre-commit hook). Any device running a newer build records it in
 // settings/appBuild; a device whose own build is older than that number knows it's out of date. Only a real newer build can trigger it.
-const APP_BUILD = 1795447079;
+const APP_BUILD = 1795447181;
 window._appUpd = window._appUpd || { pending: false };
 async function _appVerCheck() { try { const d = await dbGet('settings', 'appBuild'), live = +((d && d.value) || 0);
     if (APP_BUILD > live) { await dbSet('settings', 'appBuild', { value: APP_BUILD }); return; }
@@ -38614,8 +38614,13 @@ window.ctcBTweak = async function() { if (!adminLoggedIn) return; const B = wind
   for (let i = 0; i < B.reqs.length && Date.now() - t0 < 12000; i++) for (const v of vars(i)) { const reqs = B.reqs.slice(); reqs[i] = v.drop ? null : v.r; const R = _ctcSolve(apply(reqs), cand, 500); if (R.ok) { found.push({ ch: [[i, v]], sq: R.sq }); break; } }
   if (!found.length) for (let i = 0; i < B.reqs.length && Date.now() - t0 < 20000; i++) for (let j = i + 1; j < B.reqs.length && Date.now() - t0 < 20000; j++) { const a = vars(i)[0], b = vars(j)[0]; if (!a || !b) continue;
     const reqs = B.reqs.slice(); reqs[i] = a.drop ? null : a.r; reqs[j] = b.drop ? null : b.r; const R = _ctcSolve(apply(reqs), cand, 400); if (R.ok) { found.push({ ch: [[i, a], [j, b]], sq: R.sq }); if (found.length >= 4) break; } }
+  // Always also offer the "just about works" fix: take the closest squad the solver can build and move each failing
+  // requirement exactly to what that squad achieves (a named card it can't fit is dropped). Guaranteed to be possible.
+  { let bs = null, bg = Infinity; for (let t = 0; t < 4; t++) { const R = _ctcSolve(base, cand, 900), E = R.sq && R.sq.length === B.slots ? _ctcEval(R.sq, base) : null; if (!E) continue; const g = E.reqs.reduce((a, x) => a + x.gap, 0); if (g < bg) { bg = g; bs = { sq: R.sq, E }; } }
+    if (bs) { const ch = []; bs.E.reqs.forEach((x, i) => { if (x.ok) return; const r = B.reqs[i]; if (r.ty === 'card') return ch.push([i, { drop: 1, txt: 'Remove: ' + _ctcReqTxt(r) }]); const nr = Object.assign({}, r, { n: x.have }); ch.push([i, { r: nr, txt: _ctcReqTxt(r) + ' → ' + _ctcReqTxt(nr) }]); });
+      if (ch.length) { const reqs = B.reqs.slice(); ch.forEach(([i, v]) => { reqs[i] = v.drop ? null : v.r; }); if (_ctcEval(bs.sq, { slots: B.slots, reqs: reqs.filter(Boolean) }).ok) found.push({ ch, sq: bs.sq, fit: 1 }); } } }
   window._ctcTw = found;
-  if (box) box.innerHTML = found.length ? `<div class="ck-k" style="margin-bottom:6px">🔧 Smallest tweaks that make it possible</div>${found.slice(0, 6).map((f, x) => `<div class="ctc-tw"><div>${f.ch.map(([, v]) => '• ' + esc(v.txt)).join('<br>')}</div><button class="hx-btn ghost" onclick="ctcBTweakUse(${x})">Use this</button></div>`).join('')}<div class="ck-fine">Pick one, then Save. Each one was checked with a real squad built from cards players can get.</div>`
+  if (box) box.innerHTML = found.length ? `<div class="ck-k" style="margin-bottom:6px">🔧 Smallest tweaks that make it possible</div>${found.slice(0, 6).map((f, x) => `<div class="ctc-tw"><div>${f.fit ? '<b>Just about works</b> (fitted to the closest squad)<br>' : ''}${f.ch.map(([, v]) => '• ' + esc(v.txt)).join('<br>')}</div><button class="hx-btn ghost" onclick="ctcBTweakUse(${x})">Use this</button></div>`).join('')}<div class="ck-fine">Pick one, then Save. Each one was checked with a real squad built from cards players can get.</div>`
     : '<div class="ck-fine">❌ No small tweak found — loosening one or two requirements isn\'t enough. Try removing a requirement or lowering the squad rating more.</div>'; };
 window.ctcBTweakUse = function(x) { const B = window._ctcB, f = (window._ctcTw || [])[x]; if (!B || !f) return; const reqs = B.reqs.slice(); f.ch.forEach(([i, v]) => { reqs[i] = v.drop ? null : v.r; }); B.reqs = reqs.filter(Boolean);
   B.proof = _ctcProofOf(f.sq, { slots: B.slots, reqs: B.reqs }, { sp: f.sq.some(c => c && c.sp) }); _ctcBDraw(); showToast('🔧 Tweak applied — press Save to keep it.', 'success'); };
