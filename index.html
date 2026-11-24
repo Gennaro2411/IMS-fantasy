@@ -31693,7 +31693,7 @@ const _betPay = (b, st) => b.free ? (st === 'won' ? Math.round(b.stake * b.odds)
 // after settling (a steward penalty, a corrected re-import) and that flips the outcome, the bet is
 // re-settled automatically, the coins are adjusted by the difference, and the player gets a
 // "Stewards' decision" pop-up. Bets an admin decided by hand (adminOverride) are left alone.
-async function _betSettleMine(userId, races, coins) {
+async function _betSettleMine(userId, races, coins, opts) { const noRe = !!(opts && opts.noResettle); // noResettle: only settle open bets (used where races may be a cached snapshot)
   const all = await dbGetAll('bets').catch(() => []);
   const mine = all.filter(b => b.userId === userId);
   let changed = false;
@@ -31731,6 +31731,7 @@ async function _betSettleMine(userId, races, coins) {
         const part = (b.legs || []).map((l, i) => ({ ...l, result: ls[i] || null }));
         if (legsChanged || part.some((l, i) => (l.result || null) !== ((b.legs || [])[i].result || null))) { b.legs = part; await dbSet('bets', b.id, b).catch(() => {}); }
         continue; }
+      if (noRe && b.status !== 'open') continue; // already settled — only the Bets page (fresh results) may change it
       const oldPay = b.status === 'open' ? 0 : (b.payout || 0);
       if (b.status === st && oldPay === pay) {
         // Bet outcome unchanged, but leg results may have been recomputed (e.g. BOTT points corrected after the first settle) — refresh stale ✕/✓ on the legs.
@@ -31763,6 +31764,7 @@ async function _betSettleMine(userId, races, coins) {
       Object.assign(b, { status: 'void', payout: b.stake });
       changed = true; continue;
     }
+    if (noRe && b.status !== 'open') continue;
     const result = _betOutcome({ ...b, _resettle: b.status !== 'open' }, races);
     if (!result || result === b.status) continue;
     if (b.status === 'open') {
@@ -32881,7 +32883,7 @@ window._betBgSettle = async function() {
     } catch(e) {}
     const coins = await _betLoadCoins(currentUser.userId);
     window._betJustSettled = [];
-    await _betSettleMine(currentUser.userId, races, coins);
+    await _betSettleMine(currentUser.userId, races, coins, { noResettle: true }); // home page uses cached results: never flip a settled bet from here
     window._betShowNotices(coins); // any re-settled bets from corrected results
     const done = window._betJustSettled || []; window._betJustSettled = [];
     if (!done.length || typeof showToast !== 'function') return;
@@ -37653,7 +37655,7 @@ async function _ckPackGuard() { document.querySelectorAll('#toast-stack .toast')
   try { const sd = await dbGet('settings', 'ckSpecials'); if (JSON.stringify((sd && sd.value && sd.value.list) || []) !== window._ckSpSig) window._ckPoolC = null; } catch (e) {} return true; }
 // New-version check. APP_BUILD is stamped on every commit (git pre-commit hook). Any device running a newer build records it in
 // settings/appBuild; a device whose own build is older than that number knows it's out of date. Only a real newer build can trigger it.
-const APP_BUILD = 1795530457;
+const APP_BUILD = 1795531029;
 window._appUpd = window._appUpd || { pending: false };
 async function _appVerCheck() { try { const d = await dbGet('settings', 'appBuild'), live = +((d && d.value) || 0);
     if (APP_BUILD > live) { await dbSet('settings', 'appBuild', { value: APP_BUILD }); return; }
