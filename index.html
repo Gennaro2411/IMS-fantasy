@@ -1400,7 +1400,7 @@
   /* ---- explore bento ---- */
   .hx-bento{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
   .hx-tile{--c:#7c86ff;position:relative;overflow:hidden;isolation:isolate;display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-height:150px;padding:18px 18px 16px;text-align:left;cursor:pointer;color:#fff;font:inherit;border-radius:22px;border:1px solid color-mix(in srgb,var(--c) 26%,rgba(255,255,255,.06));background:radial-gradient(120% 100% at 100% 0%,color-mix(in srgb,var(--c) 20%,transparent),transparent 60%),linear-gradient(165deg,#17142c,#0c0b15);transition:transform .28s cubic-bezier(.2,.9,.25,1),border-color .25s,box-shadow .25s}
-  .hx-tile.w{grid-column:span 2;min-height:176px}
+  .hx-tile.w{grid-column:span 2;min-height:176px}.hx-tile-cards{grid-column:1/-1;min-height:0}.hx-cardrow{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-top:10px;pointer-events:none}.hx-cardrow-c .ck{width:100%}@media (max-width:620px){.hx-cardrow{grid-template-columns:repeat(3,minmax(0,1fr))}.hx-cardrow-c:nth-child(n+4){display:none}}
   .hx-tile::before{content:'';position:absolute;inset:0;z-index:-1;opacity:0;transition:opacity .3s;background:radial-gradient(240px circle at var(--mx,70%) var(--my,10%),color-mix(in srgb,var(--c) 34%,transparent),transparent 70%)}
   .hx-tile:hover{transform:translateY(-5px);border-color:var(--c);box-shadow:0 22px 44px -22px var(--c)}.hx-tile:hover::before{opacity:1}.hx-tile:active{transform:translateY(-1px) scale(.99)}
   .hx-tile-wm{position:absolute;right:-18px;bottom:-22px;z-index:-1;color:var(--c);opacity:.11;transition:transform .5s cubic-bezier(.2,.9,.25,1),opacity .3s}.hx-tile-wm svg{width:128px;height:128px;stroke-width:1.1}
@@ -10576,6 +10576,9 @@ async function renderDashboard() {
         const lbHtml = top3.length ? `<span class="hx-pod">${top3.map((t, i) => `<span><i>${i + 1}</i><u>${esc(t.teamName || t.playerName || t.name || 'Team')}</u><em>${t.total}</em></span>`).join('')}</span>` : `<small>${mgrs} managers. One title. Where will you finish?</small>`;
         const nx = upcomingSchedule[0] || null, pct = total ? Math.round(done / total * 100) : 0;
         const dotCol = (i) => { const k = total > 1 ? i / (total - 1) : 0, A = [124, 134, 255], B = [177, 132, 232], C = [255, 92, 138], f = k < .5 ? [A, B, k * 2] : [B, C, (k - .5) * 2]; return 'rgb(' + f[0].map((v, n) => Math.round(v + (f[1][n] - v) * f[2])).join(',') + ')'; };
+        // newest special cards on the Cards tile (filled in once the card pool is ready)
+        setTimeout(async () => { const el = document.getElementById('hx-cardrow'); if (!el || typeof _ckPool !== 'function') return; try { const pool = await _ckPool();
+          const L = pool.list.filter(c => c.sp && !c.np && !c.ctc).reverse().slice(0, 6); /* specials are added in order, so newest last */ el.innerHTML = L.map(c => `<span class="hx-cardrow-c">${_ckCard(c, {})}</span>`).join(''); } catch (e) {} }, 300);
         deck.innerHTML = `
           <div class="hx-h hx-rv" data-k="exh"><div><small>Everything in one place</small><h2>Explore the <em>paddock</em></h2></div></div>
           <div class="hx-bento hx-rv" data-k="ex">
@@ -10585,6 +10588,7 @@ async function renderDashboard() {
             ${bt('bets', '', 'ticket', 'IM$ betting', 'Bets', '<small>Back your calls with IM$. Boosted odds every race weekend.</small>', '#f0487a')}
             ${bt('results', '', 'flag', prevRace ? 'Latest · R' + (prevRace.raceNum || '') : 'Race results', 'Results', `<small>${prevRace ? getRaceFlag(prevRace.name) + ' ' + esc(prevRace.name) + ' — every division, every finisher.' : 'Every round, every division.'}</small>`, '#27f4d2')}
             ${bt('games', '', 'target', 'Daily games <u>NEW</u>', 'Games', '<small>Who Finished Where?, Steward Simulator, duels and IM$ prizes.</small>', '#4ade80')}
+            ${typeof _ckCan === 'function' && _ckCan() ? `<button class="hx-tile hx-tile-cards" style="--c:#a779e6" onclick="showPage('cards')"><span class="hx-tile-k"><i>${_ico('sparkles')}</i>IMS Cards</span><b>Cards</b><small>Open packs, chase specials, complete CTCs and trade with the paddock.</small><span class="hx-cardrow" id="hx-cardrow"></span></button>` : ''}
           </div>
           <div class="hx-links hx-rv" data-k="lk">${[['predictions', 'clipboard', 'Race briefing'], ['history', 'chart', 'Stats & records'], ['social', 'user', 'Social'], ['extra', 'sparkles', 'Extra'], ['home', 'swap', 'Edit team']].map(([pg, ic, l]) => `<button onclick="showPage('${pg}')">${_ico(ic)}${l}</button>`).join('')}</div>
           <section class="hx-card hx-pulse hx-rv" data-k="pu">
@@ -37685,7 +37689,7 @@ async function _ckPackGuard() { document.querySelectorAll('#toast-stack .toast')
   try { const sd = await dbGet('settings', 'ckSpecials'); if (JSON.stringify((sd && sd.value && sd.value.list) || []) !== window._ckSpSig) window._ckPoolC = null; } catch (e) {} return true; }
 // New-version check. APP_BUILD is stamped on every commit (git pre-commit hook). Any device running a newer build records it in
 // settings/appBuild; a device whose own build is older than that number knows it's out of date. Only a real newer build can trigger it.
-const APP_BUILD = 1795534468;
+const APP_BUILD = 1795534931;
 window._appUpd = window._appUpd || { pending: false };
 async function _appVerCheck() { try { const d = await dbGet('settings', 'appBuild'), live = +((d && d.value) || 0);
     if (APP_BUILD > live) { await dbSet('settings', 'appBuild', { value: APP_BUILD }); return; }
