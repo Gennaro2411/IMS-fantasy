@@ -5764,8 +5764,11 @@ window.loadAttendance = async function() {
       // round that just locked — rounds drop off the schedule once they lock, so fall back to the latest round with results.
       let wk = null;
       { const _rs = await dbGetAll('races').catch(() => []), last = _rs.slice().sort((a, b) => (b.raceNum || 0) - (a.raceNum || 0))[0];
-        const live = (((await dbGet('settings', 'teamsLocked').catch(() => null)) || {}).value) || (last && typeof _raceAllDivsIn === 'function' && !_raceAllDivsIn(last));
         const cur = (sch || []).filter(r => r.lockTime && r.lockTime <= Date.now()).sort((a, b) => b.lockTime - a.lockTime)[0];
+        // The weekend counts as "still running" only for 3 days after lock — after that the check-ins move on to the
+        // next round even if teams were left locked or a division was never imported.
+        const recent = !!(cur && Date.now() - cur.lockTime < 3 * 86400e3);
+        const live = recent && ((((await dbGet('settings', 'teamsLocked').catch(() => null)) || {}).value) || (last && typeof _raceAllDivsIn === 'function' && !_raceAllDivsIn(last)));
         const lastPlayed = _rs.filter(r => r.driverPoints && Object.values(r.driverPoints).some(v => v > 0)).sort((a, b) => (b.raceNum || 0) - (a.raceNum || 0))[0];
         if (live) wk = cur ? { ...cur, _wk: 1 } : (lastPlayed ? { name: lastPlayed.name, raceNum: lastPlayed.raceNum, lockTime: 0, _wk: 1 } : null); }
       const tk = (x) => (window.trackKey ? window.trackKey(x) : String(x || '').toLowerCase().replace(/[^a-z0-9]/g, ''));
@@ -37655,7 +37658,7 @@ async function _ckPackGuard() { document.querySelectorAll('#toast-stack .toast')
   try { const sd = await dbGet('settings', 'ckSpecials'); if (JSON.stringify((sd && sd.value && sd.value.list) || []) !== window._ckSpSig) window._ckPoolC = null; } catch (e) {} return true; }
 // New-version check. APP_BUILD is stamped on every commit (git pre-commit hook). Any device running a newer build records it in
 // settings/appBuild; a device whose own build is older than that number knows it's out of date. Only a real newer build can trigger it.
-const APP_BUILD = 1795531029;
+const APP_BUILD = 1795531452;
 window._appUpd = window._appUpd || { pending: false };
 async function _appVerCheck() { try { const d = await dbGet('settings', 'appBuild'), live = +((d && d.value) || 0);
     if (APP_BUILD > live) { await dbSet('settings', 'appBuild', { value: APP_BUILD }); return; }
