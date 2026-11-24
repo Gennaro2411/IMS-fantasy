@@ -6087,6 +6087,12 @@ window._now = () => Date.now() + (window._srvSkew || 0);
 // One tiny write to learn this device's clock offset from the server (once per page load) before a duel starts.
 window._clockSync = async () => { if (window._srvSkew != null) return;
   try { const me = (typeof _wdMe === 'function') ? _wdMe() : null; if (!me || !me.uid) return; await dbSet('wordleScores', _wdScoreId(me.uid), { clockAt: Date.now() }); } catch (e) {} };
+// Firestore query: only the documents where field == value (one read per matching doc, not the whole collection).
+async function dbWhere(col, field, value) { if (!PROJECT_ID) return [];
+  const url = 'https://firestore.googleapis.com/v1/projects/' + PROJECT_ID + '/databases/(default)/documents:runQuery?key=' + API_KEY;
+  const v = typeof value === 'number' ? (Number.isInteger(value) ? { integerValue: String(value) } : { doubleValue: value }) : typeof value === 'boolean' ? { booleanValue: value } : { stringValue: String(value) };
+  const res = await fsRequest('POST', url, { structuredQuery: { from: [{ collectionId: col }], where: { fieldFilter: { field: { fieldPath: field }, op: 'EQUAL', value: v } } } });
+  return (Array.isArray(res) ? res : []).filter(r => r && r.document).map(r => fsDocToObj(r.document)).filter(Boolean); }
 async function fsRequest(method, url, body) {
   const opts = {method, headers:{'Content-Type':'application/json'}};
   if (body) opts.body = JSON.stringify(body);
@@ -21401,7 +21407,7 @@ window.clearTeamPhoto = async function(id) {
 // their bets (open ones are cancelled, not refunded — the wallet is reset anyway).
 window._betWipeUser = async function(userId) {
   if (!userId) return 0;
-  const bets = (await dbGetAll('bets', { fresh: true }).catch(() => [])).filter(b => b.userId === userId);
+  const bets = (await dbWhere('bets', 'userId', userId).catch(() => dbGetAll('bets', { fresh: true }).catch(() => []))).filter(b => b.userId === userId);
   await Promise.all(bets.map(b => dbDelete('bets', b.id).catch(() => {})));
   await dbDelete('coins', userId).catch(() => {});
   return bets.length;
@@ -33839,7 +33845,7 @@ window.betPlace = async function() {
   if (legs.length === 1) {
     const l = legs[0];
     // One single per pick per round — no stacking. Cash it out first to re-bet.
-    const _dup = (await dbGetAll('bets', { fresh: true }).catch(() => [])).find(x => x.userId === currentUser.userId && x.status === 'open'
+    const _dup = (await dbWhere('bets', 'userId', currentUser.userId).catch(() => dbGetAll('bets', { fresh: true }).catch(() => []))).find(x => x.userId === currentUser.userId && x.status === 'open'
       && x.raceName === ctx.upcoming.name && x.div === l.div && x.market === l.market && (x.sel || []).join('-') === l.sel.join('-'));
     if (_dup) return err('You already have this bet (' + _dup.stake + ' <i class="imc" title="IM$"></i> @ ' + fmtOdds(_dup.odds) + '). One bet per pick — cash it out first if you want to change it.');
     label = l.label; odds = l.odds;
@@ -37666,7 +37672,7 @@ async function _ckPackGuard() { document.querySelectorAll('#toast-stack .toast')
   try { const sd = await dbGet('settings', 'ckSpecials'); if (JSON.stringify((sd && sd.value && sd.value.list) || []) !== window._ckSpSig) window._ckPoolC = null; } catch (e) {} return true; }
 // New-version check. APP_BUILD is stamped on every commit (git pre-commit hook). Any device running a newer build records it in
 // settings/appBuild; a device whose own build is older than that number knows it's out of date. Only a real newer build can trigger it.
-const APP_BUILD = 1795533951;
+const APP_BUILD = 1795534301;
 window._appUpd = window._appUpd || { pending: false };
 async function _appVerCheck() { try { const d = await dbGet('settings', 'appBuild'), live = +((d && d.value) || 0);
     if (APP_BUILD > live) { await dbSet('settings', 'appBuild', { value: APP_BUILD }); return; }
