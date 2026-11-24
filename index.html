@@ -6301,7 +6301,7 @@ async function dbAdd(col, obj) {
 window._deletedTeamIds = window._deletedTeamIds || new Set();
 
 async function dbSet(col, id, obj) {
-  if (col === 'coins' && _myCoinsId(id)) { _coinMemPut(id, obj); if (window._ckRun) { window._coinPend = (window._coinPend || 0) + 1; if (window._coinPend < 10) return; return _coinFlush(); } }
+  if (col === 'coins' && _myCoinsId(id)) { if (!window._ckRun) obj = Object.assign({}, obj, { _rev: Date.now() + '-' + Math.random().toString(36).slice(2, 7) }); if (window._ckRun && !window._coinBase && window._coinMem) window._coinBase = JSON.parse(JSON.stringify(window._coinMem.c)); /* wallet as it was before this run's first change */ _coinMemPut(id, obj); if (window._ckRun) { window._coinPend = (window._coinPend || 0) + 1; if (window._coinPend < 10) return; return _coinFlush(); } }
   return _dbSetRaw(col, id, obj); }
 async function _dbSetRaw(col, id, obj) {
   if (window._spec && /^(wordleDuels|wordleScores|cnDuels|coins)$/.test(col)) return; // spectating: read-only
@@ -31432,10 +31432,21 @@ const IM_SEASON_TOPUP = 1000, IM_TOPUP_FROM = 9;
 // Your own wallet is kept in memory for 30 s (and for the whole of an Auto Opener run), and every write you make updates
 // that copy, so bursts of taps don't re-read it. Coming back to the app always re-reads it.
 const _myCoinsId = id => typeof currentUser !== 'undefined' && currentUser && id === currentUser.userId;
-function _coinMemGet(id) { const M = window._coinMem; if (!_myCoinsId(id) || !M || M.id !== id) return null; if (!window._ckRun && !window._coinPend && Date.now() - M.at > 30e3) return null; return JSON.parse(JSON.stringify(M.c)); }
+function _coinMemGet(id) { const M = window._coinMem; if (!_myCoinsId(id) || !M || M.id !== id) return null; if (!window._ckRun && !window._coinPend) return null; /* only during an Auto Opener run — otherwise always read fresh (other devices may have changed it) */ return JSON.parse(JSON.stringify(M.c)); }
 function _coinMemPut(id, obj, full) { if (!_myCoinsId(id)) return; const M = window._coinMem; if (full || !M || M.id !== id) window._coinMem = { id, c: JSON.parse(JSON.stringify(obj)), at: Date.now() }; else { Object.assign(M.c, JSON.parse(JSON.stringify(obj))); } }
 // Auto Opener: wallet writes are batched — saved every 10 writes (~5 packs), when the run stops, or when you leave the page.
-async function _coinFlush() { const M = window._coinMem; if (!window._coinPend || !M) return; window._coinPend = 0; try { await _dbSetRaw('coins', M.id, JSON.parse(JSON.stringify(M.c))); } catch (e) { console.error('coin flush', e); window._coinPend = 1; } }
+// Saving a batch: if another device changed the wallet since our last save (different _rev), we don't overwrite it —
+// we take the fresh copy and add on just what this run changed (IM$, card counts, stats, new log entries).
+function _coinMerge(fresh, base, mine) { if (Array.isArray(mine)) { const add = mine.slice((base || []).length); return (Array.isArray(fresh) ? fresh : []).concat(add); }
+  if (mine && typeof mine === 'object') { const o = Object.assign({}, fresh && typeof fresh === 'object' ? fresh : {}); for (const k of new Set([...Object.keys(mine), ...Object.keys(base || {})])) { if (!(k in mine)) { if (base && k in base && fresh && JSON.stringify(fresh[k]) === JSON.stringify(base[k])) delete o[k]; continue; } o[k] = _coinMerge(fresh ? fresh[k] : undefined, base ? base[k] : undefined, mine[k]); } return o; }
+  if (typeof mine === 'number' && typeof base === 'number' && typeof fresh === 'number') return fresh + (mine - base);
+  return JSON.stringify(mine) === JSON.stringify(base) && fresh !== undefined ? fresh : mine; }
+async function _coinFlush() { const M = window._coinMem; if (!window._coinPend || !M) return; window._coinPend = 0;
+  try { const mine = JSON.parse(JSON.stringify(M.c)), base = window._coinBase || null, fresh = await _dbGetRaw('coins', M.id).catch(() => null);
+    let out = mine; if (fresh && base && fresh._rev !== base._rev) out = _coinMerge(fresh, base, mine); // someone else saved meanwhile
+    out._rev = Date.now() + '-' + Math.random().toString(36).slice(2, 7); await _dbSetRaw('coins', M.id, out);
+    window._coinMem = { id: M.id, c: JSON.parse(JSON.stringify(out)), at: Date.now() }; window._coinBase = JSON.parse(JSON.stringify(out)); }
+  catch (e) { console.error('coin flush', e); window._coinPend = 1; } }
 document.addEventListener('visibilitychange', () => { if (document.hidden) _coinFlush(); else if (!window._ckRun) window._coinMem = null; });
 window.addEventListener('pagehide', () => { _coinFlush(); });
 async function _betLoadCoins(userId) {
@@ -37712,7 +37723,7 @@ async function _ckPackGuard() { document.querySelectorAll('#toast-stack .toast')
   try { const sd = await dbGet('settings', 'ckSpecials'); if (JSON.stringify((sd && sd.value && sd.value.list) || []) !== window._ckSpSig) window._ckPoolC = null; } catch (e) {} return true; }
 // New-version check. APP_BUILD is stamped on every commit (git pre-commit hook). Any device running a newer build records it in
 // settings/appBuild; a device whose own build is older than that number knows it's out of date. Only a real newer build can trigger it.
-const APP_BUILD = 1795535416;
+const APP_BUILD = 1795550561;
 window._appUpd = window._appUpd || { pending: false };
 async function _appVerCheck() { try { const d = await dbGet('settings', 'appBuild'), live = +((d && d.value) || 0);
     if (APP_BUILD > live) { await dbSet('settings', 'appBuild', { value: APP_BUILD }); return; }
@@ -37753,6 +37764,7 @@ window.ckAutoBuy = async function() { const c = await _betLoadCoins(currentUser.
 window.ckAutoCfg = async function(f, v) { const c = await _betLoadCoins(currentUser.userId); c.cards = c.cards || {}; c.cards.autoCfg = Object.assign(_ckAutoCfg(c), { [f]: v }); await dbSet('coins', currentUser.userId, { cards: c.cards }); window._ckCoinsC = c; _ckRender(); };
 // Buy button: Auto on → start auto-opening that pack; off → open one normally.
 window.ckBuyGo = async function(id) { if (!_ckAutoOnFor(id)) return ckBuy(id); const c = await _betLoadCoins(currentUser.userId); if (!_ckAutoOwned(c)) return ckBuy(id); const AC = _ckAutoCfg(c);
+  window._coinMem = null; window._coinBase = null; window._coinPend = 0; // start the run from a fresh read
   window._ckRun = { id, left: Infinity, done: 0, cfg: AC, step: 0, show: true, spent: 0, sold: 0, soldN: 0, kept: [], all: 0 }; _ckRunBar(); _ckRunNext(); };
 // Which cards in this pack to sell, by the player's rules.
 function _ckAutoSellIdx(got, AC) { const dup = new Set(_ckDupIdx(got)), seen = new Set(); const out = [];
@@ -37760,9 +37772,9 @@ function _ckAutoSellIdx(got, AC) { const dup = new Set(_ckDupIdx(got)), seen = n
     if (AC.m === 'all' || dup.has(i)) out.push(i); }); return out; }
 // Admin auto-play: runs the normal pack animation hands-free — rips the pack, flips every card, applies keep / sell
 // duplicates / sell all on the summary, then opens the next one. A small ■ Stop bar shows how many are left.
-window.ckAutoStop = function() { const R = window._ckRun; window._ckRun = null; _coinFlush(); clearTimeout(window._ckRunT); document.getElementById('ck-run')?.remove(); if (R) _ckRunReport(R, 'Stopped'); };
+window.ckAutoStop = function() { const R = window._ckRun; window._ckRun = null; _coinFlush().then(() => { window._coinBase = null; }); clearTimeout(window._ckRunT); document.getElementById('ck-run')?.remove(); if (R) _ckRunReport(R, 'Stopped'); };
 // End-of-session report: packs, IM$ spent / made from sales, net, and the best cards kept.
-function _ckRunReport(R, why) { _coinFlush().then(() => setTimeout(_ckRender, 50)); const P = CK_PACKS[R.id], net = (R.val || 0) - R.spent, /* net = value of every card found minus what the packs cost */ top = R.kept.slice().sort((a, b) => (!!b.sp - !!a.sp) || b.r - a.r), best = top.filter(x => x.sp || x.r >= CK_BIG_MIN).slice(0, 30);
+function _ckRunReport(R, why) { _coinFlush().then(() => { window._coinBase = null; setTimeout(_ckRender, 50); }); const P = CK_PACKS[R.id], net = (R.val || 0) - R.spent, /* net = value of every card found minus what the packs cost */ top = R.kept.slice().sort((a, b) => (!!b.sp - !!a.sp) || b.r - a.r), best = top.filter(x => x.sp || x.r >= CK_BIG_MIN).slice(0, 30);
   document.getElementById('ck-ao')?.remove(); const o = document.createElement('div'); o.id = 'ck-ao'; o.className = 'ck-ov in ctc-pk'; o.onclick = e => { if (e.target === o) o.remove(); };
   o.innerHTML = `<div class="ctc-pkb"><button class="ma-x" onclick="document.getElementById('ck-ao').remove()">✕</button><div class="ck-k">Auto opener · ${esc(why)}</div><div class="ck-ttl" style="font-size:1.4rem">${R.done} × ${esc(P ? P.n : '')}</div>
     <div class="bo-hstats" style="margin:10px 0"><div><b>${R.all}</b><small>Cards</small></div><div><b>${R.spent.toLocaleString()}</b><small>Spent IM$</small></div><div><b>${(R.val || 0).toLocaleString()}</b><small>Cards worth</small></div><div><b style="color:${net >= 0 ? '#4ade80' : '#ff5470'}">${net >= 0 ? '+' : ''}${net.toLocaleString()}</b><small>Net value</small></div><div><b>${R.sold.toLocaleString()}</b><small>Sold for (${R.soldN} cards)</small></div></div>
