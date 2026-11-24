@@ -4164,18 +4164,18 @@ body.ck-lock>header,body.ck-lock>main,body.ck-lock #mobile-nav{visibility:hidden
   background:linear-gradient(180deg,color-mix(in srgb,var(--rim) 55%,#fff),var(--rim));box-shadow:0 0 0 1.5px var(--b),0 3px 8px rgba(0,0,0,.55);pointer-events:auto;cursor:help;transition:filter .15s}
 .ck-og b:hover{filter:brightness(1.2)}.tr-og{display:block;width:100%;margin-top:4px;padding:5px;border-radius:8px;border:1px solid rgba(255,210,74,.45);background:transparent;color:#ffd96a;font-size:.72rem;font-weight:700;cursor:pointer;text-align:center}.tr-og.on{background:rgba(255,210,74,.14)}
 /* Birthday: the birthday-boost look — pink / gold / violet shimmering rim, plum party background, falling confetti */
-.ck.sp.sp-bday{--rim:#ff6ec4;--b:#2b1240;padding:3px;background:linear-gradient(90deg,#ff6ec4,#ffd666,#7873f5,#ff6ec4,#ffd666);background-size:300% 100%;animation:bdShine 6s linear infinite;box-shadow:0 0 0 1px rgba(255,255,255,.25),0 0 22px rgba(255,110,196,.55),0 16px 40px -14px rgba(120,115,245,.7)}
-.ck.sp.sp-bday .ck-in{background:radial-gradient(60% 40% at 0% 20%,rgba(255,105,180,.32),transparent 70%),radial-gradient(55% 35% at 100% 0%,rgba(255,214,102,.2),transparent 70%),radial-gradient(70% 40% at 50% 105%,rgba(120,115,245,.32),transparent 70%),linear-gradient(165deg,#2b1240,#140d1f 55%,#1c1430)!important}
+.ck.sp.sp-bday{--rim:#ff6ec4;--b:#2b1240;padding:3px;background:linear-gradient(90deg,#ff6ec4,#ff9ad5,#ffd666,#ff6ec4,#ff9ad5,#7873f5,#ff6ec4);background-size:300% 100%;animation:bdShine 6s linear infinite;box-shadow:0 0 0 1px rgba(255,170,220,.5),0 0 26px rgba(255,110,196,.75),0 16px 40px -12px rgba(255,105,180,.6)}
+.ck.sp.sp-bday .ck-in{background:radial-gradient(90% 60% at 0% 35%,rgba(255,105,180,.55),transparent 70%),radial-gradient(70% 45% at 100% 0%,rgba(255,214,102,.28),transparent 70%),radial-gradient(80% 50% at 100% 100%,rgba(255,110,196,.4),transparent 70%),linear-gradient(150deg,#4a1550,#2b1240 45%,#22102e)!important}
 .ck-bdc{position:absolute;inset:0;pointer-events:none;overflow:hidden;border-radius:12px;z-index:2;display:block}
 .ck-bdc span{position:absolute;top:-8%;left:var(--x);width:3.5cqw;height:6cqw;border-radius:1px;background:hsl(var(--h),90%,65%);opacity:.8;animation:ckBdFall 5s linear var(--d) infinite}
 @keyframes ckBdFall{0%{transform:translateY(0) rotate(0)}100%{transform:translateY(160cqw) rotate(540deg);opacity:0}}
 .ck.sp.sp-bday .ck-top,.ck.sp.sp-bday .ck-nm,.ck.sp.sp-bday .ck-st,.ck.sp.sp-bday .ck-spb{position:relative;z-index:3}
 .ck.sp.sp-bday .ck-rt b{color:#ffd666;text-shadow:0 0 10px rgba(255,214,102,.65),0 2px 0 rgba(0,0,0,.35)}
-.ck.sp.sp-bday .ck-rt small{color:#ffb3df;letter-spacing:.05em;white-space:nowrap}
+.ck.sp.sp-bday .ck-rt small{color:#ffc6e8;text-shadow:0 0 6px rgba(255,110,196,.8);letter-spacing:.05em;white-space:nowrap}
 .ck.sp.sp-bday .ck-nm{background:linear-gradient(90deg,#ff6ec4,#ffd666,#b9b5ff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .ck.sp.sp-bday .ck-st{color:#f1e6ff}
-.ck.sp.sp-bday .ck-spb{background:linear-gradient(90deg,#ff6ec4,#ffd666,#7873f5);color:#2b1240;font-weight:900;box-shadow:0 4px 14px -4px rgba(255,110,196,.8)}
-.ck-show.sp-bday{background:radial-gradient(55% 50% at 50% 45%,rgba(255,110,196,.45),transparent 70%),radial-gradient(80% 60% at 50% 110%,rgba(255,214,102,.3),transparent 60%),#150c1e}
+.ck.sp.sp-bday .ck-spb{background:linear-gradient(90deg,#ff6ec4,#ff9ad5 50%,#ffd666);color:#3a0f2e;font-weight:900;box-shadow:0 4px 14px -4px rgba(255,110,196,.8)}
+.ck-show.sp-bday{background:radial-gradient(55% 50% at 50% 45%,rgba(255,110,196,.6),transparent 70%),radial-gradient(80% 60% at 50% 110%,rgba(255,214,102,.3),transparent 60%),#150c1e}
 @media (prefers-reduced-motion:reduce){.ck.sp.sp-bday,.ck-bdc span{animation:none!important}}
 .ck-show.sp-cent,.ck-show.sp-dotd{background:radial-gradient(60% 55% at 50% 45%,rgba(255,70,50,.42),transparent 70%),radial-gradient(80% 60% at 50% 110%,rgba(255,211,107,.18),transparent 60%),#0a0306}.ck-show.sp-tots{background:radial-gradient(60% 55% at 50% 45%,rgba(59,91,255,.45),transparent 70%),#05071a}
 .ck-show-c{width:min(78vw,calc(70vh * .7),420px);filter:drop-shadow(0 30px 50px rgba(0,0,0,.7));animation:ckShowIn .6s cubic-bezier(.2,.9,.3,1.2)}.ck-show-c .ck{width:100%}
@@ -37645,7 +37645,7 @@ async function _ckPackGuard() { document.querySelectorAll('#toast-stack .toast')
   try { const sd = await dbGet('settings', 'ckSpecials'); if (JSON.stringify((sd && sd.value && sd.value.list) || []) !== window._ckSpSig) window._ckPoolC = null; } catch (e) {} return true; }
 // New-version check. APP_BUILD is stamped on every commit (git pre-commit hook). Any device running a newer build records it in
 // settings/appBuild; a device whose own build is older than that number knows it's out of date. Only a real newer build can trigger it.
-const APP_BUILD = 1795529558;
+const APP_BUILD = 1795529671;
 window._appUpd = window._appUpd || { pending: false };
 async function _appVerCheck() { try { const d = await dbGet('settings', 'appBuild'), live = +((d && d.value) || 0);
     if (APP_BUILD > live) { await dbSet('settings', 'appBuild', { value: APP_BUILD }); return; }
