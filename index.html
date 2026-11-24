@@ -4626,6 +4626,7 @@ body.ck-lock>header,body.ck-lock>main,body.ck-lock #mobile-nav{visibility:hidden
 .ctc-c{display:flex;flex-direction:column;gap:9px;padding:14px;border-radius:16px;background:linear-gradient(160deg,rgba(111,116,232,.14),rgba(240,72,122,.06) 60%,rgba(255,255,255,.02));box-shadow:inset 0 0 0 1px rgba(124,134,255,.28)}
 .ctc-c.done{background:rgba(74,222,128,.05);box-shadow:inset 0 0 0 1px rgba(74,222,128,.3)}.ctc-c.off{opacity:.72;box-shadow:inset 0 0 0 1px rgba(255,176,32,.4)}
 .ctc-ch{display:flex;justify-content:space-between;align-items:baseline;gap:10px}.ctc-ch b{font:900 italic 1.25rem/1.1 'Barlow Condensed',sans-serif;letter-spacing:.02em;text-transform:uppercase;color:#fff}.ctc-ch span{flex:none;font-size:.68rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#b9beff;padding:3px 9px;border-radius:99px;background:rgba(124,134,255,.16)}
+.ctc-crw.has{display:grid;grid-template-columns:minmax(0,1fr) 92px;gap:12px;align-items:start}.ctc-rcv{width:92px;cursor:pointer;filter:drop-shadow(0 8px 16px rgba(0,0,0,.45))}.ctc-rcv .ck{width:100%}
 .ctc-c p,.ctc-hd p{margin:0;font-size:.8rem;color:#a5a9d6;line-height:1.4}
 .ctc-chips{display:flex;flex-wrap:wrap;gap:5px}.ctc-chips span{font-size:.72rem;padding:4px 9px;border-radius:8px;background:rgba(255,255,255,.06);color:#d5d7f5}
 .ctc-cr small,.ctc-hr small,.ctc-chem small{display:block;font-size:.6rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#8b8fb8;margin-bottom:4px}
@@ -37645,7 +37646,7 @@ async function _ckPackGuard() { document.querySelectorAll('#toast-stack .toast')
   try { const sd = await dbGet('settings', 'ckSpecials'); if (JSON.stringify((sd && sd.value && sd.value.list) || []) !== window._ckSpSig) window._ckPoolC = null; } catch (e) {} return true; }
 // New-version check. APP_BUILD is stamped on every commit (git pre-commit hook). Any device running a newer build records it in
 // settings/appBuild; a device whose own build is older than that number knows it's out of date. Only a real newer build can trigger it.
-const APP_BUILD = 1795530032;
+const APP_BUILD = 1795530247;
 window._appUpd = window._appUpd || { pending: false };
 async function _appVerCheck() { try { const d = await dbGet('settings', 'appBuild'), live = +((d && d.value) || 0);
     if (APP_BUILD > live) { await dbSet('settings', 'appBuild', { value: APP_BUILD }); return; }
@@ -38478,7 +38479,8 @@ async function _ctcTab(pool, c) { const list = await _ctcLoad(), K = (c && c.car
   const grow = g => { const S = subsOf(g), d = gPart(g), f = gDone(g), live = _ctcLive(g);
     return `<div class="ctc-c ctc-g${f ? ' done' : ''}${live ? '' : ' off'}"><div class="ctc-ch"><b>${esc(g.name)}</b><span>📦 ${S.length} part${_ctcS(S.length)}</span></div>${g.desc ? `<p>${esc(g.desc)}</p>` : ''}
       <div class="ctc-gp"><i style="width:${S.length ? d / S.length * 100 : 0}%"></i></div><small class="ctc-gpn">${d} / ${S.length} parts done</small>
-      <div class="ctc-cr"><small>Reward for finishing every part</small>${_ctcRewHtml(g.rew, pool)}</div>
+      ${(() => { const rc = ((g.rew || {}).cards || []).map(k => pool.by[k]).filter(Boolean)[0];
+        return `<div class="ctc-crw${rc ? ' has' : ''}"><div class="ctc-cr"><small>Reward for finishing every part</small>${_ctcRewHtml(g.rew, pool)}</div>${rc ? `<div class="ctc-rcv">${_ckCard(rc, { on: `ckDetail('${esc(rc.k)}')` })}</div>` : ''}</div>`; })()}
       <div class="ctc-cf"><small>${f ? '✅ Completed' : 'One reward for finishing every part'}${g.exp ? (g.exp < Date.now() ? ' · ⌛ ended' : ' · ⏳ ends in ' + _ctcEnds(g.exp)) : ''}${adminLoggedIn ? ` · <b class="${live ? 'up' : 'dn'}">${g.on ? (live ? 'LIVE' : 'EXPIRED') : 'DRAFT'}</b>` : ''}</small><button class="hx-btn${f ? ' ghost' : ''}" onclick="ctcGrpOpen('${esc(g.id)}')">${f ? 'View' : 'Open'}</button></div>
       ${adminLoggedIn ? `<div class="ctc-ad">${stats(g.id)}<button onclick="ctcEdit('${esc(g.id)}')">✏️ Edit</button><button onclick="ctcToggle('${esc(g.id)}')">${g.on ? '⏸ Make draft' : '▶ Go live'}</button><button onclick="ctcDel('${esc(g.id)}')">🗑 Delete</button></div>` : ''}</div>`; };
   const row = ch => { const d = doneOf(ch), f = fin(ch), live = _ctcLive(ch);
