@@ -1400,7 +1400,20 @@
   /* ---- explore bento ---- */
   .hx-bento{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
   .hx-tile{--c:#7c86ff;position:relative;overflow:hidden;isolation:isolate;display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-height:150px;padding:18px 18px 16px;text-align:left;cursor:pointer;color:#fff;font:inherit;border-radius:22px;border:1px solid color-mix(in srgb,var(--c) 26%,rgba(255,255,255,.06));background:radial-gradient(120% 100% at 100% 0%,color-mix(in srgb,var(--c) 20%,transparent),transparent 60%),linear-gradient(165deg,#17142c,#0c0b15);transition:transform .28s cubic-bezier(.2,.9,.25,1),border-color .25s,box-shadow .25s}
-  .hx-tile.w{grid-column:span 2;min-height:176px}.hx-tile-cards{grid-column:1/-1;min-height:0}.hx-cardrow{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-top:10px;pointer-events:none}.hx-cardrow-c .ck{width:100%}@media (max-width:620px){.hx-cardrow{grid-template-columns:repeat(3,minmax(0,1fr))}.hx-cardrow-c:nth-child(n+4){display:none}}
+  .hx-tile.w{grid-column:span 2;min-height:176px}.hx-cards{grid-column:1/-1;position:relative;overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);align-items:center;gap:10px;min-height:250px;padding:22px 24px;border-radius:20px;border:1px solid rgba(167,121,230,.35);cursor:pointer;text-align:left;color:#fff;font:inherit;
+  background:radial-gradient(70% 90% at 85% 60%,rgba(240,72,122,.28),transparent 60%),radial-gradient(60% 80% at 60% 0%,rgba(111,116,232,.35),transparent 60%),linear-gradient(135deg,#191530,#120f1d 60%,#1b1226);box-shadow:0 18px 40px -20px rgba(167,121,230,.7);transition:transform .25s,box-shadow .25s}
+.hx-cards:hover{transform:translateY(-2px);box-shadow:0 24px 50px -20px rgba(240,72,122,.7)}
+.hx-cards-glow{position:absolute;inset:-40%;background:conic-gradient(from 0deg,transparent,rgba(167,121,230,.18),transparent 30%,rgba(240,72,122,.16),transparent 60%);animation:hxSpin 14s linear infinite;pointer-events:none}@keyframes hxSpin{to{transform:rotate(360deg)}}
+.hx-cards-tx{position:relative;z-index:2;display:flex;flex-direction:column;gap:8px}
+.hx-cards-k{display:flex;align-items:center;gap:6px;font-size:.7rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#c9b6ff}.hx-cards-k svg{width:14px;height:14px}.hx-cards-k u{text-decoration:none;padding:2px 7px;border-radius:99px;background:linear-gradient(110deg,#6f74e8,#a779e6 55%,#f0487a);color:#fff;font-size:.6rem;letter-spacing:.08em}
+.hx-cards-tx b{font-family:'Barlow Condensed',sans-serif;font-style:italic;font-weight:900;font-size:clamp(1.7rem,3.4vw,2.5rem);line-height:1;text-transform:uppercase}.hx-cards-tx b em{font-style:italic;background:linear-gradient(110deg,#7c86ff,#b184e8 48%,#ff5c8a);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;padding-right:.08em}
+.hx-cards-tx small{color:#b8b8d4;font-size:.84rem;line-height:1.45;max-width:36ch}
+.hx-cards-go{align-self:flex-start;margin-top:4px;padding:9px 16px;border-radius:999px;background:linear-gradient(110deg,#6f74e8,#a779e6 55%,#f0487a);font:900 .8rem/1 'Barlow Condensed',sans-serif;letter-spacing:1.4px;text-transform:uppercase;box-shadow:0 10px 24px -10px rgba(167,121,230,.9)}
+.hx-fan{position:relative;z-index:1;height:230px;display:block;pointer-events:none}
+.hx-fan-c{position:absolute;left:50%;top:50%;width:118px;transform:translate(-50%,-50%) translateX(calc(var(--i) * 62px)) translateY(calc(var(--i) * var(--i) * 7px)) rotate(calc(var(--i) * 9deg));transition:transform .35s cubic-bezier(.2,1.3,.3,1);z-index:calc(10 - (var(--i) * var(--i)));filter:drop-shadow(0 12px 18px rgba(0,0,0,.55))}
+.hx-fan-c .ck{width:100%}
+.hx-cards:hover .hx-fan-c{transform:translate(-50%,-50%) translateX(calc(var(--i) * 78px)) translateY(calc(var(--i) * var(--i) * 5px - 6px)) rotate(calc(var(--i) * 12deg))}
+@media (max-width:620px){.hx-cards{grid-template-columns:1fr;padding:18px}.hx-fan{height:180px}.hx-fan-c{width:92px;transform:translate(-50%,-50%) translateX(calc(var(--i) * 46px)) translateY(calc(var(--i) * var(--i) * 6px)) rotate(calc(var(--i) * 9deg))}}
   .hx-tile::before{content:'';position:absolute;inset:0;z-index:-1;opacity:0;transition:opacity .3s;background:radial-gradient(240px circle at var(--mx,70%) var(--my,10%),color-mix(in srgb,var(--c) 34%,transparent),transparent 70%)}
   .hx-tile:hover{transform:translateY(-5px);border-color:var(--c);box-shadow:0 22px 44px -22px var(--c)}.hx-tile:hover::before{opacity:1}.hx-tile:active{transform:translateY(-1px) scale(.99)}
   .hx-tile-wm{position:absolute;right:-18px;bottom:-22px;z-index:-1;color:var(--c);opacity:.11;transition:transform .5s cubic-bezier(.2,.9,.25,1),opacity .3s}.hx-tile-wm svg{width:128px;height:128px;stroke-width:1.1}
@@ -10578,7 +10591,7 @@ async function renderDashboard() {
         const dotCol = (i) => { const k = total > 1 ? i / (total - 1) : 0, A = [124, 134, 255], B = [177, 132, 232], C = [255, 92, 138], f = k < .5 ? [A, B, k * 2] : [B, C, (k - .5) * 2]; return 'rgb(' + f[0].map((v, n) => Math.round(v + (f[1][n] - v) * f[2])).join(',') + ')'; };
         // newest special cards on the Cards tile (filled in once the card pool is ready)
         setTimeout(async () => { const el = document.getElementById('hx-cardrow'); if (!el || typeof _ckPool !== 'function') return; try { const pool = await _ckPool();
-          const L = pool.list.filter(c => c.sp && !c.np && !c.ctc).reverse().slice(0, 6); /* specials are added in order, so newest last */ el.innerHTML = L.map(c => `<span class="hx-cardrow-c">${_ckCard(c, {})}</span>`).join(''); } catch (e) {} }, 300);
+          const L = pool.list.filter(c => c.sp && !c.np && !c.ctc).reverse().slice(0, 6); /* specials are added in order, so newest last */ el.innerHTML = L.slice(0, 5).map((c, i, A) => `<span class="hx-fan-c" style="--i:${i - (A.length - 1) / 2}">${_ckCard(c, {})}</span>`).join(''); } catch (e) {} }, 300);
         deck.innerHTML = `
           <div class="hx-h hx-rv" data-k="exh"><div><small>Everything in one place</small><h2>Explore the <em>paddock</em></h2></div></div>
           <div class="hx-bento hx-rv" data-k="ex">
@@ -10588,7 +10601,7 @@ async function renderDashboard() {
             ${bt('bets', '', 'ticket', 'IM$ betting', 'Bets', '<small>Back your calls with IM$. Boosted odds every race weekend.</small>', '#f0487a')}
             ${bt('results', '', 'flag', prevRace ? 'Latest · R' + (prevRace.raceNum || '') : 'Race results', 'Results', `<small>${prevRace ? getRaceFlag(prevRace.name) + ' ' + esc(prevRace.name) + ' — every division, every finisher.' : 'Every round, every division.'}</small>`, '#27f4d2')}
             ${bt('games', '', 'target', 'Daily games <u>NEW</u>', 'Games', '<small>Who Finished Where?, Steward Simulator, duels and IM$ prizes.</small>', '#4ade80')}
-            ${typeof _ckCan === 'function' && _ckCan() ? `<button class="hx-tile hx-tile-cards" style="--c:#a779e6" onclick="showPage('cards')"><span class="hx-tile-k"><i>${_ico('sparkles')}</i>IMS Cards</span><b>Cards</b><small>Open packs, chase specials, complete CTCs and trade with the paddock.</small><span class="hx-cardrow" id="hx-cardrow"></span></button>` : ''}
+            ${typeof _ckCan === 'function' && _ckCan() ? `<button class="hx-cards" onclick="showPage('cards')"><span class="hx-cards-glow"></span><span class="hx-cards-tx"><span class="hx-cards-k">${_ico('sparkles')} IMS Cards <u>NEW SPECIALS</u></span><b>Collect the <em>paddock</em></b><small>Rip packs, pull walkouts, chase Record Breakers & Original Cards, crack CTCs and trade with everyone.</small><span class="hx-cards-go">Open packs →</span></span><span class="hx-fan" id="hx-cardrow"></span></button>` : ''}
           </div>
           <div class="hx-links hx-rv" data-k="lk">${[['predictions', 'clipboard', 'Race briefing'], ['history', 'chart', 'Stats & records'], ['social', 'user', 'Social'], ['extra', 'sparkles', 'Extra'], ['home', 'swap', 'Edit team']].map(([pg, ic, l]) => `<button onclick="showPage('${pg}')">${_ico(ic)}${l}</button>`).join('')}</div>
           <section class="hx-card hx-pulse hx-rv" data-k="pu">
@@ -37689,7 +37702,7 @@ async function _ckPackGuard() { document.querySelectorAll('#toast-stack .toast')
   try { const sd = await dbGet('settings', 'ckSpecials'); if (JSON.stringify((sd && sd.value && sd.value.list) || []) !== window._ckSpSig) window._ckPoolC = null; } catch (e) {} return true; }
 // New-version check. APP_BUILD is stamped on every commit (git pre-commit hook). Any device running a newer build records it in
 // settings/appBuild; a device whose own build is older than that number knows it's out of date. Only a real newer build can trigger it.
-const APP_BUILD = 1795534931;
+const APP_BUILD = 1795535100;
 window._appUpd = window._appUpd || { pending: false };
 async function _appVerCheck() { try { const d = await dbGet('settings', 'appBuild'), live = +((d && d.value) || 0);
     if (APP_BUILD > live) { await dbSet('settings', 'appBuild', { value: APP_BUILD }); return; }
