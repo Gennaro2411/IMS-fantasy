@@ -10591,7 +10591,12 @@ async function renderDashboard() {
         const dotCol = (i) => { const k = total > 1 ? i / (total - 1) : 0, A = [124, 134, 255], B = [177, 132, 232], C = [255, 92, 138], f = k < .5 ? [A, B, k * 2] : [B, C, (k - .5) * 2]; return 'rgb(' + f[0].map((v, n) => Math.round(v + (f[1][n] - v) * f[2])).join(',') + ')'; };
         // newest special cards on the Cards tile (filled in once the card pool is ready)
         setTimeout(async () => { const el = document.getElementById('hx-cardrow'); if (!el || typeof _ckPool !== 'function') return; try { const pool = await _ckPool();
-          const L = pool.list.filter(c => c.sp && !c.np && !c.ctc).reverse().slice(0, 6); /* specials are added in order, so newest last */ el.innerHTML = L.slice(0, 5).map((c, i, A) => `<span class="hx-fan-c" style="--i:${i - (A.length - 1) / 2}">${_ckCard(c, {})}</span>`).join(''); } catch (e) {} }, 300);
+          // Cover hand: only cards with a real photo, one of each card type (specials first, then the top tiers),
+          // best card of each type; the very best goes in the middle and they get a little worse towards the edges.
+          const ph = c => typeof _ckPhOf === 'function' && !!_ckPhOf(c), typeOf = c => c.sp ? 'sp:' + c.sp : 't:' + c.t, best = {};
+          pool.list.filter(c => ph(c) && !c.np && !c.ctc && (c.sp || ['dia', 'rg', 'ug'].includes(c.t))).forEach(c => { const t = typeOf(c); if (!best[t] || c.r > best[t].r) best[t] = c; });
+          const top = Object.values(best).sort((a, b) => (!!b.sp - !!a.sp) || b.r - a.r).slice(0, 5).sort((a, b) => b.r - a.r);
+          const pos = [0, -1, 1, -2, 2]; el.innerHTML = top.map((c, i) => `<span class="hx-fan-c" style="--i:${pos[i]}">${_ckCard(c, {})}</span>`).join(''); } catch (e) {} }, 300);
         deck.innerHTML = `
           <div class="hx-h hx-rv" data-k="exh"><div><small>Everything in one place</small><h2>Explore the <em>paddock</em></h2></div></div>
           <div class="hx-bento hx-rv" data-k="ex">
@@ -37702,7 +37707,7 @@ async function _ckPackGuard() { document.querySelectorAll('#toast-stack .toast')
   try { const sd = await dbGet('settings', 'ckSpecials'); if (JSON.stringify((sd && sd.value && sd.value.list) || []) !== window._ckSpSig) window._ckPoolC = null; } catch (e) {} return true; }
 // New-version check. APP_BUILD is stamped on every commit (git pre-commit hook). Any device running a newer build records it in
 // settings/appBuild; a device whose own build is older than that number knows it's out of date. Only a real newer build can trigger it.
-const APP_BUILD = 1795535100;
+const APP_BUILD = 1795535279;
 window._appUpd = window._appUpd || { pending: false };
 async function _appVerCheck() { try { const d = await dbGet('settings', 'appBuild'), live = +((d && d.value) || 0);
     if (APP_BUILD > live) { await dbSet('settings', 'appBuild', { value: APP_BUILD }); return; }
