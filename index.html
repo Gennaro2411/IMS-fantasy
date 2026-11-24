@@ -6161,7 +6161,7 @@ async function dbGetAll(col, opts) {
 // document is what keeps the Firestore bill down. Anything wrong (no file, server not running for 10+
 // minutes, old browser) → falls straight back to reading Firestore as before.
 window._SNAP_COLS = new Set(['drivers', 'races', 'teams', 'constructors', 'schedule', 'seasonArchives', 'archives', 'bets', 'transfers', 'rosterMoves', 'predictions', 'settings']);
-window._SNAP_SETTINGS = new Set(['seasonNumber','totalRounds','seasonDefinitions','trackRecords','qualiPace','heroImage','fiaVerdicts','betSpecials','betBoost','betH2H','betConfig','betOddsOverrides','bdayOdds','statOverrides','raceStats','musicCustom','departedFanZonePoints','departedDriverPrices','betStatsSince','wordleCfg','adminUsers','stewardIncidents']); // same list as functions/index.js
+window._SNAP_SETTINGS = new Set(['seasonNumber','totalRounds','seasonDefinitions','trackRecords','qualiPace','heroImage','fiaVerdicts','betSpecials','betBoost','betH2H','betConfig','betOddsOverrides','bdayOdds','statOverrides','raceStats','musicCustom','departedFanZonePoints','departedDriverPrices','betStatsSince','wordleCfg','adminUsers','stewardIncidents','ckSpecials','ckFirst','ckRateLock']); // same list as functions/index.js
 window._snapBypass = window._snapBypass || {};
 function _snapUrl(p, v) { return 'https://firebasestorage.googleapis.com/v0/b/fantasy-ims.firebasestorage.app/o/' + encodeURIComponent(p) + '?alt=media&token=ims-snap-v1' + (v ? '&v=' + v : ''); }
 function _snapMeta() {
@@ -6251,7 +6251,7 @@ async function dbGet(col, id) {
   if (col === 'settings' && window._SNAP_SETTINGS && window._SNAP_SETTINGS.has(id)) {
     const c = window._snapSetC; let docs = c && Date.now() - c.at < 15000 ? c.docs : null;
     if (!docs) { docs = await _snapGet('settings').catch(() => null); if (docs) window._snapSetC = { at: Date.now(), docs }; }
-    if (docs && (await _snapMeta())) { const d = docs.find(x => x.id === id); return d ? _dbClone(d) : null; }
+    if (docs && (await _snapMeta())) { const d = docs.find(x => x.id === id); if (d) return _dbClone(d); if (!/^ck(Specials|First|RateLock)$/.test(id)) return null; } // card docs added later: if the snapshot doesn't have them yet, read live
   }
   const _d = await _dbGetRaw(col, id);
   if (_d && (col === 'races' || col === 'seasonArchives' || col === 'teams')) await _constrAliasFix(col, _d);
@@ -6288,6 +6288,9 @@ async function dbAdd(col, obj) {
 window._deletedTeamIds = window._deletedTeamIds || new Set();
 
 async function dbSet(col, id, obj) {
+  if (col === 'coins' && _myCoinsId(id)) { _coinMemPut(id, obj); if (window._ckRun) { window._coinPend = (window._coinPend || 0) + 1; if (window._coinPend < 10) return; return _coinFlush(); } }
+  return _dbSetRaw(col, id, obj); }
+async function _dbSetRaw(col, id, obj) {
   if (window._spec && /^(wordleDuels|wordleScores|cnDuels|coins)$/.test(col)) return; // spectating: read-only
   if (!PROJECT_ID) throw new Error('Not connected');
   // Firestore's PATCH CREATES a document when the id doesn't exist. That means any ordinary
@@ -31226,7 +31229,7 @@ window.adminUserBets = function(uid) {
 // doc and shown the next time they open Bets.
 window._betSettleAll = async function() {
   try { await window._fiaLoad(true); if (!window._allDrivers) window._allDrivers = await dbGetAll('drivers').catch(() => []); } catch (e) {}
-  const [races, bets] = await Promise.all([dbGetAll('races', { fresh: true }).catch(() => []), dbGetAll('bets', { fresh: true }).catch(() => [])]);
+  const [races, bets] = await Promise.all([dbGetAll('races', { fresh: true }).catch(() => []), dbGetAll('bets', { fresh: true }).catch(() => [])]); /* admin settle-all: always live */
   const users = [...new Set(bets.filter(b => b.userId).map(b => b.userId))];
   let n = 0;
   for (const uid of users) {
@@ -31399,8 +31402,18 @@ window.acmMerge = async function(btn) {
 // IM$ never resets. Everyone gets +1,000 IM$ once per new season (from Season 9 on), added the next time
 // their wallet loads. `topUpSeason` = the last season they were topped up for (or joined in).
 const IM_SEASON_TOPUP = 1000, IM_TOPUP_FROM = 9;
+// Your own wallet is kept in memory for 30 s (and for the whole of an Auto Opener run), and every write you make updates
+// that copy, so bursts of taps don't re-read it. Coming back to the app always re-reads it.
+const _myCoinsId = id => typeof currentUser !== 'undefined' && currentUser && id === currentUser.userId;
+function _coinMemGet(id) { const M = window._coinMem; if (!_myCoinsId(id) || !M || M.id !== id) return null; if (!window._ckRun && !window._coinPend && Date.now() - M.at > 30e3) return null; return JSON.parse(JSON.stringify(M.c)); }
+function _coinMemPut(id, obj, full) { if (!_myCoinsId(id)) return; const M = window._coinMem; if (full || !M || M.id !== id) window._coinMem = { id, c: JSON.parse(JSON.stringify(obj)), at: Date.now() }; else { Object.assign(M.c, JSON.parse(JSON.stringify(obj))); } }
+// Auto Opener: wallet writes are batched — saved every 10 writes (~5 packs), when the run stops, or when you leave the page.
+async function _coinFlush() { const M = window._coinMem; if (!window._coinPend || !M) return; window._coinPend = 0; try { await _dbSetRaw('coins', M.id, JSON.parse(JSON.stringify(M.c))); } catch (e) { console.error('coin flush', e); window._coinPend = 1; } }
+document.addEventListener('visibilitychange', () => { if (document.hidden) _coinFlush(); else if (!window._ckRun) window._coinMem = null; });
+window.addEventListener('pagehide', () => { _coinFlush(); });
 async function _betLoadCoins(userId) {
-  let c = await dbGet('coins', userId).catch(() => null);
+  { const m = _coinMemGet(userId); if (m) return m; }
+  let c = await dbGet('coins', userId).catch(() => null); if (c) _coinMemPut(userId, c, true);
   const cs = Number(window.currentSeason) || 0;
   if (!c) { c = { userId, balance: BET_START_COINS, staked: 0, won: 0, betsPlaced: 0, betsWon: 0, createdAt: Date.now(), ...(cs ? { topUpSeason: cs } : {}) }; await dbSet('coins', userId, c).catch(() => {}); return c; }
   if (cs >= IM_TOPUP_FROM) {
@@ -37589,22 +37602,22 @@ const _ckOgHeld = (k, uid) => { const id = uid || (typeof currentUser !== 'undef
 const _ckOgMine = k => window._ckOgPrev ? true /* test account preview */ : _ckOgHeld(k);
 // Copies that must stay: locked copies, plus the Original Card if you hold it (it can be traded, never sold or used in a CTC).
 const _ckKeepN = (LK, k) => Math.max(_ckLk(LK, k), _ckOgHeld(k) ? 1 : 0);
-async function _ckOgLoad() { try { const d = await dbGet('settings', 'ckFirst'); window._ckFirst = (d && d.value) || {}; } catch (e) {} return window._ckFirst; }
+async function _ckOgLoad(live) { try { const d = live ? await _dbGetRaw('settings', 'ckFirst') : await dbGet('settings', 'ckFirst'); window._ckFirst = (d && d.value) || {}; } catch (e) {} return window._ckFirst; }
 // Called after a pull/reward: any special card nobody has had before is claimed for this player.
 async function _ckOgClaim(got, via) { try { let sp = (got || []).filter(x => x && (x.sp || x.ctc)); if (!sp.length) return; /* specials + CTC reward cards */ if (sp.every(x => window._ckFirst[x.k])) return;
     // Only truly brand-new cards: if anyone already has (or had) this card, nobody gets its Original Card from a later pull.
     try { const G = await _ckGlobal(await _ckPool()); sp = sp.filter(x => !(G.n || {})[x.k]); } catch (e) { return; } if (!sp.length) return;
-    const F = await _ckOgLoad(), me = currentUser.userId, nm = (_wdMe() || {}).name || ''; let n = 0;
+    const F = await _ckOgLoad(true), me = currentUser.userId, nm = (_wdMe() || {}).name || ''; let n = 0;
     sp.forEach(x => { if (!F[x.k]) { F[x.k] = { u: me, nm, h: me, hn: nm, t: Date.now(), via: via || 'pack' }; n++; } });
     if (n) { await dbSet('settings', 'ckFirst', { value: F }); showToast(`👑 Original Card! You pulled the very first ${n === 1 ? esc(sp.find(x => F[x.k].u === me).n) + ' special' : n + ' specials'} ever. It's marked OG and can be traded, but never sold.`, 'success'); } } catch (e) {} }
 // Admin: fill in Original Owners for older special cards from everyone's pull history (earliest recorded pull wins).
-window.ckRateLock = async function(k, clear) { if (!adminLoggedIn) return; const d = await dbGet('settings', 'ckRateLock').catch(() => null), V0 = (d && d.value) || {}, map = Object.assign({}, V0.map || {});
+window.ckRateLock = async function(k, clear) { if (!adminLoggedIn) return; const d = await _dbGetRaw('settings', 'ckRateLock').catch(() => null), V0 = (d && d.value) || {}, map = Object.assign({}, V0.map || {});
   if (clear) delete map[k]; else { const v = parseInt((document.getElementById('ck-rl-v') || {}).value, 10); if (!(v >= 40 && v <= 99)) return showToast('Rating must be 40–99.', 'error'); map[k] = v; }
   await dbSet('settings', 'ckRateLock', { value: Object.assign({}, V0, { map }) }); window._ckPoolC = null; document.getElementById('ck-dt')?.remove(); showToast(clear ? 'Rating unlocked — back to the calculated value.' : `🔒 Rating locked at ${map[k]}.`, 'success'); _ckRender(); };
 // Lock EVERY card at its current rating (so imports stop moving them), or clear all locks.
 window.ckRateLockAll = async function(clear) { if (!adminLoggedIn) return; window._ckPoolC = null; const pool = await _ckPool();
   customConfirm(clear ? 'Unlock every card? Ratings go back to being calculated from stats.' : `Lock all ${pool.list.filter(c => !c.sp).length} cards at their current ratings? New results won't change them until you unlock.`, async () => {
-    const map = {}; if (!clear) pool.list.forEach(c => { if (!c.sp) map[c.k] = c.r; }); const d0 = await dbGet('settings', 'ckRateLock').catch(() => null); await dbSet('settings', 'ckRateLock', { value: Object.assign({}, (d0 && d0.value) || {}, { map }) }); window._ckPoolC = null; showToast(clear ? 'All ratings unlocked.' : '🔒 All ratings locked.', 'success'); _ckRender(); }, clear ? 'Unlock all' : 'Lock all'); };
+    const map = {}; if (!clear) pool.list.forEach(c => { if (!c.sp) map[c.k] = c.r; }); const d0 = await _dbGetRaw('settings', 'ckRateLock').catch(() => null); await dbSet('settings', 'ckRateLock', { value: Object.assign({}, (d0 && d0.value) || {}, { map }) }); window._ckPoolC = null; showToast(clear ? 'All ratings unlocked.' : '🔒 All ratings locked.', 'success'); _ckRender(); }, clear ? 'Unlock all' : 'Lock all'); };
 // Wishlist (up to 10 cards): shown to people trading with you, so they can see what you're after.
 const CK_WISH_MAX = 10;
 window.ckWish = async function(k) { const c = await _betLoadCoins(currentUser.userId); c.cards = c.cards || {}; const W = c.cards.wish = c.cards.wish || {};
@@ -37625,16 +37638,16 @@ window.ckOgSet = async function(k) { if (!adminLoggedIn) return; const pool = aw
     <select id="og-who" style="width:100%;padding:10px;border-radius:10px;background:#0e0c1a;color:#fff;border:1px solid rgba(255,255,255,.14)">${T.map(t => `<option value="${esc(t.id)}"${f && (f.h || f.u) === t.id ? ' selected' : ''}>${esc(t.n)}</option>`).join('')}</select>
     <div class="ck-acts"><button class="hx-btn" onclick="ckOgSetGo('${esc(k)}')">Give Original Card</button>${f ? `<button class="hx-btn ghost dn" onclick="ckOgSetGo('${esc(k)}',1)">Remove it</button>` : ''}</div></div>`;
   document.body.appendChild(o); window._ogT = T; };
-window.ckOgSetGo = async function(k, clear) { if (!adminLoggedIn) return; const F = await _ckOgLoad();
+window.ckOgSetGo = async function(k, clear) { if (!adminLoggedIn) return; const F = await _ckOgLoad(true);
   if (clear) delete F[k]; else { const id = document.getElementById('og-who').value, p = (window._ogT || []).find(t => t.id === id); if (!p) return; F[k] = Object.assign({ t: Date.now(), via: 'admin' }, F[k] || {}, { u: id, nm: p.n, h: id, hn: p.n }); }
   await dbSet('settings', 'ckFirst', { value: F }); document.getElementById('og-set')?.remove(); showToast(clear ? 'Original Card removed.' : '👑 Original Card given.', 'success'); _ckRender(); };
-window.ckOgFix = async function() { if (!adminLoggedIn) return; const F = await _ckOgLoad(), all = await _gmNoTestCoins(await dbGetAll('coins', { fresh: true }).catch(() => [])), bad = [];
+window.ckOgFix = async function() { if (!adminLoggedIn) return; const F = await _ckOgLoad(true), all = await _gmNoTestCoins(await dbGetAll('coins', { fresh: true }).catch(() => [])), bad = [];
   Object.entries(F).forEach(([k, f]) => { if (!f) return; const other = all.filter(x => x && x.userId !== f.u && ((x.cards || {}).dex || {})[k]);
     // someone else has it in their index but has no pull of it AFTER this claim → they had it first
     if (other.some(x => !(x.cardPulls || []).some(p => p.k === k && (p.t || 0) > (f.t || 0)))) bad.push(k); });
   if (!bad.length) return showToast('No wrong Original Cards found.', 'info'); const pool = await _ckPool();
   customConfirm(`Remove ${bad.length} Original Card tag${bad.length === 1 ? '' : 's'} given to someone who wasn't first?<br><small>${bad.map(k => esc((pool.by[k] || {}).n || k) + ' (' + esc(F[k].nm || '?') + ')').join(', ')}</small>`, async () => { bad.forEach(k => delete F[k]); await dbSet('settings', 'ckFirst', { value: F }); showToast(`Removed ${bad.length}.`, 'success'); _ckRender(); }, 'Remove'); };
-window.ckOgBackfill = async function() { if (!adminLoggedIn) return; const pool = await _ckPool(), F = await _ckOgLoad(), all = await _gmNoTestCoins(await dbGetAll('coins', { fresh: true }).catch(() => [])), teams = await dbGetAll('teams').catch(() => []), nm = {}; teams.forEach(t => { if (t && t.userId) nm[t.userId] = t.playerName || t.teamName || ''; });
+window.ckOgBackfill = async function() { if (!adminLoggedIn) return; const pool = await _ckPool(), F = await _ckOgLoad(true), all = await _gmNoTestCoins(await dbGetAll('coins', { fresh: true }).catch(() => [])), teams = await dbGetAll('teams').catch(() => []), nm = {}; teams.forEach(t => { if (t && t.userId) nm[t.userId] = t.playerName || t.teamName || ''; });
   const best = {}; all.forEach(x => (x && x.cardPulls || []).forEach(p => { const c = pool.by[p.k]; if (!c || !c.sp || F[p.k]) return; if (!best[p.k] || (p.t || 0) < best[p.k].t) best[p.k] = { u: x.userId, nm: p.by || nm[x.userId] || '', h: x.userId, hn: p.by || nm[x.userId] || '', t: p.t || 0, via: p.p === 'ctc' ? 'ctc' : 'pack' }; }));
   // CTC reward cards: whoever completed that challenge (or group) first.
   { const list = await _ctcLoad(true); list.filter(ch => ch.rew && (ch.rew.cards || []).length).forEach(ch => { let w = null;
@@ -37672,7 +37685,7 @@ async function _ckPackGuard() { document.querySelectorAll('#toast-stack .toast')
   try { const sd = await dbGet('settings', 'ckSpecials'); if (JSON.stringify((sd && sd.value && sd.value.list) || []) !== window._ckSpSig) window._ckPoolC = null; } catch (e) {} return true; }
 // New-version check. APP_BUILD is stamped on every commit (git pre-commit hook). Any device running a newer build records it in
 // settings/appBuild; a device whose own build is older than that number knows it's out of date. Only a real newer build can trigger it.
-const APP_BUILD = 1795534301;
+const APP_BUILD = 1795534468;
 window._appUpd = window._appUpd || { pending: false };
 async function _appVerCheck() { try { const d = await dbGet('settings', 'appBuild'), live = +((d && d.value) || 0);
     if (APP_BUILD > live) { await dbSet('settings', 'appBuild', { value: APP_BUILD }); return; }
@@ -37720,9 +37733,9 @@ function _ckAutoSellIdx(got, AC) { const dup = new Set(_ckDupIdx(got)), seen = n
     if (AC.m === 'all' || dup.has(i)) out.push(i); }); return out; }
 // Admin auto-play: runs the normal pack animation hands-free — rips the pack, flips every card, applies keep / sell
 // duplicates / sell all on the summary, then opens the next one. A small ■ Stop bar shows how many are left.
-window.ckAutoStop = function() { const R = window._ckRun; window._ckRun = null; clearTimeout(window._ckRunT); document.getElementById('ck-run')?.remove(); if (R) _ckRunReport(R, 'Stopped'); };
+window.ckAutoStop = function() { const R = window._ckRun; window._ckRun = null; _coinFlush(); clearTimeout(window._ckRunT); document.getElementById('ck-run')?.remove(); if (R) _ckRunReport(R, 'Stopped'); };
 // End-of-session report: packs, IM$ spent / made from sales, net, and the best cards kept.
-function _ckRunReport(R, why) { setTimeout(_ckRender, 50); const P = CK_PACKS[R.id], net = (R.val || 0) - R.spent, /* net = value of every card found minus what the packs cost */ top = R.kept.slice().sort((a, b) => (!!b.sp - !!a.sp) || b.r - a.r), best = top.filter(x => x.sp || x.r >= CK_BIG_MIN).slice(0, 30);
+function _ckRunReport(R, why) { _coinFlush().then(() => setTimeout(_ckRender, 50)); const P = CK_PACKS[R.id], net = (R.val || 0) - R.spent, /* net = value of every card found minus what the packs cost */ top = R.kept.slice().sort((a, b) => (!!b.sp - !!a.sp) || b.r - a.r), best = top.filter(x => x.sp || x.r >= CK_BIG_MIN).slice(0, 30);
   document.getElementById('ck-ao')?.remove(); const o = document.createElement('div'); o.id = 'ck-ao'; o.className = 'ck-ov in ctc-pk'; o.onclick = e => { if (e.target === o) o.remove(); };
   o.innerHTML = `<div class="ctc-pkb"><button class="ma-x" onclick="document.getElementById('ck-ao').remove()">✕</button><div class="ck-k">Auto opener · ${esc(why)}</div><div class="ck-ttl" style="font-size:1.4rem">${R.done} × ${esc(P ? P.n : '')}</div>
     <div class="bo-hstats" style="margin:10px 0"><div><b>${R.all}</b><small>Cards</small></div><div><b>${R.spent.toLocaleString()}</b><small>Spent IM$</small></div><div><b>${(R.val || 0).toLocaleString()}</b><small>Cards worth</small></div><div><b style="color:${net >= 0 ? '#4ade80' : '#ff5470'}">${net >= 0 ? '+' : ''}${net.toLocaleString()}</b><small>Net value</small></div><div><b>${R.sold.toLocaleString()}</b><small>Sold for (${R.soldN} cards)</small></div></div>
@@ -37859,17 +37872,17 @@ function _ckChampMissing(pool) { const have = new Set(pool.list.filter(x => x.sp
     return { k, n, note: n > 1 ? n + '× Champion' : L[0] + ' Champion', r: Math.max(75, Math.min(99, b.r + 2 + (top ? 1 : 0) + (n - 1) * 2)) }; }); }
 window.ckSpAllChamps = async function() { if (!adminLoggedIn) return; window._ckPoolC = null; const pool = await _ckPool(), miss = _ckChampMissing(pool); if (!miss.length) return showToast('Every champion already has a champion card.', 'success');
   customConfirm(`Create ${miss.length} champion cards (one per champion)? Starting rating = normal rating +2, +1 if they won a D1/E1 title, +2 for each extra title (75–99). Multi-champions are labelled e.g. "3× Champion". You can change each one after.`, async () => {
-    const sd = await dbGet('settings', 'ckSpecials').catch(() => null), t = Date.now(), list = ((sd && sd.value && sd.value.list) || []).concat(miss.map((m, i) => ({ id: (t + i).toString(36), k: m.k, ty: 'champ', r: m.r, note: m.note.slice(0, 30), t })));
+    const sd = await _dbGetRaw('settings', 'ckSpecials').catch(() => null), t = Date.now(), list = ((sd && sd.value && sd.value.list) || []).concat(miss.map((m, i) => ({ id: (t + i).toString(36), k: m.k, ty: 'champ', r: m.r, note: m.note.slice(0, 30), t })));
     await dbSet('settings', 'ckSpecials', { value: { list } }); window._ckPoolC = null; showToast('👑 ' + miss.length + ' champion cards created.', 'success'); window._ckAllT = 'sp'; _ckRender(); }, 'Create'); };
 window.ckSpRate = async function(id) { if (!adminLoggedIn) return; const v = parseInt((document.getElementById('ck-spr-' + id) || {}).value, 10); if (!(v >= 40 && v <= 100)) return showToast('Rating must be 40–100.', 'error');
-  { const sd0 = await dbGet('settings', 'ckSpecials').catch(() => null), x0 = ((sd0 && sd0.value && sd0.value.list) || []).find(y => y.id === id); if (x0 && x0.ty === 'dotd' && v < 80) return showToast('DOTD cards are rated 80 or higher.', 'error'); }
-  const sd = await dbGet('settings', 'ckSpecials').catch(() => null), list = ((sd && sd.value && sd.value.list) || []); const x = list.find(y => y.id === id); if (!x) return; x.r = v;
+  { const sd0 = await _dbGetRaw('settings', 'ckSpecials').catch(() => null), x0 = ((sd0 && sd0.value && sd0.value.list) || []).find(y => y.id === id); if (x0 && x0.ty === 'dotd' && v < 80) return showToast('DOTD cards are rated 80 or higher.', 'error'); }
+  const sd = await _dbGetRaw('settings', 'ckSpecials').catch(() => null), list = ((sd && sd.value && sd.value.list) || []); const x = list.find(y => y.id === id); if (!x) return; x.r = v;
   await dbSet('settings', 'ckSpecials', { value: { list } }); window._ckPoolC = null; showToast('Rating saved: ' + v, 'success'); _ckRender(); };
 // Shrink an uploaded image to a small JPEG (max 360px wide) so it fits in the specials settings doc.
 const _ckImgSmall = f => new Promise((res, rej) => { const r = new FileReader(); r.onerror = rej; r.onload = () => { const im = new Image(); im.onerror = rej; im.onload = () => { const W = Math.min(360, im.width), H = Math.round(im.height * W / im.width), cv = document.createElement('canvas'); cv.width = W; cv.height = H; cv.getContext('2d').drawImage(im, 0, 0, W, H); res(cv.toDataURL('image/jpeg', .82)); }; im.src = r.result; }; r.readAsDataURL(f); });
 window.ckSpImgPick = async function(inp) { const f = inp.files && inp.files[0]; window._ckSpImg = f ? await _ckImgSmall(f).catch(() => '') : ''; if (f && !window._ckSpImg) showToast('Couldn\'t read that image.', 'error'); ckSpPrev(); };
 window.ckSpImgSet = async function(id, inp) { if (!adminLoggedIn) return; let img = ''; if (inp) { const f = inp.files && inp.files[0]; if (!f) return; img = await _ckImgSmall(f).catch(() => ''); if (!img) return showToast('Couldn\'t read that image.', 'error'); }
-  const sd = await dbGet('settings', 'ckSpecials').catch(() => null), list = ((sd && sd.value && sd.value.list) || []), x = list.find(y => y.id === id); if (!x) return; if (img) x.img = img; else delete x.img;
+  const sd = await _dbGetRaw('settings', 'ckSpecials').catch(() => null), list = ((sd && sd.value && sd.value.list) || []), x = list.find(y => y.id === id); if (!x) return; if (img) x.img = img; else delete x.img;
   await dbSet('settings', 'ckSpecials', { value: { list } }); window._ckPoolC = null; showToast(img ? '🖼️ Image saved — it\'s now a dynamic card.' : 'Image removed.', 'success'); _ckRender(); };
 window.ckAltImg = function(k) { const A = _ckAlt(); if (A[k]) delete A[k]; else A[k] = 1; try { localStorage.setItem(_ckAltK, JSON.stringify(A)); } catch (e) {} document.getElementById('ck-dt')?.remove(); ckDetail(k); };
 window.ckSpFind = function(q) { const sel = document.getElementById('ck-sp-k'); if (!sel) return; q = String(q || '').toLowerCase(); let first = null;
@@ -37880,10 +37893,10 @@ window.ckSpPrev = async function() { const pool = await _ckPool(), k = (document
 window.ckSpAdd = async function() { if (!adminLoggedIn) return; const k = document.getElementById('ck-sp-k').value, ty = document.getElementById('ck-sp-ty').value, r = parseInt(document.getElementById('ck-sp-r').value, 10), note = document.getElementById('ck-sp-n').value.trim().slice(0, 30), ctc = !!(document.getElementById('ck-sp-ctc') || {}).checked;
   if (!k || !CK_SP[ty]) return showToast('Pick a driver and type.', 'error'); if (!(r >= 40 && r <= (ty === 'cent' ? 100 : 99))) return showToast('Set a rating between 40 and ' + (ty === 'cent' ? 100 : 99) + '.', 'error'); if (ty === 'dotd' && r < 80) return showToast('DOTD cards are rated 80 or higher.', 'error');
   const pool = await _ckPool(), b = pool.by[k]; customConfirm(`Create a ${r} ${CK_SP[ty].n} card for ${esc(b ? b.n : k)}?${ctc ? ' It will be CTC only (not in packs).' : ''}`, async () => {
-    const sd = await dbGet('settings', 'ckSpecials').catch(() => null), list = ((sd && sd.value && sd.value.list) || []).concat([Object.assign({ id: Date.now().toString(36), k, ty, r, note, t: Date.now() }, ctc ? { ctc: 1 } : {}, window._ckSpImg ? { img: window._ckSpImg } : {})]); window._ckSpImg = '';
+    const sd = await _dbGetRaw('settings', 'ckSpecials').catch(() => null), list = ((sd && sd.value && sd.value.list) || []).concat([Object.assign({ id: Date.now().toString(36), k, ty, r, note, t: Date.now() }, ctc ? { ctc: 1 } : {}, window._ckSpImg ? { img: window._ckSpImg } : {})]); window._ckSpImg = '';
     await dbSet('settings', 'ckSpecials', { value: { list } }); window._ckPoolC = null; showToast('✨ Special card created.', 'success'); window._ckAllT = 'sp'; _ckRender(); }, 'Create'); };
 window.ckSpDel = function(id) { if (!adminLoggedIn) return; customConfirm('Delete this special card? Players who own it will lose it from their collection.', async () => {
-    const sd = await dbGet('settings', 'ckSpecials').catch(() => null), list = ((sd && sd.value && sd.value.list) || []).filter(x => x.id !== id);
+    const sd = await _dbGetRaw('settings', 'ckSpecials').catch(() => null), list = ((sd && sd.value && sd.value.list) || []).filter(x => x.id !== id);
     await dbSet('settings', 'ckSpecials', { value: { list } }); window._ckPoolC = null; showToast('Deleted.', 'success'); _ckRender(); }, 'Delete'); };
 // Loyalty bonus: Bronze + Silver + Gold for everyone who scored a fantasy point in S7, and again for S8.
 // Each player can only ever get each season's bonus once (c.cards.loyal[season]).
@@ -38124,7 +38137,7 @@ async function _ckAutoCent() { if (!adminLoggedIn || window._ckCentBusy) return;
     const at100 = FP.filter(p => (p.st || 0) >= 100).map(p => _wdNorm(p.name)).filter(Boolean);
     if (!seen) { await dbSet('settings', 'ckCentSeen', { value: { keys: at100, t: Date.now() } }); return; }
     const known = new Set(seen.keys || []), fresh = at100.filter(k => !known.has(k)); if (!fresh.length) return;
-    const sp = await dbGet('settings', 'ckSpecials').catch(() => null), list = ((sp && sp.value && sp.value.list) || []), t = Date.now(), pool = await _ckPool(); let made = [];
+    const sp = await _dbGetRaw('settings', 'ckSpecials').catch(() => null), list = ((sp && sp.value && sp.value.list) || []), t = Date.now(), pool = await _ckPool(); let made = [];
     fresh.forEach((k, i) => { if (!pool.by[k] || list.some(x => x.ty === 'cent' && x.k === k)) return; list.push({ id: (t + i).toString(36) + 'c', k, ty: 'cent', r: 100, note: '', t }); made.push(pool.by[k].n); });
     if (made.length) await dbSet('settings', 'ckSpecials', { value: { list } });
     await dbSet('settings', 'ckCentSeen', { value: { keys: [...known, ...fresh], t } });
@@ -38824,9 +38837,9 @@ window.ctcToggle = async function(id) { if (!adminLoggedIn) return; const list =
 window.ctcDel = function(id) { if (!adminLoggedIn) return; const isG = (((window._ctcC || {}).list || []).find(x => x.id === id) || {}).kind === 'grp';
   customConfirm(isG ? 'Delete this group? Its parts become standalone challenges. Players keep any rewards they already got.' : 'Delete this challenge? Players who already completed it keep their rewards.', async () => { const list = (await _ctcLoad(true)).filter(x => x.id !== id).map(x => x.grp === id ? Object.assign({}, x, { grp: '' }) : x); if (window._ctcGrp === id) window._ctcGrp = ''; await _ctcSave(list); if ((window._ctcB || {}).id === id) window._ctcB = _ctcBNew(); showToast('Deleted.', 'success'); _ckRender(); }, 'Delete'); };
 // Special cards: flip "CTC only" (never in packs; only from a challenge reward).
-window.ckSpRx = async function(id, v) { if (!adminLoggedIn) return; const sd = await dbGet('settings', 'ckSpecials').catch(() => null), list = ((sd && sd.value && sd.value.list) || []), x = list.find(y => y.id === id); if (!x) return;
+window.ckSpRx = async function(id, v) { if (!adminLoggedIn) return; const sd = await _dbGetRaw('settings', 'ckSpecials').catch(() => null), list = ((sd && sd.value && sd.value.list) || []), x = list.find(y => y.id === id); if (!x) return;
   const n = Math.max(1, Math.min(100, parseFloat(v) || 1)); if (n > 1) x.rx = n; else delete x.rx; await dbSet('settings', 'ckSpecials', { value: { list } }); window._ckPoolC = null; showToast(n > 1 ? `This card is now ${n}× rarer.` : 'Back to normal rarity.', 'success'); _ckRender(); };
-window.ckSpCtc = async function(id) { if (!adminLoggedIn) return; const sd = await dbGet('settings', 'ckSpecials').catch(() => null), list = ((sd && sd.value && sd.value.list) || []), x = list.find(y => y.id === id); if (!x) return;
+window.ckSpCtc = async function(id) { if (!adminLoggedIn) return; const sd = await _dbGetRaw('settings', 'ckSpecials').catch(() => null), list = ((sd && sd.value && sd.value.list) || []), x = list.find(y => y.id === id); if (!x) return;
   if (x.ctc) delete x.ctc; else if (x.np) { delete x.np; x.ctc = 1; } else x.np = 1; await dbSet('settings', 'ckSpecials', { value: { list } }); window._ckPoolC = null; showToast(x.ctc ? '🧩 CTC only — only from a challenge reward.' : x.np ? '🚫 Not in packs — owners keep it as a normal card, nobody can pull it.' : '📦 This card can come out of packs again.', 'success'); _ckRender(); };
 // ===== SPECTATE LIVE DUELS =====
 // Watch a live duel through either player's eyes. The duel's own screen is drawn with the spectator standing in
@@ -38996,7 +39009,7 @@ window.trAccept = function(id) { const me = currentUser && currentUser.userId; i
       await dbSet('trades', id, { status: 'accepting', by: me, at: _now() }); await new Promise(r => setTimeout(r, 1500)); dbInvalidate('trades'); const t2 = await dbGet('trades', id); // claim it, then make sure a cancel didn't win the race
       if (!t2 || t2.status !== 'accepting' || t2.by !== me) { showToast('The sender cancelled this offer.', 'error'); return; }
       const K = c.cards = c.cards || { inv: {} }; K.tra = K.tra || {}; if (!K.tra[id]) { K.tra[id] = 1; _trTake(c, t.get); _trGive(c, t.give, t.fromName); await dbSet('coins', me, c); _ckSetPill(c); }
-      if ((t.give.og || []).length || (t.get.og || []).length) { try { const F = await _ckOgLoad(), myN = (_wdMe() || {}).name || ''; let ch = 0;
+      if ((t.give.og || []).length || (t.get.og || []).length) { try { const F = await _ckOgLoad(true), myN = (_wdMe() || {}).name || ''; let ch = 0;
           (t.give.og || []).forEach(k => { if (F[k] && (F[k].h || F[k].u) === t.from) { F[k].h = me; F[k].hn = myN; ch++; } });
           (t.get.og || []).forEach(k => { if (F[k] && (F[k].h || F[k].u) === me) { F[k].h = t.from; F[k].hn = t.fromName; ch++; } });
           if (ch) await dbSet('settings', 'ckFirst', { value: F }); } catch (e) { console.error(e); } }

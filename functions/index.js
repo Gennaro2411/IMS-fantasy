@@ -13,7 +13,7 @@ const bucket = admin.storage().bucket('fantasy-ims.firebasestorage.app');
 const COLS = ['drivers', 'races', 'teams', 'constructors', 'schedule', 'seasonArchives', 'archives', 'bets', 'transfers', 'rosterMoves', 'predictions', 'settings'];
 // Only these settings docs go in the snapshot: they change rarely and every visit reads them. Fast-changing
 // ones (lock state, live games, daily flags) are always read live by the app.
-const SETTINGS = ['seasonNumber','totalRounds','seasonDefinitions','trackRecords','qualiPace','heroImage','fiaVerdicts','betSpecials','betBoost','betH2H','betConfig','betOddsOverrides','bdayOdds','statOverrides','raceStats','musicCustom','departedFanZonePoints','departedDriverPrices','betStatsSince','wordleCfg','adminUsers','stewardIncidents'];
+const SETTINGS = ['seasonNumber','totalRounds','seasonDefinitions','trackRecords','qualiPace','heroImage','fiaVerdicts','betSpecials','betBoost','betH2H','betConfig','betOddsOverrides','bdayOdds','statOverrides','raceStats','musicCustom','departedFanZonePoints','departedDriverPrices','betStatsSince','wordleCfg','adminUsers','stewardIncidents','ckSpecials','ckFirst','ckRateLock'];
 const readCol = async c => c === 'settings'
   ? (await db.getAll(...SETTINGS.map(id => db.collection('settings').doc(id)))).filter(s => s.exists)
   : (await db.collection(c).get()).docs;
