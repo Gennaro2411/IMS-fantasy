@@ -10593,14 +10593,13 @@ async function renderDashboard() {
         setTimeout(async () => { const el = document.getElementById('hx-cardrow'); if (!el || typeof _ckPool !== 'function') return; try { const pool = await _ckPool();
           // Cover hand: only cards with a real photo, one of each card type (specials first, then the top tiers),
           // best card of each type; the very best goes in the middle and they get a little worse towards the edges.
-          const ph = c => typeof _ckPhOf === 'function' && !!_ckPhOf(c), typeOf = c => c.sp ? 'sp:' + c.sp : 't:' + c.t, best = {};
-          pool.list.filter(c => ph(c) && !c.np && !c.ctc && (c.sp || ['dia', 'rg', 'ug'].includes(c.t))).forEach(c => { const t = typeOf(c); if (!best[t] || c.r > best[t].r) best[t] = c; });
-          // one card per driver too (no Ussh twice), four of the best types, then a Silver on the end — Willierbread's if he has one
-          const drv = c => c.base || c.k, used = new Set(), top = [];
-          Object.values(best).sort((a, b) => (!!b.sp - !!a.sp) || b.r - a.r).forEach(c => { if (top.length < 4 && !used.has(drv(c))) { top.push(c); used.add(drv(c)); } });
-          // Willierbread's own normal card always goes on the end (whatever photo/tier rules say); a Silver only if he isn't found
-          const wb = pool.list.filter(c => !c.sp && /willi?er\s*bread/i.test(String(c.n).replace(/[^a-z\s]/gi, ''))).sort((a, b) => b.r - a.r)[0];
-          const sil = wb || pool.list.filter(c => ph(c) && !c.sp && /^(us|rs)$/.test(c.t) && !used.has(drv(c))).sort((a, b) => b.r - a.r)[0];
+          // A fresh hand on every visit, same theme: 4 different card types (specials first), one strong photo card of each,
+          // all different drivers; best in the middle; a Silver photo card on the end.
+          const ph = c => typeof _ckPhOf === 'function' && !!_ckPhOf(c), typeOf = c => c.sp ? 'sp:' + c.sp : 't:' + c.t, drv = c => c.base || c.k, rnd = A => A[Math.floor(Math.random() * A.length)], shuf = A => A.map(x => [Math.random(), x]).sort((p, q) => p[0] - q[0]).map(x => x[1]);
+          const byT = {}; pool.list.filter(c => ph(c) && !c.np && !c.ctc && (c.sp || ['dia', 'rg', 'ug'].includes(c.t))).forEach(c => (byT[typeOf(c)] = byT[typeOf(c)] || []).push(c));
+          const types = shuf(Object.keys(byT)).sort((x, y) => (y.startsWith('sp:') - x.startsWith('sp:'))), used = new Set(), top = [];
+          types.forEach(t => { if (top.length >= 4) return; const C = byT[t].filter(c => !used.has(drv(c))).sort((a, b) => b.r - a.r).slice(0, 4); if (!C.length) return; const c = rnd(C); top.push(c); used.add(drv(c)); });
+          const sil = rnd(pool.list.filter(c => ph(c) && !c.sp && /^(us|rs)$/.test(c.t) && !used.has(drv(c))).sort((a, b) => b.r - a.r).slice(0, 12)) || null;
           top.sort((a, b) => b.r - a.r); if (sil) top.push(sil);
           const pos = [0, -1, 1, -2, 2]; el.innerHTML = top.map((c, i) => `<span class="hx-fan-c" style="--i:${pos[i]}">${_ckCard(c, {})}</span>`).join(''); } catch (e) {} }, 300);
         deck.innerHTML = `
@@ -37713,7 +37712,7 @@ async function _ckPackGuard() { document.querySelectorAll('#toast-stack .toast')
   try { const sd = await dbGet('settings', 'ckSpecials'); if (JSON.stringify((sd && sd.value && sd.value.list) || []) !== window._ckSpSig) window._ckPoolC = null; } catch (e) {} return true; }
 // New-version check. APP_BUILD is stamped on every commit (git pre-commit hook). Any device running a newer build records it in
 // settings/appBuild; a device whose own build is older than that number knows it's out of date. Only a real newer build can trigger it.
-const APP_BUILD = 1795535385;
+const APP_BUILD = 1795535416;
 window._appUpd = window._appUpd || { pending: false };
 async function _appVerCheck() { try { const d = await dbGet('settings', 'appBuild'), live = +((d && d.value) || 0);
     if (APP_BUILD > live) { await dbSet('settings', 'appBuild', { value: APP_BUILD }); return; }
