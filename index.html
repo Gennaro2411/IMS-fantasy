@@ -10598,7 +10598,9 @@ async function renderDashboard() {
           // one card per driver too (no Ussh twice), four of the best types, then a Silver on the end — Willierbread's if he has one
           const drv = c => c.base || c.k, used = new Set(), top = [];
           Object.values(best).sort((a, b) => (!!b.sp - !!a.sp) || b.r - a.r).forEach(c => { if (top.length < 4 && !used.has(drv(c))) { top.push(c); used.add(drv(c)); } });
-          const sil = pool.list.filter(c => ph(c) && !c.sp && /^(us|rs)$/.test(c.t) && !used.has(drv(c))).sort((a, b) => (/willierbread/i.test(b.n) - /willierbread/i.test(a.n)) || b.r - a.r)[0];
+          // Willierbread's own normal card always goes on the end (whatever photo/tier rules say); a Silver only if he isn't found
+          const wb = pool.list.filter(c => !c.sp && /willi?er\s*bread/i.test(String(c.n).replace(/[^a-z\s]/gi, ''))).sort((a, b) => b.r - a.r)[0];
+          const sil = wb || pool.list.filter(c => ph(c) && !c.sp && /^(us|rs)$/.test(c.t) && !used.has(drv(c))).sort((a, b) => b.r - a.r)[0];
           top.sort((a, b) => b.r - a.r); if (sil) top.push(sil);
           const pos = [0, -1, 1, -2, 2]; el.innerHTML = top.map((c, i) => `<span class="hx-fan-c" style="--i:${pos[i]}">${_ckCard(c, {})}</span>`).join(''); } catch (e) {} }, 300);
         deck.innerHTML = `
@@ -37711,7 +37713,7 @@ async function _ckPackGuard() { document.querySelectorAll('#toast-stack .toast')
   try { const sd = await dbGet('settings', 'ckSpecials'); if (JSON.stringify((sd && sd.value && sd.value.list) || []) !== window._ckSpSig) window._ckPoolC = null; } catch (e) {} return true; }
 // New-version check. APP_BUILD is stamped on every commit (git pre-commit hook). Any device running a newer build records it in
 // settings/appBuild; a device whose own build is older than that number knows it's out of date. Only a real newer build can trigger it.
-const APP_BUILD = 1795535344;
+const APP_BUILD = 1795535385;
 window._appUpd = window._appUpd || { pending: false };
 async function _appVerCheck() { try { const d = await dbGet('settings', 'appBuild'), live = +((d && d.value) || 0);
     if (APP_BUILD > live) { await dbSet('settings', 'appBuild', { value: APP_BUILD }); return; }
