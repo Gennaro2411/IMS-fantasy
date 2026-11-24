@@ -37666,7 +37666,7 @@ async function _ckPackGuard() { document.querySelectorAll('#toast-stack .toast')
   try { const sd = await dbGet('settings', 'ckSpecials'); if (JSON.stringify((sd && sd.value && sd.value.list) || []) !== window._ckSpSig) window._ckPoolC = null; } catch (e) {} return true; }
 // New-version check. APP_BUILD is stamped on every commit (git pre-commit hook). Any device running a newer build records it in
 // settings/appBuild; a device whose own build is older than that number knows it's out of date. Only a real newer build can trigger it.
-const APP_BUILD = 1795533240;
+const APP_BUILD = 1795533951;
 window._appUpd = window._appUpd || { pending: false };
 async function _appVerCheck() { try { const d = await dbGet('settings', 'appBuild'), live = +((d && d.value) || 0);
     if (APP_BUILD > live) { await dbSet('settings', 'appBuild', { value: APP_BUILD }); return; }
@@ -37716,7 +37716,7 @@ function _ckAutoSellIdx(got, AC) { const dup = new Set(_ckDupIdx(got)), seen = n
 // duplicates / sell all on the summary, then opens the next one. A small ■ Stop bar shows how many are left.
 window.ckAutoStop = function() { const R = window._ckRun; window._ckRun = null; clearTimeout(window._ckRunT); document.getElementById('ck-run')?.remove(); if (R) _ckRunReport(R, 'Stopped'); };
 // End-of-session report: packs, IM$ spent / made from sales, net, and the best cards kept.
-function _ckRunReport(R, why) { const P = CK_PACKS[R.id], net = (R.val || 0) - R.spent, /* net = value of every card found minus what the packs cost */ top = R.kept.slice().sort((a, b) => (!!b.sp - !!a.sp) || b.r - a.r), best = top.filter(x => x.sp || x.r >= CK_BIG_MIN).slice(0, 30);
+function _ckRunReport(R, why) { setTimeout(_ckRender, 50); const P = CK_PACKS[R.id], net = (R.val || 0) - R.spent, /* net = value of every card found minus what the packs cost */ top = R.kept.slice().sort((a, b) => (!!b.sp - !!a.sp) || b.r - a.r), best = top.filter(x => x.sp || x.r >= CK_BIG_MIN).slice(0, 30);
   document.getElementById('ck-ao')?.remove(); const o = document.createElement('div'); o.id = 'ck-ao'; o.className = 'ck-ov in ctc-pk'; o.onclick = e => { if (e.target === o) o.remove(); };
   o.innerHTML = `<div class="ctc-pkb"><button class="ma-x" onclick="document.getElementById('ck-ao').remove()">✕</button><div class="ck-k">Auto opener · ${esc(why)}</div><div class="ck-ttl" style="font-size:1.4rem">${R.done} × ${esc(P ? P.n : '')}</div>
     <div class="bo-hstats" style="margin:10px 0"><div><b>${R.all}</b><small>Cards</small></div><div><b>${R.spent.toLocaleString()}</b><small>Spent IM$</small></div><div><b>${(R.val || 0).toLocaleString()}</b><small>Cards worth</small></div><div><b style="color:${net >= 0 ? '#4ade80' : '#ff5470'}">${net >= 0 ? '+' : ''}${net.toLocaleString()}</b><small>Net value</small></div><div><b>${R.sold.toLocaleString()}</b><small>Sold for (${R.soldN} cards)</small></div></div>
@@ -38106,8 +38106,8 @@ window._ckIxDraw = function(more) { const D = window._ckIxD, g = document.getEle
   const pg = document.getElementById('ck-ix-pg'); if (pg) pg.innerHTML = `<b>${_ch.toLocaleString()}</b> of <b>${_cb.length.toLocaleString()}</b> ${esc(_cl)} collected <i style="--p:${_cb.length ? (_ch / _cb.length * 100).toFixed(1) : 0}%"></i><small>${_cb.length ? Math.floor(_ch / _cb.length * 100) : 0}%</small>`; }
   if (n) n.textContent = `${L.length} card${L.length === 1 ? '' : 's'}${L.length > cap ? ` · showing ${cap}` : ''}${/^rrank/.test(X.sort) && _ckAgo('ckAggGlobal') ? ' · rarity ranks ' + _ckAgo('ckAggGlobal') : ''}`;
   const m = document.getElementById('ck-ix-more'); if (m) m.innerHTML = L.length > cap ? `<button class="hx-btn ghost" style="width:100%;margin-top:12px" onclick="_ckIxDraw(1)">Show more (${L.length - cap} left)</button>` : ''; };
-function _ckRender() { const pg = document.getElementById('page-cards'); if (pg && pg.classList.contains('active')) return renderCards(); }
-async function _ckLockLoad() { const lk = await dbGet('settings', 'gamesLock').catch(() => null); window._gamesLock = (lk && lk.value) || {}; _ckNavSync(); }
+function _ckRender() { if (window._ckRun) return; /* auto opener running: redraw once at the end, not after every pack */ const pg = document.getElementById('page-cards'); if (pg && pg.classList.contains('active')) return renderCards(); }
+async function _ckLockLoad() { if (window._ckLockAt && Date.now() - window._ckLockAt < 5 * 60e3) return _ckNavSync(); window._ckLockAt = Date.now(); /* re-read at most every 5 min */ const lk = await dbGet('settings', 'gamesLock').catch(() => null); window._gamesLock = (lk && lk.value) || {}; _ckNavSync(); }
 function _ckNavSync() { const on = _ckCan(); ['nav-cards-btn', 'mobile-cards-btn'].forEach(id => { const b = document.getElementById(id); if (b) b.style.display = on ? '' : 'none'; }); }
 setTimeout(() => { _ckLockLoad(); setInterval(_ckNavSync, 4000); }, 2500);
 // Auto Centurion: whenever a driver reaches 100 appearances, create their 100-rated Centurion card.
