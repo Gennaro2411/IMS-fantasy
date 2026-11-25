@@ -37537,7 +37537,7 @@ const _ckTier = (r) => CK_TIERS.find(t => r >= t.lo);
 const CK_VAL = 0.18, _ckV = v => Math.max(1, Math.round(v * CK_VAL));
 // Cards that can't be sold: CTC reward cards and Moments cards (sell value N/A).
 const _ckNoSell = c => !!c && (!!c.ctc || c.sp === 'mom');
-const _ckSellV = (c) => c.sp === 'mom' ? 0 : c.sp === 'rb' && c.r >= 90 ? 10000 + 2000 * (c.r - 90) /* Record Breaker 90+: 10k, +2k per point */ : c.sp === 'cent' ? 10000 + 150 * Math.max(0, c.r - 70) /* Centurion: 100 appearances */ : c.sp === 'dotd' ? 1000 + _ckV(100) * Math.max(0, c.r - 80) /* DOTD (rated 80+): 1,000 at 80, +18 per point */ : _ckV(c.sp === 'champ' ? CK_CHAMP_SELL(c.r) : c.sp ? CK_SP_SELL(c.r) : _ckTier(c.r).sell(c.r));
+const _ckSellV = (c) => c.sp === 'mom' ? 0 : c.sp === 'rb' && c.r >= 90 ? 10000 + 2000 * (c.r - 90) /* Record Breaker 90+: 10k, +2k per point */ : c.sp === 'bad' && c.r >= 85 ? 5000 + 800 * (c.r - 85) /* Bad Boys 85+: 5k, +800 per point */ : c.sp === 'cent' ? 10000 + 150 * Math.max(0, c.r - 70) /* Centurion: 100 appearances */ : c.sp === 'dotd' ? 1000 + _ckV(100) * Math.max(0, c.r - 80) /* DOTD (rated 80+): 1,000 at 80, +18 per point */ : _ckV(c.sp === 'champ' ? CK_CHAMP_SELL(c.r) : c.sp ? CK_SP_SELL(c.r) : _ckTier(c.r).sell(c.r));
 // odds = chance of each card in the pack being that rarity (must add up to 1)
 const CK_PACKS = { bronze: { n: 'Bronze Pack', price: 50, sp: { dotd: .0015, tots: .0012 }, odds: [['ub', .8], ['rb', .2]], c: '#b4703a', c2: '#5e3516' },
   silver: { n: 'Silver Pack', price: 100, sp: { dotd: .003, tots: .0035 }, odds: [['us', .86], ['rs', .14]], c: '#c9d2dc', c2: '#6b7684' },
@@ -37772,7 +37772,7 @@ async function _ckPackGuard() { document.querySelectorAll('#toast-stack .toast')
   try { const sd = await dbGet('settings', 'ckSpecials'); if (JSON.stringify((sd && sd.value && sd.value.list) || []) !== window._ckSpSig) window._ckPoolC = null; } catch (e) {} return true; }
 // New-version check. APP_BUILD is stamped on every commit (git pre-commit hook). Any device running a newer build records it in
 // settings/appBuild; a device whose own build is older than that number knows it's out of date. Only a real newer build can trigger it.
-const APP_BUILD = 1795618185;
+const APP_BUILD = 1795618760;
 window._appUpd = window._appUpd || { pending: false };
 async function _appVerCheck() { try { const d = await dbGet('settings', 'appBuild'), live = +((d && d.value) || 0);
     if (APP_BUILD > live) { await dbSet('settings', 'appBuild', { value: APP_BUILD }); return; }
