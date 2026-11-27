@@ -1747,7 +1747,7 @@
 .tr-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.tr-lbl{font-size:.66rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#a779e6}
 .tr-skip{background:none;border:0;color:var(--muted);font-size:.78rem;font-weight:700;cursor:pointer;padding:4px 2px}.tr-skip:hover{color:var(--text)}
 .tr-bar{display:flex;gap:4px;margin-bottom:18px}.tr-bar i{flex:1;height:4px;border-radius:99px;background:rgba(255,255,255,.08);transition:background .3s}.tr-bar i.d{background:rgba(167,121,230,.55)}.tr-bar i.on{background:linear-gradient(90deg,#6f74e8,#f0487a)}
-.tr-ic{width:54px;height:54px;border-radius:16px;display:grid;place-items:center;font-size:1.7rem;background:linear-gradient(135deg,rgba(111,116,232,.25),rgba(240,72,122,.2));border:1px solid rgba(167,121,230,.35);margin-bottom:12px}
+.tr-ic svg{width:28px;height:28px}.tr-ic{width:54px;height:54px;border-radius:16px;display:grid;place-items:center;background:linear-gradient(135deg,rgba(111,116,232,.25),rgba(240,72,122,.2));border:1px solid rgba(167,121,230,.35);margin-bottom:12px}
 .tr-t{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.65rem;line-height:1.05;margin-bottom:6px;letter-spacing:.3px}
 .tr-b{font-size:.9rem;color:#b4b4d0;line-height:1.55}
 .tr-tips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}.tr-tips span{font-size:.72rem;font-weight:700;padding:4px 10px;border-radius:99px;background:rgba(124,134,255,.1);border:1px solid rgba(124,134,255,.28);color:#c7cbff}
@@ -30740,18 +30740,18 @@ function esc(s) {
 
 // ===== ONBOARDING TOUR =====
 const TOUR_STEPS = [
-  { i: '🏁', title: 'Welcome to IMS Fantasy', body: 'Fantasy for the International Motorsport Series — pick real IMS drivers, score points from their races, and battle the whole league.', tips: ['About a minute', 'Skip any time'] },
-  { i: '🏠', title: 'Home', body: 'Your dashboard: rank, points from the last race, team value and when the next race starts.', page: 'dashboard' },
-  { i: '✏️', title: 'Edit Team', body: 'Pick one driver from every division (D0–D4) plus a constructor, all inside your $100M budget. You get free transfers every race week.', tips: ['1 driver per division', '$100M budget'], page: 'home' },
-  { i: '👤', title: 'My Team', body: 'Your squad for the race. Pick a captain before lights out — their points count double. Chips like Triple Captain can swing a whole week.', tips: ['Captain = 2×', 'Chips'], page: 'my-team' },
-  { i: '💰', title: 'Market', body: 'Every driver and constructor with price, ownership and stats. Prices move after each race based on how they really drove.', page: 'market' },
-  { i: '🏆', title: 'Leaderboard', body: 'See where you stand against everyone else. It updates after every race.', page: 'leaderboard' },
-  { i: '📋', title: 'Results & Briefing', body: 'Results has every race result and how your drivers scored. Briefing is the preview before each race — form, storylines and who to watch.', tips: ['Before & after each race'], page: 'results' },
-  { i: '🎲', title: 'Bets', body: 'Put IM$ on what happens in each race — winners, podiums, head-to-heads and more. Win and your IM$ grows.', tips: ['Earn IM$'], page: 'bets' },
-  { i: '🃏', title: 'Cards', body: 'Spend IM$ on packs to collect IMS driver cards. Chase specials, complete CTC challenges, fill your Index and trade with other players.', tips: ['Packs', 'CTCs', 'Trades'], page: 'cards' },
-  { i: '🎮', title: 'Games', body: 'Daily mini-games built on IMS stats — a quick way to test your league knowledge and earn rewards.', page: 'games' },
-  { i: '❓', title: 'Got questions?', body: 'Tap ❓ in the nav any time for the full guide — captains, chips, prices, cards, badges and everything else.' },
-  { i: '🎉', title: "You're all set", body: 'Head to Edit Team and build your first squad. Good luck this season!' }
+  { i: 'flag', title: 'Welcome to IMS Fantasy', body: 'Fantasy for the International Motorsport Series — pick real IMS drivers, score points from their races, and battle the whole league.', tips: ['About a minute', 'Skip any time'] },
+  { i: 'home', title: 'Home', body: 'Your dashboard: rank, points from the last race, team value and when the next race starts.', page: 'dashboard' },
+  { i: 'edit', title: 'Edit Team', body: 'Pick one driver from every division (D0–D4) plus a constructor, all inside your $100M budget. You get free transfers every race week.', tips: ['1 driver per division', '$100M budget'], page: 'home' },
+  { i: 'user', title: 'My Team', body: 'Your squad for the race. Pick a captain before lights out — their points count double. Chips like Triple Captain can swing a whole week.', tips: ['Captain = 2×', 'Chips'], page: 'my-team' },
+  { i: 'market', title: 'Market', body: 'Every driver and constructor with price, ownership and stats. Prices move after each race based on how they really drove.', page: 'market' },
+  { i: 'trophy', title: 'Leaderboard', body: 'See where you stand against everyone else. It updates after every race.', page: 'leaderboard' },
+  { i: 'clip', title: 'Results & Briefing', body: 'Results has every race result and how your drivers scored. Briefing is the preview before each race — form, storylines and who to watch.', tips: ['Before & after each race'], page: 'results' },
+  { i: 'dice', title: 'Bets', body: 'Put IM$ on what happens in each race — winners, podiums, head-to-heads and more. Win and your IM$ grows.', tips: ['Earn IM$'], page: 'bets' },
+  { i: 'cards', title: 'Cards', body: 'Spend IM$ on packs to collect IMS driver cards. Chase specials, complete CTC challenges, fill your Index and trade with other players.', tips: ['Packs', 'CTCs', 'Trades'], page: 'cards' },
+  { i: 'game', title: 'Games', body: 'Daily mini-games built on IMS stats — a quick way to test your league knowledge and earn rewards.', page: 'games' },
+  { i: 'help', title: 'Got questions?', body: 'Tap ❓ in the nav any time for the full guide — captains, chips, prices, cards, badges and everything else.' },
+  { i: 'check', title: "You're all set", body: 'Head to Edit Team and build your first squad. Good luck this season!' }
 ];
 let _tourStep = 0;
 
@@ -30760,12 +30760,26 @@ function startTour() {
   showTourStep();
 }
 
+const _TR_IC = {
+  flag: '<path d="M5 21V4"/><path d="M5 4h12l-2 4 2 4H5"/>',
+  home: '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>',
+  edit: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>',
+  market: '<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
+  trophy: '<path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H4v1a4 4 0 0 0 4 4M16 6h4v1a4 4 0 0 1-4 4"/><path d="M12 13v4M8 21h8M9 17h6"/>',
+  clip: '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M9 10h6M9 14h6M9 18h3"/>',
+  dice: '<rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="9" cy="9" r=".6" fill="#c49bff"/><circle cx="15" cy="15" r=".6" fill="#c49bff"/><circle cx="15" cy="9" r=".6" fill="#c49bff"/><circle cx="9" cy="15" r=".6" fill="#c49bff"/>',
+  cards: '<rect x="3" y="6" width="11" height="15" rx="2"/><path d="M8 3h11a2 2 0 0 1 2 2v13"/>',
+  game: '<rect x="2.5" y="7" width="19" height="11" rx="4"/><path d="M7 12.5h4M9 10.5v4"/><circle cx="15.5" cy="11.5" r=".6" fill="#ff6b98"/><circle cx="17.5" cy="13.5" r=".6" fill="#ff6b98"/>',
+  help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14"/><path d="M12 17.5h.01"/>',
+  check: '<circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/>'
+};
 function _tourPaint(o) {
   const ov = document.getElementById('tour-overlay'), box = document.getElementById('tour-box'); if (!ov || !box) return;
   const total = TOUR_STEPS.length;
   box.innerHTML = `<div class="tr-top"><span class="tr-lbl">${o.label}</span><button class="tr-skip" onclick="endTour()">Skip</button></div>
     ${o.bar === false ? '' : `<div class="tr-bar">${TOUR_STEPS.map((_, k) => `<i class="${k < _tourStep ? 'd' : k === _tourStep ? 'on' : ''}"></i>`).join('')}</div>`}
-    <div class="tr-ic">${o.i}</div><div class="tr-t">${esc(o.title)}</div><div class="tr-b">${esc(o.body)}</div>
+    <div class="tr-ic"><svg viewBox="0 0 24 24" fill="none" stroke="url(#trg)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><defs><linearGradient id="trg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9aa0ff"/><stop offset=".55" stop-color="#c49bff"/><stop offset="1" stop-color="#ff6b98"/></linearGradient></defs>${_TR_IC[o.i] || ''}</svg></div><div class="tr-t">${esc(o.title)}</div><div class="tr-b">${esc(o.body)}</div>
     ${(o.tips || []).length ? `<div class="tr-tips">${o.tips.map(t => `<span>${esc(t)}</span>`).join('')}</div>` : ''}
     <div class="tr-acts">${o.back ? '<button class="tr-btn ghost" onclick="tourNav(-1)">Back</button>' : ''}<button class="tr-btn" id="tour-next">${o.next}</button></div>`;
   document.getElementById('tour-next').onclick = o.go;
@@ -30774,7 +30788,7 @@ function _tourPaint(o) {
 function showTourStep() {
   const step = TOUR_STEPS[_tourStep], total = TOUR_STEPS.length, last = _tourStep === total - 1;
   if (step.page && document.getElementById('page-' + step.page)) showPage(step.page);
-  _tourPaint({ label: `Step ${_tourStep + 1} of ${total}`, i: step.i, title: step.title, body: step.body, tips: step.tips, back: _tourStep > 0, next: last ? "🏁 Let's go" : 'Next', go: () => tourNav(1) });
+  _tourPaint({ label: `Step ${_tourStep + 1} of ${total}`, i: step.i, title: step.title, body: step.body, tips: step.tips, back: _tourStep > 0, next: last ? "Let's go" : 'Next', go: () => tourNav(1) });
 }
 
 window.tourNav = function(dir) {
@@ -30794,7 +30808,7 @@ function maybeStartTour() {
   if (localStorage.getItem('imsTourComplete')) return;
   if (window._tourExisting) { try { localStorage.setItem('imsTourComplete', '1'); } catch (e) {} return; }
   _tourStep = 0;
-  _tourPaint({ label: 'Welcome', bar: false, i: '🏁', title: 'Welcome to IMS Fantasy', body: 'New here? Take a quick tour of how everything works — it only takes a minute.', tips: ['Teams', 'Bets', 'Cards', 'Games'], next: '🏁 Start tour', go: () => { _tourStep = 1; showTourStep(); } });
+  _tourPaint({ label: 'Welcome', bar: false, i: 'flag', title: 'Welcome to IMS Fantasy', body: 'New here? Take a quick tour of how everything works — it only takes a minute.', tips: ['Teams', 'Bets', 'Cards', 'Games'], next: 'Start tour', go: () => { _tourStep = 1; showTourStep(); } });
 }
 
 window.showTour = function() {
@@ -37753,7 +37767,7 @@ async function _ckPackGuard() { document.querySelectorAll('#toast-stack .toast')
   try { const sd = await dbGet('settings', 'ckSpecials'); if (JSON.stringify((sd && sd.value && sd.value.list) || []) !== window._ckSpSig) window._ckPoolC = null; } catch (e) {} return true; }
 // New-version check. APP_BUILD is stamped on every commit (git pre-commit hook). Any device running a newer build records it in
 // settings/appBuild; a device whose own build is older than that number knows it's out of date. Only a real newer build can trigger it.
-const APP_BUILD = 1795793936;
+const APP_BUILD = 1795794025;
 window._appUpd = window._appUpd || { pending: false };
 async function _appVerCheck() { try { const d = await dbGet('settings', 'appBuild'), live = +((d && d.value) || 0);
     if (APP_BUILD > live) { await dbSet('settings', 'appBuild', { value: APP_BUILD }); return; }
