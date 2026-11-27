@@ -37815,7 +37815,7 @@ async function _ckPackGuard() { document.querySelectorAll('#toast-stack .toast')
   try { const sd = await dbGet('settings', 'ckSpecials'); if (JSON.stringify((sd && sd.value && sd.value.list) || []) !== window._ckSpSig) window._ckPoolC = null; } catch (e) {} return true; }
 // New-version check. APP_BUILD is stamped on every commit (git pre-commit hook). Any device running a newer build records it in
 // settings/appBuild; a device whose own build is older than that number knows it's out of date. Only a real newer build can trigger it.
-const APP_BUILD = 1795790225;
+const APP_BUILD = 1795790465;
 window._appUpd = window._appUpd || { pending: false };
 async function _appVerCheck() { try { const d = await dbGet('settings', 'appBuild'), live = +((d && d.value) || 0);
     if (APP_BUILD > live) { await dbSet('settings', 'appBuild', { value: APP_BUILD }); return; }
@@ -38721,7 +38721,7 @@ window.ctcTestFill = async function() { if (!(await _ckIsTest())) return; const 
   window._ctcSq = window._ctcSq || {}; window._ctcSq[ch.id] = R.sq.map(x => x.k); showToast('🧪 Squad filled — check it, then trade in.', 'success'); _ckRender(); };
 const _ctcTester = () => !!(adminLoggedIn || (window._ckTestC && window._ckTestC.v));
 function _ctcView(ch, pool, c, grp) { const K = (c && c.cards) || {}, inv = _ckInv(c), picks = _ctcPicks(ch), P0 = (K.ctc || {})[ch.id] || {};
-  if (ch.max > 0 && (P0.n || 0) >= ch.max) return _ctcUsed(ch, pool, P0, grp);
+  if (ch.max > 0 && _ctcN(P0, ch) >= ch.max) return _ctcUsed(ch, pool, P0, grp);
   picks.forEach((k, i) => { if (k && !(pool.by[k] && inv[k] > 0)) picks[i] = null; }); // sold / traded since it was placed
   const cards = picks.map(k => k ? pool.by[k] : null), ev = _ctcEval(cards, ch), d = _ctcN((K.ctc || {})[ch.id], ch), fin = ch.max > 0 && d >= ch.max, live = _ctcLive(ch) && (!grp || _ctcLive(grp));
   const needC = (ch.reqs || []).find(r => r.ty === 'chem'), pct = ev.max ? Math.min(100, ev.chem.tot / ev.max * 100) : 0, n = cards.filter(Boolean).length;
